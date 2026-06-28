@@ -1,0 +1,6338 @@
+package com.alphaseries;
+
+import com.alphaseries.vb.Vb;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public final class Handling {
+    private Handling() {
+    }
+
+    public static void Proc_6_0_6D7FF0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "GF");
+            long targetUserId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            if (targetUserId <= 0L) {
+                targetUserId = readWireLong(requestPayload, new LongRef(1));
+            }
+            if (targetUserId <= 0L) {
+                return;
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId) || !handlingUserHasPermission(callerUserId, "fuse_mod")) {
+                return;
+            }
+            String escapedTarget = Functions.Proc_10_11_80A9C0(targetUserId, 0, 0);
+            String userRow = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name,ROUND((UNIX_TIMESTAMP()-users.create_time)/60,0),"
+                + "ROUND((UNIX_TIMESTAMP()-users.lastonline_time)/60,0),users.id_socket FROM users WHERE users.id='"
+                + escapedTarget + "' LIMIT 1", 0, 0);
+            if (userRow.isEmpty()) {
+                return;
+            }
+            String payload = staffUserSummaryPayload(userRow,
+                Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM staff_cfh WHERE id_user='" + targetUserId + "'", 0, 0)),
+                Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM staff_cfh WHERE id_user='" + targetUserId + "' AND id_closed='2'", 0, 0)),
+                Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM users_cautions WHERE id_user='" + targetUserId + "'", 0, 0)),
+                Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM users_bans WHERE id_user='" + targetUserId + "'", 0, 0)));
+            if (!payload.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, payload, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_1_6D8B70(Object... args) {
+        staffDirectMessage(args, "GM", "fuse_alert", "4", false, false);
+    }
+
+    public static void Proc_6_2_6D9880(Object... args) {
+        staffDirectMessage(args, "GO", "fuse_kick", "5", true, false);
+    }
+
+    public static void Proc_6_3_6DA490(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "GP");
+            LongRef offset = new LongRef(1);
+            long targetUserId = readWireLong(requestPayload, offset);
+            if (targetUserId <= 0L) {
+                targetUserId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            }
+            String banMessage = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            if (banMessage.isEmpty()) {
+                banMessage = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 0, 0);
+            }
+            long banHours = readWireLong(requestPayload, offset);
+            if (banHours <= 0L) {
+                banHours = Vb.val(Functions.Proc_10_6_809F10(Vb.mid(requestPayload, (int) offset.value), 0, 0));
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (targetUserId <= 0L || banMessage.isEmpty() || banHours <= 0L
+                || callerUserId.isEmpty() || "0".equals(callerUserId)
+                || !handlingUserHasPermission(callerUserId, "fuse_mod")
+                || !handlingUserHasPermission(callerUserId, "fuse_alert")
+                || containsUnsafeStaffAlert(banMessage)) {
+                return;
+            }
+            long currentRoomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            MySQL.Proc_5_1_6D4110("INSERT INTO logs_moderation(id_type,id_user,id_target,id_target_2,timestamp,message,id_session) VALUES('6','"
+                + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0) + "','" + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0)
+                + "','" + currentRoomId + "',UNIX_TIMESTAMP(),'" + Functions.Proc_10_11_80A9C0(banMessage, 0, 0)
+                + "','" + socketIndex + "')", 0, 0);
+            String targetIpAddress = MySQL.Proc_5_2_6D4690("SELECT ip_last FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' LIMIT 1", 0, 0);
+            long banSeconds = banHours * 60L * 60L;
+            if (!targetIpAddress.isEmpty()) {
+                MySQL.Proc_5_0_6D3CD0("INSERT INTO users_bans(id_user,id_partner,message,timestamp_expire,timestamp_submit,ipaddress) VALUES('"
+                    + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0)
+                    + "','" + Functions.Proc_10_11_80A9C0(banMessage, 0, 0) + "',UNIX_TIMESTAMP()+" + banSeconds
+                    + ",UNIX_TIMESTAMP(),'" + Functions.Proc_10_11_80A9C0(targetIpAddress, 0, 0) + "')", 0, 0);
+            } else {
+                MySQL.Proc_5_0_6D3CD0("INSERT INTO users_bans(id_user,id_partner,message,timestamp_expire,timestamp_submit) VALUES('"
+                    + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0)
+                    + "','" + Functions.Proc_10_11_80A9C0(banMessage, 0, 0) + "',UNIX_TIMESTAMP()+" + banSeconds
+                    + ",UNIX_TIMESTAMP())", 0, 0);
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET login_session=NULL WHERE id='" + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "'", 0, 0);
+            int targetSocketIndex = handlingSocketFromUserId(String.valueOf(targetUserId));
+            if (targetSocketIndex > 0) {
+                Proc_6_244_801E80(targetSocketIndex, "@c" + banMessage + '\2', 0);
+                Proc_6_243_7FFEB0(targetSocketIndex, 0, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static long Proc_6_4_6DAFB0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "CH");
+            LongRef offset = new LongRef(1);
+            long actionType = readWireLong(requestPayload, offset);
+            if (actionType <= 0L) {
+                actionType = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            }
+            String messageText = readWireString(requestPayload, offset);
+            if (messageText.isEmpty()) {
+                messageText = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            }
+            messageText = Functions.Proc_10_10_80A7F0(messageText, 0, 0);
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId) || !handlingUserHasPermission(callerUserId, "fuse_mod")) {
+                return 0L;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L || actionType <= 0L || messageText.isEmpty() || containsUnsafeStaffAlert(messageText)) {
+                return 0L;
+            }
+            String roomText = MySQL.Proc_5_2_6D4690("SELECT id_slot,id_owner FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0);
+            String[] roomFields = roomText.split("\t", -1);
+            String roomOwnerId = String.valueOf(Vb.val(handlingField(roomFields, 1)));
+            if (roomOwnerId.isEmpty() || "0".equals(roomOwnerId)) {
+                return 0L;
+            }
+            long logType = actionType == 1L ? 1L : 2L;
+            MySQL.Proc_5_1_6D4110("INSERT INTO logs_moderation(id_type,id_user,id_target,timestamp,message,id_session) VALUES('"
+                + logType + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0) + "','" + roomId
+                + "',UNIX_TIMESTAMP(),'" + Functions.Proc_10_11_80A9C0(messageText, 0, 0) + "','" + socketIndex + "')", 0, 0);
+            broadcastToRoomUsers(roomId, "Ba" + messageText + '\2');
+            if (actionType == 1L || actionType == 4L) {
+                MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_events WHERE id_room='" + roomId + "' LIMIT 1", 0, 0);
+                Functions.Proc_10_18_80C9E0(roomId, 0, 0);
+            }
+            if (actionType == 1L) {
+                MySQL.Proc_5_0_6D3CD0("INSERT INTO users_cautions(id_user,id_partner,message,timestamp_submit) VALUES('"
+                    + Functions.Proc_10_11_80A9C0(roomOwnerId, 0, 0) + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0)
+                    + "','" + Functions.Proc_10_11_80A9C0(messageText + " (Room caution of room id: " + roomId + ")", 0, 0)
+                    + "',UNIX_TIMESTAMP())", 0, 0);
+            }
+            return actionType;
+        } catch (Exception ignored) {
+            return 0L;
+        }
+    }
+
+    public static void Proc_6_5_6DC340(Object... args) {
+        try {
+            long callForHelpId = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
+            int socketIndex = args != null && args.length >= 2 ? (int) Vb.val(args[1]) : 0;
+            if (callForHelpId <= 0L) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT staff_cfh.id,users.id,users.name,staff_cfh.id_partner,staff_cfh.id_room,"
+                + "staff_cfh.id_category,staff_cfh.description,rooms.id,rooms.name FROM staff_cfh,users,rooms WHERE staff_cfh.id='"
+                + callForHelpId + "' AND staff_cfh.id_closed='0' AND users.id=staff_cfh.id_user AND rooms.id=staff_cfh.id_room LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return;
+            }
+            String[] fields = rowText.split("\t", -1);
+            String representedRow = handlingField(fields, 0) + "\t\t" + handlingField(fields, 1) + "\t" + handlingField(fields, 2)
+                + "\t" + handlingField(fields, 3) + "\t" + handlingField(fields, 4) + "\t" + handlingField(fields, 5)
+                + "\t" + handlingField(fields, 6) + "\t" + handlingField(fields, 7) + "\t" + handlingField(fields, 8) + "\t";
+            String payload = "HR" + callForHelpRowPayload(representedRow, null);
+            if (socketIndex > 0) {
+                Proc_6_244_801E80(socketIndex, payload, 0);
+            } else {
+                Proc_6_249_802F10(payload, 0, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_6_6DC9D0(Object... args) {
+        updateCallForHelpTab(args, "GB", "2");
+    }
+
+    public static void Proc_6_7_6DD0E0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "GD");
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)
+                || !handlingUserHasPermission(callerUserId, "fuse_mod")
+                || !handlingUserHasPermission(callerUserId, "fuse_receive_calls_for_help")) {
+                return;
+            }
+            LongRef offset = new LongRef(1);
+            long closeState = readWireLong(requestPayload, offset);
+            if (closeState < 1L || closeState > 3L) {
+                return;
+            }
+            long callForHelpId = readWireLong(requestPayload, offset);
+            if (callForHelpId <= 0L) {
+                callForHelpId = readWireLong(requestPayload, offset);
+            }
+            if (callForHelpId <= 0L) {
+                return;
+            }
+            String reporterUserId = String.valueOf(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_user FROM staff_cfh WHERE id='"
+                + callForHelpId + "' LIMIT 1", 0, 0)));
+            int reporterSocketIndex = handlingSocketFromUserId(reporterUserId);
+            if (reporterSocketIndex > 0) {
+                Proc_6_244_801E80(reporterSocketIndex, Crypto.Proc_3_0_6D2AF0(closeState, null, "H\\"), 0);
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE staff_cfh SET id_closed='" + closeState + "',id_tab='0' WHERE id='" + callForHelpId + "'", 0, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_8_6DD790(Object... args) {
+        updateCallForHelpTab(args, "GC", "1");
+    }
+
+    public static void Proc_6_9_6DDD70(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "GL");
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId) || !handlingUserHasPermission(callerUserId, "fuse_mod")) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            LongRef offset = new LongRef(1);
+            readWireLong(requestPayload, offset);
+            long lockFlag = readWireLong(requestPayload, offset);
+            if (roomId > 0L && lockFlag == 1L) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET status_door='1', name='Inappropriate to hotel management' WHERE id='" + roomId + "'", 0, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_10_6DE1D0(Object... args) {
+        staffRoomHistory(args, "GG", true);
+    }
+
+    public static void Proc_6_11_6DF4A0(Object... args) {
+        staffRoomHistory(args, "GJ", false);
+    }
+
+    public static void Proc_6_12_6DFE90(Object... args) {
+        staffDirectMessage(args, "GN", "fuse_alert", "3", false, true);
+    }
+
+    public static long Proc_6_13_6E0A80(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return 0L;
+            }
+            long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
+            Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Ga"), 0);
+            return roomUserIndex;
+        } catch (Exception ignored) {
+            return 0L;
+        }
+    }
+
+    public static long Proc_6_14_6E10C0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "A]");
+            long danceId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            if (danceId <= 0L) {
+                danceId = readWireLong(requestPayload, new LongRef(1));
+            }
+            if (danceId < 0L) {
+                danceId = 0L;
+            }
+            if (danceId > 4L) {
+                danceId = 4L;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return 0L;
+            }
+            long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
+            String payload = Crypto.Proc_3_0_6D2AF0(danceId, null,
+                Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "G`"));
+            Proc_6_247_8027E0(socketIndex, payload, 0);
+            return danceId;
+        } catch (Exception ignored) {
+            return 0L;
+        }
+    }
+
+    public static void Proc_6_15_6E1900(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId) || !handlingUserHasPermission(userId, "fuse_use_wardrobe")) {
+                return;
+            }
+            long maxSlots = handlingUserHasPermission(userId, "fuse_larger_wardrobe") ? 10L : 5L;
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_slot,figure,gender FROM users_wardrobe WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' ORDER BY id_slot", 0, 0);
+            long slotCount = 0L;
+            StringBuilder wardrobePayload = new StringBuilder();
+            for (String row : rowText.split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    String[] fields = row.split("\t", -1);
+                    if (fields.length >= 3) {
+                        long slotId = Vb.val(handlingField(fields, 0));
+                        if (slotId >= 1L && slotId <= maxSlots) {
+                            String genderText = Vb.left(handlingField(fields, 2).toUpperCase(), 1);
+                            if (!"M".equals(genderText) && !"F".equals(genderText)) {
+                                genderText = "M";
+                            }
+                            wardrobePayload.append(wardrobeSlotPayload(slotId, handlingField(fields, 1), genderText));
+                            slotCount++;
+                        }
+                    }
+                }
+            }
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(slotCount, null, "DK") + wardrobePayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_16_6E2320(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "Ex");
+            LongRef offset = new LongRef(1);
+            long slotId = readWireLong(requestPayload, offset);
+            String figureText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            String genderText = Vb.left(readWireString(requestPayload, offset).toUpperCase(), 1);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId) || !handlingUserHasPermission(userId, "fuse_use_wardrobe")) {
+                return;
+            }
+            long maxSlots = handlingUserHasPermission(userId, "fuse_larger_wardrobe") ? 10L : 5L;
+            if (slotId < 1L || slotId > maxSlots || (!"M".equals(genderText) && !"F".equals(genderText))) {
+                return;
+            }
+            String figureData = Proc_6_239_7FC170(Functions.applicationPath + "/figuredata.cache", 0, 0);
+            if (!isValidWardrobeFigure(figureText, genderText, figureData)) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM users_wardrobe WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_slot='" + slotId + "' LIMIT 1", 0, 0);
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO users_wardrobe(id_user,id_slot,figure,gender) VALUES('"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + slotId + "','"
+                + Functions.Proc_10_11_80A9C0(figureText, 0, 0) + "','"
+                + Functions.Proc_10_11_80A9C0(genderText, 0, 0) + "')", 0, 0);
+            Proc_6_15_6E1900(socketIndex, "Ew", "Ew");
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_17_6E48D0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "@l");
+            LongRef offset = new LongRef(1);
+            String genderText = Vb.left(readWireString(requestPayload, offset).toUpperCase(), 1);
+            String figureText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId) || (!"M".equals(genderText) && !"F".equals(genderText))) {
+                return;
+            }
+            String figureData = Proc_6_239_7FC170(Functions.applicationPath + "/figuredata.cache", 0, 0);
+            if (!isValidWardrobeFigure(figureText, genderText, figureData)) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET tutorial_clothes='1',gender='"
+                + Functions.Proc_10_11_80A9C0(genderText, 0, 0) + "',figure='"
+                + Functions.Proc_10_11_80A9C0(figureText, 0, 0) + "' WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
+            String mottoText = MySQL.Proc_5_2_6D4690("SELECT motto FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            String payload = userIdentityPayload(Vb.val(userId), mottoText, genderText, figureText);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            Proc_6_247_8027E0(socketIndex, payload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_18_6E7480(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long offerCount = 0L;
+            StringBuilder offerPayload = new StringBuilder();
+            String offerRows = MySQL.Proc_5_2_6D4690("SELECT id,sprite_name,months,level,price_credits FROM products_club ORDER BY id ASC", 0, 0);
+            for (String row : offerRows.split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    String[] fields = row.split("\t", -1);
+                    if (fields.length >= 5) {
+                        long months = Vb.val(handlingField(fields, 2));
+                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 0)), null, ""));
+                        offerPayload.append(handlingField(fields, 1)).append('\2');
+                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(months, null, ""));
+                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(months * 31L, null, ""));
+                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 3)), null, ""));
+                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 4)), null, ""));
+                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(0, null, ""));
+                        offerCount++;
+                    }
+                }
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT level_hc,hc_days,hc2_days,hc_periods,hc2_periods,hc_presents,"
+                + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0) FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            String[] userFields = rowText.split("\t", -1);
+            long hcLevel = Vb.val(handlingField(userFields, 0));
+            long hcDays = Vb.val(handlingField(userFields, 1));
+            long vipDays = Vb.val(handlingField(userFields, 2));
+            long hcPeriods = Vb.val(handlingField(userFields, 3));
+            long vipPeriods = Vb.val(handlingField(userFields, 4));
+            long presentsAvailable = Vb.val(handlingField(userFields, 5));
+            long daysSinceStart = Vb.val(handlingField(userFields, 6));
+            long activeDays = hcLevel > 1L ? vipDays : hcDays;
+            long periodsLeft = hcLevel > 1L ? vipPeriods : hcPeriods;
+            long daysLeft = activeDays - daysSinceStart;
+            if (daysLeft < 0L) {
+                daysLeft = 0L;
+            }
+            if (periodsLeft < 1L && daysLeft > 0L) {
+                periodsLeft = (daysLeft + 30L) / 31L;
+            }
+            String payload = Crypto.Proc_3_0_6D2AF0(offerCount, null, "Iq") + offerPayload;
+            payload += Crypto.Proc_3_0_6D2AF0(hcLevel, null, "");
+            payload += Crypto.Proc_3_0_6D2AF0(daysLeft, null, "");
+            payload += Crypto.Proc_3_0_6D2AF0(periodsLeft, null, "");
+            payload += Crypto.Proc_3_0_6D2AF0(presentsAvailable, null, "");
+            Proc_6_244_801E80(socketIndex, payload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static String Proc_6_19_6E8040(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            String cachedPayload = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
+            String packetPrefix = args != null && args.length >= 3 ? Vb.cStr(args[2]) : "";
+            if (packetPrefix.isEmpty()) {
+                packetPrefix = "Gz";
+            }
+            if (cachedPayload.isEmpty()) {
+                cachedPayload = Licence.global_0082912C;
+            }
+            String payload = packetPrefix + cachedPayload;
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    public static void Proc_6_20_6E88E0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long rankIndex = handlingUserRank(userId);
+            long staffFlag = handlingUserHasPermission(userId, "fuse_client_staff") ? 1L : 0L;
+            String payload = Crypto.Proc_3_0_6D2AF0(rankIndex, null, "@B");
+            payload += Crypto.Proc_3_0_6D2AF0(rankIndex, null, "");
+            payload = "0" + Crypto.Proc_3_0_6D2AF0(staffFlag, null, payload);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static String Proc_6_24_6EA010(Object... args) {
+        return handlingRepresentedChatRoute(args, 0L);
+    }
+
+    public static String Proc_6_25_6EEAC0(Object... args) {
+        return handlingRepresentedChatRoute(args, 0L);
+    }
+
+    public static String Proc_6_26_7034C0(Object... args) {
+        return handlingRepresentedChatRoute(args, 0L);
+    }
+
+    public static String Proc_6_27_706920(Object... args) {
+        return handlingRepresentedChatRoute(args, 1L);
+    }
+
+    public static String Proc_6_28_709DA0(Object... args) {
+        return handlingRepresentedChatRoute(args, 2L);
+    }
+
+    public static void Proc_6_53_718E00(Object... args) {
+        int socketIndex = args != null && args.length >= 1 ? (int) Vb.val(args[0]) : 0;
+        if (socketIndex <= 0) {
+            return;
+        }
+        HandlingMUS.Proc_12_1_821AA0(socketIndex, "@R", 0);
+    }
+
+    public static final class LongRef {
+        public long value;
+
+        public LongRef(long value) {
+            this.value = value;
+        }
+    }
+
+    public static final class StickyNoteUpdate {
+        public long furnitureId;
+        public String noteColor = "";
+        public String noteCaption = "";
+    }
+
+    public static final class WallPlacement {
+        public long wallX;
+        public long wallY;
+        public long localX;
+        public long localY;
+    }
+
+    public static final class RoomEventPayload {
+        public long categoryId;
+        public String categoryName = "";
+        public String eventName = "";
+        public String eventDescription = "";
+        public String tagOne = "";
+        public String tagTwo = "";
+    }
+
+    public static final class RoomSettingsPayload {
+        public String roomName = "";
+        public String roomPassword = "";
+        public long doorStatus;
+        public String roomDescription = "";
+        public long visitorsMax;
+        public long categoryId;
+        public String tagOne = "";
+        public String tagTwo = "";
+        public long allowOthersPets;
+        public long allowFeedPets;
+        public long allowWalkthrough;
+        public long disableWalls;
+        public long thicknessFloor;
+        public long thicknessWallpaper;
+    }
+
+    public static final class InventoryPayloads {
+        public long regularCount;
+        public long iconCount;
+        public String regularPayload = "";
+        public String iconPayload = "";
+    }
+
+    public static final class FurnitureMoveRequest {
+        public long furnitureId;
+        public long positionX;
+        public long positionY;
+        public long rotation;
+    }
+
+    public static final class FurnitureCacheState {
+        public String pendingRoomCache = "";
+        public String pendingFurnitureCache = "";
+        public String representedRoomCache = "";
+    }
+
+    public static final class FurnitureStateCache {
+        public String pendingRoomCache = "";
+        public String pendingFurnitureCache = "";
+        public String representedRoomCache = "";
+    }
+
+    public static final class FriendTargetList {
+        public boolean deleteAllPending;
+        public String targetList = "";
+        public long targetCount;
+    }
+
+    public static final class PetCommandAction {
+        public boolean found;
+        public long requiredLevel;
+        public String action = "";
+    }
+
+    public static final class PetExperienceUpdate {
+        public long petLevel;
+        public long petExperience;
+        public boolean leveledUp;
+        public String statusPayload = "";
+        public String experiencePayload = "";
+    }
+
+    public static final class PollAnswerSubmission {
+        public long pollId;
+        public long questionId;
+        public long answerValue;
+        public String answerText = "";
+        public boolean valid;
+    }
+
+    public static final class RecyclerSelection {
+        public long requestedCount;
+        public String selectedItems = "";
+        public boolean valid;
+    }
+
+    public static final class AchievementProgressDecision {
+        public long achievementIndex = -1L;
+        public long nextLevel;
+        public long requiredProgress;
+        public boolean shouldReward;
+    }
+
+    public static final class WiredApplyResult {
+        public long appliedCount;
+        public String statePayloads = "";
+    }
+
+    public static final class SongInfoRequest {
+        public long requestedCount;
+        public String requestedIds = "";
+    }
+
+    public static final class JukeboxAddRequest {
+        public long diskFurnitureId;
+        public long playlistOrder;
+    }
+
+    public static final class QuestProgressDecision {
+        public long questId;
+        public long numericQuestId;
+        public long progressValue;
+        public long amountRequired;
+        public long waitAmount;
+        public long remainingWait;
+        public boolean shouldComplete;
+        public boolean shouldScheduleWait;
+        public boolean shouldSendList;
+    }
+
+    public static final class ActivityPointAward {
+        public long pointType;
+        public long awardAmount;
+        public long newPoints;
+        public boolean shouldAward;
+        public String payload = "";
+    }
+
+    public static final class TradeOfferItemPayload {
+        public long itemCount;
+        public String payload = "";
+    }
+
+    public static final class MovementPosition {
+        public long positionX;
+        public long positionY;
+        public boolean found;
+    }
+
+    public static final class StaffChatRowsPayload {
+        public long chatCount;
+        public String payload = "";
+    }
+
+    public static String wardrobeSlotPayload(long slotId, String figureText, String genderText) {
+        return Crypto.Proc_3_0_6D2AF0(slotId, null, "") + Vb.cStr(figureText) + '\2' + Vb.cStr(genderText) + '\2';
+    }
+
+    public static boolean isValidWardrobeFigure(String figureText, String genderText) {
+        return isValidWardrobeFigure(figureText, genderText, "");
+    }
+
+    public static boolean isValidWardrobeFigure(String figureText, String genderText, String figureData) {
+        String figure = Vb.cStr(figureText);
+        String gender = Vb.cStr(genderText).toUpperCase();
+        if (figure.isEmpty() || figure.length() > 255 || figure.indexOf('\'') >= 0 || figure.indexOf('"') >= 0) {
+            return false;
+        }
+
+        String allowedTypes = ";lg;ha;wa;hr;ch;sh;cc;ea;he;ca;hd;fa;cp;";
+        for (String part : figure.split("\\.", -1)) {
+            if (!part.isEmpty()) {
+                String[] piece = part.split("-", -1);
+                if (piece.length < 2) {
+                    return false;
+                }
+                String figureType = piece[0].toLowerCase();
+                String setId = piece[1];
+                if (!allowedTypes.contains(";" + figureType + ";") || Vb.val(setId) <= 0L) {
+                    return false;
+                }
+
+                if (!Vb.cStr(figureData).isEmpty()) {
+                    String lowerFigureData = figureData.toLowerCase();
+                    String setTypeMarker = "<settype type=\"" + figureType + "\"";
+                    int setTypeStart = lowerFigureData.indexOf(setTypeMarker.toLowerCase());
+                    if (setTypeStart < 0) {
+                        return false;
+                    }
+                    int setTypeEnd = lowerFigureData.indexOf("</settype>", setTypeStart);
+                    if (setTypeEnd < 0) {
+                        return false;
+                    }
+                    String setTypeXml = figureData.substring(setTypeStart, setTypeEnd);
+                    String setMarker = "<set id=\"" + Vb.val(setId) + "\"";
+                    if (!setTypeXml.toLowerCase().contains(setMarker.toLowerCase())) {
+                        return false;
+                    }
+                    if (!figureSetAllowsGender(setTypeXml, setMarker, gender)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public static boolean figureSetAllowsGender(String setTypeXml, String setMarker, String genderText) {
+        String setType = Vb.cStr(setTypeXml);
+        String marker = Vb.cStr(setMarker);
+        int setStart = setType.toLowerCase().indexOf(marker.toLowerCase());
+        if (setStart < 0) {
+            return false;
+        }
+        String lowerSetType = setType.toLowerCase();
+        int setEnd = lowerSetType.indexOf("</set>", setStart);
+        if (setEnd < 0) {
+            setEnd = lowerSetType.indexOf("/>", setStart);
+        }
+        if (setEnd < 0) {
+            setEnd = setType.length();
+        }
+        String setXml = setType.substring(setStart, setEnd);
+        int genderStart = setXml.toLowerCase().indexOf("gender=\"");
+        if (genderStart < 0) {
+            return true;
+        }
+        if (genderStart + 8 >= setXml.length()) {
+            return false;
+        }
+        String genderValue = setXml.substring(genderStart + 8, genderStart + 9).toUpperCase();
+        String gender = Vb.cStr(genderText).toUpperCase();
+        return "U".equals(genderValue) || genderValue.equals(gender);
+    }
+
+    public static String userIdentityPayload(long userId, String mottoText, String genderText, String figureText) {
+        return Crypto.Proc_3_0_6D2AF0(userId, null, "DJ")
+            + Vb.cStr(mottoText) + '\2'
+            + Vb.cStr(genderText) + '\2'
+            + Vb.cStr(figureText) + '\2';
+    }
+
+    public static String representedChatPayload(long roomUserIndex, String filteredText, long gestureId, long chatType) {
+        String prefix = chatType == 1L ? "@Y" : "@X";
+        String payload = Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, prefix) + Vb.cStr(filteredText) + '\2';
+        return Crypto.Proc_3_0_6D2AF0(gestureId, null, payload);
+    }
+
+    public static String Proc_6_21_6E8BA0(Object... args) {
+        if (args == null || args.length == 0) {
+            return "";
+        }
+        return extractUrlList(Vb.cStr(args[0]));
+    }
+
+    public static String extractUrlList(String messageText) {
+        StringBuilder urlList = new StringBuilder();
+        for (String word : Vb.cStr(messageText).split(" ", -1)) {
+            String candidate = word.trim();
+            String lowered = candidate.toLowerCase();
+            if (!candidate.isEmpty()) {
+                if (lowered.startsWith("www.") && lowered.indexOf('.', 4) > 0) {
+                    urlList.append(candidate).append(';');
+                } else if (lowered.startsWith("http://")) {
+                    urlList.append(candidate).append(';');
+                } else if (lowered.startsWith("https://")) {
+                    urlList.append(candidate).append(';');
+                }
+            }
+        }
+        return urlList.toString();
+    }
+
+    public static String Proc_6_22_6E9300(Object... args) {
+        if (args == null || args.length == 0) {
+            return "";
+        }
+        boolean enabled = Vb.val(Functions.Proc_10_0_809570("com.client.chat.filter.enabled", 0)) != 0L;
+        String replacement = Functions.Proc_10_0_809570("com.client.chat.filter.replacement", "");
+        return filterChatText(Vb.cStr(args[0]), enabled, replacement, Licence.global_00829290);
+    }
+
+    public static String filterChatText(String messageText, boolean filterEnabled, String replacementText, String filterRows) {
+        String filteredText = Vb.cStr(messageText);
+        if (filterEnabled && !Vb.cStr(filterRows).isEmpty()) {
+            for (String row : Vb.cStr(filterRows).split("\r", -1)) {
+                String[] fields = row.split("\t", -1);
+                String blockedWord = fields.length > 0 ? fields[0].trim() : "";
+                if (!blockedWord.isEmpty()) {
+                    if (blockedWord.length() > 3) {
+                        Pattern pattern = Pattern.compile(Pattern.quote(blockedWord), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+                        filteredText = pattern.matcher(filteredText).replaceAll(Matcher.quoteReplacement(Vb.cStr(replacementText)));
+                    } else if (filteredText.equalsIgnoreCase(blockedWord)) {
+                        filteredText = Vb.cStr(replacementText);
+                    }
+                }
+            }
+        }
+        return filteredText;
+    }
+
+    public static long Proc_6_23_6E9A90(Object... args) {
+        if (args == null || args.length == 0) {
+            return 0L;
+        }
+        boolean enabled = Vb.val(Functions.Proc_10_0_809570("com.client.chat.gesture.enabled", 0)) != 0L;
+        return findGestureId(Vb.cStr(args[0]), enabled, Licence.global_00829294);
+    }
+
+    public static long findGestureId(String messageText, boolean gestureEnabled, String gestureRows) {
+        if (!gestureEnabled || Vb.cStr(gestureRows).isEmpty()) {
+            return 0L;
+        }
+        String[] rows = Vb.cStr(gestureRows).split("\r", -1);
+        for (String word : Vb.cStr(messageText).split(" ", -1)) {
+            String token = word.trim();
+            if (!token.isEmpty()) {
+                for (String row : rows) {
+                    if (!row.isEmpty()) {
+                        String[] fields = row.split("\t", -1);
+                        if (fields.length >= 2 && token.equalsIgnoreCase(fields[0])) {
+                            return Vb.val(fields[1]);
+                        }
+                    }
+                }
+            }
+        }
+        return 0L;
+    }
+
+    public static String Proc_6_29_70D800(Object... args) {
+        if (args == null || args.length < 12) {
+            return "";
+        }
+        long baseValue = Vb.val(args[0]);
+        long firstValue = Vb.val(args[1]);
+        long secondValue = Vb.val(args[2]);
+        long thirdValue = Vb.val(args[3]);
+        String fourthValue = Vb.cStr(args[4]);
+        long fifthValue = Vb.val(args[5]);
+        String sixthValue = Vb.cStr(args[6]);
+        String seventhValue = Vb.cStr(args[7]);
+        long eighthValue = Vb.val(args[8]);
+        String ninthValue = Vb.cStr(args[9]);
+        long tenthValue = Vb.val(args[10]);
+        String eleventhValue = Vb.cStr(args[11]);
+
+        String payload = Crypto.Proc_3_0_6D2AF0(baseValue, null, "0");
+        payload = Crypto.Proc_3_0_6D2AF0(firstValue, null, payload) + "H";
+        payload = "0" + Crypto.Proc_3_0_6D2AF0(secondValue, null, payload) + "H";
+        payload = Crypto.Proc_3_0_6D2AF0(baseValue, null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(thirdValue, null, payload) + fourthValue + '\2';
+        payload = Crypto.Proc_3_0_6D2AF0(fifthValue, null, payload) + sixthValue + '\2';
+        payload = Crypto.Proc_3_0_6D2AF0(eighthValue, null, payload) + ninthValue + '\2' + seventhValue + '\2';
+        return Crypto.Proc_3_0_6D2AF0(tenthValue, null, payload) + eleventhValue + '\2';
+    }
+
+    public static void Proc_6_30_70DC90(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty()) {
+                return;
+            }
+            long callForHelpId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM staff_cfh WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND id_closed='0' AND timestamp_sent > UNIX_TIMESTAMP()-600 ORDER BY id DESC LIMIT 1", 0, 0));
+            if (callForHelpId > 0L) {
+                MySQL.Proc_5_0_6D3CD0("DELETE FROM staff_cfh WHERE id='" + callForHelpId + "'", 0, 0);
+                Proc_6_244_801E80(socketIndex, "E@", 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_31_70DE80(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long rankIndex = handlingUserRank(userId);
+            long hcLevel = handlingUserHcLevel(userId);
+            if (!Functions.Proc_10_1_809790(rankIndex, "", "fuse_mod", hcLevel)) {
+                return;
+            }
+            String payload = Crypto.Proc_3_0_6D2AF0(0, null, "HS")
+                + Crypto.Proc_3_0_6D2AF0(0, null, "")
+                + staffModerationPayload(rankIndex, hcLevel);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT staff_cfh.id,staff_cfh.id_tab,users.id,users.name,"
+                + "staff_cfh.id_partner,staff_cfh.id_room,staff_cfh.id_category,staff_cfh.description,rooms.id,rooms.name,"
+                + "staff_cfh.id_picker FROM staff_cfh,users,rooms WHERE staff_cfh.id_closed!='3' "
+                + "AND staff_cfh.timestamp_sent > UNIX_TIMESTAMP()-43200 AND users.id=staff_cfh.id_user "
+                + "AND users.id_socket IS NOT NULL AND rooms.id=staff_cfh.id_room LIMIT 1000", 0, 0);
+            for (String row : rowText.split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    Proc_6_244_801E80(socketIndex, "HR" + callForHelpRowPayload(row, null), 0);
+                }
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_32_70EAB0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String packetPayload = handlingPacketPayload(args);
+            String requestPayload = packetPayload.length() >= 3 ? packetPayload.substring(2) : packetPayload;
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long lastClosedState = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_closed FROM staff_cfh WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND timestamp_sent > UNIX_TIMESTAMP()-600 ORDER BY id DESC LIMIT 1", 0, 0));
+            if (lastClosedState == 0L && !MySQL.Proc_5_2_6D4690("SELECT id_closed FROM staff_cfh WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND timestamp_sent > UNIX_TIMESTAMP()-600 ORDER BY id DESC LIMIT 1", 0, 0).isEmpty()) {
+                return;
+            }
+            LongRef offset = new LongRef(1);
+            String descriptionText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            if (descriptionText.length() < 30) {
+                return;
+            }
+            long categoryId = readWireLong(requestPayload, offset);
+            if (categoryId <= 0L) {
+                categoryId = readWireLong(requestPayload, offset);
+            }
+            long partnerUserId = readWireLong(requestPayload, offset);
+            if (partnerUserId == Vb.val(userId)) {
+                partnerUserId = 0L;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO staff_cfh(id_user,id_room,id_category,id_partner,description,timestamp_sent) VALUES('"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "','" + categoryId + "','"
+                + partnerUserId + "','" + Functions.Proc_10_11_80A9C0(descriptionText, 0, 0) + "',UNIX_TIMESTAMP())", 0, 0);
+            long callForHelpId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM staff_cfh", 0, 0));
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(callForHelpId, null, "EA"), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_33_70F4F0(Object... args) {
+        try {
+            Proc_6_244_801E80(handlingSocketIndex(args), "HF" + Licence.global_00829204, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_34_70F590(Object... args) {
+        try {
+            Proc_6_244_801E80(handlingSocketIndex(args), "HG" + Licence.global_00829208, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_35_70F630(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String packetPayload = handlingPacketPayload(args);
+            long categoryId = packetPayload.length() >= 3 ? readWireLong(packetPayload.substring(2), new LongRef(1)) : 0L;
+            String categoryPayload = indexedPayload(Licence.global_0082920C, categoryId);
+            Proc_6_244_801E80(socketIndex,
+                Crypto.Proc_3_0_6D2AF0(categoryId, null, "HJ") + '\2' + categoryPayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_36_70F7B0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String packetPayload = handlingPacketPayload(args);
+            String searchText = packetPayload.length() >= 3
+                ? Functions.Proc_10_11_80A9C0(Functions.Proc_10_7_80A190(packetPayload.substring(2), 0, 0), 0, 0)
+                : "";
+            if (searchText.length() < 3) {
+                Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                return;
+            }
+            String rows = MySQL.Proc_5_2_6D4690("SELECT id,name FROM faq WHERE name LIKE '%" + searchText + "%' LIMIT 25", 0, 0);
+            long resultCount = 0L;
+            String resultPayload = "";
+            for (String row : rows.split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    String[] fields = row.split("\t", -1);
+                    if (fields.length >= 2) {
+                        resultPayload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 0)), null, resultPayload)
+                            + handlingField(fields, 1) + '\2';
+                        resultCount++;
+                    }
+                }
+            }
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(resultCount, null, "HI") + resultPayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_37_70FC20(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String packetPayload = handlingPacketPayload(args);
+            long faqId = 0L;
+            if (packetPayload.length() >= 3) {
+                String requestPayload = packetPayload.substring(2);
+                faqId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                if (faqId <= 0L) {
+                    faqId = readWireLong(requestPayload, new LongRef(1));
+                }
+            }
+            Proc_6_244_801E80(socketIndex, "HH" + indexedPayload(Licence.global_00829210, faqId), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static long Proc_6_38_70FD10(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "GV");
+            LongRef offset = new LongRef(1);
+            String candidateName = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            if (candidateName.isEmpty()) {
+                candidateName = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 0, 0);
+            }
+            return Proc_6_40_711770(socketIndex, 0, candidateName);
+        } catch (Exception ignored) {
+            return 0L;
+        }
+    }
+
+    public static long Proc_6_39_711650(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "GW");
+            LongRef offset = new LongRef(1);
+            String candidateName = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            if (candidateName.isEmpty()) {
+                candidateName = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 0, 0);
+            }
+            return Proc_6_40_711770(socketIndex, -1, candidateName);
+        } catch (Exception ignored) {
+            return 0L;
+        }
+    }
+
+    public static long Proc_6_40_711770(Object... args) {
+        try {
+            if (args == null || args.length < 3) {
+                return 0L;
+            }
+            int socketIndex = handlingSocketIndex(args);
+            boolean checkOnly = Vb.val(args[1]) < 0L;
+            String candidateName = Vb.cStr(args[2]).trim();
+            if (socketIndex <= 0) {
+                return 0L;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            String oldName = MySQL.Proc_5_2_6D4690("SELECT name FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            MySQL.Proc_5_2_6D4690("SELECT gender FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            long existingCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM users WHERE name='"
+                + Functions.Proc_10_11_80A9C0(candidateName, 0, 0) + "'", 0, 0));
+            long validationCode = avatarNameValidationCode(candidateName, oldName, existingCount);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(validationCode, null, "H{") + candidateName + '\2', 0);
+            if (checkOnly || validationCode != 0L) {
+                return validationCode;
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET name='" + Functions.Proc_10_11_80A9C0(candidateName, 0, 0)
+                + "',tutorial_name='1',merge_name='0' WHERE id='" + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
+            MySQL.Proc_5_1_6D4110("INSERT INTO logs_identity(previous_identity,new_identity,timestamp,id_session) VALUES('"
+                + Functions.Proc_10_11_80A9C0(oldName, 0, 0) + "','" + Functions.Proc_10_11_80A9C0(candidateName, 0, 0)
+                + "',UNIX_TIMESTAMP(),'" + socketIndex + "')", 0, 0);
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId > 0L) {
+                long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
+                Proc_6_247_8027E0(socketIndex,
+                    Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, Crypto.Proc_3_0_6D2AF0(Vb.val(userId), null, "H|"))
+                        + candidateName + '\2', 0);
+                String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
+                    + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
+                Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
+                Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GH"), 0);
+            }
+            return 0L;
+        } catch (Exception ignored) {
+            return 0L;
+        }
+    }
+
+    public static String Proc_6_41_712730(Object... args) {
+        if (args == null || args.length == 0) {
+            return "";
+        }
+        String[] values = normalizeUserEntryArgs(args);
+        long userId = Vb.val(values[0]);
+        String userName = values[1];
+        String figureText = values[2];
+        String mottoText = values[3];
+        String genderText = values[4];
+        long roomUserIndex = Vb.val(values[5]);
+        long xValue = Vb.val(values[6]);
+        long yValue = Vb.val(values[7]);
+        String zValue = values[8];
+        long firstState = Vb.val(values[9]);
+        long secondState = Vb.val(values[10]);
+        if (roomUserIndex <= 0L) {
+            roomUserIndex = userId;
+        }
+
+        String payload = Crypto.Proc_3_0_6D2AF0(userId, null, "") + userName + '\2' + figureText;
+        payload = Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, payload + '\2' + mottoText + '\2');
+        payload = Crypto.Proc_3_0_6D2AF0(xValue, null, "0" + payload);
+        payload = Crypto.Proc_3_0_6D2AF0(yValue, null, "0" + payload) + zValue + '\2' + "JI";
+        payload = payload + genderText + '\2' + "M";
+        payload = Crypto.Proc_3_0_6D2AF0(firstState, null, payload);
+        return Crypto.Proc_3_0_6D2AF0(secondState, null, payload + "M" + '\2');
+    }
+
+    public static String Proc_6_42_712FB0(Object... args) {
+        if (args == null || args.length == 0) {
+            return "";
+        }
+        String[] values = normalizeObjectEntryArgs(args);
+        long entityId = Vb.val(values[0]);
+        String displayName = values[1];
+        String figureText = values[2];
+        String genderText = values[3];
+        long roomUserIndex = Vb.val(values[4]);
+        long xValue = Vb.val(values[5]);
+        long yValue = Vb.val(values[6]);
+        String zValue = values[7];
+        long objectType = Vb.val(values[8]);
+        if (roomUserIndex <= 0L) {
+            roomUserIndex = entityId;
+        }
+
+        String payload;
+        String tailMarker;
+        if (objectType == 3L) {
+            payload = Crypto.Proc_3_0_6D2AF0(entityId, null, "");
+            tailMarker = "PAJJ";
+        } else {
+            payload = "M";
+            tailMarker = "HK";
+        }
+
+        payload = payload + displayName + '\2';
+        payload = payload + figureText + '\2';
+        payload = payload + genderText + '\2';
+        payload = payload + Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "");
+        payload = payload + Crypto.Proc_3_0_6D2AF0(xValue, null, "");
+        payload = payload + Crypto.Proc_3_0_6D2AF0(yValue, null, "");
+        payload = payload + zValue + '\2';
+        return payload + tailMarker;
+    }
+
+    public static void Proc_6_43_713680(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "FF");
+            long requestedRoomId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            if (requestedRoomId <= 0L) {
+                requestedRoomId = readWireLong(requestPayload, new LongRef(1));
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long roomId = requestedRoomId > 0L ? requestedRoomId : handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L) {
+                return;
+            }
+            if (!handlingUserOwnsRoom(callerUserId, roomId) && !handlingUserHasPermission(callerUserId, "fuse_any_room_controller")) {
+                return;
+            }
+            String roomRow = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms.name,rooms.description,rooms.status_door,"
+                + "rooms.id_category,rooms.visitors_max,models.visitors_max,rooms.tag_1,rooms.tag_2,NULL,"
+                + "rooms.allow_otherspets,rooms.allow_feedpets,rooms.allow_walkthrough,rooms.disable_walls "
+                + "FROM rooms,models WHERE rooms.id='" + roomId + "' AND models.id=rooms.id_model LIMIT 1", 0, 0);
+            if (roomRow.isEmpty()) {
+                return;
+            }
+            String[] roomFields = roomRow.split("\t", -1);
+            if (roomFields.length < 14) {
+                return;
+            }
+            String rightsRow = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name FROM rooms_rights,users WHERE rooms_rights.id_room='"
+                + roomId + "' AND users.id=rooms_rights.id_user LIMIT 250", 0, 0);
+            String payload = roomSettingsReadPayload(roomFields, rightsRow);
+            if (!payload.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, payload, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_44_7145E0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String packetPayload = handlingRequestPayload(args, "FB");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return;
+            }
+            String iconPayload = roomIconPayloadFromWire(packetPayload);
+            if (iconPayload.isEmpty()) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET icon='" + Functions.Proc_10_11_80A9C0(iconPayload, 0, 0)
+                + "' WHERE id='" + roomId + "'", 0, 0);
+            String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
+                + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
+            Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GI") + '\2', 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GH"), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_45_714B60(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_events WHERE id_room='" + roomId + "'", 0, 0);
+            Proc_6_244_801E80(socketIndex, "Er-1" + '\2', 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_46_714D50(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return;
+            }
+            long doorStatus = Vb.val(MySQL.Proc_5_2_6D4690("SELECT status_door FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            Proc_6_244_801E80(socketIndex, doorStatus != 0L ? "EoHK" : "EoIH", 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_47_714F60(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String packetPayload = handlingPacketPayload(args);
+            if (packetPayload.length() > 2) {
+                packetPayload = packetPayload.substring(2);
+            }
+            long roomId = readWireLong(packetPayload, new LongRef(1));
+            if (roomId <= 0L) {
+                return;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET homeroom='" + roomId + "' WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GG"), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_48_7151E0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String packetPayload = handlingRequestPayload(args, "EZ");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return;
+            }
+            long doorStatus = Vb.val(MySQL.Proc_5_2_6D4690("SELECT status_door FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            if (doorStatus != 0L) {
+                Proc_6_244_801E80(socketIndex, "EoHK", 0);
+                return;
+            }
+            RoomEventPayload event = new RoomEventPayload();
+            if (!roomEventCreatePayloadFromWire(packetPayload, event)) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms_events(id_room,id_user,name,description,id_category,tag_1,tag_2,timestamp,name_category) VALUES('"
+                + roomId + "','" + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','"
+                + Functions.Proc_10_11_80A9C0(event.eventName, 0, 0) + "','"
+                + Functions.Proc_10_11_80A9C0(event.eventDescription, 0, 0) + "','" + event.categoryId + "',"
+                + nullableSqlText(event.tagOne) + "," + nullableSqlText(event.tagTwo)
+                + ",UNIX_TIMESTAMP(),'" + Functions.Proc_10_11_80A9C0(event.categoryName, 0, 0) + "')", 0, 0);
+            Proc_6_247_8027E0(socketIndex, "Er" + Proc_6_51_716AC0(roomId), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_49_715D30(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String packetPayload = handlingRequestPayload(args, "E\\");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return;
+            }
+            RoomEventPayload event = new RoomEventPayload();
+            if (!roomEventEditPayloadFromWire(packetPayload, event)) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE rooms_events SET id_user='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "',name='" + Functions.Proc_10_11_80A9C0(event.eventName, 0, 0)
+                + "',description='" + Functions.Proc_10_11_80A9C0(event.eventDescription, 0, 0)
+                + "',tag_1=" + nullableSqlText(event.tagOne)
+                + ",tag_2=" + nullableSqlText(event.tagTwo)
+                + " WHERE id_room='" + roomId + "'", 0, 0);
+            Proc_6_247_8027E0(socketIndex, "Er" + Proc_6_51_716AC0(roomId), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_50_7166B0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "Ab");
+            String targetName = Functions.Proc_10_7_80A190(requestPayload, 0, 0).trim();
+            if (targetName.isEmpty() || !requestPayload.startsWith("@")) {
+                targetName = requestPayload.trim();
+            }
+            if (targetName.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, "BC", 0);
+                return;
+            }
+            String targetRow = MySQL.Proc_5_2_6D4690("SELECT users.id,users.id_socket,logs_visitedrooms.id_room "
+                + "FROM users,logs_visitedrooms WHERE users.name='" + Functions.Proc_10_11_80A9C0(targetName, 0, 0)
+                + "' AND users.id=logs_visitedrooms.id_user AND logs_visitedrooms.timestamp_left IS NULL LIMIT 1", 0, 0);
+            String[] targetFields = targetRow.split("\t", -1);
+            long targetUserId = Vb.val(handlingField(targetFields, 0));
+            long targetSocketIndex = Vb.val(handlingField(targetFields, 1));
+            long targetRoomId = Vb.val(handlingField(targetFields, 2));
+            if (targetUserId <= 0L || targetSocketIndex <= 0L || targetRoomId <= 0L) {
+                Proc_6_244_801E80(socketIndex, "BC", 0);
+                return;
+            }
+            Proc_6_57_71E8F0(socketIndex, targetRoomId, "");
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_52_7172B0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String packetPayload = handlingRequestPayload(args, "FQ");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return;
+            }
+            if (!handlingUserOwnsRoom(userId, roomId) && !handlingUserHasPermission(userId, "fuse_any_room_controller")) {
+                return;
+            }
+            RoomSettingsPayload settings = new RoomSettingsPayload();
+            if (!roomSettingsFromWire(packetPayload, settings)) {
+                return;
+            }
+            settings.categoryId = roomCategoryForUser(settings.categoryId, userId);
+            if (settings.categoryId <= 0L) {
+                return;
+            }
+            if (settings.disableWalls != 0L && !handlingUserHasPermission(userId, "fuse_hide_room_walls")) {
+                settings.disableWalls = 0L;
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET thickness_floor='" + settings.thicknessFloor
+                + "',thickness_wallpaper='" + settings.thicknessWallpaper
+                + "',name='" + Functions.Proc_10_11_80A9C0(settings.roomName, 0, 0)
+                + "',password='" + Functions.Proc_10_11_80A9C0(settings.roomPassword, 0, 0)
+                + "',description='" + Functions.Proc_10_11_80A9C0(settings.roomDescription, 0, 0)
+                + "',status_door='" + settings.doorStatus
+                + "',id_category='" + settings.categoryId
+                + "',tag_1=" + nullableSqlText(settings.tagOne)
+                + ",tag_2=" + nullableSqlText(settings.tagTwo)
+                + ",allow_otherspets='" + settings.allowOthersPets
+                + "',allow_feedpets='" + settings.allowFeedPets
+                + "',allow_walkthrough='" + settings.allowWalkthrough
+                + "',visitors_max='" + settings.visitorsMax
+                + "',disable_walls='" + settings.disableWalls
+                + "' WHERE id='" + roomId + "'", 0, 0);
+            String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
+                + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
+            Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GS"), 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GH"), 0);
+            String optionPayload = Crypto.Proc_3_0_6D2AF0(settings.disableWalls, null, "GX");
+            optionPayload = Crypto.Proc_3_0_6D2AF0(settings.thicknessFloor, null, optionPayload);
+            optionPayload = Crypto.Proc_3_0_6D2AF0(settings.thicknessWallpaper, null, optionPayload);
+            Proc_6_244_801E80(socketIndex, optionPayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static String Proc_6_51_716AC0(Object... args) {
+        try {
+            if (args == null || args.length == 0) {
+                return "-1" + '\2';
+            }
+            long roomId = Vb.val(args[0]);
+            if (roomId <= 0L) {
+                return "-1" + '\2';
+            }
+            String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name,rooms_events.id_room,rooms_events.id_category,"
+                + "rooms_events.name,rooms_events.description,DATE_FORMAT(FROM_UNIXTIME(rooms_events.timestamp), '"
+                + timeFormat + "'),rooms_events.tag_1,rooms_events.tag_2 FROM rooms_events,users WHERE rooms_events.id_room='"
+                + roomId + "' AND users.id=rooms_events.id_user LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return "-1" + '\2';
+            }
+            String[] fields = rowText.split("\t", -1);
+            if (fields.length < 9) {
+                return "-1" + '\2';
+            }
+            StringBuilder payload = new StringBuilder();
+            for (int fieldIndex = 4; fieldIndex <= 8; fieldIndex++) {
+                payload.append(handlingField(fields, fieldIndex)).append('\2');
+            }
+            String result = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 0)), null, payload.toString());
+            result = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 2)), null, result);
+            return Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 3)), null, result);
+        } catch (Exception ignored) {
+            return "-1" + '\2';
+        }
+    }
+
+    public static long Proc_6_54_719050(Object... args) {
+        long reservedSlot = 0L;
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            long preferredSlot = args != null && args.length >= 3 ? Vb.val(args[2]) : 0L;
+            if (socketIndex <= 0 || roomId <= 0L) {
+                return 0L;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            if (handlingCurrentRoomId(socketIndex, userId) > 0L) {
+                Proc_6_55_71A6E0(socketIndex, 0, 0);
+            }
+            reservedSlot = reserveRepresentedRoomSlot(preferredSlot);
+            if (reservedSlot <= 0L) {
+                Proc_6_244_801E80(socketIndex, Functions.Proc_10_8_80A580(1, 0, 0), 0);
+                return 0L;
+            }
+            loadRepresentedRoomBots(reservedSlot, roomId);
+            String sessionId = MySQL.Proc_5_2_6D4690("SELECT login_session FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            MySQL.Proc_5_1_6D4110("INSERT INTO logs_visitedrooms(id_user,id_room,timestamp_enter,id_session) VALUES('"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "',UNIX_TIMESTAMP(),'"
+                + Functions.Proc_10_11_80A9C0(sessionId, 0, 0) + "')", 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET id_slot='" + reservedSlot
+                + "',visitors_now=visitors_now+1 WHERE id='" + roomId + "'", 0, 0);
+            Proc_6_56_71E730(socketIndex, 0, 0);
+            Proc_6_53_718E00(socketIndex, 0, 0);
+            return reservedSlot;
+        } catch (Exception ignored) {
+            if (reservedSlot > 0L) {
+                releaseRepresentedRoomSlot(reservedSlot);
+            }
+            return 0L;
+        }
+    }
+
+    public static long Proc_6_55_71A6E0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return 0L;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            String roomRow = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,logs_visitedrooms.id_room,rooms.id_slot "
+                + "FROM logs_visitedrooms,rooms WHERE logs_visitedrooms.id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND logs_visitedrooms.timestamp_left IS NULL AND rooms.id=logs_visitedrooms.id_room "
+                + "ORDER BY logs_visitedrooms.timestamp_enter DESC LIMIT 1", 0, 0);
+            if (roomRow.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, "J|H", 0);
+                return 0L;
+            }
+            String[] fields = roomRow.split("\t", -1);
+            long visitId = Vb.val(handlingField(fields, 0));
+            long roomId = Vb.val(handlingField(fields, 1));
+            long slotId = Vb.val(handlingField(fields, 2));
+            if (roomId <= 0L) {
+                return 0L;
+            }
+            long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
+            if (roomUserIndex > 0L) {
+                Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "@\\"), 0);
+            }
+            if (visitId > 0L) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE logs_visitedrooms SET timestamp_left=UNIX_TIMESTAMP() WHERE id='"
+                    + visitId + "' AND timestamp_left IS NULL", 0, 0);
+            } else {
+                MySQL.Proc_5_0_6D3CD0("UPDATE logs_visitedrooms SET timestamp_left=UNIX_TIMESTAMP() WHERE id_user='"
+                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room='" + roomId
+                    + "' AND timestamp_left IS NULL", 0, 0);
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET visitors_now=IF(visitors_now>0,visitors_now-1,0) WHERE id='" + roomId + "'", 0, 0);
+            if (slotId > 0L) {
+                releaseRepresentedRoomSlot(slotId);
+                MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET id_slot=null WHERE id='" + roomId + "' AND id_slot='" + slotId + "'", 0, 0);
+            }
+            Proc_6_244_801E80(socketIndex, "J|H", 0);
+            return roomId;
+        } catch (Exception ignored) {
+            return 0L;
+        }
+    }
+
+    public static void Proc_6_56_71E730(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long roomMode = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            Proc_6_244_801E80(socketIndex, "@S", 0);
+            Proc_6_244_801E80(socketIndex, "Bf/client.php" + '\2', 0);
+            Proc_6_244_801E80(socketIndex, roomMode == 0L ? "@i" : "@{", 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static long Proc_6_57_71E8F0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            String suppliedPassword = args != null && args.length >= 3 ? Vb.cStr(args[2]) : "";
+            if (roomId <= 0L) {
+                Proc_6_244_801E80(socketIndex, "C`H", 0);
+                return 0L;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            String roomRow = MySQL.Proc_5_2_6D4690("SELECT visitors_now,visitors_max,status_door,password,id_slot,id_owner "
+                + "FROM rooms WHERE rooms.id='" + roomId + "' LIMIT 1", 0, 0);
+            if (roomRow.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, "C`H", 0);
+                return 0L;
+            }
+            String[] fields = roomRow.split("\t", -1);
+            long visitorsNow = Vb.val(handlingField(fields, 0));
+            long visitorsMax = Vb.val(handlingField(fields, 1));
+            long doorStatus = Vb.val(handlingField(fields, 2));
+            String roomPassword = handlingField(fields, 3);
+            long roomSlot = Vb.val(handlingField(fields, 4));
+            String ownerUserId = String.valueOf(Vb.val(handlingField(fields, 5)));
+            boolean isOwner = ownerUserId.equals(String.valueOf(Vb.val(userId)));
+            if (!isOwner) {
+                boolean isBanned = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_user FROM rooms_bans WHERE id_user='"
+                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0)) > 0L;
+                if (isBanned) {
+                    Proc_6_53_718E00(socketIndex, 0, 0);
+                    Proc_6_244_801E80(socketIndex, "C`PA", 0);
+                    return 0L;
+                }
+                if (visitorsMax > 0L && visitorsNow >= visitorsMax && !handlingUserHasPermission(userId, "fuse_enter_full_rooms")) {
+                    Proc_6_53_718E00(socketIndex, 0, 0);
+                    Proc_6_244_801E80(socketIndex, "C`I", 0);
+                    return 0L;
+                }
+                if (doorStatus == 1L && !handlingUserHasPermission(userId, "fuse_enter_locked_rooms")) {
+                    Proc_6_53_718E00(socketIndex, 0, 0);
+                    Proc_6_244_801E80(socketIndex, "C`H", 0);
+                    return 0L;
+                }
+                if (doorStatus == 2L && !roomPassword.equals(suppliedPassword)) {
+                    Proc_6_53_718E00(socketIndex, 0, 0);
+                    Proc_6_244_801E80(socketIndex, "@afhFF", 0);
+                    return 0L;
+                }
+            }
+            return Proc_6_54_719050(socketIndex, roomId, roomSlot);
+        } catch (Exception ignored) {
+            return 0L;
+        }
+    }
+
+    public static long Proc_6_58_71FCA0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String packetPayload = handlingRequestPayload(args, "FG");
+            ensureRepresentedRoomSlotPool();
+            if (Licence.global_0082930C.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, Functions.Proc_10_8_80A580(1, 0, 0), 0);
+                return 0L;
+            }
+            String roomIdText = Functions.Proc_10_7_80A190(packetPayload, 0, 0);
+            if (roomIdText.isEmpty()) {
+                roomIdText = packetPayload;
+            }
+            long roomId = Vb.val(roomIdText);
+            int passwordStart = 2 + roomIdText.length();
+            String roomPassword = "";
+            if (passwordStart < packetPayload.length()) {
+                roomPassword = Functions.Proc_10_6_809F10(packetPayload.substring(passwordStart), 0, 0);
+            }
+            Proc_6_57_71E8F0(socketIndex, roomId, roomPassword);
+            return roomId;
+        } catch (Exception ignored) {
+            return 0L;
+        }
+    }
+
+    public static void Proc_6_59_71FEE0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String advertisementPayload = "\2\2";
+            if (Licence.global_008291D8 > 0L) {
+                String candidate = indexedPayload(Licence.global_008291D4, Vb.val(Functions.Proc_10_3_809B90(Licence.global_008291D8, 1, 0)));
+                if (!candidate.isEmpty()) {
+                    advertisementPayload = candidate;
+                }
+            }
+            Proc_6_244_801E80(socketIndex, "DB" + advertisementPayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_60_720060(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "FA");
+            LongRef offset = new LongRef(1);
+            long requestMode = readWireLong(requestPayload, offset);
+            long detailFlag = readWireLong(requestPayload, offset);
+            if (detailFlag == 1L) {
+                long roomId = readWireLong(requestPayload, offset);
+                if (roomId <= 0L) {
+                    return;
+                }
+                String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
+                    + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
+                String rowText = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                    + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                    + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,"
+                    + "rooms.is_staff_picked FROM " + queryTail, 0, 0);
+                Proc_6_244_801E80(socketIndex,
+                    Crypto.Proc_3_0_6D2AF0(0, null, "GF") + singleNavigatorRoomPayloadFromRows(rowText), 0);
+            } else if (requestMode > 0L) {
+                // VB6 reads a room id from packed session offsets here; those offsets are not represented yet.
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_61_720490(Object... args) {
+        roomKickOrBanUser(args, false);
+    }
+
+    public static void Proc_6_62_7209F0(Object... args) {
+        roomKickOrBanUser(args, true);
+    }
+
+    public static void Proc_6_63_721050(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "DE");
+            LongRef offset = new LongRef(1);
+            long voteValue = readWireLong(requestPayload, offset);
+            if (voteValue != 1L) {
+                return;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return;
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            String existingVoteUserId = MySQL.Proc_5_2_6D4690("SELECT id_user FROM rooms_rates WHERE id_user='"
+                + escapedUserId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            if (!existingVoteUserId.isEmpty()) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms_rates(id_user,id_room,timestamp) VALUES('"
+                + escapedUserId + "','" + roomId + "',UNIX_TIMESTAMP())", 0, 0);
+            long roomRate = Vb.val(MySQL.Proc_5_2_6D4690("SELECT rate FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            if (roomRate < 0L) {
+                roomRate = 0L;
+            }
+            roomRate++;
+            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET rate='" + roomRate + "' WHERE id='" + roomId + "'", 0, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomRate, null, "EY"), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_64_721650(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "D\u007f");
+            LongRef offset = new LongRef(1);
+            String targetName = Functions.Proc_10_11_80A9C0(readWireString(requestPayload, offset), 0, 0);
+            if (targetName.isEmpty()) {
+                return;
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+                return;
+            }
+            String targetUserId = String.valueOf(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
+                + targetName + "' LIMIT 1", 0, 0)));
+            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_rights WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_room='" + roomId + "'", 0, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(0, null, "Fc"), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_65_721A10(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "A`");
+            LongRef offset = new LongRef(1);
+            String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
+            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return;
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+                return;
+            }
+            int targetSocketIndex = handlingSocketFromUserId(targetUserId);
+            if (targetSocketIndex <= 0) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("INSERT IGNORE INTO rooms_rights(id_user,id_room) VALUES('"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','" + roomId + "')", 0, 0);
+            Proc_6_244_801E80(targetSocketIndex, "@j", 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_66_721D60(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "AT");
+            StickyNoteUpdate note = new StickyNoteUpdate();
+            if (!stickyNoteUpdateFromWire(requestPayload, note) || note.furnitureId <= 0L) {
+                return;
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign,caption,position_wall FROM furnitures WHERE id='"
+                + note.furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            String[] fields = rowText.split("\t", -1);
+            if (rowText.isEmpty() || fields.length < 2) {
+                return;
+            }
+            long productId = Vb.val(handlingField(fields, 1));
+            if (!isPostItProduct(productId)) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='"
+                + Functions.Proc_10_11_80A9C0(note.noteColor, 0, 0) + "',caption='"
+                + Functions.Proc_10_11_80A9C0(note.noteCaption, 0, 0) + "' WHERE id='" + note.furnitureId + "'", 0, 0);
+            String broadcastPayload = "AT" + note.furnitureId + '\1' + "AS" + note.furnitureId + '\2';
+            broadcastPayload = Crypto.Proc_3_0_6D2AF0(productId, null, broadcastPayload)
+                + productId + '\2' + note.noteColor + '\2';
+            Proc_6_247_8027E0(socketIndex, broadcastPayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_67_722940(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "AS");
+            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            if (furnitureId <= 0L) {
+                return;
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign,caption FROM furnitures WHERE id='"
+                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            String[] fields = rowText.split("\t", -1);
+            if (rowText.isEmpty() || fields.length < 4) {
+                return;
+            }
+            long productId = Vb.val(handlingField(fields, 1));
+            if (!isPostItProduct(productId)) {
+                return;
+            }
+            String noteColor = Vb.left(handlingField(fields, 2), 6);
+            if (noteColor.isEmpty()) {
+                noteColor = "FFFF33";
+            }
+            String noteCaption = handlingField(fields, 3).replace('\u001f', '\r');
+            Proc_6_244_801E80(socketIndex, "@p" + furnitureId + '\2' + noteColor + '\r' + noteCaption + '\2', 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_68_723170(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "AU");
+            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            if (furnitureId <= 0L) {
+                return;
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L || !handlingUserOwnsRoom(callerUserId, roomId)) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign,caption FROM furnitures WHERE id='"
+                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            String[] fields = rowText.split("\t", -1);
+            if (rowText.isEmpty() || fields.length < 2) {
+                return;
+            }
+            long productId = Vb.val(handlingField(fields, 1));
+            if (!isPostItProduct(productId)) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM furnitures WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
+            Proc_6_247_8027E0(socketIndex, "AT" + furnitureId, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_69_723630(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "AN");
+            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            if (furnitureId <= 0L) {
+                return;
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,id_destination,sign_extra FROM furnitures WHERE id='"
+                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            String[] fields = rowText.split("\t", -1);
+            if (rowText.isEmpty() || fields.length < 3) {
+                return;
+            }
+            long boxProductId = Vb.val(handlingField(fields, 1));
+            long openedProductId = Vb.val(handlingField(fields, 2));
+            String openedSign = handlingField(fields, 3);
+            if (boxProductId <= 0L || openedProductId <= 0L) {
+                return;
+            }
+            String boxAction = DataManager.Proc_8_12_806C30(boxProductId, 17, 0).toLowerCase();
+            if (!boxAction.contains("present_") || "ecotron_box".equals(boxAction)) {
+                return;
+            }
+            Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM furnitures WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time) VALUES('"
+                + openedProductId + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0) + "','"
+                + Functions.Proc_10_11_80A9C0(openedSign, 0, 0) + "','"
+                + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0) + "',UNIX_TIMESTAMP())", 0, 0);
+            long openedProductType = Vb.val(DataManager.Proc_8_12_806C30(openedProductId, 0, 0));
+            String responseClass = "i";
+            if (openedProductType == 2L) {
+                responseClass = "s";
+            }
+            if (openedProductType == 3L) {
+                responseClass = "e";
+            }
+            String responsePayload = Crypto.Proc_3_0_6D2AF0(openedProductId, null, "BA" + responseClass + '\2')
+                + DataManager.Proc_8_12_806C30(openedProductId, 24, 0) + '\2';
+            Proc_6_244_801E80(socketIndex, responsePayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_70_724190(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "FI");
+            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            if (furnitureId <= 0L) {
+                return;
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign,position_wall FROM furnitures WHERE id='"
+                + furnitureId + "' AND id_room='" + roomId + "' AND position_wall IS NOT NULL LIMIT 1", 0, 0);
+            String[] fields = rowText.split("\t", -1);
+            if (rowText.isEmpty() || fields.length < 3) {
+                return;
+            }
+            long productId = Vb.val(handlingField(fields, 1));
+            if (productId <= 0L) {
+                return;
+            }
+            long currentState = Vb.val(handlingField(fields, 2));
+            long stateCount = Licence.Proc_9_0_806F70(productId, 5, 0);
+            if (stateCount <= 0L) {
+                stateCount = Vb.val(DataManager.Proc_8_12_806C30(productId, 10, 0));
+            }
+            if (stateCount <= 0L) {
+                stateCount = 1L;
+            }
+            long nextState = currentState + 1L;
+            if (nextState > stateCount) {
+                nextState = 0L;
+            }
+            if (nextState < 0L) {
+                nextState = 0L;
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + nextState + "' WHERE id='" + furnitureId + "'", 0, 0);
+            String payload = Crypto.Proc_3_0_6D2AF0(productId, null, "AU" + furnitureId + '\2')
+                + nextState + '\2' + "0" + '\2';
+            Proc_6_247_8027E0(socketIndex, payload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_71_724CF0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L || !handlingUserOwnsRoom(callerUserId, roomId)) {
+                return;
+            }
+            String socketRows = MySQL.Proc_5_2_6D4690("SELECT users.id_socket FROM rooms_rights,users WHERE rooms_rights.id_room='"
+                + roomId + "' AND users.id=rooms_rights.id_user AND users.id_socket IS NOT NULL", 0, 0);
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_rights WHERE id_room='" + roomId + "'", 0, 0);
+            for (String row : Vb.cStr(socketRows).split("\r", -1)) {
+                int targetSocketIndex = (int) Vb.val(row);
+                if (targetSocketIndex > 0) {
+                    Proc_6_244_801E80(targetSocketIndex, "@k", 0);
+                }
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_72_7250D0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "@W");
+            long requestFlag = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            if (requestFlag == 0L && !requestPayload.isEmpty()) {
+                requestFlag = readWireLong(requestPayload, new LongRef(1));
+            }
+            if (requestFlag != 0L) {
+                return;
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L || !handlingUserOwnsRoom(callerUserId, roomId)) {
+                return;
+            }
+            Functions.Proc_10_18_80C9E0(roomId, 0, 0);
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0);
+            Proc_6_53_718E00(socketIndex, 0, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_73_725540(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "AT");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L || (!handlingUserHasRoomRight(userId, roomId)
+                && !handlingUserHasPermission(userId, "fuse_pick_up_any_furni"))) {
+                return;
+            }
+            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            if (furnitureId <= 0L) {
+                return;
+            }
+            long productId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id_room='"
+                + roomId + "' AND id='" + furnitureId + "' LIMIT 1", 0, 0));
+            if (productId <= 0L) {
+                return;
+            }
+            String productSprite = DataManager.Proc_8_12_806C30(productId, 17, 0);
+            if (productSprite.isEmpty()) {
+                productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0);
+            }
+            if (!productSprite.startsWith("CF_") && !productSprite.startsWith("CFC_")) {
+                return;
+            }
+            String[] productParts = productSprite.split("_", -1);
+            if (productParts.length < 2) {
+                return;
+            }
+            long creditValue = Vb.val(productParts[1]);
+            if (creditValue <= 0L) {
+                return;
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET credits=credits+" + creditValue + " WHERE id='" + escapedUserId + "'", 0, 0);
+            long updatedCredits = Vb.val(MySQL.Proc_5_2_6D4690("SELECT credits FROM users WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0));
+            Proc_6_244_801E80(socketIndex, "@F" + updatedCredits + ".0" + '\2', 0);
+            Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM furnitures WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
+            // VB6 also deletes room/pathfinder cache files via Proc_6_106_74B750, which is not ported yet.
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_74_7265B0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "Aa");
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+                return;
+            }
+            LongRef offset = new LongRef(1);
+            long revokeCount = readWireLong(requestPayload, offset);
+            if (revokeCount < 1L || revokeCount > 150L) {
+                return;
+            }
+            for (long revokeIndex = 1L; revokeIndex <= revokeCount; revokeIndex++) {
+                String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
+                if (!targetUserId.isEmpty() && !"0".equals(targetUserId)) {
+                    MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_rights WHERE id_user='"
+                        + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_room='" + roomId + "'", 0, 0);
+                    int targetSocketIndex = handlingSocketFromUserId(targetUserId);
+                    if (targetSocketIndex > 0) {
+                        Proc_6_244_801E80(targetSocketIndex, "@k", 0);
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_75_7269D0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "EB");
+            LongRef offset = new LongRef(1);
+            String targetName = Functions.Proc_10_11_80A9C0(readWireString(requestPayload, offset), 0, 0);
+            if (targetName.isEmpty()) {
+                return;
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+                return;
+            }
+            String targetUserId = String.valueOf(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
+                + targetName + "' LIMIT 1", 0, 0)));
+            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_rights WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_room='" + roomId + "'", 0, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(0, null, "Fc"), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_77_727590(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "FD");
+            LongRef offset = new LongRef(1);
+            long roomId = readWireLong(requestPayload, offset);
+            if (roomId <= 0L) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms_official.id,models.required_files,rooms_official.caption "
+                + "FROM rooms_official,rooms,models WHERE rooms.id='" + roomId
+                + "' AND rooms_official.id_room=rooms.id AND models.id=rooms.id_model AND models.type='1' LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return;
+            }
+            String[] fields = rowText.split("\t", -1);
+            String requiredFiles = handlingField(fields, 2);
+            String roomCaption = handlingField(fields, 3);
+            String payload = Crypto.Proc_3_0_6D2AF0(roomId, null, "GE") + requiredFiles + '\2';
+            payload = Crypto.Proc_3_0_6D2AF0(roomId, null, payload) + roomCaption + '\2';
+            Proc_6_244_801E80(socketIndex, payload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_80_72EB60(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            if (roomId <= 0L) {
+                roomId = handlingCurrentRoomId(socketIndex, userId);
+            }
+            if (roomId <= 0L) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name,users.figure,users.motto,users.gender,"
+                + "models.position_x,models.position_y,rooms.id_slot FROM users,rooms,models WHERE users.id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND rooms.id='" + roomId
+                + "' AND models.id=rooms.id_model LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return;
+            }
+            String[] fields = rowText.split("\t", -1);
+            long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
+            long positionX = Vb.val(handlingField(fields, 5));
+            long positionY = Vb.val(handlingField(fields, 6));
+            String positionZ = "0.0";
+            long directionValue = 0L;
+            String entryPayload = Proc_6_41_712730(
+                Vb.val(handlingField(fields, 0)),
+                handlingField(fields, 1),
+                handlingField(fields, 2),
+                handlingField(fields, 3),
+                handlingField(fields, 4),
+                roomUserIndex,
+                positionX,
+                positionY,
+                positionZ,
+                directionValue,
+                0);
+            if (!entryPayload.isEmpty()) {
+                Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(1, null, "@\\") + entryPayload, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_82_731070(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            if (roomId <= 0L && socketIndex > 0) {
+                String userId = handlingUserIdFromSocket(socketIndex);
+                if (!userId.isEmpty() && !"0".equals(userId)) {
+                    roomId = handlingCurrentRoomId(socketIndex, userId);
+                }
+            }
+            if (socketIndex <= 0 || roomId <= 0L) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,users_effects.id_effect "
+                + "FROM logs_visitedrooms,users_effects WHERE logs_visitedrooms.id_room='" + roomId
+                + "' AND logs_visitedrooms.timestamp_left IS NULL AND users_effects.id_user=logs_visitedrooms.id_user "
+                + "AND users_effects.timestamp_expire IS NOT NULL AND users_effects.timestamp_expire>UNIX_TIMESTAMP() "
+                + "ORDER BY logs_visitedrooms.timestamp_enter ASC LIMIT 250", 0, 0);
+            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+                if (!row.trim().isEmpty()) {
+                    String[] fields = row.split("\t", -1);
+                    long roomUserIndex = Vb.val(handlingField(fields, 0));
+                    long effectId = Vb.val(handlingField(fields, 1));
+                    if (roomUserIndex > 0L && effectId > 0L) {
+                        String effectPayload = Crypto.Proc_3_0_6D2AF0(effectId, null,
+                            Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Ge"));
+                        Proc_6_244_801E80(socketIndex, effectPayload, 0);
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static String Proc_6_83_732640(Object... args) {
+        try {
+            int socketIndex = 0;
+            long modelId = 0L;
+            if (args != null && args.length >= 2) {
+                socketIndex = handlingSocketIndex(args);
+                modelId = Vb.val(args[1]);
+            } else if (args != null && args.length >= 1) {
+                modelId = Vb.val(args[0]);
+            }
+            if (modelId <= 0L && socketIndex > 0) {
+                String userId = handlingUserIdFromSocket(socketIndex);
+                if (!userId.isEmpty() && !"0".equals(userId)) {
+                    long roomId = handlingCurrentRoomId(socketIndex, userId);
+                    if (roomId > 0L) {
+                        modelId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_model FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+                    }
+                }
+            }
+            if (modelId <= 0L) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_type,id_source,id_sprite,position_x,position_y,position_z,"
+                + "action,action_rotation,action_height FROM models_furnitures WHERE id_model='" + modelId + "' LIMIT 500", 0, 0);
+            long itemCount = 0L;
+            StringBuilder itemPayload = new StringBuilder();
+            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+                String trimmedRow = row.trim();
+                if (!trimmedRow.isEmpty()) {
+                    String[] fields = trimmedRow.split("\t", -1);
+                    long productId = Vb.val(handlingField(fields, 0));
+                    long sourceId = Vb.val(handlingField(fields, 1));
+                    if (sourceId <= 0L) {
+                        sourceId = itemCount + 1L;
+                    }
+                    if (productId <= 0L) {
+                        productId = sourceId;
+                    }
+                    long positionX = Vb.val(handlingField(fields, 3));
+                    long positionY = Vb.val(handlingField(fields, 4));
+                    long positionZ = Vb.val(handlingField(fields, 5));
+                    String itemData = handlingField(fields, 6);
+                    long rotation = Vb.val(handlingField(fields, 7));
+                    itemPayload.append(Proc_6_161_7B2EE0(sourceId, positionX, positionY, rotation, positionZ, "", itemData, 0, productId));
+                    itemCount++;
+                }
+            }
+            String payload = Crypto.Proc_3_0_6D2AF0(itemCount, null, "@^") + itemPayload;
+            if (socketIndex > 0) {
+                Proc_6_244_801E80(socketIndex, payload, 0);
+            }
+            return payload;
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    public static String Proc_6_84_733600(Object... args) {
+        String payload = "Di" + Licence.global_00829094;
+        try {
+            int socketIndex = args != null && args.length >= 1 ? handlingSocketIndex(args) : 0;
+            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            if (roomId <= 0L && socketIndex > 0) {
+                String userId = handlingUserIdFromSocket(socketIndex);
+                if (!userId.isEmpty() && !"0".equals(userId)) {
+                    roomId = handlingCurrentRoomId(socketIndex, userId);
+                }
+            }
+            if (socketIndex > 0) {
+                Proc_6_244_801E80(socketIndex, payload, 0);
+            }
+            if (roomId <= 0L) {
+                return payload;
+            }
+            Path cacheRoot = Path.of(Functions.applicationPath, "cache");
+            String triggerCache = handlingEnsureRoomCacheFile(cacheRoot.resolve("wired_trigger").resolve(roomId + ".cache").toString());
+            String actionCache = handlingEnsureRoomCacheFile(cacheRoot.resolve("wired_action").resolve(roomId + ".cache").toString());
+            String conditionCache = handlingEnsureRoomCacheFile(cacheRoot.resolve("wired_condition").resolve(roomId + ".cache").toString());
+            String pathfinderCache = handlingEnsureRoomCacheFile(cacheRoot.resolve("pathfinder").resolve(roomId + ".cache").toString());
+            String destinationCache = handlingEnsureRoomCacheFile(cacheRoot.resolve("rooms").resolve("destination_" + roomId + ".cache").toString());
+            String roomCache = handlingEnsureRoomCacheFile(cacheRoot.resolve("rooms").resolve(roomId + ".cache").toString());
+            return payload + '\t' + triggerCache + '\t' + actionCache + '\t' + conditionCache
+                + '\t' + pathfinderCache + '\t' + destinationCache + '\t' + roomCache;
+        } catch (Exception ignored) {
+            return payload;
+        }
+    }
+
+    public static String Proc_6_85_73A8E0(Object... args) {
+        try {
+            int socketIndex = args != null && args.length >= 1 ? handlingSocketIndex(args) : 0;
+            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            if (roomId <= 0L && socketIndex > 0) {
+                String userId = handlingUserIdFromSocket(socketIndex);
+                if (!userId.isEmpty() && !"0".equals(userId)) {
+                    roomId = handlingCurrentRoomId(socketIndex, userId);
+                }
+            }
+            if (roomId <= 0L) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,position_wall,sign,id_secondary FROM furnitures WHERE id_room='"
+                + roomId + "' AND id_owner IS NULL AND position_wall IS NOT NULL LIMIT 100", 0, 0);
+            long itemCount = 0L;
+            StringBuilder itemPayload = new StringBuilder();
+            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+                String trimmedRow = row.trim();
+                if (!trimmedRow.isEmpty()) {
+                    String[] fields = trimmedRow.split("\t", -1);
+                    long furnitureId = Vb.val(handlingField(fields, 0));
+                    long productId = Vb.val(handlingField(fields, 1));
+                    String wallPosition = handlingField(fields, 2);
+                    String signText = handlingField(fields, 3);
+                    long secondaryValue = Vb.val(handlingField(fields, 4));
+                    if (furnitureId > 0L && productId > 0L && !wallPosition.isEmpty()) {
+                        itemPayload.append(Proc_6_156_7972B0(furnitureId, productId, wallPosition, signText, secondaryValue));
+                        itemCount++;
+                    }
+                }
+            }
+            String payload = Crypto.Proc_3_0_6D2AF0(itemCount, null, "@m") + itemPayload;
+            if (socketIndex > 0) {
+                Proc_6_244_801E80(socketIndex, payload, 0);
+            }
+            return payload;
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    public static String handlingField(String[] fields, long fieldIndex) {
+        return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
+    }
+
+    public static void Proc_6_243_7FFEB0(Object... args) {
+        int socketIndex = handlingSocketIndex(args);
+        if (socketIndex <= 0) {
+            return;
+        }
+        String marker = "[" + socketIndex + "]";
+        Guardian.setSocketConnected(socketIndex, false);
+        Guardian.global_008291A0 = Vb.cStr(Guardian.global_008291A0).replace(marker, "");
+        Licence.global_008291A0 = Vb.cStr(Licence.global_008291A0).replace(marker, "");
+        Licence.global_00829350 = Vb.cStr(Licence.global_00829350).replace(marker, "");
+        Licence.global_00829354 = Vb.cStr(Licence.global_00829354).replace(marker, "");
+        MySQL.Proc_5_0_6D3CD0("UPDATE users SET id_socket=null WHERE id_socket='" + socketIndex + "'", 0, 0);
+    }
+
+    public static void Proc_6_244_801E80(Object... args) {
+        if (args == null || args.length < 2) {
+            return;
+        }
+        int socketIndex = (int) Vb.val(args[0]);
+        if (socketIndex <= 0 || Guardian.Proc_11_2_821390(socketIndex, 0, 0) != 1
+            || isSocketMarkedBusy(Vb.cStr(Licence.global_0082934C), socketIndex)) {
+            return;
+        }
+        HandlingMUS.Proc_12_1_821AA0(socketIndex, Vb.cStr(args[1]) + '\1', 0);
+    }
+
+    public static long Proc_6_245_801FA0(Object... args) {
+        if (args == null || args.length < 2) {
+            return 0L;
+        }
+        int socketIndex = (int) Vb.val(args[0]);
+        String userId = handlingUserIdFromSocket(socketIndex);
+        long roomId = handlingCurrentRoomId(socketIndex, userId);
+        return broadcastToRoomUsers(roomId, Vb.cStr(args[1]));
+    }
+
+    public static long Proc_6_246_8024C0(Object... args) {
+        if (args == null || args.length < 2) {
+            return 0L;
+        }
+        return broadcastToRoomUsers(Vb.val(args[0]), Vb.cStr(args[1]));
+    }
+
+    public static long Proc_6_247_8027E0(Object... args) {
+        if (args == null || args.length < 2) {
+            return 0L;
+        }
+        int socketIndex = handlingSocketIndex(args);
+        String userId = handlingUserIdFromSocket(socketIndex);
+        long roomId = handlingCurrentRoomId(socketIndex, userId);
+        return broadcastToRoomUsers(roomId, Vb.cStr(args[1]));
+    }
+
+    public static long Proc_6_248_802B80(Object... args) {
+        if (args == null || args.length < 2) {
+            return 0L;
+        }
+        return broadcastToRoomUsers(Vb.val(args[0]), Vb.cStr(args[1]));
+    }
+
+    public static long Proc_6_249_802F10(Object... args) {
+        if (args == null || args.length == 0) {
+            return 0L;
+        }
+        return broadcastToStaffModerators(Vb.cStr(args[0]));
+    }
+
+    public static int handlingSocketIndex(Object... args) {
+        return args != null && args.length >= 1 ? (int) Vb.val(args[0]) : 0;
+    }
+
+    public static String handlingPacketPayload(Object... args) {
+        if (args == null) {
+            return "";
+        }
+        String payload = args.length >= 3 ? Vb.cStr(args[2]) : "";
+        if (payload.isEmpty() && args.length >= 2) {
+            payload = Vb.cStr(args[1]);
+        }
+        return payload;
+    }
+
+    public static String handlingRequestPayload(Object[] args, String prefix) {
+        String payload = handlingPacketPayload(args);
+        String expectedPrefix = Vb.cStr(prefix);
+        if (!expectedPrefix.isEmpty() && payload.startsWith(expectedPrefix)) {
+            return payload.substring(expectedPrefix.length());
+        }
+        return payload;
+    }
+
+    public static String handlingUserIdFromSocket(int socketIndex) {
+        if (socketIndex <= 0) {
+            return "";
+        }
+        String recordPayload = Licence.getSessionRecordPayload("1:", String.valueOf(socketIndex));
+        if (!recordPayload.isEmpty()) {
+            String[] fields = recordPayload.split("\2", -1);
+            String userId = String.valueOf(Vb.val(handlingField(fields, 0)));
+            if (!userId.isEmpty() && !"0".equals(userId)) {
+                return userId;
+            }
+        }
+        return String.valueOf(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE id_socket='" + socketIndex + "' LIMIT 1", 0, 0)));
+    }
+
+    public static int handlingSocketFromUserId(String userId) {
+        String idText = String.valueOf(Vb.val(userId));
+        if (idText.isEmpty() || "0".equals(idText)) {
+            return 0;
+        }
+        long socketIndex = Licence.Proc_9_8_8086A0(idText, 0, 0);
+        if (socketIndex <= 0L) {
+            socketIndex = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(idText, 0, 0) + "' LIMIT 1", 0, 0));
+        }
+        return (int) socketIndex;
+    }
+
+    public static long handlingCurrentRoomId(int socketIndex, String userId) {
+        long roomId = Licence.Proc_9_10_808F30(String.valueOf(socketIndex), 1, 0);
+        if (roomId > 0L) {
+            return roomId;
+        }
+        String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+        if (!Vb.cStr(userId).isEmpty() && !"0".equals(Vb.cStr(userId))) {
+            roomId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_room FROM logs_visitedrooms WHERE id_user='"
+                + escapedUserId + "' AND timestamp_left IS NULL ORDER BY timestamp_enter DESC LIMIT 1", 0, 0));
+        }
+        if (roomId <= 0L) {
+            roomId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM rooms WHERE id_slot='" + socketIndex + "' LIMIT 1", 0, 0));
+        }
+        return roomId;
+    }
+
+    public static long representedRoomUserIndex(int socketIndex, String userId) {
+        long roomUserIndex = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM logs_visitedrooms WHERE id_user='"
+            + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+            + "' AND timestamp_left IS NULL ORDER BY timestamp_enter DESC LIMIT 1", 0, 0));
+        return roomUserIndex > 0L ? roomUserIndex : socketIndex;
+    }
+
+    public static boolean handlingUserHasPermission(String userId, String permissionName) {
+        long rankIndex = Vb.val(MySQL.Proc_5_2_6D4690("SELECT level FROM users WHERE id='"
+            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+        long hcLevel = Vb.val(MySQL.Proc_5_2_6D4690("SELECT level_hc FROM users WHERE id='"
+            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+        return Functions.Proc_10_1_809790(rankIndex, "", permissionName, hcLevel);
+    }
+
+    private static void roomKickOrBanUser(Object[] args, boolean addRoomBan) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingPacketPayload(args);
+            if (requestPayload.startsWith("A_") || requestPayload.startsWith("E@")) {
+                requestPayload = requestPayload.substring(2);
+            }
+            LongRef offset = new LongRef(1);
+            String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
+            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return;
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long callerRoomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (callerRoomId <= 0L) {
+                return;
+            }
+            int targetSocketIndex = handlingSocketFromUserId(targetUserId);
+            if (targetSocketIndex <= 0) {
+                return;
+            }
+            long targetRoomId = handlingCurrentRoomId(targetSocketIndex, targetUserId);
+            if (targetRoomId != callerRoomId) {
+                return;
+            }
+            if (!handlingUserHasPermission(callerUserId, "fuse_kick")
+                || handlingUserHasPermission(targetUserId, "fuse_unkickable")) {
+                return;
+            }
+            Proc_6_244_801E80(targetSocketIndex, "@aXjO", 0);
+            Proc_6_53_718E00(targetSocketIndex, "@aXjO", 0);
+            if (addRoomBan) {
+                MySQL.Proc_5_0_6D3CD0("INSERT IGNORE INTO rooms_bans(id_room,id_user,timestamp_expire) VALUES('"
+                    + callerRoomId + "','" + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0)
+                    + "',UNIX_TIMESTAMP()+900)", 0, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static long handlingUserRank(String userId) {
+        return Vb.val(MySQL.Proc_5_2_6D4690("SELECT level FROM users WHERE id='"
+            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+    }
+
+    public static long handlingUserHcLevel(String userId) {
+        long hcLevel = Vb.val(MySQL.Proc_5_2_6D4690("SELECT level_hc FROM users WHERE id='"
+            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+        if (hcLevel < 0L) {
+            return 0L;
+        }
+        return Math.min(hcLevel, 2L);
+    }
+
+    public static String handlingUserSessionId(String userId) {
+        if (Vb.cStr(userId).isEmpty() || "0".equals(Vb.cStr(userId))) {
+            return "";
+        }
+        return MySQL.Proc_5_2_6D4690("SELECT id_session FROM users WHERE id='"
+            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+    }
+
+    public static boolean handlingUserOwnsRoom(String userId, long roomId) {
+        if (Vb.cStr(userId).isEmpty() || "0".equals(Vb.cStr(userId)) || roomId <= 0L) {
+            return false;
+        }
+        return !MySQL.Proc_5_2_6D4690("SELECT id FROM rooms WHERE id='" + roomId + "' AND id_owner='"
+            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0).isEmpty();
+    }
+
+    public static boolean handlingUserHasRoomRight(String userId, long roomId) {
+        if (Vb.cStr(userId).isEmpty() || "0".equals(Vb.cStr(userId)) || roomId <= 0L) {
+            return false;
+        }
+        if (!MySQL.Proc_5_2_6D4690("SELECT id_owner FROM rooms WHERE id='" + roomId + "' AND id_owner='"
+            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0).isEmpty()) {
+            return true;
+        }
+        return !MySQL.Proc_5_2_6D4690("SELECT id_user FROM rooms_rights WHERE id_user='"
+            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0).isEmpty();
+    }
+
+    public static long roomCategoryForUser(long categoryId, String userId) {
+        long rankIndex = handlingUserRank(userId);
+        long hcLevel = handlingUserHcLevel(userId);
+        return Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM rooms_categories WHERE id='" + categoryId
+            + "' AND level_minrequired <= '" + rankIndex + "' AND hclevel_minrequired <= '" + hcLevel + "' LIMIT 1", 0, 0));
+    }
+
+    public static int handlingSocketIndexForUserName(String userName) {
+        if (Vb.cStr(userName).isEmpty()) {
+            return 0;
+        }
+        return (int) Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE name='"
+            + Functions.Proc_10_11_80A9C0(userName, 0, 0) + "' AND id_socket IS NOT NULL LIMIT 1", 0, 0));
+    }
+
+    public static String staffModerationPayload(long rankIndex, long hcLevel) {
+        Object cache = Licence.global_008292D8;
+        int rank = (int) Math.max(0L, Math.min(rankIndex, 20L));
+        int hc = (int) Math.max(0L, Math.min(hcLevel, 2L));
+        if (cache instanceof String[][]) {
+            String[][] values = (String[][]) cache;
+            if (rank < values.length && values[rank] != null && hc < values[rank].length) {
+                return Vb.cStr(values[rank][hc]);
+            }
+        }
+        if (cache instanceof Object[][]) {
+            Object[][] values = (Object[][]) cache;
+            if (rank < values.length && values[rank] != null && hc < values[rank].length) {
+                return Vb.cStr(values[rank][hc]);
+            }
+        }
+        return "";
+    }
+
+    public static String indexedPayload(Object cache, long index) {
+        int idx = (int) index;
+        if (idx < 0) {
+            return "";
+        }
+        if (cache instanceof String[]) {
+            String[] values = (String[]) cache;
+            return idx < values.length ? Vb.cStr(values[idx]) : "";
+        }
+        if (cache instanceof Object[]) {
+            Object[] values = (Object[]) cache;
+            return idx < values.length ? Vb.cStr(values[idx]) : "";
+        }
+        return "";
+    }
+
+    public static void ensureRepresentedRoomSlotPool() {
+        if (!Licence.global_0082930C.isEmpty()) {
+            return;
+        }
+        StringBuilder slots = new StringBuilder();
+        for (long slotIndex = 1L; slotIndex <= 500L; slotIndex++) {
+            slots.append('[').append(slotIndex).append(']');
+        }
+        Licence.global_0082930C = slots.toString();
+    }
+
+    public static long reserveRepresentedRoomSlot(long preferredSlot) {
+        ensureRepresentedRoomSlotPool();
+        if (preferredSlot > 0L) {
+            String marker = "[" + preferredSlot + "]";
+            if (Licence.global_0082930C.contains(marker)) {
+                Licence.global_0082930C = Licence.global_0082930C.replaceFirst(Pattern.quote(marker), "");
+                return preferredSlot;
+            }
+        }
+        for (String part : Licence.global_0082930C.split("\\]", -1)) {
+            long candidateSlot = Vb.val(part.replace("[", ""));
+            if (candidateSlot > 0L) {
+                String marker = "[" + candidateSlot + "]";
+                Licence.global_0082930C = Licence.global_0082930C.replaceFirst(Pattern.quote(marker), "");
+                return candidateSlot;
+            }
+        }
+        return 0L;
+    }
+
+    public static void releaseRepresentedRoomSlot(long slotId) {
+        if (slotId <= 0L) {
+            return;
+        }
+        String marker = "[" + slotId + "]";
+        if (!Licence.global_0082930C.contains(marker)) {
+            Licence.global_0082930C += marker;
+        }
+    }
+
+    public static void loadRepresentedRoomBots(long roomSlot, long roomId) {
+        if (roomSlot <= 0L || roomId <= 0L
+            || Vb.val(Functions.Proc_10_0_809570("com.client.rooms.bots.enabled", "-1", 0)) == 0L) {
+            return;
+        }
+        String rowText = MySQL.Proc_5_2_6D4690("SELECT id,name,motto,speech,responses,position_x,position_y,position_z,"
+            + "position_r,figure,NULL,id_handle,id_handleaction,cache_action,speech_submit,allow_walk,max_fields_away "
+            + "FROM bots WHERE id_room='" + roomId + "' LIMIT 255", 0, 0);
+        for (String row : rowText.split("\r", -1)) {
+            if (!row.isEmpty()) {
+                allocateRepresentedBot(roomSlot, row.split("\t", -1));
+            }
+        }
+    }
+
+    public static long broadcastToRoomUsers(long roomId, String payload) {
+        if (roomId <= 0L || Vb.cStr(payload).isEmpty()) {
+            return 0L;
+        }
+        String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_room='"
+            + roomId + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user AND users.id_socket IS NOT NULL", 0, 0);
+        if (rowText.isEmpty()) {
+            rowText = MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE id_socket IS NOT NULL AND id IN "
+                + "(SELECT id_user FROM logs_visitedrooms WHERE id_room='" + roomId + "' AND timestamp_left IS NULL)", 0, 0);
+        }
+        String sentMarkers = "";
+        long sentCount = 0L;
+        for (String row : rowText.split("\r", -1)) {
+            int socketIndex = (int) Vb.val(row);
+            String marker = "[" + socketIndex + "]";
+            if (socketIndex > 0 && !sentMarkers.contains(marker)) {
+                Proc_6_244_801E80(socketIndex, payload, 0);
+                sentMarkers += marker;
+                sentCount++;
+            }
+        }
+        return sentCount;
+    }
+
+    public static long broadcastToStaffModerators(String payload) {
+        if (Vb.cStr(payload).isEmpty()) {
+            return 0L;
+        }
+        String sentMarkers = "";
+        long sentCount = 0L;
+        for (String recordText : Vb.cStr(Licence.global_00829268).split("\\[", -1)) {
+            if (recordText.startsWith("1:")) {
+                int payloadStart = recordText.indexOf('\1');
+                int payloadEnd = recordText.indexOf(']', payloadStart + 1);
+                if (payloadStart > 0) {
+                    if (payloadEnd < 0) {
+                        payloadEnd = recordText.length();
+                    }
+                    String[] fields = recordText.substring(payloadStart + 1, payloadEnd).split("\2", -1);
+                    String candidateUserId = String.valueOf(Vb.val(handlingField(fields, 0)));
+                    int candidateSocket = (int) Vb.val(handlingField(fields, 1));
+                    if ("0".equals(candidateUserId)) {
+                        candidateUserId = handlingUserIdFromSocket(candidateSocket);
+                    }
+                    String marker = "[" + candidateSocket + "]";
+                    if (candidateSocket > 0 && !sentMarkers.contains(marker) && handlingUserHasPermission(candidateUserId, "fuse_mod")) {
+                        Proc_6_244_801E80(candidateSocket, payload, 0);
+                        sentMarkers += marker;
+                        sentCount++;
+                    }
+                }
+            }
+        }
+        String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_socket FROM users WHERE id_socket IS NOT NULL", 0, 0);
+        for (String row : rowText.split("\r", -1)) {
+            String[] fields = row.split("\t", -1);
+            String candidateUserId = String.valueOf(Vb.val(handlingField(fields, 0)));
+            int candidateSocket = (int) Vb.val(handlingField(fields, 1));
+            String marker = "[" + candidateSocket + "]";
+            if (candidateSocket > 0 && !sentMarkers.contains(marker) && handlingUserHasPermission(candidateUserId, "fuse_mod")) {
+                Proc_6_244_801E80(candidateSocket, payload, 0);
+                sentMarkers += marker;
+                sentCount++;
+            }
+        }
+        return sentCount;
+    }
+
+    private static String handlingRepresentedChatRoute(Object[] args, long chatType) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            String requestPayload = handlingPacketPayload(args);
+            if (requestPayload.startsWith("@t") || requestPayload.startsWith("@w") || requestPayload.startsWith("@x")) {
+                requestPayload = requestPayload.substring(2);
+            }
+            if (requestPayload.startsWith("H") || requestPayload.startsWith("I")) {
+                requestPayload = requestPayload.substring(1);
+            }
+
+            String targetName = "";
+            String messageText;
+            LongRef offset = new LongRef(1);
+            if (chatType == 2L) {
+                targetName = readWireString(requestPayload, offset).trim();
+                messageText = readWireString(requestPayload, offset);
+                if (messageText.isEmpty()) {
+                    messageText = requestPayload;
+                    int spaceAt = messageText.indexOf(' ');
+                    if (spaceAt >= 0) {
+                        targetName = messageText.substring(0, spaceAt).trim();
+                        messageText = messageText.substring(spaceAt + 1);
+                    }
+                }
+            } else {
+                messageText = readWireString(requestPayload, offset);
+                if (messageText.isEmpty()) {
+                    messageText = requestPayload;
+                }
+            }
+
+            messageText = left(Functions.Proc_10_10_80A7F0(messageText, 0, 0).trim(), 122);
+            if (messageText.isEmpty()) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
+            if (roomId <= 0L || roomUserIndex <= 0L) {
+                return "";
+            }
+            long userRank = handlingUserRank(userId);
+            long hcLevel = handlingUserHcLevel(userId);
+            if (!Proc_6_21_6E8BA0(messageText, 0, 0).isEmpty()
+                && !Functions.Proc_10_1_809790(userRank, "", "fuse_can_chat_links", hcLevel)) {
+                return "";
+            }
+            String filteredText = Proc_6_22_6E9300(messageText, 0, 0);
+            if (filteredText.isEmpty()) {
+                filteredText = messageText;
+            }
+            long gestureId = Proc_6_23_6E9A90(filteredText, 0, 0);
+            MySQL.Proc_5_1_6D4110("INSERT INTO logs_chat(id_user,id_room,timestamp,description,id_type,id_session) VALUES('"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "',UNIX_TIMESTAMP(),'"
+                + Functions.Proc_10_11_80A9C0(filteredText, 0, 0) + "','" + chatType + "','"
+                + Functions.Proc_10_11_80A9C0(handlingUserSessionId(userId), 0, 0) + "')", 0, 0);
+            String payload = representedChatPayload(roomUserIndex, filteredText, gestureId, chatType);
+            if (chatType == 2L) {
+                int targetSocketIndex = handlingSocketIndexForUserName(targetName);
+                if (targetSocketIndex > 0) {
+                    Proc_6_244_801E80(targetSocketIndex, payload, 0);
+                    Proc_6_244_801E80(socketIndex, payload, 0);
+                } else {
+                    Proc_6_244_801E80(socketIndex, payload, 0);
+                }
+            } else {
+                Proc_6_245_801FA0(socketIndex, payload, 0);
+            }
+            return payload;
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    private static void staffDirectMessage(
+        Object[] args,
+        String prefix,
+        String requiredPermission,
+        String logType,
+        boolean kickAfterSend,
+        boolean requireOnlineTarget
+    ) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, prefix);
+            LongRef offset = new LongRef(1);
+            long targetUserId = readWireLong(requestPayload, offset);
+            if (targetUserId <= 0L) {
+                targetUserId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            }
+            String messageText = readWireString(requestPayload, offset);
+            if (messageText.isEmpty()) {
+                messageText = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (targetUserId <= 0L || messageText.isEmpty()
+                || callerUserId.isEmpty() || "0".equals(callerUserId)
+                || !handlingUserHasPermission(callerUserId, "fuse_mod")
+                || !handlingUserHasPermission(callerUserId, requiredPermission)
+                || containsUnsafeStaffAlert(messageText)) {
+                return;
+            }
+            int targetSocketIndex = handlingSocketFromUserId(String.valueOf(targetUserId));
+            if (requireOnlineTarget && targetSocketIndex <= 0) {
+                return;
+            }
+            long currentRoomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            MySQL.Proc_5_1_6D4110("INSERT INTO logs_moderation(id_type,id_user,id_target,id_target_2,timestamp,message,id_session) VALUES('"
+                + logType + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0) + "','"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','" + currentRoomId
+                + "',UNIX_TIMESTAMP(),'" + Functions.Proc_10_11_80A9C0(messageText, 0, 0) + "','" + socketIndex + "')", 0, 0);
+            if (targetSocketIndex > 0) {
+                Proc_6_244_801E80(targetSocketIndex, "Ba" + messageText + '\2', 0);
+                if (kickAfterSend) {
+                    Proc_6_53_718E00(targetSocketIndex, 0, 0);
+                }
+            }
+            if ("4".equals(logType)) {
+                MySQL.Proc_5_0_6D3CD0("INSERT INTO users_cautions(id_user,id_partner,message,timestamp_submit) VALUES('"
+                    + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0)
+                    + "','" + Functions.Proc_10_11_80A9C0(messageText, 0, 0) + "',UNIX_TIMESTAMP())", 0, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    private static void updateCallForHelpTab(Object[] args, String prefix, String tabId) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, prefix);
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)
+                || !handlingUserHasPermission(callerUserId, "fuse_mod")
+                || !handlingUserHasPermission(callerUserId, "fuse_receive_calls_for_help")) {
+                return;
+            }
+            String whereClause = staffCallForHelpWhereClause(requestPayload);
+            if (whereClause.isEmpty()) {
+                return;
+            }
+            if ("2".equals(tabId)) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE staff_cfh SET id_tab='2',id_picker='"
+                    + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0)
+                    + "',timestamp_picked=UNIX_TIMESTAMP() WHERE " + whereClause, 0, 0);
+            } else {
+                MySQL.Proc_5_0_6D3CD0("UPDATE staff_cfh SET id_tab='1',id_picker=0,timestamp_picked=NULL WHERE "
+                    + whereClause, 0, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    private static void staffRoomHistory(Object[] args, String prefix, boolean includeChatRows) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, prefix);
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId) || !handlingUserHasPermission(callerUserId, "fuse_mod")) {
+                return;
+            }
+            if (includeChatRows && !handlingUserHasPermission(callerUserId, "fuse_chatlog")) {
+                return;
+            }
+            long targetUserId = includeChatRows ? staffNestedUserIdFromWire(requestPayload)
+                : Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            if (targetUserId <= 0L) {
+                return;
+            }
+            String targetRow = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name FROM users WHERE users.id='"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' LIMIT 1", 0, 0);
+            if (targetRow.isEmpty()) {
+                return;
+            }
+            String[] targetFields = targetRow.split("\t", -1);
+            targetUserId = Vb.val(handlingField(targetFields, 0));
+            if (targetUserId <= 0L) {
+                return;
+            }
+            String visitRows;
+            if (includeChatRows) {
+                visitRows = MySQL.Proc_5_2_6D4690("SELECT models.type,rooms.id,rooms.name,logs_visitedrooms.timestamp_enter,"
+                    + "logs_visitedrooms.timestamp_left FROM rooms,logs_visitedrooms,models WHERE logs_visitedrooms.id_user='"
+                    + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0)
+                    + "' AND rooms.id=logs_visitedrooms.id_room AND logs_visitedrooms.timestamp_enter > UNIX_TIMESTAMP()-21600 "
+                    + "AND models.id=rooms.id_model GROUP BY logs_visitedrooms.id ORDER BY logs_visitedrooms.id DESC LIMIT 10", 0, 0);
+            } else {
+                visitRows = MySQL.Proc_5_2_6D4690("SELECT models.type,rooms.id,rooms.name,DATE_FORMAT(FROM_UNIXTIME(logs_visitedrooms.timestamp_enter), '%H'),"
+                    + "DATE_FORMAT(FROM_UNIXTIME(logs_visitedrooms.timestamp_enter), '%i') FROM rooms,logs_visitedrooms,models "
+                    + "WHERE logs_visitedrooms.timestamp_enter > UNIX_TIMESTAMP()-21600 AND logs_visitedrooms.id_user='"
+                    + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0)
+                    + "' AND rooms.id=logs_visitedrooms.id_room AND models.id=rooms.id_model GROUP BY logs_visitedrooms.id "
+                    + "ORDER BY logs_visitedrooms.id DESC LIMIT 50", 0, 0);
+            }
+            long rowCount = 0L;
+            StringBuilder rowPayload = new StringBuilder();
+            for (String row : visitRows.split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    if (includeChatRows) {
+                        String[] fields = row.split("\t", -1);
+                        long roomId = Vb.val(handlingField(fields, 1));
+                        long timestampEnter = Vb.val(handlingField(fields, 3));
+                        long timestampLeft = Vb.val(handlingField(fields, 4));
+                        String chatRows = MySQL.Proc_5_2_6D4690("SELECT DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%H'),"
+                            + "DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%i'),users.id,users.name,logs_chat.description "
+                            + "FROM logs_chat,users WHERE logs_chat.id_room='" + roomId + "' AND logs_chat.id_user='"
+                            + targetUserId + "' AND logs_chat.timestamp >= " + timestampEnter
+                            + (timestampLeft > 0L ? " AND logs_chat.timestamp <= " + timestampLeft : "")
+                            + " AND users.id=logs_chat.id_user ORDER BY logs_chat.id ASC", 0, 0);
+                        rowPayload.append(staffRoomChatHistoryPayload(row, chatRows));
+                    } else {
+                        rowPayload.append(staffRoomVisitPayload(row));
+                    }
+                    rowCount++;
+                }
+            }
+            String responsePrefix = includeChatRows ? "HX" : "HY";
+            String responsePayload = Crypto.Proc_3_0_6D2AF0(targetUserId, null, responsePrefix)
+                + handlingField(targetFields, 1) + '\2';
+            responsePayload = Crypto.Proc_3_0_6D2AF0(rowCount, null, responsePayload) + rowPayload;
+            Proc_6_244_801E80(socketIndex, responsePayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static long avatarNameValidationCode(String candidateName, String currentName, long existingCount) {
+        String candidate = Vb.cStr(candidateName).trim();
+        if (candidate.length() < 3) {
+            return 2L;
+        }
+        if (candidate.length() > 14) {
+            return 1L;
+        }
+        String upper = candidate.toUpperCase();
+        if (upper.startsWith("MOD-") || upper.startsWith("VIP-")) {
+            return 2L;
+        }
+        for (int index = 0; index < candidate.length(); index++) {
+            char ch = candidate.charAt(index);
+            boolean allowed = (ch >= 'A' && ch <= 'Z')
+                || (ch >= 'a' && ch <= 'z')
+                || (ch >= '0' && ch <= '9')
+                || ch == '-'
+                || ch == '_';
+            if (!allowed) {
+                return 2L;
+            }
+        }
+        if (candidate.equalsIgnoreCase(Vb.cStr(currentName))) {
+            return 0L;
+        }
+        return existingCount > 0L ? 3L : 0L;
+    }
+
+    public static long handlingMovementField(String movementText, long fieldIndex) {
+        String[] fields = Vb.cStr(movementText).split("\0", -1);
+        return fieldIndex >= 0 && fieldIndex < fields.length ? Vb.val(fields[(int) fieldIndex]) : 0L;
+    }
+
+    public static long handlingDirectionCode(long deltaX, long deltaY) {
+        return Functions.movementDirectionCode(deltaX, deltaY);
+    }
+
+    public static String representedRoomRecord(String roomCacheText, long roomSlot) {
+        if (roomSlot <= 0L) {
+            return "";
+        }
+        String cacheText = Vb.cStr(roomCacheText);
+        String markerText = "\1" + roomSlot + '\t';
+        int startAt = cacheText.indexOf(markerText);
+        if (startAt < 0) {
+            markerText = "\1" + roomSlot + '\2';
+            startAt = cacheText.indexOf(markerText);
+        }
+        if (startAt < 0) {
+            return "";
+        }
+        int recordStart = startAt + 1;
+        int recordEnd = cacheText.indexOf('\2', recordStart);
+        if (recordEnd < 0) {
+            recordEnd = cacheText.length();
+        }
+        return cacheText.substring(recordStart, recordEnd);
+    }
+
+    public static String representedRoomRecordSet(String roomCacheText, long roomSlot, String roomRecord) {
+        if (roomSlot <= 0L) {
+            return Vb.cStr(roomCacheText);
+        }
+        String cacheText = removeRepresentedCacheRecord(roomCacheText, "\1" + roomSlot + '\t');
+        cacheText = removeRepresentedCacheRecord(cacheText, "\1" + roomSlot + '\2');
+        while (cacheText.startsWith("\2")) {
+            cacheText = cacheText.substring(1);
+        }
+        return cacheText + '\1' + Vb.cStr(roomRecord) + '\2';
+    }
+
+    public static MovementPosition representedMovementPosition(String roomCacheText, long roomSlot, long entityIndex) {
+        MovementPosition result = new MovementPosition();
+        String roomRecord = representedRoomRecord(roomCacheText, roomSlot);
+        if (roomRecord.isEmpty()) {
+            return result;
+        }
+        String[] fields = roomRecord.split("\t", -1);
+        if (fields.length < 5) {
+            return result;
+        }
+        StringBuilder movementText = new StringBuilder();
+        for (int fieldIndex = 4; fieldIndex < fields.length; fieldIndex++) {
+            if (fieldIndex > 4) {
+                movementText.append('\t');
+            }
+            movementText.append(fields[fieldIndex]);
+        }
+        for (String part : movementText.toString().split("\1", -1)) {
+            String movementRecord = part;
+            if (!movementRecord.isEmpty()) {
+                if (movementRecord.endsWith("\2")) {
+                    movementRecord = movementRecord.substring(0, movementRecord.length() - 1);
+                }
+                String[] movementFields = movementRecord.split("\t", -1);
+                if (movementFields.length >= 3 && Vb.val(handlingField(movementFields, 0)) == entityIndex) {
+                    result.positionX = Vb.val(handlingField(movementFields, 1));
+                    result.positionY = Vb.val(handlingField(movementFields, 2));
+                    result.found = true;
+                    return result;
+                }
+            }
+        }
+        return result;
+    }
+
+    public static String representedRoomOccupantMove(
+        String roomCacheText,
+        long roomSlot,
+        long entityIndex,
+        long positionX,
+        long positionY,
+        long directionValue,
+        long movingValue
+    ) {
+        if (roomSlot <= 0L || entityIndex <= 0L) {
+            return Vb.cStr(roomCacheText);
+        }
+        String roomRecord = representedRoomRecord(roomCacheText, roomSlot);
+        if (roomRecord.isEmpty()) {
+            roomRecord = roomSlot + "\t\t\t0";
+        }
+        String[] rawFields = ensureHandlingFieldCount(roomRecord.split("\t", -1), 4);
+        String[] fields = new String[5];
+        for (int fieldIndex = 0; fieldIndex < 4; fieldIndex++) {
+            fields[fieldIndex] = rawFields[fieldIndex];
+        }
+        StringBuilder movementText = new StringBuilder();
+        for (int fieldIndex = 4; fieldIndex < rawFields.length; fieldIndex++) {
+            if (fieldIndex > 4) {
+                movementText.append('\t');
+            }
+            movementText.append(rawFields[fieldIndex]);
+        }
+        fields[4] = movementText.toString();
+        String movementRecord = entityIndex + "\t" + positionX + "\t" + positionY + "\t" + directionValue + "\t" + movingValue;
+        fields[4] = removeMovementRecord(handlingField(fields, 4), "\1" + entityIndex + '\t');
+        fields[4] = fields[4] + '\1' + movementRecord + '\2';
+        return representedRoomRecordSet(roomCacheText, roomSlot, joinTab(fields));
+    }
+
+    public static String Proc_6_239_7FC170(Object... args) {
+        if (args == null || args.length == 0) {
+            return "";
+        }
+        return readFile(Vb.cStr(args[0]));
+    }
+
+    public static void Proc_6_240_7FC2B0(Object... args) {
+        if (args == null || args.length < 2) {
+            return;
+        }
+        writeFile(Vb.cStr(args[0]), Vb.cStr(args[1]));
+    }
+
+    public static String readFile(String filePath) {
+        if (Vb.cStr(filePath).isEmpty()) {
+            return "";
+        }
+        Path path = Path.of(filePath);
+        if (!Files.exists(path)) {
+            return "";
+        }
+        try {
+            byte[] bytes = Files.readAllBytes(path);
+            return new String(bytes, StandardCharsets.UTF_8);
+        } catch (IOException ex) {
+            return "";
+        }
+    }
+
+    public static void writeFile(String filePath, String fileText) {
+        if (Vb.cStr(filePath).isEmpty()) {
+            return;
+        }
+        try {
+            Path path = Path.of(filePath);
+            Path parent = path.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+            Files.write(path, (Vb.cStr(fileText) + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
+        } catch (IOException ignored) {
+            // VB6 source suppresses write failures.
+        }
+    }
+
+    public static String removeRepresentedLineRecord(String cacheText, String markerText) {
+        String cache = Vb.cStr(cacheText);
+        String marker = Vb.cStr(markerText);
+        if (cache.isEmpty() || marker.isEmpty()) {
+            return cache;
+        }
+        cache = cache.replace("\r", "");
+        StringBuilder rebuilt = new StringBuilder();
+        for (String rowText : cache.split("\n", -1)) {
+            if (!rowText.isEmpty() && !rowText.contains(marker)) {
+                if (rebuilt.length() > 0) {
+                    rebuilt.append('\n');
+                }
+                rebuilt.append(rowText);
+            }
+        }
+        return rebuilt.toString();
+    }
+
+    public static String handlingEnsureRoomCacheFile(String cachePath) {
+        if (Vb.cStr(cachePath).isEmpty()) {
+            return "";
+        }
+        Path path = Path.of(cachePath);
+        if (!Files.exists(path)) {
+            DataManager.Proc_8_10_8068E0(cachePath, "");
+        }
+        return readFile(cachePath);
+    }
+
+    public static String removeRepresentedCacheRecord(String cacheText, String markerText) {
+        String cache = Vb.cStr(cacheText);
+        String marker = Vb.cStr(markerText);
+        if (cache.isEmpty() || marker.isEmpty()) {
+            return cache;
+        }
+        int markerAt = cache.indexOf(marker);
+        while (markerAt >= 0) {
+            int recordStart = cache.lastIndexOf('\1', markerAt);
+            if (recordStart < 0) {
+                recordStart = markerAt;
+            }
+            int recordEnd = cache.indexOf('\2', markerAt + marker.length());
+            if (recordEnd < 0) {
+                recordEnd = markerAt + marker.length() - 1;
+            }
+            cache = cache.substring(0, recordStart) + cache.substring(recordEnd + 1);
+            markerAt = cache.indexOf(marker);
+        }
+        return cache;
+    }
+
+    public static String readWireString(String packetPayload, LongRef offset) {
+        if (offset == null) {
+            return "";
+        }
+        String payload = Vb.cStr(packetPayload);
+        if (offset.value < 1L) {
+            offset.value = 1L;
+        }
+        if (offset.value + 1L > payload.length()) {
+            return "";
+        }
+        int start = (int) offset.value - 1;
+        long fieldLength = Crypto.Proc_3_4_6D3620(payload.substring(start));
+        if (fieldLength <= 0L) {
+            return "";
+        }
+        int valueStart = start + 2;
+        int valueEnd = Math.min(payload.length(), valueStart + (int) fieldLength);
+        if (valueEnd - valueStart < fieldLength) {
+            return "";
+        }
+        offset.value = offset.value + 2L + fieldLength;
+        return payload.substring(valueStart, valueEnd);
+    }
+
+    public static long readWireLong(String packetPayload, LongRef offset) {
+        if (offset == null) {
+            return 0L;
+        }
+        String payload = Vb.cStr(packetPayload);
+        if (offset.value < 1L) {
+            offset.value = 1L;
+        }
+        if (offset.value > payload.length()) {
+            return 0L;
+        }
+        String remainingPayload = payload.substring((int) offset.value - 1);
+        long encodedLengthSize = wireLongFieldLength(remainingPayload);
+        if (encodedLengthSize <= 0L) {
+            return 0L;
+        }
+        long value = Crypto.Proc_3_3_6D3240(remainingPayload);
+        offset.value += encodedLengthSize;
+        return value;
+    }
+
+    private static long wireLongFieldLength(String encodedValue) {
+        String value = Vb.cStr(encodedValue);
+        if (value.isEmpty()) {
+            return 0L;
+        }
+        long firstByte = value.charAt(0) - 64L;
+        long tailLength = (firstByte & 0x38L) / 8L;
+        if (tailLength <= 0L) {
+            return 1L;
+        }
+        return Math.min(value.length(), tailLength + 1L);
+    }
+
+    public static boolean stickyNoteUpdateFromWire(String packetPayload, StickyNoteUpdate update) {
+        if (update == null) {
+            return false;
+        }
+        String payload = Vb.cStr(packetPayload);
+        String idText = Functions.Proc_10_6_809F10(payload);
+        long furnitureId = Vb.val(idText);
+        String notePayload = "";
+        if (furnitureId <= 0L) {
+            LongRef offset = new LongRef(1);
+            furnitureId = readWireLong(payload, offset);
+            notePayload = Vb.mid(payload, (int) offset.value);
+        } else {
+            long idLengthSize = Crypto.Proc_3_2_6D30A0(payload);
+            if (idLengthSize > 0L) {
+                notePayload = Vb.mid(payload, (int) idLengthSize + idText.length() + 1);
+            }
+        }
+        if (notePayload.isEmpty()) {
+            notePayload = Functions.Proc_10_7_80A190(payload);
+        }
+        if (notePayload.isEmpty()) {
+            return false;
+        }
+        if (notePayload.length() > 510) {
+            notePayload = notePayload.substring(0, 510);
+        }
+
+        int separatorAt = firstPositiveIndex(notePayload, '\r', '\n', '\2');
+        String noteColor;
+        String noteCaption;
+        if (separatorAt >= 0) {
+            noteColor = notePayload.substring(0, separatorAt).toUpperCase();
+            noteCaption = notePayload.substring(separatorAt + 1);
+        } else {
+            noteColor = notePayload.substring(0, Math.min(6, notePayload.length())).toUpperCase();
+            noteCaption = notePayload.length() > 6 ? notePayload.substring(6) : "";
+        }
+        if (noteColor.length() > 6) {
+            noteColor = noteColor.substring(0, 6);
+        }
+        if (!isStickyNoteColor(noteColor)) {
+            return false;
+        }
+        if (noteCaption.length() > 510) {
+            noteCaption = noteCaption.substring(0, 510);
+        }
+        noteCaption = noteCaption.replace('\u00a0', '\u001f').replace('\r', '\u001f').replace('\n', '\u001f');
+        update.furnitureId = furnitureId;
+        update.noteColor = noteColor;
+        update.noteCaption = noteCaption;
+        return true;
+    }
+
+    public static boolean isStickyNoteColor(String noteColor) {
+        String color = Vb.cStr(noteColor).toUpperCase();
+        return "9CFF9C".equals(color) || "FFFF33".equals(color) || "FF9CFF".equals(color) || "9CCEFF".equals(color);
+    }
+
+    public static long stickyFurnitureIdFromPayload(String requestPayload) {
+        long furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        if (furnitureId <= 0L) {
+            furnitureId = readWireLong(requestPayload, new LongRef(1));
+        }
+        return furnitureId;
+    }
+
+    public static boolean isPostItProduct(long productId) {
+        return DataManager.Proc_8_12_806C30(productId, 18, 0).toLowerCase().startsWith("post.it");
+    }
+
+    public static boolean isDimmerColour(String colourText) {
+        String color = Vb.cStr(colourText).toUpperCase();
+        return "#0053F7".equals(color)
+            || "#74F5F5".equals(color)
+            || "#E759DE".equals(color)
+            || "#EA4532".equals(color)
+            || "#F2F851".equals(color)
+            || "#82F349".equals(color)
+            || "#000000".equals(color);
+    }
+
+    public static boolean wallPlacementFromPayload(String packetPayload, WallPlacement placement) {
+        if (placement == null) {
+            return false;
+        }
+        String normalizedPayload = Vb.cStr(packetPayload)
+            .replace('\1', ' ')
+            .replace('\2', ' ')
+            .replace('\t', ' ')
+            .replace('\r', ' ')
+            .replace('\n', ' ');
+        while (normalizedPayload.contains("  ")) {
+            normalizedPayload = normalizedPayload.replace("  ", " ");
+        }
+        normalizedPayload = normalizedPayload.trim();
+        String lower = normalizedPayload.toLowerCase();
+        int wallAt = lower.indexOf(":w=");
+        int localAt = lower.indexOf("l=");
+        if (wallAt < 0 || localAt <= wallAt) {
+            return false;
+        }
+        String wallText = normalizedPayload.substring(wallAt + 3, localAt).trim().replace(" ", "");
+        String localText = normalizedPayload.substring(localAt + 2).trim().replace(" ", "");
+        String[] wallParts = wallText.split(",", -1);
+        String[] localParts = localText.split(",", -1);
+        if (wallParts.length < 2 || localParts.length < 2) {
+            return false;
+        }
+        placement.wallX = Vb.val(wallParts[0]);
+        placement.wallY = Vb.val(wallParts[1]);
+        placement.localX = Vb.val(localParts[0]);
+        placement.localY = Vb.val(localParts[1]);
+        return true;
+    }
+
+    public static String roomIconPayloadFromWire(String packetPayload) {
+        LongRef offset = new LongRef(1);
+        long previousOffset = offset.value;
+        long backgroundId = readWireLong(packetPayload, offset);
+        if (offset.value <= previousOffset || backgroundId < 0L || backgroundId > 24L) {
+            return "";
+        }
+
+        previousOffset = offset.value;
+        long foregroundId = readWireLong(packetPayload, offset);
+        if (offset.value <= previousOffset || foregroundId < 0L || foregroundId > 11L) {
+            return "";
+        }
+
+        previousOffset = offset.value;
+        long itemCount = readWireLong(packetPayload, offset);
+        if (offset.value <= previousOffset || itemCount < 0L || itemCount > 12L) {
+            return "";
+        }
+
+        String payload = Crypto.Proc_3_0_6D2AF0(backgroundId, null, "");
+        payload = Crypto.Proc_3_0_6D2AF0(foregroundId, null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(itemCount, null, payload);
+
+        for (long itemIndex = 1L; itemIndex <= itemCount; itemIndex++) {
+            previousOffset = offset.value;
+            long itemType = readWireLong(packetPayload, offset);
+            if (offset.value <= previousOffset || itemType < 0L) {
+                return "";
+            }
+
+            previousOffset = offset.value;
+            long itemPosition = readWireLong(packetPayload, offset);
+            if (offset.value <= previousOffset || itemPosition < 0L) {
+                return "";
+            }
+
+            payload = Crypto.Proc_3_0_6D2AF0(itemType, null, payload);
+            payload = Crypto.Proc_3_0_6D2AF0(itemPosition, null, payload);
+        }
+        return payload;
+    }
+
+    public static boolean roomEventCreatePayloadFromWire(String packetPayload, RoomEventPayload result) {
+        if (result == null) {
+            return false;
+        }
+        LongRef offset = new LongRef(1);
+        long categoryId = readWireLong(packetPayload, offset);
+        if (categoryId < 1L) {
+            return false;
+        }
+        String categoryName = DataManager.Proc_8_11_8069B0(categoryId, 0);
+        if (categoryName.isEmpty()) {
+            return false;
+        }
+        result.categoryId = categoryId;
+        result.categoryName = categoryName;
+        return readRoomEventCommon(packetPayload, offset, result, true);
+    }
+
+    public static boolean roomEventEditPayloadFromWire(String packetPayload, RoomEventPayload result) {
+        if (result == null) {
+            return false;
+        }
+        LongRef offset = new LongRef(1);
+        return readRoomEventCommon(packetPayload, offset, result, true);
+    }
+
+    public static boolean roomSettingsFromWire(String packetPayload, RoomSettingsPayload result) {
+        if (result == null) {
+            return false;
+        }
+        LongRef offset = new LongRef(1);
+        String roomName = Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset));
+        if (roomName.length() < 3) {
+            return false;
+        }
+        result.roomName = left(roomName, 60);
+        result.roomPassword = left(Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset)), 60);
+        result.doorStatus = readWireLong(packetPayload, offset);
+        if (result.doorStatus < 0L || result.doorStatus > 2L) {
+            return false;
+        }
+        result.roomDescription = left(Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset)), 255);
+        result.visitorsMax = readWireLong(packetPayload, offset);
+        if (result.visitorsMax < 1L) {
+            result.visitorsMax = 1L;
+        }
+        if (result.visitorsMax > 250L) {
+            result.visitorsMax = 250L;
+        }
+        result.categoryId = readWireLong(packetPayload, offset);
+        if (result.categoryId <= 0L) {
+            return false;
+        }
+        long tagCount = readWireLong(packetPayload, offset);
+        if (tagCount < 0L || tagCount > 2L) {
+            return false;
+        }
+        for (long tagIndex = 1L; tagIndex <= tagCount; tagIndex++) {
+            String tagText = left(Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset)), 60).toLowerCase();
+            if (tagIndex == 1L) {
+                result.tagOne = tagText;
+            } else if (tagIndex == 2L) {
+                result.tagTwo = tagText;
+            }
+        }
+
+        result.allowOthersPets = optionalWireLong(packetPayload, offset, 0L);
+        result.allowFeedPets = optionalWireLong(packetPayload, offset, 0L);
+        result.allowWalkthrough = optionalWireLong(packetPayload, offset, 0L);
+        result.disableWalls = optionalWireLong(packetPayload, offset, 0L);
+        result.thicknessFloor = optionalWireLong(packetPayload, offset, 0L);
+        result.thicknessWallpaper = optionalWireLong(packetPayload, offset, 0L);
+
+        result.allowOthersPets = roomSettingsFlag(result.allowOthersPets);
+        result.allowFeedPets = roomSettingsFlag(result.allowFeedPets);
+        result.allowWalkthrough = roomSettingsFlag(result.allowWalkthrough);
+        result.disableWalls = roomSettingsFlag(result.disableWalls);
+        result.thicknessFloor = roomSettingsThickness(result.thicknessFloor);
+        result.thicknessWallpaper = roomSettingsThickness(result.thicknessWallpaper);
+        return true;
+    }
+
+    public static String roomSettingsReadPayload(String[] roomFields, String rightsRow) {
+        StringBuilder tagPayload = new StringBuilder();
+        long tagCount = 0L;
+        if (!handlingField(roomFields, 7).isEmpty()) {
+            tagPayload.append(handlingField(roomFields, 7)).append('\2');
+            tagCount++;
+        }
+        if (!handlingField(roomFields, 8).isEmpty()) {
+            tagPayload.append(handlingField(roomFields, 8)).append('\2');
+            tagCount++;
+        }
+
+        StringBuilder rightsPayload = new StringBuilder();
+        long rightsCount = 0L;
+        if (!Vb.cStr(rightsRow).isEmpty()) {
+            for (String row : Vb.cStr(rightsRow).split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    String[] rightsFields = row.split("\t", -1);
+                    if (rightsFields.length >= 2) {
+                        rightsPayload = new StringBuilder(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(rightsFields, 0)), null, rightsPayload.toString()));
+                        rightsPayload.append(handlingField(rightsFields, 1)).append('\2');
+                        rightsCount++;
+                    }
+                }
+            }
+        }
+
+        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 0)), null, "GQ");
+        payload = payload + handlingField(roomFields, 1) + '\2';
+        payload = payload + handlingField(roomFields, 2) + '\2';
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 3)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 4)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 5)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 6)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(tagCount, null, payload) + tagPayload;
+        payload = Crypto.Proc_3_0_6D2AF0(rightsCount, null, payload) + rightsPayload + "H";
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 10)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 11)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 12)), null, payload);
+        return Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 13)), null, payload);
+    }
+
+    public static long roomSettingsFlag(long flagValue) {
+        return flagValue != 0L ? 1L : 0L;
+    }
+
+    public static long roomSettingsThickness(long thicknessValue) {
+        if (thicknessValue < -2L) {
+            return -2L;
+        }
+        if (thicknessValue > 1L) {
+            return 1L;
+        }
+        return thicknessValue;
+    }
+
+    public static String nullableSqlText(String valueText) {
+        return Vb.cStr(valueText).isEmpty() ? "null" : "'" + Functions.Proc_10_11_80A9C0(valueText) + "'";
+    }
+
+    public static long navigatorListLimit() {
+        long limit = Vb.val(Functions.Proc_10_0_809570("com.client.navigator.list.limit", 50));
+        return limit <= 0L ? 50L : limit;
+    }
+
+    public static String navigatorSearchTerm(String rawText) {
+        return Functions.Proc_10_11_80A9C0(rawText).replace("%", "");
+    }
+
+    public static String officialNavigatorQuery() {
+        String separator = " UNION ALL ";
+        StringBuilder queryText = new StringBuilder();
+        queryText.append("SELECT rooms_official.id_type,rooms_official.id_style,rooms_official.icon,");
+        queryText.append("rooms_official.caption,rooms_official.caption_2,rooms_official.caption_3,");
+        queryText.append("NULL,rooms.id,rooms.name,users.name,rooms.status_door,rooms.visitors_now,");
+        queryText.append("rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,");
+        queryText.append("rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,");
+        queryText.append("rooms.allow_otherspets,NULL,NULL,NULL,rooms_official.id_parent,");
+        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM users,rooms,");
+        queryText.append("rooms_categories,rooms_official WHERE rooms_official.id_type='2' ");
+        queryText.append("AND rooms_official.id_room IS NOT NULL AND rooms.id=rooms_official.id_room ");
+        queryText.append("AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category ");
+        queryText.append("GROUP BY rooms_official.id");
+
+        queryText.append(separator).append("SELECT rooms_official.id_type,rooms_official.id_style,");
+        queryText.append("rooms_official.icon,rooms_official.caption,rooms_official.caption_2,");
+        queryText.append("rooms_official.caption_3,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
+        queryText.append("NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,rooms_official.id_parent,");
+        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM rooms_official ");
+        queryText.append("WHERE rooms_official.id_type='1' GROUP BY rooms_official.id");
+
+        queryText.append(separator).append("SELECT rooms_official.id_type,rooms_official.id_style,");
+        queryText.append("rooms_official.icon,rooms_official.caption,rooms_official.caption_2,");
+        queryText.append("rooms_official.caption_3,NULL,rooms.id,rooms.name,NULL,rooms.status_door,");
+        queryText.append("rooms.visitors_now,rooms.visitors_max,rooms.description,");
+        queryText.append("rooms_categories.has_trading,NULL,rooms.rate,rooms.id_category,rooms.icon,");
+        queryText.append("rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,models.name,");
+        queryText.append("models.required_files,models.visitors_max,rooms_official.id_parent,");
+        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM models,rooms,");
+        queryText.append("rooms_categories,rooms_official WHERE rooms_official.id_type='3' ");
+        queryText.append("AND rooms_official.id_room IS NOT NULL AND rooms.id=rooms_official.id_room ");
+        queryText.append("AND models.id=rooms.id_model AND rooms_categories.id=rooms.id_category ");
+        queryText.append("GROUP BY rooms_official.id");
+
+        queryText.append(separator).append("SELECT rooms_official.id_type,rooms_official.id_style,");
+        queryText.append("rooms_official.icon,rooms_official.caption,rooms_official.caption_2,");
+        queryText.append("rooms_official.caption_3,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
+        queryText.append("NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,rooms_official.id_parent,");
+        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM rooms_official ");
+        queryText.append("WHERE rooms_official.id_type='4' GROUP BY rooms_official.id ");
+        queryText.append("ORDER BY 27 ASC LIMIT 255");
+        return queryText.toString();
+    }
+
+    public static String navigatorField(String[] fields, long fieldIndex) {
+        return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
+    }
+
+    public static String navigatorEventFragment(String[] fields) {
+        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 0)), null, "");
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 4)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 5)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 9)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 10)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 7)), null, payload);
+        return payload + " "
+            + navigatorField(fields, 1) + '\2'
+            + navigatorField(fields, 2) + '\2'
+            + navigatorField(fields, 3) + '\2'
+            + navigatorField(fields, 6) + '\2'
+            + navigatorField(fields, 11) + '\2'
+            + navigatorField(fields, 12) + '\2'
+            + navigatorField(fields, 13) + '\2'
+            + navigatorField(fields, 14) + '\2'
+            + "H";
+    }
+
+    public static String navigatorRoomFragment(String[] fields) {
+        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 0)), null, "");
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 4)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 5)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 9)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 10)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 7)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 14)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 15)), null, payload);
+        return payload
+            + navigatorField(fields, 1) + '\2'
+            + navigatorField(fields, 2) + '\2'
+            + navigatorField(fields, 3) + '\2'
+            + navigatorField(fields, 6) + '\2'
+            + navigatorField(fields, 11) + '\2'
+            + navigatorField(fields, 12) + '\2'
+            + navigatorField(fields, 13) + '\2'
+            + "H";
+    }
+
+    public static String navigatorRoomListPayloadFromRows(String rowText) {
+        long roomCount = 0L;
+        StringBuilder payload = new StringBuilder();
+        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                payload.append(navigatorRoomFragment(row.split("\t", -1)));
+                roomCount++;
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(roomCount, null, payload.toString());
+    }
+
+    public static String singleNavigatorRoomPayloadFromRows(String rowText) {
+        String listPayload = navigatorRoomListPayloadFromRows(rowText);
+        String singleCountPrefix = Crypto.Proc_3_0_6D2AF0(1, null, "");
+        if (listPayload.endsWith(singleCountPrefix)) {
+            return listPayload.substring(0, listPayload.length() - singleCountPrefix.length());
+        }
+        return "";
+    }
+
+    public static String Proc_6_112_74E0C0(Object... args) {
+        try {
+            if (args == null || args.length == 0) {
+                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+            }
+            String queryTail = Vb.cStr(args[0]);
+            if (queryTail.isEmpty()) {
+                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,"
+                + "rooms.is_staff_picked FROM " + queryTail, 0, 0);
+            return navigatorRoomListPayloadFromRows(rowText);
+        } catch (Exception ignored) {
+            return Crypto.Proc_3_0_6D2AF0(0, null, "");
+        }
+    }
+
+    public static String navigatorEventListPayloadFromRows(String rowText) {
+        long eventCount = 0L;
+        StringBuilder payload = new StringBuilder();
+        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                payload.append(navigatorEventFragment(row.split("\t", -1)));
+                eventCount++;
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(eventCount, null, payload.toString());
+    }
+
+    public static String navigatorCombinedRoomListPayloadFromRows(String eventRows, String roomRows) {
+        long itemCount = 0L;
+        StringBuilder payload = new StringBuilder();
+        for (String row : Vb.cStr(eventRows).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                payload.append(navigatorEventFragment(row.split("\t", -1)));
+                itemCount++;
+            }
+        }
+        for (String row : Vb.cStr(roomRows).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                payload.append(navigatorRoomFragment(row.split("\t", -1)));
+                itemCount++;
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(itemCount, null, payload.toString());
+    }
+
+    public static String Proc_6_122_752280(Object... args) {
+        if (args == null || args.length == 0) {
+            return "";
+        }
+        boolean includeCountPrefix = args.length >= 2
+            && (args[1] instanceof Boolean ? (Boolean) args[1] : Vb.val(args[1]) != 0L);
+        return officialNavigatorRowsPayload(Vb.cStr(args[0]), includeCountPrefix);
+    }
+
+    public static String officialNavigatorRowsPayload(String rowText, boolean includeCountPrefix) {
+        long itemCount = 0L;
+        StringBuilder payload = new StringBuilder();
+        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 27) {
+                    payload.append(officialNavigatorRowPayload(fields));
+                    itemCount++;
+                }
+            }
+        }
+        if (includeCountPrefix) {
+            return Crypto.Proc_3_0_6D2AF0(itemCount, null, "") + payload;
+        }
+        return payload.toString();
+    }
+
+    public static String officialNavigatorRowPayload(String[] fields) {
+        if (fields == null || fields.length < 27) {
+            return "";
+        }
+        StringBuilder payload = new StringBuilder();
+        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 0)), null, ""));
+        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 1)), null, ""));
+        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 2)), null, ""));
+        for (int fieldIndex = 3; fieldIndex <= 24; fieldIndex++) {
+            payload.append(navigatorField(fields, fieldIndex)).append('\2');
+        }
+        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 25)), null, ""));
+        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 26)), null, ""));
+        if (fields.length >= 28) {
+            payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 27)), null, ""));
+        }
+        return payload.toString();
+    }
+
+    public static String Proc_6_138_7678A0(Object... args) {
+        if (args == null || args.length < 2) {
+            return "";
+        }
+        return inventoryItemPayload(Vb.val(args[0]), Vb.val(args[1]),
+            args.length >= 3 ? Vb.cStr(args[2]) : "",
+            args.length >= 4 ? Vb.val(args[3]) : 0L);
+    }
+
+    public static String inventoryItemPayload(long itemId, long productId, String itemData, long extraValue) {
+        String[] productFields = Licence.Proc_9_3_807930(productId, 0, 0).split("\t", -1);
+        long productType = 0L;
+        String productName = "";
+        String productDescription = "";
+        String productSprite = "";
+        if (productFields.length >= 19) {
+            productType = Vb.val(productFields[1]);
+            productName = productFields[14];
+            productDescription = productFields[15];
+            productSprite = productFields[18];
+        }
+
+        String itemClass = productType == 9L ? "I" : "S";
+        String normalizedItemData = Vb.cStr(itemData).replace('\b', '\t');
+        return Crypto.Proc_3_0_6D2AF0(itemId, null, "0") + itemClass + '\2'
+            + Crypto.Proc_3_0_6D2AF0(itemId, null, "")
+            + Crypto.Proc_3_0_6D2AF0(productId, null, "")
+            + Crypto.Proc_3_0_6D2AF0(productType, null, "")
+            + normalizedItemData + '\2'
+            + Crypto.Proc_3_0_6D2AF0(extraValue, null, "")
+            + productName + '\2'
+            + productDescription + '\2'
+            + productSprite + '\2'
+            + "M" + '\2'
+            + Crypto.Proc_3_0_6D2AF0(extraValue, null, "");
+    }
+
+    public static String representedTradeOfferStore(
+        String tradeOffersText,
+        long socketIndex,
+        long furnitureId,
+        long productId,
+        String signText,
+        long secondaryValue
+    ) {
+        if (socketIndex <= 0L || furnitureId <= 0L || productId <= 0L) {
+            return Vb.cStr(tradeOffersText);
+        }
+        String rowText = socketIndex + "\t" + furnitureId + "\t" + productId + "\t"
+            + Vb.cStr(signText).replace("\r", "") + "\t" + secondaryValue;
+        StringBuilder rebuiltText = new StringBuilder();
+        boolean replacedExisting = false;
+        for (String row : Vb.cStr(tradeOffersText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 2) {
+                    if (Vb.val(handlingField(fields, 0)) == socketIndex && Vb.val(handlingField(fields, 1)) == furnitureId) {
+                        appendRow(rebuiltText, rowText);
+                        replacedExisting = true;
+                    } else {
+                        appendRow(rebuiltText, row);
+                    }
+                }
+            }
+        }
+        if (!replacedExisting) {
+            appendRow(rebuiltText, rowText);
+        }
+        return rebuiltText.toString();
+    }
+
+    public static String representedTradeOfferRemove(String tradeOffersText, long socketIndex, long furnitureId) {
+        if (socketIndex <= 0L || Vb.cStr(tradeOffersText).isEmpty()) {
+            return Vb.cStr(tradeOffersText);
+        }
+        StringBuilder rebuiltText = new StringBuilder();
+        for (String row : Vb.cStr(tradeOffersText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 2) {
+                    long rowSocketIndex = Vb.val(handlingField(fields, 0));
+                    long rowFurnitureId = Vb.val(handlingField(fields, 1));
+                    if (rowSocketIndex != socketIndex || (furnitureId > 0L && rowFurnitureId != furnitureId)) {
+                        appendRow(rebuiltText, row);
+                    }
+                }
+            }
+        }
+        return rebuiltText.toString();
+    }
+
+    public static String representedTradeOfferSqlIds(String tradeOffersText, long socketIndex) {
+        if (socketIndex <= 0L || Vb.cStr(tradeOffersText).isEmpty()) {
+            return "";
+        }
+        StringBuilder sqlIds = new StringBuilder();
+        for (String row : Vb.cStr(tradeOffersText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 2 && Vb.val(handlingField(fields, 0)) == socketIndex) {
+                    long furnitureId = Vb.val(handlingField(fields, 1));
+                    if (furnitureId > 0L) {
+                        if (sqlIds.length() > 0) {
+                            sqlIds.append(',');
+                        }
+                        sqlIds.append('\'').append(furnitureId).append('\'');
+                    }
+                }
+            }
+        }
+        return sqlIds.toString();
+    }
+
+    public static String representedTradeOfferLogItems(String tradeOffersText, long socketIndex) {
+        if (socketIndex <= 0L || Vb.cStr(tradeOffersText).isEmpty()) {
+            return "";
+        }
+        StringBuilder logItems = new StringBuilder();
+        for (String row : Vb.cStr(tradeOffersText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 3 && Vb.val(handlingField(fields, 0)) == socketIndex) {
+                    long furnitureId = Vb.val(handlingField(fields, 1));
+                    long productId = Vb.val(handlingField(fields, 2));
+                    if (furnitureId > 0L) {
+                        if (logItems.length() > 0) {
+                            logItems.append('\1');
+                        }
+                        logItems.append(furnitureId).append(':').append(productId);
+                    }
+                }
+            }
+        }
+        return logItems.toString();
+    }
+
+    public static TradeOfferItemPayload representedTradeOfferItemPayload(String tradeOffersText, long socketIndex) {
+        TradeOfferItemPayload result = new TradeOfferItemPayload();
+        if (socketIndex <= 0L || Vb.cStr(tradeOffersText).isEmpty()) {
+            return result;
+        }
+        StringBuilder payload = new StringBuilder();
+        for (String row : Vb.cStr(tradeOffersText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 5 && Vb.val(handlingField(fields, 0)) == socketIndex) {
+                    payload.append(inventoryItemPayload(
+                        Vb.val(handlingField(fields, 1)),
+                        Vb.val(handlingField(fields, 2)),
+                        handlingField(fields, 3),
+                        Vb.val(handlingField(fields, 4))));
+                    result.itemCount++;
+                }
+            }
+        }
+        result.payload = payload.toString();
+        return result;
+    }
+
+    public static String representedTradeOfferPayload(
+        String tradeOffersText,
+        long sourceSocketIndex,
+        long targetSocketIndex,
+        String sourceUserId,
+        String targetUserId
+    ) {
+        if (sourceSocketIndex <= 0L || targetSocketIndex <= 0L) {
+            return "";
+        }
+        TradeOfferItemPayload sourceItems = representedTradeOfferItemPayload(tradeOffersText, sourceSocketIndex);
+        TradeOfferItemPayload targetItems = representedTradeOfferItemPayload(tradeOffersText, targetSocketIndex);
+        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(sourceUserId), null, "Al");
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(targetUserId), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(sourceItems.itemCount, null, payload) + sourceItems.payload;
+        return Crypto.Proc_3_0_6D2AF0(targetItems.itemCount, null, payload) + targetItems.payload;
+    }
+
+    public static InventoryPayloads inventoryPayloadsFromRows(String rowText) {
+        InventoryPayloads result = new InventoryPayloads();
+        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                long furnitureId = Vb.val(navigatorField(fields, 0));
+                long productId = Vb.val(navigatorField(fields, 1));
+                String itemData = navigatorField(fields, 2);
+                long secondaryValue = Vb.val(navigatorField(fields, 3));
+                long productType = Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0));
+                String itemPayload = inventoryItemPayload(furnitureId, productId, itemData, secondaryValue);
+                if (productType == 9L) {
+                    result.iconPayload += itemPayload;
+                    result.iconCount++;
+                } else {
+                    result.regularPayload += itemPayload;
+                    result.regularCount++;
+                }
+            }
+        }
+        return result;
+    }
+
+    public static FurnitureMoveRequest furnitureMoveRequestFromPayload(String packetPayload) {
+        FurnitureMoveRequest request = new FurnitureMoveRequest();
+        String requestPayload = Vb.cStr(packetPayload);
+        if (requestPayload.startsWith("A[")) {
+            requestPayload = requestPayload.substring(2);
+        }
+
+        String normalizedPayload = requestPayload
+            .replace('\1', ' ')
+            .replace('\2', ' ')
+            .replace('\t', ' ')
+            .replace('\r', ' ')
+            .replace('\n', ' ');
+        while (normalizedPayload.contains("  ")) {
+            normalizedPayload = normalizedPayload.replace("  ", " ");
+        }
+        normalizedPayload = normalizedPayload.trim();
+
+        if (!normalizedPayload.isEmpty()) {
+            String[] tokens = normalizedPayload.split(" ", -1);
+            request.furnitureId = tokens.length >= 1 ? Vb.val(tokens[0]) : 0L;
+            request.positionX = tokens.length >= 2 ? Vb.val(tokens[1]) : 0L;
+            request.positionY = tokens.length >= 3 ? Vb.val(tokens[2]) : 0L;
+            request.rotation = tokens.length >= 4 ? Vb.val(tokens[3]) : 0L;
+        }
+
+        if (request.furnitureId <= 0L) {
+            LongRef offset = new LongRef(1);
+            request.furnitureId = readWireLong(requestPayload, offset);
+        }
+        return request;
+    }
+
+    public static String activityPointBalancePayload(String rowText) {
+        String[] fields = Vb.cStr(rowText).split("\t", -1);
+        long itemCount = 0L;
+        StringBuilder itemPayload = new StringBuilder();
+        for (long pointType = 1L; pointType <= 4L; pointType++) {
+            long pointValue = Vb.val(navigatorField(fields, pointType - 1L));
+            itemPayload.append(Crypto.Proc_3_0_6D2AF0(pointType, null, ""));
+            itemPayload.append(Crypto.Proc_3_0_6D2AF0(pointValue, null, ""));
+            itemCount++;
+        }
+        return Crypto.Proc_3_0_6D2AF0(itemCount, null, "M@") + itemPayload;
+    }
+
+    public static long pickupFurnitureIdFromPayload(String packetPayload) {
+        String requestPayload = Vb.cStr(packetPayload);
+        if (requestPayload.startsWith("AZ")) {
+            requestPayload = requestPayload.substring(2);
+        }
+        long furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        if (furnitureId <= 0L) {
+            LongRef offset = new LongRef(1);
+            furnitureId = readWireLong(requestPayload, offset);
+        }
+        return furnitureId;
+    }
+
+    public static FurnitureCacheState trackFurnitureCacheMarker(
+        String pendingRoomCache,
+        String pendingFurnitureCache,
+        String representedRoomCache,
+        long roomId,
+        long furnitureId
+    ) {
+        FurnitureCacheState state = new FurnitureCacheState();
+        state.pendingRoomCache = Vb.cStr(pendingRoomCache);
+        state.pendingFurnitureCache = Vb.cStr(pendingFurnitureCache);
+        state.representedRoomCache = Vb.cStr(representedRoomCache);
+        if (furnitureId <= 0L) {
+            return state;
+        }
+
+        String exactMarker = "\1" + furnitureId + '\2';
+        state.pendingFurnitureCache = state.pendingFurnitureCache.replace(exactMarker, "") + exactMarker;
+        state.pendingFurnitureCache = removeRepresentedCacheRecord(state.pendingFurnitureCache, "\1" + furnitureId + '\t');
+
+        if (!state.representedRoomCache.isEmpty()) {
+            state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, exactMarker);
+            state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, "\1" + furnitureId + '\t');
+        }
+
+        if (roomId > 0L) {
+            String roomMarker = "\1" + roomId + '\2';
+            state.pendingRoomCache = state.pendingRoomCache.replace(roomMarker, "");
+            state.pendingRoomCache = removeRepresentedCacheRecord(state.pendingRoomCache, "\1" + roomId + '\t');
+            state.pendingRoomCache += roomMarker;
+        }
+        return state;
+    }
+
+    public static FurnitureCacheState removeFurnitureCacheMarker(
+        String pendingRoomCache,
+        String pendingFurnitureCache,
+        String representedRoomCache,
+        long furnitureId
+    ) {
+        FurnitureCacheState state = new FurnitureCacheState();
+        state.pendingRoomCache = Vb.cStr(pendingRoomCache);
+        state.pendingFurnitureCache = Vb.cStr(pendingFurnitureCache);
+        state.representedRoomCache = Vb.cStr(representedRoomCache);
+        if (furnitureId <= 0L) {
+            return state;
+        }
+
+        String exactMarker = "\1" + furnitureId + '\2';
+        String recordMarker = "\1" + furnitureId + '\t';
+        state.pendingRoomCache = state.pendingRoomCache.replace(exactMarker, "");
+        state.pendingFurnitureCache = state.pendingFurnitureCache.replace(exactMarker, "");
+        state.pendingRoomCache = removeRepresentedCacheRecord(state.pendingRoomCache, recordMarker);
+        state.pendingFurnitureCache = removeRepresentedCacheRecord(state.pendingFurnitureCache, recordMarker);
+        if (!state.representedRoomCache.isEmpty()) {
+            state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, exactMarker);
+            state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, recordMarker);
+        }
+        return state;
+    }
+
+    public static long nextFurnitureState(String productSprite, long currentState, long maxState) {
+        String sprite = Vb.cStr(productSprite).toLowerCase();
+        if (sprite.contains("dice")) {
+            return Functions.Proc_10_4_809CA0(1, 6);
+        }
+        if (sprite.startsWith("bb_score_") || sprite.startsWith("es_score_") || sprite.contains("score")) {
+            long resolvedMaxState = maxState <= 0L ? 99L : maxState;
+            long nextState = currentState + 1L;
+            return nextState > resolvedMaxState ? 0L : nextState;
+        }
+        long resolvedMaxState = maxState <= 0L ? 1L : maxState;
+        long nextState = currentState + 1L;
+        return nextState > resolvedMaxState ? 0L : nextState;
+    }
+
+    public static String furnitureStatePayload(long furnitureId, long stateValue) {
+        return "AX" + furnitureId + '\2' + stateValue + '\2';
+    }
+
+    public static FurnitureStateCache representedFurnitureStateCache(
+        String pendingRoomCache,
+        String pendingFurnitureCache,
+        String representedRoomCache,
+        long roomId,
+        long furnitureId,
+        long stateValue
+    ) {
+        FurnitureStateCache state = new FurnitureStateCache();
+        state.pendingRoomCache = Vb.cStr(pendingRoomCache);
+        state.pendingFurnitureCache = Vb.cStr(pendingFurnitureCache);
+        state.representedRoomCache = Vb.cStr(representedRoomCache);
+        if (roomId <= 0L || furnitureId <= 0L) {
+            return state;
+        }
+
+        String roomMarker = "\1" + roomId + '\2';
+        state.pendingRoomCache = state.pendingRoomCache.replace(roomMarker, "");
+        state.pendingRoomCache = removeRepresentedCacheRecord(state.pendingRoomCache, "\1" + roomId + '\t');
+        state.pendingRoomCache += roomMarker;
+
+        String furnitureMarker = "\1" + furnitureId + '\2';
+        state.pendingFurnitureCache = state.pendingFurnitureCache.replace(furnitureMarker, "");
+        state.pendingFurnitureCache += furnitureMarker;
+
+        state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, "\1" + roomId + '\t');
+        state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, furnitureMarker);
+        state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, "\1" + furnitureId + '\t');
+        state.representedRoomCache += "\1" + roomId + '\t' + furnitureId + '\t' + stateValue + '\2';
+        return state;
+    }
+
+    public static FurnitureStateCache representedFurnitureStateWrite(
+        String pendingRoomCache,
+        String pendingFurnitureCache,
+        String representedRoomCache,
+        long roomId,
+        long furnitureId,
+        String stateText
+    ) {
+        FurnitureStateCache state = new FurnitureStateCache();
+        state.pendingRoomCache = Vb.cStr(pendingRoomCache);
+        state.pendingFurnitureCache = Vb.cStr(pendingFurnitureCache);
+        state.representedRoomCache = Vb.cStr(representedRoomCache);
+        if (furnitureId <= 0L) {
+            return state;
+        }
+
+        String furnitureMarker = "\1" + furnitureId + '\2';
+        state.pendingFurnitureCache = state.pendingFurnitureCache.replace(furnitureMarker, "");
+        state.pendingFurnitureCache += furnitureMarker;
+
+        if (roomId > 0L) {
+            String roomMarker = "\1" + roomId + '\2';
+            state.pendingRoomCache = state.pendingRoomCache.replace(roomMarker, "");
+            state.pendingRoomCache += roomMarker;
+        }
+
+        state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, furnitureMarker);
+        state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, "\1" + furnitureId + '\t');
+        state.representedRoomCache += "\1" + furnitureId + '\t' + roomId + '\t' + Vb.cStr(stateText) + '\2';
+        return state;
+    }
+
+    public static String Proc_6_156_7972B0(Object... args) {
+        if (args == null || args.length == 0) {
+            return "";
+        }
+        long baseValue = Vb.val(args[0]);
+        long firstValue = args.length >= 2 ? Vb.val(args[1]) : 0L;
+        String secondValue = args.length >= 3 ? Vb.cStr(args[2]) : "";
+        String thirdValue = args.length >= 4 ? Vb.cStr(args[3]) : "";
+        long fourthValue = args.length >= 5 ? Vb.val(args[4]) : 0L;
+        return wallInventoryPlacementPayload(baseValue, firstValue, secondValue, thirdValue, fourthValue);
+    }
+
+    public static String wallInventoryPlacementPayload(
+        long furnitureId,
+        long productId,
+        String wallPosition,
+        String itemData,
+        long secondaryValue
+    ) {
+        String payload = Crypto.Proc_3_0_6D2AF0(productId, null, furnitureId + "\2")
+            + Vb.cStr(wallPosition) + '\2'
+            + Vb.cStr(itemData) + '\2';
+        return "0" + Crypto.Proc_3_0_6D2AF0(secondaryValue, null, payload);
+    }
+
+    public static String Proc_6_161_7B2EE0(Object... args) {
+        if (args == null || args.length == 0) {
+            return "";
+        }
+        return floorItemPlacementPayload(
+            Vb.val(args[0]),
+            args.length >= 2 ? Vb.val(args[1]) : 0L,
+            args.length >= 3 ? Vb.val(args[2]) : 0L,
+            args.length >= 4 ? Vb.val(args[3]) : 0L,
+            args.length >= 5 ? Vb.val(args[4]) : 0L,
+            args.length >= 6 ? Vb.cStr(args[5]) : "",
+            args.length >= 7 ? Vb.cStr(args[6]) : "",
+            args.length >= 8 ? Vb.val(args[7]) : 0L,
+            args.length >= 9 ? Vb.val(args[8]) : 0L);
+    }
+
+    public static String floorItemPlacementPayload(
+        long furnitureId,
+        long positionX,
+        long positionY,
+        long rotation,
+        long positionZ,
+        String stateText,
+        String itemData,
+        long secondaryValue,
+        long productId
+    ) {
+        String normalizedItemData = Vb.cStr(itemData).replace('\b', '\t').replace("{{9}}", "\t");
+        String payload = Crypto.Proc_3_0_6D2AF0(furnitureId, null, "0");
+        payload = Crypto.Proc_3_0_6D2AF0(positionX, null, payload);
+        payload = "0" + Crypto.Proc_3_0_6D2AF0(positionY, null, payload);
+        payload = "0" + Crypto.Proc_3_0_6D2AF0(rotation, null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(positionZ, null, payload) + Vb.cStr(stateText) + '\2';
+        payload = Crypto.Proc_3_0_6D2AF0(secondaryValue, null, payload) + normalizedItemData + '\2' + "M";
+        return Crypto.Proc_3_0_6D2AF0(productId, null, payload);
+    }
+
+    public static String systemHandshakePayload(String configuredDateFormat) {
+        String dateFormat = Vb.cStr(configuredDateFormat);
+        if (dateFormat.isEmpty()) {
+            dateFormat = "DAQBHHIIKHJHPAHQA";
+        }
+        return "0" + dateFormat + '\2' + "SAHPB" + "http://www.alpha-series.com/" + '\2' + "QBH";
+    }
+
+    public static String handlingLoginTicketFromPayload(String packetPayload) {
+        String requestPayload = Vb.cStr(packetPayload);
+        if (requestPayload.startsWith("F_")) {
+            requestPayload = requestPayload.substring(2);
+        }
+        requestPayload = Functions.Proc_10_10_80A7F0(requestPayload, 0, 0).trim();
+        if (requestPayload.startsWith("F_")) {
+            requestPayload = requestPayload.substring(2);
+        }
+        return requestPayload;
+    }
+
+    public static String handlingLoginActivityPointPayload(long pointType, long pointsValue) {
+        return Crypto.Proc_3_0_6D2AF0(pointType, null,
+            Crypto.Proc_3_0_6D2AF0(pointsValue, null, "Fv") + "H");
+    }
+
+    public static String representedActivityPointAwardPayload(long pointType, long pointsValue) {
+        return Crypto.Proc_3_0_6D2AF0(pointType, null,
+            Crypto.Proc_3_0_6D2AF0(pointsValue, null, "Fv")) + "H";
+    }
+
+    public static ActivityPointAward activityPointAwardDecision(
+        long sessionSeconds,
+        long pointType,
+        long intervalSeconds,
+        long maxPoints,
+        long awardAmount,
+        long currentPoints
+    ) {
+        ActivityPointAward result = new ActivityPointAward();
+        result.pointType = pointType;
+        result.awardAmount = awardAmount;
+        if (sessionSeconds <= 0L || intervalSeconds <= 0L || sessionSeconds % intervalSeconds != 0L) {
+            return result;
+        }
+        long effectiveMaxPoints = maxPoints <= 0L ? 1L : maxPoints;
+        if (currentPoints >= effectiveMaxPoints || awardAmount == 0L) {
+            return result;
+        }
+        result.newPoints = currentPoints + awardAmount;
+        result.payload = representedActivityPointAwardPayload(pointType, result.newPoints);
+        result.shouldAward = true;
+        return result;
+    }
+
+    public static boolean isSocketMarkedBusy(String representedSocketCache, long socketIndex) {
+        String cache = Vb.cStr(representedSocketCache);
+        if (socketIndex <= 0L || cache.isEmpty()) {
+            return false;
+        }
+        String marker = "[" + socketIndex + "]";
+        int startAt = cache.indexOf(marker);
+        if (startAt < 0) {
+            return false;
+        }
+        int recordStart = startAt + marker.length();
+        int recordEnd = cache.indexOf('[', recordStart);
+        if (recordEnd < 0) {
+            recordEnd = cache.length();
+        }
+        String recordText = cache.substring(recordStart, recordEnd);
+        String[] fields = recordText.split("\2", -1);
+        return fields.length >= 6 && Vb.val(fields[5]) != 0L;
+    }
+
+    public static String ownProfilePayload(String userRow) {
+        String[] fields = Vb.cStr(userRow).split("\t", -1);
+        if (fields.length < 6) {
+            return "";
+        }
+        long userId = Vb.val(handlingField(fields, 0));
+        if (userId <= 0L) {
+            return "";
+        }
+        String userName = handlingField(fields, 1);
+        String mottoText = handlingField(fields, 2);
+        String genderText = handlingField(fields, 3).toUpperCase();
+        genderText = genderText.isEmpty() ? "M" : genderText.substring(0, 1);
+        if (!"M".equals(genderText) && !"F".equals(genderText)) {
+            genderText = "M";
+        }
+        long respectAmount = Vb.val(handlingField(fields, 4));
+        long scratchAmount = Vb.val(handlingField(fields, 5));
+        String payload = "@E" + userId + '\2' + userName + '\2' + mottoText + '\2';
+        payload += genderText + "\2\2\2H\2HIH";
+        payload = Crypto.Proc_3_0_6D2AF0(respectAmount, null, payload);
+        return Crypto.Proc_3_0_6D2AF0(scratchAmount, null, payload);
+    }
+
+    public static long soundSettingFromWire(String packetPayload) {
+        String requestPayload = Vb.cStr(packetPayload);
+        if (requestPayload.startsWith("Ce")) {
+            requestPayload = requestPayload.substring(2);
+        }
+        long soundSetting = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        if (soundSetting <= 0L) {
+            soundSetting = Vb.val(requestPayload);
+        }
+        return soundSetting > 0L && soundSetting < 101L ? soundSetting : 0L;
+    }
+
+    public static String loginGroupPayload(long groupId, String groupRow) {
+        if (groupId <= 0L || Vb.cStr(groupRow).isEmpty()) {
+            return "";
+        }
+        String[] fields = Vb.cStr(groupRow).split("\t", -1);
+        String payload = Crypto.Proc_3_0_6D2AF0(groupId, null, "Dt");
+        payload += handlingField(fields, 0) + '\2';
+        payload += handlingField(fields, 1) + '\2';
+        payload += handlingField(fields, 2) + '\2';
+        payload += Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 3)), null, "") + "H";
+        return payload;
+    }
+
+    public static String questCompletionPayload(
+        long campaignId,
+        String questName,
+        long campaignLevelCount,
+        long questId,
+        long userQuestLevel,
+        long progressValue,
+        long activityCount
+    ) {
+        long resolvedActivityCount = activityCount <= 0L ? 1L : activityCount;
+        String payload = Crypto.Proc_3_0_6D2AF0(campaignId, null, "") + Vb.cStr(questName) + '\2';
+        payload += Crypto.Proc_3_0_6D2AF0(campaignLevelCount, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(questId, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(userQuestLevel, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(progressValue, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(resolvedActivityCount, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(0, null, "");
+        return payload;
+    }
+
+    public static long questRequestIdFromWire(String packetPayload, String prefix) {
+        return idRequestFromWire(packetPayload, prefix);
+    }
+
+    public static long nextQuestId(String questRows, String activeRow) {
+        long currentQuestId = 0L;
+        long currentLevel = 0L;
+        if (!Vb.cStr(activeRow).isEmpty()) {
+            String[] activeFields = Vb.cStr(activeRow).split("\t", -1);
+            currentQuestId = Vb.val(handlingField(activeFields, 0));
+            currentLevel = Vb.val(handlingField(activeFields, 1));
+        }
+
+        long currentCampaignId = 0L;
+        long fallbackQuestId = 0L;
+        long fallbackCampaignId = 0L;
+        long fallbackLevel = Integer.MAX_VALUE;
+        boolean foundCurrent = false;
+        for (String row : Vb.cStr(questRows).split("\r", -1)) {
+            String rowValue = row.trim();
+            if (!rowValue.isEmpty()) {
+                String[] fields = rowValue.split("\t", -1);
+                if (fields.length >= 9) {
+                    long rowQuestId = Vb.val(handlingField(fields, 0));
+                    long rowLevel = Vb.val(handlingField(fields, 1));
+                    long rowCampaignId = Vb.val(handlingField(fields, 8));
+                    if (fallbackQuestId <= 0L || rowLevel < fallbackLevel) {
+                        fallbackQuestId = rowQuestId;
+                        fallbackCampaignId = rowCampaignId;
+                        fallbackLevel = rowLevel;
+                    }
+                    if (rowQuestId == currentQuestId) {
+                        currentCampaignId = rowCampaignId;
+                        currentLevel = rowLevel;
+                        foundCurrent = true;
+                    }
+                }
+            }
+        }
+        if (!foundCurrent) {
+            currentCampaignId = fallbackCampaignId;
+            currentLevel = fallbackLevel - 1L;
+        }
+
+        long requestedQuestId = 0L;
+        long bestLevel = Integer.MAX_VALUE;
+        for (String row : Vb.cStr(questRows).split("\r", -1)) {
+            String rowValue = row.trim();
+            if (!rowValue.isEmpty()) {
+                String[] fields = rowValue.split("\t", -1);
+                if (fields.length >= 9) {
+                    long rowQuestId = Vb.val(handlingField(fields, 0));
+                    long rowLevel = Vb.val(handlingField(fields, 1));
+                    long rowCampaignId = Vb.val(handlingField(fields, 8));
+                    if (rowCampaignId == currentCampaignId && rowLevel > currentLevel && rowLevel < bestLevel) {
+                        requestedQuestId = rowQuestId;
+                        bestLevel = rowLevel;
+                    }
+                }
+            }
+        }
+        return requestedQuestId > 0L ? requestedQuestId : fallbackQuestId;
+    }
+
+    public static QuestProgressDecision questProgressDecision(String activeRow, String questRows, long remainingWait) {
+        QuestProgressDecision decision = new QuestProgressDecision();
+        if (Vb.cStr(activeRow).isEmpty()) {
+            return decision;
+        }
+        String[] activeFields = Vb.cStr(activeRow).split("\t", -1);
+        decision.questId = Vb.val(handlingField(activeFields, 0));
+        decision.numericQuestId = Vb.val(handlingField(activeFields, 1));
+        decision.progressValue = Vb.val(handlingField(activeFields, 2));
+        String timeNextText = handlingField(activeFields, 4);
+        if (decision.questId <= 0L) {
+            return decision;
+        }
+
+        boolean matchedQuest = false;
+        for (String row : Vb.cStr(questRows).split("\r", -1)) {
+            String rowValue = row.trim();
+            if (!rowValue.isEmpty()) {
+                String[] fields = rowValue.split("\t", -1);
+                if (fields.length >= 11 && Vb.val(handlingField(fields, 0)) == decision.questId) {
+                    decision.amountRequired = Vb.val(handlingField(fields, 9));
+                    decision.waitAmount = Vb.val(handlingField(fields, 10));
+                    matchedQuest = true;
+                    break;
+                }
+            }
+        }
+        if (!matchedQuest) {
+            return decision;
+        }
+
+        if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
+            decision.remainingWait = Math.max(0L, remainingWait);
+            if (decision.remainingWait > 0L) {
+                decision.shouldSendList = true;
+                return decision;
+            }
+        } else if (decision.waitAmount > 0L && decision.progressValue > 0L && decision.progressValue < decision.amountRequired) {
+            decision.shouldScheduleWait = true;
+            decision.shouldSendList = true;
+            return decision;
+        }
+
+        if (decision.amountRequired <= 0L) {
+            decision.amountRequired = 1L;
+        }
+        if (decision.progressValue >= decision.amountRequired) {
+            decision.shouldComplete = true;
+        } else {
+            decision.shouldSendList = true;
+        }
+        return decision;
+    }
+
+    public static String questListPayload(String questRows, String userQuestRows) {
+        String userQuestText = "\r" + Vb.cStr(userQuestRows) + "\r";
+        long lastCampaignId = -1L;
+        long campaignLevelCount = 0L;
+        long questCount = 0L;
+        StringBuilder questPayload = new StringBuilder();
+        for (String row : Vb.cStr(questRows).split("\r", -1)) {
+            String questRow = row.trim();
+            if (!questRow.isEmpty()) {
+                String[] questFields = questRow.split("\t", -1);
+                if (questFields.length >= 11) {
+                    long questId = Vb.val(handlingField(questFields, 0));
+                    long questLevel = Vb.val(handlingField(questFields, 1));
+                    String questName = handlingField(questFields, 2);
+                    long rewardAmount = Vb.val(handlingField(questFields, 4));
+                    long rewardType = Vb.val(handlingField(questFields, 5));
+                    long campaignId = Vb.val(handlingField(questFields, 8));
+                    long activityCount = Vb.val(handlingField(questFields, 9));
+                    long waitSeconds = Vb.val(handlingField(questFields, 10));
+
+                    if (campaignId != lastCampaignId) {
+                        lastCampaignId = campaignId;
+                        campaignLevelCount = 0L;
+                    }
+                    campaignLevelCount++;
+
+                    String[] userQuestFields = userQuestFields(userQuestText, questId);
+                    long userLevel = Vb.val(handlingField(userQuestFields, 1));
+                    String timestampDone = handlingField(userQuestFields, 2);
+                    String timestampAccepted = handlingField(userQuestFields, 3);
+                    String timeNextText = handlingField(userQuestFields, 4);
+                    long progressValue = Vb.val(handlingField(userQuestFields, 5));
+                    long remainingWait = Vb.val(handlingField(userQuestFields, 6));
+
+                    long stateCode = 0L;
+                    if (!timestampDone.isEmpty() && !"0".equals(timestampDone)) {
+                        stateCode = 2L;
+                    } else if (!timestampAccepted.isEmpty() && !"0".equals(timestampAccepted)) {
+                        stateCode = 1L;
+                    }
+                    if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
+                        waitSeconds = remainingWait;
+                    }
+
+                    String rowPayload = Crypto.Proc_3_0_6D2AF0(campaignId, null, "") + questName + '\2';
+                    rowPayload += Crypto.Proc_3_0_6D2AF0(questId, null, "");
+                    rowPayload += Crypto.Proc_3_0_6D2AF0(questLevel, null, "");
+                    rowPayload += Crypto.Proc_3_0_6D2AF0(campaignLevelCount, null, "");
+                    rowPayload += Crypto.Proc_3_0_6D2AF0(stateCode, null, "");
+                    rowPayload += Crypto.Proc_3_0_6D2AF0(userLevel, null, "");
+                    rowPayload += Crypto.Proc_3_0_6D2AF0(progressValue, null, "");
+                    rowPayload += Crypto.Proc_3_0_6D2AF0(activityCount, null, "");
+                    rowPayload += Crypto.Proc_3_0_6D2AF0(rewardType, null, "");
+                    rowPayload += Crypto.Proc_3_0_6D2AF0(rewardAmount, null, "");
+                    rowPayload += "HHH\2\2H\2HHH";
+                    rowPayload += Crypto.Proc_3_0_6D2AF0(waitSeconds, null, "");
+
+                    questPayload.append(rowPayload);
+                    questCount++;
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(questCount, null, "L`"))
+            + questPayload;
+    }
+
+    public static String Proc_6_166_7BE940(Object... args) {
+        long userId = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
+        String userName = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
+        String motto = args != null && args.length >= 3 ? Vb.cStr(args[2]) : "";
+        String figure = args != null && args.length >= 4 ? Vb.cStr(args[3]) : "";
+        long rankValue = args != null && args.length >= 5 ? Vb.val(args[4]) : 0L;
+        long followCount = args != null && args.length >= 6 ? Vb.val(args[5]) : 0L;
+        long isOnline = args != null && args.length >= 7 ? Vb.val(args[6]) : 0L;
+        String lastOnlineText = args != null && args.length >= 8 ? Vb.cStr(args[7]) : "";
+        long relationshipState = args != null && args.length >= 9 ? Vb.val(args[8]) : 0L;
+        return messengerFriendPayload(userId, userName, motto, figure, rankValue, followCount, isOnline, lastOnlineText, relationshipState);
+    }
+
+    public static String messengerFriendPayload(
+        long userId,
+        String userName,
+        String motto,
+        String figure,
+        long rankValue,
+        long followCount,
+        long isOnline,
+        String lastOnlineText,
+        long relationshipState
+    ) {
+        long followEnabled = Vb.val(Functions.Proc_10_0_809570("com.client.messenger.follow.enabled", 0));
+        String payload = Crypto.Proc_3_0_6D2AF0(userId, null, "0") + Vb.cStr(userName) + '\2';
+        payload = Crypto.Proc_3_0_6D2AF0(rankValue, null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(isOnline, null, payload);
+
+        if (isOnline == 1L) {
+            payload = Crypto.Proc_3_0_6D2AF0(followEnabled != 0L && followCount > isOnline ? 1L : 0L, null, payload)
+                + Vb.cStr(motto);
+        } else if (isOnline == 0L) {
+            payload = payload + '\2' + "H" + Vb.cStr(figure) + '\2' + relationshipState;
+        }
+        return payload + '\2' + Vb.cStr(lastOnlineText) + '\2' + '\2';
+    }
+
+    public static String messengerFriendSummaryPayloadFromRow(String rowText, long relationshipState) {
+        String[] fields = Vb.cStr(rowText).split("\t", -1);
+        if (fields.length < 7) {
+            return "";
+        }
+        long socketIndex = Vb.val(fields[5]);
+        return messengerFriendPayload(
+            Vb.val(fields[0]),
+            fields[1],
+            fields[2],
+            fields[3],
+            Vb.val(fields[4]),
+            socketIndex > 0L ? 2L : 0L,
+            socketIndex > 0L ? 1L : 0L,
+            fields[6],
+            relationshipState);
+    }
+
+    public static String messengerSearchResultPayload(
+        String userId,
+        String userName,
+        String figureText,
+        String mottoText,
+        String nicknameText,
+        String lastOnlineText,
+        long isOnline
+    ) {
+        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(userId), null, "");
+        payload += Vb.cStr(userName) + '\2' + Vb.cStr(mottoText) + '\2';
+        payload = "1" + Crypto.Proc_3_0_6D2AF0(isOnline, null, payload) + "H" + '\2';
+        payload += Vb.cStr(nicknameText) + '\2' + Vb.cStr(figureText) + '\2' + Vb.cStr(lastOnlineText) + '\2';
+        return payload;
+    }
+
+    public static long messengerMaxFriends(long configIndex) {
+        if (Licence.global_0082927C instanceof long[]) {
+            long[] values = (long[]) Licence.global_0082927C;
+            return configIndex >= 0 && configIndex < values.length ? values[(int) configIndex] : 0L;
+        }
+        if (Licence.global_0082927C instanceof String[]) {
+            String[] values = (String[]) Licence.global_0082927C;
+            return configIndex >= 0 && configIndex < values.length ? Vb.val(values[(int) configIndex]) : 0L;
+        }
+        return 0L;
+    }
+
+    public static String requestTextFromWirePayload(String packetPayload, String prefix, int maxLength) {
+        String requestPayload = Vb.cStr(packetPayload);
+        if (!Vb.cStr(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
+            requestPayload = requestPayload.substring(prefix.length());
+        }
+        String value = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+        if (value.isEmpty()) {
+            LongRef offset = new LongRef(1);
+            value = readWireString(requestPayload, offset);
+        }
+        if (maxLength >= 0 && value.length() > maxLength) {
+            return value.substring(0, maxLength);
+        }
+        return value;
+    }
+
+    public static FriendTargetList friendDeleteTargetsFromPayload(String packetPayload) {
+        String requestPayload = Vb.cStr(packetPayload);
+        if (requestPayload.startsWith("@f")) {
+            requestPayload = requestPayload.substring(2);
+        }
+        FriendTargetList result = new FriendTargetList();
+        LongRef offset = new LongRef(1);
+        long firstValue = readWireLong(requestPayload, offset);
+        if (firstValue == 1L) {
+            result.deleteAllPending = true;
+            return result;
+        }
+
+        long maxTargets = firstValue <= 0L ? 75L : Math.min(firstValue, 75L);
+        StringBuilder targetList = new StringBuilder();
+        while (offset.value <= requestPayload.length() && result.targetCount < maxTargets) {
+            long previousOffset = offset.value;
+            long targetUserId = readWireLong(requestPayload, offset);
+            if (targetUserId <= 0L || offset.value == previousOffset) {
+                break;
+            }
+            String token = String.valueOf(targetUserId);
+            if (!("," + targetList + ",").contains("," + token + ",")) {
+                if (targetList.length() > 0) {
+                    targetList.append(',');
+                }
+                targetList.append(token);
+                result.targetCount++;
+            }
+        }
+        if (targetList.length() == 0 && firstValue > 1L) {
+            targetList.append(firstValue);
+            result.targetCount = 1L;
+        }
+        result.targetList = targetList.toString();
+        return result;
+    }
+
+    public static String messengerAcceptedFriendsPayload(String payloadRows, long acceptedCount) {
+        return acceptedCount > 0L ? Crypto.Proc_3_0_6D2AF0(acceptedCount, null, "@MH") + Vb.cStr(payloadRows) : "";
+    }
+
+    public static String messengerRemoveFriendsPayload(String targetIdsPayload, long removedCount) {
+        return removedCount > 0L ? Crypto.Proc_3_0_6D2AF0(removedCount, null, "@MM") + Vb.cStr(targetIdsPayload) : "";
+    }
+
+    public static String messengerRemovedIdPayload(long targetUserId) {
+        return Crypto.Proc_3_0_6D2AF0(targetUserId, null, "");
+    }
+
+    public static String messengerRequestAcceptedCallerPayload(long targetUserId) {
+        return Crypto.Proc_3_0_6D2AF0(targetUserId, null, "DD") + "H";
+    }
+
+    public static String messengerRequestDeniedPayload() {
+        return "DDH" + '\2';
+    }
+
+    public static String messengerRequestNotifyPayload(long userId, String userName) {
+        return Crypto.Proc_3_0_6D2AF0(userId, null, "BD") + Vb.cStr(userName) + '\2' + userId + '\2';
+    }
+
+    public static String messengerPendingRequestsPayload(String rowText) {
+        long requestCount = 0L;
+        StringBuilder requestPayload = new StringBuilder();
+        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                long requesterId = Vb.val(handlingField(fields, 0));
+                String requesterName = handlingField(fields, 1);
+                if (requesterId > 0L) {
+                    requestPayload.append('0').append(Crypto.Proc_3_0_6D2AF0(requesterId, null, ""));
+                    requestPayload.append(requesterName).append('\2').append(requesterName).append('\2');
+                    requestCount++;
+                }
+            }
+        }
+        String payload = Crypto.Proc_3_0_6D2AF0(requestCount, null, "Dz");
+        payload += Crypto.Proc_3_0_6D2AF0(requestCount, null, "Dz");
+        return Crypto.Proc_3_0_6D2AF0(requestCount, null, payload) + requestPayload;
+    }
+
+    public static String messengerFriendListPayload(String rowText, long maxFriends0, long maxFriends1, long maxFriends2) {
+        long friendCount = 0L;
+        StringBuilder friendPayload = new StringBuilder();
+        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 7) {
+                    long friendSocketIndex = Vb.val(fields[2]);
+                    long friendOnline = friendSocketIndex > 0L ? 1L : 0L;
+                    friendPayload.append(messengerFriendPayload(
+                        Vb.val(fields[0]),
+                        fields[1],
+                        fields[4],
+                        fields[3],
+                        Vb.val(fields[5]),
+                        friendOnline == 1L ? 2L : 0L,
+                        friendOnline,
+                        fields[6],
+                        1L));
+                    friendCount++;
+                }
+            }
+        }
+        String payload = Crypto.Proc_3_0_6D2AF0(maxFriends0, null, "@L");
+        payload += Crypto.Proc_3_0_6D2AF0(maxFriends1, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(maxFriends2, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(friendCount, null, "") + friendPayload + "PYH";
+        return payload;
+    }
+
+    public static FriendTargetList friendRemoveTargetsFromPayload(String packetPayload, String callerUserId) {
+        String requestPayload = Vb.cStr(packetPayload);
+        if (requestPayload.startsWith("@h")) {
+            requestPayload = requestPayload.substring(2);
+        }
+        FriendTargetList result = new FriendTargetList();
+        LongRef offset = new LongRef(1);
+        long removeCount = readWireLong(requestPayload, offset);
+        if (removeCount <= 0L) {
+            return result;
+        }
+        if (removeCount > 75L) {
+            removeCount = 75L;
+        }
+        StringBuilder targetList = new StringBuilder();
+        for (long removeIndex = 1L; removeIndex <= removeCount; removeIndex++) {
+            long targetUserId = readWireLong(requestPayload, offset);
+            String token = String.valueOf(targetUserId);
+            if (targetUserId > 0L && !token.equals(Vb.cStr(callerUserId)) && !("," + targetList + ",").contains("," + token + ",")) {
+                if (targetList.length() > 0) {
+                    targetList.append(',');
+                }
+                targetList.append(token);
+                result.targetCount++;
+            }
+        }
+        result.targetList = targetList.toString();
+        return result;
+    }
+
+    public static String petRaceListPayload(String productPet, String rowText, long rankIndex, long hcLevel) {
+        long raceCount = 0L;
+        StringBuilder racePayload = new StringBuilder();
+        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 4) {
+                    long breedId = Vb.val(fields[1]);
+                    long minRank = Vb.val(fields[2]);
+                    long minHcRank = Vb.val(fields[3]);
+                    if (rankIndex >= minRank && hcLevel >= minHcRank) {
+                        racePayload.append(Crypto.Proc_3_0_6D2AF0(breedId, null, "")).append("II");
+                        raceCount++;
+                    }
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(raceCount, null, "L{" + Vb.cStr(productPet) + '\2') + racePayload;
+    }
+
+    public static String petInventoryListPayload(String rowText) {
+        long petCount = 0L;
+        StringBuilder petPayload = new StringBuilder();
+        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 4) {
+                    String rowPayload = petInventoryRowPayload(fields);
+                    if (!rowPayload.isEmpty()) {
+                        petPayload.append(rowPayload);
+                        petCount++;
+                    }
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(petCount, null, "IX") + petPayload;
+    }
+
+    public static String petInventoryRowPayload(String[] fields) {
+        long petId = Vb.val(handlingField(fields, 0));
+        if (petId <= 0L) {
+            return "";
+        }
+        String petName = handlingField(fields, 1);
+        String petFigure = handlingField(fields, 2).toLowerCase();
+        long scratches = Vb.val(handlingField(fields, 3));
+        String[] figureParts = petFigure.split(" ", -1);
+        long petType = figureParts.length >= 1 ? Vb.val(figureParts[0]) : 0L;
+        long petRace = figureParts.length >= 2 ? Vb.val(figureParts[1]) : 0L;
+        String petColor = figureParts.length >= 3 ? figureParts[2] : "";
+
+        String payload = "0" + Crypto.Proc_3_0_6D2AF0(petId, null, "") + petName + '\2';
+        payload += Crypto.Proc_3_0_6D2AF0(petType, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(petRace, null, "");
+        payload += "0" + petColor + '\2';
+        payload += Crypto.Proc_3_0_6D2AF0(scratches, null, "");
+        return payload;
+    }
+
+    public static long petNameValidationCode(String candidateName) {
+        String name = Vb.cStr(candidateName);
+        if (name.length() > 30) {
+            return 1L;
+        }
+        if (name.length() < 1) {
+            return 2L;
+        }
+        for (int index = 0; index < name.length(); index++) {
+            char ch = name.charAt(index);
+            boolean valid = (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
+            if (!valid) {
+                return 2L;
+            }
+        }
+        return 0L;
+    }
+
+    public static String petNameValidationPayload(String candidateName) {
+        return Crypto.Proc_3_0_6D2AF0(petNameValidationCode(candidateName), null, "@d");
+    }
+
+    public static String petCommandListPayload(long petLevel, Object commandRows) {
+        long resolvedLevel = Math.max(0L, petLevel);
+        String[] rows = normalizeRows(commandRows);
+        long allCount = 0L;
+        long availableCount = 0L;
+        StringBuilder allPayload = new StringBuilder();
+        StringBuilder availablePayload = new StringBuilder();
+        for (String row : rows) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                long commandId = Vb.val(handlingField(fields, 0));
+                long requiredLevel = Vb.val(handlingField(fields, 1));
+                if (commandId > 0L) {
+                    allPayload.append('0').append(Crypto.Proc_3_0_6D2AF0(commandId, null, ""));
+                    allCount++;
+                    if (requiredLevel <= resolvedLevel) {
+                        availablePayload.append('0').append(Crypto.Proc_3_0_6D2AF0(commandId, null, ""));
+                        availableCount++;
+                    }
+                }
+            }
+        }
+        String payload = Crypto.Proc_3_0_6D2AF0(resolvedLevel, null, "I]");
+        payload += Crypto.Proc_3_0_6D2AF0(allCount, null, "") + allPayload;
+        payload += Crypto.Proc_3_0_6D2AF0(availableCount, null, "") + availablePayload;
+        return payload;
+    }
+
+    public static PetCommandAction petCommandAction(long commandId, Object commandRows) {
+        PetCommandAction result = new PetCommandAction();
+        if (commandId <= 0L) {
+            return result;
+        }
+        for (String row : normalizeRows(commandRows)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (Vb.val(handlingField(fields, 0)) == commandId) {
+                    result.requiredLevel = Vb.val(handlingField(fields, 1));
+                    result.action = handlingField(fields, 2);
+                    result.found = true;
+                    return result;
+                }
+            }
+        }
+        return result;
+    }
+
+    public static String representedPetStatusPayload(long botEntityId, String[] petFields) {
+        if (botEntityId <= 0L || petFields == null || petFields.length < 11) {
+            return "";
+        }
+        String petName = handlingField(petFields, 1);
+        String petFigure = handlingField(petFields, 2);
+        long petLevel = Vb.val(handlingField(petFields, 3));
+        long petExperience = Vb.val(handlingField(petFields, 4));
+        long petEnergy = Vb.val(handlingField(petFields, 5));
+        long petNutrition = Vb.val(handlingField(petFields, 6));
+        long petScratches = Vb.val(handlingField(petFields, 7));
+        long petAgeDays = Vb.val(handlingField(petFields, 8));
+        long ownerId = Vb.val(handlingField(petFields, 9));
+        String ownerName = handlingField(petFields, 10);
+
+        String payload = "IY" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "") + petName + '\2';
+        payload += Crypto.Proc_3_0_6D2AF0(petLevel, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(petExperience, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(petEnergy, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(petNutrition, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(petScratches, null, "") + petFigure + '\2';
+        payload += Crypto.Proc_3_0_6D2AF0(petAgeDays, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(ownerId, null, "") + ownerName + '\2';
+        return payload;
+    }
+
+    public static PetExperienceUpdate petExperienceUpdate(
+        long botEntityId,
+        String petName,
+        String petFigure,
+        long petLevel,
+        long petExperience,
+        long petEnergy,
+        long petNutrition,
+        long petScratches,
+        long experienceDelta,
+        Object levelRows
+    ) {
+        PetExperienceUpdate result = new PetExperienceUpdate();
+        long nextExperience = petExperience + experienceDelta;
+        if (nextExperience < 0L) {
+            nextExperience = 0L;
+        }
+        long nextLevel = petLevel;
+        long maxExperience = petLevelMaxExperience(petLevel, levelRows);
+        if (maxExperience > 0L && nextExperience >= maxExperience && petLevelMaxExperience(petLevel + 1L, levelRows) > 0L) {
+            nextLevel = petLevel + 1L;
+            nextExperience = 0L;
+            result.leveledUp = true;
+        }
+        result.petLevel = nextLevel;
+        result.petExperience = nextExperience;
+        result.statusPayload = petExperienceStatusPayload(botEntityId, petName, petFigure, nextLevel, nextExperience, petEnergy, petNutrition, petScratches);
+        result.experiencePayload = "Ia" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
+            + Crypto.Proc_3_0_6D2AF0(experienceDelta, null, "")
+            + Crypto.Proc_3_0_6D2AF0(nextExperience, null, "");
+        return result;
+    }
+
+    public static long petLevelMaxExperience(long petLevel, Object levelRows) {
+        for (String row : normalizeRows(levelRows)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (Vb.val(handlingField(fields, 0)) == petLevel) {
+                    return Vb.val(handlingField(fields, 1));
+                }
+            }
+        }
+        return 0L;
+    }
+
+    public static String petExperienceStatusPayload(
+        long botEntityId,
+        String petName,
+        String petFigure,
+        long petLevel,
+        long petExperience,
+        long petEnergy,
+        long petNutrition,
+        long petScratches
+    ) {
+        String payload = "IY" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "") + Vb.cStr(petName) + '\2';
+        payload += Crypto.Proc_3_0_6D2AF0(petLevel, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(petExperience, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(petEnergy, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(petNutrition, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(petScratches, null, "") + Vb.cStr(petFigure) + '\2';
+        return payload;
+    }
+
+    public static String petScratchPayload(long botEntityId, long userId, long scratches, String petName, String petFigure) {
+        String payload = "I^" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(userId, null, "");
+        payload += Crypto.Proc_3_0_6D2AF0(scratches, null, "");
+        payload += Vb.cStr(petName) + '\2' + Vb.cStr(petFigure) + '\2';
+        return payload;
+    }
+
+    public static String petCommandActionPayload(long botEntityId, String commandAction, long commandId) {
+        if (Vb.cStr(commandAction).isEmpty()) {
+            return "";
+        }
+        return "IZ" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
+            + Vb.cStr(commandAction) + '\2'
+            + Crypto.Proc_3_0_6D2AF0(commandId, null, "");
+    }
+
+    public static long reserveRepresentedBotSlot() {
+        for (long slotIndex = 1L; slotIndex <= 5000L; slotIndex++) {
+            String marker = "[" + slotIndex + "]";
+            if (!Licence.global_008292D4.contains(marker)) {
+                Licence.global_008292D4 += marker;
+                return slotIndex;
+            }
+        }
+        return 0L;
+    }
+
+    public static String representedBotField(String[] botFields, long fieldIndex) {
+        return botFields != null && fieldIndex >= 0 && fieldIndex < botFields.length ? Vb.cStr(botFields[(int) fieldIndex]) : "";
+    }
+
+    public static long allocateRepresentedBot(long roomSlot, String[] botFields) {
+        if (roomSlot <= 0L) {
+            return 0L;
+        }
+        long botEntityId = reserveRepresentedBotSlot();
+        if (botEntityId <= 0L) {
+            return 0L;
+        }
+        storeRepresentedBotRecord(botEntityId, representedBotRecordFromFields(roomSlot, botFields));
+        return botEntityId;
+    }
+
+    public static String representedBotRecordFromFields(long roomSlot, String[] botFields) {
+        long botId = Vb.val(representedBotField(botFields, 0));
+        String botName = representedBotField(botFields, 1);
+        String botMotto = representedBotField(botFields, 2);
+        String botSpeech = representedBotField(botFields, 3);
+        String botResponses = representedBotField(botFields, 4);
+        long positionX = Vb.val(representedBotField(botFields, 5));
+        long positionY = Vb.val(representedBotField(botFields, 6));
+        String positionZ = representedBotField(botFields, 7);
+        long positionR = Vb.val(representedBotField(botFields, 8));
+        String botFigure = representedBotField(botFields, 9);
+        long handleId = Vb.val(representedBotField(botFields, 11));
+        long handleActionId = Vb.val(representedBotField(botFields, 12));
+        String cacheAction = representedBotField(botFields, 13);
+        String speechSubmit = representedBotField(botFields, 14);
+        long allowWalk = Vb.val(representedBotField(botFields, 15));
+        long maxFieldsAway = Vb.val(representedBotField(botFields, 16));
+
+        return roomSlot + "\2" + botId + "\2"
+            + botName + '\2' + botMotto + '\2'
+            + botSpeech + '\2' + botResponses + '\2'
+            + positionX + "\2" + positionY + "\2"
+            + positionZ + '\2' + positionR + '\2'
+            + botFigure + '\2' + handleId + '\2'
+            + handleActionId + '\2' + cacheAction + '\2'
+            + speechSubmit + '\2' + allowWalk + '\2'
+            + maxFieldsAway;
+    }
+
+    public static void storeRepresentedBotRecord(long botEntityId, String recordText) {
+        if (botEntityId <= 0L) {
+            return;
+        }
+        String startMarker = "[" + botEntityId + ":";
+        int startAt = Licence.global_00829358.indexOf(startMarker);
+        if (startAt >= 0) {
+            int endAt = Licence.global_00829358.indexOf(']', startAt + startMarker.length());
+            if (endAt >= 0) {
+                Licence.global_00829358 = Licence.global_00829358.substring(0, startAt)
+                    + Licence.global_00829358.substring(endAt + 1);
+            }
+        }
+        Licence.global_00829358 += startMarker + Vb.cStr(recordText) + "]";
+    }
+
+    public static void removeRepresentedBotRecord(long botEntityId) {
+        if (botEntityId <= 0L) {
+            return;
+        }
+        String startMarker = "[" + botEntityId + ":";
+        int startAt = Licence.global_00829358.indexOf(startMarker);
+        if (startAt >= 0) {
+            int endAt = Licence.global_00829358.indexOf(']', startAt + startMarker.length());
+            if (endAt >= 0) {
+                Licence.global_00829358 = Licence.global_00829358.substring(0, startAt)
+                    + Licence.global_00829358.substring(endAt + 1);
+            }
+        }
+        Licence.global_008292D4 = Licence.global_008292D4.replace("[" + botEntityId + "]", "");
+    }
+
+    public static String representedBotRecordText(long botEntityId) {
+        if (botEntityId <= 0L || Licence.global_00829358.isEmpty()) {
+            return "";
+        }
+        String startMarker = "[" + botEntityId + ":";
+        int startAt = Licence.global_00829358.indexOf(startMarker);
+        if (startAt < 0) {
+            return "";
+        }
+        startAt += startMarker.length();
+        int endAt = Licence.global_00829358.indexOf(']', startAt);
+        if (endAt <= startAt) {
+            return "";
+        }
+        return Licence.global_00829358.substring(startAt, endAt);
+    }
+
+    public static String representedBotRecordField(long botEntityId, long fieldIndex) {
+        String[] fields = representedBotRecordText(botEntityId).split("\2", -1);
+        return fieldIndex >= 0 && fieldIndex < fields.length ? fields[(int) fieldIndex] : "";
+    }
+
+    public static long representedBotRecordLong(long botEntityId, long fieldIndex) {
+        return Vb.val(representedBotRecordField(botEntityId, fieldIndex));
+    }
+
+    public static long representedBotEntityFromBotId(long botId) {
+        if (botId <= 0L || Licence.global_00829358.isEmpty()) {
+            return 0L;
+        }
+        for (String record : Licence.global_00829358.split("\\[", -1)) {
+            int payloadAt = record.indexOf(':');
+            int endAt = record.indexOf(']');
+            if (payloadAt > 0 && endAt > payloadAt) {
+                long entityId = Vb.val(record.substring(0, payloadAt));
+                String[] fields = record.substring(payloadAt + 1, endAt).split("\2", -1);
+                if (fields.length >= 2 && Vb.val(fields[1]) == botId) {
+                    return entityId;
+                }
+            }
+        }
+        return 0L;
+    }
+
+    public static String representedBotEntitiesForRoom(long roomSlot, long onlyBotId) {
+        if (roomSlot <= 0L || Licence.global_00829358.isEmpty()) {
+            return "";
+        }
+        StringBuilder result = new StringBuilder();
+        for (String record : Licence.global_00829358.split("\\[", -1)) {
+            int payloadAt = record.indexOf(':');
+            int endAt = record.indexOf(']');
+            if (payloadAt > 0 && endAt > payloadAt) {
+                long entityId = Vb.val(record.substring(0, payloadAt));
+                String[] fields = record.substring(payloadAt + 1, endAt).split("\2", -1);
+                if (fields.length >= 2 && Vb.val(fields[0]) == roomSlot && (onlyBotId <= 0L || Vb.val(fields[1]) == onlyBotId)) {
+                    if (result.length() > 0) {
+                        result.append('\r');
+                    }
+                    result.append(entityId);
+                }
+            }
+        }
+        return result.toString();
+    }
+
+    public static boolean isRepresentedBotAllocated(long roomSlot, long botId) {
+        return !representedBotEntitiesForRoom(roomSlot, botId).isEmpty();
+    }
+
+    public static void storeRepresentedBotPosition(long botEntityId, long positionX, long positionY, String positionZ, long positionR) {
+        String[] fields = representedBotRecordText(botEntityId).split("\2", -1);
+        if (fields.length < 10) {
+            return;
+        }
+        fields[6] = String.valueOf(positionX);
+        fields[7] = String.valueOf(positionY);
+        fields[8] = Vb.cStr(positionZ);
+        fields[9] = String.valueOf(positionR);
+        storeRepresentedBotRecord(botEntityId, String.join("\2", fields));
+    }
+
+    public static String representedBotRoomEntryPayload(long botEntityId) {
+        long botId = representedBotRecordLong(botEntityId, 1);
+        if (botEntityId <= 0L || botId <= 0L) {
+            return "";
+        }
+        String botName = representedBotRecordField(botEntityId, 2);
+        long positionX = representedBotRecordLong(botEntityId, 6);
+        long positionY = representedBotRecordLong(botEntityId, 7);
+        String positionZ = representedBotRecordField(botEntityId, 8);
+        long positionR = representedBotRecordLong(botEntityId, 9);
+        String botFigure = representedBotRecordField(botEntityId, 10);
+        return "@\\" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
+            + botName + '\2'
+            + positionX + " " + positionY + " " + positionZ + '\2'
+            + positionR + "\2" + botFigure + '\2';
+    }
+
+    public static String representedRoomUserProfilePayload(
+        long roomUserIndex,
+        String userName,
+        String mottoText,
+        long achievementScore,
+        String figureText
+    ) {
+        if (roomUserIndex <= 0L) {
+            return "";
+        }
+        String payload = Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Jf");
+        payload += Vb.cStr(userName) + '\2';
+        payload += Vb.cStr(mottoText) + '\2';
+        payload += Crypto.Proc_3_0_6D2AF0(achievementScore, null, "");
+        payload += Vb.cStr(figureText) + '\2';
+        return payload;
+    }
+
+    public static String badgeInventoryPayload(String inventoryRows, String equippedPayload) {
+        long inventoryCount = 0L;
+        StringBuilder inventoryPayload = new StringBuilder();
+        for (String row : Vb.cStr(inventoryRows).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                String badgeId = handlingField(fields, 0);
+                long badgeRowId = Vb.val(handlingField(fields, 2));
+                if (!badgeId.isEmpty()) {
+                    inventoryPayload.append('0').append(Crypto.Proc_3_0_6D2AF0(badgeRowId, null, "")).append(badgeId).append('\2');
+                    inventoryCount++;
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(inventoryCount, null, "Ce") + inventoryPayload + Vb.cStr(equippedPayload);
+    }
+
+    public static String equippedBadgePayload(String badgeRows) {
+        long equippedCount = 0L;
+        StringBuilder equippedPayload = new StringBuilder();
+        for (String row : Vb.cStr(badgeRows).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                String badgeId = handlingField(fields, 0);
+                long badgeSlot = Vb.val(handlingField(fields, 1));
+                if (!badgeId.isEmpty()) {
+                    equippedPayload.append('0').append(Crypto.Proc_3_0_6D2AF0(badgeSlot, null, "")).append(badgeId).append('\2');
+                    equippedCount++;
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(equippedCount, null, "") + equippedPayload;
+    }
+
+    public static String badgeDisplayPayload(long userId, String equippedPayload) {
+        return "Cd" + Crypto.Proc_3_0_6D2AF0(userId, null, "") + Vb.cStr(equippedPayload);
+    }
+
+    public static String tagListPayload(String tagRows) {
+        long tagCount = 0L;
+        StringBuilder tagPayload = new StringBuilder();
+        for (String row : Vb.cStr(tagRows).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                tagPayload.append(row).append('\2');
+                tagCount++;
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(tagCount, null, "") + tagPayload;
+    }
+
+    public static String tagDisplayPayload(long userId, String tagPayload) {
+        return "E^" + Crypto.Proc_3_0_6D2AF0(userId, null, "") + Vb.cStr(tagPayload);
+    }
+
+    public static long pollIdFromWire(String packetPayload, String prefix) {
+        return idRequestFromWire(packetPayload, prefix);
+    }
+
+    public static PollAnswerSubmission pollAnswerFromWire(String packetPayload, String prefix) {
+        PollAnswerSubmission submission = new PollAnswerSubmission();
+        String requestPayload = Vb.cStr(packetPayload);
+        if (!Vb.cStr(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
+            requestPayload = requestPayload.substring(prefix.length());
+        }
+        LongRef offset = new LongRef(1);
+        submission.pollId = readWireLong(requestPayload, offset);
+        submission.questionId = readWireLong(requestPayload, offset);
+        submission.answerValue = readWireLong(requestPayload, offset);
+        submission.answerText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+        if (submission.pollId <= 0L) {
+            submission.pollId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        }
+        if (submission.answerText.isEmpty() && submission.answerValue > 0L) {
+            submission.answerText = String.valueOf(submission.answerValue);
+        }
+        submission.valid = submission.pollId > 0L && submission.questionId > 0L;
+        return submission;
+    }
+
+    public static String pollPayloadFromRows(String pollRow, String questionRows, Map<Long, String> answerRowsByQuestionId) {
+        String[] pollFields = Vb.cStr(pollRow).split("\t", -1);
+        if (pollFields.length < 3) {
+            return "";
+        }
+        long pollId = Vb.val(pollFields[0]);
+        String questionPayload = "";
+        long questionCount = 0L;
+        for (String questionRow : Vb.cStr(questionRows).split("\r", -1)) {
+            if (!questionRow.isEmpty()) {
+                String[] questionFields = questionRow.split("\t", -1);
+                if (questionFields.length >= 3) {
+                    long questionId = Vb.val(questionFields[0]);
+                    String questionText = questionFields[1];
+                    long questionType = Vb.val(questionFields[2]);
+                    String answerPayload = "";
+                    long answerCount = 0L;
+                    String answerRows = answerRowsByQuestionId != null ? answerRowsByQuestionId.get(questionId) : null;
+                    for (String answerRow : Vb.cStr(answerRows).split("\r", -1)) {
+                        if (!answerRow.isEmpty()) {
+                            String[] answerFields = answerRow.split("\t", -1);
+                            if (answerFields.length >= 3) {
+                                answerPayload += answerFields[2] + '\2';
+                                answerCount++;
+                            }
+                        }
+                    }
+                    questionCount++;
+                    questionPayload = Crypto.Proc_3_0_6D2AF0(questionId, null, questionPayload);
+                    questionPayload = Crypto.Proc_3_0_6D2AF0(questionCount, null, questionPayload);
+                    questionPayload = Crypto.Proc_3_0_6D2AF0(questionType, null, questionPayload);
+                    questionPayload += questionText + '\2';
+                    questionPayload = Crypto.Proc_3_0_6D2AF0(answerCount, null, questionPayload);
+                    questionPayload = Crypto.Proc_3_0_6D2AF0(0, null, questionPayload);
+                    questionPayload = Crypto.Proc_3_0_6D2AF0(answerCount, null, questionPayload) + answerPayload;
+                }
+            }
+        }
+        String payload = Crypto.Proc_3_0_6D2AF0(pollId, null, "D}") + pollFields[1] + '\2' + pollFields[2] + '\2';
+        return Crypto.Proc_3_0_6D2AF0(questionCount, null, payload) + questionPayload;
+    }
+
+    public static String achievementRewardPayload(long achievementIndex, String achievementRow, long badgeLevel, long badgeRowId) {
+        String[] fields = Vb.cStr(achievementRow).split("\t", -1);
+        if (fields.length < 7) {
+            return "";
+        }
+        long achievementId = Vb.val(fields[0]);
+        String badgePrefix = fields[1];
+        long rewardIncrease = Vb.val(fields[3]);
+        long levelTotal = Vb.val(fields[4]);
+        long scoreIncrease = Vb.val(fields[5]);
+        if (achievementId == 0L || badgePrefix.isEmpty()) {
+            return "";
+        }
+        long normalizedBadgeLevel = badgeLevel <= 0L ? 1L : badgeLevel;
+        String badgeId = badgePrefix + normalizedBadgeLevel;
+        String payload = Crypto.Proc_3_0_6D2AF0(achievementIndex, null, "Fu");
+        payload = Crypto.Proc_3_0_6D2AF0(achievementId, null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(badgeRowId, null, payload) + badgeId + '\2';
+        payload = Crypto.Proc_3_0_6D2AF0(rewardIncrease, null, Crypto.Proc_3_0_6D2AF0(scoreIncrease, null, payload));
+        return payload + "HHH\2" + levelTotal + '\2';
+    }
+
+    public static String achievementAwardPayload(String achievementRow) {
+        String[] fields = Vb.cStr(achievementRow).split("\t", -1);
+        if (fields.length < 7) {
+            return "";
+        }
+        long rewardIncrease = Vb.val(fields[3]);
+        long scoreIncrease = Vb.val(fields[5]);
+        long rewardType = Vb.val(fields[6]);
+        if (rewardIncrease == 0L && scoreIncrease == 0L) {
+            return "";
+        }
+        return Crypto.Proc_3_0_6D2AF0(rewardType, null,
+            Crypto.Proc_3_0_6D2AF0(rewardIncrease, null, Crypto.Proc_3_0_6D2AF0(scoreIncrease, null, "Fv")));
+    }
+
+    public static AchievementProgressDecision achievementProgressDecision(
+        String achievementRows,
+        long achievementQuestId,
+        Map<String, Long> currentLevelsByBadgePrefix,
+        long currentProgress
+    ) {
+        AchievementProgressDecision decision = new AchievementProgressDecision();
+        long achievementIndex = 0L;
+        for (String row : Vb.cStr(achievementRows).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 7) {
+                    long achievementId = Vb.val(fields[0]);
+                    if (achievementId == achievementQuestId) {
+                        String badgePrefix = fields[1];
+                        long progressStep = Vb.val(fields[2]);
+                        long levelTotal = Vb.val(fields[4]);
+                        if (levelTotal <= 0L) {
+                            levelTotal = 1L;
+                        }
+                        long currentLevel = currentLevelsByBadgePrefix != null && currentLevelsByBadgePrefix.containsKey(badgePrefix)
+                            ? currentLevelsByBadgePrefix.get(badgePrefix) : 0L;
+                        if (!badgePrefix.isEmpty() && progressStep > 0L && currentLevel >= 0L && currentLevel < levelTotal) {
+                            decision.achievementIndex = achievementIndex;
+                            decision.nextLevel = currentLevel + 1L;
+                            decision.requiredProgress = progressStep * decision.nextLevel;
+                            decision.shouldReward = currentProgress >= decision.requiredProgress;
+                        }
+                        return decision;
+                    }
+                }
+                achievementIndex++;
+            }
+        }
+        return decision;
+    }
+
+    public static String achievementListPayload(String achievementRows, Map<String, Long> currentLevelsByBadgePrefix) {
+        StringBuilder payload = new StringBuilder();
+        long achievementCount = 0L;
+        for (String row : Vb.cStr(achievementRows).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 7) {
+                    long achievementId = Vb.val(fields[0]);
+                    String badgePrefix = fields[1];
+                    if (achievementId > 0L && !badgePrefix.isEmpty()) {
+                        long progressRequired = Vb.val(fields[2]);
+                        long rewardIncrease = Vb.val(fields[3]);
+                        long levelTotal = Vb.val(fields[4]);
+                        long scoreIncrease = Vb.val(fields[5]);
+                        long rewardType = Vb.val(fields[6]);
+                        if (levelTotal <= 0L) {
+                            levelTotal = 1L;
+                        }
+                        long currentLevel = currentLevelsByBadgePrefix != null && currentLevelsByBadgePrefix.containsKey(badgePrefix)
+                            ? currentLevelsByBadgePrefix.get(badgePrefix) : 0L;
+                        if (currentLevel < 0L) {
+                            currentLevel = 0L;
+                        }
+                        if (currentLevel > levelTotal) {
+                            currentLevel = levelTotal;
+                        }
+                        long currentProgress = currentLevel > 0L ? progressRequired * currentLevel : 0L;
+                        if (currentProgress < 0L) {
+                            currentProgress = 0L;
+                        }
+                        String entryPayload = Crypto.Proc_3_0_6D2AF0(achievementId, null, "");
+                        entryPayload = Crypto.Proc_3_0_6D2AF0(currentLevel, null, entryPayload);
+                        entryPayload = Crypto.Proc_3_0_6D2AF0(currentProgress, null, entryPayload);
+                        entryPayload = Crypto.Proc_3_0_6D2AF0(progressRequired, null, entryPayload);
+                        entryPayload = Crypto.Proc_3_0_6D2AF0(rewardIncrease, null, entryPayload);
+                        entryPayload = Crypto.Proc_3_0_6D2AF0(scoreIncrease, null, entryPayload);
+                        entryPayload = Crypto.Proc_3_0_6D2AF0(rewardType, null, entryPayload);
+                        entryPayload = Crypto.Proc_3_0_6D2AF0(levelTotal, null, entryPayload);
+                        payload.append(entryPayload).append(badgePrefix).append('\2').append(currentLevel).append('\2');
+                        achievementCount++;
+                    }
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(achievementCount, null, "Ft") + payload;
+    }
+
+    public static String wiredSpecialStatePayload(long itemState) {
+        return itemState == 1507L ? "5;1;7;1;5;0;" : "";
+    }
+
+    public static String wiredEditRecordFromWire(String packetPayload, String packetCode, long wiredCode, boolean includeExtraValue) {
+        String requestPayload = Vb.cStr(packetPayload);
+        if (!Vb.cStr(packetCode).isEmpty() && requestPayload.startsWith(packetCode)) {
+            requestPayload = requestPayload.substring(packetCode.length());
+        }
+        LongRef offset = new LongRef(1);
+        long furnitureId = readWireLong(requestPayload, offset);
+        if (furnitureId <= 0L) {
+            furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        }
+        if (furnitureId <= 0L || wiredCode <= 0L) {
+            return "";
+        }
+        long parameterCount = readWireLong(requestPayload, offset);
+        if (parameterCount < 0L || parameterCount > 100L) {
+            return "";
+        }
+        String parameterValues = "";
+        for (long parameterIndex = 0L; parameterIndex < parameterCount; parameterIndex++) {
+            long parameterValue = readWireLong(requestPayload, offset);
+            if (!parameterValues.isEmpty()) {
+                parameterValues += ";";
+            }
+            parameterValues += parameterValue;
+        }
+        String textValue = left(Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0), 125);
+        if (textValue.isEmpty()) {
+            textValue = left(Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 0, 0), 125);
+        }
+        long selectedCount = readWireLong(requestPayload, offset);
+        if (selectedCount < 0L || selectedCount > 100L) {
+            return "";
+        }
+        String selectedIdsText = "";
+        for (long selectedIndex = 0L; selectedIndex < selectedCount; selectedIndex++) {
+            long selectedFurnitureId = readWireLong(requestPayload, offset);
+            if (selectedFurnitureId <= 0L) {
+                return "";
+            }
+            if (!selectedIdsText.isEmpty()) {
+                selectedIdsText += ";";
+            }
+            selectedIdsText += selectedFurnitureId;
+        }
+        long extraValue = includeExtraValue ? readWireLong(requestPayload, offset) : 0L;
+        return wiredRecordText(wiredCode, furnitureId, selectedIdsText, parameterValues, textValue,
+            includeExtraValue ? String.valueOf(extraValue) : "");
+    }
+
+    public static String wiredRecordText(
+        long wiredCode,
+        long furnitureId,
+        String selectedIdsText,
+        String parameterValues,
+        String textValue,
+        String extraValue
+    ) {
+        if (wiredCode <= 0L || furnitureId <= 0L) {
+            return "";
+        }
+        String recordText = "\1" + wiredCode + '\2' + furnitureId + '\3' + Vb.cStr(selectedIdsText)
+            + '\4' + Vb.cStr(parameterValues) + '\5' + left(textValue, 125) + '\6';
+        if (!Vb.cStr(extraValue).isEmpty()) {
+            recordText += Vb.cStr(extraValue);
+        }
+        return recordText;
+    }
+
+    public static String wiredRecordMarker(String recordText) {
+        String code = wiredRecordField(recordText, 0);
+        String furnitureId = wiredRecordField(recordText, 1);
+        if (code.isEmpty() || furnitureId.isEmpty()) {
+            return "";
+        }
+        return "\1" + code + '\2' + furnitureId + '\3';
+    }
+
+    public static String wiredCacheWithRecord(String cacheText, String recordText) {
+        String record = Vb.cStr(recordText);
+        if (record.isEmpty()) {
+            return Vb.cStr(cacheText);
+        }
+        String cache = removeRepresentedLineRecord(cacheText, wiredRecordMarker(record));
+        return cache.isEmpty() ? record : record + '\n' + cache;
+    }
+
+    public static String wiredRecordField(String recordText, long fieldIndex) {
+        String bodyText = Vb.cStr(recordText);
+        if (bodyText.startsWith("\1")) {
+            bodyText = bodyText.substring(1);
+        }
+        String[] parts = bodyText.split("\2", 2);
+        if (fieldIndex == 0L) {
+            return parts.length >= 1 ? parts[0] : "";
+        }
+        if (parts.length < 2) {
+            return "";
+        }
+        String restText = parts[1];
+        parts = restText.split("\3", 2);
+        if (fieldIndex == 1L) {
+            return parts.length >= 1 ? parts[0] : "";
+        }
+        if (parts.length < 2) {
+            return "";
+        }
+        restText = parts[1];
+        parts = restText.split("\4", 2);
+        if (fieldIndex == 2L) {
+            return parts.length >= 1 ? parts[0] : "";
+        }
+        if (parts.length < 2) {
+            return "";
+        }
+        restText = parts[1];
+        parts = restText.split("\5", 2);
+        if (fieldIndex == 3L) {
+            return parts.length >= 1 ? parts[0] : "";
+        }
+        if (parts.length < 2) {
+            return "";
+        }
+        restText = parts[1];
+        parts = restText.split("\6", 2);
+        if (fieldIndex == 4L) {
+            return parts.length >= 1 ? parts[0] : "";
+        }
+        if (fieldIndex == 5L && parts.length >= 2) {
+            return parts[1];
+        }
+        return "";
+    }
+
+    public static boolean wiredSelectedItemsExist(String selectedIds, String existingIds) {
+        String selected = Vb.cStr(selectedIds);
+        if (selected.isEmpty()) {
+            return true;
+        }
+        for (String idPart : selected.replace(',', ';').split(";", -1)) {
+            long furnitureId = Vb.val(idPart);
+            if (furnitureId > 0L && !containsDelimitedId(existingIds, furnitureId)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static WiredApplyResult wiredApplySelected(
+        String selectedIds,
+        String parameterText,
+        long selectedFurnitureId,
+        String existingIds
+    ) {
+        WiredApplyResult result = new WiredApplyResult();
+        String effectiveSelectedIds = selectedFurnitureId > 0L ? String.valueOf(selectedFurnitureId) : Vb.cStr(selectedIds);
+        if (effectiveSelectedIds.isEmpty()) {
+            return result;
+        }
+        String[] parameterParts = (Vb.cStr(parameterText) + ";").split(";", -1);
+        long stateValue = Vb.val(parameterParts.length > 0 ? parameterParts[0] : "");
+        for (String idPart : effectiveSelectedIds.replace(',', ';').split(";", -1)) {
+            long furnitureId = Vb.val(idPart);
+            if (furnitureId > 0L && containsDelimitedId(existingIds, furnitureId)) {
+                result.statePayloads += furnitureStatePayload(furnitureId, stateValue);
+                result.appliedCount++;
+            }
+        }
+        return result;
+    }
+
+    public static SongInfoRequest songInfoRequestFromWire(String packetPayload) {
+        SongInfoRequest request = new SongInfoRequest();
+        String requestPayload = Vb.cStr(packetPayload);
+        if (requestPayload.startsWith("C]")) {
+            requestPayload = requestPayload.substring(2);
+        }
+        LongRef offset = new LongRef(1);
+        long requestedCount = readWireLong(requestPayload, offset);
+        if (requestedCount <= 0L) {
+            requestedCount = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        }
+        if (requestedCount > 60L) {
+            requestedCount = 60L;
+        }
+        request.requestedCount = requestedCount;
+        String requestedIds = "";
+        for (long requestIndex = 0L; requestIndex < requestedCount; requestIndex++) {
+            long cdId = readWireLong(requestPayload, offset);
+            if (cdId > 0L) {
+                if (!requestedIds.isEmpty()) {
+                    requestedIds += ",";
+                }
+                requestedIds += cdId;
+            }
+        }
+        request.requestedIds = requestedIds;
+        return request;
+    }
+
+    public static String songInfoPayload(String cdRows) {
+        long responseCount = 0L;
+        StringBuilder cdPayload = new StringBuilder();
+        for (String row : Vb.cStr(cdRows).split("\r", -1)) {
+            String rowValue = row.trim();
+            if (!rowValue.isEmpty()) {
+                String[] fields = rowValue.split("\t", -1);
+                if (fields.length >= 5) {
+                    long cdId = Vb.val(handlingField(fields, 4));
+                    long sequenceId = Vb.val(handlingField(fields, 1));
+                    String rowPayload = Crypto.Proc_3_0_6D2AF0(cdId, null, "");
+                    rowPayload = Crypto.Proc_3_0_6D2AF0(sequenceId, null, rowPayload);
+                    rowPayload += handlingField(fields, 0) + '\2';
+                    rowPayload += handlingField(fields, 2) + '\2';
+                    rowPayload += handlingField(fields, 3) + '\2';
+                    cdPayload.append(rowPayload);
+                    responseCount++;
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(responseCount, null, "Dl") + cdPayload;
+    }
+
+    public static String removeSoundMachineMarkers(String representedRoomCache, long jukeboxId, long activeDestinationId) {
+        String cache = Vb.cStr(representedRoomCache);
+        if (activeDestinationId > 0L) {
+            cache = cache.replaceFirst(Pattern.quote("\1" + activeDestinationId + '\2'), "");
+        }
+        if (jukeboxId > 0L) {
+            cache = cache.replaceFirst(Pattern.quote("\1" + jukeboxId + '\2'), "");
+        }
+        return cache;
+    }
+
+    public static JukeboxAddRequest jukeboxAddRequestFromWire(String packetPayload) {
+        JukeboxAddRequest request = new JukeboxAddRequest();
+        String requestPayload = Vb.cStr(packetPayload);
+        if (requestPayload.startsWith("C" + '\177')) {
+            requestPayload = requestPayload.substring(2);
+        }
+        LongRef offset = new LongRef(1);
+        request.diskFurnitureId = readWireLong(requestPayload, offset);
+        request.playlistOrder = readWireLong(requestPayload, offset);
+        if (request.playlistOrder < 0L) {
+            request.playlistOrder = 0L;
+        }
+        return request;
+    }
+
+    public static boolean jukeboxCanAddDisk(long playlistOrder, String maxOrderText, long playlistCount, long playlistLimit) {
+        long effectiveLimit = playlistLimit <= 0L ? 100L : playlistLimit;
+        if (playlistCount >= effectiveLimit) {
+            return false;
+        }
+        String maxText = Vb.cStr(maxOrderText);
+        long maxOrder = Vb.val(maxText);
+        if (!maxText.isEmpty()) {
+            return playlistOrder == maxOrder || playlistOrder == maxOrder + 1L;
+        }
+        return playlistOrder == 0L;
+    }
+
+    public static long jukeboxRemoveOrderFromWire(String packetPayload) {
+        String requestPayload = Vb.cStr(packetPayload);
+        if (requestPayload.startsWith("D@")) {
+            requestPayload = requestPayload.substring(2);
+        }
+        LongRef offset = new LongRef(1);
+        long playlistOrder = readWireLong(requestPayload, offset);
+        return Math.max(0L, playlistOrder);
+    }
+
+    public static String jukeboxPlaylistPayload(long playlistLimit, String playlistRows) {
+        long effectiveLimit = playlistLimit <= 0L ? 100L : playlistLimit;
+        long playlistCount = 0L;
+        StringBuilder playlistPayload = new StringBuilder();
+        for (String row : Vb.cStr(playlistRows).split("\r", -1)) {
+            String rowValue = row.trim();
+            if (!rowValue.isEmpty()) {
+                String[] fields = rowValue.split("\t", -1);
+                long cdId = Vb.val(handlingField(fields, 0));
+                long destinationId = Vb.val(handlingField(fields, 1));
+                if (cdId > 0L) {
+                    playlistPayload.append(Crypto.Proc_3_0_6D2AF0(cdId, null, ""));
+                    playlistPayload.append(Crypto.Proc_3_0_6D2AF0(destinationId, null, ""));
+                    playlistCount++;
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(effectiveLimit, null, Crypto.Proc_3_0_6D2AF0(playlistCount, null, "EN"))
+            + playlistPayload;
+    }
+
+    public static String songDiskInventoryPayload(String diskRows) {
+        long diskCount = 0L;
+        StringBuilder diskPayload = new StringBuilder();
+        for (String row : Vb.cStr(diskRows).split("\r", -1)) {
+            String rowValue = row.trim();
+            if (!rowValue.isEmpty()) {
+                String[] fields = rowValue.split("\t", -1);
+                long diskId = Vb.val(handlingField(fields, 0));
+                long destinationId = Vb.val(handlingField(fields, 1));
+                if (diskId > 0L) {
+                    diskPayload.append(Crypto.Proc_3_0_6D2AF0(diskId, null, ""));
+                    diskPayload.append(Crypto.Proc_3_0_6D2AF0(destinationId, null, ""));
+                    diskCount++;
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(diskCount, null, "EM") + diskPayload;
+    }
+
+    public static String jukeboxPlaybackPayload(long startedAt, long sequenceId, long destinationId, long diskFurnitureId) {
+        if (destinationId <= 0L || sequenceId <= 0L) {
+            return "";
+        }
+        String payload = Crypto.Proc_3_0_6D2AF0(startedAt, null, "EG");
+        payload = Crypto.Proc_3_0_6D2AF0(sequenceId, null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(destinationId, null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(diskFurnitureId, null, payload);
+        return Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(0, null, payload));
+    }
+
+    public static String[] badgeUpdateSelectionsFromWire(String packetPayload) {
+        String requestPayload = Vb.cStr(packetPayload);
+        if (requestPayload.startsWith("B^")) {
+            requestPayload = requestPayload.substring(2);
+        }
+        String[] slots = new String[5];
+        LongRef offset = new LongRef(1);
+        for (int slotIndex = 0; slotIndex < slots.length; slotIndex++) {
+            long hasBadge = readWireLong(requestPayload, offset);
+            if (hasBadge == 1L) {
+                slots[slotIndex] = Functions.Proc_10_11_80A9C0(readWireString(requestPayload, offset), 0, 0);
+            } else {
+                slots[slotIndex] = "";
+            }
+        }
+        return slots;
+    }
+
+    public static long idRequestFromWire(String packetPayload, String prefix) {
+        String requestPayload = Vb.cStr(packetPayload);
+        if (!Vb.cStr(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
+            requestPayload = requestPayload.substring(prefix.length());
+        }
+        LongRef offset = new LongRef(1);
+        long value = readWireLong(requestPayload, offset);
+        if (value <= 0L) {
+            value = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        }
+        return value;
+    }
+
+    public static String recyclerStatusPayload(long enabledValue, long remainingBlockTime) {
+        long normalizedEnabled = enabledValue != 0L ? 1L : 0L;
+        String payload = Crypto.Proc_3_0_6D2AF0(normalizedEnabled, null, "G{");
+        return Crypto.Proc_3_0_6D2AF0(remainingBlockTime, null, payload);
+    }
+
+    public static RecyclerSelection recyclerSelectionFromWire(String packetPayload) {
+        RecyclerSelection selection = new RecyclerSelection();
+        String requestPayload = Vb.cStr(packetPayload);
+        if (requestPayload.startsWith("F^")) {
+            requestPayload = requestPayload.substring(2);
+        }
+        LongRef offset = new LongRef(1);
+        selection.requestedCount = readWireLong(requestPayload, offset);
+        if (selection.requestedCount != 5L) {
+            return selection;
+        }
+        String selectedItems = "";
+        for (long itemIndex = 0L; itemIndex < selection.requestedCount; itemIndex++) {
+            long furnitureId = readWireLong(requestPayload, offset);
+            if (furnitureId <= 0L) {
+                return selection;
+            }
+            String token = String.valueOf(furnitureId);
+            if (("," + selectedItems + ",").contains("," + token + ",")) {
+                return selection;
+            }
+            if (!selectedItems.isEmpty()) {
+                selectedItems += ",";
+            }
+            selectedItems += token;
+        }
+        selection.selectedItems = selectedItems;
+        selection.valid = true;
+        return selection;
+    }
+
+    public static String callForHelpRowPayload(String rowText, Map<Long, String> userNamesById) {
+        String[] fields = Vb.cStr(rowText).split("\t", -1);
+        long callForHelpId = Vb.val(handlingField(fields, 0));
+        long callerId = Vb.val(handlingField(fields, 2));
+        String callerName = handlingField(fields, 3);
+        long partnerId = Vb.val(handlingField(fields, 4));
+        long roomId = Vb.val(handlingField(fields, 5));
+        long categoryId = Vb.val(handlingField(fields, 6));
+        String descriptionText = handlingField(fields, 7);
+        String roomName = handlingField(fields, 9);
+        long pickerId = Vb.val(handlingField(fields, 10));
+        String partnerName = userNamesById != null && partnerId > 0L ? Vb.cStr(userNamesById.get(partnerId)) : "";
+        String pickerName = userNamesById != null && pickerId > 0L ? Vb.cStr(userNamesById.get(pickerId)) : "";
+        return Proc_6_29_70D800(0, 0, categoryId, callerId, callerName, partnerId, partnerName,
+            descriptionText, roomId, roomName, callForHelpId, pickerName);
+    }
+
+    public static String staffCallForHelpWhereClause(String packetPayload) {
+        String requestPayload = Vb.cStr(packetPayload);
+        LongRef offset = new LongRef(1);
+        long requestedCount = readWireLong(requestPayload, offset);
+        if (requestedCount < 1L || requestedCount > 150L) {
+            return "";
+        }
+        StringBuilder whereClause = new StringBuilder();
+        for (long requestIndex = 0L; requestIndex < requestedCount; requestIndex++) {
+            long callForHelpId = readWireLong(requestPayload, offset);
+            if (callForHelpId <= 0L) {
+                return "";
+            }
+            if (whereClause.length() > 0) {
+                whereClause.append(" OR ");
+            }
+            whereClause.append("id='").append(callForHelpId).append('\'');
+        }
+        return whereClause.toString();
+    }
+
+    public static String staffUserSummaryPayload(
+        String rowText,
+        long callForHelpCount,
+        long pickedCallForHelpCount,
+        long cautionCount,
+        long banCount
+    ) {
+        String[] fields = Vb.cStr(rowText).split("\t", -1);
+        long userId = Vb.val(handlingField(fields, 0));
+        String userName = handlingField(fields, 1);
+        long createdMinutes = Vb.val(handlingField(fields, 2));
+        long lastOnlineMinutes = Vb.val(handlingField(fields, 3));
+        long socketIndex = Vb.val(handlingField(fields, 4));
+        String payload = Crypto.Proc_3_0_6D2AF0(userId, null, "HU") + userName + '\2';
+        payload = Crypto.Proc_3_0_6D2AF0(createdMinutes, null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(lastOnlineMinutes, null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(socketIndex > 0L ? 1L : 0L, null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(callForHelpCount, null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(pickedCallForHelpCount, null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(cautionCount, null, payload);
+        return Crypto.Proc_3_0_6D2AF0(banCount, null, payload);
+    }
+
+    public static String staffRoomVisitPayload(String rowText) {
+        String[] fields = Vb.cStr(rowText).split("\t", -1);
+        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 0)), null, "");
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 1)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 3)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 4)), null, payload);
+        return payload + handlingField(fields, 2) + '\2';
+    }
+
+    public static long staffNestedUserIdFromWire(String packetPayload) {
+        String requestPayload = Vb.cStr(packetPayload);
+        long directValue = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        if (directValue > 0L) {
+            return directValue;
+        }
+        LongRef offset = new LongRef(1);
+        String nestedPayload = readWireString(requestPayload, offset);
+        long nestedValue = Vb.val(Functions.Proc_10_6_809F10(nestedPayload, 0, 0));
+        if (nestedValue <= 0L) {
+            nestedValue = Vb.val(nestedPayload);
+        }
+        if (nestedValue > 0L) {
+            return nestedValue;
+        }
+        offset.value = 1L;
+        return readWireLong(requestPayload, offset);
+    }
+
+    public static StaffChatRowsPayload staffRoomChatRowsPayload(String chatRows) {
+        StaffChatRowsPayload result = new StaffChatRowsPayload();
+        StringBuilder chatPayload = new StringBuilder();
+        for (String row : Vb.cStr(chatRows).split("\r", -1)) {
+            String rowValue = row.trim();
+            if (!rowValue.isEmpty()) {
+                String[] fields = rowValue.split("\t", -1);
+                if (fields.length >= 5) {
+                    chatPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 0)), null, ""));
+                    chatPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 1)), null, ""));
+                    chatPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 2)), null, ""));
+                    chatPayload.append(handlingField(fields, 3)).append('\2');
+                    chatPayload.append(handlingField(fields, 4)).append('\2');
+                    result.chatCount++;
+                }
+            }
+        }
+        result.payload = chatPayload.toString();
+        return result;
+    }
+
+    public static String staffRoomChatHistoryPayload(String visitRowText, String chatRows) {
+        String[] fields = Vb.cStr(visitRowText).split("\t", -1);
+        StaffChatRowsPayload chatRowsPayload = staffRoomChatRowsPayload(chatRows);
+        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 0)), null, "");
+        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 1)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(chatRowsPayload.chatCount, null, payload);
+        return payload + handlingField(fields, 2) + '\2' + chatRowsPayload.payload;
+    }
+
+    public static boolean containsUnsafeStaffAlert(String messageText) {
+        String lowerMessage = Vb.cStr(messageText).toLowerCase();
+        return lowerMessage.contains("cookie") && lowerMessage.contains("javascript:");
+    }
+
+    private static String[] normalizeRows(Object rowSource) {
+        if (rowSource instanceof String[]) {
+            return (String[]) rowSource;
+        }
+        return Vb.cStr(rowSource).split("\r", -1);
+    }
+
+    private static boolean readRoomEventCommon(String packetPayload, LongRef offset, RoomEventPayload result, boolean requireText) {
+        result.eventName = Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset));
+        if (requireText && result.eventName.length() < 3) {
+            return false;
+        }
+        result.eventDescription = Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset));
+        if (requireText && result.eventDescription.length() < 3) {
+            return false;
+        }
+        long tagCount = readWireLong(packetPayload, offset);
+        if (tagCount < 0L || tagCount > 2L) {
+            return false;
+        }
+        for (long tagIndex = 1L; tagIndex <= tagCount; tagIndex++) {
+            String tagText = left(Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset)), 30).toLowerCase();
+            if (tagIndex == 1L) {
+                result.tagOne = tagText;
+            } else if (tagIndex == 2L) {
+                result.tagTwo = tagText;
+            }
+        }
+        return true;
+    }
+
+    private static long optionalWireLong(String packetPayload, LongRef offset, long defaultValue) {
+        long previousOffset = offset.value;
+        long value = readWireLong(packetPayload, offset);
+        return offset.value <= previousOffset ? defaultValue : value;
+    }
+
+    private static boolean containsDelimitedId(String idText, long wantedId) {
+        String wanted = String.valueOf(wantedId);
+        for (String idPart : Vb.cStr(idText).replace(',', ';').split(";", -1)) {
+            if (wanted.equals(String.valueOf(Vb.val(idPart)))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void appendRow(StringBuilder rows, String rowText) {
+        if (rows.length() > 0) {
+            rows.append('\r');
+        }
+        rows.append(rowText);
+    }
+
+    private static String[] ensureHandlingFieldCount(String[] fields, int lastIndex) {
+        if (fields.length > lastIndex) {
+            return fields;
+        }
+        String[] expanded = new String[lastIndex + 1];
+        for (int index = 0; index < expanded.length; index++) {
+            expanded[index] = index < fields.length ? fields[index] : "";
+        }
+        return expanded;
+    }
+
+    private static String joinTab(String[] fields) {
+        return String.join("\t", fields);
+    }
+
+    private static String removeMovementRecord(String movementText, String markerText) {
+        String result = Vb.cStr(movementText);
+        String marker = Vb.cStr(markerText);
+        int markerAt = result.indexOf(marker);
+        while (markerAt >= 0) {
+            int endAt = result.indexOf('\2', markerAt + marker.length());
+            if (endAt < 0) {
+                result = result.substring(0, markerAt);
+            } else {
+                result = result.substring(0, markerAt) + result.substring(endAt + 1);
+            }
+            markerAt = result.indexOf(marker);
+        }
+        return result;
+    }
+
+    private static String[] userQuestFields(String userQuestText, long questId) {
+        if (questId <= 0L) {
+            return new String[0];
+        }
+        String marker = "\r" + questId + '\t';
+        String text = Vb.cStr(userQuestText);
+        int start = text.indexOf(marker);
+        if (start < 0) {
+            return new String[0];
+        }
+        int rowStart = start + marker.length();
+        int rowEnd = text.indexOf('\r', rowStart);
+        if (rowEnd < 0) {
+            rowEnd = text.length();
+        }
+        return (questId + "\t" + text.substring(rowStart, rowEnd)).split("\t", -1);
+    }
+
+    private static String left(String value, int maxLength) {
+        String text = Vb.cStr(value);
+        return text.length() <= maxLength ? text : text.substring(0, maxLength);
+    }
+
+    private static int firstPositiveIndex(String text, char... chars) {
+        int result = -1;
+        for (char ch : chars) {
+            int at = text.indexOf(ch);
+            if (at >= 0 && (result < 0 || at < result)) {
+                result = at;
+            }
+        }
+        return result;
+    }
+
+    private static String[] normalizeUserEntryArgs(Object... args) {
+        String[] values = new String[11];
+        for (int i = 0; i < values.length; i++) {
+            values[i] = "";
+        }
+        if (args.length == 1) {
+            String recordText = Vb.cStr(args[0]);
+            if (recordText.indexOf('\t') >= 0) {
+                String[] fields = recordText.split("\t", -1);
+                for (int i = 0; i < values.length; i++) {
+                    values[i] = handlingField(fields, i);
+                }
+            } else {
+                values[0] = recordText;
+                values[5] = recordText;
+            }
+        } else {
+            for (int i = 0; i < values.length && i < args.length; i++) {
+                values[i] = Vb.cStr(args[i]);
+            }
+        }
+        return values;
+    }
+
+    private static String[] normalizeObjectEntryArgs(Object... args) {
+        String[] values = new String[9];
+        for (int i = 0; i < values.length; i++) {
+            values[i] = "";
+        }
+        if (args.length == 1) {
+            String recordText = Vb.cStr(args[0]);
+            if (recordText.indexOf('\t') >= 0) {
+                String[] fields = recordText.split("\t", -1);
+                for (int i = 0; i < values.length; i++) {
+                    values[i] = handlingField(fields, i);
+                }
+            } else {
+                values[0] = recordText;
+                values[4] = recordText;
+            }
+        } else {
+            for (int i = 0; i < values.length && i < args.length; i++) {
+                values[i] = Vb.cStr(args[i]);
+            }
+        }
+        return values;
+    }
+}
