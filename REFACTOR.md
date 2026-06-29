@@ -19,6 +19,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Move raw `Licence.global_*` string caches into typed collection-backed state holders under the appropriate `game.*` package, keeping legacy serialization only at explicit compatibility boundaries.
 - Each domain module should expose a single module-level manager/registry for its live instances and cached state instead of relying on `Licence.java` globals or scattered static ownership. `Licence` accessors are only temporary compatibility bridges while callers migrate to those managers.
 - Keep the refactor branch current with required runtime fixes from `dev`; commit `099dd4d17cd83efeecdb088ac1d94c8ff8404621` (`Fix AlphaSeries boot runtime`) is intentionally merged into this branch.
+- Restore the missing decompiled literals listed in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into the matching Java classes and methods, preserving source text unless a deliberate compatibility boundary documents otherwise.
 - Commit only verified milestones with `REFACTOR.md` metrics updated when the legacy surface changes.
 
 ## Completed Slices
@@ -245,6 +246,7 @@ Measured on 2026-06-30:
 - Replace remaining `Crypto.Proc_3_*` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
 - Continue replacing duplicated local string/number helpers in root compatibility classes with `StringUtils` and `NumberUtils`.
 - Move remaining raw `Licence.global_*` caches into typed state holders under the appropriate `game.*` package.
+- Insert the missing strings tracked in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md`; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
 - Delete remaining deprecated compatibility aliases only after their call sites reach zero and tests pass.
 
 ## Verification
