@@ -1816,6 +1816,12 @@ public final class PortedModuleSmokeTest {
                     && sqlText.contains("friendships.id_friend='88'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88, "Target", "Motto", "fig", 1, 8, "now"));
                 }
+                if (sqlText.contains("SELECT id,name,id_socket,figure,motto,nickname,DATE_FORMAT(FROM_UNIXTIME(lastonline_time)")
+                    && sqlText.contains("LOWER(name) LIKE 'targ%'")) {
+                    return Arrays.<List<Object>>asList(
+                        Arrays.<Object>asList(88, "Target", 8, "fig", "Motto", "nick", "now"),
+                        Arrays.<Object>asList(99, "Targus", 0, "fig2", "Other", "nick2", "later"));
+                }
                 if (sqlText.contains("SELECT activitypoints_0 FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(70));
                 }
@@ -2781,6 +2787,12 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "@MMIM77"));
         assertEquals(true, containsSend(handlingSends, "@MM"));
         handlingSql.clear();
+        handlingSends.clear();
+        String searchPayload = Handling.Proc_6_172_7C25B0(4, "@i" + wireString("targ"));
+        assertEquals(true, searchPayload.startsWith("Fs"));
+        assertEquals(true, searchPayload.contains("Target"));
+        assertEquals(true, searchPayload.contains("Targus"));
+        assertEquals(true, containsSend(handlingSends, "Fs"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
