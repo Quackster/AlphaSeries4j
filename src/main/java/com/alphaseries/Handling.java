@@ -5703,6 +5703,70 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_202_7D6760(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            long enabledValue = Vb.val(Functions.Proc_10_0_809570("com.client.catalog.recycler.enabled", 0, 0));
+            if (enabledValue == 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            RecyclerSelection selection = recyclerSelectionFromWire(handlingPacketPayload(args));
+            if (!selection.valid) {
+                return "";
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            String itemWhere = recyclerSelectionWhereClause(selection.selectedItems, escapedUserId);
+            if (itemWhere.isEmpty()) {
+                return "";
+            }
+            long validCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures,products WHERE "
+                + itemWhere, 0, 0));
+            if (validCount != selection.requestedCount) {
+                return "";
+            }
+            long rewardProductId = representedRecyclerRewardProduct();
+            if (rewardProductId <= 0L) {
+                return "";
+            }
+            long rewardDestinationId = Vb.val(MySQL.Proc_5_2_6D4690(
+                "SELECT id_destination FROM catalog_products WHERE id_product='" + rewardProductId
+                    + "' ORDER BY id DESC LIMIT 1", 0, 0));
+            if (rewardDestinationId <= 0L) {
+                rewardDestinationId = rewardProductId;
+            }
+            String rewardSign = recyclerRewardSign();
+            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='"
+                + Functions.Proc_10_11_80A9C0(rewardSign, 0, 0) + "',id_owner='" + escapedUserId
+                + "',id_destination='" + rewardDestinationId + "' WHERE id_owner='" + escapedUserId
+                + "' AND id_product='" + Licence.global_0082916C + "' ORDER BY id DESC LIMIT 1", 1, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner=NULL WHERE id_owner='" + escapedUserId
+                + "' AND id_room IS NULL AND id IN (" + selection.selectedItems + ")", 0, 0);
+            MySQL.Proc_5_1_6D4110("INSERT INTO logs_recycler(id_user,timestamp,items,id_reward,id_session) VALUES('"
+                + escapedUserId + "',UNIX_TIMESTAMP(),'"
+                + Functions.Proc_10_11_80A9C0(selection.selectedItems, 0, 0) + "','"
+                + rewardProductId + "','0')", 0, 0);
+            for (String furnitureId : selection.selectedItems.split(",", -1)) {
+                long selectedFurnitureId = Vb.val(furnitureId);
+                if (selectedFurnitureId > 0L) {
+                    Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(selectedFurnitureId, null, "Ac"), 0);
+                }
+            }
+            String payload = Crypto.Proc_3_0_6D2AF0(rewardProductId, null, "G|");
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_203_7D7F80(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
@@ -10798,6 +10862,92 @@ public final class Handling {
         selection.selectedItems = selectedItems;
         selection.valid = true;
         return selection;
+    }
+
+    public static String recyclerSelectionWhereClause(String selectedItems, String escapedUserId) {
+        String whereClause = "";
+        for (String item : Vb.cStr(selectedItems).split(",", -1)) {
+            long furnitureId = Vb.val(item);
+            if (furnitureId <= 0L) {
+                continue;
+            }
+            if (!whereClause.isEmpty()) {
+                whereClause += " OR ";
+            }
+            whereClause += "furnitures.id_owner='" + escapedUserId + "' AND furnitures.id_room IS NULL"
+                + " AND furnitures.id='" + furnitureId + "' AND products.id=furnitures.id_product"
+                + " AND products.is_recycleable='1'";
+        }
+        return whereClause;
+    }
+
+    public static long representedRecyclerRewardProduct() {
+        try {
+            if (Licence.global_00829140 instanceof Object[] && Licence.global_0082915C instanceof Object[]) {
+                Object[] productLists = (Object[]) Licence.global_00829140;
+                Object[] chances = (Object[]) Licence.global_0082915C;
+                for (int rewardGroupIndex = 0; rewardGroupIndex < Licence.global_00829168
+                    && rewardGroupIndex < productLists.length && rewardGroupIndex < chances.length; rewardGroupIndex++) {
+                    long chance = Vb.val(chances[rewardGroupIndex]);
+                    if (chance > 0L && Functions.Proc_10_4_809CA0(1, chance, 0) == 1L) {
+                        long productId = representedRandomProductFromList(Vb.cStr(productLists[rewardGroupIndex]));
+                        if (productId > 0L) {
+                            return productId;
+                        }
+                    }
+                }
+                for (int rewardGroupIndex = 0; rewardGroupIndex < Licence.global_00829168
+                    && rewardGroupIndex < productLists.length; rewardGroupIndex++) {
+                    long productId = representedRandomProductFromList(Vb.cStr(productLists[rewardGroupIndex]));
+                    if (productId > 0L) {
+                        return productId;
+                    }
+                }
+            }
+            String rewardRows = MySQL.Proc_5_2_6D4690(
+                "SELECT id_product FROM settings_recycler ORDER BY chance DESC LIMIT 100", 0, 0);
+            String[] rows = Vb.cStr(rewardRows).split("\r", -1);
+            if (rows.length > 0 && !Vb.cStr(rewardRows).isEmpty()) {
+                int rowIndex = (int) Vb.val(Functions.Proc_10_4_809CA0(0, rows.length - 1L, 0));
+                rowIndex = Math.max(0, Math.min(rowIndex, rows.length - 1));
+                return Vb.val(rows[rowIndex]);
+            }
+            return 0L;
+        } catch (Exception ignored) {
+            // VB6 source suppresses helper failures.
+            return 0L;
+        }
+    }
+
+    public static long representedRandomProductFromList(String productList) {
+        try {
+            String normalizedProducts = "";
+            long productCount = 0L;
+            for (String productRow : Vb.cStr(productList).split("\2", -1)) {
+                long productId = Vb.val(productRow);
+                if (productId > 0L) {
+                    if (!normalizedProducts.isEmpty()) {
+                        normalizedProducts += "\2";
+                    }
+                    normalizedProducts += productId;
+                    productCount++;
+                }
+            }
+            if (productCount <= 0L) {
+                return 0L;
+            }
+            String[] productRows = normalizedProducts.split("\2", -1);
+            int selectedIndex = (int) Vb.val(Functions.Proc_10_4_809CA0(0, productRows.length - 1L, 0));
+            selectedIndex = Math.max(0, Math.min(selectedIndex, productRows.length - 1));
+            return Vb.val(productRows[selectedIndex]);
+        } catch (Exception ignored) {
+            // VB6 source suppresses helper failures.
+            return 0L;
+        }
+    }
+
+    public static String recyclerRewardSign() {
+        return LocalDateTime.now().toString().replace('T', ' ');
     }
 
     public static String callForHelpRowPayload(String rowText, Map<Long, String> userNamesById) {

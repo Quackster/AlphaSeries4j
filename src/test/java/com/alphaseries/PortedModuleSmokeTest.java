@@ -1803,6 +1803,10 @@ public final class PortedModuleSmokeTest {
         String originalHcGiftLookup = Licence.global_0082917C;
         String originalGiftWrapPayload = Licence.global_00829260;
         Object originalCatalogPagePayloads = Licence.global_00829308;
+        Object originalRecyclerProductLists = Licence.global_00829140;
+        Object originalRecyclerChances = Licence.global_0082915C;
+        long originalRecyclerGroupCount = Licence.global_00829168;
+        long originalRecyclerBoxProductId = Licence.global_0082916C;
         String originalSettingsCache = Functions.global_0082928C;
         Path figureCachePath = Files.createTempDirectory("alphaseries-figuredata");
         Functions.applicationPath = figureCachePath.toString();
@@ -1840,6 +1844,10 @@ public final class PortedModuleSmokeTest {
         Licence.global_0082917C = "[81\0" + "506\1" + "20]";
         Licence.global_00829260 = "WRAP_PAYLOAD";
         Licence.global_00829308 = new String[]{"", "", "PAGE_PAYLOAD"};
+        Licence.global_00829140 = new String[]{"506\2"};
+        Licence.global_0082915C = new String[]{"1"};
+        Licence.global_00829168 = 1L;
+        Licence.global_0082916C = 508L;
         Functions.global_0082928C = "[com.server.socket.game.rooms.own.max=5]"
             + "[com.client.navigator.staff_picked.category.id.default=2]"
             + "[com.client.navigator.staff_picked.style.default=3]"
@@ -2022,6 +2030,15 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id,id_destination FROM furnitures WHERE id_owner='77' AND id_product='700'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(4, 50), Arrays.<Object>asList(5, 51));
+                }
+                if (sqlText.contains("SELECT COUNT(*) FROM furnitures,products WHERE")
+                    && sqlText.contains("furnitures.id='1'")
+                    && sqlText.contains("furnitures.id='5'")
+                    && sqlText.contains("products.is_recycleable='1'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(5));
+                }
+                if (sqlText.contains("SELECT id_destination FROM catalog_products WHERE id_product='506'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(81));
                 }
                 if (sqlText.contains("SELECT soundmachine_jb_playlist.id_destination,soundmachine_jb_playlist.id_cd,soundmachine_cds.sequence")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(40, 2, 3));
@@ -3209,6 +3226,18 @@ public final class PortedModuleSmokeTest {
         assertEquals(Handling.recyclerStatusPayload(1, 0), recyclerStatus);
         assertEquals(true, containsSend(handlingSends, "G{"));
         handlingSends.clear();
+        handlingSql.clear();
+        String recyclerSubmitPayload = Handling.Proc_6_202_7D6760(4,
+            "F^" + wireLong(5) + wireLong(1) + wireLong(2) + wireLong(3) + wireLong(4) + wireLong(5));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(506, null, "G|"), recyclerSubmitPayload);
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='"));
+        assertEquals(true, containsSql(handlingSql, "id_owner='77',id_destination='81' WHERE id_owner='77' AND id_product='508'"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner=NULL WHERE id_owner='77' AND id_room IS NULL AND id IN (1,2,3,4,5)"));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO logs_recycler(id_user,timestamp,items,id_reward,id_session) VALUES('77',UNIX_TIMESTAMP(),'1,2,3,4,5','506','0')"));
+        assertEquals(true, containsSend(handlingSends, "Ac"));
+        assertEquals(true, containsSend(handlingSends, "G|"));
+        handlingSends.clear();
+        handlingSql.clear();
         String achievementReward = Handling.Proc_6_204_7D82E0(4, 0, 3);
         assertEquals(Handling.achievementRewardPayload(0, "2\tACH_\t10\t5\t3\t7\t2", 3, 204), achievementReward);
         assertEquals(true, containsSql(handlingSql, "DELETE FROM users_badges WHERE id_user='77' AND id_badge LIKE 'ACH_%' LIMIT 1"));
@@ -3365,6 +3394,10 @@ public final class PortedModuleSmokeTest {
         Licence.global_0082917C = originalHcGiftLookup;
         Licence.global_00829260 = originalGiftWrapPayload;
         Licence.global_00829308 = originalCatalogPagePayloads;
+        Licence.global_00829140 = originalRecyclerProductLists;
+        Licence.global_0082915C = originalRecyclerChances;
+        Licence.global_00829168 = originalRecyclerGroupCount;
+        Licence.global_0082916C = originalRecyclerBoxProductId;
         Functions.global_0082928C = originalSettingsCache;
         Functions.applicationPath = originalApplicationPath.toString();
     }
