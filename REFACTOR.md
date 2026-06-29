@@ -5,6 +5,7 @@ Last updated: 2026-06-29
 ## Goal
 
 Refactor the VB6-port-shaped code into Java packages with stable domain APIs, typed database access, prepared statements, fluent packet builders, and smaller classes while preserving source compatibility and runtime behavior until each compatibility layer can be removed safely.
+Keep common string/number helpers in shared utility classes, and move raw `Licence` globals toward typed collections in the relevant `game.*` package.
 
 ## Completed Slices
 
@@ -28,9 +29,11 @@ Refactor the VB6-port-shaped code into Java packages with stable domain APIs, ty
 - Added `com.alphaseries.game.inventory.InventoryMessagePayloads` for inventory item/list payload building.
 - Added `com.alphaseries.game.moderation.StaffPayloads` for call-for-help rows, staff user summaries, room visits, room chat history, and unsafe staff-alert checks.
 - Added `com.alphaseries.game.pet.PetPayloads` for pet race, inventory, name-validation, command, status, scratch, and action outgoing payloads.
+- Added `com.alphaseries.game.session.SessionRegistry` as a typed adapter around the legacy `Licence.global_00829268` session cache.
 - Added `com.alphaseries.game.wired.WiredPayloads` for wired record formatting, cache replacement, selected-item checks, and state payload aggregation.
 - Added `com.alphaseries.messages.outgoing.MessengerPayloads` for friend, request, search, pending-request, and friend-list outgoing payloads.
 - Added `com.alphaseries.server.packet.PacketSink` and kept the root `PacketSink` as a deprecated compatibility alias.
+- Added `com.alphaseries.util.StringUtils` and `NumberUtils`; migrated new staff/session code away from duplicated local helper methods.
 - Migrated several payload builders from string concatenation to fluent `PacketBuilder`.
 
 ## VB Compatibility Class Removal Checklist
@@ -46,9 +49,9 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 473
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1403
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1394
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 473
-- `Handling.java`: 12597 lines
+- `Handling.java`: 12583 lines
 - `Functions.java`: 797 lines
 - `MySQL.java`: 301 lines
 - `Vb.java`: 106 lines
@@ -60,6 +63,8 @@ Measured on 2026-06-29:
 - Move MUS handling into a `server.mus` package with compatibility shims for old entry points.
 - Extract navigator, room, moderation, pet, badge, poll, recycler, jukebox, and wired payload builders from `Handling`.
 - Replace remaining `Crypto.Proc_3_*` and direct `Vb.val`/`Vb.cStr` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
+- Continue replacing duplicated local `text`/`number`/`field` helpers in extracted packages with `StringUtils` and `NumberUtils`.
+- Move remaining raw `Licence.global_*` caches into typed state holders under the appropriate `game.*` package.
 - Delete deprecated compatibility aliases and `com.alphaseries.vb.Vb` only after call-site count reaches zero and tests pass.
 
 ## Verification

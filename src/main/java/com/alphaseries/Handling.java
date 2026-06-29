@@ -10517,21 +10517,7 @@ public final class Handling {
     }
 
     public static void handlingStoreSocketSession(int socketIndex, String sessionRecord) {
-        if (socketIndex <= 0 || Vb.cStr(sessionRecord).isEmpty()) {
-            return;
-        }
-        StringBuilder rebuiltCache = new StringBuilder();
-        String socketPrefix = "1:" + socketIndex;
-        for (String recordText : Vb.cStr(Licence.global_00829268).split("\\[", -1)) {
-            if (recordText.isEmpty()) {
-                continue;
-            }
-            if (!recordText.startsWith(socketPrefix + "\1")) {
-                rebuiltCache.append('[').append(recordText);
-            }
-        }
-        rebuiltCache.append("[1:").append(socketIndex).append('\1').append(sessionRecord).append(']');
-        Licence.global_00829268 = rebuiltCache.toString();
+        Licence.storeSocketSession(socketIndex, sessionRecord);
     }
 
     public static String normalizeRoomModelMap(String modelMap) {

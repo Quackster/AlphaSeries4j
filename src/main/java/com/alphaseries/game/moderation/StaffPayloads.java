@@ -2,7 +2,8 @@ package com.alphaseries.game.moderation;
 
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.PacketReader;
-import com.alphaseries.protocol.WireEncoding;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.util.Map;
 
@@ -16,18 +17,18 @@ public final class StaffPayloads {
     }
 
     public static String callForHelpRow(String rowText, Map<Long, String> userNamesById) {
-        String[] fields = text(rowText).split("\t", -1);
-        long callForHelpId = number(field(fields, 0));
-        long callerId = number(field(fields, 2));
-        String callerName = field(fields, 3);
-        long partnerId = number(field(fields, 4));
-        long roomId = number(field(fields, 5));
-        long categoryId = number(field(fields, 6));
-        String descriptionText = field(fields, 7);
-        String roomName = field(fields, 9);
-        long pickerId = number(field(fields, 10));
-        String partnerName = userNamesById != null && partnerId > 0L ? text(userNamesById.get(partnerId)) : "";
-        String pickerName = userNamesById != null && pickerId > 0L ? text(userNamesById.get(pickerId)) : "";
+        String[] fields = StringUtils.text(rowText).split("\t", -1);
+        long callForHelpId = NumberUtils.parseLong(StringUtils.field(fields, 0));
+        long callerId = NumberUtils.parseLong(StringUtils.field(fields, 2));
+        String callerName = StringUtils.field(fields, 3);
+        long partnerId = NumberUtils.parseLong(StringUtils.field(fields, 4));
+        long roomId = NumberUtils.parseLong(StringUtils.field(fields, 5));
+        long categoryId = NumberUtils.parseLong(StringUtils.field(fields, 6));
+        String descriptionText = StringUtils.field(fields, 7);
+        String roomName = StringUtils.field(fields, 9);
+        long pickerId = NumberUtils.parseLong(StringUtils.field(fields, 10));
+        String partnerName = userNamesById != null && partnerId > 0L ? StringUtils.text(userNamesById.get(partnerId)) : "";
+        String pickerName = userNamesById != null && pickerId > 0L ? StringUtils.text(userNamesById.get(pickerId)) : "";
         return callForHelp(0, 0, categoryId, callerId, callerName, partnerId, partnerName,
             descriptionText, roomId, roomName, callForHelpId, pickerName);
     }
@@ -94,12 +95,12 @@ public final class StaffPayloads {
         long cautionCount,
         long banCount
     ) {
-        String[] fields = text(rowText).split("\t", -1);
-        long userId = number(field(fields, 0));
-        String userName = field(fields, 1);
-        long createdMinutes = number(field(fields, 2));
-        long lastOnlineMinutes = number(field(fields, 3));
-        long socketIndex = number(field(fields, 4));
+        String[] fields = StringUtils.text(rowText).split("\t", -1);
+        long userId = NumberUtils.parseLong(StringUtils.field(fields, 0));
+        String userName = StringUtils.field(fields, 1);
+        long createdMinutes = NumberUtils.parseLong(StringUtils.field(fields, 2));
+        long lastOnlineMinutes = NumberUtils.parseLong(StringUtils.field(fields, 3));
+        long socketIndex = NumberUtils.parseLong(StringUtils.field(fields, 4));
         return PacketBuilder.message("HU")
             .appendInt(userId)
             .appendString(userName)
@@ -114,29 +115,29 @@ public final class StaffPayloads {
     }
 
     public static String roomVisit(String rowText) {
-        String[] fields = text(rowText).split("\t", -1);
+        String[] fields = StringUtils.text(rowText).split("\t", -1);
         return PacketBuilder.create()
-            .appendInt(number(field(fields, 0)))
-            .appendInt(number(field(fields, 1)))
-            .appendInt(number(field(fields, 3)))
-            .appendInt(number(field(fields, 4)))
-            .appendString(field(fields, 2))
+            .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 0)))
+            .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 1)))
+            .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 3)))
+            .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 4)))
+            .appendString(StringUtils.field(fields, 2))
             .build();
     }
 
     public static ChatRows roomChatRows(String chatRows) {
         ChatRows result = new ChatRows();
         PacketBuilder chatPayload = PacketBuilder.create();
-        for (String row : text(chatRows).split("\r", -1)) {
+        for (String row : StringUtils.text(chatRows).split("\r", -1)) {
             String rowValue = row.trim();
             if (!rowValue.isEmpty()) {
                 String[] fields = rowValue.split("\t", -1);
                 if (fields.length >= 5) {
-                    chatPayload.appendInt(number(field(fields, 0)))
-                        .appendInt(number(field(fields, 1)))
-                        .appendInt(number(field(fields, 2)))
-                        .appendString(field(fields, 3))
-                        .appendString(field(fields, 4));
+                    chatPayload.appendInt(NumberUtils.parseLong(StringUtils.field(fields, 0)))
+                        .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 1)))
+                        .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 2)))
+                        .appendString(StringUtils.field(fields, 3))
+                        .appendString(StringUtils.field(fields, 4));
                     result.chatCount++;
                 }
             }
@@ -146,31 +147,19 @@ public final class StaffPayloads {
     }
 
     public static String roomChatHistory(String visitRowText, String chatRows) {
-        String[] fields = text(visitRowText).split("\t", -1);
+        String[] fields = StringUtils.text(visitRowText).split("\t", -1);
         ChatRows chatRowsPayload = roomChatRows(chatRows);
         return PacketBuilder.create()
-            .appendInt(number(field(fields, 0)))
-            .appendInt(number(field(fields, 1)))
+            .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 0)))
+            .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 1)))
             .appendInt(chatRowsPayload.chatCount)
-            .appendString(field(fields, 2))
+            .appendString(StringUtils.field(fields, 2))
             .appendRaw(chatRowsPayload.payload)
             .build();
     }
 
     public static boolean containsUnsafeAlert(String messageText) {
-        String lowerMessage = text(messageText).toLowerCase();
+        String lowerMessage = StringUtils.text(messageText).toLowerCase();
         return lowerMessage.contains("cookie") && lowerMessage.contains("javascript:");
-    }
-
-    private static String field(String[] fields, int index) {
-        return fields != null && index >= 0 && index < fields.length ? text(fields[index]) : "";
-    }
-
-    private static long number(Object value) {
-        return WireEncoding.parseLeadingLong(value);
-    }
-
-    private static String text(Object value) {
-        return value == null ? "" : String.valueOf(value);
     }
 }

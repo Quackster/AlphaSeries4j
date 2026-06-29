@@ -1,5 +1,8 @@
 package com.alphaseries;
 
+import com.alphaseries.game.session.SessionRegistry;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 import com.alphaseries.vb.Vb;
 
 import java.time.LocalDateTime;
@@ -123,35 +126,35 @@ public final class Licence {
         if (args == null || args.length == 0) {
             return "";
         }
-        return getSessionRecordField("0:", Vb.cStr(args[0]), optionalColumnIndex(args, 1, 0));
+        return getSessionRecordField("0:", StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
     }
 
     public static long Proc_9_7_808320(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return Vb.val(getSessionRecordField("1:", Vb.cStr(args[0]), optionalColumnIndex(args, 1, 1)));
+        return sessionRegistry().recordLong("1:", StringUtils.text(args[0]), optionalColumnIndex(args, 1, 1));
     }
 
     public static long Proc_9_8_8086A0(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return Vb.val(getSessionLinkedValue(Vb.cStr(args[0]), true));
+        return sessionRegistry().linkedLong(StringUtils.text(args[0]), true);
     }
 
     public static long Proc_9_9_808AC0(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return Vb.val(getSessionLinkedValue(Vb.cStr(args[0]), false));
+        return sessionRegistry().linkedLong(StringUtils.text(args[0]), false);
     }
 
     public static long Proc_9_10_808F30(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return Vb.val(getSessionCacheField(Vb.cStr(args[0]), optionalColumnIndex(args, 1, 0)));
+        return sessionRegistry().cacheLong(StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
     }
 
     public static long Proc_9_11_809220(Object... args) {
@@ -159,77 +162,36 @@ public final class Licence {
     }
 
     public static int optionalColumnIndex(Object[] args, int argumentIndex, int defaultValue) {
-        if (args != null && argumentIndex >= 0 && argumentIndex < args.length && !Vb.cStr(args[argumentIndex]).isEmpty()) {
-            return (int) Vb.val(args[argumentIndex]);
+        if (args != null && argumentIndex >= 0 && argumentIndex < args.length && !StringUtils.text(args[argumentIndex]).isEmpty()) {
+            return NumberUtils.parseInt(args[argumentIndex]);
         }
         return defaultValue;
     }
 
     public static String getSessionCacheField(String keyName, long columnIndex) {
-        if (keyName == null || keyName.isEmpty() || global_00829268.isEmpty()) {
-            return "";
-        }
-        String lowerCache = global_00829268.toLowerCase();
-        String marker = "[" + keyName.toLowerCase() + '\1';
-        int markerAt = lowerCache.indexOf(marker);
-        if (markerAt < 0) {
-            return "";
-        }
-        String valueText = global_00829268.substring(markerAt + marker.length());
-        String[] fields = valueText.split("\2", -1);
-        if (columnIndex < 0 || columnIndex >= fields.length) {
-            return "";
-        }
-        return fields[(int) columnIndex];
+        return sessionRegistry().cacheField(keyName, columnIndex);
     }
 
     public static String getSessionRecordField(String recordPrefix, String recordId, long columnIndex) {
-        String payload = getSessionRecordPayload(recordPrefix, recordId);
-        if (payload.isEmpty()) {
-            return "";
-        }
-        String[] fields = payload.split("\2", -1);
-        if (columnIndex < 0 || columnIndex >= fields.length) {
-            return "";
-        }
-        String[] valueParts = fields[(int) columnIndex].split("\\]", -1);
-        return valueParts.length == 0 ? "" : valueParts[0];
+        return sessionRegistry().recordField(recordPrefix, recordId, columnIndex);
     }
 
     public static String getSessionRecordPayload(String recordPrefix, String recordId) {
-        if (global_00829268.isEmpty()) {
-            return "";
-        }
-        String marker = "[" + recordPrefix + recordId + '\1';
-        int markerAt = global_00829268.toLowerCase().indexOf(marker.toLowerCase());
-        if (markerAt < 0) {
-            return "";
-        }
-        int payloadStart = markerAt + marker.length();
-        int payloadEnd = global_00829268.indexOf(']', payloadStart);
-        if (payloadEnd < 0) {
-            payloadEnd = global_00829268.length();
-        }
-        return global_00829268.substring(payloadStart, payloadEnd);
+        return sessionRegistry().recordPayload(recordPrefix, recordId);
     }
 
     public static String getSessionLinkedValue(String recordId, boolean useBracketCount) {
-        if (global_00829268.isEmpty()) {
-            return "";
-        }
-        String marker = "\2" + recordId + "]";
-        String[] parts = global_00829268.split(java.util.regex.Pattern.quote(marker), -1);
-        if (parts.length < 2) {
-            return "";
-        }
-        String sectionText = parts[parts.length - 1];
-        String[] bracketParts = sectionText.split("\\[", -1);
-        int targetIndex = bracketParts.length - 1;
-        String[] valueParts = useBracketCount ? sectionText.split("\1", -1) : sectionText.split("\0", -1);
-        if (targetIndex < 0 || targetIndex >= valueParts.length) {
-            return "";
-        }
-        return valueParts[targetIndex];
+        return sessionRegistry().linkedValue(recordId, useBracketCount);
+    }
+
+    public static void storeSocketSession(int socketIndex, String sessionRecord) {
+        SessionRegistry registry = sessionRegistry();
+        registry.storeSocketSession(socketIndex, sessionRecord);
+        global_00829268 = registry.toLegacyCache();
+    }
+
+    private static SessionRegistry sessionRegistry() {
+        return SessionRegistry.fromLegacyCache(global_00829268);
     }
 
     public static String getTableCell(Object tableCache, long rowId, long columnIndex) {
