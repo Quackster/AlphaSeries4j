@@ -1891,6 +1891,9 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id FROM users WHERE id_socket='8'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88));
                 }
+                if (sqlText.contains("FROM users WHERE login_ticket = 'login-77'")) {
+                    return Arrays.<List<Object>>asList(loginUserRow());
+                }
                 if (sqlText.contains("SELECT id FROM users WHERE name='Target'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88));
                 }
@@ -3135,6 +3138,20 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "DAQBHHIIKHJHPAHQA"));
         assertEquals(true, containsSend(handlingSends, "http://www.alpha-series.com/"));
         handlingSends.clear();
+        handlingSql.clear();
+        assertEquals("77", Handling.Proc_6_163_7B3480(4, "F_login-77"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET login_ticket=null,id_socket = '4' WHERE id = '77'"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_amount='5',scratch_amount='5',update_time=UNIX_TIMESTAMP() WHERE id='77' LIMIT 1"));
+        assertEquals(true, containsSend(handlingSends, "@C"));
+        assertEquals(true, containsSend(handlingSends, "@F123.0"));
+        assertEquals(true, containsSend(handlingSends, "Fv"));
+        assertEquals(true, containsSend(handlingSends, "GG"));
+        assertEquals(true, containsSend(handlingSends, "DX"));
+        assertEquals(true, containsSend(handlingSends, "Cd"));
+        assertEquals(true, containsSend(handlingSends, "E^"));
+        assertEquals(true, Licence.getSessionRecordPayload("1:", "4").contains("login-77"));
+        handlingSends.clear();
+        handlingSql.clear();
         String friendNotifyPayload = Handling.Proc_6_165_7BE0B0(4);
         assertEquals(true, friendNotifyPayload.startsWith("@MHIH"));
         assertEquals(true, friendNotifyPayload.contains("User77"));
@@ -3566,6 +3583,29 @@ public final class PortedModuleSmokeTest {
             fields[(int) Long.parseLong(columnPairs[index])] = columnPairs[index + 1];
         }
         return String.join("\t", fields);
+    }
+
+    private static List<Object> loginUserRow() {
+        Object[] fields = new Object[48];
+        Arrays.fill(fields, 0);
+        fields[0] = 77;
+        fields[1] = "Caller";
+        fields[2] = 2;
+        fields[3] = "hd-180-1";
+        fields[4] = "Motto";
+        fields[5] = "M";
+        fields[6] = 11;
+        fields[7] = 123;
+        fields[12] = 0;
+        fields[14] = 9;
+        fields[26] = 1;
+        fields[35] = 22;
+        fields[36] = 0;
+        fields[39] = 33;
+        fields[41] = 1;
+        fields[45] = 44;
+        fields[46] = 55;
+        return Arrays.asList(fields);
     }
 
     private static String wireString(String value) {

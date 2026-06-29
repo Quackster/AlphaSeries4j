@@ -5205,6 +5205,114 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_163_7B3480(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String packetPayload = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
+            String loginTicket = handlingLoginTicketFromPayload(packetPayload);
+            if (loginTicket.isEmpty() || "NULL".equalsIgnoreCase(loginTicket)) {
+                if (socketIndex > 0) {
+                    Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                }
+                return "";
+            }
+            String escapedTicket = Functions.Proc_10_11_80A9C0(loginTicket, 0, 0);
+            String userRow = MySQL.Proc_5_2_6D4690("SELECT id,name,level,figure,motto,gender,activitypoints_0,credits,level_hc,"
+                + "hc_days,hc2_days,hc_presents,id_socket,nickname,homeroom,respect_amount,scratch_amount,language,hc_periods,"
+                + "hc2_periods,respect_received,respect_given,ROUND(online_time/60,0),ROUND((UNIX_TIMESTAMP()-create_time)/60/60/24,0),"
+                + "gifts_given,gifts_received,ROUND((UNIX_TIMESTAMP()-update_time)/60/60/24,0),hc_startperiod,"
+                + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0),merge_name,tutorial_name,tutorial_clothes,tutorial_guide,"
+                + "login_session,achievement_score,activitypoints_1,id_favgroup,privileges_extra,accept_friends,activitypoints_2,"
+                + "amount_staffpicked,email_validated,email,settings_sound,online_time,activitypoints_3,activitypoints_4,ip_last "
+                + "FROM users WHERE login_ticket = '" + escapedTicket + "' LIMIT 1", 0, 0);
+            if (userRow.isEmpty()) {
+                if (socketIndex > 0) {
+                    Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                }
+                return "";
+            }
+            String[] fields = userRow.split("\t", -1);
+            String userId = String.valueOf((long) Vb.val(handlingField(fields, 0)));
+            if (userId.isEmpty() || "0".equals(userId)) {
+                if (socketIndex > 0) {
+                    Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                }
+                return "";
+            }
+            int oldSocketIndex = (int) Vb.val(handlingField(fields, 12));
+            if (oldSocketIndex > 0 && oldSocketIndex != socketIndex) {
+                Proc_6_243_7FFEB0(oldSocketIndex, 0, 0);
+            }
+            String userName = handlingField(fields, 1);
+            long rankIndex = Vb.val(handlingField(fields, 2));
+            long creditsValue = Vb.val(handlingField(fields, 7));
+            long homeRoomId = Vb.val(handlingField(fields, 14));
+            long updateAgeDays = Vb.val(handlingField(fields, 26));
+            long emailValidated = Vb.val(handlingField(fields, 41));
+            long[] pointValues = new long[]{
+                Vb.val(handlingField(fields, 6)),
+                Vb.val(handlingField(fields, 35)),
+                Vb.val(handlingField(fields, 39)),
+                Vb.val(handlingField(fields, 45)),
+                Vb.val(handlingField(fields, 46))
+            };
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET login_ticket=null,id_socket = '" + socketIndex
+                + "' WHERE id = '" + escapedUserId + "'", 0, 0);
+            if (updateAgeDays > 0L) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE users SET respect_amount='5',scratch_amount='5',update_time=UNIX_TIMESTAMP() WHERE id='"
+                    + escapedUserId + "' LIMIT 1", 0, 0);
+            }
+            handlingStoreSocketSession(socketIndex, userId + '\2' + socketIndex + '\2' + userName + '\2'
+                + rankIndex + '\2' + loginTicket + '\2');
+            Proc_6_244_801E80(socketIndex, "@C", 0);
+            Proc_6_20_6E88E0(socketIndex, 0, 0);
+            Proc_6_244_801E80(socketIndex, "@F" + creditsValue + ".0" + '\2', 0);
+            for (int pointIndex = 0; pointIndex <= 4; pointIndex++) {
+                Proc_6_244_801E80(socketIndex, handlingLoginActivityPointPayload(pointIndex, pointValues[pointIndex]), 0);
+            }
+            if (homeRoomId > 0L) {
+                Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(homeRoomId, null, "GG"), 0);
+            }
+            if (emailValidated > 0L) {
+                Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(emailValidated, null, "DX"), 0);
+            }
+            Proc_6_244_801E80(socketIndex, "@a" + "com.server.socket.location" + '\2' + "invalid.location" + '\2', 0);
+            if (Vb.val(Functions.Proc_10_0_809570("com.client.motd.message.enabled", 0, 0)) != 0L) {
+                String motdMessage = Functions.Proc_10_0_809570("com.client.motd.message", "", 0).replace("\\n", "\n");
+                if (!motdMessage.isEmpty()) {
+                    Proc_6_244_801E80(socketIndex, Console.Proc_2_4_6D28B0(motdMessage.length(), 0, 0)
+                        + " " + motdMessage + '\2', 0);
+                }
+            }
+            Proc_6_244_801E80(socketIndex, "Cd" + Crypto.Proc_3_0_6D2AF0(Vb.val(userId), null, "")
+                + Proc_6_195_7D38D0(userId, 0, 0), 0);
+            Proc_6_244_801E80(socketIndex, "E^" + Crypto.Proc_3_0_6D2AF0(Vb.val(userId), null, "")
+                + Proc_6_196_7D3ED0(userId, 0, 0), 0);
+            long favouriteGroupId = Vb.val(handlingField(fields, 36));
+            if (favouriteGroupId > 0L) {
+                String groupRow = MySQL.Proc_5_3_6D4CF0("SELECT group_name,group_description,id_badge,id_room FROM users_groups WHERE id='"
+                    + favouriteGroupId + "' LIMIT 1", 0, 0);
+                if (!groupRow.isEmpty()) {
+                    String[] groupFields = groupRow.split("\t", -1);
+                    String groupPayload = Crypto.Proc_3_0_6D2AF0(favouriteGroupId, null, "Dt")
+                        + handlingField(groupFields, 0) + '\2'
+                        + handlingField(groupFields, 1) + '\2'
+                        + handlingField(groupFields, 2) + '\2'
+                        + Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(groupFields, 3)), null, "") + "H";
+                    Proc_6_244_801E80(socketIndex, groupPayload, 0);
+                }
+            }
+            return userId;
+        } catch (Exception ignored) {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex > 0) {
+                Proc_6_243_7FFEB0(socketIndex, 0, 0);
+            }
+            return "";
+        }
+    }
+
     public static String Proc_6_165_7BE0B0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
@@ -9727,6 +9835,24 @@ public final class Handling {
             requestPayload = requestPayload.substring(2);
         }
         return requestPayload;
+    }
+
+    public static void handlingStoreSocketSession(int socketIndex, String sessionRecord) {
+        if (socketIndex <= 0 || Vb.cStr(sessionRecord).isEmpty()) {
+            return;
+        }
+        StringBuilder rebuiltCache = new StringBuilder();
+        String socketPrefix = "1:" + socketIndex;
+        for (String recordText : Vb.cStr(Licence.global_00829268).split("\\[", -1)) {
+            if (recordText.isEmpty()) {
+                continue;
+            }
+            if (!recordText.startsWith(socketPrefix + "\1")) {
+                rebuiltCache.append('[').append(recordText);
+            }
+        }
+        rebuiltCache.append("[1:").append(socketIndex).append('\1').append(sessionRecord).append(']');
+        Licence.global_00829268 = rebuiltCache.toString();
     }
 
     public static String handlingLoginActivityPointPayload(long pointType, long pointsValue) {
