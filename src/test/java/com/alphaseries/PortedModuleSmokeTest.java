@@ -1791,7 +1791,10 @@ public final class PortedModuleSmokeTest {
             + "[com.client.bot.guide.id=20]"
             + "[com.client.catalog.recycler.enabled=1]"
             + "[com.server.socket.game.default.songdisk=700]"
-            + "[com.server.socket.game.jukebox.900.soundsets.max=5]";
+            + "[com.server.socket.game.jukebox.900.soundsets.max=5]"
+            + "[com.server.socket.game.activitypoints_0.interval=60]"
+            + "[com.server.socket.game.activitypoints_0.max=500]"
+            + "[com.server.socket.game.activitypoints_0.amount=5]";
         Licence.global_008291E8 = new String[][]{{"2", "ACH_", "10", "5", "3", "7", "2"}};
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_mod\2fuse_alert\2fuse_kick\2fuse_receive_calls_for_help\2fuse_chatlog\2"
             + "fuse_use_wardrobe\2fuse_larger_wardrobe\2fuse_client_staff\2"}};
@@ -1834,6 +1837,12 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT activitypoints_0 FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(70));
+                }
+                if (sqlText.contains("SELECT online_time FROM users WHERE id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(60));
+                }
+                if (sqlText.contains("SELECT id,name,motto,gender,respect_amount,scratch_amount FROM users WHERE id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(77, "Caller", "Motto", "M", 4, 2));
                 }
                 if (sqlText.contains("SELECT activitypoints_1,activitypoints_2,activitypoints_3,activitypoints_4 FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, 20, 30, 40));
@@ -3191,6 +3200,16 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_2=activitypoints_2+5 WHERE id='77' LIMIT 1"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET id_level=id_level+1,progress='0',id_numericquest='0',timestamp_done=UNIX_TIMESTAMP() WHERE id_user='77' AND id_quest='10' LIMIT 1"));
         Licence.global_00829080 = "";
+        handlingSends.clear();
+        handlingSql.clear();
+        String ownProfilePayload = Handling.Proc_6_237_7F9ED0(4);
+        assertEquals(Handling.ownProfilePayload("77\tCaller\tMotto\tM\t4\t2"), ownProfilePayload);
+        assertEquals(true, containsSend(handlingSends, "@E77"));
+        handlingSends.clear();
+        String pointAwardPayload = Handling.Proc_6_238_7FA670(4);
+        assertEquals(Handling.representedActivityPointAwardPayload(0, 75), pointAwardPayload);
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_0=activitypoints_0+5 WHERE id='77'"));
+        assertEquals(true, containsSend(handlingSends, "Fv"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));

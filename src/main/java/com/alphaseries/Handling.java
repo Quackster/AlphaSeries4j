@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 public final class Handling {
     private static String representedInteractionPairs = "";
     private static String representedTradeOffers = "";
+    private static String representedActivityPointTicks = "";
 
     private Handling() {
     }
@@ -6068,6 +6069,67 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_237_7F9ED0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,name,motto,gender,respect_amount,scratch_amount FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            String payload = ownProfilePayload(rowText);
+            if (!payload.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, payload, 0);
+            }
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_238_7FA670(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long sessionSeconds = representedActivityPointSessionSeconds(socketIndex, userId);
+            if (sessionSeconds <= 0L) {
+                return "";
+            }
+            StringBuilder sentPayloads = new StringBuilder();
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            for (long pointType = 0L; pointType <= 4L; pointType++) {
+                long intervalSeconds = Vb.val(Functions.Proc_10_0_809570(
+                    "com.server.socket.game.activitypoints_" + pointType + ".interval", 0, 0));
+                if (intervalSeconds > 0L && sessionSeconds % intervalSeconds == 0L) {
+                    String columnName = "activitypoints_" + pointType;
+                    long maxPoints = Vb.val(Functions.Proc_10_0_809570(
+                        "com.server.socket.game.activitypoints_" + pointType + ".max", 1, 0));
+                    long currentPoints = Vb.val(MySQL.Proc_5_2_6D4690("SELECT " + columnName + " FROM users WHERE id='"
+                        + escapedUserId + "' LIMIT 1", 0, 0));
+                    long awardAmount = Vb.val(Functions.Proc_10_0_809570(
+                        "com.server.socket.game.activitypoints_" + pointType + ".amount", 0, 0));
+                    ActivityPointAward award = activityPointAwardDecision(
+                        sessionSeconds, pointType, intervalSeconds, maxPoints, awardAmount, currentPoints);
+                    if (award.shouldAward) {
+                        MySQL.Proc_5_0_6D3CD0("UPDATE users SET " + columnName + "=" + columnName + "+"
+                            + awardAmount + " WHERE id='" + escapedUserId + "'", 0, 0);
+                        Proc_6_244_801E80(socketIndex, award.payload, 0);
+                        sentPayloads.append(award.payload);
+                    }
+                }
+            }
+            return sentPayloads.toString();
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
@@ -8306,6 +8368,31 @@ public final class Handling {
     public static String representedActivityPointAwardPayload(long pointType, long pointsValue) {
         return Crypto.Proc_3_0_6D2AF0(pointType, null,
             Crypto.Proc_3_0_6D2AF0(pointsValue, null, "Fv")) + "H";
+    }
+
+    public static long representedActivityPointSessionSeconds(long socketIndex, String userId) {
+        if (socketIndex <= 0L || Vb.cStr(userId).isEmpty()) {
+            return 0L;
+        }
+        String marker = "[" + socketIndex + "]";
+        long tickValue = 0L;
+        int startAt = representedActivityPointTicks.indexOf(marker);
+        if (startAt >= 0) {
+            int valueStart = startAt + marker.length();
+            int endAt = representedActivityPointTicks.indexOf('[', valueStart);
+            if (endAt < 0) {
+                endAt = representedActivityPointTicks.length();
+            }
+            tickValue = Vb.val(representedActivityPointTicks.substring(valueStart, endAt));
+            representedActivityPointTicks = representedActivityPointTicks.substring(0, startAt)
+                + representedActivityPointTicks.substring(endAt);
+        } else {
+            tickValue = Vb.val(MySQL.Proc_5_2_6D4690("SELECT online_time FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+        }
+        tickValue += 60L;
+        representedActivityPointTicks += marker + tickValue;
+        return tickValue;
     }
 
     public static ActivityPointAward activityPointAwardDecision(
