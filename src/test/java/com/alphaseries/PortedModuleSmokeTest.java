@@ -2358,6 +2358,13 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT users.id,users.name,users.figure,users.motto,users.gender,models.position_x,models.position_y,rooms.id_slot")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(77, "Caller", "hd-180-1", "Motto", "M", 2, 3, 4));
                 }
+                if (sqlText.contains("SELECT rooms.id_slot FROM rooms WHERE rooms.id='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(4));
+                }
+                if (sqlText.contains("SELECT logs_visitedrooms.id,users.id,users.name,users.figure,users.motto")
+                    && sqlText.contains("logs_visitedrooms.id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(61, 77, "Caller", "hd-180-1", "Motto", "M", 2, 3, 4));
+                }
                 if (sqlText.contains("SELECT logs_visitedrooms.id,users_effects.id_effect")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(61, 12));
                 }
@@ -2819,6 +2826,16 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "@\\"));
         assertEquals(true, containsSend(handlingSends, "Caller"));
         assertEquals(true, containsSend(handlingSends, "hd-180-1"));
+        handlingSends.clear();
+        String originalBotRecordCacheForRoomList = Licence.global_00829358;
+        Licence.global_00829358 = "[200:4\2" + "501\2RoomBot\2hello\2speech\2responses\2" + "5\2" + "6\2" + "0.5\2" + "3\2" + "1 2 ff\2]";
+        Handling.Proc_6_81_730010(4, 9);
+        assertEquals(true, containsSend(handlingSends, "@\\"));
+        assertEquals(true, containsSend(handlingSends, "Caller"));
+        assertEquals(true, containsSend(handlingSends, "RoomBot"));
+        assertEquals(true, containsSend(handlingSends, "Du"));
+        assertEquals(true, containsSend(handlingSends, "0.5"));
+        Licence.global_00829358 = originalBotRecordCacheForRoomList;
         handlingSends.clear();
         Handling.Proc_6_82_731070(4, 9);
         assertEquals(true, containsSend(handlingSends, "Ge"));
