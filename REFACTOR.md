@@ -189,6 +189,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed activity-point tick balance reads and awards through `UserDao`, replacing raw activity-point SQL in `Handling`.
 - Added typed `OwnProfileRow` loading and routed own-profile payloads through `UserDao` plus fluent `UserPayloads` construction instead of tab-delimited handler parsing.
 - Added typed `RoomUserProfileRow` loading and routed room-user profile lookups through `RoomDao`, replacing raw visit/user fallback SQL and tab-delimited handler parsing.
+- Added typed `RoomUserTargetRow` loading and routed room interaction/badge target lookups through `RoomDao`, replacing duplicated raw visit/user fallback SQL and field-index parsing.
 - Added `VoucherDao` and routed voucher reward lookup, catalog product lookup, user reward updates, and voucher deletion through typed DAO methods.
 - Restored decompiled boot caption states and Figuredata cache validation/error logging.
 - Restored decompiled `ERR.log`/`SLOW.log` boot header text.
@@ -232,9 +233,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 367
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 112
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 108
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12505 lines
+- `Handling.java`: 12497 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines

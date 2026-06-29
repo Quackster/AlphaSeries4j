@@ -39,6 +39,7 @@ import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.room.RoomUserEntryRow;
 import com.alphaseries.game.room.RoomUserProfileRow;
+import com.alphaseries.game.room.RoomUserTargetRow;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.session.SocketMarkerSet;
@@ -3222,23 +3223,13 @@ public final class Handling {
             if (callerRoomId <= 0L) {
                 return;
             }
-            String targetRow = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket "
-                + "FROM logs_visitedrooms,users WHERE logs_visitedrooms.id='" + requestedRoomUserIndex
-                + "' AND logs_visitedrooms.id_room='" + callerRoomId
-                + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1", 0, 0);
-            if (targetRow.isEmpty()) {
-                targetRow = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket "
-                    + "FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_user='" + requestedRoomUserIndex
-                    + "' AND logs_visitedrooms.id_room='" + callerRoomId
-                    + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1", 0, 0);
-            }
-            if (targetRow.isEmpty()) {
+            RoomUserTargetRow target = activeRoomUserTarget(callerRoomId, requestedRoomUserIndex);
+            if (target == null) {
                 return;
             }
-            String[] targetFields = targetRow.split("\t", -1);
-            long targetRoomUserIndex = NumberUtils.parseLong(handlingField(targetFields, 0));
-            String targetUserId = String.valueOf(NumberUtils.parseLong(handlingField(targetFields, 1)));
-            int targetSocketIndex = (int) NumberUtils.parseLong(handlingField(targetFields, 2));
+            long targetRoomUserIndex = target.roomUserIndex();
+            String targetUserId = String.valueOf(target.userId());
+            int targetSocketIndex = (int) target.socketIndex();
             if (targetRoomUserIndex <= 0L || targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return;
             }
@@ -6626,20 +6617,12 @@ public final class Handling {
                 return "";
             }
             long callerRoomUserIndex = representedRoomUserIndex(socketIndex, callerUserId);
-            String targetRow = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id='"
-                + requestedRoomUserIndex + "' AND logs_visitedrooms.id_room='" + callerRoomId
-                + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1", 0, 0);
-            if (targetRow.isEmpty()) {
-                targetRow = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_user='"
-                    + requestedRoomUserIndex + "' AND logs_visitedrooms.id_room='" + callerRoomId
-                    + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1", 0, 0);
-            }
-            if (targetRow.isEmpty()) {
+            RoomUserTargetRow target = activeRoomUserTarget(callerRoomId, requestedRoomUserIndex);
+            if (target == null) {
                 return "";
             }
-            String[] targetFields = targetRow.split("\t", -1);
-            long targetRoomUserIndex = NumberUtils.parseLong(handlingField(targetFields, 0));
-            String targetUserId = String.valueOf((long) NumberUtils.parseLong(handlingField(targetFields, 1)));
+            long targetRoomUserIndex = target.roomUserIndex();
+            String targetUserId = String.valueOf(target.userId());
             if (targetRoomUserIndex <= 0L || targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
             }
@@ -11433,6 +11416,15 @@ public final class Handling {
             row.motto(),
             row.achievementScore(),
             row.figure());
+    }
+
+    public static RoomUserTargetRow activeRoomUserTarget(long roomId, long requestedRoomUserIndex) throws Exception {
+        RoomDao rooms = roomDao();
+        java.util.Optional<RoomUserTargetRow> target = rooms.activeRoomUserTargetByVisitId(roomId, requestedRoomUserIndex);
+        if (target.isEmpty()) {
+            target = rooms.activeRoomUserTargetByUserId(roomId, requestedRoomUserIndex);
+        }
+        return target.orElse(null);
     }
 
     public static String badgeInventoryPayload(String inventoryRows, String equippedPayload) {
