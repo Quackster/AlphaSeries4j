@@ -3,13 +3,15 @@ package com.alphaseries.game.room;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
-import java.util.regex.Pattern;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public final class RepresentedRoomSlots {
-    private String availableSlotMarkers;
+    private final Set<Long> availableSlots = new LinkedHashSet<>();
 
     private RepresentedRoomSlots(String availableSlotMarkers) {
-        this.availableSlotMarkers = StringUtils.text(availableSlotMarkers);
+        parse(StringUtils.text(availableSlotMarkers));
     }
 
     public static RepresentedRoomSlots fromLegacy(String availableSlotMarkers) {
@@ -17,34 +19,36 @@ public final class RepresentedRoomSlots {
     }
 
     public String availableSlotMarkers() {
-        return availableSlotMarkers;
+        StringBuilder markers = new StringBuilder();
+        for (Long slotId : availableSlots) {
+            markers.append(marker(slotId));
+        }
+        return markers.toString();
     }
 
     public boolean isEmpty() {
-        return availableSlotMarkers.isEmpty();
+        return availableSlots.isEmpty();
     }
 
     public void ensureInitialized() {
-        if (!availableSlotMarkers.isEmpty()) {
+        if (!availableSlots.isEmpty()) {
             return;
         }
-        StringBuilder slots = new StringBuilder();
         for (long slotIndex = 1L; slotIndex <= 500L; slotIndex++) {
-            slots.append('[').append(slotIndex).append(']');
+            availableSlots.add(slotIndex);
         }
-        availableSlotMarkers = slots.toString();
     }
 
     public long reserve(long preferredSlot) {
         ensureInitialized();
-        if (preferredSlot > 0L && reserveMarker(preferredSlot)) {
+        if (preferredSlot > 0L && availableSlots.remove(preferredSlot)) {
             return preferredSlot;
         }
-        for (String part : availableSlotMarkers.split("\\]", -1)) {
-            long candidateSlot = NumberUtils.parseLong(part.replace("[", ""));
-            if (candidateSlot > 0L && reserveMarker(candidateSlot)) {
-                return candidateSlot;
-            }
+        Iterator<Long> iterator = availableSlots.iterator();
+        if (iterator.hasNext()) {
+            long candidateSlot = iterator.next();
+            iterator.remove();
+            return candidateSlot;
         }
         return 0L;
     }
@@ -53,19 +57,16 @@ public final class RepresentedRoomSlots {
         if (slotId <= 0L) {
             return;
         }
-        String marker = marker(slotId);
-        if (!availableSlotMarkers.contains(marker)) {
-            availableSlotMarkers += marker;
-        }
+        availableSlots.add(slotId);
     }
 
-    private boolean reserveMarker(long slotId) {
-        String marker = marker(slotId);
-        if (!availableSlotMarkers.contains(marker)) {
-            return false;
+    private void parse(String availableSlotMarkers) {
+        for (String part : availableSlotMarkers.split("\\]", -1)) {
+            long slotId = NumberUtils.parseLong(part.replace("[", ""));
+            if (slotId > 0L) {
+                availableSlots.add(slotId);
+            }
         }
-        availableSlotMarkers = availableSlotMarkers.replaceFirst(Pattern.quote(marker), "");
-        return true;
     }
 
     private static String marker(long slotId) {
