@@ -56,6 +56,10 @@ import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.moderation.StaffPayloads;
+import com.alphaseries.game.moderation.StaffRoomChatRow;
+import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
+import com.alphaseries.game.moderation.StaffRoomVisitRow;
+import com.alphaseries.game.moderation.StaffUserLookup;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.wired.WiredPayloads;
 import com.alphaseries.messages.outgoing.AchievementPayloads;
@@ -8926,58 +8930,53 @@ public final class Handling {
             if (targetUserId <= 0L) {
                 return;
             }
-            String targetRow = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name FROM users WHERE users.id='"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' LIMIT 1", 0, 0);
-            if (targetRow.isEmpty()) {
+            StaffModerationDao moderationDao = staffModerationDao();
+            if (moderationDao == null) {
                 return;
             }
-            String[] targetFields = targetRow.split("\t", -1);
-            targetUserId = NumberUtils.parseLong(handlingField(targetFields, 0));
+            StaffUserLookup targetUser = moderationDao.staffUserLookup(targetUserId).orElse(null);
+            if (targetUser == null) {
+                return;
+            }
+            targetUserId = targetUser.userId();
             if (targetUserId <= 0L) {
                 return;
             }
-            String visitRows;
+            long rowCount;
             if (includeChatRows) {
-                visitRows = MySQL.Proc_5_2_6D4690("SELECT models.type,rooms.id,rooms.name,logs_visitedrooms.timestamp_enter,"
-                    + "logs_visitedrooms.timestamp_left FROM rooms,logs_visitedrooms,models WHERE logs_visitedrooms.id_user='"
-                    + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0)
-                    + "' AND rooms.id=logs_visitedrooms.id_room AND logs_visitedrooms.timestamp_enter > UNIX_TIMESTAMP()-21600 "
-                    + "AND models.id=rooms.id_model GROUP BY logs_visitedrooms.id ORDER BY logs_visitedrooms.id DESC LIMIT 10", 0, 0);
-            } else {
-                visitRows = MySQL.Proc_5_2_6D4690("SELECT models.type,rooms.id,rooms.name,DATE_FORMAT(FROM_UNIXTIME(logs_visitedrooms.timestamp_enter), '%H'),"
-                    + "DATE_FORMAT(FROM_UNIXTIME(logs_visitedrooms.timestamp_enter), '%i') FROM rooms,logs_visitedrooms,models "
-                    + "WHERE logs_visitedrooms.timestamp_enter > UNIX_TIMESTAMP()-21600 AND logs_visitedrooms.id_user='"
-                    + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0)
-                    + "' AND rooms.id=logs_visitedrooms.id_room AND models.id=rooms.id_model GROUP BY logs_visitedrooms.id "
-                    + "ORDER BY logs_visitedrooms.id DESC LIMIT 50", 0, 0);
-            }
-            long rowCount = 0L;
-            StringBuilder rowPayload = new StringBuilder();
-            for (String row : visitRows.split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    if (includeChatRows) {
-                        String[] fields = row.split("\t", -1);
-                        long roomId = NumberUtils.parseLong(handlingField(fields, 1));
-                        long timestampEnter = NumberUtils.parseLong(handlingField(fields, 3));
-                        long timestampLeft = NumberUtils.parseLong(handlingField(fields, 4));
-                        String chatRows = MySQL.Proc_5_2_6D4690("SELECT DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%H'),"
-                            + "DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%i'),users.id,users.name,logs_chat.description "
-                            + "FROM logs_chat,users WHERE logs_chat.id_room='" + roomId + "' AND logs_chat.id_user='"
-                            + targetUserId + "' AND logs_chat.timestamp >= " + timestampEnter
-                            + (timestampLeft > 0L ? " AND logs_chat.timestamp <= " + timestampLeft : "")
-                            + " AND users.id=logs_chat.id_user ORDER BY logs_chat.id ASC", 0, 0);
-                        rowPayload.append(staffRoomChatHistoryPayload(row, chatRows));
-                    } else {
-                        rowPayload.append(staffRoomVisitPayload(row));
-                    }
-                    rowCount++;
+                List<StaffRoomChatVisitRow> visitRows = moderationDao.recentChatHistoryVisits(targetUserId);
+                rowCount = visitRows.size();
+                StringBuilder rowPayload = new StringBuilder();
+                for (StaffRoomChatVisitRow row : visitRows) {
+                    List<StaffRoomChatRow> chatRows = moderationDao.chatRowsForVisit(
+                        row.roomId(),
+                        targetUserId,
+                        row.timestampEnter(),
+                        row.timestampLeft());
+                    rowPayload.append(staffRoomChatHistoryPayload(row, chatRows));
                 }
+                String responsePayload = PacketBuilder.message("HX")
+                    .appendInt(targetUserId)
+                    .appendString(targetUser.userName())
+                    .appendInt(rowCount)
+                    .appendRaw(rowPayload)
+                    .build();
+                Proc_6_244_801E80(socketIndex, responsePayload, 0);
+            } else {
+                List<StaffRoomVisitRow> visitRows = moderationDao.recentRoomVisits(targetUserId);
+                rowCount = visitRows.size();
+                StringBuilder rowPayload = new StringBuilder();
+                for (StaffRoomVisitRow row : visitRows) {
+                    rowPayload.append(staffRoomVisitPayload(row));
+                }
+                String responsePayload = PacketBuilder.message("HY")
+                    .appendInt(targetUserId)
+                    .appendString(targetUser.userName())
+                    .appendInt(rowCount)
+                    .appendRaw(rowPayload)
+                    .build();
+                Proc_6_244_801E80(socketIndex, responsePayload, 0);
             }
-            String responsePrefix = includeChatRows ? "HX" : "HY";
-            String responsePayload = Crypto.Proc_3_0_6D2AF0(targetUserId, null, responsePrefix)
-                + handlingField(targetFields, 1) + '\2';
-            responsePayload = Crypto.Proc_3_0_6D2AF0(rowCount, null, responsePayload) + rowPayload;
-            Proc_6_244_801E80(socketIndex, responsePayload, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -12198,6 +12197,10 @@ public final class Handling {
         return StaffPayloads.roomVisit(rowText);
     }
 
+    public static String staffRoomVisitPayload(StaffRoomVisitRow row) {
+        return StaffPayloads.roomVisit(row);
+    }
+
     public static long staffNestedUserIdFromWire(String packetPayload) {
         String requestPayload = StringUtils.text(packetPayload);
         long directValue = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
@@ -12227,6 +12230,10 @@ public final class Handling {
 
     public static String staffRoomChatHistoryPayload(String visitRowText, String chatRows) {
         return StaffPayloads.roomChatHistory(visitRowText, chatRows);
+    }
+
+    public static String staffRoomChatHistoryPayload(StaffRoomChatVisitRow visitRow, List<StaffRoomChatRow> chatRows) {
+        return StaffPayloads.roomChatHistory(visitRow, chatRows);
     }
 
     public static boolean containsUnsafeStaffAlert(String messageText) {

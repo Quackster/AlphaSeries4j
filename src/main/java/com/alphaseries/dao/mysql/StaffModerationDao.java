@@ -1,6 +1,10 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.moderation.StaffRoomChatRow;
+import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
+import com.alphaseries.game.moderation.StaffRoomVisitRow;
+import com.alphaseries.game.moderation.StaffUserLookup;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -262,6 +266,86 @@ public final class StaffModerationDao {
         return database.execute(
             "UPDATE staff_cfh SET id_tab=?,id_picker=0,timestamp_picked=NULL WHERE id IN (" + placeholders + ")",
             parameters);
+    }
+
+    public Optional<StaffUserLookup> staffUserLookup(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT users.id,users.name FROM users WHERE users.id=? LIMIT 1",
+            resultSet -> new StaffUserLookup(resultSet.getLong(1), resultSet.getString(2)),
+            userId);
+    }
+
+    public List<StaffRoomChatVisitRow> recentChatHistoryVisits(long userId) throws SQLException {
+        return database.query(
+            "SELECT models.type,rooms.id,rooms.name,logs_visitedrooms.timestamp_enter,"
+                + "logs_visitedrooms.timestamp_left FROM rooms,logs_visitedrooms,models WHERE logs_visitedrooms.id_user=? "
+                + "AND rooms.id=logs_visitedrooms.id_room AND logs_visitedrooms.timestamp_enter > UNIX_TIMESTAMP()-21600 "
+                + "AND models.id=rooms.id_model GROUP BY logs_visitedrooms.id ORDER BY logs_visitedrooms.id DESC LIMIT 10",
+            resultSet -> new StaffRoomChatVisitRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5)),
+            userId);
+    }
+
+    public List<StaffRoomVisitRow> recentRoomVisits(long userId) throws SQLException {
+        return database.query(
+            "SELECT models.type,rooms.id,rooms.name,DATE_FORMAT(FROM_UNIXTIME(logs_visitedrooms.timestamp_enter), '%H'),"
+                + "DATE_FORMAT(FROM_UNIXTIME(logs_visitedrooms.timestamp_enter), '%i') FROM rooms,logs_visitedrooms,models "
+                + "WHERE logs_visitedrooms.timestamp_enter > UNIX_TIMESTAMP()-21600 AND logs_visitedrooms.id_user=? "
+                + "AND rooms.id=logs_visitedrooms.id_room AND models.id=rooms.id_model GROUP BY logs_visitedrooms.id "
+                + "ORDER BY logs_visitedrooms.id DESC LIMIT 50",
+            resultSet -> new StaffRoomVisitRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5)),
+            userId);
+    }
+
+    public List<StaffRoomChatRow> chatRowsForVisit(
+        long roomId,
+        long userId,
+        long timestampEnter,
+        long timestampLeft
+    ) throws SQLException {
+        String timestampLeftSql = timestampLeft > 0L ? " AND logs_chat.timestamp <= ?" : "";
+        if (timestampLeft > 0L) {
+            return database.query(
+                "SELECT DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%H'),"
+                    + "DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%i'),users.id,users.name,logs_chat.description "
+                    + "FROM logs_chat,users WHERE logs_chat.id_room=? AND logs_chat.id_user=? "
+                    + "AND logs_chat.timestamp >= ?" + timestampLeftSql
+                    + " AND users.id=logs_chat.id_user ORDER BY logs_chat.id ASC",
+                resultSet -> new StaffRoomChatRow(
+                    resultSet.getLong(1),
+                    resultSet.getLong(2),
+                    resultSet.getLong(3),
+                    resultSet.getString(4),
+                    resultSet.getString(5)),
+                roomId,
+                userId,
+                timestampEnter,
+                timestampLeft);
+        }
+        return database.query(
+            "SELECT DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%H'),"
+                + "DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%i'),users.id,users.name,logs_chat.description "
+                + "FROM logs_chat,users WHERE logs_chat.id_room=? AND logs_chat.id_user=? "
+                + "AND logs_chat.timestamp >= ?" + timestampLeftSql
+                + " AND users.id=logs_chat.id_user ORDER BY logs_chat.id ASC",
+            resultSet -> new StaffRoomChatRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getString(4),
+                resultSet.getString(5)),
+            roomId,
+            userId,
+            timestampEnter);
     }
 
     public int lockRoomForModeration(long roomId) throws SQLException {

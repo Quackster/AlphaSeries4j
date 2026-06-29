@@ -139,6 +139,16 @@ public final class StaffPayloads {
             .build();
     }
 
+    public static String roomVisit(StaffRoomVisitRow row) {
+        return PacketBuilder.create()
+            .appendInt(row.modelType())
+            .appendInt(row.roomId())
+            .appendInt(row.hour())
+            .appendInt(row.minute())
+            .appendString(row.roomName())
+            .build();
+    }
+
     public static ChatRows roomChatRows(String chatRows) {
         ChatRows result = new ChatRows();
         PacketBuilder chatPayload = PacketBuilder.create();
@@ -160,6 +170,21 @@ public final class StaffPayloads {
         return result;
     }
 
+    public static ChatRows roomChatRows(List<StaffRoomChatRow> rows) {
+        ChatRows result = new ChatRows();
+        PacketBuilder chatPayload = PacketBuilder.create();
+        for (StaffRoomChatRow row : rows) {
+            chatPayload.appendInt(row.hour())
+                .appendInt(row.minute())
+                .appendInt(row.userId())
+                .appendString(row.userName())
+                .appendString(row.description());
+            result.chatCount++;
+        }
+        result.payload = chatPayload.build();
+        return result;
+    }
+
     public static String roomChatHistory(String visitRowText, String chatRows) {
         String[] fields = StringUtils.text(visitRowText).split("\t", -1);
         ChatRows chatRowsPayload = roomChatRows(chatRows);
@@ -168,6 +193,17 @@ public final class StaffPayloads {
             .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 1)))
             .appendInt(chatRowsPayload.chatCount)
             .appendString(StringUtils.field(fields, 2))
+            .appendRaw(chatRowsPayload.payload)
+            .build();
+    }
+
+    public static String roomChatHistory(StaffRoomChatVisitRow visitRow, List<StaffRoomChatRow> chatRows) {
+        ChatRows chatRowsPayload = roomChatRows(chatRows);
+        return PacketBuilder.create()
+            .appendInt(visitRow.modelType())
+            .appendInt(visitRow.roomId())
+            .appendInt(chatRowsPayload.chatCount)
+            .appendString(visitRow.roomName())
             .appendRaw(chatRowsPayload.payload)
             .build();
     }
