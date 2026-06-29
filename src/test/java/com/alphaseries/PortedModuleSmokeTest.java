@@ -1921,6 +1921,10 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT users.id_socket FROM friendships,users WHERE friendships.has_accept='1' AND friendships.id_user='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(8));
                 }
+                if (sqlText.contains("SELECT users.id,users.name,users.id_socket,users.figure,users.motto,users.level,DATE_FORMAT(FROM_UNIXTIME(users.lastonline_time)")
+                    && sqlText.contains("FROM friendships,users WHERE friendships.has_accept='1' AND friendships.id_user='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(88, "Target", 8, "fig", "Motto", 1, "now"));
+                }
                 if (sqlText.contains("SELECT id_friend FROM friendships WHERE id_user='77' AND id_friend='88' AND has_accept='1'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88));
                 }
@@ -2826,6 +2830,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(Handling.messengerPendingRequestsPayload("88\tTarget"), pendingPayload);
         assertEquals(true, containsSend(handlingSends, "Dz"));
         assertEquals(true, containsSend(handlingSends, "Target"));
+        handlingSends.clear();
+        String friendListPayload = Handling.Proc_6_176_7C4EE0(4);
+        assertEquals(true, friendListPayload.startsWith("@L"));
+        assertEquals(true, friendListPayload.contains("Target"));
+        assertEquals(true, friendListPayload.endsWith("PYH"));
+        assertEquals(true, containsSend(handlingSends, "@MHIH"));
+        assertEquals(true, containsSend(handlingSends, "@L"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));

@@ -4744,6 +4744,64 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_176_7C4EE0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long maxFriends0 = messengerMaxFriends(0L);
+            long maxFriends1 = messengerMaxFriends(2L);
+            long maxFriends2 = messengerMaxFriends(4L);
+            long queryLimit = maxFriends2 > 0L ? maxFriends2 : 200L;
+            String dateFormat = Functions.Proc_10_0_809570("com.mysql.format.date", "%d-%m-%Y", 0);
+            String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name,users.id_socket,users.figure,users.motto,users.level,"
+                + "DATE_FORMAT(FROM_UNIXTIME(users.lastonline_time), '"
+                + Functions.Proc_10_11_80A9C0(dateFormat + " " + timeFormat, 0, 0)
+                + "') FROM friendships,users WHERE friendships.has_accept='1' AND friendships.id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND users.id=friendships.id_friend LIMIT " + queryLimit, 0, 0);
+            String callerSummary = messengerFriendSummaryPayload(userId, 1L);
+            long friendCount = 0L;
+            StringBuilder friendPayload = new StringBuilder();
+            for (String row : rowText.split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    String[] fields = row.split("\t", -1);
+                    if (fields.length >= 7) {
+                        String friendUserId = handlingField(fields, 0);
+                        int friendSocketIndex = (int) Vb.val(handlingField(fields, 2));
+                        long friendOnline = friendSocketIndex > 0
+                            && Guardian.Proc_11_2_821390(friendSocketIndex, 0, 0) == 1L ? 1L : 0L;
+                        friendPayload.append(messengerFriendPayload(
+                            Vb.val(friendUserId),
+                            handlingField(fields, 1),
+                            handlingField(fields, 4),
+                            handlingField(fields, 3),
+                            Vb.val(handlingField(fields, 5)),
+                            friendOnline == 1L ? 2L : 0L,
+                            friendOnline,
+                            handlingField(fields, 6),
+                            1L));
+                        friendCount++;
+                        if (friendOnline == 1L && !callerSummary.isEmpty()) {
+                            Proc_6_244_801E80(friendSocketIndex, "@MHIH" + callerSummary, 0);
+                        }
+                    }
+                }
+            }
+            String payload = Crypto.Proc_3_0_6D2AF0(maxFriends0, null, "@L")
+                + Crypto.Proc_3_0_6D2AF0(maxFriends1, null, "")
+                + Crypto.Proc_3_0_6D2AF0(maxFriends2, null, "")
+                + Crypto.Proc_3_0_6D2AF0(friendCount, null, "") + friendPayload + "PYH";
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
