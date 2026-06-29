@@ -6738,12 +6738,12 @@ public final class Handling {
                 return "";
             }
             long roomSlot = socketIndex;
-            MovementPosition current = representedMovementPosition(Licence.global_00829310, roomSlot, socketIndex);
+            MovementPosition current = movementPosition(Licence.representedRooms().movementPosition(roomSlot, socketIndex));
             long currentX = current.found ? current.positionX : 0L;
             long currentY = current.found ? current.positionY : 0L;
             long directionValue = handlingDirectionCode(Long.compare(lookX, currentX), Long.compare(lookY, currentY));
-            Licence.global_00829310 = representedRoomOccupantMove(
-                Licence.global_00829310, roomSlot, socketIndex, currentX, currentY, directionValue, 0L);
+            Licence.setRepresentedRooms(
+                Licence.representedRooms().moveOccupant(roomSlot, socketIndex, currentX, currentY, directionValue, 0L));
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
             return "";
         } catch (Exception ignored) {
@@ -6778,7 +6778,7 @@ public final class Handling {
                 return "";
             }
             long roomSlot = socketIndex;
-            MovementPosition current = representedMovementPosition(Licence.global_00829310, roomSlot, socketIndex);
+            MovementPosition current = movementPosition(Licence.representedRooms().movementPosition(roomSlot, socketIndex));
             long currentX = current.found ? current.positionX : 0L;
             long currentY = current.found ? current.positionY : 0L;
             String movementText = Functions.Proc_10_24_80E790(socketIndex, currentX, currentY, targetX, targetY);
@@ -6789,8 +6789,8 @@ public final class Handling {
             if (movingValue == 0L && (currentX != targetX || currentY != targetY)) {
                 movingValue = 1L;
             }
-            Licence.global_00829310 = representedRoomOccupantMove(
-                Licence.global_00829310, roomSlot, socketIndex, nextX, nextY, directionValue, movingValue);
+            Licence.setRepresentedRooms(
+                Licence.representedRooms().moveOccupant(roomSlot, socketIndex, nextX, nextY, directionValue, movingValue));
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
             return "";
         } catch (Exception ignored) {
@@ -8934,6 +8934,14 @@ public final class Handling {
     public static MovementPosition representedMovementPosition(String roomCacheText, long roomSlot, long entityIndex) {
         MovementPosition result = new MovementPosition();
         RepresentedRoomCache.Position position = RepresentedRoomCache.fromLegacy(roomCacheText).movementPosition(roomSlot, entityIndex);
+        result.positionX = position.positionX;
+        result.positionY = position.positionY;
+        result.found = position.found;
+        return result;
+    }
+
+    private static MovementPosition movementPosition(RepresentedRoomCache.Position position) {
+        MovementPosition result = new MovementPosition();
         result.positionX = position.positionX;
         result.positionY = position.positionY;
         result.found = position.found;

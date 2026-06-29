@@ -49,6 +49,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.recycler.RecyclerSettings` as a typed adapter around recycler status payload, reward groups, and ecotron box product state previously walked through `Licence` globals.
 - Added `com.alphaseries.game.room.FurnitureRoomCache` for pending room, pending furniture, and represented furniture state cache mutations previously implemented inline in `Handling`.
 - Added `Licence.furnitureRoomCache()`/`setFurnitureRoomCache(...)` as the compatibility boundary for pending room, pending furniture, and represented room cache state.
+- Routed room look/walk movement handlers through `RepresentedRoomCache` instead of writing the represented room cache string directly.
 - Added `com.alphaseries.game.room.RoomPortalSettings` as a typed adapter around room warp-space and special-gate caches previously written directly through raw `Licence` globals.
 - Added `com.alphaseries.game.room.RepresentedRoomCache` for represented room record lookup, replacement, and occupant movement state previously implemented inline in `Handling` and `Main`.
 - Added `com.alphaseries.game.room.RepresentedRoomSlots` as a typed adapter around represented room slot allocation markers previously manipulated as a raw `Licence` string.
@@ -80,7 +81,7 @@ Measured on 2026-06-29:
 - Unique `Proc_*` symbols under `src/main/java`: 472
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 1330
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 476
-- `Handling.java`: 12147 lines
+- `Handling.java`: 12155 lines
 - `Functions.java`: 756 lines
 - `MySQL.java`: 301 lines
 - `Vb.java`: 106 lines
