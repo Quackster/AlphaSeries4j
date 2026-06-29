@@ -47,7 +47,7 @@ public final class Boot {
             + "charge_price_activitypoints,charge_price_activitypoints_type,charge_size,NULL,is_marketofferable,is_badgeshop "
             + "FROM products ORDER BY id ASC";
         cacheRowsById(products, MySQL.Proc_5_2_6D4690(productQuery, 0, 0));
-        Licence.global_008292BC = products;
+        Licence.setProductRows(products);
         DataManager.global_008292BC = products;
 
         long maxCatalogId = Math.max(0L, Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM catalog_products", 0, 0)));
@@ -56,8 +56,8 @@ public final class Boot {
             + "price_activitypoints,type_activitypoints,allow_gifts,min_hc_level_required,replace_defaultsign "
             + "FROM catalog_products ORDER BY id ASC";
         cacheRowsById(catalogProducts, MySQL.Proc_5_2_6D4690(catalogQuery, 0, 0));
-        Licence.global_008292C0 = catalogProducts;
-        Licence.global_00829258 = "\r" + MySQL.Proc_5_2_6D4690("SELECT id,items FROM products_deals ORDER BY id ASC", "\r", 0) + "\r";
+        Licence.setCatalogProductRows(catalogProducts);
+        Licence.setDealRows("\r" + MySQL.Proc_5_2_6D4690("SELECT id,items FROM products_deals ORDER BY id ASC", "\r", 0) + "\r");
         Licence.global_0082916C = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE sprite='ecotron_box' LIMIT 1", 0, 0));
         Licence.global_008290A0 = MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_counter IS NOT NULL", 0, 0).replace('\r', '\t');
         Licence.global_008290A4 = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='11' LIMIT 1", 0, 0));

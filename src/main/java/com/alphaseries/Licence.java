@@ -1,9 +1,9 @@
 package com.alphaseries;
 
+import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
-import com.alphaseries.vb.Vb;
 
 import java.time.LocalDateTime;
 
@@ -84,42 +84,42 @@ public final class Licence {
         if (args == null || args.length < 2) {
             return 0L;
         }
-        return Vb.val(getTableCell(global_008292BC, Vb.val(args[0]), Vb.val(args[1])));
+        return NumberUtils.parseLong(catalogRegistry().productCell(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1])));
     }
 
     public static String Proc_9_1_8072B0(Object... args) {
         if (args == null || args.length < 2) {
             return "";
         }
-        return getTableCell(global_008292C0, Vb.val(args[0]), Vb.val(args[1]));
+        return catalogRegistry().catalogProductCell(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]));
     }
 
     public static long Proc_9_2_8075F0(Object... args) {
         if (args == null || args.length < 2) {
             return 0L;
         }
-        return Vb.val(getTableCell(global_008292C0, Vb.val(args[0]), Vb.val(args[1])));
+        return NumberUtils.parseLong(catalogRegistry().catalogProductCell(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1])));
     }
 
     public static String Proc_9_3_807930(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        return getTableRow(global_008292BC, Vb.val(args[0]));
+        return catalogRegistry().productRow(NumberUtils.parseLong(args[0]));
     }
 
     public static String Proc_9_4_807B90(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        return getTableRow(global_008292C0, Vb.val(args[0]));
+        return catalogRegistry().catalogProductRow(NumberUtils.parseLong(args[0]));
     }
 
     public static String Proc_9_5_807DF0(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        return getDelimitedRow(global_00829258, Vb.val(args[0]));
+        return catalogRegistry().dealRow(NumberUtils.parseLong(args[0]));
     }
 
     public static String Proc_9_6_808080(Object... args) {
@@ -194,6 +194,22 @@ public final class Licence {
         return SessionRegistry.fromLegacyCache(global_00829268);
     }
 
+    public static void setProductRows(Object productRows) {
+        global_008292BC = productRows == null ? "" : productRows;
+    }
+
+    public static void setCatalogProductRows(Object catalogProductRows) {
+        global_008292C0 = catalogProductRows == null ? "" : catalogProductRows;
+    }
+
+    public static void setDealRows(String dealRows) {
+        global_00829258 = StringUtils.text(dealRows);
+    }
+
+    private static CatalogRegistry catalogRegistry() {
+        return CatalogRegistry.fromLegacyCaches(global_008292BC, global_008292C0, global_00829258);
+    }
+
     public static String getTableCell(Object tableCache, long rowId, long columnIndex) {
         String rowValue = getTableRow(tableCache, rowId);
         if (rowValue.isEmpty()) {
@@ -212,9 +228,9 @@ public final class Licence {
         }
         if (tableCache instanceof String[]) {
             String[] rows = (String[]) tableCache;
-            return rowId < rows.length ? Vb.cStr(rows[(int) rowId]) : "";
+            return rowId < rows.length ? StringUtils.text(rows[(int) rowId]) : "";
         }
-        return getDelimitedRow(Vb.cStr(tableCache), rowId);
+        return getDelimitedRow(StringUtils.text(tableCache), rowId);
     }
 
     public static String getDelimitedRow(String tableText, long rowId) {
@@ -225,7 +241,7 @@ public final class Licence {
         for (String rowText : rows) {
             if (!rowText.isEmpty()) {
                 String[] columns = rowText.split("\t", -1);
-                if (columns.length > 0 && Vb.val(columns[0]) == rowId) {
+                if (columns.length > 0 && NumberUtils.parseLong(columns[0]) == rowId) {
                     return rowText;
                 }
             }

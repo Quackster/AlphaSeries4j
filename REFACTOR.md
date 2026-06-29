@@ -27,6 +27,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.messages.outgoing.RecyclerPayloads` for recycler status outgoing payloads.
 - Added `com.alphaseries.messages.outgoing.JukeboxPayloads` for song info, jukebox playlist, disk inventory, and playback outgoing payloads.
 - Added `com.alphaseries.game.inventory.InventoryMessagePayloads` for inventory item/list payload building.
+- Added `com.alphaseries.game.catalog.CatalogRegistry` as a typed adapter around product, catalog-product, and deal row caches previously parsed directly from `Licence` globals.
 - Added `com.alphaseries.game.moderation.StaffPayloads` for call-for-help rows, staff user summaries, room visits, room chat history, and unsafe staff-alert checks.
 - Added `com.alphaseries.game.pet.PetPayloads` for pet race, inventory, name-validation, command, status, scratch, and action outgoing payloads.
 - Added `com.alphaseries.game.session.SessionRegistry` as a typed adapter around the legacy `Licence.global_00829268` session cache.
@@ -35,6 +36,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.server.packet.PacketSink` and kept the root `PacketSink` as a deprecated compatibility alias.
 - Added `com.alphaseries.util.StringUtils` and `NumberUtils`; migrated new staff/session code away from duplicated local helper methods.
 - Migrated extracted `game.*`, `messages.outgoing`, and `protocol` packages off duplicated local `text`/`number`/`field` helpers and onto shared utilities.
+- Migrated `Licence.Proc_9_0` through `Proc_9_5` to `CatalogRegistry`, added named cache setters, and removed `Licence`'s dependency on `Vb`.
 - Migrated several payload builders from string concatenation to fluent `PacketBuilder`.
 
 ## VB Compatibility Class Removal Checklist
@@ -50,7 +52,7 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 473
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1394
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1385
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 473
 - `Handling.java`: 12583 lines
 - `Functions.java`: 797 lines
