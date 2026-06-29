@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.room.RepresentedRoomSlots;
+import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -8287,8 +8288,9 @@ public final class Handling {
         Guardian.setSocketConnected(socketIndex, false);
         Guardian.global_008291A0 = Vb.cStr(Guardian.global_008291A0).replace(marker, "");
         Licence.global_008291A0 = Vb.cStr(Licence.global_008291A0).replace(marker, "");
-        Licence.global_00829350 = Vb.cStr(Licence.global_00829350).replace(marker, "");
-        Licence.global_00829354 = Vb.cStr(Licence.global_00829354).replace(marker, "");
+        GameServerSessionState sessionState = Licence.gameServerSessionState();
+        sessionState.removeSocket(socketIndex);
+        Licence.setGameServerSessionState(sessionState);
     }
 
     public static void Proc_6_244_801E80(Object... args) {

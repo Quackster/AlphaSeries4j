@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.server.packet.PacketSink;
+import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.vb.Vb;
 
 import java.nio.file.Path;
@@ -479,40 +480,20 @@ public final class Main {
     }
 
     public static void appendGameServerPacketData(long socketIndex, String[] fields) {
-        if (fields == null || fields.length <= 2) {
-            return;
-        }
-        StringBuilder payload = new StringBuilder();
-        for (int fieldIndex = 2; fieldIndex < fields.length; fieldIndex++) {
-            if (payload.length() > 0) {
-                payload.append('\2');
-            }
-            payload.append(Vb.cStr(fields[fieldIndex]));
-        }
-        if (payload.length() > 0) {
-            Licence.global_00829350 += "[" + socketIndex + ":" + payload + "]";
-        }
+        GameServerSessionState sessionState = Licence.gameServerSessionState();
+        sessionState.appendPacketData(socketIndex, fields);
+        Licence.setGameServerSessionState(sessionState);
     }
 
     public static String popGameServerPacketData(long socketIndex) {
-        String marker = "[" + socketIndex + ":";
-        int recordStart = Licence.global_00829350.indexOf(marker);
-        if (recordStart < 0) {
-            return "";
-        }
-        int payloadStart = recordStart + marker.length();
-        int recordEnd = Licence.global_00829350.indexOf(']', payloadStart);
-        if (recordEnd < 0) {
-            return "";
-        }
-        String payload = Licence.global_00829350.substring(payloadStart, recordEnd);
-        Licence.global_00829350 = Licence.global_00829350.substring(0, recordStart)
-            + Licence.global_00829350.substring(recordEnd + 1);
+        GameServerSessionState sessionState = Licence.gameServerSessionState();
+        String payload = sessionState.popPacketData(socketIndex);
+        Licence.setGameServerSessionState(sessionState);
         return payload;
     }
 
     public static boolean isGameSessionReady(long socketIndex) {
-        return Licence.global_00829354.contains("[" + socketIndex + "]");
+        return Licence.gameServerSessionState().isReady(socketIndex);
     }
 
     public static void Proc_0_26_6ACF30(Object... args) {
