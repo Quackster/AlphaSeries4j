@@ -2186,8 +2186,15 @@ public final class Handling {
             if (furnitureId <= 0L) {
                 return;
             }
-            long productId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id_room='"
-                + roomId + "' AND id='" + furnitureId + "' LIMIT 1", 0, 0));
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
+                return;
+            }
+            FurnitureDao.RoomFurnitureProduct furnitureProduct = furniture.roomFurnitureProduct(furnitureId, roomId).orElse(null);
+            if (furnitureProduct == null) {
+                return;
+            }
+            long productId = furnitureProduct.productId();
             if (productId <= 0L) {
                 return;
             }
@@ -2211,7 +2218,7 @@ public final class Handling {
             long updatedCredits = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT credits FROM users WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0));
             Proc_6_244_801E80(socketIndex, "@F" + updatedCredits + ".0" + '\2', 0);
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM furnitures WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
+            furniture.deleteFurniture(furnitureId);
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
         } catch (Exception ignored) {
