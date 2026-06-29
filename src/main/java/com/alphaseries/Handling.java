@@ -8783,10 +8783,16 @@ public final class Handling {
                 filteredText = messageText;
             }
             long gestureId = Proc_6_23_6E9A90(filteredText, 0, 0);
-            MySQL.Proc_5_1_6D4110("INSERT INTO logs_chat(id_user,id_room,timestamp,description,id_type,id_session) VALUES('"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "',UNIX_TIMESTAMP(),'"
-                + Functions.Proc_10_11_80A9C0(filteredText, 0, 0) + "','" + chatType + "','"
-                + Functions.Proc_10_11_80A9C0(handlingUserSessionId(userId), 0, 0) + "')", 0, 0);
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return "";
+            }
+            rooms.insertRoomChatLog(
+                NumberUtils.parseLong(userId),
+                roomId,
+                filteredText,
+                chatType,
+                handlingUserSessionId(userId));
             String payload = representedChatPayload(roomUserIndex, filteredText, gestureId, chatType);
             if (chatType == 2L) {
                 int targetSocketIndex = handlingSocketIndexForUserName(targetName);

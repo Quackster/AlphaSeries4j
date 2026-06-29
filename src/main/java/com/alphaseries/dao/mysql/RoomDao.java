@@ -171,6 +171,23 @@ public final class RoomDao {
             sessionId);
     }
 
+    public int insertRoomChatLog(
+        long userId,
+        long roomId,
+        String description,
+        long chatType,
+        String sessionId
+    ) throws SQLException {
+        return database.execute(
+            "INSERT INTO logs_chat(id_user,id_room,timestamp,description,id_type,id_session) "
+                + "VALUES(?,?,UNIX_TIMESTAMP(),?,?,?)",
+            userId,
+            roomId,
+            description,
+            chatType,
+            sessionId);
+    }
+
     public int markRoomEntered(long roomId, long slotId) throws SQLException {
         return database.execute(
             "UPDATE rooms SET id_slot=?,visitors_now=visitors_now+1 WHERE id=?",
