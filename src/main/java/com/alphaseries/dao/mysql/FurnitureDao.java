@@ -368,6 +368,24 @@ public final class FurnitureDao {
         return database.execute("UPDATE furnitures SET sign=? WHERE id=?", sign, furnitureId);
     }
 
+    public int updateGiftMetadata(
+        long furnitureId,
+        String giftMessage,
+        String sign,
+        long ownerId,
+        long catalogProductId,
+        long secondaryId
+    ) throws SQLException {
+        return database.execute(
+            "UPDATE furnitures SET sign_extra=?,sign=?,id_owner=?,id_destination=?,id_secondary=? WHERE id=?",
+            giftMessage,
+            sign,
+            ownerId,
+            catalogProductId,
+            secondaryId,
+            furnitureId);
+    }
+
     public int resetDimmerPresetStates(long furnitureId) throws SQLException {
         return database.execute("UPDATE furnitures_dimmerpresets SET id_state=? WHERE id_furni=?", 1L, furnitureId);
     }

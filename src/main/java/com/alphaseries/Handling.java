@@ -4169,9 +4169,7 @@ public final class Handling {
                     if ("TROPHY_VAR".equalsIgnoreCase(DataManager.Proc_8_12_806C30(itemProductId, 4, 0))) {
                         String trophySign = handlingUserName(handlingUserIdFromSocket(socketIndex)) + '\b'
                             + recyclerRewardSign() + '\b' + signText;
-                        MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='"
-                            + Functions.Proc_10_11_80A9C0(Functions.Proc_10_10_80A7F0(trophySign, 1, 1), 0, 0)
-                            + "' WHERE id='" + furnitureId + "'", 0, 0);
+                        furnitureDao().updateSignText(furnitureId, Functions.Proc_10_10_80A7F0(trophySign, 1, 1));
                     }
                     if (productType == 8L) {
                         Proc_6_244_801E80(socketIndex, "GM" + Crypto.Proc_3_0_6D2AF0(furnitureId, null, "")
@@ -4508,12 +4506,13 @@ public final class Handling {
                 productSign = handlingUserName(senderUserId) + '\b' + recyclerRewardSign() + '\b' + giftMessage;
             }
             long giftSecondary = colorId * 1000L + ribbonId;
-            String escapedRecipientId = Functions.Proc_10_11_80A9C0(recipientUserId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign_extra='"
-                + Functions.Proc_10_11_80A9C0(Functions.Proc_10_10_80A7F0(giftMessage, 0, 0), 0, 0)
-                + "',sign='" + Functions.Proc_10_11_80A9C0(Functions.Proc_10_10_80A7F0(productSign, 0, 0), 0, 0)
-                + "',id_owner='" + escapedRecipientId + "',id_destination='" + catalogProductId + "',id_secondary='"
-                + giftSecondary + "' WHERE id='" + grantedFurnitureId + "'", 0, 0);
+            furnitureDao().updateGiftMetadata(
+                grantedFurnitureId,
+                Functions.Proc_10_10_80A7F0(giftMessage, 0, 0),
+                Functions.Proc_10_10_80A7F0(productSign, 0, 0),
+                NumberUtils.parseLong(recipientUserId),
+                catalogProductId,
+                giftSecondary);
             if (creditPrice > 0L || activityPrice > 0L) {
                 users.spendCatalogPurchaseBalance(senderUserIdValue, creditPrice, activityType, activityPrice);
                 if (creditPrice > 0L) {
