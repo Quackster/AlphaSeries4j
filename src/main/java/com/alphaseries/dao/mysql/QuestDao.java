@@ -162,6 +162,24 @@ public final class QuestDao {
             .orElse(0L);
     }
 
+    public List<QuestDefinition> questDefinitions() throws SQLException {
+        return database.query(
+            "SELECT id,level,name,NULL,reward,reward_type,require_action,id_additional,id_campaign,amount_activities,waitamount "
+                + "FROM quests ORDER BY id_campaign DESC,level ASC",
+            resultSet -> new QuestDefinition(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getString(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getString(7),
+                resultSet.getLong(8),
+                resultSet.getLong(9),
+                resultSet.getLong(10),
+                resultSet.getLong(11)));
+    }
+
     public record UserQuestLevelRow(long questId, long level) {
         public String legacyRow() {
             return questId + "\t" + level;
@@ -188,6 +206,30 @@ public final class QuestDao {
         public String legacyRow(long remainingWait) {
             return questId + "\t" + level + "\t" + text(timestampDone) + "\t" + text(timestampAccepted)
                 + "\t" + text(timeNext) + "\t" + progress + "\t" + remainingWait;
+        }
+
+        private static String text(String value) {
+            return value == null ? "" : value;
+        }
+    }
+
+    public record QuestDefinition(
+        long questId,
+        long level,
+        String name,
+        String legacyNullSlot,
+        long reward,
+        long rewardType,
+        String requiredAction,
+        long additionalId,
+        long campaignId,
+        long activityAmount,
+        long waitAmount
+    ) {
+        public String legacyRow() {
+            return questId + "\t" + level + "\t" + text(name) + "\t" + text(legacyNullSlot) + "\t"
+                + reward + "\t" + rewardType + "\t" + text(requiredAction) + "\t" + additionalId + "\t"
+                + campaignId + "\t" + activityAmount + "\t" + waitAmount;
         }
 
         private static String text(String value) {

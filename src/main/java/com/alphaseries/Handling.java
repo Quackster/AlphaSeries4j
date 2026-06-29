@@ -82,6 +82,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -12482,9 +12483,19 @@ public final class Handling {
         if (Licence.questSettings().hasRows()) {
             return Licence.questSettings().rows();
         }
-        return MySQL.Proc_5_2_6D4690(
-            "SELECT id,level,name,NULL,reward,reward_type,require_action,id_additional,id_campaign,amount_activities,waitamount "
-                + "FROM quests ORDER BY id_campaign DESC,level ASC", 0, 0);
+        QuestDao quests = questDao();
+        if (quests == null) {
+            return "";
+        }
+        try {
+            List<String> rows = new ArrayList<>();
+            for (QuestDao.QuestDefinition quest : quests.questDefinitions()) {
+                rows.add(quest.legacyRow());
+            }
+            return String.join("\r", rows);
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
     private static String[] questFieldsById(String questRows, long questId) {

@@ -249,6 +249,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added typed navigator room loading and routed the single-room navigator detail payload through `RoomDao` plus fluent `PacketBuilder` construction, replacing raw SQL and row-string parsing for that path.
 - Added typed navigator tag-popularity rows and routed the tag-list navigator payload through `RoomDao` plus fluent `PacketBuilder`, replacing another raw navigator SQL string and tab-row parsing loop.
 - Added typed official navigator items and routed the official navigator payload through `RoomDao` plus fluent `PacketBuilder`, replacing raw official navigator SQL and row-string parsing in the runtime handler.
+- Added typed quest definition rows and routed the quest-list fallback source through `QuestDao`, keeping legacy row serialization explicit at the remaining quest compatibility boundary.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -262,9 +263,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 56
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 55
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12584 lines
+- `Handling.java`: 12594 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines
