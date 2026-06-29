@@ -2498,7 +2498,7 @@ public final class Handling {
                     long positionX = Vb.val(handlingField(fields, 6));
                     long positionY = Vb.val(handlingField(fields, 7));
                     if (roomSlot > 0L) {
-                        MovementPosition movementPosition = representedMovementPosition(Licence.global_00829310, roomSlot, roomUserIndex);
+                        MovementPosition movementPosition = movementPosition(Licence.representedRooms().movementPosition(roomSlot, roomUserIndex));
                         if (movementPosition.found) {
                             positionX = movementPosition.positionX;
                             positionY = movementPosition.positionY;
@@ -5312,8 +5312,8 @@ public final class Handling {
                         for (String occupantRow : occupantText.split("\r", -1)) {
                             long occupantRoomUserIndex = Vb.val(occupantRow);
                             if (occupantRoomUserIndex > 0L) {
-                                MovementPosition movementPosition = representedMovementPosition(
-                                    Licence.global_00829310, roomSlot, occupantRoomUserIndex);
+                                MovementPosition movementPosition = movementPosition(
+                                    Licence.representedRooms().movementPosition(roomSlot, occupantRoomUserIndex));
                                 if (movementPosition.found && movementPosition.positionX == tileX
                                     && movementPosition.positionY == tileY) {
                                     return 0L;
@@ -7201,7 +7201,7 @@ public final class Handling {
             }
             Path snapshotPath = Path.of(Functions.applicationPath, "cache", "wired_snapshots", furnitureId + ".cache");
             Files.createDirectories(snapshotPath.getParent());
-            DataManager.Proc_8_10_8068E0(snapshotPath.toString(), Licence.global_00829310, wiredCode);
+            DataManager.Proc_8_10_8068E0(snapshotPath.toString(), Licence.representedRooms().cacheText(), wiredCode);
             return snapshotPath.toString();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7262,7 +7262,9 @@ public final class Handling {
             if (jukeboxId > 0L) {
                 long activeDestinationId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_destination FROM soundmachine_jb_playlist WHERE id_jukebox='"
                     + jukeboxId + "' AND id_order='0' LIMIT 1", 0, 0));
-                Licence.global_008291FC = removeSoundMachineMarkers(Licence.global_008291FC, jukeboxId, activeDestinationId);
+                FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
+                cacheState.pendingFurnitureCache = removeSoundMachineMarkers(cacheState.pendingFurnitureCache, jukeboxId, activeDestinationId);
+                Licence.setFurnitureRoomCache(cacheState);
             }
             return "";
         } catch (Exception ignored) {
@@ -9206,8 +9208,8 @@ public final class Handling {
             long roomSlot = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
             MovementPosition userPosition = representedUserPosition(args);
             if (!userPosition.found) {
-                userPosition = representedMovementPosition(
-                    Licence.global_00829310, roomSlot, representedRoomUserIndex(socketIndex, userId));
+                userPosition = movementPosition(
+                    Licence.representedRooms().movementPosition(roomSlot, representedRoomUserIndex(socketIndex, userId)));
             }
             if (userPosition.found
                 && (Math.abs(userPosition.positionX - furnitureX) > 2L || Math.abs(userPosition.positionY - furnitureY) > 2L)) {
