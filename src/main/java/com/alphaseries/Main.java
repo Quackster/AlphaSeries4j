@@ -24,6 +24,13 @@ public final class Main {
     public static final String RUNNING_STATE_TEXT = "RUNNING";
     public static final String SERVER_EXIT_ERROR_PREFIX = "Server Exit Suburned following error: \r\n";
     public static final String UNKNOWN_PROBLEM_MESSAGE = "Unbekanntes Problem";
+    private static final String[] DESIGN_CAPTIONS = new String[] {
+        "Bitte warte...",
+        "frame :: ADDONS",
+        "Server by Privilege",
+        "User Voice",
+        "Source is only avaible for the author. Please do not share this Source!"
+    };
 
     private static PacketSink preSessionPacketSink = (socketIndex, payload) -> { };
 
@@ -268,6 +275,10 @@ public final class Main {
         title = title.replace("INITIALISIERE", INITIALIZED_STATE_TEXT);
         title = title.replace("INITIALIZING", RUNNING_STATE_TEXT);
         return title;
+    }
+
+    public static String[] designCaptions() {
+        return DESIGN_CAPTIONS.clone();
     }
 
     public static String serverExitErrorMessage(String description) {

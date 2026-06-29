@@ -1079,6 +1079,12 @@ public final class PortedModuleSmokeTest {
         assertEquals("Server Exit Suburned following error: \r\nfatal",
             Main.serverExitErrorMessage("fatal"));
         assertEquals("Unbekanntes Problem", Main.UNKNOWN_PROBLEM_MESSAGE);
+        String[] mainDesignCaptions = Main.designCaptions();
+        assertEquals("Bitte warte...", mainDesignCaptions[0]);
+        assertEquals("frame :: ADDONS", mainDesignCaptions[1]);
+        assertEquals("Server by Privilege", mainDesignCaptions[2]);
+        assertEquals("User Voice", mainDesignCaptions[3]);
+        assertEquals("Source is only avaible for the author. Please do not share this Source!", mainDesignCaptions[4]);
         assertEquals("ACCEPT 16387", Main.gameServerUnknownEventAccept());
         assertEquals(1, Guardian.Proc_11_2_821390());
         assertEquals("LISTEN", Main.gameServerUnknownEventListen());

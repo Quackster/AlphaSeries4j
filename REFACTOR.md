@@ -189,6 +189,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Restored decompiled boot startup credit/version literals.
 - Restored decompiled boot server-error prefix literal.
 - Restored decompiled main startup failure dialog literals.
+- Restored decompiled `Main.frm` design-time captions.
 - Restored decompiled updater error/download dialog literals.
 - Restored decompiled updater design-time caption literals.
 - Restored decompiled `Mistake.frm` regional-settings instruction captions.
