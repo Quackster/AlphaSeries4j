@@ -1,8 +1,11 @@
 package com.alphaseries.messages.outgoing;
 
+import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
+
+import java.util.List;
 
 public final class SocialPayloads {
     private SocialPayloads() {
@@ -48,6 +51,24 @@ public final class SocialPayloads {
             .build();
     }
 
+    public static String badgeInventory(List<BadgeRow> inventoryRows, String equippedPayload) {
+        long inventoryCount = 0L;
+        PacketBuilder inventoryPayload = PacketBuilder.create();
+        if (inventoryRows != null) {
+            for (BadgeRow row : inventoryRows) {
+                if (row != null && !StringUtils.text(row.badgeId()).isEmpty()) {
+                    inventoryPayload.appendRaw('0').appendInt(row.rowId()).appendString(row.badgeId());
+                    inventoryCount++;
+                }
+            }
+        }
+        return PacketBuilder.message("Ce")
+            .appendInt(inventoryCount)
+            .appendRaw(inventoryPayload)
+            .appendRaw(equippedPayload)
+            .build();
+    }
+
     public static String equippedBadges(String badgeRows) {
         long equippedCount = 0L;
         PacketBuilder equippedPayload = PacketBuilder.create();
@@ -58,6 +79,23 @@ public final class SocialPayloads {
                 long badgeSlot = NumberUtils.parseLong(StringUtils.field(fields, 1));
                 if (!badgeId.isEmpty()) {
                     equippedPayload.appendRaw('0').appendInt(badgeSlot).appendString(badgeId);
+                    equippedCount++;
+                }
+            }
+        }
+        return PacketBuilder.create()
+            .appendInt(equippedCount)
+            .appendRaw(equippedPayload)
+            .build();
+    }
+
+    public static String equippedBadges(List<BadgeRow> badgeRows) {
+        long equippedCount = 0L;
+        PacketBuilder equippedPayload = PacketBuilder.create();
+        if (badgeRows != null) {
+            for (BadgeRow row : badgeRows) {
+                if (row != null && !StringUtils.text(row.badgeId()).isEmpty()) {
+                    equippedPayload.appendRaw('0').appendInt(row.slot()).appendString(row.badgeId());
                     equippedCount++;
                 }
             }
@@ -82,6 +120,24 @@ public final class SocialPayloads {
             if (!row.isEmpty()) {
                 tagPayload.appendString(row);
                 tagCount++;
+            }
+        }
+        return PacketBuilder.create()
+            .appendInt(tagCount)
+            .appendRaw(tagPayload)
+            .build();
+    }
+
+    public static String tags(List<String> tagRows) {
+        long tagCount = 0L;
+        PacketBuilder tagPayload = PacketBuilder.create();
+        if (tagRows != null) {
+            for (String row : tagRows) {
+                String tag = StringUtils.text(row);
+                if (!tag.isEmpty()) {
+                    tagPayload.appendString(tag);
+                    tagCount++;
+                }
             }
         }
         return PacketBuilder.create()

@@ -27,6 +27,7 @@ import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.session.SocketMarkerSet;
+import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -6676,8 +6677,11 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String inventoryRows = MySQL.Proc_5_2_6D4690("SELECT id_badge,id_slot,id FROM users_badges WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_slot='0' LIMIT 1000", 0, 0);
+            UserDao users = userDao();
+            if (users == null) {
+                return "";
+            }
+            List<BadgeRow> inventoryRows = users.unequippedBadges(NumberUtils.parseLong(userId));
             String equippedPayload = Proc_6_195_7D38D0(userId, 0, 0);
             String payload = badgeInventoryPayload(inventoryRows, equippedPayload);
             Proc_6_244_801E80(socketIndex, payload, 0);
@@ -6738,8 +6742,11 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return Crypto.Proc_3_0_6D2AF0(0, null, "");
             }
-            String rows = MySQL.Proc_5_2_6D4690("SELECT id_badge,id_slot,id FROM users_badges WHERE id_slot != '0' AND id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 5", 0, 0);
+            UserDao users = userDao();
+            if (users == null) {
+                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+            }
+            List<BadgeRow> rows = users.equippedBadges(NumberUtils.parseLong(userId));
             return equippedBadgePayload(rows);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6762,8 +6769,11 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return Crypto.Proc_3_0_6D2AF0(0, null, "");
             }
-            String rows = MySQL.Proc_5_2_6D4690("SELECT name FROM users_tags WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 30", 0, 0);
+            UserDao users = userDao();
+            if (users == null) {
+                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+            }
+            List<String> rows = users.tagNames(NumberUtils.parseLong(userId));
             return tagListPayload(rows);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -11396,7 +11406,15 @@ public final class Handling {
         return SocialPayloads.badgeInventory(inventoryRows, equippedPayload);
     }
 
+    public static String badgeInventoryPayload(List<BadgeRow> inventoryRows, String equippedPayload) {
+        return SocialPayloads.badgeInventory(inventoryRows, equippedPayload);
+    }
+
     public static String equippedBadgePayload(String badgeRows) {
+        return SocialPayloads.equippedBadges(badgeRows);
+    }
+
+    public static String equippedBadgePayload(List<BadgeRow> badgeRows) {
         return SocialPayloads.equippedBadges(badgeRows);
     }
 
@@ -11405,6 +11423,10 @@ public final class Handling {
     }
 
     public static String tagListPayload(String tagRows) {
+        return SocialPayloads.tags(tagRows);
+    }
+
+    public static String tagListPayload(List<String> tagRows) {
         return SocialPayloads.tags(tagRows);
     }
 

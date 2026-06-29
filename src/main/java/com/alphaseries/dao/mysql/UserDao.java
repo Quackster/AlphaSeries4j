@@ -1,8 +1,10 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.social.BadgeRow;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 public final class UserDao {
@@ -120,6 +122,35 @@ public final class UserDao {
 
     public int markTutorialGuide(long userId) throws SQLException {
         return database.execute("UPDATE users SET tutorial_guide=? WHERE id=?", 1L, userId);
+    }
+
+    public List<BadgeRow> unequippedBadges(long userId) throws SQLException {
+        return database.query(
+            "SELECT id_badge,id_slot,id FROM users_badges WHERE id_user=? AND id_slot=? LIMIT 1000",
+            resultSet -> new BadgeRow(
+                resultSet.getString(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3)),
+            userId,
+            0L);
+    }
+
+    public List<BadgeRow> equippedBadges(long userId) throws SQLException {
+        return database.query(
+            "SELECT id_badge,id_slot,id FROM users_badges WHERE id_slot != ? AND id_user=? LIMIT 5",
+            resultSet -> new BadgeRow(
+                resultSet.getString(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3)),
+            0L,
+            userId);
+    }
+
+    public List<String> tagNames(long userId) throws SQLException {
+        return database.query(
+            "SELECT name FROM users_tags WHERE id_user=? LIMIT 30",
+            resultSet -> resultSet.getString(1),
+            userId);
     }
 
     public long activityPoints(long userId, long pointType) throws SQLException {
