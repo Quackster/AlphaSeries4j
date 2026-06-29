@@ -1849,6 +1849,22 @@ public final class PortedModuleSmokeTest {
                     && sqlText.contains("WHERE bots.id='10'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, "Rex", "1 2 ff", 2, 7, 100, 90, 4, 12, 5, "Owner"));
                 }
+                if (sqlText.contains("SELECT bots.name,bots.figure,bots_petdata.id_level,bots_petdata.experience")
+                    && sqlText.contains("WHERE bots.id='10'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList("Rex", "1 2 ff", 2, 18, 100, 90, 4, 9));
+                }
+                if (sqlText.contains("SELECT id_level,max_exp FROM bots_petlevels ORDER BY id_level ASC")) {
+                    return Arrays.<List<Object>>asList(
+                        Arrays.<Object>asList(1, 10),
+                        Arrays.<Object>asList(2, 20),
+                        Arrays.<Object>asList(3, 30));
+                }
+                if (sqlText.contains("SELECT scratch_amount FROM users WHERE id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(2));
+                }
+                if (sqlText.contains("SELECT bots.id,bots.name,bots.figure,bots_petdata.scratches FROM bots,bots_petdata WHERE bots.id='10'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, "Rex", "1 2 ff", 4));
+                }
                 if (sqlText.contains("SELECT id_slot,figure,gender FROM users_wardrobe")) {
                     return Arrays.<List<Object>>asList(
                         Arrays.<Object>asList(1, "hd-180-1", "M"),
@@ -1876,6 +1892,9 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT logs_visitedrooms.id,logs_visitedrooms.id_room,rooms.id_slot")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(61, 9, 4));
+                }
+                if (sqlText.contains("SELECT users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(4), Arrays.<Object>asList(8));
                 }
                 if (sqlText.contains("SELECT id FROM rooms WHERE id_slot='4'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(9));
@@ -2874,6 +2893,20 @@ public final class PortedModuleSmokeTest {
         String petCommandPayload = Handling.Proc_6_184_7CBDA0(4, 2);
         assertEquals(Handling.petCommandListPayload(2, Licence.global_008292CC), petCommandPayload);
         assertEquals(true, containsSend(handlingSends, "I]"));
+        handlingSends.clear();
+        handlingSql.clear();
+        assertEquals(3L, Handling.Proc_6_185_7CC2D0(10, 3));
+        assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET id_level='3',experience='0' WHERE id_bot='10'"));
+        assertEquals(true, containsSend(handlingSends, "@X"));
+        assertEquals(true, containsSend(handlingSends, "IY"));
+        assertEquals(true, containsSend(handlingSends, "Ia"));
+        handlingSql.clear();
+        handlingSends.clear();
+        assertEquals(5L, Handling.Proc_6_186_7CD040(4, "n}" + wireLong(10)));
+        assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET scratches='5' WHERE id_bot='10'"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET scratch_amount=scratch_amount-1,scratch_given=scratch_given+1 WHERE id='77'"));
+        assertEquals(true, containsSend(handlingSends, "I^"));
+        assertEquals(true, containsSend(handlingSends, "Rex"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));

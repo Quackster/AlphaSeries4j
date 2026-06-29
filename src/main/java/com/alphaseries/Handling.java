@@ -4947,6 +4947,128 @@ public final class Handling {
         }
     }
 
+    public static long Proc_6_185_7CC2D0(Object... args) {
+        try {
+            if (args == null || args.length == 0) {
+                return 0L;
+            }
+            long botEntityId = Vb.val(args[0]);
+            long experienceDelta = args.length >= 2 ? Vb.val(args[1]) : 0L;
+            if (botEntityId <= 0L) {
+                return 0L;
+            }
+            long botId = representedBotRecordLong(botEntityId, 1);
+            if (botId <= 0L) {
+                botId = botEntityId;
+                botEntityId = representedBotEntityFromBotId(botId);
+            }
+            if (botId <= 0L) {
+                return 0L;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT bots.name,bots.figure,bots_petdata.id_level,bots_petdata.experience,"
+                + "bots_petdata.energy,bots_petdata.nutrition,bots_petdata.scratches,bots.id_room FROM bots,bots_petdata WHERE bots.id='"
+                + botId + "' AND bots_petdata.id_bot=bots.id LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return 0L;
+            }
+            String[] fields = rowText.split("\t", -1);
+            if (fields.length < 8) {
+                return 0L;
+            }
+            String petName = handlingField(fields, 0);
+            String petFigure = handlingField(fields, 1);
+            long petLevel = Vb.val(handlingField(fields, 2));
+            long petExperience = Vb.val(handlingField(fields, 3));
+            long petEnergy = Vb.val(handlingField(fields, 4));
+            long petNutrition = Vb.val(handlingField(fields, 5));
+            long petScratches = Vb.val(handlingField(fields, 6));
+            long roomId = Vb.val(handlingField(fields, 7));
+            if (botEntityId <= 0L) {
+                botEntityId = botId;
+            }
+            String levelRows = MySQL.Proc_5_2_6D4690("SELECT id_level,max_exp FROM bots_petlevels ORDER BY id_level ASC", 0, 0);
+            PetExperienceUpdate update = petExperienceUpdate(
+                botEntityId,
+                petName,
+                petFigure,
+                petLevel,
+                petExperience,
+                petEnergy,
+                petNutrition,
+                petScratches,
+                experienceDelta,
+                levelRows);
+            if (update.leveledUp && roomId > 0L) {
+                String levelSpeech = Functions.Proc_10_0_809570("com.client.bot.pet.level_up.speech", "gst sml", 0);
+                if (!levelSpeech.isEmpty()) {
+                    Proc_6_248_802B80(roomId, "@X" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "") + levelSpeech + '\2' + "H", 0);
+                }
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE bots_petdata SET id_level='" + update.petLevel + "',experience='"
+                + update.petExperience + "' WHERE id_bot='" + botId + "'", 0, 0);
+            if (roomId > 0L) {
+                Proc_6_248_802B80(roomId, update.statusPayload, 0);
+                Proc_6_248_802B80(roomId, update.experiencePayload, 0);
+            }
+            return update.petLevel;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
+    public static long Proc_6_186_7CD040(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "n}");
+            LongRef offset = new LongRef(1);
+            long requestedId = readWireLong(requestPayload, offset);
+            if (socketIndex <= 0 || requestedId <= 0L) {
+                return 0L;
+            }
+            long botEntityId = requestedId;
+            long botId = representedBotRecordLong(botEntityId, 1);
+            if (botId <= 0L) {
+                botId = requestedId;
+                botEntityId = representedBotEntityFromBotId(botId);
+            }
+            if (botId <= 0L) {
+                return 0L;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            long scratchAmount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT scratch_amount FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+            if (scratchAmount <= 0L) {
+                return 0L;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT bots.id,bots.name,bots.figure,bots_petdata.scratches FROM bots,bots_petdata WHERE bots.id='"
+                + botId + "' AND bots.id_handle='3' AND bots.id_room IS NOT NULL AND bots_petdata.id_bot=bots.id LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return 0L;
+            }
+            String[] fields = rowText.split("\t", -1);
+            if (fields.length < 4) {
+                return 0L;
+            }
+            long scratches = Vb.val(handlingField(fields, 3)) + 1L;
+            MySQL.Proc_5_0_6D3CD0("UPDATE bots_petdata SET scratches='" + scratches + "' WHERE id_bot='" + botId + "'", 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET scratch_amount=scratch_amount-1,scratch_given=scratch_given+1 WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
+            if (botEntityId <= 0L) {
+                botEntityId = botId;
+            }
+            Proc_6_247_8027E0(socketIndex, petScratchPayload(botEntityId, Vb.val(userId), scratches,
+                handlingField(fields, 1), handlingField(fields, 2)), 0);
+            return scratches;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
