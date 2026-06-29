@@ -10274,8 +10274,7 @@ public final class Handling {
                 return;
             }
             if (roomId <= 0L) {
-                roomId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_room FROM furnitures WHERE id='"
-                    + furnitureId + "' LIMIT 1", 0, 0));
+                roomId = furnitureDao().roomIdByFurniture(furnitureId);
             }
             FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
             FurnitureStateCache state = representedFurnitureStateWrite(
@@ -10473,8 +10472,11 @@ public final class Handling {
             representedActivityPointTicks = representedActivityPointTicks.substring(0, startAt)
                 + representedActivityPointTicks.substring(endAt);
         } else {
-            tickValue = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT online_time FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+            try {
+                tickValue = userDao().onlineTime(NumberUtils.parseLong(userId));
+            } catch (Exception ignored) {
+                tickValue = 0L;
+            }
         }
         tickValue += 60L;
         representedActivityPointTicks += marker + tickValue;

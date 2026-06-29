@@ -160,11 +160,13 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `FurnitureDao`/`RoomDao` for floor-placement validation, replacing raw room-model, floor-occupancy, bot-occupancy, and active-occupant SQL with typed prepared DAO methods.
 - Expanded `FurnitureDao` for located furniture state, product-based state refresh, room/product id lookup, room existence checks, and wired sign updates, replacing raw furniture state SQL in `Handling` helpers.
 - Routed wired snapshot/edit furniture product lookups through `FurnitureDao`, replacing raw `id_product` SQL and tab-delimited parsing in `Handling`.
+- Routed represented furniture state room lookup through `FurnitureDao`, replacing raw furniture-room SQL in `Handling`.
 - Expanded `RoomDao` with typed `RoomEntryState` loading and room-ban checks for room entry validation.
 - Expanded `UserDao` for respect balance reads and respect-give updates, routing the respect handler through prepared DAO methods.
 - Expanded `UserDao` with typed activity-point balance rows and routed the balance payload through fluent `UserPayloads` construction.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for socket-user and permission-level lookups, removing remaining inline user lookup SQL from `MySQL` helper paths.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for credit and activity-point refresh lookups, routing `Functions` refresh helpers through prepared DAO methods.
+- Routed activity-point session online-time reads through `UserDao`, replacing raw user SQL in `Handling`.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for wardrobe rows, wardrobe slot replacement, tutorial-clothes updates, and motto lookup.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for avatar-name validation, rename updates, and identity-log insertion.
 - Expanded `com.alphaseries.dao.mysql.RoomDao` for active room socket lookups, routing `Functions` ready/room-alert helpers through prepared DAO methods.
@@ -236,9 +238,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 367
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 102
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 100
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12501 lines
+- `Handling.java`: 12503 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines
