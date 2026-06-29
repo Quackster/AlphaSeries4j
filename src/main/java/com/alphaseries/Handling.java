@@ -5511,6 +5511,93 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_197_7D43C0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            String requestPayload = handlingRequestPayload(args, "AK");
+            LongRef offset = new LongRef(1);
+            long lookX = readWireLong(requestPayload, offset);
+            long lookY = readWireLong(requestPayload, offset);
+            if (lookX == 0L && lookY == 0L) {
+                lookX = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                lookY = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            }
+            if (lookX < 0L || lookY < 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return "";
+            }
+            long roomSlot = socketIndex;
+            MovementPosition current = representedMovementPosition(Licence.global_00829310, roomSlot, socketIndex);
+            long currentX = current.found ? current.positionX : 0L;
+            long currentY = current.found ? current.positionY : 0L;
+            long directionValue = handlingDirectionCode(Long.compare(lookX, currentX), Long.compare(lookY, currentY));
+            Licence.global_00829310 = representedRoomOccupantMove(
+                Licence.global_00829310, roomSlot, socketIndex, currentX, currentY, directionValue, 0L);
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+            return "";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_198_7D4B70(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            String requestPayload = handlingRequestPayload(args, "AO");
+            LongRef offset = new LongRef(1);
+            long targetX = readWireLong(requestPayload, offset);
+            long targetY = readWireLong(requestPayload, offset);
+            if (targetX == 0L && targetY == 0L) {
+                targetX = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                targetY = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            }
+            if (targetX < 0L || targetY < 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L || Functions.Proc_10_25_80F5D0(roomId, targetX, targetY) == 0L) {
+                return "";
+            }
+            long roomSlot = socketIndex;
+            MovementPosition current = representedMovementPosition(Licence.global_00829310, roomSlot, socketIndex);
+            long currentX = current.found ? current.positionX : 0L;
+            long currentY = current.found ? current.positionY : 0L;
+            String movementText = Functions.Proc_10_24_80E790(socketIndex, currentX, currentY, targetX, targetY);
+            long nextX = handlingMovementField(movementText, 0);
+            long nextY = handlingMovementField(movementText, 1);
+            long directionValue = handlingMovementField(movementText, 2);
+            long movingValue = handlingMovementField(movementText, 3);
+            if (movingValue == 0L && (currentX != targetX || currentY != targetY)) {
+                movingValue = 1L;
+            }
+            Licence.global_00829310 = representedRoomOccupantMove(
+                Licence.global_00829310, roomSlot, socketIndex, nextX, nextY, directionValue, movingValue);
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+            return "";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_199_7D54E0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
