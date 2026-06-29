@@ -149,6 +149,16 @@ public final class FurnitureDao {
             furnitureId);
     }
 
+    public long dimmerFurnitureId(long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT furnitures.id FROM furnitures,products WHERE furnitures.id_room=? "
+                + "AND products.id_type=? AND furnitures.id_product=products.id LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            roomId,
+            9L)
+            .orElse(0L);
+    }
+
     public Optional<LocatedFurnitureState> locatedFurnitureState(long furnitureId) throws SQLException {
         return database.queryOne(
             "SELECT id_room,id_product,sign FROM furnitures WHERE id=? LIMIT 1",

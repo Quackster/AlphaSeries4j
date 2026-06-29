@@ -9468,9 +9468,15 @@ public final class Handling {
         if (roomId <= 0L) {
             return 0L;
         }
-        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690(
-            "SELECT furnitures.id FROM furnitures,products WHERE furnitures.id_room='" + roomId
-                + "' AND products.id_type='9' AND furnitures.id_product=products.id LIMIT 1", 0, 0));
+        FurnitureDao furniture = furnitureDao();
+        if (furniture == null) {
+            return 0L;
+        }
+        try {
+            return furniture.dimmerFurnitureId(roomId);
+        } catch (Exception ignored) {
+            return 0L;
+        }
     }
 
     public static boolean isDimmerColour(String colourText) {
