@@ -7063,15 +7063,14 @@ public final class Handling {
             if (NumberUtils.parseLong(handlingField(fields, 0)) == 0L || badgePrefix.isEmpty()) {
                 return "";
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            String escapedBadgePrefix = Functions.Proc_10_11_80A9C0(badgePrefix, 0, 0);
-            String escapedBadgeId = Functions.Proc_10_11_80A9C0(badgeId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM users_badges WHERE id_user='" + escapedUserId
-                + "' AND id_badge LIKE '" + escapedBadgePrefix + "%' LIMIT 1", 0, 0);
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO users_badges(id_user,id_badge) VALUES('"
-                + escapedUserId + "','" + escapedBadgeId + "')", 0, 0);
-            long badgeRowId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users_badges WHERE id_user='"
-                + escapedUserId + "' AND id_badge='" + escapedBadgeId + "' ORDER BY id DESC LIMIT 1", 0, 0));
+            UserDao users = userDao();
+            if (users == null) {
+                return "";
+            }
+            long userIdValue = NumberUtils.parseLong(userId);
+            users.deleteBadgesByPrefix(userIdValue, badgePrefix);
+            users.insertBadge(userIdValue, badgeId);
+            long badgeRowId = users.badgeRowId(userIdValue, badgeId);
             String payload = achievementRewardPayload(achievementIndex, achievementRow, badgeLevel, badgeRowId);
             Proc_6_244_801E80(socketIndex, payload, 0);
             String awardPayload = achievementAwardPayload(achievementRow);
@@ -7079,9 +7078,7 @@ public final class Handling {
                 long rewardIncrease = NumberUtils.parseLong(handlingField(fields, 3));
                 long scoreIncrease = NumberUtils.parseLong(handlingField(fields, 5));
                 long rewardType = NumberUtils.parseLong(handlingField(fields, 6));
-                MySQL.Proc_5_0_6D3CD0("UPDATE users SET activitypoints_" + rewardType + "=activitypoints_"
-                    + rewardType + "+" + rewardIncrease + ",achievement_score=achievement_score+" + scoreIncrease
-                    + " WHERE id='" + escapedUserId + "'", 0, 0);
+                users.addAchievementReward(userIdValue, rewardType, rewardIncrease, scoreIncrease);
                 Proc_6_244_801E80(socketIndex, awardPayload, 0);
             }
             return payload;

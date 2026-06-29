@@ -93,6 +93,13 @@ public final class UserDao {
             userId);
     }
 
+    public int addAchievementReward(long userId, long rewardType, long rewardIncrease, long scoreIncrease) throws SQLException {
+        return database.execute(
+            "UPDATE users SET activitypoints_" + rewardType + "=activitypoints_" + rewardType + "+" + rewardIncrease
+                + ",achievement_score=achievement_score+" + scoreIncrease + " WHERE id=?",
+            userId);
+    }
+
     public long respectAmount(long userId) throws SQLException {
         return database.queryOne(
             "SELECT respect_amount FROM users WHERE id=? LIMIT 1",
@@ -261,6 +268,26 @@ public final class UserDao {
             slot,
             badgeId,
             userId);
+    }
+
+    public int deleteBadgesByPrefix(long userId, String badgePrefix) throws SQLException {
+        return database.execute(
+            "DELETE FROM users_badges WHERE id_user=? AND id_badge LIKE ? LIMIT 1",
+            userId,
+            badgePrefix + "%");
+    }
+
+    public int insertBadge(long userId, String badgeId) throws SQLException {
+        return database.execute("INSERT INTO users_badges(id_user,id_badge) VALUES(?,?)", userId, badgeId);
+    }
+
+    public long badgeRowId(long userId, String badgeId) throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM users_badges WHERE id_user=? AND id_badge=? ORDER BY id DESC LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId,
+            badgeId)
+            .orElse(0L);
     }
 
     public long activityPoints(long userId, long pointType) throws SQLException {

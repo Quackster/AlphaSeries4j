@@ -40,6 +40,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.messages.outgoing.PollPayloads` for poll outgoing payloads.
 - Added `com.alphaseries.game.poll` typed poll records and `PollDao`, then routed poll handlers/prompts through prepared DAO methods and typed payload building.
 - Added `com.alphaseries.messages.outgoing.AchievementPayloads` for achievement reward, award, and list outgoing payloads.
+- Routed achievement badge replacement and reward increments through `UserDao` prepared methods.
 - Added `com.alphaseries.messages.outgoing.RecyclerPayloads` for recycler status outgoing payloads.
 - Added `com.alphaseries.messages.outgoing.JukeboxPayloads` for song info, jukebox playlist, disk inventory, and playback outgoing payloads.
 - Added `com.alphaseries.game.jukebox` typed jukebox records and `JukeboxDao`, then routed jukebox lookup, song-info, playlist, disk inventory, playback, add, and remove flows through prepared DAO methods.
@@ -225,12 +226,12 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 367
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 151
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 147
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12512 lines
+- `Handling.java`: 12509 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
-- `Main.java`: 946 lines
+- `Main.java`: 957 lines
 - `AlphaSeriesRuntime.java`: 221 lines
 
 ## Next Targets
