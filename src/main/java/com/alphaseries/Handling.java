@@ -5681,6 +5681,54 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_210_7E1DC0(Object... args) {
+        return "";
+    }
+
+    public static String Proc_6_218_7EA200(Object... args) {
+        try {
+            if (args == null || args.length == 0) {
+                return "";
+            }
+            return wiredSpecialStatePayload(Vb.val(args[0]));
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_223_7EEDD0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            SongInfoRequest request = songInfoRequestFromWire(handlingPacketPayload(args));
+            String rowText = "";
+            if (!request.requestedIds.isEmpty()) {
+                StringBuilder whereClause = new StringBuilder();
+                for (String cdId : request.requestedIds.split(",", -1)) {
+                    if (!cdId.isEmpty()) {
+                        if (whereClause.length() > 0) {
+                            whereClause.append(" OR ");
+                        }
+                        whereClause.append("id='").append(cdId).append("'");
+                    }
+                }
+                if (whereClause.length() > 0) {
+                    rowText = MySQL.Proc_5_2_6D4690("SELECT title,sequence,author,sound,id FROM soundmachine_cds WHERE "
+                        + whereClause + " LIMIT " + request.requestedCount, 0, 0);
+                }
+            }
+            String payload = songInfoPayload(rowText);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);

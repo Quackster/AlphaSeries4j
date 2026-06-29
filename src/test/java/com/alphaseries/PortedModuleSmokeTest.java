@@ -1916,6 +1916,11 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id,id_question,caption FROM poll_answers WHERE id_question='8'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(1, 8, "Yes"), Arrays.<Object>asList(2, 8, "No"));
                 }
+                if (sqlText.contains("SELECT title,sequence,author,sound,id FROM soundmachine_cds WHERE id='50' OR id='51'")) {
+                    return Arrays.<List<Object>>asList(
+                        Arrays.<Object>asList("Song A", 3, "Author A", "sound-a", 50),
+                        Arrays.<Object>asList("Song B", 4, "Author B", "sound-b", 51));
+                }
                 if (sqlText.contains("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket")
                     && sqlText.contains("logs_visitedrooms.id='61'")
                     && sqlText.contains("logs_visitedrooms.id_room='9'")) {
@@ -3065,6 +3070,15 @@ public final class PortedModuleSmokeTest {
         liveAchievementLevels.put("ACH_", 2L);
         assertEquals(Handling.achievementListPayload("2\tACH_\t10\t5\t3\t7\t2", liveAchievementLevels), achievementListPayload);
         assertEquals(true, containsSend(handlingSends, "Ft"));
+        handlingSends.clear();
+        assertEquals("", Handling.Proc_6_210_7E1DC0(4));
+        assertEquals("5;1;7;1;5;0;", Handling.Proc_6_218_7EA200(1507));
+        String liveSongInfoWire = "C]" + wireLong(2) + wireLong(50) + wireLong(51);
+        String liveSongInfoPayload = Handling.Proc_6_223_7EEDD0(4, liveSongInfoWire);
+        assertEquals(Handling.songInfoPayload("Song A\t3\tAuthor A\tsound-a\t50\rSong B\t4\tAuthor B\tsound-b\t51"),
+            liveSongInfoPayload);
+        assertEquals(true, containsSend(handlingSends, "Dl"));
+        assertEquals(true, containsSend(handlingSends, "Song A"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
