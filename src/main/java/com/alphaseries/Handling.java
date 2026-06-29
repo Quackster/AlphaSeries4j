@@ -62,9 +62,11 @@ public final class Handling {
             if (callerUserId.isEmpty() || "0".equals(callerUserId) || !handlingUserHasPermission(callerUserId, "fuse_mod")) {
                 return;
             }
-            StaffModerationDao.UserModerationSummary summary = staffModerationDao()
-                .userModerationSummary(targetUserId)
-                .orElse(null);
+            StaffModerationDao moderationDao = staffModerationDao();
+            if (moderationDao == null) {
+                return;
+            }
+            StaffModerationDao.UserModerationSummary summary = moderationDao.userModerationSummary(targetUserId).orElse(null);
             if (summary == null) {
                 return;
             }
@@ -115,25 +117,24 @@ public final class Handling {
                 return;
             }
             long currentRoomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            MySQL.Proc_5_1_6D4110("INSERT INTO logs_moderation(id_type,id_user,id_target,id_target_2,timestamp,message,id_session) VALUES('6','"
-                + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0) + "','" + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0)
-                + "','" + currentRoomId + "',UNIX_TIMESTAMP(),'" + Functions.Proc_10_11_80A9C0(banMessage, 0, 0)
-                + "','" + socketIndex + "')", 0, 0);
-            String targetIpAddress = MySQL.Proc_5_2_6D4690("SELECT ip_last FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' LIMIT 1", 0, 0);
             long banSeconds = banHours * 60L * 60L;
-            if (!targetIpAddress.isEmpty()) {
-                MySQL.Proc_5_0_6D3CD0("INSERT INTO users_bans(id_user,id_partner,message,timestamp_expire,timestamp_submit,ipaddress) VALUES('"
-                    + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0)
-                    + "','" + Functions.Proc_10_11_80A9C0(banMessage, 0, 0) + "',UNIX_TIMESTAMP()+" + banSeconds
-                    + ",UNIX_TIMESTAMP(),'" + Functions.Proc_10_11_80A9C0(targetIpAddress, 0, 0) + "')", 0, 0);
-            } else {
-                MySQL.Proc_5_0_6D3CD0("INSERT INTO users_bans(id_user,id_partner,message,timestamp_expire,timestamp_submit) VALUES('"
-                    + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0)
-                    + "','" + Functions.Proc_10_11_80A9C0(banMessage, 0, 0) + "',UNIX_TIMESTAMP()+" + banSeconds
-                    + ",UNIX_TIMESTAMP())", 0, 0);
+            StaffModerationDao moderationDao = staffModerationDao();
+            if (moderationDao != null) {
+                String targetIpAddress = moderationDao.userLastIpAddress(targetUserId);
+                moderationDao.insertModerationBanLog(
+                    NumberUtils.parseLong(callerUserId),
+                    targetUserId,
+                    currentRoomId,
+                    banMessage,
+                    socketIndex);
+                moderationDao.insertUserBan(
+                    targetUserId,
+                    NumberUtils.parseLong(callerUserId),
+                    banMessage,
+                    banSeconds,
+                    targetIpAddress);
+                moderationDao.clearUserLoginSession(targetUserId);
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET login_session=NULL WHERE id='" + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "'", 0, 0);
             int targetSocketIndex = handlingSocketFromUserId(String.valueOf(targetUserId));
             if (targetSocketIndex > 0) {
                 Proc_6_244_801E80(targetSocketIndex, "@c" + banMessage + '\2', 0);
@@ -11966,7 +11967,7 @@ public final class Handling {
 
     private static StaffModerationDao staffModerationDao() {
         Database database = MySQL.configuredDatabase();
-        return new StaffModerationDao(database);
+        return database == null ? null : new StaffModerationDao(database);
     }
 
     private static String[] normalizeRows(Object rowSource) {

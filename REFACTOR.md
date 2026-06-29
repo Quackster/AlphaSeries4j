@@ -72,6 +72,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.server.packet.PacketSink` and kept the root `PacketSink` as a deprecated compatibility alias.
 - Added `com.alphaseries.dao.mysql.StaffModerationDao` and routed staff chat-log/room-info moderation reads through typed prepared DAO methods instead of inline SQL concatenation in `MySQL`.
 - Expanded `com.alphaseries.dao.mysql.StaffModerationDao` for user moderation summaries, routing the staff user-summary handler through prepared DAO methods.
+- Expanded `com.alphaseries.dao.mysql.StaffModerationDao` for staff ban logging, ban insertion, target IP lookup, and login-session clearing.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for socket-user and permission-level lookups, removing remaining inline user lookup SQL from `MySQL` helper paths.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for credit and activity-point refresh lookups, routing `Functions` refresh helpers through prepared DAO methods.
 - Expanded `com.alphaseries.dao.mysql.RoomDao` for active room socket lookups, routing `Functions` ready/room-alert helpers through prepared DAO methods.
@@ -107,9 +108,9 @@ Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 468
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 456
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 451
 - `Boot.java`: 1130 lines
-- `Handling.java`: 12153 lines
+- `Handling.java`: 12154 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 922 lines

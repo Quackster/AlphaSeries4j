@@ -104,6 +104,59 @@ public final class StaffModerationDao {
             countBansByUser(userId)));
     }
 
+    public String userLastIpAddress(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT ip_last FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getString(1),
+            userId)
+            .orElse("");
+    }
+
+    public int insertModerationBanLog(
+        long moderatorUserId,
+        long targetUserId,
+        long roomId,
+        String message,
+        long sessionId
+    ) throws SQLException {
+        return database.execute(
+            "INSERT INTO logs_moderation(id_type,id_user,id_target,id_target_2,timestamp,message,id_session) "
+                + "VALUES('6',?,?,?,UNIX_TIMESTAMP(),?,?)",
+            moderatorUserId,
+            targetUserId,
+            roomId,
+            message,
+            sessionId);
+    }
+
+    public int insertUserBan(
+        long targetUserId,
+        long moderatorUserId,
+        String message,
+        long banSeconds,
+        String ipAddress
+    ) throws SQLException {
+        if (ipAddress == null || ipAddress.isEmpty()) {
+            return database.execute(
+                "INSERT INTO users_bans(id_user,id_partner,message,timestamp_expire,timestamp_submit) "
+                    + "VALUES(?,?,?,UNIX_TIMESTAMP()+" + banSeconds + ",UNIX_TIMESTAMP())",
+                targetUserId,
+                moderatorUserId,
+                message);
+        }
+        return database.execute(
+            "INSERT INTO users_bans(id_user,id_partner,message,timestamp_expire,timestamp_submit,ipaddress) "
+                + "VALUES(?,?,?,UNIX_TIMESTAMP()+" + banSeconds + ",UNIX_TIMESTAMP(),?)",
+            targetUserId,
+            moderatorUserId,
+            message,
+            ipAddress);
+    }
+
+    public int clearUserLoginSession(long userId) throws SQLException {
+        return database.execute("UPDATE users SET login_session=NULL WHERE id=?", userId);
+    }
+
     private long countCallForHelpByUser(long userId) throws SQLException {
         return database.queryOne(
             "SELECT COUNT(id) FROM staff_cfh WHERE id_user=?",
