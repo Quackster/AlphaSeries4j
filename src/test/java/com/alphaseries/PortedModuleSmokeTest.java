@@ -1032,6 +1032,25 @@ public final class PortedModuleSmokeTest {
         aliveState.ticks = 200L;
         assertEquals("", PrivSockHTTP.tmrCheckAliveTimer(aliveState));
         assertEquals(false, aliveState.enabled);
+        assertEquals("Cache", Cache.VB_MODULE_NAME);
+        assertEquals(false, Cache.HAS_PROCEDURES);
+        assertEquals("DownloadFile", DownloadFile.VB_MODULE_NAME);
+        assertEquals(false, DownloadFile.HAS_PROCEDURES);
+        assertEquals("Proxy", Proxy.VB_MODULE_NAME);
+        assertEquals(false, Proxy.HAS_PROCEDURES);
+        assertEquals("Walking", Walking.VB_MODULE_NAME);
+        assertEquals(false, Walking.HAS_PROCEDURES);
+        assertEquals("Walking_Bot", Walking_Bot.VB_MODULE_NAME);
+        assertEquals(false, Walking_Bot.HAS_PROCEDURES);
+        assertEquals("socketHTTP", SocketHTTP.VB_MODULE_NAME);
+        assertEquals(false, SocketHTTP.HAS_PROCEDURES);
+        Mistake.MessageBox mistakeMessageBox = Mistake.formLoad();
+        assertEquals(Mistake.MESSAGE, mistakeMessageBox.message);
+        assertEquals(Mistake.MessageStyle.CRITICAL, mistakeMessageBox.style);
+        Mistake.QueryUnloadResult mistakeUnload = Mistake.formQueryUnload(3);
+        assertEquals(false, mistakeUnload.cancel);
+        assertEquals(true, mistakeUnload.exitRequested);
+        assertEquals(3, mistakeUnload.unloadMode);
         assertEquals("", DataManager.Proc_8_0_804330(""));
 
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "hd-180-1\2M\2",
