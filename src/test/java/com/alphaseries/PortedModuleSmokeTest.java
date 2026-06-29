@@ -2221,6 +2221,9 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id,id_product,sign,id_secondary FROM furnitures WHERE id='76'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(76, 506, "trade-state", 4));
                 }
+                if (sqlText.contains("SELECT id,id_product,sign,id_secondary FROM furnitures WHERE id='86'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(86, 506, "target-state", 5));
+                }
                 if (sqlText.contains("SELECT id,id_product,sign FROM furnitures WHERE id='76'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(76, 506, "trade-state"));
                 }
@@ -3379,6 +3382,21 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, removedTradePayload.contains("Al"));
         assertEquals(false, removedTradePayload.contains("Trade Chair"));
         assertEquals(true, containsSend(handlingSends, "Al"));
+        handlingSends.clear();
+        handlingSql.clear();
+        Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
+        Handling.Proc_6_91_743480(4, "FU" + wireLong(76));
+        Handling.Proc_6_91_743480(8, "FU" + wireLong(86));
+        handlingSends.clear();
+        handlingSql.clear();
+        assertEquals("Ap", Handling.Proc_6_89_73EA10(4));
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner='88' WHERE id IN ('76') AND id_owner='77' AND id_room IS NULL"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner='77' WHERE id IN ('86') AND id_owner='88' AND id_room IS NULL"));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO logs_trading(id_user,id_partner,items_user,items_partner,id_room,timestamp,id_session) VALUES('77','88','76:506','86:506','9',UNIX_TIMESTAMP(),'session-77')"));
+        assertEquals(true, containsSend(handlingSends, "Ap"));
+        assertEquals(0, Handling.representedInteractionPartner(4));
+        handlingSends.clear();
+        Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         handlingSends.clear();
         Handling.Proc_6_94_746990(4);
         assertEquals(true, containsSend(handlingSends, "An"));

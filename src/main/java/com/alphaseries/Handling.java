@@ -2583,6 +2583,60 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_89_73EA10(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            int targetSocketIndex = representedInteractionPartner(socketIndex);
+            if (targetSocketIndex <= 0) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            String targetUserId = handlingUserIdFromSocket(targetSocketIndex);
+            if (userId.isEmpty() || "0".equals(userId) || targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return "";
+            }
+            String sourceSqlIds = representedTradeOfferSqlIds(representedTradeOffers, socketIndex);
+            String targetSqlIds = representedTradeOfferSqlIds(representedTradeOffers, targetSocketIndex);
+            if (sourceSqlIds.isEmpty() && targetSqlIds.isEmpty()) {
+                return "";
+            }
+            String sourceLogItems = representedTradeOfferLogItems(representedTradeOffers, socketIndex);
+            String targetLogItems = representedTradeOfferLogItems(representedTradeOffers, targetSocketIndex);
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            String escapedTargetUserId = Functions.Proc_10_11_80A9C0(targetUserId, 0, 0);
+            if (!sourceSqlIds.isEmpty()) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner='" + escapedTargetUserId
+                    + "' WHERE id IN (" + sourceSqlIds + ") AND id_owner='" + escapedUserId
+                    + "' AND id_room IS NULL", 0, 0);
+            }
+            if (!targetSqlIds.isEmpty()) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner='" + escapedUserId
+                    + "' WHERE id IN (" + targetSqlIds + ") AND id_owner='" + escapedTargetUserId
+                    + "' AND id_room IS NULL", 0, 0);
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            String sessionId = handlingUserSessionId(userId);
+            MySQL.Proc_5_1_6D4110("INSERT INTO logs_trading(id_user,id_partner,items_user,items_partner,id_room,timestamp,id_session) VALUES('"
+                + escapedUserId + "','" + escapedTargetUserId + "','"
+                + Functions.Proc_10_11_80A9C0(sourceLogItems, 0, 0) + "','"
+                + Functions.Proc_10_11_80A9C0(targetLogItems, 0, 0) + "','" + roomId
+                + "',UNIX_TIMESTAMP(),'" + Functions.Proc_10_11_80A9C0(sessionId, 0, 0) + "')", 0, 0);
+            Proc_6_244_801E80(socketIndex, "Ap", 0);
+            Proc_6_244_801E80(targetSocketIndex, "Ap", 0);
+            Proc_6_140_769400(socketIndex, "FT", "");
+            Proc_6_140_769400(targetSocketIndex, "FT", "");
+            removeRepresentedInteractionPair(socketIndex);
+            removeRepresentedInteractionPair(targetSocketIndex);
+            return "Ap";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static void Proc_6_90_742E80(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
