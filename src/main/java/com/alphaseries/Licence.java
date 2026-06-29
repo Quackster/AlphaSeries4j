@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.game.advertising.VisitRoomAds;
+import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -184,6 +185,15 @@ public final class Licence {
 
     public static void setMessengerFriendLimits(Object friendLimits) {
         global_0082927C = friendLimits == null ? "" : friendLimits;
+    }
+
+    public static AchievementSettings achievementSettings() {
+        return AchievementSettings.fromLegacy(global_008291E4, global_008291E8);
+    }
+
+    public static void setAchievementSettings(String questIdPayload, Object rows) {
+        global_008291E4 = StringUtils.text(questIdPayload);
+        global_008291E8 = rows == null ? "" : rows;
     }
 
     public static String Proc_9_6_808080(Object... args) {

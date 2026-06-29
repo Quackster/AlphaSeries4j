@@ -26,6 +26,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.messages.outgoing.AchievementPayloads` for achievement reward, award, and list outgoing payloads.
 - Added `com.alphaseries.messages.outgoing.RecyclerPayloads` for recycler status outgoing payloads.
 - Added `com.alphaseries.messages.outgoing.JukeboxPayloads` for song info, jukebox playlist, disk inventory, and playback outgoing payloads.
+- Added `com.alphaseries.game.achievement.AchievementSettings` as a typed adapter around achievement quest and row state previously decoded directly from `Licence` globals.
 - Added `com.alphaseries.game.advertising.VisitRoomAds` as a typed adapter around advertisement visit-room payload state previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.chat.ChatSettings` for chat word filtering and gesture lookup state previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.help.HelpCenterCache` as a typed adapter around important FAQ, FAQ category, and FAQ description payload caches previously read directly from `Licence` globals.
@@ -59,9 +60,9 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 472
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1395
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1394
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 476
-- `Handling.java`: 12513 lines
+- `Handling.java`: 12486 lines
 - `Functions.java`: 797 lines
 - `MySQL.java`: 301 lines
 - `Vb.java`: 106 lines

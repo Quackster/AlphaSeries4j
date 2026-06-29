@@ -825,6 +825,8 @@ public final class PortedModuleSmokeTest {
         Boot.Proc_1_5_6C4F80();
         assertEquals("7\2", Licence.global_008291E4);
         assertEquals("ACH_ONE", ((String[][]) Licence.global_008291E8)[0][1]);
+        assertEquals("7\2", Licence.achievementSettings().questIdPayload());
+        assertEquals(true, Licence.achievementSettings().rowsAsText().contains("ACH_ONE"));
         assertEquals(":-)\t5", Licence.global_00829294);
         assertEquals("badword", Licence.global_00829290);
         assertEquals("badword", Licence.chatSettings().filterRows());

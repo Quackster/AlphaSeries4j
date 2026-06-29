@@ -11553,38 +11553,11 @@ public final class Handling {
     }
 
     public static String achievementRowsFromGlobal() {
-        Object source = Licence.global_008291E8;
-        if (source instanceof String[][]) {
-            String[][] rows = (String[][]) source;
-            StringBuilder result = new StringBuilder();
-            for (String[] row : rows) {
-                if (row != null && row.length > 0) {
-                    if (result.length() > 0) {
-                        result.append('\r');
-                    }
-                    result.append(String.join("\t", row));
-                }
-            }
-            return result.toString();
-        }
-        if (source instanceof String[]) {
-            return String.join("\r", (String[]) source);
-        }
-        return Vb.cStr(source);
+        return Licence.achievementSettings().rowsAsText();
     }
 
     public static String achievementRowByIndex(long achievementIndex) {
-        if (achievementIndex < 0L) {
-            return "";
-        }
-        Object source = Licence.global_008291E8;
-        if (source instanceof String[][]) {
-            String[][] rows = (String[][]) source;
-            return achievementIndex < rows.length && rows[(int) achievementIndex] != null
-                ? String.join("\t", rows[(int) achievementIndex]) : "";
-        }
-        String[] rows = achievementRowsFromGlobal().split("\r", -1);
-        return achievementIndex < rows.length ? rows[(int) achievementIndex] : "";
+        return Licence.achievementSettings().rowByIndex(achievementIndex);
     }
 
     public static Map<String, Long> achievementCurrentLevels(String userId, String achievementRows) {

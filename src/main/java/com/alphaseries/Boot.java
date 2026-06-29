@@ -115,8 +115,7 @@ public final class Boot {
         AchievementSettingsCache achievementCache = buildAchievementSettingsCache(MySQL.Proc_5_2_6D4690(
             "SELECT id_quest,id_badge,progress,reward_increase,level_total,score_increase,type_reward "
                 + "FROM settings_achievements WHERE is_enabled='1' LIMIT 100", 0, 0));
-        Licence.global_008291E4 = achievementCache.questIdPayload;
-        Licence.global_008291E8 = achievementRowsByIndex(achievementCache);
+        Licence.setAchievementSettings(achievementCache.questIdPayload, achievementRowsByIndex(achievementCache));
         Proc_1_9_6C6DF0(0, 0, 0);
         Proc_1_7_6C5E10(0, 0, 0);
         Proc_1_18_6CE9C0(0, 0, 0);
