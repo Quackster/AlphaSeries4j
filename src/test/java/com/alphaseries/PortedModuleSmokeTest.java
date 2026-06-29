@@ -1789,7 +1789,9 @@ public final class PortedModuleSmokeTest {
             + "[com.client.rooms.bots.pets.enabled=1]"
             + "[com.client.rooms.bots.guide.enabled=1]"
             + "[com.client.bot.guide.id=20]"
-            + "[com.client.catalog.recycler.enabled=1]";
+            + "[com.client.catalog.recycler.enabled=1]"
+            + "[com.server.socket.game.default.songdisk=700]"
+            + "[com.server.socket.game.jukebox.900.soundsets.max=5]";
         Licence.global_008291E8 = new String[][]{{"2", "ACH_", "10", "5", "3", "7", "2"}};
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_mod\2fuse_alert\2fuse_kick\2fuse_receive_calls_for_help\2fuse_chatlog\2"
             + "fuse_use_wardrobe\2fuse_larger_wardrobe\2fuse_client_staff\2"}};
@@ -1920,6 +1922,21 @@ public final class PortedModuleSmokeTest {
                     return Arrays.<List<Object>>asList(
                         Arrays.<Object>asList("Song A", 3, "Author A", "sound-a", 50),
                         Arrays.<Object>asList("Song B", 4, "Author B", "sound-b", 51));
+                }
+                if (sqlText.contains("SELECT furnitures.id,furnitures.id_product FROM furnitures,soundmachine_jb_playlist WHERE furnitures.id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(300, 900));
+                }
+                if (sqlText.contains("SELECT id_destination FROM soundmachine_jb_playlist WHERE id_jukebox='300' AND id_order='0'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(40));
+                }
+                if (sqlText.contains("SELECT id_cd,id_destination FROM soundmachine_jb_playlist WHERE id_jukebox='300'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(2, 40), Arrays.<Object>asList(3, 41));
+                }
+                if (sqlText.contains("SELECT id,id_destination FROM furnitures WHERE id_owner='77' AND id_product='700'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(4, 50), Arrays.<Object>asList(5, 51));
+                }
+                if (sqlText.contains("SELECT soundmachine_jb_playlist.id_destination,soundmachine_jb_playlist.id_cd,soundmachine_cds.sequence")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(40, 2, 3));
                 }
                 if (sqlText.contains("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket")
                     && sqlText.contains("logs_visitedrooms.id='61'")
@@ -3079,6 +3096,21 @@ public final class PortedModuleSmokeTest {
             liveSongInfoPayload);
         assertEquals(true, containsSend(handlingSends, "Dl"));
         assertEquals(true, containsSend(handlingSends, "Song A"));
+        handlingSends.clear();
+        Licence.global_008291FC = "\1" + "300\2\1" + "40\2\1" + "999\2";
+        Handling.Proc_6_224_7EF5A0(4);
+        assertEquals("\1" + "999\2", Licence.global_008291FC);
+        String playlistPayload = Handling.Proc_6_227_7F2400(4);
+        assertEquals(Handling.jukeboxPlaylistPayload(5, "2\t40\r3\t41"), playlistPayload);
+        assertEquals(true, containsSend(handlingSends, "EN"));
+        handlingSends.clear();
+        String diskInventoryPayload = Handling.Proc_6_228_7F2AF0(4);
+        assertEquals(Handling.songDiskInventoryPayload("4\t50\r5\t51"), diskInventoryPayload);
+        assertEquals(true, containsSend(handlingSends, "EM"));
+        handlingSends.clear();
+        String playbackPayload = Handling.Proc_6_229_7F3070(4);
+        assertEquals(true, playbackPayload.startsWith("EG"));
+        assertEquals(true, containsSend(handlingSends, "EG"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
