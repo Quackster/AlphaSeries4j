@@ -1938,8 +1938,30 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT soundmachine_jb_playlist.id_destination,soundmachine_jb_playlist.id_cd,soundmachine_cds.sequence")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(40, 2, 3));
                 }
+                if (sqlText.contains("SELECT id_quest,id_numericquest,progress,id_level,time_next FROM users_quests WHERE id_user='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, 10, 1, 0, 0));
+                }
+                if (sqlText.contains("SELECT id_quest,id_numericquest,progress,id_level FROM users_quests WHERE id_user='77' AND id_quest='10'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, 10, 3, 0));
+                }
+                if (sqlText.contains("SELECT id_quest,id_level FROM users_quests WHERE id_user='77'")
+                    && sqlText.contains("timestamp_accepted IS NOT NULL")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, 1));
+                }
                 if (sqlText.contains("SELECT id_quest,id_level,timestamp_done,timestamp_accepted,time_next,progress FROM users_quests WHERE id_user='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, 0, 0, 1, 0, 1));
+                }
+                if (sqlText.contains("SELECT id_level FROM users_quests WHERE id_user='77' AND id_quest='10'")) {
+                    return new ArrayList<List<Object>>();
+                }
+                if (sqlText.contains("SELECT progress FROM users_quests WHERE id_user='77' AND id_quest='10'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
+                }
+                if (sqlText.contains("SELECT time_next FROM users_quests WHERE id_user='77' AND id_quest='10'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
+                }
+                if (sqlText.contains("SELECT activitypoints_2 FROM users WHERE id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(20));
                 }
                 if (sqlText.contains("FROM quests ORDER BY id_campaign DESC,level ASC")) {
                     return Arrays.<List<Object>>asList(
@@ -3144,6 +3166,30 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET timestamp_done=NULL,timestamp_accepted=NULL WHERE id_user='77' LIMIT 50"));
         assertEquals(true, containsSend(handlingSends, "Lc"));
         assertEquals(true, containsSend(handlingSends, "L`"));
+        handlingSends.clear();
+        handlingSql.clear();
+        Handling.Proc_6_232_7F45A0(4, "p^" + wireLong(10));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO users_quests(id_user,id_quest,id_level,id_numericquest,timestamp_accepted) VALUES('77','10','0','10',UNIX_TIMESTAMP())"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL 30 SECOND) WHERE id_user='77' AND id_quest='10' LIMIT 1"));
+        assertEquals(true, containsSend(handlingSends, "L`"));
+        handlingSends.clear();
+        handlingSql.clear();
+        Handling.Proc_6_233_7F5D60(4);
+        assertEquals(true, containsSql(handlingSql, "id_numericquest='11'"));
+        assertEquals(true, containsSend(handlingSends, "L`"));
+        handlingSends.clear();
+        handlingSql.clear();
+        Handling.Proc_6_235_7F77E0(4);
+        assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL 30 SECOND) WHERE id_user='77' AND id_quest='10' LIMIT 1"));
+        assertEquals(true, containsSend(handlingSends, "L`"));
+        handlingSends.clear();
+        handlingSql.clear();
+        Handling.Proc_6_164_7BC820(4, 10, 10);
+        assertEquals(true, containsSend(handlingSends, "Lb"));
+        assertEquals(true, containsSend(handlingSends, "La"));
+        assertEquals(true, containsSend(handlingSends, "Fv"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_2=activitypoints_2+5 WHERE id='77' LIMIT 1"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET id_level=id_level+1,progress='0',id_numericquest='0',timestamp_done=UNIX_TIMESTAMP() WHERE id_user='77' AND id_quest='10' LIMIT 1"));
         Licence.global_00829080 = "";
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
