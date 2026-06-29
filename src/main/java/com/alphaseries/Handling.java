@@ -1130,22 +1130,21 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
-            String oldName = MySQL.Proc_5_2_6D4690("SELECT name FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
-            MySQL.Proc_5_2_6D4690("SELECT gender FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
-            long existingCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM users WHERE name='"
-                + Functions.Proc_10_11_80A9C0(candidateName, 0, 0) + "'", 0, 0));
+            UserDao users = userDao();
+            if (users == null) {
+                return 0L;
+            }
+            long numericUserId = NumberUtils.parseLong(userId);
+            String oldName = users.name(numericUserId);
+            users.gender(numericUserId);
+            long existingCount = users.countByName(candidateName);
             long validationCode = avatarNameValidationCode(candidateName, oldName, existingCount);
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(validationCode, null, "H{") + candidateName + '\2', 0);
             if (checkOnly || validationCode != 0L) {
                 return validationCode;
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET name='" + Functions.Proc_10_11_80A9C0(candidateName, 0, 0)
-                + "',tutorial_name='1',merge_name='0' WHERE id='" + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
-            MySQL.Proc_5_1_6D4110("INSERT INTO logs_identity(previous_identity,new_identity,timestamp,id_session) VALUES('"
-                + Functions.Proc_10_11_80A9C0(oldName, 0, 0) + "','" + Functions.Proc_10_11_80A9C0(candidateName, 0, 0)
-                + "',UNIX_TIMESTAMP(),'" + socketIndex + "')", 0, 0);
+            users.updateName(numericUserId, candidateName);
+            users.insertIdentityLog(oldName, candidateName, socketIndex);
             long roomId = handlingCurrentRoomId(socketIndex, userId);
             if (roomId > 0L) {
                 long roomUserIndex = representedRoomUserIndex(socketIndex, userId);

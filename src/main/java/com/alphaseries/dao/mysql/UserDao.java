@@ -113,6 +113,47 @@ public final class UserDao {
             .orElse("");
     }
 
+    public String name(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT name FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getString(1),
+            userId)
+            .orElse("");
+    }
+
+    public String gender(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT gender FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getString(1),
+            userId)
+            .orElse("");
+    }
+
+    public long countByName(String name) throws SQLException {
+        return database.queryOne(
+            "SELECT COUNT(*) FROM users WHERE name=?",
+            resultSet -> resultSet.getLong(1),
+            name)
+            .orElse(0L);
+    }
+
+    public int updateName(long userId, String name) throws SQLException {
+        return database.execute(
+            "UPDATE users SET name=?,tutorial_name=?,merge_name=? WHERE id=?",
+            name,
+            1L,
+            0L,
+            userId);
+    }
+
+    public int insertIdentityLog(String previousIdentity, String newIdentity, long sessionId) throws SQLException {
+        return database.execute(
+            "INSERT INTO logs_identity(previous_identity,new_identity,timestamp,id_session) VALUES(?,?,UNIX_TIMESTAMP(),?)",
+            previousIdentity,
+            newIdentity,
+            sessionId);
+    }
+
     public record UserIdentity(long userId, long socketIndex, String motto, String figure, String gender) {
     }
 }
