@@ -1806,6 +1806,16 @@ public final class PortedModuleSmokeTest {
                     && sqlText.contains("FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(77, "User77", "Ready", "hd-180-1", 1, 4, "today"));
                 }
+                if (sqlText.contains("SELECT id,name,motto,figure,level,id_socket,DATE_FORMAT(FROM_UNIXTIME(lastonline_time)")
+                    && sqlText.contains("FROM users WHERE id='88'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(88, "Target", "Motto", "fig", 1, 8, "now"));
+                }
+                if (sqlText.contains("SELECT users.id,users.name,users.motto,users.figure,users.level,users.id_socket")
+                    && sqlText.contains("friendships.has_accept='0'")
+                    && sqlText.contains("friendships.id_user='77'")
+                    && sqlText.contains("friendships.id_friend='88'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(88, "Target", "Motto", "fig", 1, 8, "now"));
+                }
                 if (sqlText.contains("SELECT activitypoints_0 FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(70));
                 }
@@ -2747,6 +2757,16 @@ public final class PortedModuleSmokeTest {
         assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BG") + inviteText + "\2", invitePayload);
         assertEquals(true, containsSend(handlingSends, "BG"));
         assertEquals(true, containsSql(handlingSql, "(Invite To: Target) -- " + inviteText));
+        handlingSql.clear();
+        handlingSends.clear();
+        String acceptPayload = Handling.Proc_6_167_7BECA0(4, "@e" + wireLong(1) + wireLong(88));
+        assertEquals(true, acceptPayload.startsWith("@MH"));
+        assertEquals(true, acceptPayload.contains("Target"));
+        assertEquals(true, containsSql(handlingSql, "INSERT IGNORE INTO friendships(id_user,id_friend,has_accept) VALUES('88','77','0')"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE friendships SET has_accept='1'"));
+        assertEquals(true, containsSend(handlingSends, "@MHIH"));
+        assertEquals(true, containsSend(handlingSends, "User77"));
+        assertEquals(true, containsSend(handlingSends, "@MH"));
         handlingSql.clear();
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
