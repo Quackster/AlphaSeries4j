@@ -2,6 +2,7 @@ package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
 import com.alphaseries.game.jukebox.SongDiskRow;
+import com.alphaseries.game.jukebox.SongInfoRow;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -14,22 +15,35 @@ public final class JukeboxPayloads {
     }
 
     public static String songInfo(String cdRows) {
-        long responseCount = 0L;
-        PacketBuilder cdPayload = PacketBuilder.create();
+        List<SongInfoRow> songs = new ArrayList<>();
         for (String row : StringUtils.text(cdRows).split("\r", -1)) {
             String rowValue = row.trim();
             if (!rowValue.isEmpty()) {
                 String[] fields = rowValue.split("\t", -1);
                 if (fields.length >= 5) {
-                    long cdId = NumberUtils.parseLong(StringUtils.field(fields, 4));
-                    long sequenceId = NumberUtils.parseLong(StringUtils.field(fields, 1));
-                    cdPayload.appendInt(cdId)
-                        .appendInt(sequenceId)
-                        .appendString(StringUtils.field(fields, 0))
-                        .appendString(StringUtils.field(fields, 2))
-                        .appendString(StringUtils.field(fields, 3));
-                    responseCount++;
+                    songs.add(new SongInfoRow(
+                        StringUtils.field(fields, 0),
+                        NumberUtils.parseLong(StringUtils.field(fields, 1)),
+                        StringUtils.field(fields, 2),
+                        StringUtils.field(fields, 3),
+                        NumberUtils.parseLong(StringUtils.field(fields, 4))));
                 }
+            }
+        }
+        return songInfo(songs);
+    }
+
+    public static String songInfo(List<SongInfoRow> songs) {
+        long responseCount = 0L;
+        PacketBuilder cdPayload = PacketBuilder.create();
+        for (SongInfoRow song : songs == null ? List.<SongInfoRow>of() : songs) {
+            if (song != null && song.cdId() > 0L) {
+                cdPayload.appendInt(song.cdId())
+                    .appendInt(song.sequenceId())
+                    .appendString(song.title())
+                    .appendString(song.author())
+                    .appendString(song.sound());
+                responseCount++;
             }
         }
         return PacketBuilder.message("Dl")

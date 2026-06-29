@@ -5,8 +5,10 @@ import com.alphaseries.game.jukebox.JukeboxPlaybackRow;
 import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
 import com.alphaseries.game.jukebox.JukeboxRow;
 import com.alphaseries.game.jukebox.SongDiskRow;
+import com.alphaseries.game.jukebox.SongInfoRow;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +34,45 @@ public final class JukeboxDao {
                 + "OR products.name LIKE '%jukebox%' OR products.sprite LIKE '%jukebox%') ORDER BY furnitures.id DESC LIMIT 1",
             resultSet -> new JukeboxRow(resultSet.getLong(1), resultSet.getLong(2)),
             roomId);
+    }
+
+    public List<SongInfoRow> songInfoRows(String requestedIds, long requestedCount) throws SQLException {
+        long effectiveCount = requestedCount <= 0L ? 0L : Math.min(requestedCount, 60L);
+        List<Long> cdIds = new ArrayList<>();
+        for (String requestedId : String.valueOf(requestedIds == null ? "" : requestedIds).split(",", -1)) {
+            if (!requestedId.isEmpty()) {
+                try {
+                    long cdId = Long.parseLong(requestedId);
+                    if (cdId > 0L) {
+                        cdIds.add(cdId);
+                    }
+                } catch (NumberFormatException ignored) {
+                    // Ignore malformed legacy request ids.
+                }
+            }
+        }
+        if (effectiveCount <= 0L || cdIds.isEmpty()) {
+            return List.of();
+        }
+        StringBuilder whereClause = new StringBuilder();
+        List<Object> parameters = new ArrayList<>();
+        for (Long cdId : cdIds) {
+            if (whereClause.length() > 0) {
+                whereClause.append(" OR ");
+            }
+            whereClause.append("id=?");
+            parameters.add(cdId);
+        }
+        return database.query(
+            "SELECT title,sequence,author,sound,id FROM soundmachine_cds WHERE "
+                + whereClause + " LIMIT " + effectiveCount,
+            resultSet -> new SongInfoRow(
+                resultSet.getString(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getString(4),
+                resultSet.getLong(5)),
+            parameters.toArray());
     }
 
     public long activeDestinationId(long jukeboxId) throws SQLException {

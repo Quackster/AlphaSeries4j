@@ -18,6 +18,7 @@ import com.alphaseries.game.jukebox.JukeboxPlaybackRow;
 import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
 import com.alphaseries.game.jukebox.JukeboxRow;
 import com.alphaseries.game.jukebox.SongDiskRow;
+import com.alphaseries.game.jukebox.SongInfoRow;
 import com.alphaseries.game.pet.BotRoomEntryRow;
 import com.alphaseries.game.pet.PetCommandActionRow;
 import com.alphaseries.game.pet.PetCommandTargetRow;
@@ -7279,23 +7280,10 @@ public final class Handling {
                 return "";
             }
             SongInfoRequest request = songInfoRequestFromWire(handlingPacketPayload(args));
-            String rowText = "";
-            if (!request.requestedIds.isEmpty()) {
-                StringBuilder whereClause = new StringBuilder();
-                for (String cdId : request.requestedIds.split(",", -1)) {
-                    if (!cdId.isEmpty()) {
-                        if (whereClause.length() > 0) {
-                            whereClause.append(" OR ");
-                        }
-                        whereClause.append("id='").append(cdId).append("'");
-                    }
-                }
-                if (whereClause.length() > 0) {
-                    rowText = MySQL.Proc_5_2_6D4690("SELECT title,sequence,author,sound,id FROM soundmachine_cds WHERE "
-                        + whereClause + " LIMIT " + request.requestedCount, 0, 0);
-                }
-            }
-            String payload = songInfoPayload(rowText);
+            JukeboxDao jukebox = jukeboxDao();
+            String payload = jukebox == null
+                ? songInfoPayload("")
+                : songInfoPayload(jukebox.songInfoRows(request.requestedIds, request.requestedCount));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -11981,6 +11969,10 @@ public final class Handling {
     }
 
     public static String songInfoPayload(String cdRows) {
+        return JukeboxPayloads.songInfo(cdRows);
+    }
+
+    public static String songInfoPayload(List<SongInfoRow> cdRows) {
         return JukeboxPayloads.songInfo(cdRows);
     }
 
