@@ -97,6 +97,16 @@ public final class PortedModuleSmokeTest {
             DataManager.lastLicenceFailureMessage);
         assertEquals(false, DataManager.applyLicenceResponse("{BLOCKED no%20licence}", "FMT", 0));
         assertEquals("no licence", DataManager.lastLicenceFailureMessage);
+        assertEquals(DataManager.DEFAULT_LICENCE_ENDPOINT, DataManager.licenceEndpointFromEnvironment(new HashMap<>()));
+        Map<String, String> licenceEnvironment = new HashMap<>();
+        licenceEnvironment.put(DataManager.LICENCE_ENDPOINT_ENV, "http://127.0.0.1:8080/check_product_sep11");
+        assertEquals("http://127.0.0.1:8080/check_product_sep11",
+            DataManager.licenceEndpointFromEnvironment(licenceEnvironment));
+        assertEquals(true, DataManager.buildLicenceRequestUrl(
+            new DataManager.LicenceCheckContext("PRODUCT-KEY", "ALPHASERIES_FINAL (PREMIUM)",
+                LocalDateTime.of(2026, 6, 29, 14, 50, 0)),
+            "http://127.0.0.1:8080/check_product_sep11").startsWith(
+                "http://127.0.0.1:8080/check_product_sep11?local_time="));
         final List<String> licenceUrls = new ArrayList<>();
         DataManager.configureLicenceHttpFetcher((requestUrl, action) -> {
             licenceUrls.add(action + ":" + requestUrl);
@@ -105,8 +115,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, DataManager.checkLicence(new DataManager.LicenceCheckContext(
             "PRODUCT-KEY", "ALPHASERIES_FINAL (PREMIUM)", LocalDateTime.of(2026, 6, 29, 14, 50, 0))));
         assertEquals(true, licenceUrls.get(0).startsWith("1:http://www.alpha-series.com/check_product_sep11?local_time="));
-        assertEquals(true, licenceUrls.get(0).contains("2026-06-29_14-50-00:"));
-        assertEquals(true, licenceUrls.get(0).contains("&version=ALPHASERIES_FINAL (PREMIUM)&productKey=PRODUCT-KEY&token="));
+        assertEquals(true, licenceUrls.get(0).contains("2026-06-29_14-50-00%3A"));
+        assertEquals(true, licenceUrls.get(0).contains("&version=ALPHASERIES_FINAL+%28PREMIUM%29&productKey=PRODUCT-KEY&token="));
+        assertEquals("ALPHASERIES_FINAL+%28PREMIUM%29", DataManager.urlEncode("ALPHASERIES_FINAL (PREMIUM)"));
         assertEquals(4, DataManager.global_00829054);
         assertEquals(1, DataManager.global_00829068[7]);
         DataManager.configureLicenceHttpFetcher(null);
@@ -865,6 +876,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("AB", Main.newPremiumCheck(2, "d" + Character.toString((char) 163) + Character.toString((char) 164)));
         assertEquals("AZ", Main.getIdentity("e" + Character.toString((char) 164) + Character.toString((char) 190), 3));
         assertEquals("KEY", Main.productKeyFromConfig("a=b=c=d=e=f=g=KEY\r\nnext"));
+        assertEquals("PRODUCT-KEY", Main.productKeyFromConfig("mySQL_db=alphaseries\r\nproductKey=PRODUCT-KEY\r\n"));
+        assertEquals("LEGACY-KEY", Main.productKeyFromConfig("mySQL_db=snapshot\r\nlicence=LEGACY-KEY\r\n"));
         Licence.global_00829354 = "[3][7]";
         assertEquals(true, Main.isGameSessionReady(7));
         assertEquals(false, Main.isGameSessionReady(8));

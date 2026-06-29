@@ -83,6 +83,7 @@ public final class Console {
 
     public static void appendConsoleLine(String lineText, long foreColor) {
         entries.add(new Entry(lineText, foreColor));
+        System.out.println(lineText);
     }
 
     public static String formatConsoleLine(String messageText, String sourceName, boolean alwaysPrefix) {

@@ -18,6 +18,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Do not duplicate common conversion helpers. Use `StringUtils`, `NumberUtils`, and protocol utilities instead of reintroducing VB-style local helper methods.
 - Move raw `Licence.global_*` string caches into typed collection-backed state holders under the appropriate `game.*` package, keeping legacy serialization only at explicit compatibility boundaries.
 - Each domain module should expose a single module-level manager/registry for its live instances and cached state instead of relying on `Licence.java` globals or scattered static ownership. `Licence` accessors are only temporary compatibility bridges while callers migrate to those managers.
+- Keep the refactor branch current with required runtime fixes from `dev`; commit `099dd4d17cd83efeecdb088ac1d94c8ff8404621` (`Fix AlphaSeries boot runtime`) is intentionally merged into this branch.
 - Commit only verified milestones with `REFACTOR.md` metrics updated when the legacy surface changes.
 
 ## Completed Slices
@@ -196,14 +197,15 @@ Compared with `main`, the VB helper artifact has been removed:
 
 Measured on 2026-06-30:
 
-- Unique `Proc_*` symbols under `src/main/java`: 463
+- Unique `Proc_*` symbols under `src/main/java`: 473
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 210
-- `Boot.java`: 1196 lines
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 212
+- `Boot.java`: 1225 lines
 - `Handling.java`: 12413 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
-- `Main.java`: 920 lines
+- `Main.java`: 929 lines
+- `AlphaSeriesRuntime.java`: 221 lines
 
 ## Next Targets
 

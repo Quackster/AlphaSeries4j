@@ -25,6 +25,19 @@ Run the app with:
 ./gradlew run
 ```
 
+For local boot verification without the historical remote endpoint, run the dev
+licence server in another terminal:
+
+```sh
+scripts/dev-licence-server.py
+```
+
+Then point the app at it:
+
+```sh
+ALPHASERIES_LICENCE_ENDPOINT=http://127.0.0.1:18080/check_product_sep11 ./gradlew run
+```
+
 ## Local Database Setup
 
 The repo includes `config.ini` configured for the local MariaDB/MySQL instance:

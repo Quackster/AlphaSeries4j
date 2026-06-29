@@ -93,11 +93,31 @@ public final class Boot {
     }
 
     public static void Proc_1_3_6BEBA0(Object... args) {
-        Proc_1_2_6BE280(0, 0, 0);
-        Proc_1_5_6C4F80(0, 0, 0);
-        Proc_1_7_6C5E10(0, 0, 0);
-        ServerMaintenanceDao maintenanceDao = serverMaintenanceDao();
-        if (maintenanceDao != null) {
+        runTimed("Empfohlene Räume im Cache gespeichert", () -> Proc_1_2_6BE280(0, 0, 0));
+        runTimed("Mögliche Badgevergabe im Cache gespeichert", () -> Proc_1_16_6CCA60(0, 0, 0));
+        runTimed("Haustiere im Cache gespeichert", () -> Proc_1_7_6C5E10(0, 0, 0));
+        runTimed("Figuredata im Cache gespeichert", Boot::writeFiguredataCache);
+        runTimed("Server Einstellungen im Cache gespeichert", () -> Proc_1_9_6C6DF0(0, 0, 0));
+        runTimed("Event Kategorien im Cache gespeichert", () -> Proc_1_8_6C6850(0, 0, 0));
+        runTimed("Navigator Kategorien im Cache gespeichert", () -> {
+            Proc_1_11_6C8D10(0, 0, 0);
+            Proc_1_12_6C8EF0(0, 0, 0);
+        });
+        runTimed("Raumwerbung im Cache gespeichert", () -> Proc_1_22_6D0F00(0, 0, 0));
+        runTimed("Bonussystem im Cache gespeichert", () -> Proc_1_5_6C4F80(0, 0, 0));
+        runTimed("Katalog im Cache gespeichert", () -> Proc_1_1_6BB340(0, 0, 0));
+        runTimed("Chat Einstellungen im Cache gespeichert", Boot::buildChatSettingsCache);
+        runTimed("Haustierrassen im Cache gespeichert", () -> Proc_1_6_6C5830(0, 0, 0));
+        runTimed("FAQ im Cache gespeichert", () -> {
+            Proc_1_19_6CF190(0, 0, 0);
+            Proc_1_20_6CF830(0, 0, 0);
+            Proc_1_21_6D08C0(0, 0, 0);
+        });
+        runTimed("Aktive Serverdaten zurückgesetzt", () -> {
+            ServerMaintenanceDao maintenanceDao = serverMaintenanceDao();
+            if (maintenanceDao == null) {
+                return;
+            }
             try {
                 maintenanceDao.resetConnectedUsers();
                 maintenanceDao.resetVisitedRoomSlots();
@@ -106,12 +126,7 @@ public final class Boot {
             } catch (Exception ignored) {
                 // VB6 source suppresses boot-time maintenance failures.
             }
-        }
-        Proc_1_9_6C6DF0(0, 0, 0);
-        Proc_1_8_6C6850(0, 0, 0);
-        Proc_1_11_6C8D10(0, 0, 0);
-        Proc_1_12_6C8EF0(0, 0, 0);
-        Proc_1_22_6D0F00(0, 0, 0);
+        });
     }
 
     public static void Proc_1_4_6C4F00(Object... args) {
@@ -401,6 +416,20 @@ public final class Boot {
         String messageText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
         String logChannel = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
         Console.Proc_2_0_6D1510(messageText, logChannel, "65280");
+    }
+
+    public static void runTimed(String messageText, Runnable action) {
+        long startedAt = System.nanoTime();
+        if (action != null) {
+            action.run();
+        }
+        long elapsedMillis = Math.max(0L, (System.nanoTime() - startedAt) / 1_000_000L);
+        Proc_1_23_6D1480(messageText, "DEBUG, time: " + elapsedMillis + " ms");
+    }
+
+    public static void writeFiguredataCache() {
+        String figureData = MySQL.Proc_5_2_6D4690("SELECT value FROM settings WHERE variable='com.cache.figuredata'", 0, 0);
+        Handling.Proc_6_240_7FC2B0(java.nio.file.Path.of(Functions.applicationPath, "figuredata.cache").toString(), figureData);
     }
 
     public static void cacheRowsById(String[] targetCache, String rowText) {
