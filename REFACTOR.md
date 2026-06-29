@@ -167,6 +167,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `RoomDao` with favourite-room list/add/remove methods, replacing raw favourite-room SQL and row parsing in `Handling`.
 - Expanded `FurnitureDao` with typed dimmer preset/state rows and dimmer update methods, replacing raw dimmer SQL and tab-delimited parsing in `Handling`.
 - Expanded `RoomDao` with owned-room counts, creatable room model lookup, room insert, and newest-room id reads, replacing raw room-create SQL and model row parsing in `Handling`.
+- Expanded `RoomDao`/`UserDao` with staff-pick room state and official-room maintenance methods, replacing raw staff-pick SQL in `Handling`.
 - Migrated remaining `Functions` conversions for email validation, identity refresh, club period, occupancy, download, inventory path, movement, and random helpers off `Vb`.
 - Migrated remaining `MySQL` helper conversions and staff moderation payload builders off `Vb` helpers and onto shared `StringUtils`/`NumberUtils`.
 - Added `com.alphaseries.util.StringUtils` and `NumberUtils`; migrated new staff/session code away from duplicated local helper methods.
@@ -197,9 +198,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 463
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 216
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 210
 - `Boot.java`: 1196 lines
-- `Handling.java`: 12410 lines
+- `Handling.java`: 12413 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 920 lines

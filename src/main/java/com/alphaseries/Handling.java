@@ -3593,28 +3593,31 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            String ownerUserId = MySQL.Proc_5_2_6D4690("SELECT id_owner FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0);
-            if (ownerUserId.isEmpty()) {
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
                 return;
             }
-            long currentPicked = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690(
-                "SELECT is_staff_picked FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            long ownerUserId = rooms.roomOwnerId(roomId);
+            if (ownerUserId <= 0L) {
+                return;
+            }
+            long currentPicked = rooms.staffPickedState(roomId);
             long newPicked = currentPicked == 0L ? 1L : 0L;
             long categoryId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.category.id.default", 0, 0));
             if (categoryId <= 0L) {
                 categoryId = 1L;
             }
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_official WHERE id_parent='" + categoryId
-                + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            rooms.deleteStaffPickedOfficialRoom(categoryId, roomId);
             if (newPicked != 0L) {
                 long styleId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.style.default", 0, 0));
                 long iconId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.category.icon.default", 0, 0));
-                MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms_official(id_parent,id_room,id_style,id_type,icon) VALUES('"
-                    + categoryId + "','" + roomId + "','" + styleId + "','2','" + iconId + "')", 0, 0);
-                MySQL.Proc_5_0_6D3CD0("UPDATE users SET amount_staffpicked=amount_staffpicked+1 WHERE id='"
-                    + Functions.Proc_10_11_80A9C0(ownerUserId, 0, 0) + "'", 0, 0);
+                rooms.insertStaffPickedOfficialRoom(categoryId, roomId, styleId, iconId);
+                UserDao users = userDao();
+                if (users != null) {
+                    users.incrementStaffPickedCount(ownerUserId);
+                }
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET is_staff_picked='" + newPicked + "' WHERE id='" + roomId + "'", 0, 0);
+            rooms.updateStaffPickedState(roomId, newPicked);
             String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                 + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
             Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);

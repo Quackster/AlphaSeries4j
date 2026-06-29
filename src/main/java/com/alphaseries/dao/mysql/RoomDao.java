@@ -97,6 +97,43 @@ public final class RoomDao {
             .orElse(0L);
     }
 
+    public long roomOwnerId(long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_owner FROM rooms WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            roomId)
+            .orElse(0L);
+    }
+
+    public long staffPickedState(long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT is_staff_picked FROM rooms WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            roomId)
+            .orElse(0L);
+    }
+
+    public int deleteStaffPickedOfficialRoom(long categoryId, long roomId) throws SQLException {
+        return database.execute(
+            "DELETE FROM rooms_official WHERE id_parent=? AND id_room=? LIMIT 1",
+            categoryId,
+            roomId);
+    }
+
+    public int insertStaffPickedOfficialRoom(long categoryId, long roomId, long styleId, long iconId) throws SQLException {
+        return database.execute(
+            "INSERT INTO rooms_official(id_parent,id_room,id_style,id_type,icon) VALUES(?,?,?,?,?)",
+            categoryId,
+            roomId,
+            styleId,
+            2L,
+            iconId);
+    }
+
+    public int updateStaffPickedState(long roomId, long state) throws SQLException {
+        return database.execute("UPDATE rooms SET is_staff_picked=? WHERE id=?", state, roomId);
+    }
+
     public String modelHeightmap(long roomId) throws SQLException {
         return database.queryOne(
             "SELECT heightmap FROM models,rooms WHERE rooms.id=? AND models.id=rooms.id_model LIMIT 1",

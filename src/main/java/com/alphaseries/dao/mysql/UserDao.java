@@ -325,6 +325,10 @@ public final class UserDao {
         return database.execute("UPDATE users SET homeroom=? WHERE id=?", roomId, userId);
     }
 
+    public int incrementStaffPickedCount(long userId) throws SQLException {
+        return database.execute("UPDATE users SET amount_staffpicked=amount_staffpicked+1 WHERE id=?", userId);
+    }
+
     public List<UserEffectSummaryRow> userEffectSummaries(long userId) throws SQLException {
         return database.query(
             "SELECT id_effect,time_rent,COUNT(id_effect),timestamp_expire,UNIX_TIMESTAMP() "
