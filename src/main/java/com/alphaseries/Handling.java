@@ -4851,16 +4851,18 @@ public final class Handling {
             if (furnitureId <= 0L) {
                 return;
             }
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
+                return;
+            }
+            FurnitureDao.RoomFurnitureState furnitureState = furniture.roomFurnitureState(furnitureId).orElse(null);
+            if (furnitureState == null) {
+                return;
+            }
             if (productId <= 0L) {
-                productId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id='"
-                    + furnitureId + "' LIMIT 1", 0, 0));
+                productId = furnitureState.productId();
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_room FROM furnitures WHERE id='"
-                + furnitureId + "' LIMIT 1", 0, 0);
-            long roomId = 0L;
-            if (!rowText.isEmpty()) {
-                roomId = NumberUtils.parseLong(handlingField(rowText.split("\t", -1), 0));
-            }
+            long roomId = furnitureState.roomId();
             FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
             FurnitureCacheState state = removeFurnitureCacheMarker(
                 cacheState.pendingRoomCache,

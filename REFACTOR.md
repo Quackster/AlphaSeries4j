@@ -121,6 +121,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `FurnitureDao` for room-right floor-furniture pickup, replacing tab-delimited ownership rows and room-guarded raw pickup update SQL with typed prepared DAO methods.
 - Expanded `FurnitureDao` for floor-furniture state toggles, replacing tab-delimited state rows and raw state update SQL with typed prepared DAO methods.
 - Expanded `FurnitureDao` for room furniture state refreshes, replacing tab-delimited state rows with typed prepared DAO reads.
+- Routed furniture cache marker cleanup through typed room furniture state reads instead of separate raw product/room SQL lookups.
 - Expanded `RoomDao` with typed `RoomEntryState` loading and room-ban checks for room entry validation.
 - Expanded `UserDao` for respect balance reads and respect-give updates, routing the respect handler through prepared DAO methods.
 - Expanded `UserDao` with typed activity-point balance rows and routed the balance payload through fluent `UserPayloads` construction.
@@ -162,9 +163,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 463
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 312
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 310
 - `Boot.java`: 1130 lines
-- `Handling.java`: 12352 lines
+- `Handling.java`: 12354 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 920 lines
