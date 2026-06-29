@@ -36,6 +36,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.catalog.GiftSettings` as a typed adapter around club-gift and gift-wrap state previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.moderation.StaffPayloads` for call-for-help rows, staff user summaries, room visits, room chat history, and unsafe staff-alert checks.
 - Added `com.alphaseries.game.messenger.MessengerSettings` as a typed adapter around messenger friend-limit state previously decoded directly from `Licence` globals.
+- Added `com.alphaseries.game.navigator.NewFriendRooms` as a typed adapter around the cached new-friend room rows and expiry previously managed directly through `Licence` globals.
 - Added `com.alphaseries.game.navigator.RecommendedRooms` as a typed adapter around the recommended-room payload cache previously read through `Licence` globals.
 - Added `com.alphaseries.game.navigator.RoomCategoryCache` as a typed adapter around room-category defaults, raw rows, and rank/HC payloads previously read through `Licence` globals.
 - Added `com.alphaseries.game.pet.PetPayloads` for pet race, inventory, name-validation, command, status, scratch, and action outgoing payloads.
@@ -65,9 +66,9 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 472
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1390
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1387
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 476
-- `Handling.java`: 12471 lines
+- `Handling.java`: 12451 lines
 - `Functions.java`: 797 lines
 - `MySQL.java`: 301 lines
 - `Vb.java`: 106 lines

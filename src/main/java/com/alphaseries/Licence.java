@@ -8,6 +8,7 @@ import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.messenger.MessengerSettings;
+import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.pet.PetSettings;
@@ -260,6 +261,15 @@ public final class Licence {
 
     public static void setWiredStatePayload(String statePayload) {
         global_00829094 = StringUtils.text(statePayload);
+    }
+
+    public static NewFriendRooms newFriendRooms() {
+        return NewFriendRooms.fromLegacy(global_0082908C, global_00829090);
+    }
+
+    public static void setNewFriendRooms(String rows, LocalDateTime expiresAt) {
+        global_0082908C = StringUtils.text(rows);
+        global_00829090 = expiresAt;
     }
 
     public static String Proc_9_6_808080(Object... args) {
