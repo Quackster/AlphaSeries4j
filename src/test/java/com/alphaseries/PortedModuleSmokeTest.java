@@ -1729,6 +1729,8 @@ public final class PortedModuleSmokeTest {
         Object originalProductCache = DataManager.global_008292BC;
         Object originalLicenceProductCache = Licence.global_008292BC;
         Object originalRoomCategoryPayloads = Licence.global_00829244;
+        Object originalRecommendedRooms = Licence.global_0082911C;
+        long originalRecommendedRoomCount = Licence.global_00829128;
         String originalSettingsCache = Functions.global_0082928C;
         Path figureCachePath = Files.createTempDirectory("alphaseries-figuredata");
         Functions.applicationPath = figureCachePath.toString();
@@ -1751,11 +1753,15 @@ public final class PortedModuleSmokeTest {
         String[][] categoryPayloads = new String[21][3];
         categoryPayloads[2][1] = "CATEGORY_PAYLOAD";
         Licence.global_00829244 = categoryPayloads;
+        Licence.global_0082911C = new String[]{"RECOMMENDED"};
+        Licence.global_00829128 = 1L;
         Functions.global_0082928C = "[com.server.socket.game.rooms.own.max=5]"
             + "[com.client.navigator.staff_picked.category.id.default=2]"
             + "[com.client.navigator.staff_picked.style.default=3]"
             + "[com.client.navigator.staff_picked.category.icon.default=4]"
-            + "[com.server.socket.game.rooms.favourites.max=3]";
+            + "[com.server.socket.game.rooms.favourites.max=3]"
+            + "[com.client.navigator.list.limit=4]"
+            + "[com.mysql.format.time=%H:%i]";
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_mod\2fuse_alert\2fuse_kick\2fuse_receive_calls_for_help\2fuse_chatlog\2"
             + "fuse_use_wardrobe\2fuse_larger_wardrobe\2fuse_client_staff\2"}};
         MySQL.configureDatabaseConnection(new Database() {
@@ -1836,6 +1842,10 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT rooms.id,rooms.name,rooms.description,rooms.status_door")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(
                         9, "Room", "Description", 0, 1, 25, 50, "tag1", "tag2", "", 1, 0, 1, 0));
+                }
+                if (sqlText.contains("SELECT rooms.id,rooms_events.name")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(
+                        9, "Event Room", "Owner", 0, 3, 25, "Event Desc", 1, "", 5, 2, "icon", "tag1", "tag2", "12:00"));
                 }
                 if (sqlText.contains("SELECT users.id,users.name FROM rooms_rights")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88, "Target"));
@@ -2426,6 +2436,33 @@ public final class PortedModuleSmokeTest {
         Handling.Proc_6_111_74DF70(4, "", "", 2, 1);
         assertEquals(true, containsSend(handlingSends, "C]CATEGORY_PAYLOAD"));
         handlingSends.clear();
+        assertEquals(true, Handling.Proc_6_114_750550("rooms_events,users,rooms,rooms_categories WHERE rooms.id=rooms_events.id_room").contains("Event Room"));
+        assertEquals(true, Handling.Proc_6_113_74EE70(
+            "rooms_events,users,rooms,rooms_categories WHERE rooms.id=rooms_events.id_room",
+            "users,rooms,rooms_categories WHERE rooms.id='9'").contains("Event Room"));
+        Handling.Proc_6_115_751220(4, "GC" + wireLong(2));
+        assertEquals(true, containsSend(handlingSends, "GCPC2"));
+        assertEquals(true, containsSend(handlingSends, "RECOMMENDED"));
+        handlingSends.clear();
+        Handling.Proc_6_116_751550(4, "GC" + wireLong(2));
+        assertEquals(true, containsSend(handlingSends, "GC 2"));
+        assertEquals(true, containsSend(handlingSends, "RECOMMENDED"));
+        handlingSends.clear();
+        Handling.Proc_6_117_751880(4);
+        assertEquals(true, containsSend(handlingSends, "GCQA"));
+        handlingSends.clear();
+        Handling.Proc_6_118_751A80(4);
+        assertEquals(true, containsSend(handlingSends, "GC\0"));
+        handlingSends.clear();
+        Handling.Proc_6_119_751C80(4);
+        assertEquals(true, containsSend(handlingSends, "GCRA"));
+        handlingSends.clear();
+        Handling.Proc_6_120_751E80(4);
+        assertEquals(true, containsSend(handlingSends, "GCSA"));
+        handlingSends.clear();
+        Handling.Proc_6_121_752080(4);
+        assertEquals(true, containsSend(handlingSends, "GCQA"));
+        handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
         assertEquals(4, Handling.representedInteractionPartner(8));
@@ -2458,6 +2495,8 @@ public final class PortedModuleSmokeTest {
         DataManager.global_008292BC = originalProductCache;
         Licence.global_008292BC = originalLicenceProductCache;
         Licence.global_00829244 = originalRoomCategoryPayloads;
+        Licence.global_0082911C = originalRecommendedRooms;
+        Licence.global_00829128 = originalRecommendedRoomCount;
         Functions.global_0082928C = originalSettingsCache;
         Functions.applicationPath = originalApplicationPath.toString();
     }

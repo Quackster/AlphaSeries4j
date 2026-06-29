@@ -3180,6 +3180,172 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_113_74EE70(Object... args) {
+        try {
+            if (args == null || args.length < 2) {
+                return "";
+            }
+            String eventQueryTail = Vb.cStr(args[0]);
+            String roomQueryTail = Vb.cStr(args[1]);
+            String eventRows = "";
+            String roomRows = "";
+            if (!eventQueryTail.isEmpty()) {
+                String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
+                eventRows = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms_events.name,users.name,rooms.status_door,"
+                    + "rooms.visitors_now,rooms.visitors_max,rooms_events.description,rooms_categories.has_trading,"
+                    + "rooms.allow_otherspets,rooms.rate,rooms_events.id_category,rooms.icon,rooms_events.tag_1,"
+                    + "rooms_events.tag_2,DATE_FORMAT(FROM_UNIXTIME(rooms_events.timestamp), '" + timeFormat
+                    + "') FROM " + eventQueryTail, 0, 0);
+            }
+            if (!roomQueryTail.isEmpty()) {
+                roomRows = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                    + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,"
+                    + "rooms.allow_otherspets,rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2 FROM "
+                    + roomQueryTail, 0, 0);
+            }
+            return navigatorCombinedRoomListPayloadFromRows(eventRows, roomRows);
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    public static String Proc_6_114_750550(Object... args) {
+        try {
+            if (args == null || args.length == 0) {
+                return "";
+            }
+            String queryTail = Vb.cStr(args[0]);
+            if (queryTail.isEmpty()) {
+                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+            }
+            String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms_events.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms_events.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms_events.id_category,rooms.icon,rooms_events.tag_1,rooms_events.tag_2,"
+                + "DATE_FORMAT(FROM_UNIXTIME(rooms_events.timestamp), '" + timeFormat + "') FROM " + queryTail, 0, 0);
+            return navigatorEventListPayloadFromRows(rowText);
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    public static void Proc_6_115_751220(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long categoryId = navigatorCategoryIdFromPacket(args, "GC");
+            String categoryFilter = categoryId > 1L ? " rooms_events.id_category='" + categoryId + "' AND" : "";
+            long limitValue = navigatorListLimit();
+            String queryTail = "rooms_events,users,rooms,rooms_categories WHERE" + categoryFilter
+                + " rooms.id=rooms_events.id_room AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
+                + "GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
+            long randomTree = Functions.Proc_10_4_809CA0(1, Licence.global_00829128, 0);
+            Proc_6_244_801E80(socketIndex, "GCPC" + categoryId + '\2'
+                + Crypto.Proc_3_0_6D2AF0(limitValue, null, "") + Proc_6_112_74E0C0(queryTail, 0, 0)
+                + recommendedRoomPayload(randomTree), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_116_751550(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long categoryId = navigatorCategoryIdFromPacket(args, "GC");
+            String categoryFilter = categoryId > 1L ? " rooms.id_category='" + categoryId + "' AND" : "";
+            long limitValue = navigatorListLimit();
+            String queryTail = "users,rooms,rooms_categories WHERE" + categoryFilter
+                + " rooms.visitors_now > 0 AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
+                + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
+            long randomTree = Functions.Proc_10_4_809CA0(1, Licence.global_00829128, 0);
+            Proc_6_244_801E80(socketIndex, "GC " + categoryId + '\2'
+                + Crypto.Proc_3_0_6D2AF0(limitValue, null, "") + Proc_6_112_74E0C0(queryTail, 0, 0)
+                + recommendedRoomPayload(randomTree), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_117_751880(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long limitValue = navigatorListLimit();
+            String queryTail = "friendships,logs_visitedrooms,users,rooms,rooms_categories WHERE friendships.id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND logs_visitedrooms.id_user=friendships.id_friend AND logs_visitedrooms.timestamp_left IS NULL "
+                + "AND rooms.id=logs_visitedrooms.id_room AND rooms_categories.id=rooms.id_category "
+                + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.id DESC LIMIT " + limitValue;
+            Proc_6_244_801E80(socketIndex, "GCQA" + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
+                + Proc_6_112_74E0C0(queryTail, 0, 0), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_118_751A80(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long limitValue = navigatorListLimit();
+            String queryTail = "friendships,users,rooms,rooms_categories WHERE friendships.id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND users.id=friendships.id_friend AND rooms_categories.id=rooms.id_category "
+                + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
+            Proc_6_244_801E80(socketIndex, "GC" + '\0' + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
+                + Proc_6_112_74E0C0(queryTail, 0, 0), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_119_751C80(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long limitValue = navigatorListLimit();
+            String queryTail = "rooms_favourites,users,rooms,rooms_categories WHERE rooms_favourites.id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND rooms.id=rooms_favourites.id_room AND rooms_categories.id=rooms.id_category "
+                + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
+            Proc_6_244_801E80(socketIndex, "GCRA" + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
+                + Proc_6_112_74E0C0(queryTail, 0, 0), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_120_751E80(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long limitValue = navigatorListLimit();
+            String queryTail = "logs_visitedrooms,users,rooms,rooms_categories WHERE logs_visitedrooms.id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND rooms.id=logs_visitedrooms.id_room AND rooms_categories.id=rooms.id_category "
+                + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.id DESC LIMIT " + limitValue;
+            Proc_6_244_801E80(socketIndex, "GCSA" + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
+                + Proc_6_112_74E0C0(queryTail, 0, 0), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_121_752080(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long limitValue = navigatorListLimit();
+            String queryTail = "users,rooms,rooms_categories WHERE rooms.id_owner='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
+                + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
+            Proc_6_244_801E80(socketIndex, "GCQA" + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
+                + Proc_6_112_74E0C0(queryTail, 0, 0), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }
@@ -4435,6 +4601,30 @@ public final class Handling {
 
     public static String navigatorSearchTerm(String rawText) {
         return Functions.Proc_10_11_80A9C0(rawText).replace("%", "");
+    }
+
+    public static long navigatorCategoryIdFromPacket(Object[] args, String packetPrefix) {
+        String requestPayload = handlingRequestPayload(args, packetPrefix);
+        long categoryId = Vb.val(Functions.Proc_10_7_80A190(requestPayload, 0, 0));
+        if (categoryId <= 0L) {
+            categoryId = readWireLong(requestPayload, new LongRef(1));
+        }
+        return categoryId;
+    }
+
+    public static String recommendedRoomPayload(long treeIndex) {
+        try {
+            long normalizedIndex = treeIndex > 0L ? treeIndex - 1L : treeIndex;
+            if (Licence.global_0082911C instanceof String[]) {
+                String[] rows = (String[]) Licence.global_0082911C;
+                if (normalizedIndex >= 0L && normalizedIndex < rows.length) {
+                    return Vb.cStr(rows[(int) normalizedIndex]);
+                }
+            }
+            return "";
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
     public static String officialNavigatorQuery() {
