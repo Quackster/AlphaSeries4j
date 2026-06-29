@@ -1035,7 +1035,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(mainSql, "UPDATE users SET id_socket=null,lastonline_time=UNIX_TIMESTAMP() WHERE id_socket IS NOT NULL"));
         assertEquals(true, containsSql(mainSql, "UPDATE rooms SET id_slot=null,visitors_now='0' WHERE id_slot IS NOT NULL OR visitors_now!='0'"));
         assertEquals(false, Main.runServer("[!] Alpha", ""));
+        Path runServerRoot = Files.createTempDirectory("alphaseries-runserver");
+        String oldApplicationPathForRunServer = Functions.applicationPath;
+        Functions.applicationPath = runServerRoot.toString();
         assertEquals(true, Main.runServer("Alpha", "rank=2\r7:2=1"));
+        assertEquals(true, Files.exists(runServerRoot.resolve("ERR.log")));
+        assertEquals(true, Files.exists(runServerRoot.resolve("SLOW.log")));
+        Functions.applicationPath = oldApplicationPathForRunServer;
         Main.StartupResult missingLifecycleStartup = Main.startServer(null);
         assertEquals(false, missingLifecycleStartup.success);
         assertEquals("lifecycle", missingLifecycleStartup.stage);
