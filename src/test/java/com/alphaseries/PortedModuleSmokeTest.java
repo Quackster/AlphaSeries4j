@@ -2355,6 +2355,16 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT rooms.id,rooms_official.id,models.required_files,rooms_official.caption")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(9, 1, "model.swf", "Official Room"));
                 }
+                if (sqlText.contains("SELECT rooms.id,rooms.id_slot,NULL,models.name,models.id,rooms.id_floor")
+                    && sqlText.contains("FROM rooms,models WHERE rooms.id='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(
+                        9, 4, "", "model", 20, "floorA", "wallA", "landA", 5, "000\n111", 2, 3, "", "Room", 0, 1, 1, 1, 0, 77));
+                }
+                if (sqlText.contains("SELECT rooms.id,rooms.id_slot,users.id,models.name,models.id,rooms.id_floor")
+                    && sqlText.contains("FROM rooms,models,users WHERE rooms.id='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(
+                        9, 4, 77, "model", 20, "floorA", "wallA", "landA", 5, "000\n111", 2, 3, "", "Room", 0, 1, 1, 1, 0, 77, 0, 1, 2));
+                }
                 if (sqlText.contains("SELECT users.id,users.name,users.figure,users.motto,users.gender,models.position_x,models.position_y,rooms.id_slot")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(77, "Caller", "hd-180-1", "Motto", "M", 2, 3, 4));
                 }
@@ -2836,6 +2846,21 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "Du"));
         assertEquals(true, containsSend(handlingSends, "0.5"));
         Licence.global_00829358 = originalBotRecordCacheForRoomList;
+        handlingSends.clear();
+        Handling.Proc_6_78_7279A0(4);
+        assertEquals(true, containsSend(handlingSends, "Bf/client.php"));
+        assertEquals(true, containsSend(handlingSends, "AE9"));
+        assertEquals(true, containsSend(handlingSends, "@_000\r111\2"));
+        assertEquals(true, containsSend(handlingSends, "GWH000\r111\2H"));
+        assertEquals(true, containsSend(handlingSends, "CP\2\2"));
+        handlingSends.clear();
+        Handling.Proc_6_79_72A430(4);
+        assertEquals(true, containsSend(handlingSends, "@nfloor\2floorA\2"));
+        assertEquals(true, containsSend(handlingSends, "@nwallpaper\2wallA\2"));
+        assertEquals(true, containsSend(handlingSends, "@nlandscape\2landA\2"));
+        assertEquals(true, containsSend(handlingSends, "Er"));
+        assertEquals(true, containsSend(handlingSends, "@o"));
+        assertEquals(true, containsSend(handlingSends, "GX"));
         handlingSends.clear();
         Handling.Proc_6_82_731070(4, 9);
         assertEquals(true, containsSend(handlingSends, "Ge"));

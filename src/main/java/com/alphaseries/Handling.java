@@ -2313,6 +2313,121 @@ public final class Handling {
         }
     }
 
+    public static void Proc_6_78_7279A0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return;
+            }
+            String roomRow = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms.id_slot,NULL,models.name,models.id,rooms.id_floor,"
+                + "rooms.id_wallpaper,rooms.id_landscape,rooms.rate,models.map,models.position_x,models.position_y,NULL,"
+                + "rooms.name,rooms.disable_walls,rooms.allow_otherspets,rooms.allow_walkthrough,rooms.allow_feedpets,models.type,"
+                + "rooms.visitors_primaryid FROM rooms,models WHERE rooms.id='" + roomId
+                + "' AND models.id=rooms.id_model LIMIT 1", 0, 0);
+            if (roomRow.isEmpty()) {
+                return;
+            }
+            String[] fields = roomRow.split("\t", -1);
+            long modelId = Vb.val(handlingField(fields, 4));
+            String modelPayload = normalizeRoomModelMap(handlingField(fields, 9));
+            Proc_6_244_801E80(socketIndex, "Bf" + "/client.php" + '\2', 0);
+            Proc_6_244_801E80(socketIndex, "AE" + roomId + '\2' + "H", 0);
+            if (!modelPayload.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, "@_" + modelPayload + '\2', 0);
+                Proc_6_244_801E80(socketIndex, "GV" + modelPayload + '\2', 0);
+                Proc_6_244_801E80(socketIndex, "GWH" + modelPayload + '\2' + "H", 0);
+            }
+            Proc_6_81_730010(socketIndex, roomId, -1);
+            Proc_6_82_731070(socketIndex, roomId, 0);
+            Proc_6_84_733600(socketIndex, roomId);
+            Proc_6_83_732640(socketIndex, modelId);
+            Proc_6_85_73A8E0(socketIndex, roomId);
+            Proc_6_235_7F77E0(socketIndex, 0, 0);
+            Proc_6_80_72EB60(socketIndex, roomId);
+            Proc_6_244_801E80(socketIndex, "CP" + '\2' + '\2', 0);
+            sendRoomPollPrompt(socketIndex, userId, roomId);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_79_72A430(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return;
+            }
+            String roomRow = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms.id_slot,users.id,models.name,models.id,rooms.id_floor,"
+                + "rooms.id_wallpaper,rooms.id_landscape,rooms.rate,models.map,models.position_x,models.position_y,NULL,"
+                + "rooms.name,rooms.disable_walls,rooms.allow_otherspets,rooms.allow_walkthrough,rooms.allow_feedpets,models.type,"
+                + "rooms.visitors_primaryid,rooms.is_staff_picked,thickness_floor,thickness_wallpaper FROM rooms,models,users "
+                + "WHERE rooms.id='" + roomId + "' AND users.id=rooms.id_owner AND models.id=rooms.id_model LIMIT 1", 0, 0);
+            if (roomRow.isEmpty()) {
+                return;
+            }
+            String[] fields = roomRow.split("\t", -1);
+            long modelId = Vb.val(handlingField(fields, 4));
+            String floorPattern = handlingField(fields, 5);
+            String wallpaperPattern = handlingField(fields, 6);
+            String landscapePattern = handlingField(fields, 7);
+            long roomRate = Vb.val(handlingField(fields, 8));
+            if (roomRate < 0L) {
+                roomRate = 0L;
+            }
+            String modelPayload = normalizeRoomModelMap(handlingField(fields, 9));
+            String ownerUserId = String.valueOf((long) Vb.val(handlingField(fields, 2)));
+            long disableWalls = Vb.val(handlingField(fields, 14));
+            long thicknessFloor = Vb.val(handlingField(fields, 21));
+            long thicknessWallpaper = Vb.val(handlingField(fields, 22));
+            boolean hasControl = handlingUserHasRoomRight(userId, roomId)
+                || handlingUserHasPermission(userId, "fuse_any_room_controller");
+            boolean hasVoted = !MySQL.Proc_5_2_6D4690("SELECT id_user FROM rooms_rates WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0).isEmpty();
+            long ratingPayloadValue = hasVoted ? -1L : roomRate;
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "AE") + '\2', 0);
+            Proc_6_244_801E80(socketIndex, "@nfloor" + '\2' + floorPattern + '\2', 0);
+            Proc_6_244_801E80(socketIndex, "@nwallpaper" + '\2' + wallpaperPattern + '\2', 0);
+            Proc_6_244_801E80(socketIndex, "@nlandscape" + '\2' + landscapePattern + '\2', 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(ratingPayloadValue, null, "EY"), 0);
+            Proc_6_244_801E80(socketIndex, "Er" + Proc_6_51_716AC0(roomId, 0, 0), 0);
+            if (hasControl) {
+                Proc_6_244_801E80(socketIndex, "@j", 0);
+            }
+            if (ownerUserId.equals(String.valueOf((long) Vb.val(userId)))) {
+                Proc_6_244_801E80(socketIndex, "@o", 0);
+            }
+            if (!modelPayload.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, "@_" + modelPayload + '\2', 0);
+                Proc_6_244_801E80(socketIndex, "GV" + modelPayload + '\2', 0);
+            }
+            String wallPayload = Crypto.Proc_3_0_6D2AF0(disableWalls, null, "GX");
+            wallPayload = Crypto.Proc_3_0_6D2AF0(thicknessFloor, null, wallPayload);
+            wallPayload = Crypto.Proc_3_0_6D2AF0(thicknessWallpaper, null, wallPayload);
+            Proc_6_244_801E80(socketIndex, wallPayload, 0);
+            Proc_6_81_730010(socketIndex, roomId, -1);
+            Proc_6_82_731070(socketIndex, roomId, 0);
+            Proc_6_83_732640(socketIndex, modelId);
+            Proc_6_84_733600(socketIndex, roomId);
+            Proc_6_85_73A8E0(socketIndex, roomId);
+            Proc_6_235_7F77E0(socketIndex, 0, 0);
+            Proc_6_80_72EB60(socketIndex, roomId);
+            Proc_6_244_801E80(socketIndex, "CP" + '\2' + '\2', 0);
+            sendRoomPollPrompt(socketIndex, userId, roomId);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
     public static void Proc_6_80_72EB60(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
@@ -10031,6 +10146,40 @@ public final class Handling {
         }
         rebuiltCache.append("[1:").append(socketIndex).append('\1').append(sessionRecord).append(']');
         Licence.global_00829268 = rebuiltCache.toString();
+    }
+
+    public static String normalizeRoomModelMap(String modelMap) {
+        String modelPayload = Vb.cStr(modelMap).replace('\n', '\r');
+        while (modelPayload.contains("\r\r")) {
+            modelPayload = modelPayload.replace("\r\r", "\r");
+        }
+        return modelPayload;
+    }
+
+    public static void sendRoomPollPrompt(int socketIndex, String userId, long roomId) {
+        if (socketIndex <= 0 || Vb.cStr(userId).isEmpty() || roomId <= 0L) {
+            return;
+        }
+        String pollRow = MySQL.Proc_5_2_6D4690("SELECT id,description_title FROM poll WHERE id_room='"
+            + roomId + "' AND timestamp_hide>UNIX_TIMESTAMP() LIMIT 1", 0, 0);
+        if (pollRow.isEmpty()) {
+            return;
+        }
+        String[] pollFields = pollRow.split("\t", -1);
+        long pollId = Vb.val(handlingField(pollFields, 0));
+        if (pollId <= 0L) {
+            return;
+        }
+        String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+        if (!MySQL.Proc_5_2_6D4690("SELECT id_user FROM poll_exit WHERE id_user='" + escapedUserId
+            + "' AND id_poll='" + pollId + "' LIMIT 1", 0, 0).isEmpty()) {
+            return;
+        }
+        if (!MySQL.Proc_5_2_6D4690("SELECT id FROM poll_results WHERE id_user='" + escapedUserId
+            + "' AND id_poll='" + pollId + "' LIMIT 1", 0, 0).isEmpty()) {
+            return;
+        }
+        Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(pollId, null, "D|") + handlingField(pollFields, 1) + '\2', 0);
     }
 
     public static String handlingLoginActivityPointPayload(long pointType, long pointsValue) {
