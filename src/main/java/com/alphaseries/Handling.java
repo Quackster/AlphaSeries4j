@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.moderation.StaffPayloads;
+import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.wired.WiredPayloads;
 import com.alphaseries.messages.outgoing.AchievementPayloads;
 import com.alphaseries.messages.outgoing.JukeboxPayloads;
@@ -19,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -7014,7 +7016,7 @@ public final class Handling {
             MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='"
                 + Functions.Proc_10_11_80A9C0(rewardSign, 0, 0) + "',id_owner='" + escapedUserId
                 + "',id_destination='" + rewardDestinationId + "' WHERE id_owner='" + escapedUserId
-                + "' AND id_product='" + Licence.global_0082916C + "' ORDER BY id DESC LIMIT 1", 1, 0);
+                + "' AND id_product='" + Licence.recyclerSettings().boxProductId() + "' ORDER BY id DESC LIMIT 1", 1, 0);
             MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner=NULL WHERE id_owner='" + escapedUserId
                 + "' AND id_room IS NULL AND id IN (" + selection.selectedItems + ")", 0, 0);
             MySQL.Proc_5_1_6D4110("INSERT INTO logs_recycler(id_user,timestamp,items,id_reward,id_session) VALUES('"
@@ -12243,22 +12245,19 @@ public final class Handling {
 
     public static long representedRecyclerRewardProduct() {
         try {
-            if (Licence.global_00829140 instanceof Object[] && Licence.global_0082915C instanceof Object[]) {
-                Object[] productLists = (Object[]) Licence.global_00829140;
-                Object[] chances = (Object[]) Licence.global_0082915C;
-                for (int rewardGroupIndex = 0; rewardGroupIndex < Licence.global_00829168
-                    && rewardGroupIndex < productLists.length && rewardGroupIndex < chances.length; rewardGroupIndex++) {
-                    long chance = Vb.val(chances[rewardGroupIndex]);
+            RecyclerSettings recyclerSettings = Licence.recyclerSettings();
+            if (recyclerSettings.hasRewardGroups()) {
+                for (RecyclerSettings.RewardGroup rewardGroup : recyclerSettings.rewardGroups()) {
+                    long chance = rewardGroup.chance();
                     if (chance > 0L && Functions.Proc_10_4_809CA0(1, chance, 0) == 1L) {
-                        long productId = representedRandomProductFromList(Vb.cStr(productLists[rewardGroupIndex]));
+                        long productId = representedRandomProductFromList(rewardGroup.productIds());
                         if (productId > 0L) {
                             return productId;
                         }
                     }
                 }
-                for (int rewardGroupIndex = 0; rewardGroupIndex < Licence.global_00829168
-                    && rewardGroupIndex < productLists.length; rewardGroupIndex++) {
-                    long productId = representedRandomProductFromList(Vb.cStr(productLists[rewardGroupIndex]));
+                for (RecyclerSettings.RewardGroup rewardGroup : recyclerSettings.rewardGroups()) {
+                    long productId = representedRandomProductFromList(rewardGroup.productIds());
                     if (productId > 0L) {
                         return productId;
                     }
@@ -12280,26 +12279,17 @@ public final class Handling {
     }
 
     public static long representedRandomProductFromList(String productList) {
+        return representedRandomProductFromList(RecyclerSettings.productIds(productList));
+    }
+
+    public static long representedRandomProductFromList(List<Long> productIds) {
         try {
-            String normalizedProducts = "";
-            long productCount = 0L;
-            for (String productRow : Vb.cStr(productList).split("\2", -1)) {
-                long productId = Vb.val(productRow);
-                if (productId > 0L) {
-                    if (!normalizedProducts.isEmpty()) {
-                        normalizedProducts += "\2";
-                    }
-                    normalizedProducts += productId;
-                    productCount++;
-                }
-            }
-            if (productCount <= 0L) {
+            if (productIds == null || productIds.isEmpty()) {
                 return 0L;
             }
-            String[] productRows = normalizedProducts.split("\2", -1);
-            int selectedIndex = (int) Vb.val(Functions.Proc_10_4_809CA0(0, productRows.length - 1L, 0));
-            selectedIndex = Math.max(0, Math.min(selectedIndex, productRows.length - 1));
-            return Vb.val(productRows[selectedIndex]);
+            int selectedIndex = (int) Vb.val(Functions.Proc_10_4_809CA0(0, productIds.size() - 1L, 0));
+            selectedIndex = Math.max(0, Math.min(selectedIndex, productIds.size() - 1));
+            return productIds.get(selectedIndex);
         } catch (Exception ignored) {
             // VB6 source suppresses helper failures.
             return 0L;

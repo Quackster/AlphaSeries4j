@@ -22,7 +22,6 @@ public final class Boot {
         }
         RecyclerCache cache = buildRecyclerCache(chanceRows, productsByChance);
         Licence.global_0082912C = cache.payload;
-        Licence.global_00829168 = cache.groupCount;
         String[] productLists = new String[50];
         String[] chances = new String[50];
         for (Map.Entry<Long, String> entry : cache.productListByGroupIndex.entrySet()) {
@@ -33,8 +32,7 @@ public final class Boot {
                 chances[index] = chance == null ? "" : String.valueOf(chance.longValue());
             }
         }
-        Licence.global_00829140 = productLists;
-        Licence.global_0082915C = chances;
+        Licence.setRecyclerRewards(productLists, chances, cache.groupCount);
     }
 
     public static void Proc_1_1_6BB340(Object... args) {
@@ -58,7 +56,7 @@ public final class Boot {
         cacheRowsById(catalogProducts, MySQL.Proc_5_2_6D4690(catalogQuery, 0, 0));
         Licence.setCatalogProductRows(catalogProducts);
         Licence.setDealRows("\r" + MySQL.Proc_5_2_6D4690("SELECT id,items FROM products_deals ORDER BY id ASC", "\r", 0) + "\r");
-        Licence.global_0082916C = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE sprite='ecotron_box' LIMIT 1", 0, 0));
+        Licence.setRecyclerBoxProductId(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE sprite='ecotron_box' LIMIT 1", 0, 0)));
         Licence.global_008290A0 = MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_counter IS NOT NULL", 0, 0).replace('\r', '\t');
         Licence.global_008290A4 = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='11' LIMIT 1", 0, 0));
         Licence.global_008290A8 = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='19' LIMIT 1", 0, 0));

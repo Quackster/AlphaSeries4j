@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.game.catalog.CatalogRegistry;
+import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -204,6 +205,20 @@ public final class Licence {
 
     public static void setDealRows(String dealRows) {
         global_00829258 = StringUtils.text(dealRows);
+    }
+
+    public static void setRecyclerRewards(Object productLists, Object chances, long groupCount) {
+        global_00829140 = productLists == null ? "" : productLists;
+        global_0082915C = chances == null ? "" : chances;
+        global_00829168 = Math.max(0L, groupCount);
+    }
+
+    public static void setRecyclerBoxProductId(long boxProductId) {
+        global_0082916C = Math.max(0L, boxProductId);
+    }
+
+    public static RecyclerSettings recyclerSettings() {
+        return RecyclerSettings.fromLegacy(global_00829140, global_0082915C, global_00829168, global_0082916C);
     }
 
     private static CatalogRegistry catalogRegistry() {
