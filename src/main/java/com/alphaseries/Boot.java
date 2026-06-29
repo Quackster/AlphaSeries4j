@@ -15,6 +15,10 @@ import java.util.Map;
 import java.util.function.BooleanSupplier;
 
 public final class Boot {
+    public static final String DEFAULT_BOOT_NOTICE = "ILLEGAL KOMBINATION: Der Programmierer haftet nicht f\u00fcr das "
+        + "Nutzen dieses Servers - Das nutzen mit rechtlich gesch\u00fctzten Bildern ist strafbar - Bitte eigene "
+        + "Software nutzen";
+
     private Boot() {
     }
 
@@ -426,6 +430,19 @@ public final class Boot {
         java.nio.file.Path appPath = java.nio.file.Path.of(Functions.applicationPath);
         DataManager.Proc_8_9_806810(appPath.resolve("ERR.log").toString(), bootErrorLogHeader(productName, nowText));
         DataManager.Proc_8_9_806810(appPath.resolve("SLOW.log").toString(), bootSlowLogHeader(productName, nowText));
+    }
+
+    public static void printStartupNotice() {
+        printStartupNotice(DEFAULT_BOOT_NOTICE);
+    }
+
+    public static void printStartupNotice(String messageText) {
+        String message = StringUtils.text(messageText);
+        if (message.length() <= 10) {
+            return;
+        }
+        Console.Proc_2_1_6D1B60(message, "", "49344");
+        Console.Proc_2_2_6D21D0("", "HIDDEN", "262144");
     }
 
     public static String bootErrorLogHeader(String productName, String nowText) {

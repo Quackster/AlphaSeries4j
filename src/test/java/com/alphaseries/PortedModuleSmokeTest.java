@@ -593,6 +593,13 @@ public final class PortedModuleSmokeTest {
         String bootSlowHeader = Boot.bootSlowLogHeader("ALPHASERIES_FINAL (PREMIUM)", "2026-06-30T10:15");
         assertEquals(true, bootSlowHeader.contains(
             "slow query are being logged if you are running the development mode."));
+        Console.clear();
+        Boot.printStartupNotice("short");
+        assertEquals(0, Console.entries().size());
+        Boot.printStartupNotice();
+        assertEquals(true, Console.entries().get(0).lineText().contains("ILLEGAL KOMBINATION"));
+        assertEquals(true, Console.entries().get(0).lineText().contains("Bitte eigene Software nutzen"));
+        assertEquals(49344L, Console.entries().get(0).foreColor());
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "a\2b\2c\2d\2",
             Boot.buildCampaignReplacementCache("a\tb\rc\td"));
         Boot.AchievementSettingsCache achievementSettings = Boot.buildAchievementSettingsCache(

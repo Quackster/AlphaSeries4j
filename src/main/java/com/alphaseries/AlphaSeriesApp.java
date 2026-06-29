@@ -24,6 +24,7 @@ public final class AlphaSeriesApp {
             System.err.println("AlphaSeries startup failed");
             System.exit(1);
         }
+        Boot.printStartupNotice();
         Console.Proc_2_0_6D1510("Verbunden mit folgendem Serial: " + lifecycle.productKey,
             "INITIALIZE", "16776960");
         Main.StartupResult startup = Main.startServer(lifecycle);
