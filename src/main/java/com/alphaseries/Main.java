@@ -1,5 +1,7 @@
 package com.alphaseries;
 
+import com.alphaseries.dao.mysql.RoomDao;
+import com.alphaseries.db.Database;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.server.packet.PacketSink;
 import com.alphaseries.game.session.GameServerSessionState;
@@ -7,6 +9,7 @@ import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -679,23 +682,30 @@ public final class Main {
     }
 
     public static long mainRollerFurnitureOnTile(long roomId, long rollerId, long positionX, long positionY) {
-        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_room='" + roomId
-            + "' AND position_x='" + positionX + "' AND position_y='" + positionY + "' AND id<>'"
-            + rollerId + "' ORDER BY position_z DESC,id DESC LIMIT 1", 0, 0));
+        try {
+            return roomDao().furnitureIdAtExcluding(roomId, rollerId, positionX, positionY);
+        } catch (SQLException ignored) {
+            return 0L;
+        }
     }
 
     public static String mainRollerTargetHeight(long roomId, long positionX, long positionY, String fallbackHeight) {
-        String heightText = MySQL.Proc_5_2_6D4690("SELECT position_z FROM furnitures WHERE id_room='" + roomId
-            + "' AND position_x='" + positionX + "' AND position_y='" + positionY
-            + "' ORDER BY position_z DESC,id DESC LIMIT 1", 0, 0);
-        return mainRollerTargetHeight(heightText, fallbackHeight);
+        try {
+            return mainRollerTargetHeight(roomDao().topFurnitureHeightAt(roomId, positionX, positionY), fallbackHeight);
+        } catch (SQLException ignored) {
+            return mainRollerTargetHeight("", fallbackHeight);
+        }
     }
 
     public static long mainCurrentRoomIdForSlot(long roomSlot) {
         if (roomSlot <= 0L) {
             return 0L;
         }
-        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM rooms WHERE id_slot='" + roomSlot + "' LIMIT 1", 0, 0));
+        try {
+            return roomDao().roomIdBySlot(roomSlot);
+        } catch (SQLException ignored) {
+            return 0L;
+        }
     }
 
     public static long mainCurrentRoomIdForSocket(long socketIndex) {
@@ -710,9 +720,11 @@ public final class Main {
         if (userId.isEmpty() || "0".equals(userId)) {
             return 0L;
         }
-        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_room FROM logs_visitedrooms WHERE id_user='"
-            + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-            + "' AND timestamp_left IS NULL ORDER BY timestamp_enter DESC LIMIT 1", 0, 0));
+        try {
+            return roomDao().currentRoomIdByUser(NumberUtils.parseLong(userId));
+        } catch (SQLException ignored) {
+            return 0L;
+        }
     }
 
     public static String mainUserIdFromSocket(long socketIndex) {
@@ -874,5 +886,16 @@ public final class Main {
             joined.append(StringUtils.text(fields[index]));
         }
         return joined.toString();
+    }
+
+    private static RoomDao roomDao() throws SQLException {
+        return new RoomDao(configuredDatabase());
+    }
+
+    private static Database configuredDatabase() throws SQLException {
+        if (MySQL.configuredDatabase() == null) {
+            throw new SQLException("Database is not configured.");
+        }
+        return MySQL.configuredDatabase();
     }
 }

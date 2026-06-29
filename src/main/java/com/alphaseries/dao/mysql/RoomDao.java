@@ -40,6 +40,38 @@ public final class RoomDao {
             .orElse(0L);
     }
 
+    public long currentRoomIdByUser(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_room FROM logs_visitedrooms WHERE id_user=? AND timestamp_left IS NULL "
+                + "ORDER BY timestamp_enter DESC LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public long furnitureIdAtExcluding(long roomId, long excludedFurnitureId, long positionX, long positionY) throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM furnitures WHERE id_room=? AND position_x=? AND position_y=? AND id<>? "
+                + "ORDER BY position_z DESC,id DESC LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            roomId,
+            positionX,
+            positionY,
+            excludedFurnitureId)
+            .orElse(0L);
+    }
+
+    public String topFurnitureHeightAt(long roomId, long positionX, long positionY) throws SQLException {
+        return database.queryOne(
+            "SELECT position_z FROM furnitures WHERE id_room=? AND position_x=? AND position_y=? "
+                + "ORDER BY position_z DESC,id DESC LIMIT 1",
+            resultSet -> resultSet.getString(1),
+            roomId,
+            positionX,
+            positionY)
+            .orElse("");
+    }
+
     public long roomIdByBot(long botId) throws SQLException {
         return database.queryOne(
             "SELECT id_room FROM bots WHERE id=? LIMIT 1",
