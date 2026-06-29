@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
+import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.session.GameServerSessionState;
@@ -10052,30 +10053,8 @@ public final class Handling {
         long roomId,
         long furnitureId
     ) {
-        FurnitureCacheState state = new FurnitureCacheState();
-        state.pendingRoomCache = Vb.cStr(pendingRoomCache);
-        state.pendingFurnitureCache = Vb.cStr(pendingFurnitureCache);
-        state.representedRoomCache = Vb.cStr(representedRoomCache);
-        if (furnitureId <= 0L) {
-            return state;
-        }
-
-        String exactMarker = "\1" + furnitureId + '\2';
-        state.pendingFurnitureCache = state.pendingFurnitureCache.replace(exactMarker, "") + exactMarker;
-        state.pendingFurnitureCache = removeRepresentedCacheRecord(state.pendingFurnitureCache, "\1" + furnitureId + '\t');
-
-        if (!state.representedRoomCache.isEmpty()) {
-            state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, exactMarker);
-            state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, "\1" + furnitureId + '\t');
-        }
-
-        if (roomId > 0L) {
-            String roomMarker = "\1" + roomId + '\2';
-            state.pendingRoomCache = state.pendingRoomCache.replace(roomMarker, "");
-            state.pendingRoomCache = removeRepresentedCacheRecord(state.pendingRoomCache, "\1" + roomId + '\t');
-            state.pendingRoomCache += roomMarker;
-        }
-        return state;
+        return furnitureCacheState(FurnitureRoomCache.trackMarker(
+            pendingRoomCache, pendingFurnitureCache, representedRoomCache, roomId, furnitureId));
     }
 
     public static FurnitureCacheState removeFurnitureCacheMarker(
@@ -10084,25 +10063,8 @@ public final class Handling {
         String representedRoomCache,
         long furnitureId
     ) {
-        FurnitureCacheState state = new FurnitureCacheState();
-        state.pendingRoomCache = Vb.cStr(pendingRoomCache);
-        state.pendingFurnitureCache = Vb.cStr(pendingFurnitureCache);
-        state.representedRoomCache = Vb.cStr(representedRoomCache);
-        if (furnitureId <= 0L) {
-            return state;
-        }
-
-        String exactMarker = "\1" + furnitureId + '\2';
-        String recordMarker = "\1" + furnitureId + '\t';
-        state.pendingRoomCache = state.pendingRoomCache.replace(exactMarker, "");
-        state.pendingFurnitureCache = state.pendingFurnitureCache.replace(exactMarker, "");
-        state.pendingRoomCache = removeRepresentedCacheRecord(state.pendingRoomCache, recordMarker);
-        state.pendingFurnitureCache = removeRepresentedCacheRecord(state.pendingFurnitureCache, recordMarker);
-        if (!state.representedRoomCache.isEmpty()) {
-            state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, exactMarker);
-            state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, recordMarker);
-        }
-        return state;
+        return furnitureCacheState(FurnitureRoomCache.removeMarker(
+            pendingRoomCache, pendingFurnitureCache, representedRoomCache, furnitureId));
     }
 
     public static long nextFurnitureState(String productSprite, long currentState, long maxState) {
@@ -10132,28 +10094,8 @@ public final class Handling {
         long furnitureId,
         long stateValue
     ) {
-        FurnitureStateCache state = new FurnitureStateCache();
-        state.pendingRoomCache = Vb.cStr(pendingRoomCache);
-        state.pendingFurnitureCache = Vb.cStr(pendingFurnitureCache);
-        state.representedRoomCache = Vb.cStr(representedRoomCache);
-        if (roomId <= 0L || furnitureId <= 0L) {
-            return state;
-        }
-
-        String roomMarker = "\1" + roomId + '\2';
-        state.pendingRoomCache = state.pendingRoomCache.replace(roomMarker, "");
-        state.pendingRoomCache = removeRepresentedCacheRecord(state.pendingRoomCache, "\1" + roomId + '\t');
-        state.pendingRoomCache += roomMarker;
-
-        String furnitureMarker = "\1" + furnitureId + '\2';
-        state.pendingFurnitureCache = state.pendingFurnitureCache.replace(furnitureMarker, "");
-        state.pendingFurnitureCache += furnitureMarker;
-
-        state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, "\1" + roomId + '\t');
-        state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, furnitureMarker);
-        state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, "\1" + furnitureId + '\t');
-        state.representedRoomCache += "\1" + roomId + '\t' + furnitureId + '\t' + stateValue + '\2';
-        return state;
+        return furnitureStateCache(FurnitureRoomCache.stateCache(
+            pendingRoomCache, pendingFurnitureCache, representedRoomCache, roomId, furnitureId, stateValue));
     }
 
     public static FurnitureStateCache representedFurnitureStateWrite(
@@ -10164,28 +10106,8 @@ public final class Handling {
         long furnitureId,
         String stateText
     ) {
-        FurnitureStateCache state = new FurnitureStateCache();
-        state.pendingRoomCache = Vb.cStr(pendingRoomCache);
-        state.pendingFurnitureCache = Vb.cStr(pendingFurnitureCache);
-        state.representedRoomCache = Vb.cStr(representedRoomCache);
-        if (furnitureId <= 0L) {
-            return state;
-        }
-
-        String furnitureMarker = "\1" + furnitureId + '\2';
-        state.pendingFurnitureCache = state.pendingFurnitureCache.replace(furnitureMarker, "");
-        state.pendingFurnitureCache += furnitureMarker;
-
-        if (roomId > 0L) {
-            String roomMarker = "\1" + roomId + '\2';
-            state.pendingRoomCache = state.pendingRoomCache.replace(roomMarker, "");
-            state.pendingRoomCache += roomMarker;
-        }
-
-        state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, furnitureMarker);
-        state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, "\1" + furnitureId + '\t');
-        state.representedRoomCache += "\1" + furnitureId + '\t' + roomId + '\t' + Vb.cStr(stateText) + '\2';
-        return state;
+        return furnitureStateCache(FurnitureRoomCache.stateWrite(
+            pendingRoomCache, pendingFurnitureCache, representedRoomCache, roomId, furnitureId, stateText));
     }
 
     public static void handlingRepresentedFurnitureStateWrite(Object... args) {
@@ -10225,6 +10147,22 @@ public final class Handling {
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
+    }
+
+    private static FurnitureCacheState furnitureCacheState(FurnitureRoomCache.State source) {
+        FurnitureCacheState state = new FurnitureCacheState();
+        state.pendingRoomCache = source.pendingRoomCache;
+        state.pendingFurnitureCache = source.pendingFurnitureCache;
+        state.representedRoomCache = source.representedRoomCache;
+        return state;
+    }
+
+    private static FurnitureStateCache furnitureStateCache(FurnitureRoomCache.State source) {
+        FurnitureStateCache state = new FurnitureStateCache();
+        state.pendingRoomCache = source.pendingRoomCache;
+        state.pendingFurnitureCache = source.pendingFurnitureCache;
+        state.representedRoomCache = source.representedRoomCache;
+        return state;
     }
 
     public static String Proc_6_156_7972B0(Object... args) {
