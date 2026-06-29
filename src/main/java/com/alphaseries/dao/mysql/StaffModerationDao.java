@@ -86,6 +86,57 @@ public final class StaffModerationDao {
             roomId);
     }
 
+    public Optional<UserModerationSummary> userModerationSummary(long userId) throws SQLException {
+        Optional<String> userRow = database.queryOne(
+            "SELECT users.id,users.name,ROUND((UNIX_TIMESTAMP()-users.create_time)/60,0),"
+                + "ROUND((UNIX_TIMESTAMP()-users.lastonline_time)/60,0),users.id_socket FROM users WHERE users.id=? LIMIT 1",
+            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
+                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5),
+            userId);
+        if (userRow.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(new UserModerationSummary(
+            userRow.get(),
+            countCallForHelpByUser(userId),
+            countPickedCallForHelpByUser(userId),
+            countCautionsByUser(userId),
+            countBansByUser(userId)));
+    }
+
+    private long countCallForHelpByUser(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT COUNT(id) FROM staff_cfh WHERE id_user=?",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    private long countPickedCallForHelpByUser(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT COUNT(id) FROM staff_cfh WHERE id_user=? AND id_closed=?",
+            resultSet -> resultSet.getLong(1),
+            userId,
+            2L)
+            .orElse(0L);
+    }
+
+    private long countCautionsByUser(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT COUNT(id) FROM users_cautions WHERE id_user=?",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    private long countBansByUser(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT COUNT(id) FROM users_bans WHERE id_user=?",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
     public record CallForHelpRoom(long roomId, String roomName, long modelType, long userId, long partnerId, long timestampSent) {
         public String[] toFields() {
             return new String[]{
@@ -125,5 +176,9 @@ public final class StaffModerationDao {
         public String[] toFields() {
             return new String[]{name, description, tag1, tag2};
         }
+    }
+
+    public record UserModerationSummary(String userRow, long callForHelpCount, long pickedCallForHelpCount,
+                                        long cautionCount, long banCount) {
     }
 }

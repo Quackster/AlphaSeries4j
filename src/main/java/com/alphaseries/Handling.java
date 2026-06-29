@@ -1,5 +1,7 @@
 package com.alphaseries;
 
+import com.alphaseries.dao.mysql.StaffModerationDao;
+import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.room.FurnitureRoomCache;
@@ -60,18 +62,17 @@ public final class Handling {
             if (callerUserId.isEmpty() || "0".equals(callerUserId) || !handlingUserHasPermission(callerUserId, "fuse_mod")) {
                 return;
             }
-            String escapedTarget = Functions.Proc_10_11_80A9C0(targetUserId, 0, 0);
-            String userRow = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name,ROUND((UNIX_TIMESTAMP()-users.create_time)/60,0),"
-                + "ROUND((UNIX_TIMESTAMP()-users.lastonline_time)/60,0),users.id_socket FROM users WHERE users.id='"
-                + escapedTarget + "' LIMIT 1", 0, 0);
-            if (userRow.isEmpty()) {
+            StaffModerationDao.UserModerationSummary summary = staffModerationDao()
+                .userModerationSummary(targetUserId)
+                .orElse(null);
+            if (summary == null) {
                 return;
             }
-            String payload = staffUserSummaryPayload(userRow,
-                NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM staff_cfh WHERE id_user='" + targetUserId + "'", 0, 0)),
-                NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM staff_cfh WHERE id_user='" + targetUserId + "' AND id_closed='2'", 0, 0)),
-                NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM users_cautions WHERE id_user='" + targetUserId + "'", 0, 0)),
-                NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM users_bans WHERE id_user='" + targetUserId + "'", 0, 0)));
+            String payload = staffUserSummaryPayload(summary.userRow(),
+                summary.callForHelpCount(),
+                summary.pickedCallForHelpCount(),
+                summary.cautionCount(),
+                summary.banCount());
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -11961,6 +11962,11 @@ public final class Handling {
 
     public static boolean containsUnsafeStaffAlert(String messageText) {
         return StaffPayloads.containsUnsafeAlert(messageText);
+    }
+
+    private static StaffModerationDao staffModerationDao() {
+        Database database = MySQL.configuredDatabase();
+        return new StaffModerationDao(database);
     }
 
     private static String[] normalizeRows(Object rowSource) {
