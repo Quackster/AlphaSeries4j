@@ -2178,7 +2178,8 @@ public final class Handling {
             Proc_6_244_801E80(socketIndex, "@F" + updatedCredits + ".0" + '\2', 0);
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
             MySQL.Proc_5_0_6D3CD0("DELETE FROM furnitures WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
-            // VB6 also deletes room/pathfinder cache files via Proc_6_106_74B750, which is not ported yet.
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -5163,7 +5164,7 @@ public final class Handling {
             String payload = furnitureStatePayload(furnitureId, stateValue);
             Proc_6_246_8024C0(roomId, payload, 0);
             if (productType == 11L || lowerSprite.contains("soundmachine") || lowerSprite.contains("jukebox")) {
-                // Proc_6_224_7EF5A0 is not ported yet; the state refresh remains preserved.
+                Proc_6_224_7EF5A0(0, roomId, furnitureId);
             }
             return payload;
         } catch (Exception ignored) {

@@ -139,7 +139,18 @@ public final class Filesystems {
     }
 
     private static void dispatchReadyPacket(long socketIndex, String packetCode, String packetPayload) {
-        // The VB6 source delegates CN/F_ packets into large Handling.bas routines
-        // that are still being mapped. Keep the parse boundary explicit for now.
+        switch (Vb.cStr(packetCode)) {
+            case "CN":
+                Handling.Proc_6_162_7B3310(socketIndex, packetPayload, 0);
+                break;
+            case "F_":
+                Handling.Proc_6_163_7B3480(socketIndex, packetPayload, 0);
+                break;
+            case "CD":
+                Handling.Proc_7FA5A0(socketIndex, "CD", packetPayload);
+                break;
+            default:
+                break;
+        }
     }
 }

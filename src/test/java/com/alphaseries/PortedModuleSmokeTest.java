@@ -3199,6 +3199,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "DAQBHHIIKHJHPAHQA"));
         assertEquals(true, containsSend(handlingSends, "http://www.alpha-series.com/"));
         handlingSends.clear();
+        Filesystems.Proc_7_2_803D60(4, "x@BCN");
+        assertEquals(true, containsSend(handlingSends, "DAQBHHIIKHJHPAHQA"));
+        handlingSends.clear();
         handlingSql.clear();
         assertEquals("77", Handling.Proc_6_163_7B3480(4, "F_login-77"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET login_ticket=null,id_socket = '4' WHERE id = '77'"));
