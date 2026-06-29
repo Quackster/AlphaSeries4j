@@ -7215,15 +7215,14 @@ public final class Handling {
             if (roomId <= 0L || (!handlingUserHasRoomRight(userId, roomId) && !handlingUserOwnsRoom(userId, roomId))) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            long productId = furnitureDao().roomFurnitureProductById(furnitureId, roomId)
+                .map(FurnitureDao.RoomFurnitureProduct::productId)
+                .orElse(0L);
+            if (productId <= 0L) {
                 return "";
             }
-            String[] fields = rowText.split("\t", -1);
-            long productId = NumberUtils.parseLong(handlingField(fields, 0));
             long wiredCode = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 27, 0));
-            if (productId <= 0L || wiredCode <= 0L) {
+            if (wiredCode <= 0L) {
                 return "";
             }
             Path snapshotPath = Path.of(Functions.applicationPath, "cache", "wired_snapshots", furnitureId + ".cache");
@@ -11640,9 +11639,9 @@ public final class Handling {
             if (roomId <= 0L || (!handlingUserHasRoomRight(userId, roomId) && !handlingUserOwnsRoom(userId, roomId))) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id='" + furnitureId
-                + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            long productId = NumberUtils.parseLong(handlingField(rowText.split("\t", -1), 0));
+            long productId = furnitureDao().roomFurnitureProductById(furnitureId, roomId)
+                .map(FurnitureDao.RoomFurnitureProduct::productId)
+                .orElse(0L);
             long wiredCode = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 27, 0));
             if (wiredCode < minimumCode || wiredCode > maximumCode) {
                 return "";
