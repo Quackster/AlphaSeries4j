@@ -22,6 +22,7 @@ import com.alphaseries.messages.outgoing.MessengerPayloads;
 import com.alphaseries.messages.outgoing.PollPayloads;
 import com.alphaseries.messages.outgoing.RecyclerPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
+import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.vb.Vb;
 
@@ -736,7 +737,7 @@ public final class Handling {
     }
 
     public static String wardrobeSlotPayload(long slotId, String figureText, String genderText) {
-        return Crypto.Proc_3_0_6D2AF0(slotId, null, "") + Vb.cStr(figureText) + '\2' + Vb.cStr(genderText) + '\2';
+        return UserPayloads.wardrobeSlot(slotId, figureText, genderText);
     }
 
     public static boolean isValidWardrobeFigure(String figureText, String genderText) {
@@ -817,16 +818,11 @@ public final class Handling {
     }
 
     public static String userIdentityPayload(long userId, String mottoText, String genderText, String figureText) {
-        return Crypto.Proc_3_0_6D2AF0(userId, null, "DJ")
-            + Vb.cStr(mottoText) + '\2'
-            + Vb.cStr(genderText) + '\2'
-            + Vb.cStr(figureText) + '\2';
+        return UserPayloads.identityRefresh(userId, mottoText, figureText, genderText);
     }
 
     public static String representedChatPayload(long roomUserIndex, String filteredText, long gestureId, long chatType) {
-        String prefix = chatType == 1L ? "@Y" : "@X";
-        String payload = Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, prefix) + Vb.cStr(filteredText) + '\2';
-        return Crypto.Proc_3_0_6D2AF0(gestureId, null, payload);
+        return UserPayloads.representedChat(roomUserIndex, filteredText, gestureId, chatType);
     }
 
     public static String Proc_6_21_6E8BA0(Object... args) {

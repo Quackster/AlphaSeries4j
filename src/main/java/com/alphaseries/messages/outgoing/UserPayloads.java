@@ -55,4 +55,21 @@ public final class UserPayloads {
             .appendString(figureText)
             .build();
     }
+
+    public static String wardrobeSlot(long slotId, String figureText, String genderText) {
+        return PacketBuilder.create()
+            .appendInt(slotId)
+            .appendString(figureText)
+            .appendString(genderText)
+            .build();
+    }
+
+    public static String representedChat(long roomUserIndex, String filteredText, long gestureId, long chatType) {
+        String prefix = chatType == 1L ? "@Y" : "@X";
+        return PacketBuilder.message(prefix)
+            .appendInt(roomUserIndex)
+            .appendString(filteredText)
+            .appendInt(gestureId)
+            .build();
+    }
 }
