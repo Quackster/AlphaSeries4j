@@ -2240,6 +2240,46 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_76_726CE0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "Es");
+            LongRef offset = new LongRef(1);
+            String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
+            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return "";
+            }
+            String giverUserId = handlingUserIdFromSocket(socketIndex);
+            if (giverUserId.isEmpty() || "0".equals(giverUserId) || giverUserId.equals(targetUserId)) {
+                return "";
+            }
+            int targetSocketIndex = handlingSocketFromUserId(targetUserId);
+            if (targetSocketIndex <= 0) {
+                return "";
+            }
+            long respectAmount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT respect_amount FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(giverUserId, 0, 0) + "' LIMIT 1", 0, 0));
+            if (respectAmount <= 0L) {
+                return "";
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET respect_amount=respect_amount-1,respect_given=respect_given+1 WHERE id='"
+                + Functions.Proc_10_11_80A9C0(giverUserId, 0, 0) + "'", 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET respect_received=respect_received+1 WHERE id='"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "'", 0, 0);
+            Proc_6_205_7D9780(socketIndex, 3);
+            Proc_6_205_7D9780(targetSocketIndex, 2);
+            long respectReceived = Vb.val(MySQL.Proc_5_2_6D4690("SELECT respect_received FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' LIMIT 1", 0, 0));
+            String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(targetUserId), null, "Fx")
+                + Crypto.Proc_3_0_6D2AF0(respectReceived, null, "");
+            Proc_6_247_8027E0(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static void Proc_6_77_727590(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);

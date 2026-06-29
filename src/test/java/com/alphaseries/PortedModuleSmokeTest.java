@@ -1991,6 +1991,12 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT respect_received FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(30));
                 }
+                if (sqlText.contains("SELECT respect_amount FROM users WHERE id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(2));
+                }
+                if (sqlText.contains("SELECT respect_received FROM users WHERE id='88'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(12));
+                }
                 if (sqlText.contains("SELECT name FROM users_tags WHERE id_user='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("alpha"), Arrays.<Object>asList("beta"));
                 }
@@ -3256,6 +3262,13 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         Handling.Proc_6_205_7D9780(4, 2);
         assertEquals(true, containsSend(handlingSends, "Fu"));
+        handlingSql.clear();
+        handlingSends.clear();
+        String respectPayload = Handling.Proc_6_76_726CE0(4, "Es" + wireLong(88));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(88, null, "Fx") + Crypto.Proc_3_0_6D2AF0(12, null, ""), respectPayload);
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_amount=respect_amount-1,respect_given=respect_given+1 WHERE id='77'"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_received=respect_received+1 WHERE id='88'"));
+        assertEquals(true, containsSend(handlingSends, "Fx"));
         handlingSends.clear();
         String achievementListPayload = Handling.Proc_6_206_7DA450(4);
         Map<String, Long> liveAchievementLevels = new HashMap<>();
