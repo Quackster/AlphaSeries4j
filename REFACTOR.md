@@ -155,6 +155,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed furniture cache marker cleanup through typed room furniture state reads instead of separate raw product/room SQL lookups.
 - Routed reward trophy and gift metadata furniture updates through `FurnitureDao`, replacing raw furniture sign SQL in `Handling`.
 - Added `CatalogDao` for catalog-product destination reads and routed recycler reward-box updates through prepared `CatalogDao`/`FurnitureDao` methods.
+- Expanded `CatalogDao`/`ClubDao`/`FurnitureDao` for club-gift claim/status flows, replacing raw catalog, user-club, furniture insert/newest-id, and present decrement SQL in `Handling`.
 - Expanded `FurnitureDao` for wall furniture placement, replacing inventory placement row strings and raw wall-placement update SQL with typed prepared DAO methods.
 - Expanded `FurnitureDao` with typed floor-position furniture rows and routed package-open product/package checks through typed `FurnitureDao`/`PackageDao` records instead of tab-delimited handler parsing.
 - Added typed simple floor-furniture reads and routed wheel/simple floor item handlers through `FurnitureDao`, replacing raw furniture row SQL and tab-delimited parsing.
@@ -240,9 +241,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 367
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 94
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 88
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12512 lines
+- `Handling.java`: 12493 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines

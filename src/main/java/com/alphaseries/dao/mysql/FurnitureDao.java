@@ -559,6 +559,27 @@ public final class FurnitureDao {
             catalogProductId);
     }
 
+    public int insertClubGiftFurniture(long productId, long catalogProductId, long ownerId, String sign) throws SQLException {
+        return database.execute(
+            "INSERT INTO furnitures(id_product,id_ctlgproduct,id_owner,task_owner,task_time,position_r,sign) "
+                + "VALUES(?,?,?,?,UNIX_TIMESTAMP(),?,?)",
+            productId,
+            catalogProductId,
+            ownerId,
+            ownerId,
+            0L,
+            sign);
+    }
+
+    public long newestFurnitureIdByOwnerAndProduct(long ownerId, long productId) throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM furnitures WHERE id_owner=? AND id_product=? ORDER BY id DESC LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            ownerId,
+            productId)
+            .orElse(0L);
+    }
+
     public List<Long> newestFurnitureIdsByOwner(long ownerId, long limit) throws SQLException {
         long effectiveLimit = Math.max(0L, limit);
         if (effectiveLimit <= 0L) {

@@ -4324,8 +4324,8 @@ public final class Handling {
             if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            long catalogProductId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM catalog_products WHERE sprite='"
-                + Functions.Proc_10_11_80A9C0(requestedSprite, 0, 0) + "' LIMIT 1", 0, 0));
+            CatalogDao catalog = catalogDao();
+            long catalogProductId = catalog == null ? 0L : catalog.idBySprite(requestedSprite);
             if (catalogProductId <= 0L) {
                 return "";
             }
@@ -4335,39 +4335,26 @@ public final class Handling {
             if (productId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT level_hc,hc_days,hc2_days,hc_presents,"
-                + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0) FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            long userIdValue = NumberUtils.parseLong(userId);
+            ClubDao clubs = clubDao();
+            ClubDao.ClubGiftStatus status = clubs == null ? null : clubs.clubGiftStatus(userIdValue).orElse(null);
+            if (status == null) {
                 return "";
             }
-            String[] userFields = rowText.split("\t", -1);
-            long hcLevel = NumberUtils.parseLong(handlingField(userFields, 0));
-            long hcDays = NumberUtils.parseLong(handlingField(userFields, 1));
-            long vipDays = NumberUtils.parseLong(handlingField(userFields, 2));
-            long presentsAvailable = NumberUtils.parseLong(handlingField(userFields, 3));
-            long daysSinceStart = NumberUtils.parseLong(handlingField(userFields, 4));
-            long activeDays = (hcLevel > 1L ? vipDays : hcDays) - daysSinceStart;
-            if (activeDays < 0L) {
-                activeDays = 0L;
-            }
-            if (presentsAvailable <= 0L || activeDays < requiredDays) {
+            if (status.presentsAvailable() <= 0L || status.activeDays() < requiredDays) {
                 return "";
             }
             String itemData = DataManager.Proc_8_12_806C30(productId, 24, 0);
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO furnitures(id_product,id_ctlgproduct,id_owner,task_owner,task_time,position_r,sign) VALUES('"
-                + productId + "','" + catalogProductId + "','" + escapedUserId + "','" + escapedUserId
-                + "',UNIX_TIMESTAMP(),'0','" + Functions.Proc_10_11_80A9C0(itemData, 0, 0) + "')", 0, 0);
-            long insertedFurnitureId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_owner='"
-                + escapedUserId + "' AND id_product='" + productId + "' ORDER BY id DESC LIMIT 1", 0, 0));
+            FurnitureDao furniture = furnitureDao();
+            furniture.insertClubGiftFurniture(productId, catalogProductId, userIdValue, itemData);
+            long insertedFurnitureId = furniture.newestFurnitureIdByOwnerAndProduct(userIdValue, productId);
             String itemClass = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 9L ? "I" : "i";
             String responsePayload = Crypto.Proc_3_0_6D2AF0(productId, null, "AC")
                 + DataManager.Proc_8_12_806C30(productId, 24, 0) + '\2'
                 + "HHHI" + itemClass + '\2';
             responsePayload = Crypto.Proc_3_0_6D2AF0(insertedFurnitureId, null, responsePayload) + '\2' + "IH";
             Proc_6_244_801E80(socketIndex, responsePayload, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET hc_presents=hc_presents-1 WHERE id='" + escapedUserId + "'", 0, 0);
+            clubs.decrementPresents(userIdValue);
             Proc_6_140_769400(socketIndex, "FT", "");
             return responsePayload;
         } catch (Exception ignored) {
@@ -4383,19 +4370,13 @@ public final class Handling {
             if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT level_hc,hc_days,hc2_days,hc_presents,"
-                + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0) FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
-            String[] userFields = rowText.split("\t", -1);
-            long hcLevel = NumberUtils.parseLong(handlingField(userFields, 0));
-            long hcDays = NumberUtils.parseLong(handlingField(userFields, 1));
-            long vipDays = NumberUtils.parseLong(handlingField(userFields, 2));
-            long presentsAvailable = NumberUtils.parseLong(handlingField(userFields, 3));
-            long daysSinceStart = NumberUtils.parseLong(handlingField(userFields, 4));
-            long activeDays = (hcLevel > 1L ? vipDays : hcDays) - daysSinceStart;
-            if (activeDays < 0L) {
-                activeDays = 0L;
-            }
+            ClubDao clubs = clubDao();
+            ClubDao.ClubGiftStatus status = clubs == null
+                ? new ClubDao.ClubGiftStatus(0L, 0L, 0L, 0L, 0L)
+                : clubs.clubGiftStatus(NumberUtils.parseLong(userId))
+                    .orElse(new ClubDao.ClubGiftStatus(0L, 0L, 0L, 0L, 0L));
+            long presentsAvailable = status.presentsAvailable();
+            long activeDays = status.activeDays();
             long statusCount = 0L;
             StringBuilder statusPayload = new StringBuilder();
             GiftSettings giftSettings = Licence.giftSettings();

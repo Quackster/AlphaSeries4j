@@ -32,6 +32,19 @@ public final class ClubDao {
             .orElse("");
     }
 
+    public Optional<ClubGiftStatus> clubGiftStatus(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT level_hc,hc_days,hc2_days,hc_presents,"
+                + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0) FROM users WHERE id=? LIMIT 1",
+            resultSet -> new ClubGiftStatus(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5)),
+            userId);
+    }
+
     public Optional<ContainedClubProduct> containedClubProduct(long productId) throws SQLException {
         return database.queryOne(
             "SELECT months,level FROM products_containshc WHERE id_product=? LIMIT 1",
@@ -61,6 +74,17 @@ public final class ClubDao {
             userId);
     }
 
+    public int decrementPresents(long userId) throws SQLException {
+        return database.execute("UPDATE users SET hc_presents=hc_presents-1 WHERE id=?", userId);
+    }
+
     public record ContainedClubProduct(long months, long level) {
+    }
+
+    public record ClubGiftStatus(long hcLevel, long hcDays, long vipDays, long presentsAvailable, long daysSinceStart) {
+        public long activeDays() {
+            long activeDays = (hcLevel > 1L ? vipDays : hcDays) - daysSinceStart;
+            return Math.max(0L, activeDays);
+        }
     }
 }

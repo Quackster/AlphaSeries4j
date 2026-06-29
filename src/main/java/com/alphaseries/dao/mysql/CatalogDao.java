@@ -18,4 +18,12 @@ public final class CatalogDao {
             productId)
             .orElse(0L);
     }
+
+    public long idBySprite(String sprite) throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM catalog_products WHERE sprite=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            sprite)
+            .orElse(0L);
+    }
 }
