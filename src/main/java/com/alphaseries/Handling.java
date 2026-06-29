@@ -11,6 +11,7 @@ import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.dao.mysql.TradeDao;
 import com.alphaseries.dao.mysql.MessengerDao;
 import com.alphaseries.dao.mysql.VoucherDao;
+import com.alphaseries.dao.mysql.PollDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.BotRoomEntryRow;
 import com.alphaseries.game.pet.PetCommandActionRow;
@@ -22,6 +23,8 @@ import com.alphaseries.game.pet.PetPlacementRow;
 import com.alphaseries.game.pet.PetScratchRow;
 import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
+import com.alphaseries.game.poll.PollDefinition;
+import com.alphaseries.game.poll.PollPrompt;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.game.room.RoomOccupantRow;
@@ -6885,13 +6888,11 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            String pollRow = MySQL.Proc_5_2_6D4690("SELECT id,description_title,description_thanks FROM poll WHERE id='"
-                + pollId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            if (pollRow.isEmpty()) {
+            PollDao polls = pollDao();
+            if (polls == null || polls.pollHeader(pollId, roomId).isEmpty()) {
                 return "";
             }
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO poll_exit(id_user,id_poll) VALUES('"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + pollId + "')", 0, 0);
+            polls.recordPollExit(NumberUtils.parseLong(userId), pollId);
             return "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6914,15 +6915,11 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            String pollRow = MySQL.Proc_5_2_6D4690("SELECT id,description_title,description_thanks FROM poll WHERE id='"
-                + submission.pollId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            if (pollRow.isEmpty()) {
+            PollDao polls = pollDao();
+            if (polls == null || polls.pollHeader(submission.pollId, roomId).isEmpty()) {
                 return "";
             }
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO poll_results(id_poll,id_question,message_answer,id_user,timestamp) VALUES('"
-                + submission.pollId + "','" + submission.questionId + "','"
-                + Functions.Proc_10_11_80A9C0(submission.answerText, 0, 0) + "','"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "',UNIX_TIMESTAMP())", 0, 0);
+            polls.recordPollAnswer(submission.pollId, submission.questionId, submission.answerText, NumberUtils.parseLong(userId));
             return "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6945,26 +6942,12 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            String pollRow = MySQL.Proc_5_2_6D4690("SELECT id,description_title,description_thanks FROM poll WHERE id='"
-                + pollId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            if (pollRow.isEmpty()) {
+            PollDao polls = pollDao();
+            if (polls == null) {
                 return "";
             }
-            String questionRows = MySQL.Proc_5_2_6D4690("SELECT id,description_question,id_type FROM poll_questions WHERE id_poll='"
-                + pollId + "' LIMIT 50", 0, 0);
-            Map<Long, String> answerRowsByQuestionId = new HashMap<>();
-            for (String questionRow : questionRows.split("\r", -1)) {
-                if (!questionRow.isEmpty()) {
-                    String[] questionFields = questionRow.split("\t", -1);
-                    if (questionFields.length >= 3) {
-                        long questionId = NumberUtils.parseLong(handlingField(questionFields, 0));
-                        String answerRows = MySQL.Proc_5_2_6D4690("SELECT id,id_question,caption FROM poll_answers WHERE id_question='"
-                            + questionId + "' LIMIT 5", 0, 0);
-                        answerRowsByQuestionId.put(questionId, answerRows);
-                    }
-                }
-            }
-            String payload = pollPayloadFromRows(pollRow, questionRows, answerRowsByQuestionId);
+            PollDefinition poll = polls.pollDefinition(pollId, roomId).orElse(null);
+            String payload = pollPayload(poll);
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -10483,26 +10466,33 @@ public final class Handling {
         if (socketIndex <= 0 || StringUtils.text(userId).isEmpty() || roomId <= 0L) {
             return;
         }
-        String pollRow = MySQL.Proc_5_2_6D4690("SELECT id,description_title FROM poll WHERE id_room='"
-            + roomId + "' AND timestamp_hide>UNIX_TIMESTAMP() LIMIT 1", 0, 0);
-        if (pollRow.isEmpty()) {
+        PollDao polls = pollDao();
+        if (polls == null) {
             return;
         }
-        String[] pollFields = pollRow.split("\t", -1);
-        long pollId = NumberUtils.parseLong(handlingField(pollFields, 0));
-        if (pollId <= 0L) {
+        long userIdValue = NumberUtils.parseLong(userId);
+        if (userIdValue <= 0L) {
             return;
         }
-        String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-        if (!MySQL.Proc_5_2_6D4690("SELECT id_user FROM poll_exit WHERE id_user='" + escapedUserId
-            + "' AND id_poll='" + pollId + "' LIMIT 1", 0, 0).isEmpty()) {
+        try {
+            PollPrompt pollPrompt = polls.activePrompt(roomId).orElse(null);
+            if (pollPrompt == null || pollPrompt.id() <= 0L) {
+                return;
+            }
+            if (polls.hasExited(userIdValue, pollPrompt.id())) {
+                return;
+            }
+            if (polls.hasAnswered(userIdValue, pollPrompt.id())) {
+                return;
+            }
+            Proc_6_244_801E80(socketIndex, PacketBuilder.message("D|")
+                .appendInt(pollPrompt.id())
+                .appendString(pollPrompt.title())
+                .build(), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
             return;
         }
-        if (!MySQL.Proc_5_2_6D4690("SELECT id FROM poll_results WHERE id_user='" + escapedUserId
-            + "' AND id_poll='" + pollId + "' LIMIT 1", 0, 0).isEmpty()) {
-            return;
-        }
-        Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(pollId, null, "D|") + handlingField(pollFields, 1) + '\2', 0);
     }
 
     public static String handlingLoginActivityPointPayload(long pointType, long pointsValue) {
@@ -11542,6 +11532,10 @@ public final class Handling {
         return PollPayloads.poll(pollRow, questionRows, answerRowsByQuestionId);
     }
 
+    public static String pollPayload(PollDefinition poll) {
+        return PollPayloads.poll(poll);
+    }
+
     public static String achievementRowsFromGlobal() {
         return Licence.achievementSettings().rowsAsText();
     }
@@ -12310,6 +12304,11 @@ public final class Handling {
     private static VoucherDao voucherDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new VoucherDao(database);
+    }
+
+    private static PollDao pollDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new PollDao(database);
     }
 
     private static BotDao botDao() {
