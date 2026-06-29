@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.config.AppSettingsCache;
 import com.alphaseries.config.PermissionMatrix;
+import com.alphaseries.dao.mysql.ClubDao;
 import com.alphaseries.dao.mysql.FurnitureDao;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.UserDao;
@@ -495,6 +496,10 @@ public final class Functions {
         return new FurnitureDao(configuredDatabase());
     }
 
+    private static ClubDao clubDao() throws SQLException {
+        return new ClubDao(configuredDatabase());
+    }
+
     private static Database configuredDatabase() throws SQLException {
         if (MySQL.configuredDatabase() == null) {
             throw new SQLException("Database is not configured.");
@@ -540,7 +545,7 @@ public final class Functions {
             }
             long giftIncrementDefault = NumberUtils.parseLong(Proc_10_0_809570(
                 "com.server.socket.game.club.gifts.hcrank" + hcRank + ".amount", 0, 0));
-            MySQL.Proc_5_0_6D3CD0(clubPeriodUpdateQuery(userId, hcRank, currentPeriods, paidDays, giftIncrementDefault), 0, 0);
+            clubDao().applyClubPeriod(userId, hcRank, currentPeriods, paidDays, giftIncrementDefault);
             return 1L;
         } catch (Exception ex) {
             return 0L;

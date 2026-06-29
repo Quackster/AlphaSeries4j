@@ -30,4 +30,26 @@ public final class ClubDao {
             userId)
             .orElse("");
     }
+
+    public int applyClubPeriod(long userId, long hcRank, long currentPeriods, long paidDays, long giftIncrementDefault)
+        throws SQLException {
+
+        long periodIncrement = 1L;
+        long giftIncrement = giftIncrementDefault;
+        if (paidDays > 0L) {
+            periodIncrement = Math.round((paidDays + currentPeriods) / 31.0d);
+            giftIncrement = 0L;
+        }
+        if (periodIncrement < 1L) {
+            periodIncrement = 1L;
+            giftIncrement = giftIncrementDefault;
+        }
+        String periodColumn = hcRank > 1L ? "hc2" : "hc";
+        return database.execute(
+            "UPDATE users SET hc_startperiod=UNIX_TIMESTAMP(),"
+                + periodColumn + "_periods=" + periodColumn + "_periods+" + periodIncrement
+                + ",hc_presents=hc_presents+" + giftIncrement
+                + " WHERE id=?",
+            userId);
+    }
 }
