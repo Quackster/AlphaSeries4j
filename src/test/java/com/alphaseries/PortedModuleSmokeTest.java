@@ -1837,6 +1837,14 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT level FROM users")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
                 }
+                if (sqlText.contains("SELECT id_pet,breed,min_rank,min_hcrank,name FROM settings_petraces WHERE product_pet='dog'")) {
+                    return Arrays.<List<Object>>asList(
+                        Arrays.<Object>asList(1, 1, 0, 0, "A"),
+                        Arrays.<Object>asList(2, 2, 2, 0, "B"));
+                }
+                if (sqlText.contains("SELECT bots.id,bots.name,bots.figure,bots_petdata.scratches FROM bots,bots_petdata WHERE bots.id_user='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, "Rex", "1 2 FF00AA", 4));
+                }
                 if (sqlText.contains("SELECT id_slot,figure,gender FROM users_wardrobe")) {
                     return Arrays.<List<Object>>asList(
                         Arrays.<Object>asList(1, "hd-180-1", "M"),
@@ -2837,6 +2845,15 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, friendListPayload.endsWith("PYH"));
         assertEquals(true, containsSend(handlingSends, "@MHIH"));
         assertEquals(true, containsSend(handlingSends, "@L"));
+        handlingSends.clear();
+        String raceListPayload = Handling.Proc_6_177_7C6580(4, "n\u007f" + wireString("dog"));
+        assertEquals(Handling.petRaceListPayload("dog", "1\t1\t0\t0\tA\r2\t2\t2\t0\tB", 1, 0), raceListPayload);
+        assertEquals(true, containsSend(handlingSends, "L{dog\2"));
+        handlingSends.clear();
+        String petInventoryPayload = Handling.Proc_6_178_7C6E60(4);
+        assertEquals(Handling.petInventoryListPayload("10\tRex\t1 2 FF00AA\t4"), petInventoryPayload);
+        assertEquals(true, containsSend(handlingSends, "IX"));
+        assertEquals(true, containsSend(handlingSends, "Rex"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));

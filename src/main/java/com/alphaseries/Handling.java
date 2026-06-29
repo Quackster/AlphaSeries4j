@@ -4802,6 +4802,53 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_177_7C6580(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "n" + '\177');
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String productPet = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            if (productPet.isEmpty()) {
+                productPet = readWireString(requestPayload, new LongRef(1));
+            }
+            if (productPet.isEmpty()) {
+                return "";
+            }
+            long rankIndex = handlingUserRank(userId);
+            long hcLevel = handlingUserHcLevel(userId);
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_pet,breed,min_rank,min_hcrank,name FROM settings_petraces WHERE product_pet='"
+                + Functions.Proc_10_11_80A9C0(productPet, 0, 0) + "' ORDER BY breed ASC", 0, 0);
+            String payload = petRaceListPayload(productPet, rowText, rankIndex, hcLevel);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_178_7C6E60(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT bots.id,bots.name,bots.figure,bots_petdata.scratches FROM bots,bots_petdata WHERE bots.id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND bots.id_handle='3' AND bots.id_room IS NULL AND bots_petdata.id_bot=bots.id", 0, 0);
+            String payload = petInventoryListPayload(rowText);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
