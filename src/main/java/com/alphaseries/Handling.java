@@ -3434,6 +3434,105 @@ public final class Handling {
         }
     }
 
+    public static void Proc_6_131_75C700(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT level_hc,hc_days,hc2_days,hc_presents,"
+                + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0) FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            String[] userFields = rowText.split("\t", -1);
+            long hcLevel = Vb.val(handlingField(userFields, 0));
+            long hcDays = Vb.val(handlingField(userFields, 1));
+            long vipDays = Vb.val(handlingField(userFields, 2));
+            long presentsAvailable = Vb.val(handlingField(userFields, 3));
+            long daysSinceStart = Vb.val(handlingField(userFields, 4));
+            long activeDays = (hcLevel > 1L ? vipDays : hcDays) - daysSinceStart;
+            if (activeDays < 0L) {
+                activeDays = 0L;
+            }
+            long statusCount = 0L;
+            StringBuilder statusPayload = new StringBuilder();
+            for (String row : Vb.cStr(Licence.global_0082917C).replace("[", "").split("]", -1)) {
+                if (!row.isEmpty()) {
+                    String[] giftParts = row.replace('\1', '\0').split("\0", -1);
+                    if (giftParts.length >= 3) {
+                        long catalogProductId = Vb.val(handlingField(giftParts, 0));
+                        long productId = Vb.val(handlingField(giftParts, 1));
+                        long requiredDays = Vb.val(handlingField(giftParts, 2));
+                        long canClaim = presentsAvailable > 0L && activeDays >= requiredDays ? 1L : 0L;
+                        statusPayload.append(Crypto.Proc_3_0_6D2AF0(catalogProductId, null, ""));
+                        statusPayload.append(Crypto.Proc_3_0_6D2AF0(productId, null, ""));
+                        statusPayload.append(Crypto.Proc_3_0_6D2AF0(requiredDays, null, ""));
+                        statusPayload.append(Crypto.Proc_3_0_6D2AF0(canClaim, null, ""));
+                        statusPayload.append('H');
+                        statusCount++;
+                    }
+                }
+            }
+            String payload = Crypto.Proc_3_0_6D2AF0(presentsAvailable, null, "IoM")
+                + Licence.global_00829178
+                + Crypto.Proc_3_0_6D2AF0(statusCount, null, "") + statusPayload;
+            Proc_6_244_801E80(socketIndex, payload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_134_765B90(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "oV");
+            long itemId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            if (itemId <= 0L) {
+                itemId = readWireLong(requestPayload, new LongRef(1));
+            }
+            long itemType = Vb.val(Licence.Proc_9_1_8072B0(itemId, 9, 0));
+            long giftEnabled = itemType == 1L ? Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.enabled", 0, 0)) : 0L;
+            String responsePayload = Crypto.Proc_3_0_6D2AF0(itemId, null, "In");
+            responsePayload = Crypto.Proc_3_0_6D2AF0(giftEnabled, null, responsePayload) + '\2';
+            Proc_6_244_801E80(socketIndex, responsePayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_135_765D80(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String defaultPayload = "0" + Crypto.Proc_3_0_6D2AF0(
+                Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.enabled", 0, 0)), null, "Il");
+            long giftWrapPrice = Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.price", defaultPayload, 0));
+            Proc_6_244_801E80(socketIndex,
+                Crypto.Proc_3_0_6D2AF0(giftWrapPrice, null, "") + Licence.global_00829260, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_136_765F10(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingPacketPayload(args);
+            if (requestPayload.length() >= 3) {
+                requestPayload = requestPayload.substring(2);
+            }
+            long pageId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            if (pageId <= 0L) {
+                pageId = readWireLong(requestPayload, new LongRef(1));
+            }
+            String pagePayload = indexedPayload(Licence.global_00829308, pageId);
+            if (!pagePayload.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, "A\u007f" + Crypto.Proc_3_0_6D2AF0(pageId, null, "") + pagePayload, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }

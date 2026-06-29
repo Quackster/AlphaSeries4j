@@ -95,6 +95,9 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT level_hc FROM users")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
                 }
+                if (sqlText.contains("SELECT level_hc,hc_days,hc2_days,hc_presents")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(2, 40, 80, 1, 10));
+                }
                 if (sqlText.contains("SELECT level FROM users")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
                 }
@@ -1728,9 +1731,14 @@ public final class PortedModuleSmokeTest {
         Path originalApplicationPath = Path.of(Functions.applicationPath);
         Object originalProductCache = DataManager.global_008292BC;
         Object originalLicenceProductCache = Licence.global_008292BC;
+        Object originalCatalogProductCache = Licence.global_008292C0;
         Object originalRoomCategoryPayloads = Licence.global_00829244;
         Object originalRecommendedRooms = Licence.global_0082911C;
         long originalRecommendedRoomCount = Licence.global_00829128;
+        String originalHcGiftPayload = Licence.global_00829178;
+        String originalHcGiftLookup = Licence.global_0082917C;
+        String originalGiftWrapPayload = Licence.global_00829260;
+        Object originalCatalogPagePayloads = Licence.global_00829308;
         String originalSettingsCache = Functions.global_0082928C;
         Path figureCachePath = Files.createTempDirectory("alphaseries-figuredata");
         Functions.applicationPath = figureCachePath.toString();
@@ -1750,18 +1758,28 @@ public final class PortedModuleSmokeTest {
         stickyProducts[506] = productRow(506, "1", "1", "14", "Trade Chair", "15", "Trade Desc", "18", "trade_sprite");
         DataManager.global_008292BC = stickyProducts;
         Licence.global_008292BC = stickyProducts;
+        String[] catalogProducts = new String[82];
+        catalogProducts[81] = productRow(81, "2", "506", "9", "1");
+        Licence.global_008292C0 = catalogProducts;
         String[][] categoryPayloads = new String[21][3];
         categoryPayloads[2][1] = "CATEGORY_PAYLOAD";
         Licence.global_00829244 = categoryPayloads;
         Licence.global_0082911C = new String[]{"RECOMMENDED"};
         Licence.global_00829128 = 1L;
+        Licence.global_00829178 = "GIFTS";
+        Licence.global_0082917C = "[81\0" + "506\1" + "20]";
+        Licence.global_00829260 = "WRAP_PAYLOAD";
+        Licence.global_00829308 = new String[]{"", "", "PAGE_PAYLOAD"};
         Functions.global_0082928C = "[com.server.socket.game.rooms.own.max=5]"
             + "[com.client.navigator.staff_picked.category.id.default=2]"
             + "[com.client.navigator.staff_picked.style.default=3]"
             + "[com.client.navigator.staff_picked.category.icon.default=4]"
             + "[com.server.socket.game.rooms.favourites.max=3]"
             + "[com.client.navigator.list.limit=4]"
-            + "[com.mysql.format.time=%H:%i]";
+            + "[com.mysql.format.time=%H:%i]"
+            + "[com.client.catalog.gifts.enabled=1]"
+            + "[com.client.catalog.gifts.wrap.enabled=1]"
+            + "[com.client.catalog.gifts.wrap.price=7]";
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_mod\2fuse_alert\2fuse_kick\2fuse_receive_calls_for_help\2fuse_chatlog\2"
             + "fuse_use_wardrobe\2fuse_larger_wardrobe\2fuse_client_staff\2"}};
         MySQL.configureDatabaseConnection(new Database() {
@@ -2491,6 +2509,20 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "GCSANav"));
         assertEquals(true, containsSend(handlingSends, "Event Room"));
         handlingSends.clear();
+        Handling.Proc_6_131_75C700(4);
+        assertEquals(true, containsSend(handlingSends, "IoM"));
+        assertEquals(true, containsSend(handlingSends, "GIFTS"));
+        handlingSends.clear();
+        Handling.Proc_6_134_765B90(4, "oV" + wireLong(81));
+        assertEquals(true, containsSend(handlingSends, "In"));
+        handlingSends.clear();
+        Handling.Proc_6_135_765D80(4);
+        assertEquals(true, containsSend(handlingSends, "WRAP_PAYLOAD"));
+        handlingSends.clear();
+        Handling.Proc_6_136_765F10(4, "xx" + wireLong(2));
+        assertEquals(true, containsSend(handlingSends, "A\u007f"));
+        assertEquals(true, containsSend(handlingSends, "PAGE_PAYLOAD"));
+        handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
         assertEquals(4, Handling.representedInteractionPartner(8));
@@ -2522,9 +2554,14 @@ public final class PortedModuleSmokeTest {
         Guardian.setSocketConnected(8, false);
         DataManager.global_008292BC = originalProductCache;
         Licence.global_008292BC = originalLicenceProductCache;
+        Licence.global_008292C0 = originalCatalogProductCache;
         Licence.global_00829244 = originalRoomCategoryPayloads;
         Licence.global_0082911C = originalRecommendedRooms;
         Licence.global_00829128 = originalRecommendedRoomCount;
+        Licence.global_00829178 = originalHcGiftPayload;
+        Licence.global_0082917C = originalHcGiftLookup;
+        Licence.global_00829260 = originalGiftWrapPayload;
+        Licence.global_00829308 = originalCatalogPagePayloads;
         Functions.global_0082928C = originalSettingsCache;
         Functions.applicationPath = originalApplicationPath.toString();
     }
