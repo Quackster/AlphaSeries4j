@@ -209,7 +209,12 @@ public final class DataManager {
 
     public static boolean applyLicenceResponse(String responseText, String timeFormat, long checksumSalt) {
         String response = Vb.cStr(responseText);
-        if (response.isEmpty() || !blockedLicenceMessage(response).isEmpty()) {
+        String blockedMessage = blockedLicenceMessage(response);
+        if (!blockedMessage.isEmpty()) {
+            lastLicenceFailureMessage = blockedMessage;
+            return false;
+        }
+        if (response.isEmpty()) {
             Proc_8_4_804970();
             return false;
         }

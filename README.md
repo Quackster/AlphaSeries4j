@@ -29,6 +29,7 @@ mySQL_port=3306
 mySQL_db=alphaseries
 mySQL_username=root
 mySQL_password=verysecret
+productKey=CHANGE_ME
 ```
 
 Create the database with:

@@ -76,6 +76,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("Das Lizenzsystem ist zurzeit nicht erreichbar. Versuch es sp\u00e4ter wieder!",
             DataManager.lastLicenceFailureMessage);
         assertEquals(false, DataManager.applyLicenceResponse("{BLOCKED no%20licence}", "FMT", 0));
+        assertEquals("no licence", DataManager.lastLicenceFailureMessage);
         final List<String> licenceUrls = new ArrayList<>();
         DataManager.configureLicenceHttpFetcher((requestUrl, action) -> {
             licenceUrls.add(action + ":" + requestUrl);
