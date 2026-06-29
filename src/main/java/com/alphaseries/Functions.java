@@ -355,22 +355,14 @@ public final class Functions {
             return 0L;
         }
         try {
-            long roomId = Vb.val(args[0]);
+            long roomId = NumberUtils.parseLong(args[0]);
             if (roomId <= 0L) {
                 return 0L;
             }
-            String rowText = MySQL.Proc_5_2_6D4690(
-                "SELECT users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_room='" + roomId
-                    + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user"
-                    + " AND users.id_socket IS NOT NULL", 0, 0);
             String sentMarkers = "";
             long readyCount = 0L;
-            for (String row : Vb.cStr(rowText).split("\r", -1)) {
-                if (row.isEmpty()) {
-                    continue;
-                }
-                String[] fields = row.split("\t", -1);
-                int socketIndex = (int) Vb.val(fields.length > 0 ? fields[0] : "");
+            for (Long activeSocketIndex : roomDao().activeSocketIndexesByRoom(roomId)) {
+                int socketIndex = activeSocketIndex == null ? 0 : activeSocketIndex.intValue();
                 String marker = "[" + socketIndex + "]";
                 if (socketIndex > 0 && !sentMarkers.contains(marker)) {
                     Handling.Proc_6_53_718E00(socketIndex, 0, 0);
@@ -393,7 +385,7 @@ public final class Functions {
             return 0L;
         }
         try {
-            String userId = Vb.cStr(args[0]);
+            String userId = StringUtils.text(args[0]);
             if (userId.isEmpty()) {
                 return 0L;
             }
@@ -401,7 +393,7 @@ public final class Functions {
             if (socketIndex <= 0L) {
                 return 0L;
             }
-            HandlingMUS.Proc_12_1_821AA0((int) socketIndex, roomAlertPayload(Vb.cStr(args[1]), Vb.cStr(args[2])));
+            HandlingMUS.Proc_12_1_821AA0((int) socketIndex, roomAlertPayload(StringUtils.text(args[1]), StringUtils.text(args[2])));
             return 1L;
         } catch (Exception ex) {
             return 0L;
@@ -413,23 +405,15 @@ public final class Functions {
             return 0L;
         }
         try {
-            long roomId = Vb.val(args[0]);
+            long roomId = NumberUtils.parseLong(args[0]);
             if (roomId <= 0L) {
                 return 0L;
             }
-            String payload = roomAlertPayload(Vb.cStr(args[1]), Vb.cStr(args[2]));
-            String rowText = MySQL.Proc_5_2_6D4690(
-                "SELECT users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_room='" + roomId
-                    + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user"
-                    + " AND users.id_socket IS NOT NULL", 0, 0);
+            String payload = roomAlertPayload(StringUtils.text(args[1]), StringUtils.text(args[2]));
             String sentMarkers = "";
             long sentCount = 0L;
-            for (String row : Vb.cStr(rowText).split("\r", -1)) {
-                if (row.isEmpty()) {
-                    continue;
-                }
-                String[] fields = row.split("\t", -1);
-                int socketIndex = (int) Vb.val(fields.length > 0 ? fields[0] : "");
+            for (Long activeSocketIndex : roomDao().activeSocketIndexesByRoom(roomId)) {
+                int socketIndex = activeSocketIndex == null ? 0 : activeSocketIndex.intValue();
                 String marker = "[" + socketIndex + "]";
                 if (socketIndex > 0 && !sentMarkers.contains(marker)) {
                     HandlingMUS.Proc_12_1_821AA0(socketIndex, payload);
@@ -452,11 +436,11 @@ public final class Functions {
             return 0L;
         }
         try {
-            String userId = String.valueOf(Vb.val(args[0]));
+            String userId = String.valueOf(NumberUtils.parseLong(args[0]));
             if ("0".equals(userId)) {
                 return 0L;
             }
-            long numericUserId = Vb.val(userId);
+            long numericUserId = NumberUtils.parseLong(userId);
             UserDao userDao = userDao();
             userDao.markEmailValidated(numericUserId);
             long socketIndex = Licence.Proc_9_9_808AC0(userId, 0, 0);
@@ -480,11 +464,11 @@ public final class Functions {
             return 0L;
         }
         try {
-            String requestedUserId = Vb.cStr(args[0]);
+            String requestedUserId = StringUtils.text(args[0]);
             if (requestedUserId.isEmpty() || "0".equals(requestedUserId)) {
                 return 0L;
             }
-            UserDao.UserIdentity identity = userDao().findIdentity(Vb.val(requestedUserId)).orElse(null);
+            UserDao.UserIdentity identity = userDao().findIdentity(NumberUtils.parseLong(requestedUserId)).orElse(null);
             if (identity == null) {
                 return 0L;
             }

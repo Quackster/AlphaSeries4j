@@ -73,6 +73,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.dao.mysql.StaffModerationDao` and routed staff chat-log/room-info moderation reads through typed prepared DAO methods instead of inline SQL concatenation in `MySQL`.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for socket-user and permission-level lookups, removing remaining inline user lookup SQL from `MySQL` helper paths.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for credit and activity-point refresh lookups, routing `Functions` refresh helpers through prepared DAO methods.
+- Expanded `com.alphaseries.dao.mysql.RoomDao` for active room socket lookups, routing `Functions` ready/room-alert helpers through prepared DAO methods.
 - Migrated remaining `MySQL` helper conversions and staff moderation payload builders off `Vb` helpers and onto shared `StringUtils`/`NumberUtils`.
 - Added `com.alphaseries.util.StringUtils` and `NumberUtils`; migrated new staff/session code away from duplicated local helper methods.
 - Added `com.alphaseries.protocol.ReadyPacketBuffer` for game ready-packet frame parsing and routed `Filesystems` through it instead of inline VB-style substring parsing.
@@ -99,10 +100,10 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 470
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1148
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 474
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1133
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 472
 - `Handling.java`: 12148 lines
-- `Functions.java`: 758 lines
+- `Functions.java`: 742 lines
 - `MySQL.java`: 316 lines
 - `Vb.java`: 106 lines
 
