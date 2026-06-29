@@ -211,20 +211,20 @@ public final class Boot {
         String[] defaults = new String[3];
         defaults[0] = String.valueOf(privateCategoryId);
         defaults[2] = String.valueOf(publicCategoryId);
-        Licence.global_00829224 = defaults;
+        Licence.setRoomCategoryDefaults(defaults);
         long parentCategoryId = privateCategoryId == 0L ? 1L : privateCategoryId;
-        Licence.global_00829230 = MySQL.Proc_5_2_6D4690("SELECT id,name,has_trading,level_minrequired,hclevel_minrequired "
-            + "FROM rooms_categories WHERE id_parent='" + parentCategoryId + "' ORDER BY id ASC", 0, 0);
+        Licence.setRoomCategoryRows(MySQL.Proc_5_2_6D4690("SELECT id,name,has_trading,level_minrequired,hclevel_minrequired "
+            + "FROM rooms_categories WHERE id_parent='" + parentCategoryId + "' ORDER BY id ASC", 0, 0));
     }
 
     public static void Proc_1_12_6C8EF0(Object... args) {
         String[][] values = new String[21][3];
         for (int rank = 0; rank <= 20; rank++) {
             for (int hc = 0; hc <= 2; hc++) {
-                values[rank][hc] = buildRoomCategoryPayload(Vb.cStr(Licence.global_00829230), rank, hc);
+                values[rank][hc] = buildRoomCategoryPayload(Licence.roomCategoryCache().categoryRows(), rank, hc);
             }
         }
-        Licence.global_00829244 = values;
+        Licence.setRoomCategoryPayloads(values);
     }
 
     public static void Proc_1_13_6C9820(Object... args) {

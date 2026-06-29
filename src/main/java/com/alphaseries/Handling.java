@@ -3675,14 +3675,7 @@ public final class Handling {
             if (hcLevel > 2L) {
                 hcLevel = 2L;
             }
-            String responsePayload = "";
-            if (Licence.global_00829244 instanceof String[][]) {
-                String[][] payloads = (String[][]) Licence.global_00829244;
-                if (rankIndex < payloads.length && payloads[(int) rankIndex] != null
-                    && hcLevel < payloads[(int) rankIndex].length) {
-                    responsePayload = Vb.cStr(payloads[(int) rankIndex][(int) hcLevel]);
-                }
-            }
+            String responsePayload = Licence.roomCategoryCache().payload(rankIndex, hcLevel);
             Proc_6_244_801E80(socketIndex, "C]" + responsePayload, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.

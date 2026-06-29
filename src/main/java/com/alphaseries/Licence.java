@@ -9,6 +9,7 @@ import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.messenger.MessengerSettings;
 import com.alphaseries.game.navigator.RecommendedRooms;
+import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.session.SessionRegistry;
@@ -225,6 +226,22 @@ public final class Licence {
 
     public static void setCatalogPageTrees(Object pageTrees) {
         global_008292F4 = pageTrees == null ? "" : pageTrees;
+    }
+
+    public static RoomCategoryCache roomCategoryCache() {
+        return RoomCategoryCache.fromLegacy(global_00829224, global_00829230, global_00829244);
+    }
+
+    public static void setRoomCategoryDefaults(Object defaultCategoryIds) {
+        global_00829224 = defaultCategoryIds == null ? "" : defaultCategoryIds;
+    }
+
+    public static void setRoomCategoryRows(String categoryRows) {
+        global_00829230 = StringUtils.text(categoryRows);
+    }
+
+    public static void setRoomCategoryPayloads(Object payloads) {
+        global_00829244 = payloads == null ? "" : payloads;
     }
 
     public static String Proc_9_6_808080(Object... args) {

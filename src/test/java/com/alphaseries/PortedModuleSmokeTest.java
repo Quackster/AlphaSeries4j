@@ -807,6 +807,7 @@ public final class PortedModuleSmokeTest {
         Boot.Proc_1_11_6C8D10();
         Boot.Proc_1_12_6C8EF0();
         assertEquals(true, ((String[][]) Licence.global_00829244)[0][0].contains("public"));
+        assertEquals(true, Licence.roomCategoryCache().payload(0L, 0L).contains("public"));
         Boot.Proc_1_13_6C9820();
         assertEquals(true, Licence.global_00829260.length() > 0);
         assertEquals(true, Licence.giftSettings().containsGiftWrapProduct(10L));
