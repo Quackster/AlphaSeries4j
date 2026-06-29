@@ -1243,6 +1243,11 @@ public final class PortedModuleSmokeTest {
         Mistake.MessageBox mistakeMessageBox = Mistake.formLoad();
         assertEquals(Mistake.MESSAGE, mistakeMessageBox.message);
         assertEquals(Mistake.MessageStyle.CRITICAL, mistakeMessageBox.style);
+        String[] mistakeInstructionCaptions = Mistake.instructionCaptions();
+        assertEquals("1. Click here to customize your regional options!", mistakeInstructionCaptions[0]);
+        assertEquals("2. Select the decimal symbol ,", mistakeInstructionCaptions[1]);
+        assertEquals("3. Click \"OK\" to apply your changes. You need to restart your Computer/VPS",
+            mistakeInstructionCaptions[2]);
         Mistake.QueryUnloadResult mistakeUnload = Mistake.formQueryUnload(3);
         assertEquals(false, mistakeUnload.cancel);
         assertEquals(true, mistakeUnload.exitRequested);
