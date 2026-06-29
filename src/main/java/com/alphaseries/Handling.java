@@ -4900,37 +4900,30 @@ public final class Handling {
             } else {
                 return 0L;
             }
-            String whereText = "position_x='" + positionX + "' AND position_y='" + positionY
-                + "' AND position_wall IS NULL";
-            if (roomId > 0L) {
-                whereText = "id_room='" + roomId + "' AND " + whereText;
-            }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_room,id_product,sign FROM furnitures WHERE "
-                + whereText + " LIMIT 250", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return 0L;
             }
+            List<FurnitureDao.FloorPositionFurniture> rows = roomId > 0L
+                ? furniture.floorFurnitureAt(roomId, positionX, positionY)
+                : furniture.floorFurnitureAt(positionX, positionY);
             long refreshCount = 0L;
-            for (String row : rowText.split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    String[] fields = row.split("\t", -1);
-                    long furnitureId = NumberUtils.parseLong(handlingField(fields, 0));
-                    long rowRoomId = roomId > 0L ? roomId : NumberUtils.parseLong(handlingField(fields, 1));
-                    long productId = NumberUtils.parseLong(handlingField(fields, 2));
-                    String stateText = handlingField(fields, 3);
-                    if (furnitureId > 0L && rowRoomId > 0L && productId > 0L) {
-                        String productAction = DataManager.Proc_8_12_806C30(productId, 7, 0).toLowerCase();
-                        String productSprite = DataManager.Proc_8_12_806C30(productId, 17, 0).toLowerCase();
-                        if (productSprite.isEmpty()) {
-                            productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0).toLowerCase();
-                        }
-                        if (productAction.isEmpty() || productAction.contains("switch") || productAction.contains("click")
-                            || productAction.contains("score") || productSprite.contains("score") || productSprite.contains("dice")) {
-                            long stateValue = NumberUtils.parseLong(stateText);
-                            Proc_6_151_78AC20(rowRoomId, furnitureId, stateValue);
-                            Proc_6_246_8024C0(rowRoomId, furnitureStatePayload(furnitureId, stateValue), 0);
-                            refreshCount++;
-                        }
+            for (FurnitureDao.FloorPositionFurniture row : rows) {
+                long furnitureId = row.furnitureId();
+                long rowRoomId = roomId > 0L ? roomId : row.roomId();
+                long productId = row.productId();
+                if (furnitureId > 0L && rowRoomId > 0L && productId > 0L) {
+                    String productAction = DataManager.Proc_8_12_806C30(productId, 7, 0).toLowerCase();
+                    String productSprite = DataManager.Proc_8_12_806C30(productId, 17, 0).toLowerCase();
+                    if (productSprite.isEmpty()) {
+                        productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0).toLowerCase();
+                    }
+                    if (productAction.isEmpty() || productAction.contains("switch") || productAction.contains("click")
+                        || productAction.contains("score") || productSprite.contains("score") || productSprite.contains("dice")) {
+                        long stateValue = NumberUtils.parseLong(row.sign());
+                        Proc_6_151_78AC20(rowRoomId, furnitureId, stateValue);
+                        Proc_6_246_8024C0(rowRoomId, furnitureStatePayload(furnitureId, stateValue), 0);
+                        refreshCount++;
                     }
                 }
             }
@@ -5057,21 +5050,23 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' AND position_wall IS NULL LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return "";
             }
-            long productId = NumberUtils.parseLong(handlingField(rowText.split("\t", -1), 0));
+            FurnitureDao.FloorStateFurniture stateFurniture = furniture.floorStateFurniture(furnitureId, roomId).orElse(null);
+            if (stateFurniture == null) {
+                return "";
+            }
+            long productId = stateFurniture.productId();
             if (productId <= 0L) {
                 return "";
             }
-            String packageRow = MySQL.Proc_5_2_6D4690("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='"
-                + productId + "' LIMIT 1", 0, 0);
-            if (!packageRow.isEmpty()) {
-                String[] packageFields = packageRow.split("\t", -1);
-                String packageType = handlingField(packageFields, 1).toLowerCase();
-                long containedId = NumberUtils.parseLong(handlingField(packageFields, 2));
+            PackageDao packages = packageDao();
+            if (packages != null) {
+                PackageDao.PackageRow packageRow = packages.packageByProduct(productId).orElse(null);
+                String packageType = packageRow == null ? "" : StringUtils.text(packageRow.secondaryType()).toLowerCase();
+                long containedId = packageRow == null ? 0L : packageRow.containedId();
                 if ("packages_pets".equals(packageType) && containedId > 0L) {
                     return Proc_6_86_73B0D0(socketIndex, "FH", requestPayload);
                 } else if (!packageType.isEmpty()) {

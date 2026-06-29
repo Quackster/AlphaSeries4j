@@ -100,6 +100,33 @@ public final class FurnitureDao {
             roomId);
     }
 
+    public List<FloorPositionFurniture> floorFurnitureAt(long roomId, long positionX, long positionY) throws SQLException {
+        return database.query(
+            "SELECT id,id_room,id_product,sign FROM furnitures WHERE id_room=? AND position_x=? AND position_y=? "
+                + "AND position_wall IS NULL LIMIT 250",
+            resultSet -> new FloorPositionFurniture(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getString(4)),
+            roomId,
+            positionX,
+            positionY);
+    }
+
+    public List<FloorPositionFurniture> floorFurnitureAt(long positionX, long positionY) throws SQLException {
+        return database.query(
+            "SELECT id,id_room,id_product,sign FROM furnitures WHERE position_x=? AND position_y=? "
+                + "AND position_wall IS NULL LIMIT 250",
+            resultSet -> new FloorPositionFurniture(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getString(4)),
+            positionX,
+            positionY);
+    }
+
     public Optional<RoomFurnitureState> roomFurnitureState(long furnitureId) throws SQLException {
         return database.queryOne(
             "SELECT id_room,id_product,sign FROM furnitures WHERE id=? LIMIT 1",
@@ -319,6 +346,9 @@ public final class FurnitureDao {
     }
 
     public record FloorStateFurniture(long productId, String sign) {
+    }
+
+    public record FloorPositionFurniture(long furnitureId, long roomId, long productId, String sign) {
     }
 
     public record RoomFurnitureState(long roomId, long productId, String sign) {
