@@ -79,6 +79,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `com.alphaseries.dao.mysql.StaffModerationDao` for call-for-help cancel, staff list, duplicate-check, submit, and newest-id lookups.
 - Added `com.alphaseries.dao.mysql.HelpDao` and routed FAQ search through a prepared DAO method.
 - Added `com.alphaseries.dao.mysql.ClubDao` and routed subscription offer/user club-status reads through prepared DAO methods.
+- Expanded `com.alphaseries.dao.mysql.RoomDao` for room settings, rights, icon, door-status, and event create/edit/delete operations, and routed homeroom updates through `UserDao`.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for socket-user and permission-level lookups, removing remaining inline user lookup SQL from `MySQL` helper paths.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for credit and activity-point refresh lookups, routing `Functions` refresh helpers through prepared DAO methods.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for wardrobe rows, wardrobe slot replacement, tutorial-clothes updates, and motto lookup.
@@ -116,9 +117,9 @@ Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 468
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 423
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 414
 - `Boot.java`: 1130 lines
-- `Handling.java`: 12186 lines
+- `Handling.java`: 12210 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 922 lines

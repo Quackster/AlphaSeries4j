@@ -154,6 +154,10 @@ public final class UserDao {
             sessionId);
     }
 
+    public int updateHomeRoom(long userId, long roomId) throws SQLException {
+        return database.execute("UPDATE users SET homeroom=? WHERE id=?", roomId, userId);
+    }
+
     public record UserIdentity(long userId, long socketIndex, String motto, String figure, String gender) {
     }
 }

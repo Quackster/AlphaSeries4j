@@ -4,6 +4,7 @@ import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.dao.mysql.ClubDao;
+import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -1251,10 +1252,11 @@ public final class Handling {
             if (!handlingUserOwnsRoom(callerUserId, roomId) && !handlingUserHasPermission(callerUserId, "fuse_any_room_controller")) {
                 return;
             }
-            String roomRow = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms.name,rooms.description,rooms.status_door,"
-                + "rooms.id_category,rooms.visitors_max,models.visitors_max,rooms.tag_1,rooms.tag_2,NULL,"
-                + "rooms.allow_otherspets,rooms.allow_feedpets,rooms.allow_walkthrough,rooms.disable_walls "
-                + "FROM rooms,models WHERE rooms.id='" + roomId + "' AND models.id=rooms.id_model LIMIT 1", 0, 0);
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return;
+            }
+            String roomRow = rooms.settingsRow(roomId);
             if (roomRow.isEmpty()) {
                 return;
             }
@@ -1262,8 +1264,7 @@ public final class Handling {
             if (roomFields.length < 14) {
                 return;
             }
-            String rightsRow = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name FROM rooms_rights,users WHERE rooms_rights.id_room='"
-                + roomId + "' AND users.id=rooms_rights.id_user LIMIT 250", 0, 0);
+            String rightsRow = rooms.rightsRows(roomId);
             String payload = roomSettingsReadPayload(roomFields, rightsRow);
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
@@ -1289,8 +1290,10 @@ public final class Handling {
             if (iconPayload.isEmpty()) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET icon='" + Functions.Proc_10_11_80A9C0(iconPayload, 0, 0)
-                + "' WHERE id='" + roomId + "'", 0, 0);
+            RoomDao rooms = roomDao();
+            if (rooms != null) {
+                rooms.updateIcon(roomId, iconPayload);
+            }
             String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                 + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
             Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
@@ -1312,7 +1315,10 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_events WHERE id_room='" + roomId + "'", 0, 0);
+            RoomDao rooms = roomDao();
+            if (rooms != null) {
+                rooms.deleteRoomEvents(roomId);
+            }
             Proc_6_244_801E80(socketIndex, "Er-1" + '\2', 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1330,7 +1336,8 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            long doorStatus = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT status_door FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            RoomDao rooms = roomDao();
+            long doorStatus = rooms == null ? 0L : rooms.doorStatus(roomId);
             Proc_6_244_801E80(socketIndex, doorStatus != 0L ? "EoHK" : "EoIH", 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1352,8 +1359,10 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET homeroom='" + roomId + "' WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
+            UserDao users = userDao();
+            if (users != null) {
+                users.updateHomeRoom(NumberUtils.parseLong(userId), roomId);
+            }
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GG"), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1372,7 +1381,8 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            long doorStatus = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT status_door FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            RoomDao rooms = roomDao();
+            long doorStatus = rooms == null ? 0L : rooms.doorStatus(roomId);
             if (doorStatus != 0L) {
                 Proc_6_244_801E80(socketIndex, "EoHK", 0);
                 return;
@@ -1381,12 +1391,17 @@ public final class Handling {
             if (!roomEventCreatePayloadFromWire(packetPayload, event)) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms_events(id_room,id_user,name,description,id_category,tag_1,tag_2,timestamp,name_category) VALUES('"
-                + roomId + "','" + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','"
-                + Functions.Proc_10_11_80A9C0(event.eventName, 0, 0) + "','"
-                + Functions.Proc_10_11_80A9C0(event.eventDescription, 0, 0) + "','" + event.categoryId + "',"
-                + nullableSqlText(event.tagOne) + "," + nullableSqlText(event.tagTwo)
-                + ",UNIX_TIMESTAMP(),'" + Functions.Proc_10_11_80A9C0(event.categoryName, 0, 0) + "')", 0, 0);
+            if (rooms != null) {
+                rooms.insertRoomEvent(
+                    roomId,
+                    NumberUtils.parseLong(userId),
+                    event.eventName,
+                    event.eventDescription,
+                    event.categoryId,
+                    event.tagOne,
+                    event.tagTwo,
+                    event.categoryName);
+            }
             Proc_6_247_8027E0(socketIndex, "Er" + Proc_6_51_716AC0(roomId), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1409,12 +1424,16 @@ public final class Handling {
             if (!roomEventEditPayloadFromWire(packetPayload, event)) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE rooms_events SET id_user='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "',name='" + Functions.Proc_10_11_80A9C0(event.eventName, 0, 0)
-                + "',description='" + Functions.Proc_10_11_80A9C0(event.eventDescription, 0, 0)
-                + "',tag_1=" + nullableSqlText(event.tagOne)
-                + ",tag_2=" + nullableSqlText(event.tagTwo)
-                + " WHERE id_room='" + roomId + "'", 0, 0);
+            RoomDao rooms = roomDao();
+            if (rooms != null) {
+                rooms.updateRoomEvent(
+                    roomId,
+                    NumberUtils.parseLong(userId),
+                    event.eventName,
+                    event.eventDescription,
+                    event.tagOne,
+                    event.tagTwo);
+            }
             Proc_6_247_8027E0(socketIndex, "Er" + Proc_6_51_716AC0(roomId), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -12000,6 +12019,11 @@ public final class Handling {
     private static ClubDao clubDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new ClubDao(database);
+    }
+
+    private static RoomDao roomDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new RoomDao(database);
     }
 
     private static String[] normalizeRows(Object rowSource) {
