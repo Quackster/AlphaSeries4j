@@ -5906,6 +5906,45 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_234_7F75C0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE users_quests SET timestamp_done=NULL,timestamp_accepted=NULL WHERE id_user='"
+                + escapedUserId + "' LIMIT 50", 0, 0);
+            Proc_6_244_801E80(socketIndex, "Lc", 0);
+            Proc_6_236_7F8540(socketIndex, "", "");
+            return "";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_236_7F8540(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            String userQuestRows = MySQL.Proc_5_2_6D4690(
+                "SELECT id_quest,id_level,timestamp_done,timestamp_accepted,time_next,progress FROM users_quests WHERE id_user='"
+                    + escapedUserId + "' LIMIT 250", "\r", 0);
+            String payload = questListPayload(questRowsFromSource(), questRowsWithRemainingWait(userQuestRows));
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
@@ -10179,6 +10218,37 @@ public final class Handling {
             rowEnd = text.length();
         }
         return (questId + "\t" + text.substring(rowStart, rowEnd)).split("\t", -1);
+    }
+
+    private static String questRowsFromSource() {
+        String cachedRows = Vb.cStr(Licence.global_00829080);
+        if (!cachedRows.isEmpty()) {
+            return cachedRows;
+        }
+        return MySQL.Proc_5_2_6D4690(
+            "SELECT id,level,name,NULL,reward,reward_type,require_action,id_additional,id_campaign,amount_activities,waitamount "
+                + "FROM quests ORDER BY id_campaign DESC,level ASC", 0, 0);
+    }
+
+    private static String questRowsWithRemainingWait(String userQuestRows) {
+        StringBuilder rows = new StringBuilder();
+        for (String row : Vb.cStr(userQuestRows).split("\r", -1)) {
+            String rowText = row.trim();
+            if (!rowText.isEmpty()) {
+                String[] fields = rowText.split("\t", -1);
+                String timeNextText = handlingField(fields, 4);
+                long remainingWait = 0L;
+                if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
+                    remainingWait = Vb.val(MySQL.Proc_5_2_6D4690("SELECT GREATEST(0,UNIX_TIMESTAMP('"
+                        + Functions.Proc_10_11_80A9C0(timeNextText, 0, 0)
+                        + "')-UNIX_TIMESTAMP())", 0, 0));
+                } else if (fields.length >= 7) {
+                    remainingWait = Vb.val(handlingField(fields, 6));
+                }
+                appendRow(rows, rowText + '\t' + remainingWait);
+            }
+        }
+        return rows.toString();
     }
 
     private static String left(String value, int maxLength) {

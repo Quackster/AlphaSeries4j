@@ -1938,6 +1938,14 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT soundmachine_jb_playlist.id_destination,soundmachine_jb_playlist.id_cd,soundmachine_cds.sequence")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(40, 2, 3));
                 }
+                if (sqlText.contains("SELECT id_quest,id_level,timestamp_done,timestamp_accepted,time_next,progress FROM users_quests WHERE id_user='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, 0, 0, 1, 0, 1));
+                }
+                if (sqlText.contains("FROM quests ORDER BY id_campaign DESC,level ASC")) {
+                    return Arrays.<List<Object>>asList(
+                        Arrays.<Object>asList(10, 1, "First", "", 5, 2, "visit", 0, 7, 3, 30),
+                        Arrays.<Object>asList(11, 2, "Second", "", 6, 2, "visit", 0, 7, 4, 0));
+                }
                 if (sqlText.contains("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket")
                     && sqlText.contains("logs_visitedrooms.id='61'")
                     && sqlText.contains("logs_visitedrooms.id_room='9'")) {
@@ -3124,6 +3132,19 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         Handling.Proc_6_231_7F4510(4);
         assertEquals(true, containsSend(handlingSends, "IcIQA"));
+        handlingSends.clear();
+        handlingSql.clear();
+        String liveQuestRows = "10\t1\tFirst\t\t5\t2\tvisit\t0\t7\t3\t30\r11\t2\tSecond\t\t6\t2\tvisit\t0\t7\t4\t0";
+        Licence.global_00829080 = liveQuestRows;
+        String questListPayload = Handling.Proc_6_236_7F8540(4);
+        assertEquals(Handling.questListPayload(liveQuestRows, "10\t0\t0\t1\t0\t1\t0"), questListPayload);
+        assertEquals(true, containsSend(handlingSends, "L`"));
+        handlingSends.clear();
+        Handling.Proc_6_234_7F75C0(4);
+        assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET timestamp_done=NULL,timestamp_accepted=NULL WHERE id_user='77' LIMIT 50"));
+        assertEquals(true, containsSend(handlingSends, "Lc"));
+        assertEquals(true, containsSend(handlingSends, "L`"));
+        Licence.global_00829080 = "";
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
