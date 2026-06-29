@@ -8635,13 +8635,16 @@ public final class Handling {
             || NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.rooms.bots.enabled", "-1", 0)) == 0L) {
             return;
         }
-        String rowText = MySQL.Proc_5_2_6D4690("SELECT id,name,motto,speech,responses,position_x,position_y,position_z,"
-            + "position_r,figure,NULL,id_handle,id_handleaction,cache_action,speech_submit,allow_walk,max_fields_away "
-            + "FROM bots WHERE id_room='" + roomId + "' LIMIT 255", 0, 0);
-        for (String row : rowText.split("\r", -1)) {
-            if (!row.isEmpty()) {
-                allocateRepresentedBot(roomSlot, row.split("\t", -1));
+        BotDao bots = botDao();
+        if (bots == null) {
+            return;
+        }
+        try {
+            for (BotRoomEntryRow row : bots.roomBotEntries(roomId)) {
+                allocateRepresentedBot(roomSlot, row.representedBotFields());
             }
+        } catch (Exception ignored) {
+            // VB6 source suppresses bot loading failures.
         }
     }
 
