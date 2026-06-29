@@ -30,4 +30,14 @@ public final class ServerMaintenanceDao {
     public void clearRoomEvents() throws SQLException {
         database.execute("DELETE FROM rooms_events");
     }
+
+    public void markSocketCheckTime() throws SQLException {
+        database.execute("UPDATE settings SET value=UNIX_TIMESTAMP() WHERE variable='com.server.socket.check.time'");
+    }
+
+    public int updateMostActiveSockets(long activeCount) throws SQLException {
+        return database.execute(
+            "UPDATE settings SET value=? WHERE variable='com.server.socket.mostactive'",
+            activeCount);
+    }
 }

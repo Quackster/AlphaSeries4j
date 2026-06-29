@@ -413,7 +413,11 @@ public final class Main {
     public static long pingTimer(long previousMostActiveCount) {
         long activeCount = 0L;
         try {
-            MySQL.Proc_5_0_6D3CD0("UPDATE settings SET value=UNIX_TIMESTAMP() WHERE variable='com.server.socket.check.time'", 1, 0);
+            ServerMaintenanceDao maintenanceDao = serverMaintenanceDao();
+            if (maintenanceDao == null) {
+                return 0L;
+            }
+            maintenanceDao.markSocketCheckTime();
             for (long socketIndex : Guardian.markedSocketIndexes()) {
                 if (Guardian.Proc_11_2_821390(socketIndex, 0, 0) == 1) {
                     activeCount++;
@@ -422,8 +426,7 @@ public final class Main {
                 }
             }
             if (activeCount > previousMostActiveCount) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE settings SET value='" + activeCount
-                    + "' WHERE variable='com.server.socket.mostactive'", 0, 0);
+                maintenanceDao.updateMostActiveSockets(activeCount);
             }
             Handling.Proc_6_103_74A510(0, 0, 0);
         } catch (Exception ignored) {
