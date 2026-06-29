@@ -450,6 +450,46 @@ public final class FurnitureDao {
             ownerId);
     }
 
+    public int insertCatalogFurniture(long productId, long ownerId, String sign, long catalogProductId) throws SQLException {
+        return database.execute(
+            "INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time,id_ctlgproduct) "
+                + "VALUES(?,?,?,?,UNIX_TIMESTAMP(),?)",
+            productId,
+            ownerId,
+            sign,
+            ownerId,
+            catalogProductId);
+    }
+
+    public List<Long> newestFurnitureIdsByOwner(long ownerId, long limit) throws SQLException {
+        long effectiveLimit = Math.max(0L, limit);
+        if (effectiveLimit <= 0L) {
+            return List.of();
+        }
+        return database.query(
+            "SELECT id FROM furnitures WHERE id_owner=? ORDER BY id DESC LIMIT " + effectiveLimit,
+            resultSet -> resultSet.getLong(1),
+            ownerId);
+    }
+
+    public int insertDefaultDimmerPresets(long furnitureId) throws SQLException {
+        return database.execute(
+            "INSERT INTO furnitures_dimmerpresets(id_furni,id_preset,id_state) VALUES(?,?,?),(?,?,?),(?,?,?)",
+            furnitureId,
+            1L,
+            2L,
+            furnitureId,
+            2L,
+            1L,
+            furnitureId,
+            3L,
+            1L);
+    }
+
+    public int updateDefaultDimmerSign(long furnitureId) throws SQLException {
+        return database.execute("UPDATE furnitures SET sign=? WHERE id=?", "1,1,1,#000000,166", furnitureId);
+    }
+
     public record RoomFurniture(long furnitureId, long productId, String sign, String caption) {
     }
 

@@ -281,6 +281,10 @@ public final class UserDao {
         return database.execute("INSERT INTO users_badges(id_user,id_badge) VALUES(?,?)", userId, badgeId);
     }
 
+    public int insertBadge(long userId, long slot, String badgeId) throws SQLException {
+        return database.execute("INSERT INTO users_badges(id_user,id_slot,id_badge) VALUES(?,?,?)", userId, slot, badgeId);
+    }
+
     public long badgeRowId(long userId, String badgeId) throws SQLException {
         return database.queryOne(
             "SELECT id FROM users_badges WHERE id_user=? AND id_badge=? ORDER BY id DESC LIMIT 1",
@@ -288,6 +292,15 @@ public final class UserDao {
             userId,
             badgeId)
             .orElse(0L);
+    }
+
+    public String badgeId(long userId, String badgeId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_badge FROM users_badges WHERE id_user=? AND id_badge=? LIMIT 1",
+            resultSet -> resultSet.getString(1),
+            userId,
+            badgeId)
+            .orElse("");
     }
 
     public long activityPoints(long userId, long pointType) throws SQLException {

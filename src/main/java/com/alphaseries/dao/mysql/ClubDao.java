@@ -4,6 +4,7 @@ import com.alphaseries.db.Database;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 public final class ClubDao {
     private final Database database;
@@ -31,6 +32,13 @@ public final class ClubDao {
             .orElse("");
     }
 
+    public Optional<ContainedClubProduct> containedClubProduct(long productId) throws SQLException {
+        return database.queryOne(
+            "SELECT months,level FROM products_containshc WHERE id_product=? LIMIT 1",
+            resultSet -> new ContainedClubProduct(resultSet.getLong(1), resultSet.getLong(2)),
+            productId);
+    }
+
     public int applyClubPeriod(long userId, long hcRank, long currentPeriods, long paidDays, long giftIncrementDefault)
         throws SQLException {
 
@@ -51,5 +59,8 @@ public final class ClubDao {
                 + ",hc_presents=hc_presents+" + giftIncrement
                 + " WHERE id=?",
             userId);
+    }
+
+    public record ContainedClubProduct(long months, long level) {
     }
 }

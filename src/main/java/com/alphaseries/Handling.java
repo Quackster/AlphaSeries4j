@@ -4217,7 +4217,13 @@ public final class Handling {
             if (amount <= 0L) {
                 amount = 1L;
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            long userIdValue = NumberUtils.parseLong(userId);
+            FurnitureDao furniture = furnitureDao();
+            UserDao users = userDao();
+            ClubDao clubs = clubDao();
+            if (furniture == null || users == null || clubs == null) {
+                return "";
+            }
             long grantedCount = 0L;
             if ("products_deals".equals(typeSecondary)) {
                 String dealRow = Licence.Proc_9_5_807DF0(productId, 0, 0);
@@ -4235,24 +4241,22 @@ public final class Handling {
                         if (defaultSign.isEmpty()) {
                             defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(dealProductId, 5, 0), 0, 0);
                         }
-                        MySQL.Proc_5_0_6D3CD0("INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time,id_ctlgproduct) VALUES('"
-                            + dealProductId + "','" + escapedUserId + "','"
-                            + Functions.Proc_10_11_80A9C0(defaultSign, 0, 0) + "','" + escapedUserId
-                            + "',UNIX_TIMESTAMP(),'" + catalogProductId + "')", 0, 0);
+                        furniture.insertCatalogFurniture(dealProductId, userIdValue, defaultSign, catalogProductId);
                         grantedCount++;
                     }
                 }
             } else {
-                String containsClubRow = MySQL.Proc_5_2_6D4690("SELECT months,level FROM products_containshc WHERE id_product='"
-                    + catalogProductId + "' LIMIT 1", 0, 0);
-                if (containsClubRow.isEmpty()) {
-                    containsClubRow = MySQL.Proc_5_2_6D4690("SELECT months,level FROM products_containshc WHERE id_product='"
-                        + productId + "' LIMIT 1", 0, 0);
-                }
-                if (!containsClubRow.isEmpty()) {
-                    String[] containsClubFields = containsClubRow.split("\t", -1);
-                    long hcMonths = NumberUtils.parseLong(handlingField(containsClubFields, 0));
-                    long hcLevel = NumberUtils.parseLong(handlingField(containsClubFields, 1));
+                ClubDao.ContainedClubProduct containedClub = clubs.containedClubProduct(catalogProductId)
+                    .orElseGet(() -> {
+                        try {
+                            return clubs.containedClubProduct(productId).orElse(null);
+                        } catch (Exception ignored) {
+                            return null;
+                        }
+                    });
+                if (containedClub != null) {
+                    long hcMonths = containedClub.months();
+                    long hcLevel = containedClub.level();
                     if (hcLevel <= 0L) {
                         hcLevel = 1L;
                     }
@@ -4263,15 +4267,10 @@ public final class Handling {
                     badgeId = DataManager.Proc_8_12_806C30(productId, 27, 0).toUpperCase();
                 }
                 if (badgeId.length() > 2) {
-                    String existingBadge = MySQL.Proc_5_2_6D4690("SELECT id_badge FROM users_badges WHERE id_user='"
-                        + escapedUserId + "' AND id_badge='" + Functions.Proc_10_11_80A9C0(badgeId, 0, 0)
-                        + "' LIMIT 1", 0, 0).toUpperCase();
+                    String existingBadge = StringUtils.text(users.badgeId(userIdValue, badgeId)).toUpperCase();
                     if (!badgeId.equals(existingBadge)) {
-                        MySQL.Proc_5_0_6D3CD0("INSERT INTO users_badges(id_user,id_slot,id_badge) VALUES('"
-                            + escapedUserId + "','0','" + Functions.Proc_10_11_80A9C0(badgeId, 0, 0) + "')", 0, 0);
-                        long badgeRowId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users_badges WHERE id_user='"
-                            + escapedUserId + "' AND id_badge='" + Functions.Proc_10_11_80A9C0(badgeId, 0, 0)
-                            + "' ORDER BY id DESC LIMIT 1", 0, 0));
+                        users.insertBadge(userIdValue, 0L, badgeId);
+                        long badgeRowId = users.badgeRowId(userIdValue, badgeId);
                         Proc_6_195_7D38D0(userId, 0, 0);
                         Proc_6_193_7D2BB0(socketIndex, "Ce", "");
                         if (badgeRowId > 0L) {
@@ -4287,27 +4286,26 @@ public final class Handling {
                     defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(productId, 5, 0), 0, 0);
                 }
                 for (long itemIndex = 1L; itemIndex <= amount; itemIndex++) {
-                    MySQL.Proc_5_0_6D3CD0("INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time,id_ctlgproduct) VALUES('"
-                        + productId + "','" + escapedUserId + "','"
-                        + Functions.Proc_10_11_80A9C0(defaultSign, 0, 0) + "','" + escapedUserId
-                        + "',UNIX_TIMESTAMP(),'" + catalogProductId + "')", 0, 0);
+                    furniture.insertCatalogFurniture(productId, userIdValue, defaultSign, catalogProductId);
                     grantedCount++;
                 }
             }
             if (grantedCount <= 0L) {
                 return "";
             }
-            String newestIds = MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_owner='"
-                + escapedUserId + "' ORDER BY id DESC LIMIT " + grantedCount, 0, 0);
-            String grantedIds = newestIds.replace('\r', ',');
+            StringBuilder grantedIdsBuilder = new StringBuilder();
+            for (Long newestId : furniture.newestFurnitureIdsByOwner(userIdValue, grantedCount)) {
+                if (grantedIdsBuilder.length() > 0) {
+                    grantedIdsBuilder.append(',');
+                }
+                grantedIdsBuilder.append(newestId);
+            }
+            String grantedIds = grantedIdsBuilder.toString();
             long firstGrantedId = NumberUtils.parseLong(grantedIds);
             if (!"products_deals".equals(typeSecondary)
                 && NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 9L && firstGrantedId > 0L) {
-                MySQL.Proc_5_0_6D3CD0("INSERT INTO furnitures_dimmerpresets(id_furni,id_preset,id_state) VALUES('"
-                    + firstGrantedId + "','1','2'),('" + firstGrantedId + "','2','1'),('"
-                    + firstGrantedId + "','3','1')", 0, 0);
-                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='1,1,1,#000000,166' WHERE id='"
-                    + firstGrantedId + "'", 0, 0);
+                furniture.insertDefaultDimmerPresets(firstGrantedId);
+                furniture.updateDefaultDimmerSign(firstGrantedId);
             }
             return grantedIds;
         } catch (Exception ignored) {
