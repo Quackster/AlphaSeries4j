@@ -4652,29 +4652,23 @@ public final class Handling {
             if (furnitureId <= 0L) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign FROM furnitures WHERE id_owner='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id='" + furnitureId
-                + "' AND id_room IS NULL LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            RoomDao rooms = roomDao();
+            if (furniture == null || rooms == null) {
                 return;
             }
-            String[] fields = rowText.split("\t", -1);
-            long productId = NumberUtils.parseLong(navigatorField(fields, 1));
-            String decoValue = navigatorField(fields, 2);
+            FurnitureDao.DecorationFurniture decorationFurniture = furniture
+                .decorationFurniture(furnitureId, NumberUtils.parseLong(userId))
+                .orElse(null);
+            if (decorationFurniture == null) {
+                return;
+            }
+            long productId = decorationFurniture.productId();
+            String decoValue = StringUtils.text(decorationFurniture.sign());
             String[] productFields = Licence.Proc_9_3_807930(productId, 0, 0).split("\t", -1);
             long productType = NumberUtils.parseLong(navigatorField(productFields, 1));
-            String decoName;
-            String decoColumn;
-            if (productType == 2L) {
-                decoName = "wallpaper";
-                decoColumn = "id_wallpaper";
-            } else if (productType == 3L) {
-                decoName = "floor";
-                decoColumn = "id_floor";
-            } else if (productType == 4L) {
-                decoName = "landscape";
-                decoColumn = "id_landscape";
-            } else {
+            RoomDao.RoomDecoration decoration = RoomDao.RoomDecoration.fromProductType(productType);
+            if (decoration == null) {
                 return;
             }
             if (decoValue.isEmpty() || "0".equals(decoValue)) {
@@ -4686,11 +4680,10 @@ public final class Handling {
             if (decoValue.isEmpty()) {
                 return;
             }
-            Proc_6_247_8027E0(socketIndex, "@n" + decoName + '\2' + decoValue + '\2', 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET " + decoColumn + "='"
-                + Functions.Proc_10_11_80A9C0(decoValue, 0, 0) + "' WHERE id='" + roomId + "'", 0, 0);
+            Proc_6_247_8027E0(socketIndex, "@n" + decoration.wireName() + '\2' + decoValue + '\2', 0);
+            rooms.updateDecoration(roomId, decoration, decoValue);
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ac"), 0);
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM furnitures WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
+            furniture.deleteFurniture(furnitureId);
             Proc_6_140_769400(socketIndex, "FT", "");
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.

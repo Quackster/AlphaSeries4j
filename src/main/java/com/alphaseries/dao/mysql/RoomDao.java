@@ -338,6 +338,13 @@ public final class RoomDao {
         return database.execute("UPDATE rooms SET rate=? WHERE id=?", roomRate, roomId);
     }
 
+    public int updateDecoration(long roomId, RoomDecoration decoration, String value) throws SQLException {
+        if (decoration == null) {
+            return 0;
+        }
+        return database.execute("UPDATE rooms SET " + decoration.columnName() + "=? WHERE id=?", value, roomId);
+    }
+
     public int deleteRoomRight(long userId, long roomId) throws SQLException {
         return database.execute(
             "DELETE FROM rooms_rights WHERE id_user=? AND id_room=?",
@@ -486,6 +493,41 @@ public final class RoomDao {
     }
 
     public record RoomModelEntry(long modelId, String modelMap) {
+    }
+
+    public enum RoomDecoration {
+        WALLPAPER("wallpaper", "id_wallpaper"),
+        FLOOR("floor", "id_floor"),
+        LANDSCAPE("landscape", "id_landscape");
+
+        private final String wireName;
+        private final String columnName;
+
+        RoomDecoration(String wireName, String columnName) {
+            this.wireName = wireName;
+            this.columnName = columnName;
+        }
+
+        public String wireName() {
+            return wireName;
+        }
+
+        public String columnName() {
+            return columnName;
+        }
+
+        public static RoomDecoration fromProductType(long productType) {
+            if (productType == 2L) {
+                return WALLPAPER;
+            }
+            if (productType == 3L) {
+                return FLOOR;
+            }
+            if (productType == 4L) {
+                return LANDSCAPE;
+            }
+            return null;
+        }
     }
 
     private static String nullableText(String value) {
