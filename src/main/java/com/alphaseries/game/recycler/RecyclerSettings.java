@@ -7,15 +7,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class RecyclerSettings {
+    private final String statusPayload;
     private final List<RewardGroup> rewardGroups;
     private final long boxProductId;
 
-    private RecyclerSettings(List<RewardGroup> rewardGroups, long boxProductId) {
+    private RecyclerSettings(String statusPayload, List<RewardGroup> rewardGroups, long boxProductId) {
+        this.statusPayload = StringUtils.text(statusPayload);
         this.rewardGroups = rewardGroups;
         this.boxProductId = boxProductId;
     }
 
-    public static RecyclerSettings fromLegacy(Object productLists, Object chances, long groupCount, long boxProductId) {
+    public static RecyclerSettings fromLegacy(String statusPayload, Object productLists, Object chances, long groupCount, long boxProductId) {
         List<RewardGroup> groups = new ArrayList<>();
         if (productLists instanceof Object[] productArray && chances instanceof Object[] chanceArray) {
             long maxGroups = Math.min(groupCount, Math.min(productArray.length, chanceArray.length));
@@ -23,7 +25,11 @@ public final class RecyclerSettings {
                 groups.add(new RewardGroup(NumberUtils.parseLong(chanceArray[index]), productIds(productArray[index])));
             }
         }
-        return new RecyclerSettings(groups, boxProductId);
+        return new RecyclerSettings(statusPayload, groups, boxProductId);
+    }
+
+    public String statusPayload() {
+        return statusPayload;
     }
 
     public List<RewardGroup> rewardGroups() {

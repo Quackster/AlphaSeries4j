@@ -2038,6 +2038,7 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829268 = "[1:4\1" + "77\2" + "4][1:8\1" + "88\2" + "8]";
         Licence.global_0082934C = "";
         Licence.global_0082912C = "CACHE";
+        assertEquals("CACHE", Licence.recyclerSettings().statusPayload());
         Licence.global_00829204 = "IMPORTANTFAQ";
         Licence.global_00829208 = "FAQCATS";
         Licence.global_0082920C = new String[]{"", "CATFAQ"};

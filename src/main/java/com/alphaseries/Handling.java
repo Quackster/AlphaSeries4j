@@ -499,7 +499,7 @@ public final class Handling {
                 packetPrefix = "Gz";
             }
             if (cachedPayload.isEmpty()) {
-                cachedPayload = Licence.global_0082912C;
+                cachedPayload = Licence.recyclerSettings().statusPayload();
             }
             String payload = packetPrefix + cachedPayload;
             Proc_6_244_801E80(socketIndex, payload, 0);
@@ -8083,7 +8083,7 @@ public final class Handling {
                 case "Cd": Proc_6_101_749540(socketIndex, "EA", packetPayload); break;
                 case "Et":
                 case "Eu": Proc_6_102_749C50(socketIndex, packetCode, packetPayload); break;
-                case "@Z": Proc_6_19_6E8040(socketIndex, Licence.global_0082912C, "Gz"); break;
+                case "@Z": Proc_6_19_6E8040(socketIndex, Licence.recyclerSettings().statusPayload(), "Gz"); break;
                 case "oW": Proc_6_18_6E7480(socketIndex, "GY", packetPayload); break;
                 case "Cn": Proc_6_30_70DC90(socketIndex, packetPayload, "EG"); break;
                 case "A^": Proc_6_13_6E0A80(socketIndex, "A^", packetPayload); break;

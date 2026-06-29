@@ -21,7 +21,7 @@ public final class Boot {
             }
         }
         RecyclerCache cache = buildRecyclerCache(chanceRows, productsByChance);
-        Licence.global_0082912C = cache.payload;
+        Licence.setRecyclerStatusPayload(cache.payload);
         String[] productLists = new String[50];
         String[] chances = new String[50];
         for (Map.Entry<Long, String> entry : cache.productListByGroupIndex.entrySet()) {
