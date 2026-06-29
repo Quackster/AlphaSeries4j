@@ -1,37 +1,40 @@
-Create or resume the long-running AlphaSeries4j refactor goal.
+Start or resume the AlphaSeries4j refactor goal.
 
-Use `REFACTOR.md` and the current repository state as the source of truth. If no
-active goal exists, create one for the objective below. If an active goal already
-exists, continue it without resetting progress. Do not mark the goal complete
-until the documented legacy surfaces are gone or intentionally retained behind
-stable compatibility boundaries.
+This command is for long-running continuation work. Treat `REFACTOR.md`, the
+current git state, and the tests as the source of truth. If no active Codex
+goal exists, create one with the objective below. If one already exists,
+continue it without resetting progress. Do not mark it complete until the
+legacy surfaces listed in `REFACTOR.md` are removed or intentionally retained
+behind stable compatibility boundaries.
 
 Objective:
 
-Refactor the VB6-port-shaped Java code into maintainable Java packages with
-typed domain APIs, prepared DAO access, fluent packet builders, smaller classes,
-module-level managers/registries, and tests kept passing throughout, while
-preserving runtime behavior and source compatibility during each migration
-slice.
+Refactor AlphaSeries4j from VB6-port-shaped Java into maintainable Java
+packages with typed domain APIs, prepared DAO access, fluent packet builders,
+smaller classes, module-level managers/registries, and passing tests, while
+preserving runtime behavior and source compatibility for each migration slice.
 
-Required startup checks:
+Startup:
 
-1. Read `REFACTOR.md`.
+1. Read `REFACTOR.md` before choosing work.
 2. Run `git status --short`.
-3. Inspect any uncommitted changes before editing, and do not overwrite user
-   work.
-4. Re-measure legacy-surface counts when the slice changes those surfaces.
+3. Inspect existing uncommitted changes before editing files. Assume they are
+   user work or unfinished prior-agent work, and do not overwrite them.
+4. If the worktree already contains a partial refactor slice, finish or
+   stabilize that slice before starting a different one.
+5. Measure legacy-surface counts when the selected slice changes those
+   surfaces.
 
 Refactor rules:
 
 - Preserve current source compatibility and runtime behavior for every slice.
   Temporary compatibility shims are acceptable when they keep callers working
   while implementation moves behind typed Java boundaries.
-- Follow the package structure already established in this repo and reflected by
-  Havana/Roseau-style organization: `dao.mysql` for persistence, `game.*` for
-  domain state and module managers, `messages.*` for packet payloads,
-  `protocol` for wire encoding/building/parsing, `server.*` for runtime/server
-  concerns, and `util` for shared helpers.
+- Follow the package structure already established in this repo and reflected
+  by the Havana/Roseau-style organization: `dao.mysql` for persistence,
+  `game.*` for domain state and module managers, `messages.*` for packet
+  payloads, `protocol` for wire encoding/building/parsing, `server.*` for
+  runtime/server concerns, and `util` for shared helpers.
 - Replace raw `MySQL.Proc_5_*` SQL concatenation with typed DAO methods using
   prepared statements.
 - Load database rows into typed classes or records with named fields. Do not
@@ -45,14 +48,14 @@ Refactor rules:
   helpers. Use `StringUtils`, `NumberUtils`, `PacketReader`, `PacketBuilder`,
   `WireEncoding`, and other shared utilities already in the project.
 - Build outgoing payloads with fluent packet/payload builders, for example
-  `.appendInt(3).appendString("test")`, where protocol support exists. Avoid new
-  ad hoc packet string concatenation.
+  `.appendInt(3).appendString("test")`, where protocol support exists. Avoid
+  new ad hoc packet string concatenation.
 - Split oversized root classes by coherent behavior into small services,
   registries, DAOs, payload builders, or domain state holders.
 - Introduce polymorphism where it removes branching around type-specific
   behavior, but keep migrations narrow and behavior-preserving.
 - Each domain module should expose one module-level singleton manager or
-  registry for its live instances and cached module state instead of adding new
+  registry for live instances and cached module state instead of adding new
   reliance on `Licence.java` globals. `Licence` accessors are temporary
   compatibility bridges only.
 - Keep tests passing. Run `./gradlew test --no-daemon` before committing any
