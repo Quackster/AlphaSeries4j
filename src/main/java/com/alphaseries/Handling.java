@@ -8078,32 +8078,111 @@ public final class Handling {
     public static void dispatchPreReadyPacket(int socketIndex, String packetCode, String packetPayload) {
         try {
             switch (Vb.cStr(packetCode)) {
+                case "~\u00e4": System.exit(0); break;
+                case "oD": Proc_6_231_7F4510(socketIndex, packetPayload, 0); break;
+                case "Gd": Proc_6_230_7F3D20(socketIndex, packetPayload, 0); break;
+                case "C]": Proc_6_223_7EEDD0(socketIndex, packetPayload, 0); break;
+                case "C\u007f": Proc_6_225_7EFBD0(socketIndex, packetPayload, 0); break;
+                case "D@": Proc_6_226_7F0B20(socketIndex, packetPayload, 0); break;
+                case "DC":
+                    Proc_6_227_7F2400(socketIndex, packetPayload, 0);
+                    Proc_6_228_7F2AF0(socketIndex, packetPayload, 0);
+                    break;
+                case "AZ": Proc_6_144_76BE70(socketIndex, "AZ", packetPayload); break;
+                case "AC": Proc_6_155_795C90(socketIndex, "AC", packetPayload); break;
+                case "A[": Proc_6_141_76A670(socketIndex, "A[", packetPayload); break;
+                case "AI": Proc_6_159_79FCD0(socketIndex, "AI", packetPayload); break;
+                case "Ch": Proc_6_149_775C10(socketIndex, "Ch", packetPayload); break;
+                case "FH": Proc_6_150_777FA0(socketIndex, "FH", packetPayload); break;
                 case "@B": Proc_6_78_7279A0(socketIndex, "@B", packetPayload); break;
+                case "rv": Proc_6_142_76B310(socketIndex, "rv", packetPayload); break;
+                case "pa": Proc_6_244_801E80(socketIndex, "J|H", 0); break;
+                case "Ce": dispatchPreReadySoundSetting(socketIndex, packetPayload); break;
+                case "Cy": break;
+                case "pb": Proc_6_234_7F75C0(socketIndex, "pb", packetPayload); break;
+                case "p^": Proc_6_232_7F45A0(socketIndex, "p^", packetPayload); break;
+                case "pc": Proc_6_233_7F5D60(socketIndex, "pc", packetPayload); break;
+                case "p]": Proc_6_236_7F8540(socketIndex, "p]", packetPayload); break;
+                case "GV": Proc_6_38_70FD10(socketIndex, "GV", packetPayload); break;
+                case "GW": Proc_6_39_711650(socketIndex, "GW", packetPayload); break;
+                case "F]": Proc_6_203_7D7F80(socketIndex, "F]", packetPayload); break;
+                case "F^": Proc_6_202_7D6760(socketIndex, "F^", packetPayload); break;
+                case "Cj": Proc_6_201_7D5AC0(socketIndex, "Cj", packetPayload); break;
+                case "Ck": Proc_6_199_7D54E0(socketIndex, "Ck", packetPayload); break;
+                case "Cl": Proc_6_200_7D5770(socketIndex, "Cl", packetPayload); break;
+                case "EW": Proc_6_99_748460(socketIndex, "EW", packetPayload); break;
+                case "Cw": Proc_6_95_746CD0(socketIndex, "Cw", packetPayload); break;
+                case "AL": Proc_6_97_747640(socketIndex, "AL", packetPayload); break;
+                case "AM": Proc_6_96_747000(socketIndex, "AM", packetPayload); break;
+                case "FU": Proc_6_91_743480(socketIndex, "FU", packetPayload); break;
+                case "AH": Proc_6_92_744870(socketIndex, "AH", packetPayload); break;
+                case "FR": Proc_6_89_73EA10(socketIndex, "FR", packetPayload); break;
+                case "EV": Proc_6_100_748C80(socketIndex, "EV", packetPayload); break;
+                case "EU": Proc_6_98_747D80(socketIndex, "EU", packetPayload); break;
+                case "Er": Proc_6_206_7DA450(socketIndex, "Er", packetPayload); break;
+                case "CD": Proc_7FA5A0(socketIndex, "CD", packetPayload); break;
+                case "@G": Proc_6_237_7F9ED0(socketIndex, "@G", packetPayload); break;
+                case "D{":
+                case "Fe": break;
+                case "@t": Proc_6_26_7034C0(socketIndex, "@t", packetPayload); break;
+                case "@w": Proc_6_27_706920(socketIndex, "@w", packetPayload); break;
+                case "@x": Proc_6_28_709DA0(socketIndex, "@x", packetPayload); break;
+                case "Cd": Proc_6_101_749540(socketIndex, "EA", packetPayload); break;
+                case "Et":
+                case "Eu": Proc_6_102_749C50(socketIndex, packetCode, packetPayload); break;
+                case "@Z": Proc_6_19_6E8040(socketIndex, Licence.global_0082912C, "Gz"); break;
+                case "oW": Proc_6_18_6E7480(socketIndex, "GY", packetPayload); break;
+                case "Cn": Proc_6_30_70DC90(socketIndex, packetPayload, "EG"); break;
+                case "A^": Proc_6_13_6E0A80(socketIndex, "A^", packetPayload); break;
+                case "A]": Proc_6_14_6E10C0(socketIndex, "A]", packetPayload); break;
+                case "GE": Proc_6_32_70EAB0(socketIndex, "GE", packetPayload); break;
+                case "F`": Proc_6_33_70F4F0(socketIndex); break;
+                case "Fa": Proc_6_34_70F590(socketIndex); break;
+                case "Fb": Proc_6_37_70FC20(socketIndex, "Fb", packetPayload); break;
+                case "Fc": Proc_6_36_70F7B0(socketIndex, "Fc", packetPayload); break;
+                case "Fd": Proc_6_35_70F630(socketIndex, "Fd", packetPayload); break;
+                case "Ae": dispatchPreReadyCatalogIndex(socketIndex); break;
+                case "FC": Proc_6_104_74AB60(socketIndex, "FC", packetPayload); break;
+                case "@]": Proc_6_105_74AD50(socketIndex, "@]", packetPayload); break;
+                case "Af": Proc_6_136_765F10(socketIndex, "Af", packetPayload); break;
+                case "Fv": Proc_6_125_755650(socketIndex, "Fv", packetPayload); break;
+                case "FG": Proc_6_58_71FCA0(socketIndex, "FG", packetPayload); break;
+                case "Bv": Proc_6_59_71FEE0(socketIndex, "Bv", packetPayload); break;
                 case "@{": Proc_6_79_72A430(socketIndex, "@{", packetPayload); break;
+                case "Ew": Proc_6_15_6E1900(socketIndex, "Ew", packetPayload); break;
+                case "Ex": Proc_6_16_6E2320(socketIndex, "Ex", packetPayload); break;
+                case "@l": Proc_6_17_6E48D0(socketIndex, "@l", packetPayload); break;
+                case "oC": Proc_6_135_765D80(socketIndex, "oC", packetPayload); break;
+                case "oV": Proc_6_134_765B90(socketIndex, "oV", packetPayload); break;
                 case "Ad": Proc_6_128_756190(socketIndex, "Ad", packetPayload); break;
                 case "GX": Proc_6_132_75D4A0(socketIndex, "GX", packetPayload); break;
                 case "GZ": Proc_6_131_75C700(socketIndex, "GZ", packetPayload); break;
                 case "G[": Proc_6_130_75B770(socketIndex, "G[", packetPayload); break;
-                case "oC": Proc_6_135_765D80(socketIndex, "oC", packetPayload); break;
-                case "oV": Proc_6_134_765B90(socketIndex, "oV", packetPayload); break;
-                case "Af": Proc_6_136_765F10(socketIndex, "Af", packetPayload); break;
-                case "FT": Proc_6_140_769400(socketIndex, "FT", packetPayload); break;
-                case "AB": Proc_6_139_768100(socketIndex, "AB", packetPayload); break;
-                case "BA": Proc_6_137_766470(socketIndex, "BA", packetPayload); break;
-                case "n~": Proc_6_87_73C120(socketIndex, "n~", packetPayload); break;
-                case "n|": Proc_7CC190(socketIndex, "n|", packetPayload); break;
-                case "n{": Proc_7CA730(socketIndex, "n{", packetPayload); break;
-                case "p`":
-                case "rt": Proc_6_86_73B0D0(socketIndex, packetCode, packetPayload); break;
-                case "ny": Proc_6_183_7CABF0(socketIndex, "ny", packetPayload); break;
-                case "nx": Proc_6_178_7C6E60(socketIndex, "nx", packetPayload); break;
-                case "nz": Proc_6_179_7C7790(socketIndex, "nz", packetPayload); break;
-                case "n\u007f": Proc_6_177_7C6580(socketIndex, "n\u007f", packetPayload); break;
-                case "@t": Proc_6_26_7034C0(socketIndex, "@t", packetPayload); break;
-                case "@w": Proc_6_27_706920(socketIndex, "@w", packetPayload); break;
-                case "@x": Proc_6_28_709DA0(socketIndex, "@x", packetPayload); break;
+                case "Gc": Proc_6_107_74B7E0(socketIndex, "Gc", packetPayload); break;
+                case "GG": Proc_6_10_6DE1D0(socketIndex, "GG", packetPayload); break;
+                case "F@": Proc_6_47_714F60(socketIndex, "F@", packetPayload); break;
+                case "FB": Proc_6_44_7145E0(socketIndex, "FB", packetPayload); break;
+                case "Ab": Proc_6_50_7166B0(socketIndex, "Ab", packetPayload); break;
+                case "EZ": Proc_6_48_7151E0(socketIndex, "EZ", packetPayload); break;
+                case "E\\": Proc_6_49_715D30(socketIndex, "E\\", packetPayload); break;
+                case "FP":
+                case "FF": Proc_6_43_713680(socketIndex, "FF", packetPayload); break;
+                case "FQ": Proc_6_52_7172B0(socketIndex, "FQ", packetPayload); break;
+                case "@H": Proc_6_108_74D800(socketIndex, "@H", packetPayload); break;
+                case "@S": Proc_6_110_74DDA0(socketIndex, "@S", packetPayload); break;
+                case "@T": Proc_6_109_74DBD0(socketIndex, "@T", packetPayload); break;
+                case "BW": Proc_6_111_74DF70(socketIndex, "BW", packetPayload); break;
+                case "GI": MySQL.Proc_5_4_6D55E0(socketIndex, "GI", packetPayload); break;
+                case "oj": Proc_6_219_7EA390(socketIndex, "oj", packetPayload); break;
+                case "ok": Proc_6_220_7EBA50(socketIndex, "ok", packetPayload); break;
+                case "ol": Proc_6_222_7ED710(socketIndex, "ol", packetPayload); break;
+                case "on": Proc_6_221_7ED1E0(socketIndex, "on", packetPayload); break;
+                case "GH": MySQL.Proc_5_5_6D64D0(socketIndex, "GH", packetPayload); break;
+                case "GK": MySQL.Proc_5_6_6D7090(socketIndex, "GK", packetPayload); break;
                 case "GF": Proc_6_0_6D7FF0(socketIndex, "GF", packetPayload); break;
+                case "GJ": Proc_6_11_6DF4A0(socketIndex, "GJ", packetPayload); break;
                 case "GM": Proc_6_1_6D8B70(socketIndex, "GM", packetPayload); break;
+                case "GN": Proc_6_12_6DFE90(socketIndex, "GN", packetPayload); break;
                 case "GO": Proc_6_2_6D9880(socketIndex, "GO", packetPayload); break;
                 case "GP": Proc_6_3_6DA490(socketIndex, "GP", packetPayload); break;
                 case "CH": Proc_6_4_6DAFB0(socketIndex, "CH", packetPayload); break;
@@ -8111,33 +8190,89 @@ public final class Handling {
                 case "GC": Proc_6_8_6DD790(socketIndex, "GC", packetPayload); break;
                 case "GD": Proc_6_7_6DD0E0(socketIndex, "GD", packetPayload); break;
                 case "GL": Proc_6_9_6DDD70(socketIndex, "GL", packetPayload); break;
-                case "GG": Proc_6_10_6DE1D0(socketIndex, "GG", packetPayload); break;
-                case "GJ": Proc_6_11_6DF4A0(socketIndex, "GJ", packetPayload); break;
-                case "GN": Proc_6_12_6DFE90(socketIndex, "GN", packetPayload); break;
-                case "A^": Proc_6_13_6E0A80(socketIndex, "A^", packetPayload); break;
-                case "A]": Proc_6_14_6E10C0(socketIndex, "A]", packetPayload); break;
-                case "Ew": Proc_6_15_6E1900(socketIndex, "Ew", packetPayload); break;
-                case "Ex": Proc_6_16_6E2320(socketIndex, "Ex", packetPayload); break;
-                case "@l": Proc_6_17_6E48D0(socketIndex, "@l", packetPayload); break;
-                case "oW": Proc_6_18_6E7480(socketIndex, "GY", packetPayload); break;
-                case "@Z": Proc_6_19_6E8040(socketIndex, Licence.global_0082912C, "Gz"); break;
-                case "F@": Proc_6_47_714F60(socketIndex, "F@", packetPayload); break;
-                case "FB": Proc_6_44_7145E0(socketIndex, "FB", packetPayload); break;
-                case "EZ": Proc_6_48_7151E0(socketIndex, "EZ", packetPayload); break;
-                case "E\\": Proc_6_49_715D30(socketIndex, "E\\", packetPayload); break;
-                case "Ab": Proc_6_50_7166B0(socketIndex, "Ab", packetPayload); break;
-                case "FQ": Proc_6_52_7172B0(socketIndex, "FQ", packetPayload); break;
+                case "Fw": Proc_6_115_751220(socketIndex, "Fw", packetPayload); break;
+                case "Fn": Proc_6_116_751550(socketIndex, "Fn", packetPayload); break;
+                case "Fr": Proc_6_121_752080(socketIndex, "Fr", packetPayload); break;
+                case "Fq": Proc_6_117_751880(socketIndex, "Fq", packetPayload); break;
+                case "Fp": Proc_6_118_751A80(socketIndex, "Fp", packetPayload); break;
+                case "Fs": Proc_6_119_751C80(socketIndex, "Fs", packetPayload); break;
+                case "Fo": Proc_6_126_755B40(socketIndex, "Fo", packetPayload); break;
+                case "Ft": Proc_6_120_751E80(socketIndex, "Ft", packetPayload); break;
+                case "E|": Proc_6_123_754020(socketIndex, "E|", packetPayload); break;
+                case "Fu": Proc_6_127_755D30(socketIndex, "Fu", packetPayload); break;
+                case "E~": Proc_6_124_754D90(socketIndex, "E~", packetPayload); break;
+                case "EY": Proc_6_46_714D50(socketIndex, "EY", packetPayload); break;
+                case "Gj": Proc_6_88_73E4F0(socketIndex, "Gj", packetPayload); break;
+                case "@L": Proc_6_176_7C4EE0(socketIndex, "@L", packetPayload); break;
+                case "@u":
+                case "Ao": Proc_6_53_718E00(socketIndex, packetCode, packetPayload); break;
+                case "@j": Proc_6_182_7CAAD0(socketIndex, "@j", packetPayload); break;
                 case "@f": Proc_6_170_7C1100(socketIndex, "@f", packetPayload); break;
-                case "@g": Proc_6_174_7C3BC0(socketIndex, "@g", packetPayload); break;
-                case "@h": Proc_6_171_7C1520(socketIndex, "@h", packetPayload); break;
-                case "@i": Proc_6_172_7C25B0(socketIndex, "@i", packetPayload); break;
+                case "DF": Proc_6_169_7C0DC0(socketIndex, "DF", packetPayload); break;
+                case "@O": break;
+                case "D}":
+                case "D~": dispatchPreReadyRoomUserState(socketIndex); break;
                 case "@a": Proc_6_173_7C3430(socketIndex, "@a", packetPayload); break;
+                case "Ci": Proc_6_175_7C4800(socketIndex, "Ci", packetPayload); break;
                 case "@b": Proc_6_168_7C05F0(socketIndex, "@b", packetPayload); break;
                 case "@e": Proc_6_167_7BECA0(socketIndex, "@e", packetPayload); break;
-                case "Ci": Proc_6_175_7C4800(socketIndex, "Ci", packetPayload); break;
-                case "@L": Proc_6_176_7C4EE0(socketIndex, "@L", packetPayload); break;
-                case "pa": Proc_6_244_801E80(socketIndex, "J|H", 0); break;
-                case "CD": Proc_7FA5A0(socketIndex, "CD", packetPayload); break;
+                case "@i": Proc_6_172_7C25B0(socketIndex, "@i", packetPayload); break;
+                case "@g": Proc_6_174_7C3BC0(socketIndex, "@g", packetPayload); break;
+                case "@h": Proc_6_171_7C1520(socketIndex, "@h", packetPayload); break;
+                case "Fy": Proc_6_189_7D0630(socketIndex, "Fy", packetPayload); break;
+                case "Fx": Proc_6_188_7CF3C0(socketIndex, "Fx", packetPayload); break;
+                case "Cg": Proc_6_190_7D11D0(socketIndex, "Cg", packetPayload); break;
+                case "DG": Proc_6_191_7D18B0(socketIndex, "DG", packetPayload); break;
+                case "B_": Proc_6_192_7D1B80(socketIndex, "B_", packetPayload); break;
+                case "B]": Proc_6_193_7D2BB0(socketIndex, "B]", packetPayload); break;
+                case "B^": Proc_6_194_7D3180(socketIndex, "B^", packetPayload); break;
+                case "pg": break;
+                case "AK": Proc_6_197_7D43C0(socketIndex, "AK", packetPayload); break;
+                case "AO": Proc_6_198_7D4B70(socketIndex, "AO", packetPayload); break;
+                case "AG": Proc_6_93_745D90(socketIndex, "AG", packetPayload); break;
+                case "FT": Proc_6_140_769400(socketIndex, "FT", packetPayload); break;
+                case "AB": Proc_6_139_768100(socketIndex, "AB", packetPayload); break;
+                case "BA": Proc_6_137_766470(socketIndex, "BA", packetPayload); break;
+                case "n\u007f": Proc_6_177_7C6580(socketIndex, "n\u007f", packetPayload); break;
+                case "ny": Proc_6_183_7CABF0(socketIndex, "ny", packetPayload); break;
+                case "nx": Proc_6_178_7C6E60(socketIndex, "nx", packetPayload); break;
+                case "nz": Proc_6_179_7C7790(socketIndex, "nz", packetPayload); break;
+                case "p`":
+                case "rt": Proc_6_86_73B0D0(socketIndex, packetCode, packetPayload); break;
+                case "n~": Proc_6_87_73C120(socketIndex, "n~", packetPayload); break;
+                case "n|": Proc_7CC190(socketIndex, "n|", packetPayload); break;
+                case "n{": Proc_7CA730(socketIndex, "n{", packetPayload); break;
+                case "n}": Proc_6_186_7CD040(socketIndex, "n}", packetPayload); break;
+                case "E[": Proc_6_45_714B60(socketIndex, "E[", packetPayload); break;
+                case "A_": Proc_6_61_720490(socketIndex, "A_", packetPayload); break;
+                case "E@": Proc_6_62_7209F0(socketIndex, "E@", packetPayload); break;
+                case "DE": Proc_6_63_721050(socketIndex, "DE", packetPayload); break;
+                case "D\u007f": Proc_6_64_721650(socketIndex, "D\u007f", packetPayload); break;
+                case "EB": Proc_6_75_7269D0(socketIndex, "EB", packetPayload); break;
+                case "Bw": Proc_6_73_725540(socketIndex, "Bw", packetPayload); break;
+                case "Aa": Proc_6_74_7265B0(socketIndex, "Aa", packetPayload); break;
+                case "B[": Proc_6_71_724CF0(socketIndex, "B[", packetPayload); break;
+                case "@W": Proc_6_72_7250D0(socketIndex, "@W", packetPayload); break;
+                case "Es": Proc_6_76_726CE0(socketIndex, "Es", packetPayload); break;
+                case "FD": Proc_6_77_727590(socketIndex, "FD", packetPayload); break;
+                case "A`": Proc_6_65_721A10(socketIndex, "A`", packetPayload); break;
+                case "AT": Proc_6_66_721D60(socketIndex, "AT", packetPayload); break;
+                case "AS": Proc_6_67_722940(socketIndex, "AS", packetPayload); break;
+                case "AU": Proc_6_68_723170(socketIndex, "AU", packetPayload); break;
+                case "A~":
+                case "CW":
+                case "Cf": break;
+                case "FA": Proc_6_60_720060(socketIndex, "FA", packetPayload); break;
+                case "FI": Proc_6_70_724190(socketIndex, "FI", packetPayload); break;
+                case "AN": Proc_6_69_723630(socketIndex, "AN", packetPayload); break;
+                case "Aq":
+                case "AE":
+                case "FS":
+                case "AF":
+                    Proc_6_244_801E80(socketIndex,
+                        Vb.cStr(Functions.Proc_10_0_809570("com.client.park.infobus.theme.title", "AQ")) + '\2',
+                        0);
+                    break;
                 case "oL": Proc_7F44D0(socketIndex, "oL", packetPayload); break;
                 default:
                     if (Licence.global_00829034) {
@@ -8147,6 +8282,55 @@ public final class Handling {
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
+        }
+    }
+
+    private static void dispatchPreReadySoundSetting(int socketIndex, String packetPayload) {
+        try {
+            long soundSetting = soundSettingFromWire(packetPayload);
+            if (soundSetting <= 0L) {
+                return;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET settings_sound='" + soundSetting + "' WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses dispatcher helper failures.
+        }
+    }
+
+    private static void dispatchPreReadyCatalogIndex(int socketIndex) {
+        try {
+            String pageTree = "";
+            Object cache = Licence.global_008292F4;
+            if (cache instanceof String[][]) {
+                String[][] trees = (String[][]) cache;
+                if (trees.length > 0 && trees[0].length > 0) {
+                    pageTree = Vb.cStr(trees[0][0]);
+                }
+            }
+            Proc_6_244_801E80(socketIndex, "A~IHHM" + '\2' + pageTree, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses dispatcher helper failures.
+        }
+    }
+
+    private static void dispatchPreReadyRoomUserState(int socketIndex) {
+        try {
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
+            if (roomUserIndex <= 0L) {
+                return;
+            }
+            Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Ei") + '\r', 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses dispatcher helper failures.
         }
     }
 

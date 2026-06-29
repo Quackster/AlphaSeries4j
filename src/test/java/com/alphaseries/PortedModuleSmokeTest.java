@@ -3349,6 +3349,16 @@ public final class PortedModuleSmokeTest {
         assertEquals("", Handling.Proc_7FA5A0(4, "CD"));
         handlingSends.clear();
         handlingSql.clear();
+        Handling.dispatchPreReadyPacket(4, "Ce", "Ce50");
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET settings_sound='50' WHERE id='77' LIMIT 1"));
+        Licence.global_008292F4 = new String[][]{{"CATALOG_TREE"}};
+        Handling.dispatchPreReadyPacket(4, "Ae", "Ae");
+        assertEquals(true, containsSend(handlingSends, "A~IHHM\2CATALOG_TREE"));
+        handlingSends.clear();
+        Handling.dispatchPreReadyPacket(4, "D}", "D}");
+        assertEquals(true, containsSend(handlingSends, "Ei"));
+        handlingSends.clear();
+        handlingSql.clear();
         assertEquals(3L, Handling.Proc_6_185_7CC2D0(10, 3));
         assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET id_level='3',experience='0' WHERE id_bot='10'"));
         assertEquals(true, containsSend(handlingSends, "@X"));
