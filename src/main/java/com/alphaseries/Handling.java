@@ -9,6 +9,7 @@ import com.alphaseries.dao.mysql.FurnitureDao;
 import com.alphaseries.dao.mysql.PackageDao;
 import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.dao.mysql.TradeDao;
+import com.alphaseries.dao.mysql.MessengerDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -5629,16 +5630,14 @@ public final class Handling {
                     Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
                 }
             } else {
-                String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id_socket FROM friendships,users WHERE friendships.has_accept='1' AND friendships.id_user='"
-                    + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                    + "' AND users.id=friendships.id_friend AND users.id_socket>'0'", 0, 0);
-                for (String row : rowText.split("\r", -1)) {
-                    if (!row.isEmpty()) {
-                        String[] fields = row.split("\t", -1);
-                        targetSocketIndex = (int) NumberUtils.parseLong(handlingField(fields, 0));
-                        if (targetSocketIndex > 0 && Guardian.Proc_11_2_821390(targetSocketIndex, 0, 0) == 1L) {
-                            Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
-                        }
+                MessengerDao messenger = messengerDao();
+                if (messenger == null) {
+                    return "";
+                }
+                for (long friendSocketIndex : messenger.acceptedFriendSocketIndexes(NumberUtils.parseLong(userId))) {
+                    targetSocketIndex = (int) friendSocketIndex;
+                    if (targetSocketIndex > 0 && Guardian.Proc_11_2_821390(targetSocketIndex, 0, 0) == 1L) {
+                        Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
                     }
                 }
             }
@@ -5658,16 +5657,21 @@ public final class Handling {
             }
             FriendTargetList targets = friendDeleteTargetsFromPayload(handlingPacketPayload(args));
             if (targets.deleteAllPending) {
-                MySQL.Proc_5_0_6D3CD0("DELETE FROM friendships WHERE id_user='"
-                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND has_accept='0' LIMIT 75", 0, 0);
+                MessengerDao messenger = messengerDao();
+                if (messenger == null) {
+                    return 0L;
+                }
+                messenger.deletePendingRequests(NumberUtils.parseLong(userId));
                 return 1L;
             }
             if (targets.targetList.isEmpty()) {
                 return 0L;
             }
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM friendships WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "' AND has_accept='0' AND id_friend IN (" + targets.targetList + ") LIMIT 75", 0, 0);
+            MessengerDao messenger = messengerDao();
+            if (messenger == null) {
+                return 0L;
+            }
+            messenger.deletePendingRequests(NumberUtils.parseLong(userId), targets.targetList);
             return 1L;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -12178,6 +12182,11 @@ public final class Handling {
     private static TradeDao tradeDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new TradeDao(database);
+    }
+
+    private static MessengerDao messengerDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new MessengerDao(database);
     }
 
     private static String[] normalizeRows(Object rowSource) {
