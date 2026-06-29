@@ -8746,24 +8746,26 @@ public final class Handling {
         if (roomId <= 0L || StringUtils.text(payload).isEmpty()) {
             return 0L;
         }
-        String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_room='"
-            + roomId + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user AND users.id_socket IS NOT NULL", 0, 0);
-        if (rowText.isEmpty()) {
-            rowText = MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE id_socket IS NOT NULL AND id IN "
-                + "(SELECT id_user FROM logs_visitedrooms WHERE id_room='" + roomId + "' AND timestamp_left IS NULL)", 0, 0);
-        }
-        String sentMarkers = "";
-        long sentCount = 0L;
-        for (String row : rowText.split("\r", -1)) {
-            int socketIndex = (int) NumberUtils.parseLong(row);
-            String marker = "[" + socketIndex + "]";
-            if (socketIndex > 0 && !sentMarkers.contains(marker)) {
-                Proc_6_244_801E80(socketIndex, payload, 0);
-                sentMarkers += marker;
-                sentCount++;
+        try {
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return 0L;
             }
+            String sentMarkers = "";
+            long sentCount = 0L;
+            for (Long activeSocketIndex : rooms.activeSocketIndexesByRoomWithFallback(roomId)) {
+                int socketIndex = activeSocketIndex == null ? 0 : activeSocketIndex.intValue();
+                String marker = "[" + socketIndex + "]";
+                if (socketIndex > 0 && !sentMarkers.contains(marker)) {
+                    Proc_6_244_801E80(socketIndex, payload, 0);
+                    sentMarkers += marker;
+                    sentCount++;
+                }
+            }
+            return sentCount;
+        } catch (Exception ignored) {
+            return 0L;
         }
-        return sentCount;
     }
 
     public static long broadcastToStaffModerators(String payload) {

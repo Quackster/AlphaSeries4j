@@ -350,6 +350,18 @@ public final class RoomDao {
             roomId);
     }
 
+    public List<Long> activeSocketIndexesByRoomWithFallback(long roomId) throws SQLException {
+        List<Long> socketIndexes = activeSocketIndexesByRoom(roomId);
+        if (!socketIndexes.isEmpty()) {
+            return socketIndexes;
+        }
+        return database.query(
+            "SELECT id_socket FROM users WHERE id_socket IS NOT NULL AND id IN "
+                + "(SELECT id_user FROM logs_visitedrooms WHERE id_room=? AND timestamp_left IS NULL)",
+            resultSet -> resultSet.getLong(1),
+            roomId);
+    }
+
     public List<Long> activeVisitIdsByRoom(long roomId) throws SQLException {
         return database.query(
             "SELECT id FROM logs_visitedrooms WHERE id_room=? AND timestamp_left IS NULL LIMIT 250",
