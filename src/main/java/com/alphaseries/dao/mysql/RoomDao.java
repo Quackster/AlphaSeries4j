@@ -74,6 +74,29 @@ public final class RoomDao {
             roomId);
     }
 
+    public Optional<RoomEntryState> roomEntryState(long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT visitors_now,visitors_max,status_door,password,id_slot,id_owner "
+                + "FROM rooms WHERE rooms.id=? LIMIT 1",
+            resultSet -> new RoomEntryState(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getString(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6)),
+            roomId);
+    }
+
+    public boolean userBannedFromRoom(long userId, long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_user FROM rooms_bans WHERE id_user=? AND id_room=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId,
+            roomId)
+            .orElse(0L) > 0L;
+    }
+
     public Optional<ActiveRoomVisit> activeVisitWithRoomSlot(long userId) throws SQLException {
         return database.queryOne(
             "SELECT logs_visitedrooms.id,logs_visitedrooms.id_room,rooms.id_slot "
@@ -389,6 +412,16 @@ public final class RoomDao {
     }
 
     public record ActiveRoomVisit(long visitId, long roomId, long slotId) {
+    }
+
+    public record RoomEntryState(
+        long visitorsNow,
+        long visitorsMax,
+        long doorStatus,
+        String password,
+        long roomSlot,
+        long ownerUserId
+    ) {
     }
 
     private static String nullableText(String value) {

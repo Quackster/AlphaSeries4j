@@ -1672,45 +1672,42 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
-            String roomRow = MySQL.Proc_5_2_6D4690("SELECT visitors_now,visitors_max,status_door,password,id_slot,id_owner "
-                + "FROM rooms WHERE rooms.id='" + roomId + "' LIMIT 1", 0, 0);
-            if (roomRow.isEmpty()) {
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
                 Proc_6_244_801E80(socketIndex, "C`H", 0);
                 return 0L;
             }
-            String[] fields = roomRow.split("\t", -1);
-            long visitorsNow = NumberUtils.parseLong(handlingField(fields, 0));
-            long visitorsMax = NumberUtils.parseLong(handlingField(fields, 1));
-            long doorStatus = NumberUtils.parseLong(handlingField(fields, 2));
-            String roomPassword = handlingField(fields, 3);
-            long roomSlot = NumberUtils.parseLong(handlingField(fields, 4));
-            String ownerUserId = String.valueOf(NumberUtils.parseLong(handlingField(fields, 5)));
-            boolean isOwner = ownerUserId.equals(String.valueOf(NumberUtils.parseLong(userId)));
+            RoomDao.RoomEntryState entryState = rooms.roomEntryState(roomId).orElse(null);
+            if (entryState == null) {
+                Proc_6_244_801E80(socketIndex, "C`H", 0);
+                return 0L;
+            }
+            long userIdValue = NumberUtils.parseLong(userId);
+            boolean isOwner = entryState.ownerUserId() == userIdValue;
             if (!isOwner) {
-                boolean isBanned = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_user FROM rooms_bans WHERE id_user='"
-                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0)) > 0L;
-                if (isBanned) {
+                if (rooms.userBannedFromRoom(userIdValue, roomId)) {
                     Proc_6_53_718E00(socketIndex, 0, 0);
                     Proc_6_244_801E80(socketIndex, "C`PA", 0);
                     return 0L;
                 }
-                if (visitorsMax > 0L && visitorsNow >= visitorsMax && !handlingUserHasPermission(userId, "fuse_enter_full_rooms")) {
+                if (entryState.visitorsMax() > 0L && entryState.visitorsNow() >= entryState.visitorsMax()
+                    && !handlingUserHasPermission(userId, "fuse_enter_full_rooms")) {
                     Proc_6_53_718E00(socketIndex, 0, 0);
                     Proc_6_244_801E80(socketIndex, "C`I", 0);
                     return 0L;
                 }
-                if (doorStatus == 1L && !handlingUserHasPermission(userId, "fuse_enter_locked_rooms")) {
+                if (entryState.doorStatus() == 1L && !handlingUserHasPermission(userId, "fuse_enter_locked_rooms")) {
                     Proc_6_53_718E00(socketIndex, 0, 0);
                     Proc_6_244_801E80(socketIndex, "C`H", 0);
                     return 0L;
                 }
-                if (doorStatus == 2L && !roomPassword.equals(suppliedPassword)) {
+                if (entryState.doorStatus() == 2L && !StringUtils.text(entryState.password()).equals(suppliedPassword)) {
                     Proc_6_53_718E00(socketIndex, 0, 0);
                     Proc_6_244_801E80(socketIndex, "@afhFF", 0);
                     return 0L;
                 }
             }
-            return Proc_6_54_719050(socketIndex, roomId, roomSlot);
+            return Proc_6_54_719050(socketIndex, roomId, entryState.roomSlot());
         } catch (Exception ignored) {
             return 0L;
         }
