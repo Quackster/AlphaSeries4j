@@ -9371,23 +9371,18 @@ public final class Handling {
                 && !handlingUserHasPermission(userId, "fuse_pick_up_any_furni"))) {
                 return "";
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            String itemRow;
-            if (fromInventory) {
-                itemRow = MySQL.Proc_5_2_6D4690("SELECT id_product,id,sign,id_secondary,id_destination FROM furnitures WHERE id='"
-                    + placement.furnitureId + "' AND id_owner='" + escapedUserId
-                    + "' AND id_room IS NULL LIMIT 1", 0, 0);
-            } else {
-                itemRow = MySQL.Proc_5_2_6D4690("SELECT id_product,id,sign,id_secondary,id_destination FROM furnitures WHERE id='"
-                    + placement.furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            }
-            if (itemRow.isEmpty()) {
+            long userIdValue = NumberUtils.parseLong(userId);
+            FurnitureDao furniture = furnitureDao();
+            FurnitureDao.InventoryPlacementFurniture item = fromInventory
+                ? furniture.inventoryPlacementFurniture(placement.furnitureId, userIdValue).orElse(null)
+                : furniture.roomPlacementFurniture(placement.furnitureId, roomId).orElse(null);
+            if (item == null) {
                 return "";
             }
-            String[] itemFields = itemRow.split("\t", -1);
-            long productId = NumberUtils.parseLong(navigatorField(itemFields, 0));
-            String itemData = navigatorField(itemFields, 2);
-            long secondaryValue = NumberUtils.parseLong(navigatorField(itemFields, 3));
+            String[] itemFields = floorPlacementFields(item);
+            long productId = item.productId();
+            String itemData = StringUtils.text(item.sign());
+            long secondaryValue = item.secondaryValue();
             if (productId <= 0L) {
                 return "";
             }
@@ -9401,20 +9396,24 @@ public final class Handling {
             }
             String positionZ = String.valueOf((long) NumberUtils.parseLong(navigatorField(productFields, 24)));
             if (fromInventory) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner=NULL,id_room='" + roomId
-                    + "',position_x='" + placement.positionX + "',position_y='" + placement.positionY
-                    + "',position_z='" + Functions.Proc_10_11_80A9C0(positionZ, 0, 0) + "',position_r='"
-                    + placement.rotation + "',position_wall=NULL,task_owner='" + escapedUserId
-                    + "',task_time=UNIX_TIMESTAMP() WHERE id='" + placement.furnitureId
-                    + "' AND id_owner='" + escapedUserId + "' AND id_room IS NULL LIMIT 1", 0, 0);
+                furniture.placeFloorFurniture(
+                    placement.furnitureId,
+                    userIdValue,
+                    roomId,
+                    placement.positionX,
+                    placement.positionY,
+                    positionZ,
+                    placement.rotation);
                 Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(placement.furnitureId, null, "Ac"), 0);
             } else {
-                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET position_x='" + placement.positionX
-                    + "',position_y='" + placement.positionY + "',position_z='"
-                    + Functions.Proc_10_11_80A9C0(positionZ, 0, 0) + "',position_r='" + placement.rotation
-                    + "',position_wall=NULL,task_owner='" + escapedUserId
-                    + "',task_time=UNIX_TIMESTAMP() WHERE id='" + placement.furnitureId
-                    + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+                furniture.moveFloorFurniture(
+                    placement.furnitureId,
+                    roomId,
+                    userIdValue,
+                    placement.positionX,
+                    placement.positionY,
+                    positionZ,
+                    placement.rotation);
             }
             String placementPayload = Proc_6_161_7B2EE0(
                 placement.furnitureId, placement.positionX, placement.positionY, placement.rotation,
@@ -9466,6 +9465,19 @@ public final class Handling {
             placement.furnitureId = readWireLong(StringUtils.text(packetPayload), new LongRef(1));
         }
         return placement;
+    }
+
+    public static String[] floorPlacementFields(FurnitureDao.InventoryPlacementFurniture item) {
+        if (item == null) {
+            return new String[0];
+        }
+        return new String[]{
+            String.valueOf(item.productId()),
+            String.valueOf(item.furnitureId()),
+            StringUtils.text(item.sign()),
+            String.valueOf(item.secondaryValue()),
+            String.valueOf(item.destinationId())
+        };
     }
 
     public static boolean isPostItProduct(long productId) {

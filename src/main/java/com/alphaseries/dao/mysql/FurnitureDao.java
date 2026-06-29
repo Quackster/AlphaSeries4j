@@ -214,6 +214,19 @@ public final class FurnitureDao {
             ownerId);
     }
 
+    public Optional<InventoryPlacementFurniture> roomPlacementFurniture(long furnitureId, long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_product,id,sign,id_secondary,id_destination FROM furnitures WHERE id=? AND id_room=? LIMIT 1",
+            resultSet -> new InventoryPlacementFurniture(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5)),
+            furnitureId,
+            roomId);
+    }
+
     public List<InventoryItemRow> inventoryFurnitureForOwner(long ownerId) throws SQLException {
         return database.query(
             "SELECT id,id_product,sign,id_secondary FROM furnitures WHERE id_owner=? AND id_room IS NULL LIMIT 1000",
@@ -476,6 +489,50 @@ public final class FurnitureDao {
             ownerId,
             furnitureId,
             ownerId);
+    }
+
+    public int placeFloorFurniture(
+        long furnitureId,
+        long ownerId,
+        long roomId,
+        long positionX,
+        long positionY,
+        String positionZ,
+        long rotation
+    ) throws SQLException {
+        return database.execute(
+            "UPDATE furnitures SET id_owner=NULL,id_room=?,position_x=?,position_y=?,position_z=?,position_r=?,"
+                + "position_wall=NULL,task_owner=?,task_time=UNIX_TIMESTAMP() "
+                + "WHERE id=? AND id_owner=? AND id_room IS NULL LIMIT 1",
+            roomId,
+            positionX,
+            positionY,
+            positionZ,
+            rotation,
+            ownerId,
+            furnitureId,
+            ownerId);
+    }
+
+    public int moveFloorFurniture(
+        long furnitureId,
+        long roomId,
+        long ownerId,
+        long positionX,
+        long positionY,
+        String positionZ,
+        long rotation
+    ) throws SQLException {
+        return database.execute(
+            "UPDATE furnitures SET position_x=?,position_y=?,position_z=?,position_r=?,position_wall=NULL,"
+                + "task_owner=?,task_time=UNIX_TIMESTAMP() WHERE id=? AND id_room=? LIMIT 1",
+            positionX,
+            positionY,
+            positionZ,
+            rotation,
+            ownerId,
+            furnitureId,
+            roomId);
     }
 
     public int deleteFurniture(long furnitureId) throws SQLException {

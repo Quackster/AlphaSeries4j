@@ -158,6 +158,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `FurnitureDao` for wall furniture placement, replacing inventory placement row strings and raw wall-placement update SQL with typed prepared DAO methods.
 - Expanded `FurnitureDao` with typed floor-position furniture rows and routed package-open product/package checks through typed `FurnitureDao`/`PackageDao` records instead of tab-delimited handler parsing.
 - Added typed simple floor-furniture reads and routed wheel/simple floor item handlers through `FurnitureDao`, replacing raw furniture row SQL and tab-delimited parsing.
+- Expanded `FurnitureDao` with typed floor-placement reads and prepared placement updates, routing floor furniture move/place handlers away from raw SQL and tab-delimited parsing.
 - Expanded `FurnitureDao`/`RoomDao` for floor-placement validation, replacing raw room-model, floor-occupancy, bot-occupancy, and active-occupant SQL with typed prepared DAO methods.
 - Expanded `FurnitureDao` for located furniture state, product-based state refresh, room/product id lookup, room existence checks, and wired sign updates, replacing raw furniture state SQL in `Handling` helpers.
 - Routed wired snapshot/edit furniture product lookups through `FurnitureDao`, replacing raw `id_product` SQL and tab-delimited parsing in `Handling`.
@@ -239,9 +240,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 367
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 98
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 94
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12500 lines
+- `Handling.java`: 12512 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines
