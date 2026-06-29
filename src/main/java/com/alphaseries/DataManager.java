@@ -6,11 +6,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public final class DataManager {
     public static final String LICENCE_TIME_FORMAT = "yyyy-mm-dd_h-mm-ss";
+    public static final String LICENCE_ENDPOINT_ENV = "ALPHASERIES_LICENCE_ENDPOINT";
+    public static final String DEFAULT_LICENCE_ENDPOINT = "http://www.alpha-series.com/check_product_sep11";
     public static String global_008291AC = "";
     public static String global_00829050 = "";
     public static int global_00829054 = 0;
@@ -161,17 +164,30 @@ public final class DataManager {
     }
 
     public static String buildLicenceRequestUrl(LicenceCheckContext context) {
+        return buildLicenceRequestUrl(context, licenceEndpointFromEnvironment(System.getenv()));
+    }
+
+    public static String licenceEndpointFromEnvironment(java.util.Map<String, String> environment) {
+        String endpoint = environment == null ? "" : Vb.cStr(environment.get(LICENCE_ENDPOINT_ENV));
+        return endpoint.isEmpty() ? DEFAULT_LICENCE_ENDPOINT : endpoint;
+    }
+
+    public static String buildLicenceRequestUrl(LicenceCheckContext context, String endpoint) {
         String timeFormatText = context.localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd_H-mm-ss"));
         String timePrefix = Functions.Proc_10_3_809B90(0x9C4, 0x3E8)
             + Functions.Proc_10_3_809B90(0x9C4, 0x3E8);
         String tokenSeed = Functions.Proc_10_3_809B90(0x9C4, 0x3E8)
             + "/" + Functions.Proc_10_3_809B90(0x9C4, 0x3E8)
             + "/" + Functions.Proc_10_3_809B90(0x9C4, 0x3E8) + "/L:";
-        return "http://www.alpha-series.com/check_product_sep11?local_time="
-            + timePrefix + timeFormatText + ":"
-            + "&version=" + context.version
-            + "&productKey=" + context.productKey
-            + "&token=" + Proc_8_3_804530(tokenSeed);
+        return Vb.cStr(endpoint) + "?local_time="
+            + urlEncode(timePrefix + timeFormatText + ":")
+            + "&version=" + urlEncode(context.version)
+            + "&productKey=" + urlEncode(context.productKey)
+            + "&token=" + urlEncode(Proc_8_3_804530(tokenSeed));
+    }
+
+    public static String urlEncode(String value) {
+        return URLEncoder.encode(Vb.cStr(value), StandardCharsets.UTF_8);
     }
 
     public static String licenceBlockFromResponse(String responseText, String timeFormat) {

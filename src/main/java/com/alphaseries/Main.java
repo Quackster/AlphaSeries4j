@@ -225,6 +225,15 @@ public final class Main {
     }
 
     public static String productKeyFromConfig(String configText) {
+        java.util.Map<String, String> config = Crypto.parseConfig(configText);
+        String productKey = config.get("productkey");
+        if (productKey == null || productKey.isEmpty()) {
+            productKey = config.get("licence");
+        }
+        if (productKey != null) {
+            return productKey;
+        }
+
         String[] configParts = Vb.cStr(configText).split("=", -1);
         if (configParts.length < 8) {
             return "";
