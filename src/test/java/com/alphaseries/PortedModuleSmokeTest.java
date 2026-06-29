@@ -1834,7 +1834,7 @@ public final class PortedModuleSmokeTest {
         stickyProducts[508] = productRow(508, "12", "1", "18", "charge_sprite", "34", "3", "35", "10", "36", "2", "37", "1");
         stickyProducts[509] = productRow(509, "7", "static", "18", "plain_sprite");
         stickyProducts[510] = productRow(510, "12", "99", "17", "bb_score_blue");
-        stickyProducts[511] = productRow(511, "0", "0", "17", "habbowheel");
+        stickyProducts[511] = productRow(511, "0", "0", "1", "0", "17", "habbowheel", "24", "0");
         DataManager.global_008292BC = stickyProducts;
         Licence.global_008292BC = stickyProducts;
         String[] catalogProducts = new String[82];
@@ -2258,6 +2258,12 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id,position_x,position_y,id_product FROM furnitures WHERE id='93'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(93, 2, 3, 511));
+                }
+                if (sqlText.contains("SELECT id_product,id,sign,id_secondary,id_destination FROM furnitures WHERE id='94' AND id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(511, 94, "floor-state", 0, 0));
+                }
+                if (sqlText.contains("SELECT id_product,id,sign,id_secondary,id_destination FROM furnitures WHERE id='95' AND id_owner='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(511, 95, "placed-state", 0, 0));
                 }
                 if (sqlText.contains("SELECT status_door FROM rooms WHERE id='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
@@ -2991,6 +2997,26 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "AZ"));
         assertEquals(true, Licence.global_008291F8.contains("\1" + "9\2"));
         Handling.Proc_6_151_78AC20(9, 82, 3);
+        handlingSends.clear();
+        handlingSql.clear();
+        String movedFloorPayload = Handling.Proc_6_141_76A670(4, "A[94 5 6 2");
+        assertEquals(true, movedFloorPayload.contains("A_"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET position_x='5',position_y='6',position_z='0',position_r='2'"));
+        assertEquals(true, containsSend(handlingSends, "A_"));
+        handlingSends.clear();
+        handlingSql.clear();
+        String movedFloorWrapperPayload = Handling.Proc_6_159_79FCD0(4, "AI94 6 7 4");
+        assertEquals(true, movedFloorWrapperPayload.contains("A_"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET position_x='6',position_y='7',position_z='0',position_r='4'"));
+        handlingSends.clear();
+        handlingSql.clear();
+        String placedFloorPayload = Handling.Proc_6_142_76B310(4, "rv95 2 3 6");
+        assertEquals(true, placedFloorPayload.contains("A]"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner=NULL,id_room='9',position_x='2',position_y='3',position_z='0',position_r='6'"));
+        assertEquals(true, containsSend(handlingSends, "Ac"));
+        assertEquals(true, containsSend(handlingSends, "A]"));
+        handlingSends.clear();
+        handlingSql.clear();
         Handling.Proc_6_146_76D300(4, 82, 506);
         assertEquals(false, Licence.global_008291FC.contains("\1" + "82\2"));
         assertEquals(true, Licence.global_00829310.contains("\1" + "9\t82\t3\2"));

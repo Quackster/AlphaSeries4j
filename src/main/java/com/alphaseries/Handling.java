@@ -601,6 +601,13 @@ public final class Handling {
         public long rotation;
     }
 
+    public static final class FloorFurniturePlacement {
+        public long furnitureId;
+        public long positionX;
+        public long positionY;
+        public long rotation;
+    }
+
     public static final class FurnitureCacheState {
         public String pendingRoomCache = "";
         public String pendingFurnitureCache = "";
@@ -3901,6 +3908,14 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_141_76A670(Object... args) {
+        return handlingFloorFurnitureMove(args, "A[", false);
+    }
+
+    public static String Proc_6_142_76B310(Object... args) {
+        return handlingFloorFurnitureMove(args, "rv", true);
+    }
+
     public static void Proc_6_143_76BB80(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
@@ -4571,6 +4586,19 @@ public final class Handling {
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
+        }
+    }
+
+    public static String Proc_6_159_79FCD0(Object... args) {
+        try {
+            String requestPayload = handlingRequestPayload(args, "AI");
+            if (requestPayload.isEmpty()) {
+                return "";
+            }
+            return Proc_6_141_76A670(handlingSocketIndex(args), "A[", "A[" + requestPayload);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
         }
     }
 
@@ -8056,6 +8084,120 @@ public final class Handling {
             // VB6 source suppresses handler failures.
             return "";
         }
+    }
+
+    public static String handlingFloorFurnitureMove(Object[] args, String packetPrefix, boolean fromInventory) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, packetPrefix);
+            FloorFurniturePlacement placement = floorFurniturePlacementFromPayload(requestPayload);
+            if (placement.furnitureId <= 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L || (!handlingUserHasRoomRight(userId, roomId)
+                && !handlingUserHasPermission(userId, "fuse_pick_up_any_furni"))) {
+                return "";
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            String itemRow;
+            if (fromInventory) {
+                itemRow = MySQL.Proc_5_2_6D4690("SELECT id_product,id,sign,id_secondary,id_destination FROM furnitures WHERE id='"
+                    + placement.furnitureId + "' AND id_owner='" + escapedUserId
+                    + "' AND id_room IS NULL LIMIT 1", 0, 0);
+            } else {
+                itemRow = MySQL.Proc_5_2_6D4690("SELECT id_product,id,sign,id_secondary,id_destination FROM furnitures WHERE id='"
+                    + placement.furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            }
+            if (itemRow.isEmpty()) {
+                return "";
+            }
+            String[] itemFields = itemRow.split("\t", -1);
+            long productId = Vb.val(navigatorField(itemFields, 0));
+            String itemData = navigatorField(itemFields, 2);
+            long secondaryValue = Vb.val(navigatorField(itemFields, 3));
+            if (productId <= 0L) {
+                return "";
+            }
+            String[] productFields = Licence.Proc_9_3_807930(productId, 0, 0).split("\t", -1);
+            long productType = Vb.val(navigatorField(productFields, 1));
+            if (productType == 9L) {
+                if (fromInventory) {
+                    Proc_6_157_7974B0(socketIndex, requestPayload, itemFields);
+                }
+                return "";
+            }
+            String positionZ = String.valueOf((long) Vb.val(navigatorField(productFields, 24)));
+            if (fromInventory) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner=NULL,id_room='" + roomId
+                    + "',position_x='" + placement.positionX + "',position_y='" + placement.positionY
+                    + "',position_z='" + Functions.Proc_10_11_80A9C0(positionZ, 0, 0) + "',position_r='"
+                    + placement.rotation + "',position_wall=NULL,task_owner='" + escapedUserId
+                    + "',task_time=UNIX_TIMESTAMP() WHERE id='" + placement.furnitureId
+                    + "' AND id_owner='" + escapedUserId + "' AND id_room IS NULL LIMIT 1", 0, 0);
+                Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(placement.furnitureId, null, "Ac"), 0);
+            } else {
+                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET position_x='" + placement.positionX
+                    + "',position_y='" + placement.positionY + "',position_z='"
+                    + Functions.Proc_10_11_80A9C0(positionZ, 0, 0) + "',position_r='" + placement.rotation
+                    + "',position_wall=NULL,task_owner='" + escapedUserId
+                    + "',task_time=UNIX_TIMESTAMP() WHERE id='" + placement.furnitureId
+                    + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            }
+            String placementPayload = Proc_6_161_7B2EE0(
+                placement.furnitureId, placement.positionX, placement.positionY, placement.rotation,
+                Vb.val(positionZ), "", itemData, secondaryValue, productId);
+            String payload = (fromInventory ? "A]" : "A_") + placementPayload;
+            if (!placementPayload.isEmpty()) {
+                Proc_6_247_8027E0(socketIndex, payload, 0);
+            }
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            if (fromInventory) {
+                Proc_6_140_769400(socketIndex, "FT", "");
+            }
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static FloorFurniturePlacement floorFurniturePlacementFromPayload(String packetPayload) {
+        FloorFurniturePlacement placement = new FloorFurniturePlacement();
+        String normalizedPayload = Vb.cStr(packetPayload)
+            .replace('\1', ' ')
+            .replace('\2', ' ')
+            .replace('\t', ' ')
+            .replace('\r', ' ')
+            .replace('\n', ' ')
+            .trim();
+        while (normalizedPayload.contains("  ")) {
+            normalizedPayload = normalizedPayload.replace("  ", " ");
+        }
+        if (!normalizedPayload.isEmpty()) {
+            String[] tokens = normalizedPayload.split(" ", -1);
+            if (tokens.length >= 1) {
+                placement.furnitureId = Vb.val(tokens[0]);
+            }
+            if (tokens.length >= 2) {
+                placement.positionX = Vb.val(tokens[1]);
+            }
+            if (tokens.length >= 3) {
+                placement.positionY = Vb.val(tokens[2]);
+            }
+            if (tokens.length >= 4) {
+                placement.rotation = Vb.val(tokens[3]);
+            }
+        }
+        if (placement.furnitureId <= 0L) {
+            placement.furnitureId = readWireLong(Vb.cStr(packetPayload), new LongRef(1));
+        }
+        return placement;
     }
 
     public static boolean isPostItProduct(long productId) {
