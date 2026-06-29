@@ -6715,18 +6715,33 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_242_7FF0D0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (!userId.isEmpty() && !"0".equals(userId)) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE users SET id_socket=null WHERE id = '"
+                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
+            }
+            return "";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static void Proc_6_243_7FFEB0(Object... args) {
         int socketIndex = handlingSocketIndex(args);
         if (socketIndex <= 0) {
             return;
         }
+        Proc_6_242_7FF0D0(socketIndex, 0, 0);
         String marker = "[" + socketIndex + "]";
         Guardian.setSocketConnected(socketIndex, false);
         Guardian.global_008291A0 = Vb.cStr(Guardian.global_008291A0).replace(marker, "");
         Licence.global_008291A0 = Vb.cStr(Licence.global_008291A0).replace(marker, "");
         Licence.global_00829350 = Vb.cStr(Licence.global_00829350).replace(marker, "");
         Licence.global_00829354 = Vb.cStr(Licence.global_00829354).replace(marker, "");
-        MySQL.Proc_5_0_6D3CD0("UPDATE users SET id_socket=null WHERE id_socket='" + socketIndex + "'", 0, 0);
     }
 
     public static void Proc_6_244_801E80(Object... args) {

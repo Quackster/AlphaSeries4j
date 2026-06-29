@@ -3380,6 +3380,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "An"));
         assertEquals(true, containsSend(handlingSends, "8:DATA"));
         assertEquals(0, Handling.representedInteractionPartner(4));
+        handlingSql.clear();
+        Handling.Proc_6_242_7FF0D0(4);
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET id_socket=null WHERE id = '77'"));
         MySQL.configureDatabaseConnection(null);
         HandlingMUS.configureMusSink(null);
         Guardian.setSocketConnected(4, false);
