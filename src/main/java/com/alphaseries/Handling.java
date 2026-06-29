@@ -3862,6 +3862,14 @@ public final class Handling {
         }
     }
 
+    public static void Proc_6_152_78C2F0(Object... args) {
+        handlingRepresentedFurnitureStateWrite(args);
+    }
+
+    public static void Proc_6_153_78D980(Object... args) {
+        handlingRepresentedFurnitureStateWrite(args);
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }
@@ -5761,6 +5769,45 @@ public final class Handling {
         state.representedRoomCache = removeRepresentedCacheRecord(state.representedRoomCache, "\1" + furnitureId + '\t');
         state.representedRoomCache += "\1" + furnitureId + '\t' + roomId + '\t' + Vb.cStr(stateText) + '\2';
         return state;
+    }
+
+    public static void handlingRepresentedFurnitureStateWrite(Object... args) {
+        try {
+            long roomId = 0L;
+            long furnitureId = 0L;
+            String stateText = "";
+            if (args != null && args.length >= 3) {
+                roomId = Vb.val(args[0]);
+                furnitureId = Vb.val(args[1]);
+                stateText = Vb.cStr(args[2]);
+            } else if (args != null && args.length >= 2) {
+                furnitureId = Vb.val(args[0]);
+                stateText = Vb.cStr(args[1]);
+            }
+            if (furnitureId <= 0L) {
+                return;
+            }
+            if (roomId <= 0L) {
+                roomId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_room FROM furnitures WHERE id='"
+                    + furnitureId + "' LIMIT 1", 0, 0));
+            }
+            FurnitureStateCache state = representedFurnitureStateWrite(
+                Licence.global_008291F8,
+                Licence.global_008291FC,
+                Licence.global_00829310,
+                roomId,
+                furnitureId,
+                stateText);
+            Licence.global_008291F8 = state.pendingRoomCache;
+            Licence.global_008291FC = state.pendingFurnitureCache;
+            Licence.global_00829310 = state.representedRoomCache;
+            if (roomId > 0L) {
+                Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+                Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
     }
 
     public static String Proc_6_156_7972B0(Object... args) {
