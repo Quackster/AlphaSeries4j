@@ -180,6 +180,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed catalog purchase balance checks and debits through typed `UserDao.CatalogPurchaseBalance`, replacing raw user balance SQL and tab-delimited parsing in `Handling`.
 - Routed gift purchase balance checks, recipient lookup, debit, and gift counters through `UserDao`, replacing raw user SQL and tab-delimited parsing in `Handling`.
 - Restored decompiled boot caption states and Figuredata cache validation/error logging.
+- Restored decompiled `ERR.log`/`SLOW.log` boot header text.
 - Restored decompiled `:about`, `:entwicklung`, and `:commands` chat command response literals.
 - Restored decompiled `:whosonline` active-user chat command response.
 - Migrated remaining `Functions` conversions for email validation, identity refresh, club period, occupancy, download, inventory path, movement, and random helpers off `Vb`.

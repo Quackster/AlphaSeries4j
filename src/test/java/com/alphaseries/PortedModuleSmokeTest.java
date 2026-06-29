@@ -587,6 +587,12 @@ public final class PortedModuleSmokeTest {
         String[] cache = new String[12];
         Boot.cacheRowsById(cache, "10\t100\tchair\r11\t200\ttable");
         assertEquals("11\t200\ttable", cache[11]);
+        String bootErrorHeader = Boot.bootErrorLogHeader("ALPHASERIES_FINAL (PREMIUM)", "2026-06-30T10:15");
+        assertEquals(true, bootErrorHeader.contains("Alpha Series [Version ALPHASERIES_FINAL (PREMIUM)"));
+        assertEquals(true, bootErrorHeader.contains("Emulator is running since 2026-06-30T10:15, errors are being logged."));
+        String bootSlowHeader = Boot.bootSlowLogHeader("ALPHASERIES_FINAL (PREMIUM)", "2026-06-30T10:15");
+        assertEquals(true, bootSlowHeader.contains(
+            "slow query are being logged if you are running the development mode."));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "a\2b\2c\2d\2",
             Boot.buildCampaignReplacementCache("a\tb\rc\td"));
         Boot.AchievementSettingsCache achievementSettings = Boot.buildAchievementSettingsCache(

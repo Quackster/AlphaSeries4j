@@ -94,6 +94,7 @@ public final class Boot {
     }
 
     public static void Proc_1_3_6BEBA0(Object... args) {
+        initializeBootLogFiles();
         runTimed("Empfohlene Räume im Cache gespeichert", () -> Proc_1_2_6BE280(0, 0, 0));
         runTimed("Mögliche Badgevergabe im Cache gespeichert", () -> Proc_1_16_6CCA60(0, 0, 0));
         runTimed("Haustiere im Cache gespeichert", () -> Proc_1_7_6C5E10(0, 0, 0));
@@ -417,6 +418,33 @@ public final class Boot {
         String messageText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
         String logChannel = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
         Console.Proc_2_0_6D1510(messageText, logChannel, "65280");
+    }
+
+    public static void initializeBootLogFiles() {
+        String productName = Licence.runtimeState().productName();
+        String nowText = java.time.LocalDateTime.now().toString();
+        java.nio.file.Path appPath = java.nio.file.Path.of(Functions.applicationPath);
+        DataManager.Proc_8_9_806810(appPath.resolve("ERR.log").toString(), bootErrorLogHeader(productName, nowText));
+        DataManager.Proc_8_9_806810(appPath.resolve("SLOW.log").toString(), bootSlowLogHeader(productName, nowText));
+    }
+
+    public static String bootErrorLogHeader(String productName, String nowText) {
+        return bootLogHeader(productName,
+            " Emulator is running since " + StringUtils.text(nowText) + ", errors are being logged.");
+    }
+
+    public static String bootSlowLogHeader(String productName, String nowText) {
+        return bootLogHeader(productName,
+            " Emulator is running since " + StringUtils.text(nowText)
+                + ", slow query are being logged if you are running the development mode.");
+    }
+
+    public static String bootLogHeader(String productName, String runningLine) {
+        String separator = "-------------------------------------------------------------------------------------------------------------------------------------------------------";
+        return separator + "\r\n"
+            + " Alpha Series [Version " + StringUtils.text(productName) + "\r\n"
+            + StringUtils.text(runningLine) + "\r\n"
+            + separator + "\r\n";
     }
 
     public static void runTimed(String messageText, Runnable action) {
