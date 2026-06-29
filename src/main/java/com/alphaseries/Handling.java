@@ -2812,6 +2812,170 @@ public final class Handling {
         }
     }
 
+    public static long Proc_6_100_748C80(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "EV");
+            LongRef offset = new LongRef(1);
+            long presetId = readWireLong(requestPayload, offset);
+            long backgroundId = readWireLong(requestPayload, offset);
+            String colourText = readWireString(requestPayload, offset).toUpperCase();
+            long lightLevel = readWireLong(requestPayload, offset);
+            if (presetId < 1L || presetId > 3L || backgroundId < 1L || backgroundId > 2L
+                || !isDimmerColour(colourText) || lightLevel < 76L || lightLevel > 225L) {
+                return 0L;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L || (!handlingUserOwnsRoom(userId, roomId) && !handlingUserHasRoomRight(userId, roomId))) {
+                return 0L;
+            }
+            long dimmerFurnitureId = Vb.val(MySQL.Proc_5_2_6D4690(
+                "SELECT furnitures.id FROM furnitures,products WHERE furnitures.id_room='" + roomId
+                    + "' AND products.id_type='9' AND furnitures.id_product=products.id LIMIT 1", 0, 0));
+            if (dimmerFurnitureId <= 0L) {
+                return 0L;
+            }
+            String signText = "2," + presetId + "," + backgroundId + "," + colourText + "," + lightLevel;
+            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures_dimmerpresets SET id_state='1' WHERE id_furni='"
+                + dimmerFurnitureId + "'", 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures_dimmerpresets SET id_state='2',id_light='" + lightLevel
+                + "',id_background='" + backgroundId + "',colour='" + Functions.Proc_10_11_80A9C0(colourText, 0, 0)
+                + "' WHERE id_furni='" + dimmerFurnitureId + "' AND id_preset='" + presetId + "'", 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + Functions.Proc_10_11_80A9C0(signText, 0, 0)
+                + "' WHERE id='" + dimmerFurnitureId + "'", 0, 0);
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product,position_wall FROM furnitures WHERE id='"
+                + dimmerFurnitureId + "' LIMIT 1", 0, 0);
+            String[] fields = rowText.split("\t", -1);
+            if (fields.length >= 2) {
+                long productId = Vb.val(handlingField(fields, 0));
+                String wallPosition = handlingField(fields, 1);
+                Proc_6_247_8027E0(socketIndex, "AU" + dimmerFurnitureId + '\2'
+                    + Crypto.Proc_3_0_6D2AF0(productId, null, "") + wallPosition + '\2' + signText + '\2', 0);
+            }
+            return dimmerFurnitureId;
+        } catch (Exception ignored) {
+            return 0L;
+        }
+    }
+
+    public static long Proc_6_101_749540(Object... args) {
+        long listedEffects = 0L;
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_effect,time_rent,COUNT(id_effect),timestamp_expire,UNIX_TIMESTAMP() "
+                + "FROM users_effects WHERE id_user='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' GROUP BY users_effects.id_effect LIMIT 50", 0, 0);
+            StringBuilder effectsPayload = new StringBuilder();
+            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    String[] fields = row.split("\t", -1);
+                    if (fields.length >= 5) {
+                        long effectId = Vb.val(handlingField(fields, 0));
+                        long rentSeconds = Vb.val(handlingField(fields, 1));
+                        long effectCount = Vb.val(handlingField(fields, 2));
+                        long expireTimestamp = Vb.val(handlingField(fields, 3));
+                        long currentTimestamp = Vb.val(handlingField(fields, 4));
+                        if (effectId > 0L) {
+                            effectsPayload.append(Crypto.Proc_3_0_6D2AF0(effectId, null, ""));
+                            effectsPayload.append(Crypto.Proc_3_0_6D2AF0(rentSeconds, null, ""));
+                            effectsPayload.append(Crypto.Proc_3_0_6D2AF0(effectCount, null, ""));
+                            long remainingSeconds = expireTimestamp - currentTimestamp;
+                            effectsPayload.append(expireTimestamp > 0L && remainingSeconds > 0L
+                                ? Crypto.Proc_3_0_6D2AF0(remainingSeconds, null, "")
+                                : "M");
+                            listedEffects++;
+                        }
+                    }
+                }
+            }
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(listedEffects, null, "GL") + effectsPayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+        return listedEffects;
+    }
+
+    public static long Proc_6_102_749C50(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "");
+            if (requestPayload.length() >= 3) {
+                requestPayload = requestPayload.substring(2);
+            }
+            long effectId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            if (effectId <= 0L) {
+                effectId = readWireLong(requestPayload, new LongRef(1));
+            }
+            if (effectId <= 0L) {
+                return 0L;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            String effectRow = MySQL.Proc_5_2_6D4690("SELECT id,time_rent,timestamp_expire FROM users_effects WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_effect='" + effectId
+                + "' ORDER BY timestamp_expire DESC LIMIT 1", 0, 0);
+            String[] fields = effectRow.split("\t", -1);
+            if (fields.length < 2) {
+                return 0L;
+            }
+            long effectRowId = Vb.val(handlingField(fields, 0));
+            long rentSeconds = Vb.val(handlingField(fields, 1));
+            if (effectRowId <= 0L || rentSeconds <= 0L) {
+                return 0L;
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE users_effects SET timestamp_expire=UNIX_TIMESTAMP()+time_rent WHERE id='"
+                + effectRowId + "' LIMIT 1", 0, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(rentSeconds, null,
+                Crypto.Proc_3_0_6D2AF0(effectId, null, "GN")), 0);
+            String broadcastPayload = Crypto.Proc_3_0_6D2AF0(socketIndex, null, "Ge");
+            broadcastPayload = Crypto.Proc_3_0_6D2AF0(effectId, null, broadcastPayload) + "H";
+            Proc_6_247_8027E0(socketIndex, broadcastPayload, 0);
+            return effectId;
+        } catch (Exception ignored) {
+            return 0L;
+        }
+    }
+
+    public static long Proc_6_103_74A510(Object... args) {
+        long expiredCount = 0L;
+        try {
+            String queryText = "SELECT users_effects.id_effect,users.id_socket,users_effects.id "
+                + "FROM users_effects,users WHERE users_effects.timestamp_expire IS NOT NULL "
+                + "AND users_effects.timestamp_expire<UNIX_TIMESTAMP() AND users.id=users_effects.id_user "
+                + "AND users.id_socket IS NOT NULL LIMIT 500";
+            String rowText = MySQL.Proc_5_2_6D4690(queryText, 1, 0);
+            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    String[] fields = row.split("\t", -1);
+                    if (fields.length >= 3) {
+                        long effectId = Vb.val(handlingField(fields, 0));
+                        int socketIndex = (int) Vb.val(handlingField(fields, 1));
+                        if (socketIndex > 0 && effectId > 0L) {
+                            Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(socketIndex, null, "Ge") + "H", 0);
+                            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(effectId, null, "GO"), 0);
+                            expiredCount++;
+                        }
+                    }
+                }
+            }
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM users_effects WHERE users_effects.timestamp_expire IS NOT NULL "
+                + "AND users_effects.timestamp_expire<UNIX_TIMESTAMP() LIMIT 500", 0, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+        return expiredCount;
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }

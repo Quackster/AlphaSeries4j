@@ -1845,6 +1845,12 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id,id_product,sign FROM furnitures WHERE id='76'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(76, 506, "trade-state"));
                 }
+                if (sqlText.contains("SELECT furnitures.id FROM furnitures,products WHERE furnitures.id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(78));
+                }
+                if (sqlText.contains("SELECT id_product,position_wall FROM furnitures WHERE id='78'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(503, ":w=5"));
+                }
                 if (sqlText.contains("SELECT status_door FROM rooms WHERE id='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
                 }
@@ -1926,6 +1932,17 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT logs_visitedrooms.id,users_effects.id_effect")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(61, 12));
+                }
+                if (sqlText.contains("SELECT id_effect,time_rent,COUNT(id_effect),timestamp_expire,UNIX_TIMESTAMP()")) {
+                    return Arrays.<List<Object>>asList(
+                        Arrays.<Object>asList(12, 3600, 2, 1000, 900),
+                        Arrays.<Object>asList(13, 120, 1, 0, 900));
+                }
+                if (sqlText.contains("SELECT id,time_rent,timestamp_expire FROM users_effects")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(901, 3600, 0));
+                }
+                if (sqlText.contains("SELECT users_effects.id_effect,users.id_socket,users_effects.id")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(12, 4, 901));
                 }
                 if (sqlText.contains("SELECT id_type,id_source,id_sprite,position_x,position_y,position_z,action,action_rotation,action_height FROM models_furnitures WHERE id_model='20'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(503, 901, "", 4, 5, 0, "state", 2, 0));
@@ -2323,6 +2340,31 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         Handling.Proc_6_88_73E4F0(4);
         assertEquals(true, containsSend(handlingSends, "L\u007f"));
+        handlingSends.clear();
+        handlingSql.clear();
+        long dimmerId = Handling.Proc_6_100_748C80(4, "EV" + wireLong(2) + wireLong(1) + wireString("#82f349") + wireLong(100));
+        assertEquals(78L, dimmerId);
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures_dimmerpresets SET id_state='1'"));
+        assertEquals(true, containsSql(handlingSql, "colour='#82F349'"));
+        assertEquals(true, containsSql(handlingSql, "sign='2,2,1,#82F349,100'"));
+        assertEquals(true, containsSend(handlingSends, "AU78\2"));
+        assertEquals(true, containsSend(handlingSends, "2,2,1,#82F349,100"));
+        handlingSql.clear();
+        handlingSends.clear();
+        assertEquals(2L, Handling.Proc_6_101_749540(4));
+        assertEquals(true, containsSend(handlingSends, "GL"));
+        handlingSends.clear();
+        assertEquals(12L, Handling.Proc_6_102_749C50(4, "Fx" + wireLong(12)));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users_effects SET timestamp_expire=UNIX_TIMESTAMP()+time_rent"));
+        assertEquals(true, containsSend(handlingSends, "GN"));
+        assertEquals(true, containsSend(handlingSends, "Ge"));
+        handlingSql.clear();
+        handlingSends.clear();
+        assertEquals(1L, Handling.Proc_6_103_74A510());
+        assertEquals(true, containsSql(handlingSql, "DELETE FROM users_effects WHERE users_effects.timestamp_expire IS NOT NULL"));
+        assertEquals(true, containsSend(handlingSends, "GO"));
+        assertEquals(true, containsSend(handlingSends, "Ge"));
+        handlingSql.clear();
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
