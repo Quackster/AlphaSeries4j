@@ -1810,20 +1810,21 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            String existingVoteUserId = MySQL.Proc_5_2_6D4690("SELECT id_user FROM rooms_rates WHERE id_user='"
-                + escapedUserId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            if (!existingVoteUserId.isEmpty()) {
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms_rates(id_user,id_room,timestamp) VALUES('"
-                + escapedUserId + "','" + roomId + "',UNIX_TIMESTAMP())", 0, 0);
-            long roomRate = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT rate FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            long userIdValue = NumberUtils.parseLong(userId);
+            if (rooms.userRatedRoom(userIdValue, roomId)) {
+                return;
+            }
+            rooms.insertRoomRate(userIdValue, roomId);
+            long roomRate = rooms.roomRate(roomId);
             if (roomRate < 0L) {
                 roomRate = 0L;
             }
             roomRate++;
-            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET rate='" + roomRate + "' WHERE id='" + roomId + "'", 0, 0);
+            rooms.updateRoomRate(roomId, roomRate);
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomRate, null, "EY"), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1835,7 +1836,7 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "D\u007f");
             LongRef offset = new LongRef(1);
-            String targetName = Functions.Proc_10_11_80A9C0(readWireString(requestPayload, offset), 0, 0);
+            String targetName = readWireString(requestPayload, offset);
             if (targetName.isEmpty()) {
                 return;
             }
@@ -1847,13 +1848,16 @@ public final class Handling {
             if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
                 return;
             }
-            String targetUserId = String.valueOf(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
-                + targetName + "' LIMIT 1", 0, 0)));
-            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+            UserDao users = userDao();
+            RoomDao rooms = roomDao();
+            if (users == null || rooms == null) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_rights WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_room='" + roomId + "'", 0, 0);
+            long targetUserId = users.userIdByName(targetName);
+            if (targetUserId <= 0L) {
+                return;
+            }
+            rooms.deleteRoomRight(targetUserId, roomId);
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(0, null, "Fc"), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1881,8 +1885,11 @@ public final class Handling {
             if (targetSocketIndex <= 0) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("INSERT IGNORE INTO rooms_rights(id_user,id_room) VALUES('"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','" + roomId + "')", 0, 0);
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return;
+            }
+            rooms.insertRoomRight(NumberUtils.parseLong(targetUserId), roomId);
             Proc_6_244_801E80(targetSocketIndex, "@j", 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.

@@ -129,6 +129,14 @@ public final class UserDao {
             .orElse("");
     }
 
+    public long userIdByName(String name) throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM users WHERE name=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            name)
+            .orElse(0L);
+    }
+
     public String sessionId(long userId) throws SQLException {
         return database.queryOne(
             "SELECT id_session FROM users WHERE id=? LIMIT 1",

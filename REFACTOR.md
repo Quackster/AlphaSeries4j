@@ -83,6 +83,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `RoomDao`/`UserDao` for shared `Handling` socket, active-room, permission, room-right, category visibility, and room-ban helper queries.
 - Expanded `RoomDao`/`UserDao` for room-control active user lookup, room settings updates, and room-event payload row retrieval.
 - Expanded `RoomDao`/`UserDao` for room enter/leave lifecycle queries and writes, including visit logs, visitor counts, and represented room slot clearing.
+- Expanded `RoomDao`/`UserDao` for room rating and room-right grant/revoke operations.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for socket-user and permission-level lookups, removing remaining inline user lookup SQL from `MySQL` helper paths.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for credit and activity-point refresh lookups, routing `Functions` refresh helpers through prepared DAO methods.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for wardrobe rows, wardrobe slot replacement, tutorial-clothes updates, and motto lookup.
@@ -120,9 +121,9 @@ Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 468
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 387
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 380
 - `Boot.java`: 1130 lines
-- `Handling.java`: 12285 lines
+- `Handling.java`: 12292 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 922 lines

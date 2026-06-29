@@ -249,6 +249,48 @@ public final class RoomDao {
             .orElse(0L) > 0L;
     }
 
+    public boolean userRatedRoom(long userId, long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_user FROM rooms_rates WHERE id_user=? AND id_room=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId,
+            roomId)
+            .orElse(0L) > 0L;
+    }
+
+    public int insertRoomRate(long userId, long roomId) throws SQLException {
+        return database.execute(
+            "INSERT INTO rooms_rates(id_user,id_room,timestamp) VALUES(?,?,UNIX_TIMESTAMP())",
+            userId,
+            roomId);
+    }
+
+    public long roomRate(long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT rate FROM rooms WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            roomId)
+            .orElse(0L);
+    }
+
+    public int updateRoomRate(long roomId, long roomRate) throws SQLException {
+        return database.execute("UPDATE rooms SET rate=? WHERE id=?", roomRate, roomId);
+    }
+
+    public int deleteRoomRight(long userId, long roomId) throws SQLException {
+        return database.execute(
+            "DELETE FROM rooms_rights WHERE id_user=? AND id_room=?",
+            userId,
+            roomId);
+    }
+
+    public int insertRoomRight(long userId, long roomId) throws SQLException {
+        return database.execute(
+            "INSERT IGNORE INTO rooms_rights(id_user,id_room) VALUES(?,?)",
+            userId,
+            roomId);
+    }
+
     public long doorStatus(long roomId) throws SQLException {
         return database.queryOne(
             "SELECT status_door FROM rooms WHERE id=? LIMIT 1",
