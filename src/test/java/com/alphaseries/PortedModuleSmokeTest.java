@@ -1802,6 +1802,10 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id FROM users WHERE id_socket='8'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88));
                 }
+                if (sqlText.contains("SELECT id,name,motto,figure,level,id_socket,DATE_FORMAT(FROM_UNIXTIME(lastonline_time)")
+                    && sqlText.contains("FROM users WHERE id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(77, "User77", "Ready", "hd-180-1", 1, 4, "today"));
+                }
                 if (sqlText.contains("SELECT activitypoints_0 FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(70));
                 }
@@ -1890,6 +1894,9 @@ public final class PortedModuleSmokeTest {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88, "Target"));
                 }
                 if (sqlText.contains("SELECT users.id_socket FROM rooms_rights,users WHERE rooms_rights.id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(8));
+                }
+                if (sqlText.contains("SELECT users.id_socket FROM friendships,users WHERE friendships.has_accept='1' AND friendships.id_user='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(8));
                 }
                 if (sqlText.contains("SELECT id,id_product,sign,caption,position_wall FROM furnitures WHERE id='70'")) {
@@ -2702,6 +2709,12 @@ public final class PortedModuleSmokeTest {
         Handling.Proc_6_162_7B3310(4);
         assertEquals(true, containsSend(handlingSends, "DAQBHHIIKHJHPAHQA"));
         assertEquals(true, containsSend(handlingSends, "http://www.alpha-series.com/"));
+        handlingSends.clear();
+        String friendNotifyPayload = Handling.Proc_6_165_7BE0B0(4);
+        assertEquals(true, friendNotifyPayload.startsWith("@MHIH"));
+        assertEquals(true, friendNotifyPayload.contains("User77"));
+        assertEquals(true, containsSend(handlingSends, "@MHIH"));
+        assertEquals(true, containsSend(handlingSends, "User77"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));

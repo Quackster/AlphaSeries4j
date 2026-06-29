@@ -4433,6 +4433,44 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_165_7BE0B0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            int targetSocketIndex = args != null && args.length >= 2 ? (int) Vb.val(args[1]) : 0;
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String summaryPayload = messengerFriendSummaryPayload(userId, 1L);
+            if (summaryPayload.isEmpty()) {
+                return "";
+            }
+            String notifyPayload = "@MHIH" + summaryPayload;
+            if (targetSocketIndex > 0) {
+                if (Guardian.Proc_11_2_821390(targetSocketIndex, 0, 0) == 1L) {
+                    Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
+                }
+            } else {
+                String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id_socket FROM friendships,users WHERE friendships.has_accept='1' AND friendships.id_user='"
+                    + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                    + "' AND users.id=friendships.id_friend AND users.id_socket>'0'", 0, 0);
+                for (String row : rowText.split("\r", -1)) {
+                    if (!row.isEmpty()) {
+                        String[] fields = row.split("\t", -1);
+                        targetSocketIndex = (int) Vb.val(handlingField(fields, 0));
+                        if (targetSocketIndex > 0 && Guardian.Proc_11_2_821390(targetSocketIndex, 0, 0) == 1L) {
+                            Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
+                        }
+                    }
+                }
+            }
+            return notifyPayload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }
@@ -6884,6 +6922,25 @@ public final class Handling {
             socketIndex > 0L ? 1L : 0L,
             fields[6],
             relationshipState);
+    }
+
+    public static String messengerFriendSummaryPayload(String userId, long relationshipState) {
+        try {
+            if (Vb.cStr(userId).isEmpty() || "0".equals(Vb.cStr(userId))) {
+                return "";
+            }
+            String dateFormat = Functions.Proc_10_0_809570("com.mysql.format.date", "%d-%m-%Y", 0);
+            String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,name,motto,figure,level,id_socket,DATE_FORMAT(FROM_UNIXTIME(lastonline_time), '"
+                + Functions.Proc_10_11_80A9C0(dateFormat + " " + timeFormat, 0, 0)
+                + "') FROM users WHERE id='" + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            return messengerFriendSummaryPayloadFromRow(rowText, relationshipState);
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
     public static String messengerSearchResultPayload(
