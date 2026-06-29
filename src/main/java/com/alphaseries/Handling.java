@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.dao.mysql.StaffModerationDao;
+import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -1041,7 +1042,11 @@ public final class Handling {
                 Proc_6_243_7FFEB0(socketIndex, 0, 0);
                 return;
             }
-            String rows = MySQL.Proc_5_2_6D4690("SELECT id,name FROM faq WHERE name LIKE '%" + searchText + "%' LIMIT 25", 0, 0);
+            HelpDao helpDao = helpDao();
+            if (helpDao == null) {
+                return;
+            }
+            String rows = helpDao.faqSearchRows(searchText);
             long resultCount = 0L;
             String resultPayload = "";
             for (String row : rows.split("\r", -1)) {
@@ -11976,6 +11981,11 @@ public final class Handling {
     private static StaffModerationDao staffModerationDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new StaffModerationDao(database);
+    }
+
+    private static HelpDao helpDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new HelpDao(database);
     }
 
     private static String[] normalizeRows(Object rowSource) {
