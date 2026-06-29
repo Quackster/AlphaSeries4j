@@ -71,6 +71,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.server.update.UpdaterSettings` as a typed adapter around updater executable name, update rows, and update SQL previously read directly from `Licence` globals, and migrated `Updater` off `Vb` helpers.
 - Added `com.alphaseries.server.packet.PacketSink` and kept the root `PacketSink` as a deprecated compatibility alias.
 - Added `com.alphaseries.dao.mysql.StaffModerationDao` and routed staff chat-log/room-info moderation reads through typed prepared DAO methods instead of inline SQL concatenation in `MySQL`.
+- Expanded `com.alphaseries.dao.mysql.UserDao` for socket-user and permission-level lookups, removing remaining inline user lookup SQL from `MySQL` helper paths.
 - Added `com.alphaseries.util.StringUtils` and `NumberUtils`; migrated new staff/session code away from duplicated local helper methods.
 - Added `com.alphaseries.protocol.ReadyPacketBuffer` for game ready-packet frame parsing and routed `Filesystems` through it instead of inline VB-style substring parsing.
 - Migrated extracted `game.*`, `messages.outgoing`, and `protocol` packages off duplicated local `text`/`number`/`field` helpers and onto shared utilities.
@@ -90,12 +91,12 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 
 Measured on 2026-06-29:
 
-- Unique `Proc_*` symbols under `src/main/java`: 471
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1273
+- Unique `Proc_*` symbols under `src/main/java`: 470
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1271
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 476
 - `Handling.java`: 12150 lines
 - `Functions.java`: 756 lines
-- `MySQL.java`: 297 lines
+- `MySQL.java`: 315 lines
 - `Vb.java`: 106 lines
 
 ## Next Targets

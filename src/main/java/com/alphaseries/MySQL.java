@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.dao.mysql.StaffModerationDao;
+import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.vb.Vb;
@@ -138,6 +139,10 @@ public final class MySQL {
         return new StaffModerationDao(databaseConnection);
     }
 
+    private static UserDao userDao() {
+        return new UserDao(databaseConnection);
+    }
+
     public static int mySqlSocketIndex(Object... args) {
         if (args == null || args.length == 0) {
             return 0;
@@ -166,17 +171,30 @@ public final class MySQL {
     }
 
     public static String mySqlUserIdFromSocket(int socketIndex) {
-        if (socketIndex <= 0) {
+        if (socketIndex <= 0 || databaseConnection == null) {
             return "";
         }
-        return String.valueOf(Vb.val(Proc_5_2_6D4690("SELECT id FROM users WHERE id_socket='" + socketIndex + "' LIMIT 1", 0, 0)));
+        try {
+            long userId = userDao().userIdBySocket(socketIndex);
+            return userId <= 0L ? "0" : String.valueOf(userId);
+        } catch (SQLException ex) {
+            return "";
+        }
     }
 
     public static boolean mySqlUserHasPermission(String userId, String permissionName) {
-        String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-        long rankIndex = Vb.val(Proc_5_2_6D4690("SELECT level FROM users WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0));
-        long hcLevel = Vb.val(Proc_5_2_6D4690("SELECT level_hc FROM users WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0));
-        return Functions.Proc_10_1_809790(rankIndex, "", permissionName, hcLevel);
+        if (databaseConnection == null) {
+            return false;
+        }
+        long numericUserId = Vb.val(userId);
+        try {
+            UserDao users = userDao();
+            long rankIndex = users.rankLevel(numericUserId);
+            long hcLevel = users.hcLevel(numericUserId);
+            return Functions.Proc_10_1_809790(rankIndex, "", permissionName, hcLevel);
+        } catch (SQLException ex) {
+            return false;
+        }
     }
 
     public static String readSqlRows(String sqlText) {

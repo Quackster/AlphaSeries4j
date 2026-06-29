@@ -24,6 +24,30 @@ public final class UserDao {
             .orElse(0L);
     }
 
+    public long userIdBySocket(long socketIndex) throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM users WHERE id_socket=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            socketIndex)
+            .orElse(0L);
+    }
+
+    public long rankLevel(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT level FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public long hcLevel(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT level_hc FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
     public Optional<UserIdentity> findIdentity(long userId) throws SQLException {
         return database.queryOne(
             "SELECT id,id_socket,motto,figure,gender FROM users WHERE id=? LIMIT 1",
