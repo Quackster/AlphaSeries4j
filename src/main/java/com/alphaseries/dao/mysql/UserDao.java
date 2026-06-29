@@ -64,6 +64,10 @@ public final class UserDao {
             .orElse(0L);
     }
 
+    public int addCredits(long userId, long credits) throws SQLException {
+        return database.execute("UPDATE users SET credits=credits+" + credits + " WHERE id=?", userId);
+    }
+
     public long respectAmount(long userId) throws SQLException {
         return database.queryOne(
             "SELECT respect_amount FROM users WHERE id=? LIMIT 1",

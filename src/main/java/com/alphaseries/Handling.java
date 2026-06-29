@@ -2213,9 +2213,13 @@ public final class Handling {
             if (creditValue <= 0L) {
                 return;
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET credits=credits+" + creditValue + " WHERE id='" + escapedUserId + "'", 0, 0);
-            long updatedCredits = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT credits FROM users WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0));
+            UserDao users = userDao();
+            if (users == null) {
+                return;
+            }
+            long numericUserId = NumberUtils.parseLong(userId);
+            users.addCredits(numericUserId, creditValue);
+            long updatedCredits = users.credits(numericUserId);
             Proc_6_244_801E80(socketIndex, "@F" + updatedCredits + ".0" + '\2', 0);
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
             furniture.deleteFurniture(furnitureId);
