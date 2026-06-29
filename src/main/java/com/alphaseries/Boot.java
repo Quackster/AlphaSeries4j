@@ -81,8 +81,7 @@ public final class Boot {
                 count++;
             }
         }
-        Licence.global_00829128 = count;
-        Licence.global_0082911C = count == 0L ? Crypto.Proc_3_0_6D2AF0(0, null, "") : recommended;
+        Licence.setRecommendedRooms(count == 0L ? Crypto.Proc_3_0_6D2AF0(0, null, "") : recommended, count);
     }
 
     public static void Proc_1_3_6BEBA0(Object... args) {

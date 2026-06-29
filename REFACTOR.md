@@ -29,6 +29,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.inventory.InventoryMessagePayloads` for inventory item/list payload building.
 - Added `com.alphaseries.game.catalog.CatalogRegistry` as a typed adapter around product, catalog-product, and deal row caches previously parsed directly from `Licence` globals.
 - Added `com.alphaseries.game.moderation.StaffPayloads` for call-for-help rows, staff user summaries, room visits, room chat history, and unsafe staff-alert checks.
+- Added `com.alphaseries.game.navigator.RecommendedRooms` as a typed adapter around the recommended-room payload cache previously read through `Licence` globals.
 - Added `com.alphaseries.game.pet.PetPayloads` for pet race, inventory, name-validation, command, status, scratch, and action outgoing payloads.
 - Added `com.alphaseries.game.recycler.RecyclerSettings` as a typed adapter around recycler reward groups and ecotron box product state previously walked through `Licence` globals.
 - Added `com.alphaseries.game.session.SessionRegistry` as a typed adapter around the legacy `Licence.global_00829268` session cache.
@@ -53,9 +54,9 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 473
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1379
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1378
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 473
-- `Handling.java`: 12573 lines
+- `Handling.java`: 12566 lines
 - `Functions.java`: 797 lines
 - `MySQL.java`: 301 lines
 - `Vb.java`: 106 lines

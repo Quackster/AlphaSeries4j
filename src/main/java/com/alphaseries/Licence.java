@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.game.catalog.CatalogRegistry;
+import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.util.NumberUtils;
@@ -219,6 +220,15 @@ public final class Licence {
 
     public static RecyclerSettings recyclerSettings() {
         return RecyclerSettings.fromLegacy(global_00829140, global_0082915C, global_00829168, global_0082916C);
+    }
+
+    public static void setRecommendedRooms(Object payloads, long count) {
+        global_0082911C = payloads == null ? "" : payloads;
+        global_00829128 = Math.max(0L, count);
+    }
+
+    public static RecommendedRooms recommendedRooms() {
+        return RecommendedRooms.fromLegacy(global_0082911C, global_00829128);
     }
 
     private static CatalogRegistry catalogRegistry() {

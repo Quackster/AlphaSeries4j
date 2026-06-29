@@ -3776,7 +3776,7 @@ public final class Handling {
             String queryTail = "rooms_events,users,rooms,rooms_categories WHERE" + categoryFilter
                 + " rooms.id=rooms_events.id_room AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
                 + "GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
-            long randomTree = Functions.Proc_10_4_809CA0(1, Licence.global_00829128, 0);
+            long randomTree = Functions.Proc_10_4_809CA0(1, Licence.recommendedRooms().count(), 0);
             Proc_6_244_801E80(socketIndex, "GCPC" + categoryId + '\2'
                 + Crypto.Proc_3_0_6D2AF0(limitValue, null, "") + Proc_6_112_74E0C0(queryTail, 0, 0)
                 + recommendedRoomPayload(randomTree), 0);
@@ -3794,7 +3794,7 @@ public final class Handling {
             String queryTail = "users,rooms,rooms_categories WHERE" + categoryFilter
                 + " rooms.visitors_now > 0 AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
                 + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            long randomTree = Functions.Proc_10_4_809CA0(1, Licence.global_00829128, 0);
+            long randomTree = Functions.Proc_10_4_809CA0(1, Licence.recommendedRooms().count(), 0);
             Proc_6_244_801E80(socketIndex, "GC " + categoryId + '\2'
                 + Crypto.Proc_3_0_6D2AF0(limitValue, null, "") + Proc_6_112_74E0C0(queryTail, 0, 0)
                 + recommendedRoomPayload(randomTree), 0);
@@ -9815,14 +9815,7 @@ public final class Handling {
 
     public static String recommendedRoomPayload(long treeIndex) {
         try {
-            long normalizedIndex = treeIndex > 0L ? treeIndex - 1L : treeIndex;
-            if (Licence.global_0082911C instanceof String[]) {
-                String[] rows = (String[]) Licence.global_0082911C;
-                if (normalizedIndex >= 0L && normalizedIndex < rows.length) {
-                    return Vb.cStr(rows[(int) normalizedIndex]);
-                }
-            }
-            return "";
+            return Licence.recommendedRooms().payload(treeIndex);
         } catch (Exception ignored) {
             return "";
         }
