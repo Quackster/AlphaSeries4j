@@ -15,6 +15,7 @@ import com.alphaseries.dao.mysql.VoucherDao;
 import com.alphaseries.dao.mysql.PollDao;
 import com.alphaseries.dao.mysql.JukeboxDao;
 import com.alphaseries.dao.mysql.QuestDao;
+import com.alphaseries.dao.mysql.RecyclerDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.jukebox.JukeboxPlaybackRow;
 import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
@@ -12144,13 +12145,13 @@ public final class Handling {
                     }
                 }
             }
-            String rewardRows = MySQL.Proc_5_2_6D4690(
-                "SELECT id_product FROM settings_recycler ORDER BY chance DESC LIMIT 100", 0, 0);
-            String[] rows = StringUtils.text(rewardRows).split("\r", -1);
-            if (rows.length > 0 && !StringUtils.text(rewardRows).isEmpty()) {
-                int rowIndex = (int) NumberUtils.parseLong(Functions.Proc_10_4_809CA0(0, rows.length - 1L, 0));
-                rowIndex = Math.max(0, Math.min(rowIndex, rows.length - 1));
-                return NumberUtils.parseLong(rows[rowIndex]);
+            RecyclerDao recycler = recyclerDao();
+            List<Long> rewardProductIds = recycler == null ? List.of() : recycler.fallbackRewardProductIds();
+            if (!rewardProductIds.isEmpty()) {
+                int rowIndex = (int) NumberUtils.parseLong(Functions.Proc_10_4_809CA0(0, rewardProductIds.size() - 1L, 0));
+                rowIndex = Math.max(0, Math.min(rowIndex, rewardProductIds.size() - 1));
+                Long productId = rewardProductIds.get(rowIndex);
+                return productId == null ? 0L : productId;
             }
             return 0L;
         } catch (Exception ignored) {
@@ -12304,6 +12305,11 @@ public final class Handling {
     private static QuestDao questDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new QuestDao(database);
+    }
+
+    private static RecyclerDao recyclerDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new RecyclerDao(database);
     }
 
     private static BotDao botDao() {

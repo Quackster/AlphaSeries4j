@@ -238,6 +238,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed furniture pickup moderation logging through `StaffModerationDao`, replacing another raw `logs_moderation` insert in `Handling`.
 - Routed recycler selection validation, item clearing, and recycle logging through `FurnitureDao`, keeping dynamic item lists constrained to validated numeric IDs.
 - Routed represented room bot loading through typed `BotRoomEntryRow` records from `BotDao`, replacing raw bot SQL and tab-delimited parsing in `Handling`.
+- Added `RecyclerDao` and routed fallback recycler reward-product loading through typed prepared reads instead of raw row strings in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -251,9 +252,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 67
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 66
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12499 lines
+- `Handling.java`: 12505 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines
