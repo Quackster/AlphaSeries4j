@@ -34,6 +34,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.messages.outgoing.MessengerPayloads` for friend, request, search, pending-request, and friend-list outgoing payloads.
 - Added `com.alphaseries.server.packet.PacketSink` and kept the root `PacketSink` as a deprecated compatibility alias.
 - Added `com.alphaseries.util.StringUtils` and `NumberUtils`; migrated new staff/session code away from duplicated local helper methods.
+- Migrated extracted `game.*`, `messages.outgoing`, and `protocol` packages off duplicated local `text`/`number`/`field` helpers and onto shared utilities.
 - Migrated several payload builders from string concatenation to fluent `PacketBuilder`.
 
 ## VB Compatibility Class Removal Checklist
@@ -63,7 +64,7 @@ Measured on 2026-06-29:
 - Move MUS handling into a `server.mus` package with compatibility shims for old entry points.
 - Extract navigator, room, moderation, pet, badge, poll, recycler, jukebox, and wired payload builders from `Handling`.
 - Replace remaining `Crypto.Proc_3_*` and direct `Vb.val`/`Vb.cStr` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
-- Continue replacing duplicated local `text`/`number`/`field` helpers in extracted packages with `StringUtils` and `NumberUtils`.
+- Continue replacing duplicated local string/number helpers in root compatibility classes with `StringUtils` and `NumberUtils`.
 - Move remaining raw `Licence.global_*` caches into typed state holders under the appropriate `game.*` package.
 - Delete deprecated compatibility aliases and `com.alphaseries.vb.Vb` only after call-site count reaches zero and tests pass.
 

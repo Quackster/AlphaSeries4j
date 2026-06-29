@@ -1,6 +1,7 @@
 package com.alphaseries.game.wired;
 
-import com.alphaseries.protocol.WireEncoding;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.util.function.BiFunction;
 
@@ -28,16 +29,16 @@ public final class WiredPayloads {
         if (wiredCode <= 0L || furnitureId <= 0L) {
             return "";
         }
-        String recordText = "\1" + wiredCode + '\2' + furnitureId + '\3' + text(selectedIdsText)
-            + '\4' + text(parameterValues) + '\5' + left(textValue, 125) + '\6';
-        if (!text(extraValue).isEmpty()) {
-            recordText += text(extraValue);
+        String recordText = "\1" + wiredCode + '\2' + furnitureId + '\3' + StringUtils.text(selectedIdsText)
+            + '\4' + StringUtils.text(parameterValues) + '\5' + StringUtils.left(textValue, 125) + '\6';
+        if (!StringUtils.text(extraValue).isEmpty()) {
+            recordText += StringUtils.text(extraValue);
         }
         return recordText;
     }
 
     public static String recordField(String recordText, long fieldIndex) {
-        String bodyText = text(recordText);
+        String bodyText = StringUtils.text(recordText);
         if (bodyText.startsWith("\1")) {
             bodyText = bodyText.substring(1);
         }
@@ -93,21 +94,21 @@ public final class WiredPayloads {
     }
 
     public static String cacheWithRecord(String cacheText, String recordText) {
-        String record = text(recordText);
+        String record = StringUtils.text(recordText);
         if (record.isEmpty()) {
-            return text(cacheText);
+            return StringUtils.text(cacheText);
         }
         String cache = removeLineRecord(cacheText, recordMarker(record));
         return cache.isEmpty() ? record : record + '\n' + cache;
     }
 
     public static boolean selectedItemsExist(String selectedIds, String existingIds) {
-        String selected = text(selectedIds);
+        String selected = StringUtils.text(selectedIds);
         if (selected.isEmpty()) {
             return true;
         }
         for (String idPart : selected.replace(',', ';').split(";", -1)) {
-            long furnitureId = number(idPart);
+            long furnitureId = NumberUtils.parseLong(idPart);
             if (furnitureId > 0L && !containsDelimitedId(existingIds, furnitureId)) {
                 return false;
             }
@@ -123,14 +124,14 @@ public final class WiredPayloads {
         BiFunction<Long, Long, String> statePayloadBuilder
     ) {
         ApplyResult result = new ApplyResult();
-        String effectiveSelectedIds = selectedFurnitureId > 0L ? String.valueOf(selectedFurnitureId) : text(selectedIds);
+        String effectiveSelectedIds = selectedFurnitureId > 0L ? String.valueOf(selectedFurnitureId) : StringUtils.text(selectedIds);
         if (effectiveSelectedIds.isEmpty()) {
             return result;
         }
-        String[] parameterParts = (text(parameterText) + ";").split(";", -1);
-        long stateValue = number(parameterParts.length > 0 ? parameterParts[0] : "");
+        String[] parameterParts = (StringUtils.text(parameterText) + ";").split(";", -1);
+        long stateValue = NumberUtils.parseLong(parameterParts.length > 0 ? parameterParts[0] : "");
         for (String idPart : effectiveSelectedIds.replace(',', ';').split(";", -1)) {
-            long furnitureId = number(idPart);
+            long furnitureId = NumberUtils.parseLong(idPart);
             if (furnitureId > 0L && containsDelimitedId(existingIds, furnitureId)) {
                 result.statePayloads += statePayloadBuilder.apply(furnitureId, stateValue);
                 result.appliedCount++;
@@ -140,8 +141,8 @@ public final class WiredPayloads {
     }
 
     private static String removeLineRecord(String cacheText, String markerText) {
-        String cache = text(cacheText);
-        String marker = text(markerText);
+        String cache = StringUtils.text(cacheText);
+        String marker = StringUtils.text(markerText);
         if (cache.isEmpty() || marker.isEmpty()) {
             return cache;
         }
@@ -160,24 +161,12 @@ public final class WiredPayloads {
 
     private static boolean containsDelimitedId(String idText, long wantedId) {
         String wanted = String.valueOf(wantedId);
-        for (String idPart : text(idText).replace(',', ';').split(";", -1)) {
-            if (wanted.equals(String.valueOf(number(idPart)))) {
+        for (String idPart : StringUtils.text(idText).replace(',', ';').split(";", -1)) {
+            if (wanted.equals(String.valueOf(NumberUtils.parseLong(idPart)))) {
                 return true;
             }
         }
         return false;
     }
 
-    private static String left(String value, int maxLength) {
-        String valueText = text(value);
-        return valueText.length() <= maxLength ? valueText : valueText.substring(0, maxLength);
-    }
-
-    private static long number(Object value) {
-        return WireEncoding.parseLeadingLong(value);
-    }
-
-    private static String text(Object value) {
-        return value == null ? "" : String.valueOf(value);
-    }
 }

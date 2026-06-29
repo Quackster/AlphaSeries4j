@@ -1,7 +1,8 @@
 package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.protocol.WireEncoding;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 public final class SocialPayloads {
     private SocialPayloads() {
@@ -29,11 +30,11 @@ public final class SocialPayloads {
     public static String badgeInventory(String inventoryRows, String equippedPayload) {
         long inventoryCount = 0L;
         PacketBuilder inventoryPayload = PacketBuilder.create();
-        for (String row : text(inventoryRows).split("\r", -1)) {
+        for (String row : StringUtils.text(inventoryRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                String badgeId = field(fields, 0);
-                long badgeRowId = number(field(fields, 2));
+                String badgeId = StringUtils.field(fields, 0);
+                long badgeRowId = NumberUtils.parseLong(StringUtils.field(fields, 2));
                 if (!badgeId.isEmpty()) {
                     inventoryPayload.appendRaw('0').appendInt(badgeRowId).appendString(badgeId);
                     inventoryCount++;
@@ -50,11 +51,11 @@ public final class SocialPayloads {
     public static String equippedBadges(String badgeRows) {
         long equippedCount = 0L;
         PacketBuilder equippedPayload = PacketBuilder.create();
-        for (String row : text(badgeRows).split("\r", -1)) {
+        for (String row : StringUtils.text(badgeRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                String badgeId = field(fields, 0);
-                long badgeSlot = number(field(fields, 1));
+                String badgeId = StringUtils.field(fields, 0);
+                long badgeSlot = NumberUtils.parseLong(StringUtils.field(fields, 1));
                 if (!badgeId.isEmpty()) {
                     equippedPayload.appendRaw('0').appendInt(badgeSlot).appendString(badgeId);
                     equippedCount++;
@@ -77,7 +78,7 @@ public final class SocialPayloads {
     public static String tags(String tagRows) {
         long tagCount = 0L;
         PacketBuilder tagPayload = PacketBuilder.create();
-        for (String row : text(tagRows).split("\r", -1)) {
+        for (String row : StringUtils.text(tagRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 tagPayload.appendString(row);
                 tagCount++;
@@ -96,15 +97,4 @@ public final class SocialPayloads {
             .build();
     }
 
-    private static String field(String[] fields, int index) {
-        return fields != null && index >= 0 && index < fields.length ? text(fields[index]) : "";
-    }
-
-    private static long number(Object value) {
-        return WireEncoding.parseLeadingLong(value);
-    }
-
-    private static String text(Object value) {
-        return value == null ? "" : String.valueOf(value);
-    }
 }

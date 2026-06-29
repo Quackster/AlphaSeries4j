@@ -1,7 +1,8 @@
 package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.protocol.WireEncoding;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.util.Map;
 
@@ -10,15 +11,15 @@ public final class AchievementPayloads {
     }
 
     public static String reward(long achievementIndex, String achievementRow, long badgeLevel, long badgeRowId) {
-        String[] fields = text(achievementRow).split("\t", -1);
+        String[] fields = StringUtils.text(achievementRow).split("\t", -1);
         if (fields.length < 7) {
             return "";
         }
-        long achievementId = number(fields[0]);
+        long achievementId = NumberUtils.parseLong(fields[0]);
         String badgePrefix = fields[1];
-        long rewardIncrease = number(fields[3]);
-        long levelTotal = number(fields[4]);
-        long scoreIncrease = number(fields[5]);
+        long rewardIncrease = NumberUtils.parseLong(fields[3]);
+        long levelTotal = NumberUtils.parseLong(fields[4]);
+        long scoreIncrease = NumberUtils.parseLong(fields[5]);
         if (achievementId == 0L || badgePrefix.isEmpty()) {
             return "";
         }
@@ -37,13 +38,13 @@ public final class AchievementPayloads {
     }
 
     public static String award(String achievementRow) {
-        String[] fields = text(achievementRow).split("\t", -1);
+        String[] fields = StringUtils.text(achievementRow).split("\t", -1);
         if (fields.length < 7) {
             return "";
         }
-        long rewardIncrease = number(fields[3]);
-        long scoreIncrease = number(fields[5]);
-        long rewardType = number(fields[6]);
+        long rewardIncrease = NumberUtils.parseLong(fields[3]);
+        long scoreIncrease = NumberUtils.parseLong(fields[5]);
+        long rewardType = NumberUtils.parseLong(fields[6]);
         if (rewardIncrease == 0L && scoreIncrease == 0L) {
             return "";
         }
@@ -57,18 +58,18 @@ public final class AchievementPayloads {
     public static String list(String achievementRows, Map<String, Long> currentLevelsByBadgePrefix) {
         PacketBuilder payload = PacketBuilder.create();
         long achievementCount = 0L;
-        for (String row : text(achievementRows).split("\r", -1)) {
+        for (String row : StringUtils.text(achievementRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 7) {
-                    long achievementId = number(fields[0]);
+                    long achievementId = NumberUtils.parseLong(fields[0]);
                     String badgePrefix = fields[1];
                     if (achievementId > 0L && !badgePrefix.isEmpty()) {
-                        long progressRequired = number(fields[2]);
-                        long rewardIncrease = number(fields[3]);
-                        long levelTotal = number(fields[4]);
-                        long scoreIncrease = number(fields[5]);
-                        long rewardType = number(fields[6]);
+                        long progressRequired = NumberUtils.parseLong(fields[2]);
+                        long rewardIncrease = NumberUtils.parseLong(fields[3]);
+                        long levelTotal = NumberUtils.parseLong(fields[4]);
+                        long scoreIncrease = NumberUtils.parseLong(fields[5]);
+                        long rewardType = NumberUtils.parseLong(fields[6]);
                         if (levelTotal <= 0L) {
                             levelTotal = 1L;
                         }
@@ -105,11 +106,4 @@ public final class AchievementPayloads {
             .build();
     }
 
-    private static long number(Object value) {
-        return WireEncoding.parseLeadingLong(value);
-    }
-
-    private static String text(Object value) {
-        return value == null ? "" : String.valueOf(value);
-    }
 }

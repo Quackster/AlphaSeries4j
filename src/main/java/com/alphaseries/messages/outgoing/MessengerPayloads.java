@@ -1,7 +1,8 @@
 package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.protocol.WireEncoding;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 public final class MessengerPayloads {
     private MessengerPayloads() {
@@ -42,17 +43,17 @@ public final class MessengerPayloads {
     }
 
     public static String friendSummaryFromRow(String rowText, long relationshipState, boolean followEnabled) {
-        String[] fields = text(rowText).split("\t", -1);
+        String[] fields = StringUtils.text(rowText).split("\t", -1);
         if (fields.length < 7) {
             return "";
         }
-        long socketIndex = number(fields[5]);
+        long socketIndex = NumberUtils.parseLong(fields[5]);
         return friend(
-            number(fields[0]),
+            NumberUtils.parseLong(fields[0]),
             fields[1],
             fields[2],
             fields[3],
-            number(fields[4]),
+            NumberUtils.parseLong(fields[4]),
             socketIndex > 0L ? 2L : 0L,
             socketIndex > 0L ? 1L : 0L,
             fields[6],
@@ -71,7 +72,7 @@ public final class MessengerPayloads {
     ) {
         return PacketBuilder.create()
             .appendRaw('1')
-            .appendInt(number(userId))
+            .appendInt(NumberUtils.parseLong(userId))
             .appendString(userName)
             .appendString(mottoText)
             .appendInt(isOnline)
@@ -118,11 +119,11 @@ public final class MessengerPayloads {
     public static String pendingRequests(String rowText) {
         long requestCount = 0L;
         PacketBuilder requestPayload = PacketBuilder.create();
-        for (String row : text(rowText).split("\r", -1)) {
+        for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                long requesterId = number(field(fields, 0));
-                String requesterName = field(fields, 1);
+                long requesterId = NumberUtils.parseLong(StringUtils.field(fields, 0));
+                String requesterName = StringUtils.field(fields, 1);
                 if (requesterId > 0L) {
                     requestPayload.appendRaw('0')
                         .appendInt(requesterId)
@@ -150,18 +151,18 @@ public final class MessengerPayloads {
     ) {
         long friendCount = 0L;
         PacketBuilder friendPayload = PacketBuilder.create();
-        for (String row : text(rowText).split("\r", -1)) {
+        for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 7) {
-                    long friendSocketIndex = number(fields[2]);
+                    long friendSocketIndex = NumberUtils.parseLong(fields[2]);
                     long friendOnline = friendSocketIndex > 0L ? 1L : 0L;
                     friendPayload.appendRaw(friend(
-                        number(fields[0]),
+                        NumberUtils.parseLong(fields[0]),
                         fields[1],
                         fields[4],
                         fields[3],
-                        number(fields[5]),
+                        NumberUtils.parseLong(fields[5]),
                         friendOnline == 1L ? 2L : 0L,
                         friendOnline,
                         fields[6],
@@ -181,15 +182,4 @@ public final class MessengerPayloads {
             .build();
     }
 
-    private static String field(String[] fields, int index) {
-        return fields != null && index >= 0 && index < fields.length ? text(fields[index]) : "";
-    }
-
-    private static long number(Object value) {
-        return WireEncoding.parseLeadingLong(value);
-    }
-
-    private static String text(Object value) {
-        return value == null ? "" : String.valueOf(value);
-    }
 }

@@ -1,7 +1,8 @@
 package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.protocol.WireEncoding;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 public final class JukeboxPayloads {
     private JukeboxPayloads() {
@@ -10,18 +11,18 @@ public final class JukeboxPayloads {
     public static String songInfo(String cdRows) {
         long responseCount = 0L;
         PacketBuilder cdPayload = PacketBuilder.create();
-        for (String row : text(cdRows).split("\r", -1)) {
+        for (String row : StringUtils.text(cdRows).split("\r", -1)) {
             String rowValue = row.trim();
             if (!rowValue.isEmpty()) {
                 String[] fields = rowValue.split("\t", -1);
                 if (fields.length >= 5) {
-                    long cdId = number(field(fields, 4));
-                    long sequenceId = number(field(fields, 1));
+                    long cdId = NumberUtils.parseLong(StringUtils.field(fields, 4));
+                    long sequenceId = NumberUtils.parseLong(StringUtils.field(fields, 1));
                     cdPayload.appendInt(cdId)
                         .appendInt(sequenceId)
-                        .appendString(field(fields, 0))
-                        .appendString(field(fields, 2))
-                        .appendString(field(fields, 3));
+                        .appendString(StringUtils.field(fields, 0))
+                        .appendString(StringUtils.field(fields, 2))
+                        .appendString(StringUtils.field(fields, 3));
                     responseCount++;
                 }
             }
@@ -36,12 +37,12 @@ public final class JukeboxPayloads {
         long effectiveLimit = playlistLimit <= 0L ? 100L : playlistLimit;
         long playlistCount = 0L;
         PacketBuilder playlistPayload = PacketBuilder.create();
-        for (String row : text(playlistRows).split("\r", -1)) {
+        for (String row : StringUtils.text(playlistRows).split("\r", -1)) {
             String rowValue = row.trim();
             if (!rowValue.isEmpty()) {
                 String[] fields = rowValue.split("\t", -1);
-                long cdId = number(field(fields, 0));
-                long destinationId = number(field(fields, 1));
+                long cdId = NumberUtils.parseLong(StringUtils.field(fields, 0));
+                long destinationId = NumberUtils.parseLong(StringUtils.field(fields, 1));
                 if (cdId > 0L) {
                     playlistPayload.appendInt(cdId).appendInt(destinationId);
                     playlistCount++;
@@ -58,12 +59,12 @@ public final class JukeboxPayloads {
     public static String diskInventory(String diskRows) {
         long diskCount = 0L;
         PacketBuilder diskPayload = PacketBuilder.create();
-        for (String row : text(diskRows).split("\r", -1)) {
+        for (String row : StringUtils.text(diskRows).split("\r", -1)) {
             String rowValue = row.trim();
             if (!rowValue.isEmpty()) {
                 String[] fields = rowValue.split("\t", -1);
-                long diskId = number(field(fields, 0));
-                long destinationId = number(field(fields, 1));
+                long diskId = NumberUtils.parseLong(StringUtils.field(fields, 0));
+                long destinationId = NumberUtils.parseLong(StringUtils.field(fields, 1));
                 if (diskId > 0L) {
                     diskPayload.appendInt(diskId).appendInt(destinationId);
                     diskCount++;
@@ -90,15 +91,4 @@ public final class JukeboxPayloads {
             .build();
     }
 
-    private static String field(String[] fields, int index) {
-        return fields != null && index >= 0 && index < fields.length ? text(fields[index]) : "";
-    }
-
-    private static long number(Object value) {
-        return WireEncoding.parseLeadingLong(value);
-    }
-
-    private static String text(Object value) {
-        return value == null ? "" : String.valueOf(value);
-    }
 }

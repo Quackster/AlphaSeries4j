@@ -1,7 +1,8 @@
 package com.alphaseries.game.pet;
 
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.protocol.WireEncoding;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 public final class PetPayloads {
     private PetPayloads() {
@@ -10,13 +11,13 @@ public final class PetPayloads {
     public static String raceList(String productPet, String rowText, long rankIndex, long hcLevel) {
         long raceCount = 0L;
         PacketBuilder racePayload = PacketBuilder.create();
-        for (String row : text(rowText).split("\r", -1)) {
+        for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 4) {
-                    long breedId = number(fields[1]);
-                    long minRank = number(fields[2]);
-                    long minHcRank = number(fields[3]);
+                    long breedId = NumberUtils.parseLong(fields[1]);
+                    long minRank = NumberUtils.parseLong(fields[2]);
+                    long minHcRank = NumberUtils.parseLong(fields[3]);
                     if (rankIndex >= minRank && hcLevel >= minHcRank) {
                         racePayload.appendInt(breedId).appendRaw("II");
                         raceCount++;
@@ -34,7 +35,7 @@ public final class PetPayloads {
     public static String inventoryList(String rowText) {
         long petCount = 0L;
         PacketBuilder petPayload = PacketBuilder.create();
-        for (String row : text(rowText).split("\r", -1)) {
+        for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 4) {
@@ -53,16 +54,16 @@ public final class PetPayloads {
     }
 
     public static String inventoryRow(String[] fields) {
-        long petId = number(field(fields, 0));
+        long petId = NumberUtils.parseLong(StringUtils.field(fields, 0));
         if (petId <= 0L) {
             return "";
         }
-        String petName = field(fields, 1);
-        String petFigure = field(fields, 2).toLowerCase();
-        long scratches = number(field(fields, 3));
+        String petName = StringUtils.field(fields, 1);
+        String petFigure = StringUtils.field(fields, 2).toLowerCase();
+        long scratches = NumberUtils.parseLong(StringUtils.field(fields, 3));
         String[] figureParts = petFigure.split(" ", -1);
-        long petType = figureParts.length >= 1 ? number(figureParts[0]) : 0L;
-        long petRace = figureParts.length >= 2 ? number(figureParts[1]) : 0L;
+        long petType = figureParts.length >= 1 ? NumberUtils.parseLong(figureParts[0]) : 0L;
+        long petRace = figureParts.length >= 2 ? NumberUtils.parseLong(figureParts[1]) : 0L;
         String petColor = figureParts.length >= 3 ? figureParts[2] : "";
 
         return PacketBuilder.message("0")
@@ -76,7 +77,7 @@ public final class PetPayloads {
     }
 
     public static long nameValidationCode(String candidateName) {
-        String name = text(candidateName);
+        String name = StringUtils.text(candidateName);
         if (name.length() > 30) {
             return 1L;
         }
@@ -109,8 +110,8 @@ public final class PetPayloads {
         for (String row : rows) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                long commandId = number(field(fields, 0));
-                long requiredLevel = number(field(fields, 1));
+                long commandId = NumberUtils.parseLong(StringUtils.field(fields, 0));
+                long requiredLevel = NumberUtils.parseLong(StringUtils.field(fields, 1));
                 if (commandId > 0L) {
                     allPayload.appendRaw('0').appendInt(commandId);
                     allCount++;
@@ -136,16 +137,16 @@ public final class PetPayloads {
         }
         return fullStatus(
             botEntityId,
-            field(petFields, 1),
-            field(petFields, 2),
-            number(field(petFields, 3)),
-            number(field(petFields, 4)),
-            number(field(petFields, 5)),
-            number(field(petFields, 6)),
-            number(field(petFields, 7)),
-            number(field(petFields, 8)),
-            number(field(petFields, 9)),
-            field(petFields, 10));
+            StringUtils.field(petFields, 1),
+            StringUtils.field(petFields, 2),
+            NumberUtils.parseLong(StringUtils.field(petFields, 3)),
+            NumberUtils.parseLong(StringUtils.field(petFields, 4)),
+            NumberUtils.parseLong(StringUtils.field(petFields, 5)),
+            NumberUtils.parseLong(StringUtils.field(petFields, 6)),
+            NumberUtils.parseLong(StringUtils.field(petFields, 7)),
+            NumberUtils.parseLong(StringUtils.field(petFields, 8)),
+            NumberUtils.parseLong(StringUtils.field(petFields, 9)),
+            StringUtils.field(petFields, 10));
     }
 
     public static String fullStatus(
@@ -210,7 +211,7 @@ public final class PetPayloads {
     }
 
     public static String commandAction(long botEntityId, String commandAction, long commandId) {
-        if (text(commandAction).isEmpty()) {
+        if (StringUtils.text(commandAction).isEmpty()) {
             return "";
         }
         return PacketBuilder.message("IZ")
@@ -234,18 +235,6 @@ public final class PetPayloads {
             }
             return normalized;
         }
-        return text(rows).split("\r", -1);
-    }
-
-    private static String field(String[] fields, int index) {
-        return fields != null && index >= 0 && index < fields.length ? text(fields[index]) : "";
-    }
-
-    private static long number(Object value) {
-        return WireEncoding.parseLeadingLong(value);
-    }
-
-    private static String text(Object value) {
-        return value == null ? "" : String.valueOf(value);
+        return StringUtils.text(rows).split("\r", -1);
     }
 }
