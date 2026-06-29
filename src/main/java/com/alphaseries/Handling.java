@@ -56,6 +56,7 @@ import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.navigator.NewFriendRooms;
+import com.alphaseries.game.navigator.NavigatorRoom;
 import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
@@ -1847,14 +1848,16 @@ public final class Handling {
                 if (roomId <= 0L) {
                     return;
                 }
-                String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
-                    + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
-                String rowText = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
-                    + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
-                    + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,"
-                    + "rooms.is_staff_picked FROM " + queryTail, 0, 0);
+                RoomDao rooms = roomDao();
+                if (rooms == null) {
+                    return;
+                }
+                NavigatorRoom room = rooms.navigatorRoom(roomId).orElse(null);
                 Proc_6_244_801E80(socketIndex,
-                    Crypto.Proc_3_0_6D2AF0(0, null, "GF") + singleNavigatorRoomPayloadFromRows(rowText), 0);
+                    PacketBuilder.message("GF")
+                        .appendInt(0)
+                        .appendRaw(singleNavigatorRoomPayload(room))
+                        .build(), 0);
             } else if (requestMode > 0L) {
                 // VB6 reads a room id from packed session offsets here; those offsets are not represented yet.
             }
@@ -9823,6 +9826,30 @@ public final class Handling {
             + "H";
     }
 
+    public static String navigatorRoomFragment(NavigatorRoom room) {
+        if (room == null) {
+            return "";
+        }
+        return PacketBuilder.create()
+            .appendInt(room.roomId())
+            .appendInt(room.visitorsNow())
+            .appendInt(room.visitorsMax())
+            .appendInt(room.roomRate())
+            .appendInt(room.categoryId())
+            .appendInt(room.hasTrading())
+            .appendInt(room.allowOtherPets())
+            .appendInt(room.staffPicked())
+            .appendString(room.roomName())
+            .appendString(room.ownerName())
+            .appendString(room.doorStatus())
+            .appendString(room.description())
+            .appendString(room.icon())
+            .appendString(room.tagOne())
+            .appendString(room.tagTwo())
+            .appendRaw("H")
+            .build();
+    }
+
     public static String navigatorRoomListPayloadFromRows(String rowText) {
         long roomCount = 0L;
         StringBuilder payload = new StringBuilder();
@@ -9833,6 +9860,10 @@ public final class Handling {
             }
         }
         return Crypto.Proc_3_0_6D2AF0(roomCount, null, payload.toString());
+    }
+
+    public static String singleNavigatorRoomPayload(NavigatorRoom room) {
+        return room == null ? "" : navigatorRoomFragment(room);
     }
 
     public static String singleNavigatorRoomPayloadFromRows(String rowText) {

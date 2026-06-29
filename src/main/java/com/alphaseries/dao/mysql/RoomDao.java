@@ -1,6 +1,7 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.navigator.NavigatorRoom;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.game.room.RoomOccupantRow;
@@ -67,6 +68,32 @@ public final class RoomDao {
                 resultSet.getLong(1),
                 resultSet.getLong(2)),
             1L);
+    }
+
+    public Optional<NavigatorRoom> navigatorRoom(long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,"
+                + "rooms.is_staff_picked FROM users,rooms,rooms_categories WHERE rooms.id=? "
+                + "AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1",
+            resultSet -> new NavigatorRoom(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getString(7),
+                resultSet.getLong(8),
+                resultSet.getLong(10),
+                resultSet.getLong(11),
+                resultSet.getString(12),
+                resultSet.getString(13),
+                resultSet.getString(14),
+                resultSet.getLong(15),
+                resultSet.getLong(16)),
+            roomId);
     }
 
     public long ownedRoomCount(long ownerId) throws SQLException {
