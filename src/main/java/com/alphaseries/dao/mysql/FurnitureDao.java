@@ -106,6 +106,19 @@ public final class FurnitureDao {
             roomId);
     }
 
+    public List<WallFurniture> wallFurnitureInRoom(long roomId) throws SQLException {
+        return database.query(
+            "SELECT id,id_product,position_wall,sign,id_secondary FROM furnitures WHERE id_room=? "
+                + "AND id_owner IS NULL AND position_wall IS NOT NULL LIMIT 100",
+            resultSet -> new WallFurniture(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getString(4),
+                resultSet.getLong(5)),
+            roomId);
+    }
+
     public int updatePostIt(long furnitureId, String sign, String caption) throws SQLException {
         return database.execute(
             "UPDATE furnitures SET sign=?,caption=? WHERE id=?",
@@ -169,5 +182,8 @@ public final class FurnitureDao {
     }
 
     public record RollerFurniture(long furnitureId, long positionX, long positionY, String positionZ, long rotation) {
+    }
+
+    public record WallFurniture(long furnitureId, long productId, String wallPosition, String sign, long secondaryValue) {
     }
 }

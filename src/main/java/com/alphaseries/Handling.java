@@ -2756,23 +2756,21 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,position_wall,sign,id_secondary FROM furnitures WHERE id_room='"
-                + roomId + "' AND id_owner IS NULL AND position_wall IS NOT NULL LIMIT 100", 0, 0);
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
+                return "";
+            }
             long itemCount = 0L;
             StringBuilder itemPayload = new StringBuilder();
-            for (String row : StringUtils.text(rowText).split("\r", -1)) {
-                String trimmedRow = row.trim();
-                if (!trimmedRow.isEmpty()) {
-                    String[] fields = trimmedRow.split("\t", -1);
-                    long furnitureId = NumberUtils.parseLong(handlingField(fields, 0));
-                    long productId = NumberUtils.parseLong(handlingField(fields, 1));
-                    String wallPosition = handlingField(fields, 2);
-                    String signText = handlingField(fields, 3);
-                    long secondaryValue = NumberUtils.parseLong(handlingField(fields, 4));
-                    if (furnitureId > 0L && productId > 0L && !wallPosition.isEmpty()) {
-                        itemPayload.append(Proc_6_156_7972B0(furnitureId, productId, wallPosition, signText, secondaryValue));
-                        itemCount++;
-                    }
+            for (FurnitureDao.WallFurniture wallFurniture : furniture.wallFurnitureInRoom(roomId)) {
+                long furnitureId = wallFurniture.furnitureId();
+                long productId = wallFurniture.productId();
+                String wallPosition = StringUtils.text(wallFurniture.wallPosition());
+                String signText = StringUtils.text(wallFurniture.sign());
+                long secondaryValue = wallFurniture.secondaryValue();
+                if (furnitureId > 0L && productId > 0L && !wallPosition.isEmpty()) {
+                    itemPayload.append(Proc_6_156_7972B0(furnitureId, productId, wallPosition, signText, secondaryValue));
+                    itemCount++;
                 }
             }
             String payload = Crypto.Proc_3_0_6D2AF0(itemCount, null, "@m") + itemPayload;
