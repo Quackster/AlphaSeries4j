@@ -2908,6 +2908,41 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_95_746CD0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "Cw");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (userId.isEmpty() || "0".equals(userId) || roomId <= 0L) {
+                return "";
+            }
+            long furnitureId = idRequestFromWire(requestPayload, "");
+            if (furnitureId <= 0L) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,position_x,position_y,id_product FROM furnitures WHERE id='"
+                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            long productId = Vb.val(handlingField(rowText.split("\t", -1), 3));
+            String productAction = DataManager.Proc_8_12_806C30(productId, 17, 0);
+            return "habbowheel".equals(productAction) ? String.valueOf(furnitureId) : "";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_96_747000(Object... args) {
+        return handlingSimpleFloorItemUse(args, "AM", 0L, true);
+    }
+
+    public static String Proc_6_97_747640(Object... args) {
+        return handlingSimpleFloorItemUse(args, "AL", -1L, false);
+    }
+
     public static long Proc_6_98_747D80(Object... args) {
         long currentPresetId = 0L;
         try {
@@ -7974,6 +8009,53 @@ public final class Handling {
             furnitureId = readWireLong(requestPayload, new LongRef(1));
         }
         return furnitureId;
+    }
+
+    public static String handlingSimpleFloorItemUse(Object[] args, String packetPrefix, long stateValue, boolean storeState) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, packetPrefix);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (userId.isEmpty() || "0".equals(userId) || roomId <= 0L) {
+                return "";
+            }
+            long furnitureId = idRequestFromWire(requestPayload, "");
+            if (furnitureId <= 0L) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,position_x,position_y,id_product FROM furnitures WHERE id='"
+                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            String[] fields = rowText.split("\t", -1);
+            long furnitureX = Vb.val(handlingField(fields, 1));
+            long furnitureY = Vb.val(handlingField(fields, 2));
+            long productId = Vb.val(handlingField(fields, 3));
+            if (productId <= 0L || Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0)) != 0L) {
+                return "";
+            }
+            long roomSlot = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            MovementPosition userPosition = representedMovementPosition(
+                Licence.global_00829310, roomSlot, representedRoomUserIndex(socketIndex, userId));
+            if (userPosition.found
+                && (Math.abs(userPosition.positionX - furnitureX) > 2L || Math.abs(userPosition.positionY - furnitureY) > 2L)) {
+                return "";
+            }
+            String payload = "0" + Crypto.Proc_3_0_6D2AF0(stateValue, null,
+                Crypto.Proc_3_0_6D2AF0(furnitureId, null, "AZ"));
+            Proc_6_247_8027E0(socketIndex, payload, 0);
+            if (storeState) {
+                Proc_6_151_78AC20(roomId, furnitureId, stateValue);
+            } else {
+                Proc_6_145_76CA20(socketIndex, roomId, furnitureId);
+            }
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
     }
 
     public static boolean isPostItProduct(long productId) {

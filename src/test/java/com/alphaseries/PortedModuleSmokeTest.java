@@ -1822,7 +1822,7 @@ public final class PortedModuleSmokeTest {
         Files.createDirectories(figureCachePath.resolve("cache").resolve("items_charges"));
         Files.write(figureCachePath.resolve("cache").resolve("wired_trigger").resolve("9.cache"), "trigger-cache".getBytes());
         Files.write(figureCachePath.resolve("cache").resolve("rooms").resolve("9.cache"), "room-cache".getBytes());
-        String[] stickyProducts = new String[511];
+        String[] stickyProducts = new String[512];
         stickyProducts[9] = productRow(9, "18", "wall_sprite");
         stickyProducts[500] = productRow(500, "18", "post.it.vd");
         stickyProducts[501] = productRow(501, "17", "present_wrap_basic");
@@ -1834,6 +1834,7 @@ public final class PortedModuleSmokeTest {
         stickyProducts[508] = productRow(508, "12", "1", "18", "charge_sprite", "34", "3", "35", "10", "36", "2", "37", "1");
         stickyProducts[509] = productRow(509, "7", "static", "18", "plain_sprite");
         stickyProducts[510] = productRow(510, "12", "99", "17", "bb_score_blue");
+        stickyProducts[511] = productRow(511, "0", "0", "17", "habbowheel");
         DataManager.global_008292BC = stickyProducts;
         Licence.global_008292BC = stickyProducts;
         String[] catalogProducts = new String[82];
@@ -2254,6 +2255,9 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id_product,position_wall FROM furnitures WHERE id='78'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(503, ":w=5"));
+                }
+                if (sqlText.contains("SELECT id,position_x,position_y,id_product FROM furnitures WHERE id='93'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(93, 2, 3, 511));
                 }
                 if (sqlText.contains("SELECT status_door FROM rooms WHERE id='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
@@ -2975,6 +2979,18 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_008291FC.contains("\1" + "81\2"));
         Handling.Proc_6_151_78AC20(9, 82, 3);
         assertEquals(true, Licence.global_00829310.contains("\1" + "9\t82\t3\2"));
+        handlingSends.clear();
+        assertEquals("93", Handling.Proc_6_95_746CD0(4, "Cw" + wireLong(93)));
+        String simpleUsePayload = Handling.Proc_6_96_747000(4, "AM" + wireLong(93));
+        assertEquals(true, simpleUsePayload.contains("AZ"));
+        assertEquals(true, containsSend(handlingSends, "AZ"));
+        assertEquals(true, Licence.global_00829310.contains("\1" + "9\t93\t0\2"));
+        handlingSends.clear();
+        String simpleResetPayload = Handling.Proc_6_97_747640(4, "AL" + wireLong(93));
+        assertEquals(true, simpleResetPayload.contains("AZ"));
+        assertEquals(true, containsSend(handlingSends, "AZ"));
+        assertEquals(true, Licence.global_008291F8.contains("\1" + "9\2"));
+        Handling.Proc_6_151_78AC20(9, 82, 3);
         Handling.Proc_6_146_76D300(4, 82, 506);
         assertEquals(false, Licence.global_008291FC.contains("\1" + "82\2"));
         assertEquals(true, Licence.global_00829310.contains("\1" + "9\t82\t3\2"));
