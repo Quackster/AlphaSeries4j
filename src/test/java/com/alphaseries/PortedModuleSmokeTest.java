@@ -2386,10 +2386,10 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT heightmap FROM models,rooms WHERE rooms.id='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("0"));
                 }
-                if (sqlText.contains("SELECT bots.id,bots.name,bots.motto,bots.speech,bots.responses,'2','3','0','4',bots.figure")
+                if (sqlText.contains("SELECT bots.id,bots.name,bots.motto,bots.speech,bots.responses,bots.figure")
                     && sqlText.contains("WHERE bots_petdata.id_bot='10'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(
-                        10, "Rex", "pet motto", "speech", "responses", 2, 3, "0", 4, "1 2 ff", "", 3, 0, "", "submit", 1, 6));
+                        10, "Rex", "pet motto", "speech", "responses", "1 2 ff", 3, 0, "", "submit", 1, 6));
                 }
                 if (sqlText.contains("SELECT scratches FROM bots_petdata WHERE id_bot='10'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(5));

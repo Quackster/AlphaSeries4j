@@ -6,6 +6,7 @@ import com.alphaseries.game.pet.PetCommandTargetRow;
 import com.alphaseries.game.pet.PetExperienceStateRow;
 import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.pet.PetLevelExperienceRow;
+import com.alphaseries.game.pet.PetPlacementRow;
 import com.alphaseries.game.pet.PetRaceRow;
 import com.alphaseries.game.pet.PetScratchRow;
 import com.alphaseries.game.pet.PetStatusRow;
@@ -73,6 +74,29 @@ public final class BotDao {
                 resultSet.getLong(4)),
             userId,
             3L);
+    }
+
+    public Optional<PetPlacementRow> availablePetForPlacement(long botId, long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT bots.id,bots.name,bots.motto,bots.speech,bots.responses,bots.figure,"
+                + "bots.id_handle,bots.id_handleaction,bots.cache_action,bots.speech_submit,bots.allow_walk,bots.max_fields_away "
+                + "FROM bots,bots_petdata WHERE bots_petdata.id_bot=? AND bots.id=bots_petdata.id_bot "
+                + "AND bots.id_user=? AND bots.id_room IS NULL LIMIT 1",
+            resultSet -> new PetPlacementRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getString(4),
+                resultSet.getString(5),
+                resultSet.getString(6),
+                resultSet.getLong(7),
+                resultSet.getLong(8),
+                resultSet.getString(9),
+                resultSet.getString(10),
+                resultSet.getLong(11),
+                resultSet.getLong(12)),
+            botId,
+            userId);
     }
 
     public int clearBotRoom(long botId) throws SQLException {

@@ -16,6 +16,7 @@ import com.alphaseries.game.pet.PetCommandTargetRow;
 import com.alphaseries.game.pet.PetExperienceStateRow;
 import com.alphaseries.game.pet.PetLevelExperienceRow;
 import com.alphaseries.game.pet.PetPayloads;
+import com.alphaseries.game.pet.PetPlacementRow;
 import com.alphaseries.game.pet.PetScratchRow;
 import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -6060,16 +6061,11 @@ public final class Handling {
                 return 0L;
             }
             String positionZ = String.valueOf(NumberUtils.parseLong(rooms.modelHeightmap(roomId)));
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT bots.id,bots.name,bots.motto,bots.speech,bots.responses,'"
-                + positionX + "','" + positionY + "','" + Functions.Proc_10_11_80A9C0(positionZ, 0, 0) + "','"
-                + positionR + "',bots.figure,NULL,bots.id_handle,bots.id_handleaction,NULL,bots.speech_submit,bots.allow_walk,bots.max_fields_away "
-                + "FROM bots,bots_petdata WHERE bots_petdata.id_bot='" + petId
-                + "' AND bots.id=bots_petdata.id_bot AND bots.id_user='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "' AND bots.id_room IS NULL LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            PetPlacementRow pet = bots.availablePetForPlacement(petId, NumberUtils.parseLong(userId)).orElse(null);
+            if (pet == null) {
                 return 0L;
             }
-            long botEntityId = Proc_6_187_7CD700(roomSlot, rowText.split("\t", -1), 0);
+            long botEntityId = Proc_6_187_7CD700(roomSlot, pet.representedBotFields(positionX, positionY, positionZ, positionR), 0);
             if (botEntityId <= 0L) {
                 return 0L;
             }
