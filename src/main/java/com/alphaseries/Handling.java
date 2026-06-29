@@ -7834,6 +7834,11 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
+            long userIdValue = NumberUtils.parseLong(userId);
+            MessengerDao messenger = messengerDao();
+            if (messenger == null) {
+                return "";
+            }
             LongRef offset = new LongRef(1);
             long acceptCount = readWireLong(requestPayload, offset);
             if (acceptCount <= 0L) {
@@ -7848,13 +7853,7 @@ public final class Handling {
                 String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
                 if (!targetUserId.isEmpty() && !"0".equals(targetUserId)
                     && !("," + targetIds + ",").contains("," + targetUserId + ",")) {
-                    String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name,users.motto,users.figure,users.level,users.id_socket,"
-                        + "DATE_FORMAT(FROM_UNIXTIME(users.lastonline_time), '" + dateTimeFormat
-                        + "') FROM users,friendships WHERE friendships.has_accept='0' AND friendships.id_user='"
-                        + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND friendships.id_friend='"
-                        + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0)
-                        + "' AND users.id=friendships.id_friend LIMIT 1", 0, 0);
-                    if (!rowText.isEmpty()) {
+                    if (messenger.pendingRequestExists(userIdValue, NumberUtils.parseLong(targetUserId), dateTimeFormat)) {
                         if (targetIds.length() > 0) {
                             targetIds.append(',');
                         }
@@ -7868,38 +7867,27 @@ public final class Handling {
             long acceptedCount = 0L;
             StringBuilder payloadRows = new StringBuilder();
             for (String targetUserId : targetIds.toString().split(",", -1)) {
-                String rowText = MySQL.Proc_5_2_6D4690("SELECT id,name,motto,figure,level,id_socket,DATE_FORMAT(FROM_UNIXTIME(lastonline_time), '"
-                    + dateTimeFormat + "') FROM users WHERE id='" + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0)
-                    + "' LIMIT 1", 0, 0);
-                if (!rowText.isEmpty()) {
-                    String[] fields = rowText.split("\t", -1);
-                    if (fields.length >= 7) {
-                        int targetSocketIndex = (int) NumberUtils.parseLong(handlingField(fields, 5));
-                        payloadRows.append('H').append(messengerFriendPayload(
-                            NumberUtils.parseLong(handlingField(fields, 0)),
-                            handlingField(fields, 1),
-                            handlingField(fields, 2),
-                            handlingField(fields, 3),
-                            NumberUtils.parseLong(handlingField(fields, 4)),
-                            targetSocketIndex > 0 ? 2L : 0L,
-                            targetSocketIndex > 0 ? 1L : 0L,
-                            handlingField(fields, 6),
-                            0L));
-                        MySQL.Proc_5_0_6D3CD0("INSERT IGNORE INTO friendships(id_user,id_friend,has_accept) VALUES('"
-                            + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','"
-                            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','0')", 0, 0);
-                        MySQL.Proc_5_0_6D3CD0("UPDATE friendships SET has_accept='1' WHERE ((id_user='"
-                            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_friend='"
-                            + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "') OR (id_user='"
-                            + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_friend='"
-                            + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                            + "')) AND has_accept='0' LIMIT 2", 0, 0);
-                        if (targetSocketIndex > 0) {
-                            String notifyPayload = "@MHIH" + messengerFriendSummaryPayload(userId, 1L);
-                            Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
-                        }
-                        acceptedCount++;
+                long targetUserIdValue = NumberUtils.parseLong(targetUserId);
+                MessengerDao.MessengerFriend friend = messenger.messengerFriend(targetUserIdValue, dateTimeFormat).orElse(null);
+                if (friend != null) {
+                    int targetSocketIndex = (int) friend.socketIndex();
+                    payloadRows.append('H').append(messengerFriendPayload(
+                        friend.userId(),
+                        friend.userName(),
+                        friend.motto(),
+                        friend.figure(),
+                        friend.level(),
+                        targetSocketIndex > 0 ? 2L : 0L,
+                        targetSocketIndex > 0 ? 1L : 0L,
+                        friend.lastOnline(),
+                        0L));
+                    messenger.insertReversePendingFriendship(targetUserIdValue, userIdValue);
+                    messenger.acceptFriendshipPair(userIdValue, targetUserIdValue);
+                    if (targetSocketIndex > 0) {
+                        String notifyPayload = "@MHIH" + messengerFriendSummaryPayload(userId, 1L);
+                        Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
                     }
+                    acceptedCount++;
                 }
             }
             if (acceptedCount > 0L) {

@@ -230,6 +230,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `Boot` cache refresh/build helper conversions off `Vb` and onto shared `StringUtils`/`NumberUtils`.
 - Migrated remaining `Handling` conversions off `Vb` and onto shared `StringUtils`/`NumberUtils`, then removed the unused `com.alphaseries.vb.Vb` compatibility class.
 - Migrated several payload builders from string concatenation to fluent `PacketBuilder`.
+- Routed messenger friend-request acceptance through typed `MessengerDao` records and prepared methods, replacing raw accept-flow SQL and tab-delimited handler parsing in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -241,11 +242,11 @@ Compared with `main`, the VB helper artifact has been removed:
 
 Measured on 2026-06-30:
 
-- Unique `Proc_*` symbols under `src/main/java`: 367
+- Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 85
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 81
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12495 lines
+- `Handling.java`: 12483 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines

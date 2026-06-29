@@ -4,6 +4,7 @@ import com.alphaseries.db.Database;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 public final class MessengerDao {
     private final Database database;
@@ -124,6 +125,56 @@ public final class MessengerDao {
             userId);
     }
 
+    public boolean pendingRequestExists(long userId, long targetUserId, String dateTimeFormat) throws SQLException {
+        return database.queryOne(
+            "SELECT users.id,users.name,users.motto,users.figure,users.level,users.id_socket,"
+                + "DATE_FORMAT(FROM_UNIXTIME(users.lastonline_time), ?) FROM users,friendships "
+                + "WHERE friendships.has_accept=? AND friendships.id_user=? AND friendships.id_friend=? "
+                + "AND users.id=friendships.id_friend LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            dateTimeFormat,
+            0L,
+            userId,
+            targetUserId)
+            .orElse(0L) > 0L;
+    }
+
+    public Optional<MessengerFriend> messengerFriend(long userId, String dateTimeFormat) throws SQLException {
+        return database.queryOne(
+            "SELECT id,name,motto,figure,level,id_socket,DATE_FORMAT(FROM_UNIXTIME(lastonline_time), ?) "
+                + "FROM users WHERE id=? LIMIT 1",
+            resultSet -> new MessengerFriend(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getString(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getString(7)),
+            dateTimeFormat,
+            userId);
+    }
+
+    public int insertReversePendingFriendship(long targetUserId, long userId) throws SQLException {
+        return database.execute(
+            "INSERT IGNORE INTO friendships(id_user,id_friend,has_accept) VALUES(?,?,?)",
+            targetUserId,
+            userId,
+            0L);
+    }
+
+    public int acceptFriendshipPair(long userId, long targetUserId) throws SQLException {
+        return database.execute(
+            "UPDATE friendships SET has_accept=? WHERE ((id_user=? AND id_friend=?) OR (id_user=? AND id_friend=?)) "
+                + "AND has_accept=? LIMIT 2",
+            1L,
+            userId,
+            targetUserId,
+            targetUserId,
+            userId,
+            0L);
+    }
+
     public int insertPrivateChatLog(long userId, long roomId, String description, long sessionId) throws SQLException {
         return database.execute(
             "INSERT INTO logs_chat(id_user,id_room,timestamp,description,id_type,id_session) "
@@ -188,6 +239,17 @@ public final class MessengerDao {
         String figure,
         String motto,
         String nickname,
+        String lastOnline
+    ) {
+    }
+
+    public record MessengerFriend(
+        long userId,
+        String userName,
+        String motto,
+        String figure,
+        long level,
+        long socketIndex,
         String lastOnline
     ) {
     }
