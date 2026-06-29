@@ -2444,8 +2444,11 @@ public final class Handling {
             long thicknessWallpaper = NumberUtils.parseLong(handlingField(fields, 22));
             boolean hasControl = handlingUserHasRoomRight(userId, roomId)
                 || handlingUserHasPermission(userId, "fuse_any_room_controller");
-            boolean hasVoted = !MySQL.Proc_5_2_6D4690("SELECT id_user FROM rooms_rates WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0).isEmpty();
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return;
+            }
+            boolean hasVoted = rooms.hasRatedRoom(NumberUtils.parseLong(userId), roomId);
             long ratingPayloadValue = hasVoted ? -1L : roomRate;
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "AE") + '\2', 0);
             Proc_6_244_801E80(socketIndex, "@nfloor" + '\2' + floorPattern + '\2', 0);

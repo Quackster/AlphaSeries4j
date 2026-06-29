@@ -97,6 +97,15 @@ public final class RoomDao {
             .orElse(0L) > 0L;
     }
 
+    public boolean hasRatedRoom(long userId, long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_user FROM rooms_rates WHERE id_user=? AND id_room=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId,
+            roomId)
+            .orElse(0L) > 0L;
+    }
+
     public Optional<ActiveRoomVisit> activeVisitWithRoomSlot(long userId) throws SQLException {
         return database.queryOne(
             "SELECT logs_visitedrooms.id,logs_visitedrooms.id_room,rooms.id_slot "
