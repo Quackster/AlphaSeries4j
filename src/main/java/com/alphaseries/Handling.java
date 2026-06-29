@@ -4342,6 +4342,83 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_160_7A71A0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long firstId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            long secondId = args != null && args.length >= 3 ? Vb.val(args[2]) : 0L;
+            long furnitureId = 0L;
+            long productId = 0L;
+            String rowText = "";
+            if (secondId > 0L) {
+                rowText = MySQL.Proc_5_2_6D4690("SELECT id_room,id_product,sign FROM furnitures WHERE id='"
+                    + secondId + "' LIMIT 1", 0, 0);
+                if (!rowText.isEmpty()) {
+                    furnitureId = secondId;
+                    productId = firstId;
+                }
+            }
+            if (rowText.isEmpty() && firstId > 0L) {
+                rowText = MySQL.Proc_5_2_6D4690("SELECT id_room,id_product,sign FROM furnitures WHERE id='"
+                    + firstId + "' LIMIT 1", 0, 0);
+                if (!rowText.isEmpty()) {
+                    furnitureId = firstId;
+                }
+            }
+            if (rowText.isEmpty() && secondId > 0L) {
+                rowText = MySQL.Proc_5_2_6D4690("SELECT id_room,id_product,sign FROM furnitures WHERE id_product='"
+                    + secondId + "' ORDER BY id DESC LIMIT 1", 0, 0);
+                if (!rowText.isEmpty()) {
+                    productId = secondId;
+                }
+            }
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            String[] fields = rowText.split("\t", -1);
+            long roomId = Vb.val(handlingField(fields, 0));
+            if (productId <= 0L) {
+                productId = Vb.val(handlingField(fields, 1));
+            }
+            String signText = handlingField(fields, 2);
+            if (roomId <= 0L || productId <= 0L) {
+                return "";
+            }
+            if (furnitureId <= 0L) {
+                furnitureId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_room='"
+                    + roomId + "' AND id_product='" + productId + "' ORDER BY id DESC LIMIT 1", 0, 0));
+            }
+            if (furnitureId <= 0L) {
+                return "";
+            }
+            String productSprite = DataManager.Proc_8_12_806C30(productId, 17, 0).toLowerCase();
+            if (productSprite.isEmpty()) {
+                productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0).toLowerCase();
+            }
+            if (productSprite.startsWith("bb_score_") || productSprite.startsWith("es_score_")) {
+                long stateValue = Vb.val(signText);
+                long maxState = Vb.val(DataManager.Proc_8_12_806C30(productId, 12, 0));
+                if (maxState <= 0L) {
+                    maxState = 99L;
+                }
+                if (stateValue < 0L) {
+                    stateValue = 0L;
+                }
+                if (stateValue > maxState) {
+                    stateValue = maxState;
+                }
+                if (!String.valueOf(stateValue).equals(signText)) {
+                    MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + stateValue + "' WHERE id='"
+                        + furnitureId + "' LIMIT 1", 0, 0);
+                }
+            }
+            return Proc_6_154_78F040(furnitureId, productId);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }

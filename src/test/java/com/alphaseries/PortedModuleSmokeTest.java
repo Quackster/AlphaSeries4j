@@ -1750,7 +1750,7 @@ public final class PortedModuleSmokeTest {
         Files.createDirectories(figureCachePath.resolve("cache").resolve("items_charges"));
         Files.write(figureCachePath.resolve("cache").resolve("wired_trigger").resolve("9.cache"), "trigger-cache".getBytes());
         Files.write(figureCachePath.resolve("cache").resolve("rooms").resolve("9.cache"), "room-cache".getBytes());
-        String[] stickyProducts = new String[510];
+        String[] stickyProducts = new String[511];
         stickyProducts[9] = productRow(9, "18", "wall_sprite");
         stickyProducts[500] = productRow(500, "18", "post.it.vd");
         stickyProducts[501] = productRow(501, "17", "present_wrap_basic");
@@ -1761,6 +1761,7 @@ public final class PortedModuleSmokeTest {
         stickyProducts[507] = productRow(507, "1", "2", "14", "Wallpaper", "15", "Wallpaper Desc", "18", "paper_sprite", "20", "paper1");
         stickyProducts[508] = productRow(508, "12", "1", "18", "charge_sprite", "34", "3", "35", "10", "36", "2", "37", "1");
         stickyProducts[509] = productRow(509, "7", "static", "18", "plain_sprite");
+        stickyProducts[510] = productRow(510, "12", "99", "17", "bb_score_blue");
         DataManager.global_008292BC = stickyProducts;
         Licence.global_008292BC = stickyProducts;
         String[] catalogProducts = new String[82];
@@ -2076,6 +2077,9 @@ public final class PortedModuleSmokeTest {
                     && sqlText.contains("position_x='2'")
                     && sqlText.contains("position_y='2'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
+                }
+                if (sqlText.contains("SELECT id_room,id_product,sign FROM furnitures WHERE id='92' LIMIT 1")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(9, 510, -2));
                 }
                 if (sqlText.contains("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='505'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(505, "packages_pets", 12, ""));
@@ -2687,6 +2691,14 @@ public final class PortedModuleSmokeTest {
         assertEquals(1L, Handling.Proc_6_158_7987C0(91, 0, 0, 1, 1));
         assertEquals(0L, Handling.Proc_6_158_7987C0(91, 1, 1, 1, 1));
         assertEquals(0L, Handling.Proc_6_158_7987C0(91, 2, 2, 1, 1));
+        handlingSql.clear();
+        handlingSends.clear();
+        String scoreboardPayload = Handling.Proc_6_160_7A71A0(4, 510, 92);
+        assertEquals("AX92\2" + "0\2", scoreboardPayload);
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='0' WHERE id='92' LIMIT 1"));
+        assertEquals(true, containsSend(handlingSends, "AX92\2" + "0\2"));
+        handlingSql.clear();
+        handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
         assertEquals(4, Handling.representedInteractionPartner(8));
