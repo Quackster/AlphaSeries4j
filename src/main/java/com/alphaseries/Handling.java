@@ -10898,25 +10898,22 @@ public final class Handling {
             }
             long questId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             long numericQuestId = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            String activeRow;
-            if (questId <= 0L) {
-                activeRow = MySQL.Proc_5_2_6D4690("SELECT id_quest,id_numericquest,progress,id_level FROM users_quests WHERE id_user='"
-                    + escapedUserId + "' AND timestamp_accepted IS NOT NULL AND timestamp_done IS NULL LIMIT 1", 0, 0);
-            } else {
-                activeRow = MySQL.Proc_5_2_6D4690("SELECT id_quest,id_numericquest,progress,id_level FROM users_quests WHERE id_user='"
-                    + escapedUserId + "' AND id_quest='" + questId + "' LIMIT 1", 0, 0);
-            }
-            if (activeRow.isEmpty()) {
+            QuestDao quests = questDao();
+            UserDao users = userDao();
+            if (quests == null || users == null) {
                 return "";
             }
-            String[] activeFields = activeRow.split("\t", -1);
-            questId = NumberUtils.parseLong(handlingField(activeFields, 0));
-            if (numericQuestId <= 0L) {
-                numericQuestId = NumberUtils.parseLong(handlingField(activeFields, 1));
+            long userIdValue = NumberUtils.parseLong(userId);
+            QuestDao.UserQuestCompletionRow activeRow = quests.completionRow(userIdValue, questId).orElse(null);
+            if (activeRow == null) {
+                return "";
             }
-            long progressValue = NumberUtils.parseLong(handlingField(activeFields, 2));
-            long userQuestLevel = NumberUtils.parseLong(handlingField(activeFields, 3));
+            questId = activeRow.questId();
+            if (numericQuestId <= 0L) {
+                numericQuestId = activeRow.numericQuestId();
+            }
+            long progressValue = activeRow.progress();
+            long userQuestLevel = activeRow.level();
             if (questId <= 0L) {
                 return "";
             }
@@ -10950,15 +10947,11 @@ public final class Handling {
                 return "";
             }
             if (rewardAmount != 0L && rewardType >= 0L && rewardType <= 20L) {
-                String pointColumn = "activitypoints_" + rewardType;
-                long currentPoints = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT " + pointColumn + " FROM users WHERE id='"
-                    + escapedUserId + "' LIMIT 1", 0, 0));
-                MySQL.Proc_5_0_6D3CD0("UPDATE users SET " + pointColumn + "=" + pointColumn + "+" + rewardAmount
-                    + " WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0);
+                long currentPoints = users.activityPoints(userIdValue, rewardType);
+                users.addActivityPointsLimited(userIdValue, rewardType, rewardAmount);
                 Proc_6_244_801E80(socketIndex, representedActivityPointAwardPayload(rewardType, currentPoints + rewardAmount), 0);
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE users_quests SET id_level=id_level+1,progress='0',id_numericquest='0',timestamp_done=UNIX_TIMESTAMP() WHERE id_user='"
-                + escapedUserId + "' AND id_quest='" + questId + "' LIMIT 1", 0, 0);
+            quests.completeQuest(userIdValue, questId);
             Proc_6_244_801E80(socketIndex, "La" + completionPayload, 0);
             Proc_6_236_7F8540(socketIndex, "", "");
             return "";

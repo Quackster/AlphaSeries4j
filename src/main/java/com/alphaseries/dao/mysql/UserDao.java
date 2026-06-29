@@ -93,6 +93,13 @@ public final class UserDao {
             userId);
     }
 
+    public int addActivityPointsLimited(long userId, long pointType, long points) throws SQLException {
+        return database.execute(
+            "UPDATE users SET activitypoints_" + pointType + "=activitypoints_" + pointType + "+" + points
+                + " WHERE id=? LIMIT 1",
+            userId);
+    }
+
     public int addAchievementReward(long userId, long rewardType, long rewardIncrease, long scoreIncrease) throws SQLException {
         return database.execute(
             "UPDATE users SET activitypoints_" + rewardType + "=activitypoints_" + rewardType + "+" + rewardIncrease

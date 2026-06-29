@@ -109,6 +109,37 @@ public final class QuestDao {
             userId);
     }
 
+    public Optional<UserQuestCompletionRow> completionRow(long userId, long questId) throws SQLException {
+        if (questId <= 0L) {
+            return database.queryOne(
+                "SELECT id_quest,id_numericquest,progress,id_level FROM users_quests WHERE id_user=? "
+                    + "AND timestamp_accepted IS NOT NULL AND timestamp_done IS NULL LIMIT 1",
+                resultSet -> new UserQuestCompletionRow(
+                    resultSet.getLong(1),
+                    resultSet.getLong(2),
+                    resultSet.getLong(3),
+                    resultSet.getLong(4)),
+                userId);
+        }
+        return database.queryOne(
+            "SELECT id_quest,id_numericquest,progress,id_level FROM users_quests WHERE id_user=? AND id_quest=? LIMIT 1",
+            resultSet -> new UserQuestCompletionRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4)),
+            userId,
+            questId);
+    }
+
+    public int completeQuest(long userId, long questId) throws SQLException {
+        return database.execute(
+            "UPDATE users_quests SET id_level=id_level+1,progress='0',id_numericquest='0',timestamp_done=UNIX_TIMESTAMP() "
+                + "WHERE id_user=? AND id_quest=? LIMIT 1",
+            userId,
+            questId);
+    }
+
     public List<UserQuestListRow> listRows(long userId) throws SQLException {
         return database.query(
             "SELECT id_quest,id_level,timestamp_done,timestamp_accepted,time_next,progress "
@@ -141,6 +172,9 @@ public final class QuestDao {
         public String legacyRow() {
             return questId + "\t" + numericQuestId + "\t" + progress + "\t" + level + "\t" + (timeNext == null ? "" : timeNext);
         }
+    }
+
+    public record UserQuestCompletionRow(long questId, long numericQuestId, long progress, long level) {
     }
 
     public record UserQuestListRow(
