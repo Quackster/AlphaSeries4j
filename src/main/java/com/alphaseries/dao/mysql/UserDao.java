@@ -64,6 +64,34 @@ public final class UserDao {
             .orElse(0L);
     }
 
+    public long respectAmount(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT respect_amount FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public long respectReceived(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT respect_received FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public int spendRespect(long userId) throws SQLException {
+        return database.execute(
+            "UPDATE users SET respect_amount=respect_amount-1,respect_given=respect_given+1 WHERE id=?",
+            userId);
+    }
+
+    public int receiveRespect(long userId) throws SQLException {
+        return database.execute(
+            "UPDATE users SET respect_received=respect_received+1 WHERE id=?",
+            userId);
+    }
+
     public long activityPoints(long userId, long pointType) throws SQLException {
         return database.queryOne(
             "SELECT activitypoints_" + pointType + " FROM users WHERE id=? LIMIT 1",

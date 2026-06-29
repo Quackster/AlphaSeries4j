@@ -2312,20 +2312,22 @@ public final class Handling {
             if (targetSocketIndex <= 0) {
                 return "";
             }
-            long respectAmount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT respect_amount FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(giverUserId, 0, 0) + "' LIMIT 1", 0, 0));
+            UserDao users = userDao();
+            if (users == null) {
+                return "";
+            }
+            long giverUserIdValue = NumberUtils.parseLong(giverUserId);
+            long targetUserIdValue = NumberUtils.parseLong(targetUserId);
+            long respectAmount = users.respectAmount(giverUserIdValue);
             if (respectAmount <= 0L) {
                 return "";
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET respect_amount=respect_amount-1,respect_given=respect_given+1 WHERE id='"
-                + Functions.Proc_10_11_80A9C0(giverUserId, 0, 0) + "'", 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET respect_received=respect_received+1 WHERE id='"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "'", 0, 0);
+            users.spendRespect(giverUserIdValue);
+            users.receiveRespect(targetUserIdValue);
             Proc_6_205_7D9780(socketIndex, 3);
             Proc_6_205_7D9780(targetSocketIndex, 2);
-            long respectReceived = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT respect_received FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' LIMIT 1", 0, 0));
-            String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(targetUserId), null, "Fx")
+            long respectReceived = users.respectReceived(targetUserIdValue);
+            String payload = Crypto.Proc_3_0_6D2AF0(targetUserIdValue, null, "Fx")
                 + Crypto.Proc_3_0_6D2AF0(respectReceived, null, "");
             Proc_6_247_8027E0(socketIndex, payload, 0);
             return payload;
