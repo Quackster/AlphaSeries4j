@@ -2066,6 +2066,17 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id_product,id,sign,id_secondary,id_destination FROM furnitures WHERE id='90' AND id_owner='77' AND id_room IS NULL")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(9, 90, "wall-state", 6, 0));
                 }
+                if (sqlText.contains("SELECT id_room FROM furnitures WHERE id='91' LIMIT 1")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(9));
+                }
+                if (sqlText.contains("SELECT models.map,rooms.allow_walkthrough,rooms.id_slot FROM rooms,models WHERE rooms.id='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList("000\r0x0\r000", 1, 4));
+                }
+                if (sqlText.contains("SELECT COUNT(*) FROM furnitures WHERE id_room='9'")
+                    && sqlText.contains("position_x='2'")
+                    && sqlText.contains("position_y='2'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
+                }
                 if (sqlText.contains("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='505'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(505, "packages_pets", 12, ""));
                 }
@@ -2673,6 +2684,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "BLS"));
         handlingSql.clear();
         handlingSends.clear();
+        assertEquals(1L, Handling.Proc_6_158_7987C0(91, 0, 0, 1, 1));
+        assertEquals(0L, Handling.Proc_6_158_7987C0(91, 1, 1, 1, 1));
+        assertEquals(0L, Handling.Proc_6_158_7987C0(91, 2, 2, 1, 1));
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
         assertEquals(4, Handling.representedInteractionPartner(8));

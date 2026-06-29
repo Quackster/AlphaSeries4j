@@ -4250,6 +4250,98 @@ public final class Handling {
         }
     }
 
+    public static long Proc_6_158_7987C0(Object... args) {
+        try {
+            if (args == null || args.length < 3) {
+                return 0L;
+            }
+            long furnitureId = Vb.val(args[0]);
+            long positionX = Vb.val(args[1]);
+            long positionY = Vb.val(args[2]);
+            long footprintX = args.length >= 4 ? Vb.val(args[3]) : 1L;
+            long footprintY = args.length >= 5 ? Vb.val(args[4]) : 1L;
+            if (footprintX <= 0L) {
+                footprintX = 1L;
+            }
+            if (footprintY <= 0L) {
+                footprintY = 1L;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_room FROM furnitures WHERE id='"
+                + furnitureId + "' LIMIT 1", 0, 0);
+            long roomId;
+            if (!rowText.isEmpty()) {
+                roomId = Vb.val(rowText);
+            } else {
+                roomId = furnitureId;
+                furnitureId = 0L;
+            }
+            if (roomId <= 0L || positionX < 0L || positionY < 0L) {
+                return 0L;
+            }
+            rowText = MySQL.Proc_5_2_6D4690("SELECT models.map,rooms.allow_walkthrough,rooms.id_slot FROM rooms,models WHERE rooms.id='"
+                + roomId + "' AND models.id=rooms.id_model LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return 0L;
+            }
+            String[] fields = rowText.split("\t", -1);
+            String modelMap = handlingField(fields, 0).replace('\n', '\r');
+            while (modelMap.contains("\r\r")) {
+                modelMap = modelMap.replace("\r\r", "\r");
+            }
+            if (modelMap.endsWith("\r")) {
+                modelMap = modelMap.substring(0, modelMap.length() - 1);
+            }
+            String[] mapRows = modelMap.split("\r", -1);
+            long allowWalkthrough = Vb.val(handlingField(fields, 1));
+            long roomSlot = Vb.val(handlingField(fields, 2));
+            for (long tileY = positionY; tileY <= positionY + footprintY - 1L; tileY++) {
+                if (tileY < 0L || tileY >= mapRows.length) {
+                    return 0L;
+                }
+                String mapRow = mapRows[(int) tileY];
+                for (long tileX = positionX; tileX <= positionX + footprintX - 1L; tileX++) {
+                    if (tileX < 0L || tileX + 1L > mapRow.length()) {
+                        return 0L;
+                    }
+                    String mapCell = mapRow.substring((int) tileX, (int) tileX + 1).toLowerCase();
+                    if (mapCell.isEmpty() || "x".equals(mapCell)) {
+                        return 0L;
+                    }
+                    long occupiedCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures WHERE id_room='"
+                        + roomId + "' AND position_wall IS NULL AND position_x='" + tileX + "' AND position_y='"
+                        + tileY + "' AND id<>'" + furnitureId + "' LIMIT 1", 0, 0));
+                    if (occupiedCount > 0L) {
+                        return 0L;
+                    }
+                    occupiedCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM bots WHERE id_room='"
+                        + roomId + "' AND position_x='" + tileX + "' AND position_y='" + tileY + "' LIMIT 1", 0, 0));
+                    if (occupiedCount > 0L) {
+                        return 0L;
+                    }
+                    if (allowWalkthrough == 0L && roomSlot > 0L) {
+                        String occupantText = MySQL.Proc_5_2_6D4690("SELECT id FROM logs_visitedrooms WHERE id_room='"
+                            + roomId + "' AND timestamp_left IS NULL LIMIT 250", 0, 0);
+                        for (String occupantRow : occupantText.split("\r", -1)) {
+                            long occupantRoomUserIndex = Vb.val(occupantRow);
+                            if (occupantRoomUserIndex > 0L) {
+                                MovementPosition movementPosition = representedMovementPosition(
+                                    Licence.global_00829310, roomSlot, occupantRoomUserIndex);
+                                if (movementPosition.found && movementPosition.positionX == tileX
+                                    && movementPosition.positionY == tileY) {
+                                    return 0L;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return 1L;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }
