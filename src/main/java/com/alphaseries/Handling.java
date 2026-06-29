@@ -7,6 +7,7 @@ import com.alphaseries.dao.mysql.ClubDao;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.FurnitureDao;
 import com.alphaseries.dao.mysql.PackageDao;
+import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -2878,57 +2879,54 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product,id_owner FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            PackageDao packages = packageDao();
+            BotDao bots = botDao();
+            if (furniture == null || packages == null || bots == null) {
                 return "";
             }
-            String[] fields = rowText.split("\t", -1);
-            long productId = NumberUtils.parseLong(handlingField(fields, 0));
-            String ownerId = String.valueOf((long) NumberUtils.parseLong(handlingField(fields, 1)));
-            if (productId <= 0L || !ownerId.equals(userId)
+            FurnitureDao.RoomFurnitureOwnerProduct furnitureProduct = furniture.roomFurnitureOwnerProduct(furnitureId, roomId)
+                .orElse(null);
+            if (furnitureProduct == null) {
+                return "";
+            }
+            long productId = furnitureProduct.productId();
+            long ownerId = furnitureProduct.ownerId();
+            long numericUserId = NumberUtils.parseLong(userId);
+            if (productId <= 0L || ownerId != numericUserId
                 && !handlingUserOwnsRoom(userId, roomId)
                 && !handlingUserHasRoomRight(userId, roomId)) {
                 return "";
             }
-            String packageRow = MySQL.Proc_5_2_6D4690("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='"
-                + productId + "' LIMIT 1", 0, 0);
-            if (packageRow.isEmpty()) {
+            PackageDao.PackageRow packageRow = packages.packageByProduct(productId).orElse(null);
+            if (packageRow == null) {
                 return "";
             }
-            String[] packageFields = packageRow.split("\t", -1);
-            String packageType = handlingField(packageFields, 1).toLowerCase();
-            long containedPetId = NumberUtils.parseLong(handlingField(packageFields, 2));
+            String packageType = StringUtils.text(packageRow.secondaryType()).toLowerCase();
+            long containedPetId = packageRow.containedId();
             if (!"packages_pets".equals(packageType) || containedPetId <= 0L) {
                 return "";
             }
-            String petRow = MySQL.Proc_5_2_6D4690("SELECT id_pet,id_race,color FROM packages_pets WHERE id='"
-                + containedPetId + "' LIMIT 1", 0, 0);
-            if (petRow.isEmpty()) {
+            PackageDao.PetPackage petPackage = packages.petPackage(containedPetId).orElse(null);
+            if (petPackage == null) {
                 return "";
             }
-            String[] petFields = petRow.split("\t", -1);
-            String petFigure = String.valueOf((long) NumberUtils.parseLong(handlingField(petFields, 0))) + ' '
-                + String.valueOf((long) NumberUtils.parseLong(handlingField(petFields, 1))) + ' '
-                + handlingField(petFields, 2);
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO bots(id_user,figure,name,id_handle) VALUES('" + escapedUserId
-                + "','" + Functions.Proc_10_11_80A9C0(petFigure.toLowerCase(), 0, 0) + "','"
-                + Functions.Proc_10_11_80A9C0(petName, 0, 0) + "','3')", 0, 0);
-            long botId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM bots WHERE id_user='" + escapedUserId
-                + "' AND id_handle='3' ORDER BY id DESC LIMIT 1", 0, 0));
+            String petFigure = String.valueOf(petPackage.petType()) + ' '
+                + String.valueOf(petPackage.race()) + ' '
+                + StringUtils.text(petPackage.color());
+            bots.insertPetBot(numericUserId, petFigure.toLowerCase(), petName);
+            long botId = bots.newestPetBotId(numericUserId);
             if (botId <= 0L) {
                 return "";
             }
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO bots_petdata(id_bot,timestamp_buy,id_owner,energy,nutrition,scratches) VALUES('"
-                + botId + "',UNIX_TIMESTAMP(),'" + escapedUserId + "','100','100','0')", 0, 0);
+            bots.insertPetData(botId, numericUserId);
             String inventoryRow = petInventoryRowPayload(new String[]{String.valueOf(botId), petName, petFigure, "0"});
             if (!inventoryRow.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, "I[" + inventoryRow, 0);
             }
             Proc_6_146_76D300(socketIndex, furnitureId, productId);
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM furnitures WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
+            furniture.deleteFurniture(furnitureId);
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(validationCode, null,
                 Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Lz")) + petName + '\2', 0);
             return String.valueOf(botId);
@@ -12144,6 +12142,11 @@ public final class Handling {
     private static PackageDao packageDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new PackageDao(database);
+    }
+
+    private static BotDao botDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new BotDao(database);
     }
 
     private static String[] normalizeRows(Object rowSource) {
