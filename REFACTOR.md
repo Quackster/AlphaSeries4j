@@ -65,6 +65,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.pet.PetSettings` as a typed adapter around pet race, level, and command state previously read and written through raw `Licence` globals.
 - Added `com.alphaseries.game.pet.RepresentedBotRegistry` as a typed adapter around represented bot allocation markers and bot record caches previously manipulated as raw `Licence` strings.
 - Added `com.alphaseries.game.quest.QuestSettings` as a typed adapter around cached quest rows previously read directly from `Licence` globals.
+- Added `QuestDao` typed user-quest records and routed quest accept, auto-advance, reset, progress, and list flows through prepared DAO methods.
 - Added `com.alphaseries.game.recycler.RecyclerSettings` as a typed adapter around recycler status payload, reward groups, and ecotron box product state previously walked through `Licence` globals.
 - Added `com.alphaseries.game.room.FurnitureRoomCache` for pending room, pending furniture, and represented furniture state cache mutations previously implemented inline in `Handling`.
 - Added `Licence.furnitureRoomCache()`/`setFurnitureRoomCache(...)` as the compatibility boundary for pending room, pending furniture, and represented room cache state.
@@ -227,9 +228,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 367
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 137
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 122
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12507 lines
+- `Handling.java`: 12516 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines

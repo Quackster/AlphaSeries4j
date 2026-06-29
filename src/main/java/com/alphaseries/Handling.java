@@ -13,6 +13,7 @@ import com.alphaseries.dao.mysql.MessengerDao;
 import com.alphaseries.dao.mysql.VoucherDao;
 import com.alphaseries.dao.mysql.PollDao;
 import com.alphaseries.dao.mysql.JukeboxDao;
+import com.alphaseries.dao.mysql.QuestDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.jukebox.JukeboxPlaybackRow;
 import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
@@ -7596,27 +7597,23 @@ public final class Handling {
             if (activityCount <= 0L) {
                 activityCount = 1L;
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE users_quests SET timestamp_accepted=NULL WHERE id_user='"
-                + escapedUserId + "' AND timestamp_accepted IS NOT NULL AND timestamp_done IS NULL LIMIT 1", 0, 0);
-            String existingLevelText = MySQL.Proc_5_2_6D4690("SELECT id_level FROM users_quests WHERE id_user='"
-                + escapedUserId + "' AND id_quest='" + questId + "' LIMIT 1", 0, 0);
-            if (!existingLevelText.isEmpty()) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE users_quests SET timestamp_done=NULL,timestamp_accepted=UNIX_TIMESTAMP(),id_numericquest='"
-                    + requestedQuestId + "',time_next=NULL WHERE id_user='" + escapedUserId
-                    + "' AND id_quest='" + questId + "' LIMIT 1", 0, 0);
-            } else {
-                MySQL.Proc_5_0_6D3CD0("INSERT INTO users_quests(id_user,id_quest,id_level,id_numericquest,timestamp_accepted) VALUES('"
-                    + escapedUserId + "','" + questId + "','0','" + requestedQuestId + "',UNIX_TIMESTAMP())", 0, 0);
+            QuestDao quests = questDao();
+            if (quests == null) {
+                return "";
             }
-            long progressValue = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT progress FROM users_quests WHERE id_user='"
-                + escapedUserId + "' AND id_quest='" + questId + "' LIMIT 1", 0, 0));
+            long userIdValue = NumberUtils.parseLong(userId);
+            quests.clearAcceptedQuest(userIdValue);
+            long existingLevel = quests.existingLevel(userIdValue, questId);
+            if (existingLevel != Long.MIN_VALUE) {
+                quests.reactivateQuest(userIdValue, questId, requestedQuestId);
+            } else {
+                quests.insertQuest(userIdValue, questId, requestedQuestId);
+            }
+            long progressValue = quests.progress(userIdValue, questId);
             if (waitAmount > 0L && progressValue > 0L && progressValue < activityCount) {
-                String timeNextText = MySQL.Proc_5_2_6D4690("SELECT time_next FROM users_quests WHERE id_user='"
-                    + escapedUserId + "' AND id_quest='" + questId + "' LIMIT 1", 0, 0);
+                String timeNextText = quests.timeNext(userIdValue, questId);
                 if (timeNextText.isEmpty() || "0".equals(timeNextText)) {
-                    MySQL.Proc_5_0_6D3CD0("UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL " + waitAmount
-                        + " SECOND) WHERE id_user='" + escapedUserId + "' AND id_quest='" + questId + "' LIMIT 1", 0, 0);
+                    quests.scheduleNextTime(userIdValue, questId, waitAmount);
                 }
             }
             if (progressValue >= activityCount) {
@@ -7638,13 +7635,21 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            String activeRow = MySQL.Proc_5_2_6D4690("SELECT id_quest,id_level FROM users_quests WHERE id_user='"
-                + escapedUserId + "' AND timestamp_accepted IS NOT NULL AND timestamp_done IS NULL LIMIT 1", 0, 0);
-            if (activeRow.isEmpty()) {
-                activeRow = MySQL.Proc_5_2_6D4690("SELECT id_quest,id_level FROM users_quests WHERE id_user='"
-                    + escapedUserId + "' ORDER BY timestamp_done DESC,timestamp_accepted DESC,id_level DESC LIMIT 1", 0, 0);
+            QuestDao quests = questDao();
+            if (quests == null) {
+                return "";
             }
+            long userIdValue = NumberUtils.parseLong(userId);
+            String activeRow = quests.activeLevelRow(userIdValue)
+                .or(() -> {
+                    try {
+                        return quests.latestLevelRow(userIdValue);
+                    } catch (Exception ignored) {
+                        return java.util.Optional.empty();
+                    }
+                })
+                .map(QuestDao.UserQuestLevelRow::legacyRow)
+                .orElse("");
             long requestedQuestId = nextQuestId(questRowsFromSource(), activeRow);
             if (requestedQuestId > 0L) {
                 Proc_6_232_7F45A0(socketIndex, "p^" + Crypto.Proc_3_0_6D2AF0(requestedQuestId, null, ""));
@@ -7663,9 +7668,11 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE users_quests SET timestamp_done=NULL,timestamp_accepted=NULL WHERE id_user='"
-                + escapedUserId + "' LIMIT 50", 0, 0);
+            QuestDao quests = questDao();
+            if (quests == null) {
+                return "";
+            }
+            quests.resetUserQuests(NumberUtils.parseLong(userId));
             Proc_6_244_801E80(socketIndex, "Lc", 0);
             Proc_6_236_7F8540(socketIndex, "", "");
             return "";
@@ -7682,9 +7689,13 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            String activeRow = MySQL.Proc_5_2_6D4690("SELECT id_quest,id_numericquest,progress,id_level,time_next FROM users_quests WHERE id_user='"
-                + escapedUserId + "' AND timestamp_accepted IS NOT NULL AND timestamp_done IS NULL LIMIT 1", 0, 0);
+            QuestDao quests = questDao();
+            if (quests == null) {
+                return "";
+            }
+            long userIdValue = NumberUtils.parseLong(userId);
+            QuestDao.UserQuestProgressRow activeQuest = quests.activeProgressRow(userIdValue).orElse(null);
+            String activeRow = activeQuest == null ? "" : activeQuest.legacyRow();
             if (activeRow.isEmpty()) {
                 return "";
             }
@@ -7694,13 +7705,11 @@ public final class Handling {
             String timeNextText = handlingField(fields, 4);
             long remainingWait = 0L;
             if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
-                remainingWait = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT GREATEST(0,UNIX_TIMESTAMP('"
-                    + Functions.Proc_10_11_80A9C0(timeNextText, 0, 0) + "')-UNIX_TIMESTAMP())", 0, 0));
+                remainingWait = quests.remainingWait(timeNextText);
             }
             QuestProgressDecision decision = questProgressDecision(activeRow, questRowsFromSource(), remainingWait);
             if (decision.shouldScheduleWait) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL " + decision.waitAmount
-                    + " SECOND) WHERE id_user='" + escapedUserId + "' AND id_quest='" + questId + "' LIMIT 1", 0, 0);
+                quests.scheduleNextTime(userIdValue, questId, decision.waitAmount);
             }
             if (decision.shouldComplete) {
                 Proc_6_164_7BC820(socketIndex, questId, numericQuestId);
@@ -7721,11 +7730,12 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            String userQuestRows = MySQL.Proc_5_2_6D4690(
-                "SELECT id_quest,id_level,timestamp_done,timestamp_accepted,time_next,progress FROM users_quests WHERE id_user='"
-                    + escapedUserId + "' LIMIT 250", "\r", 0);
-            String payload = questListPayload(questRowsFromSource(), questRowsWithRemainingWait(userQuestRows));
+            QuestDao quests = questDao();
+            if (quests == null) {
+                return "";
+            }
+            String payload = questListPayload(questRowsFromSource(),
+                userQuestRowsWithRemainingWait(quests, quests.listRows(NumberUtils.parseLong(userId))));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -12308,6 +12318,11 @@ public final class Handling {
         return database == null ? null : new JukeboxDao(database);
     }
 
+    private static QuestDao questDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new QuestDao(database);
+    }
+
     private static BotDao botDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new BotDao(database);
@@ -12420,23 +12435,17 @@ public final class Handling {
         return new String[0];
     }
 
-    private static String questRowsWithRemainingWait(String userQuestRows) {
+    private static String userQuestRowsWithRemainingWait(QuestDao quests, List<QuestDao.UserQuestListRow> userQuestRows)
+        throws Exception {
+
         StringBuilder rows = new StringBuilder();
-        for (String row : StringUtils.text(userQuestRows).split("\r", -1)) {
-            String rowText = row.trim();
-            if (!rowText.isEmpty()) {
-                String[] fields = rowText.split("\t", -1);
-                String timeNextText = handlingField(fields, 4);
-                long remainingWait = 0L;
-                if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
-                    remainingWait = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT GREATEST(0,UNIX_TIMESTAMP('"
-                        + Functions.Proc_10_11_80A9C0(timeNextText, 0, 0)
-                        + "')-UNIX_TIMESTAMP())", 0, 0));
-                } else if (fields.length >= 7) {
-                    remainingWait = NumberUtils.parseLong(handlingField(fields, 6));
-                }
-                appendRow(rows, rowText + '\t' + remainingWait);
+        for (QuestDao.UserQuestListRow row : userQuestRows == null ? List.<QuestDao.UserQuestListRow>of() : userQuestRows) {
+            String timeNextText = StringUtils.text(row.timeNext());
+            long remainingWait = 0L;
+            if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
+                remainingWait = quests.remainingWait(timeNextText);
             }
+            appendRow(rows, row.legacyRow(remainingWait));
         }
         return rows.toString();
     }
