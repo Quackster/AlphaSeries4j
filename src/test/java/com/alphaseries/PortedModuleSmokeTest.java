@@ -1727,6 +1727,7 @@ public final class PortedModuleSmokeTest {
         DataManager.global_008291AC = "\0" + "1\1events\2";
         Path originalApplicationPath = Path.of(Functions.applicationPath);
         Object originalProductCache = DataManager.global_008292BC;
+        Object originalLicenceProductCache = Licence.global_008292BC;
         Path figureCachePath = Files.createTempDirectory("alphaseries-figuredata");
         Functions.applicationPath = figureCachePath.toString();
         Files.write(figureCachePath.resolve("figuredata.cache"),
@@ -1736,13 +1737,15 @@ public final class PortedModuleSmokeTest {
         Files.createDirectories(figureCachePath.resolve("cache").resolve("rooms"));
         Files.write(figureCachePath.resolve("cache").resolve("wired_trigger").resolve("9.cache"), "trigger-cache".getBytes());
         Files.write(figureCachePath.resolve("cache").resolve("rooms").resolve("9.cache"), "room-cache".getBytes());
-        String[] stickyProducts = new String[505];
+        String[] stickyProducts = new String[507];
         stickyProducts[500] = productRow(500, "18", "post.it.vd");
         stickyProducts[501] = productRow(501, "17", "present_wrap_basic");
         stickyProducts[502] = productRow(502, "0", "2", "24", "Opened Sofa");
         stickyProducts[503] = productRow(503, "10", "2");
         stickyProducts[504] = productRow(504, "17", "CF_10");
+        stickyProducts[506] = productRow(506, "1", "1", "14", "Trade Chair", "15", "Trade Desc", "18", "trade_sprite");
         DataManager.global_008292BC = stickyProducts;
+        Licence.global_008292BC = stickyProducts;
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_mod\2fuse_alert\2fuse_kick\2fuse_receive_calls_for_help\2fuse_chatlog\2"
             + "fuse_use_wardrobe\2fuse_larger_wardrobe\2fuse_client_staff\2"}};
         MySQL.configureDatabaseConnection(new Database() {
@@ -1775,6 +1778,11 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id_socket FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(4));
+                }
+                if (sqlText.contains("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket")
+                    && sqlText.contains("logs_visitedrooms.id='61'")
+                    && sqlText.contains("logs_visitedrooms.id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(61, 88, 8));
                 }
                 if (sqlText.contains("logs_visitedrooms WHERE id_user='88'") && sqlText.contains("id_room")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(9));
@@ -1830,6 +1838,12 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id_product FROM furnitures WHERE id_room='9' AND id='73'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(504));
+                }
+                if (sqlText.contains("SELECT id,id_product,sign,id_secondary FROM furnitures WHERE id='76'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(76, 506, "trade-state", 4));
+                }
+                if (sqlText.contains("SELECT id,id_product,sign FROM furnitures WHERE id='76'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(76, 506, "trade-state"));
                 }
                 if (sqlText.contains("SELECT status_door FROM rooms WHERE id='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
@@ -2309,11 +2323,38 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         Handling.Proc_6_88_73E4F0(4);
         assertEquals(true, containsSend(handlingSends, "L\u007f"));
+        handlingSends.clear();
+        Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
+        assertEquals(8, Handling.representedInteractionPartner(4));
+        assertEquals(4, Handling.representedInteractionPartner(8));
+        assertEquals(true, containsSend(handlingSends, "Ah"));
+        assertEquals(true, containsSend(handlingSends, "8:DATA"));
+        handlingSends.clear();
+        Handling.Proc_6_90_742E80(4);
+        assertEquals(true, containsSend(handlingSends, "Am"));
+        assertEquals(true, containsSend(handlingSends, "Ao"));
+        handlingSends.clear();
+        String carriedTradePayload = Handling.Proc_6_91_743480(4, "FU" + wireLong(76));
+        assertEquals(true, carriedTradePayload.contains("Al"));
+        assertEquals(true, carriedTradePayload.contains("Trade Chair"));
+        assertEquals(true, containsSend(handlingSends, "Al"));
+        assertEquals(true, containsSend(handlingSends, "8:DATA"));
+        handlingSends.clear();
+        String removedTradePayload = Handling.Proc_6_92_744870(4, "AH" + wireLong(76));
+        assertEquals(true, removedTradePayload.contains("Al"));
+        assertEquals(false, removedTradePayload.contains("Trade Chair"));
+        assertEquals(true, containsSend(handlingSends, "Al"));
+        handlingSends.clear();
+        Handling.Proc_6_94_746990(4);
+        assertEquals(true, containsSend(handlingSends, "An"));
+        assertEquals(true, containsSend(handlingSends, "8:DATA"));
+        assertEquals(0, Handling.representedInteractionPartner(4));
         MySQL.configureDatabaseConnection(null);
         HandlingMUS.configureMusSink(null);
         Guardian.setSocketConnected(4, false);
         Guardian.setSocketConnected(8, false);
         DataManager.global_008292BC = originalProductCache;
+        Licence.global_008292BC = originalLicenceProductCache;
         Functions.applicationPath = originalApplicationPath.toString();
     }
 

@@ -12,6 +12,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class Handling {
+    private static String representedInteractionPairs = "";
+    private static String representedTradeOffers = "";
+
     private Handling() {
     }
 
@@ -2578,6 +2581,237 @@ public final class Handling {
         }
     }
 
+    public static void Proc_6_90_742E80(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long sourceRoomUserIndex = representedRoomUserIndex(socketIndex, userId);
+            if (sourceRoomUserIndex <= 0L) {
+                return;
+            }
+            int targetSocketIndex = args != null && args.length >= 2 ? (int) Vb.val(args[1]) : 0;
+            if (targetSocketIndex <= 0) {
+                targetSocketIndex = representedInteractionPartner(socketIndex);
+            }
+            long interactionState = args != null && args.length >= 3
+                ? Vb.val(args[2])
+                : representedInteractionState(socketIndex);
+            if (targetSocketIndex <= 0) {
+                return;
+            }
+            String targetUserId = handlingUserIdFromSocket(targetSocketIndex);
+            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return;
+            }
+            String sourcePayload = "0" + Crypto.Proc_3_0_6D2AF0(interactionState, null,
+                "0" + Crypto.Proc_3_0_6D2AF0(sourceRoomUserIndex, null, "Am"));
+            String targetPayload = Crypto.Proc_3_0_6D2AF0(interactionState, null,
+                Crypto.Proc_3_0_6D2AF0(sourceRoomUserIndex, null, "Am"));
+            Proc_6_244_801E80(socketIndex, sourcePayload, 0);
+            Proc_6_244_801E80(targetSocketIndex, targetPayload, 0);
+            if (interactionState == 1L) {
+                Proc_6_244_801E80(socketIndex, "Ao", 0);
+                Proc_6_244_801E80(targetSocketIndex, "Ao", 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static String Proc_6_91_743480(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            String requestPayload = handlingRequestPayload(args, "FU");
+            int targetSocketIndex = representedInteractionPartner(socketIndex);
+            if (targetSocketIndex <= 0) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            String targetUserId = handlingUserIdFromSocket(targetSocketIndex);
+            if (userId.isEmpty() || "0".equals(userId) || targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return "";
+            }
+            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            if (furnitureId <= 0L) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign,id_secondary FROM furnitures WHERE id='"
+                + furnitureId + "' AND id_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND id_room IS NULL LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            String[] fields = rowText.split("\t", -1);
+            long productId = Vb.val(handlingField(fields, 1));
+            String signText = handlingField(fields, 2);
+            long secondaryValue = Vb.val(handlingField(fields, 3));
+            if (productId <= 0L) {
+                return "";
+            }
+            storeRepresentedTradeOffer(socketIndex, furnitureId, productId, signText, secondaryValue);
+            String sourcePayload = representedTradeOfferPayload(representedTradeOffers, socketIndex, targetSocketIndex, userId, targetUserId);
+            String targetPayload = representedTradeOfferPayload(representedTradeOffers, targetSocketIndex, socketIndex, targetUserId, userId);
+            if (!sourcePayload.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, sourcePayload, 0);
+            }
+            if (!targetPayload.isEmpty()) {
+                Proc_6_244_801E80(targetSocketIndex, targetPayload, 0);
+            }
+            return sourcePayload;
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    public static String Proc_6_92_744870(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            String requestPayload = handlingRequestPayload(args, "AH");
+            int targetSocketIndex = representedInteractionPartner(socketIndex);
+            if (targetSocketIndex <= 0) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            String targetUserId = handlingUserIdFromSocket(targetSocketIndex);
+            if (userId.isEmpty() || "0".equals(userId) || targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return "";
+            }
+            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            if (furnitureId <= 0L) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign FROM furnitures WHERE id='"
+                + furnitureId + "' AND id_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND id_room IS NULL LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            removeRepresentedTradeOffer(socketIndex, furnitureId);
+            String sourcePayload = representedTradeOfferPayload(representedTradeOffers, socketIndex, targetSocketIndex, userId, targetUserId);
+            String targetPayload = representedTradeOfferPayload(representedTradeOffers, targetSocketIndex, socketIndex, targetUserId, userId);
+            if (!sourcePayload.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, sourcePayload, 0);
+            }
+            if (!targetPayload.isEmpty()) {
+                Proc_6_244_801E80(targetSocketIndex, targetPayload, 0);
+            }
+            return sourcePayload;
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    public static void Proc_6_93_745D90(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return;
+            }
+            String requestPayload = handlingRequestPayload(args, "AG");
+            long requestedRoomUserIndex = readWireLong(requestPayload, new LongRef(1));
+            if (requestedRoomUserIndex <= 0L) {
+                requestedRoomUserIndex = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            }
+            if (requestedRoomUserIndex <= 0L) {
+                return;
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return;
+            }
+            long callerRoomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (callerRoomId <= 0L) {
+                return;
+            }
+            String targetRow = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket "
+                + "FROM logs_visitedrooms,users WHERE logs_visitedrooms.id='" + requestedRoomUserIndex
+                + "' AND logs_visitedrooms.id_room='" + callerRoomId
+                + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1", 0, 0);
+            if (targetRow.isEmpty()) {
+                targetRow = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket "
+                    + "FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_user='" + requestedRoomUserIndex
+                    + "' AND logs_visitedrooms.id_room='" + callerRoomId
+                    + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1", 0, 0);
+            }
+            if (targetRow.isEmpty()) {
+                return;
+            }
+            String[] targetFields = targetRow.split("\t", -1);
+            long targetRoomUserIndex = Vb.val(handlingField(targetFields, 0));
+            String targetUserId = String.valueOf(Vb.val(handlingField(targetFields, 1)));
+            int targetSocketIndex = (int) Vb.val(handlingField(targetFields, 2));
+            if (targetRoomUserIndex <= 0L || targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return;
+            }
+            if (targetSocketIndex <= 0) {
+                targetSocketIndex = handlingSocketFromUserId(targetUserId);
+            }
+            if (targetSocketIndex <= 0 || targetSocketIndex == socketIndex || representedInteractionPartner(targetSocketIndex) > 0) {
+                return;
+            }
+            storeRepresentedInteractionPair(socketIndex, targetSocketIndex, 1L);
+            String callerPayload = Crypto.Proc_3_0_6D2AF0(Vb.val(targetUserId), null,
+                Crypto.Proc_3_0_6D2AF0(Vb.val(callerUserId), null, "Ah"));
+            String targetPayload = Crypto.Proc_3_0_6D2AF0(Vb.val(callerUserId), null,
+                Crypto.Proc_3_0_6D2AF0(Vb.val(targetUserId), null, "Ah"));
+            Proc_6_244_801E80(socketIndex, callerPayload, 0);
+            Proc_6_244_801E80(targetSocketIndex, targetPayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_94_746990(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long sourceRoomUserIndex = representedRoomUserIndex(socketIndex, userId);
+            if (sourceRoomUserIndex <= 0L) {
+                return;
+            }
+            int targetSocketIndex = args != null && args.length >= 2 ? (int) Vb.val(args[1]) : 0;
+            if (targetSocketIndex <= 0) {
+                targetSocketIndex = representedInteractionPartner(socketIndex);
+            }
+            if (targetSocketIndex <= 0) {
+                return;
+            }
+            String targetUserId = handlingUserIdFromSocket(targetSocketIndex);
+            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return;
+            }
+            long targetRoomUserIndex = representedRoomUserIndex(targetSocketIndex, targetUserId);
+            if (targetRoomUserIndex <= 0L) {
+                return;
+            }
+            String payload = "0" + Crypto.Proc_3_0_6D2AF0(sourceRoomUserIndex, null, "An");
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            Proc_6_244_801E80(targetSocketIndex, payload, 0);
+            removeRepresentedInteractionPair(socketIndex);
+            removeRepresentedInteractionPair(targetSocketIndex);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }
@@ -4624,6 +4858,74 @@ public final class Handling {
         payload += handlingField(fields, 2) + '\2';
         payload += Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 3)), null, "") + "H";
         return payload;
+    }
+
+    public static void storeRepresentedInteractionPair(long sourceSocketIndex, long targetSocketIndex, long interactionState) {
+        if (sourceSocketIndex <= 0L || targetSocketIndex <= 0L) {
+            return;
+        }
+        removeRepresentedInteractionPair(sourceSocketIndex);
+        removeRepresentedInteractionPair(targetSocketIndex);
+        String sourceRow = sourceSocketIndex + "\t" + targetSocketIndex + "\t" + interactionState;
+        String targetRow = targetSocketIndex + "\t" + sourceSocketIndex + "\t" + interactionState;
+        representedInteractionPairs = representedInteractionPairs.isEmpty()
+            ? sourceRow + "\r" + targetRow
+            : representedInteractionPairs + "\r" + sourceRow + "\r" + targetRow;
+    }
+
+    public static void removeRepresentedInteractionPair(long socketIndex) {
+        if (socketIndex <= 0L || representedInteractionPairs.isEmpty()) {
+            return;
+        }
+        StringBuilder rebuilt = new StringBuilder();
+        for (String row : representedInteractionPairs.split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 1 && Vb.val(handlingField(fields, 0)) != socketIndex) {
+                    appendRow(rebuilt, row);
+                }
+            }
+        }
+        representedInteractionPairs = rebuilt.toString();
+        removeRepresentedTradeOffer(socketIndex, 0L);
+    }
+
+    public static int representedInteractionPartner(long socketIndex) {
+        if (socketIndex <= 0L || representedInteractionPairs.isEmpty()) {
+            return 0;
+        }
+        for (String row : representedInteractionPairs.split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 2 && Vb.val(handlingField(fields, 0)) == socketIndex) {
+                    return (int) Vb.val(handlingField(fields, 1));
+                }
+            }
+        }
+        return 0;
+    }
+
+    public static long representedInteractionState(long socketIndex) {
+        if (socketIndex <= 0L || representedInteractionPairs.isEmpty()) {
+            return 0L;
+        }
+        for (String row : representedInteractionPairs.split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 3 && Vb.val(handlingField(fields, 0)) == socketIndex) {
+                    return Vb.val(handlingField(fields, 2));
+                }
+            }
+        }
+        return 0L;
+    }
+
+    public static void storeRepresentedTradeOffer(long socketIndex, long furnitureId, long productId, String signText, long secondaryValue) {
+        representedTradeOffers = representedTradeOfferStore(representedTradeOffers, socketIndex, furnitureId, productId, signText, secondaryValue);
+    }
+
+    public static void removeRepresentedTradeOffer(long socketIndex, long furnitureId) {
+        representedTradeOffers = representedTradeOfferRemove(representedTradeOffers, socketIndex, furnitureId);
     }
 
     public static String questCompletionPayload(
