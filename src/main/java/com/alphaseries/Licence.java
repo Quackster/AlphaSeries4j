@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
+import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.recycler.RecyclerSettings;
@@ -155,6 +156,15 @@ public final class Licence {
 
     public static void setFaqDescriptionCache(Object descriptions) {
         global_00829210 = descriptions == null ? "" : descriptions;
+    }
+
+    public static ChatSettings chatSettings() {
+        return ChatSettings.fromLegacy(global_00829290, global_00829294);
+    }
+
+    public static void setChatSettings(String filterRows, String gestureRows) {
+        global_00829290 = StringUtils.text(filterRows);
+        global_00829294 = StringUtils.text(gestureRows);
     }
 
     public static String Proc_9_6_808080(Object... args) {

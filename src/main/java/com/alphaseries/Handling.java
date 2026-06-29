@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.catalog.GiftSettings;
+import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.recycler.RecyclerSettings;
@@ -24,7 +25,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class Handling {
@@ -852,26 +852,11 @@ public final class Handling {
         }
         boolean enabled = Vb.val(Functions.Proc_10_0_809570("com.client.chat.filter.enabled", 0)) != 0L;
         String replacement = Functions.Proc_10_0_809570("com.client.chat.filter.replacement", "");
-        return filterChatText(Vb.cStr(args[0]), enabled, replacement, Licence.global_00829290);
+        return Licence.chatSettings().filterText(Vb.cStr(args[0]), enabled, replacement);
     }
 
     public static String filterChatText(String messageText, boolean filterEnabled, String replacementText, String filterRows) {
-        String filteredText = Vb.cStr(messageText);
-        if (filterEnabled && !Vb.cStr(filterRows).isEmpty()) {
-            for (String row : Vb.cStr(filterRows).split("\r", -1)) {
-                String[] fields = row.split("\t", -1);
-                String blockedWord = fields.length > 0 ? fields[0].trim() : "";
-                if (!blockedWord.isEmpty()) {
-                    if (blockedWord.length() > 3) {
-                        Pattern pattern = Pattern.compile(Pattern.quote(blockedWord), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-                        filteredText = pattern.matcher(filteredText).replaceAll(Matcher.quoteReplacement(Vb.cStr(replacementText)));
-                    } else if (filteredText.equalsIgnoreCase(blockedWord)) {
-                        filteredText = Vb.cStr(replacementText);
-                    }
-                }
-            }
-        }
-        return filteredText;
+        return ChatSettings.fromLegacy(filterRows, "").filterText(messageText, filterEnabled, replacementText);
     }
 
     public static long Proc_6_23_6E9A90(Object... args) {
@@ -879,28 +864,11 @@ public final class Handling {
             return 0L;
         }
         boolean enabled = Vb.val(Functions.Proc_10_0_809570("com.client.chat.gesture.enabled", 0)) != 0L;
-        return findGestureId(Vb.cStr(args[0]), enabled, Licence.global_00829294);
+        return Licence.chatSettings().gestureId(Vb.cStr(args[0]), enabled);
     }
 
     public static long findGestureId(String messageText, boolean gestureEnabled, String gestureRows) {
-        if (!gestureEnabled || Vb.cStr(gestureRows).isEmpty()) {
-            return 0L;
-        }
-        String[] rows = Vb.cStr(gestureRows).split("\r", -1);
-        for (String word : Vb.cStr(messageText).split(" ", -1)) {
-            String token = word.trim();
-            if (!token.isEmpty()) {
-                for (String row : rows) {
-                    if (!row.isEmpty()) {
-                        String[] fields = row.split("\t", -1);
-                        if (fields.length >= 2 && token.equalsIgnoreCase(fields[0])) {
-                            return Vb.val(fields[1]);
-                        }
-                    }
-                }
-            }
-        }
-        return 0L;
+        return ChatSettings.fromLegacy("", gestureRows).gestureId(messageText, gestureEnabled);
     }
 
     public static String Proc_6_29_70D800(Object... args) {

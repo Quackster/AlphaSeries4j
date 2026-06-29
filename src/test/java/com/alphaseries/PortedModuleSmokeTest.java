@@ -826,6 +826,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("ACH_ONE", ((String[][]) Licence.global_008291E8)[0][1]);
         assertEquals(":-)\t5", Licence.global_00829294);
         assertEquals("badword", Licence.global_00829290);
+        assertEquals("badword", Licence.chatSettings().filterRows());
+        assertEquals(":-)\t5", Licence.chatSettings().gestureRows());
         assertEquals(75, ((int[]) Licence.global_0082927C)[2]);
         MySQL.configureDatabaseConnection(null);
 

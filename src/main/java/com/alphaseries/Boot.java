@@ -702,8 +702,9 @@ public final class Boot {
     }
 
     public static void buildChatSettingsCache() {
-        Licence.global_00829294 = MySQL.Proc_5_2_6D4690("SELECT smiley,gesture FROM settings_gesture LIMIT 100", 0, 0);
-        Licence.global_00829290 = MySQL.Proc_5_2_6D4690("SELECT word FROM settings_filter LIMIT 100", 0, 0);
+        Licence.setChatSettings(
+            MySQL.Proc_5_2_6D4690("SELECT word FROM settings_filter LIMIT 100", 0, 0),
+            MySQL.Proc_5_2_6D4690("SELECT smiley,gesture FROM settings_gesture LIMIT 100", 0, 0));
     }
 
     private static String[][] achievementRowsByIndex(AchievementSettingsCache cache) {
