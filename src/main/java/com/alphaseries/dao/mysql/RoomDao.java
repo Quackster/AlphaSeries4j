@@ -1,6 +1,7 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.room.RoomOccupantRow;
 import com.alphaseries.game.room.RoomUserEntryRow;
 
 import java.sql.SQLException;
@@ -161,6 +162,27 @@ public final class RoomDao {
                 resultSet.getLong(7),
                 resultSet.getLong(8)),
             userId,
+            roomId);
+    }
+
+    public List<RoomOccupantRow> activeRoomOccupants(long roomId) throws SQLException {
+        return database.query(
+            "SELECT logs_visitedrooms.id,users.id,users.name,users.figure,users.motto,"
+                + "users.gender,models.position_x,models.position_y,users.id_socket "
+                + "FROM logs_visitedrooms,users,rooms,models WHERE logs_visitedrooms.id_room=? "
+                + "AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user "
+                + "AND rooms.id=logs_visitedrooms.id_room AND models.id=rooms.id_model "
+                + "ORDER BY logs_visitedrooms.timestamp_enter ASC LIMIT 250",
+            resultSet -> new RoomOccupantRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getString(4),
+                resultSet.getString(5),
+                resultSet.getString(6),
+                resultSet.getLong(7),
+                resultSet.getLong(8),
+                resultSet.getLong(9)),
             roomId);
     }
 

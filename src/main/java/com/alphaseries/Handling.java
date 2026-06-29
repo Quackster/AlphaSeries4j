@@ -22,6 +22,7 @@ import com.alphaseries.game.pet.PetScratchRow;
 import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.room.FurnitureRoomCache;
+import com.alphaseries.game.room.RoomOccupantRow;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.room.RoomUserEntryRow;
@@ -2558,29 +2559,25 @@ public final class Handling {
             if (socketIndex <= 0 || roomId <= 0L) {
                 return;
             }
-            long roomSlot = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT rooms.id_slot FROM rooms WHERE rooms.id='"
-                + roomId + "' LIMIT 1", 0, 0));
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return;
+            }
+            long roomSlot = rooms.roomSlot(roomId);
             StringBuilder occupantPayload = new StringBuilder();
             StringBuilder statusPayload = new StringBuilder();
             long occupantCount = 0L;
             long statusCount = 0L;
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,users.id,users.name,users.figure,users.motto,"
-                + "users.gender,models.position_x,models.position_y,users.id_socket FROM logs_visitedrooms,users,rooms,models "
-                + "WHERE logs_visitedrooms.id_room='" + roomId + "' AND logs_visitedrooms.timestamp_left IS NULL "
-                + "AND users.id=logs_visitedrooms.id_user AND rooms.id=logs_visitedrooms.id_room AND models.id=rooms.id_model "
-                + "ORDER BY logs_visitedrooms.timestamp_enter ASC LIMIT 250", 0, 0);
-            for (String row : rowText.split("\r", -1)) {
-                if (!row.trim().isEmpty()) {
-                    String[] fields = row.split("\t", -1);
-                    long roomUserIndex = NumberUtils.parseLong(handlingField(fields, 0));
-                    long occupantUserId = NumberUtils.parseLong(handlingField(fields, 1));
-                    String genderText = handlingField(fields, 5).toUpperCase();
+            for (RoomOccupantRow occupant : rooms.activeRoomOccupants(roomId)) {
+                if (occupant != null) {
+                    long roomUserIndex = occupant.roomUserIndex();
+                    String genderText = StringUtils.text(occupant.gender()).toUpperCase();
                     genderText = genderText.isEmpty() ? "M" : genderText.substring(0, 1);
                     if (!"M".equals(genderText) && !"F".equals(genderText)) {
                         genderText = "M";
                     }
-                    long positionX = NumberUtils.parseLong(handlingField(fields, 6));
-                    long positionY = NumberUtils.parseLong(handlingField(fields, 7));
+                    long positionX = occupant.positionX();
+                    long positionY = occupant.positionY();
                     if (roomSlot > 0L) {
                         MovementPosition movementPosition = movementPosition(Licence.representedRooms().movementPosition(roomSlot, roomUserIndex));
                         if (movementPosition.found) {
@@ -2590,8 +2587,8 @@ public final class Handling {
                     }
                     String positionZ = "0.0";
                     long directionValue = 0L;
-                    occupantPayload.append(Proc_6_41_712730(occupantUserId, handlingField(fields, 2), handlingField(fields, 3),
-                        handlingField(fields, 4), genderText, roomUserIndex, positionX, positionY, positionZ, 0, 0));
+                    occupantPayload.append(Proc_6_41_712730(occupant.userId(), occupant.name(), occupant.figure(),
+                        occupant.motto(), genderText, roomUserIndex, positionX, positionY, positionZ, 0, 0));
                     statusPayload.append(Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, ""))
                         .append(' ').append(positionX).append(' ').append(positionY).append(' ').append(positionZ)
                         .append(' ').append(directionValue).append(' ').append(directionValue).append('/').append('\r');
