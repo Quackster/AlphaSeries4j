@@ -3827,6 +3827,62 @@ public final class Handling {
         }
     }
 
+    public static long Proc_6_147_76E910(Object... args) {
+        try {
+            long roomId = 0L;
+            long positionX;
+            long positionY;
+            if (args != null && args.length >= 3) {
+                roomId = Vb.val(args[0]);
+                positionX = Vb.val(args[1]);
+                positionY = Vb.val(args[2]);
+            } else if (args != null && args.length >= 2) {
+                positionX = Vb.val(args[0]);
+                positionY = Vb.val(args[1]);
+            } else {
+                return 0L;
+            }
+            String whereText = "position_x='" + positionX + "' AND position_y='" + positionY
+                + "' AND position_wall IS NULL";
+            if (roomId > 0L) {
+                whereText = "id_room='" + roomId + "' AND " + whereText;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_room,id_product,sign FROM furnitures WHERE "
+                + whereText + " LIMIT 250", 0, 0);
+            if (rowText.isEmpty()) {
+                return 0L;
+            }
+            long refreshCount = 0L;
+            for (String row : rowText.split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    String[] fields = row.split("\t", -1);
+                    long furnitureId = Vb.val(handlingField(fields, 0));
+                    long rowRoomId = roomId > 0L ? roomId : Vb.val(handlingField(fields, 1));
+                    long productId = Vb.val(handlingField(fields, 2));
+                    String stateText = handlingField(fields, 3);
+                    if (furnitureId > 0L && rowRoomId > 0L && productId > 0L) {
+                        String productAction = DataManager.Proc_8_12_806C30(productId, 7, 0).toLowerCase();
+                        String productSprite = DataManager.Proc_8_12_806C30(productId, 17, 0).toLowerCase();
+                        if (productSprite.isEmpty()) {
+                            productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0).toLowerCase();
+                        }
+                        if (productAction.isEmpty() || productAction.contains("switch") || productAction.contains("click")
+                            || productAction.contains("score") || productSprite.contains("score") || productSprite.contains("dice")) {
+                            long stateValue = Vb.val(stateText);
+                            Proc_6_151_78AC20(rowRoomId, furnitureId, stateValue);
+                            Proc_6_246_8024C0(rowRoomId, furnitureStatePayload(furnitureId, stateValue), 0);
+                            refreshCount++;
+                        }
+                    }
+                }
+            }
+            return refreshCount;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
     public static void Proc_6_148_7756D0(Object... args) {
         try {
             if (args == null || args.length < 3) {

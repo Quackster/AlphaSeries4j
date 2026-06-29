@@ -1750,7 +1750,7 @@ public final class PortedModuleSmokeTest {
         Files.createDirectories(figureCachePath.resolve("cache").resolve("items_charges"));
         Files.write(figureCachePath.resolve("cache").resolve("wired_trigger").resolve("9.cache"), "trigger-cache".getBytes());
         Files.write(figureCachePath.resolve("cache").resolve("rooms").resolve("9.cache"), "room-cache".getBytes());
-        String[] stickyProducts = new String[509];
+        String[] stickyProducts = new String[510];
         stickyProducts[500] = productRow(500, "18", "post.it.vd");
         stickyProducts[501] = productRow(501, "17", "present_wrap_basic");
         stickyProducts[502] = productRow(502, "0", "2", "24", "Opened Sofa");
@@ -1759,6 +1759,7 @@ public final class PortedModuleSmokeTest {
         stickyProducts[506] = productRow(506, "1", "1", "13", "RewardA", "14", "Trade Chair", "15", "Trade Desc", "18", "trade_sprite");
         stickyProducts[507] = productRow(507, "1", "2", "14", "Wallpaper", "15", "Wallpaper Desc", "18", "paper_sprite", "20", "paper1");
         stickyProducts[508] = productRow(508, "12", "1", "18", "charge_sprite", "34", "3", "35", "10", "36", "2", "37", "1");
+        stickyProducts[509] = productRow(509, "7", "static", "18", "plain_sprite");
         DataManager.global_008292BC = stickyProducts;
         Licence.global_008292BC = stickyProducts;
         String[] catalogProducts = new String[82];
@@ -2028,6 +2029,11 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id,id_product,position_wall,sign,id_secondary FROM furnitures WHERE id_room='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(74, 503, ":w=1,2 l=3,4", "wall-state", 6));
+                }
+                if (sqlText.contains("SELECT id,id_room,id_product,sign FROM furnitures WHERE id_room='9' AND position_x='2' AND position_y='3'")) {
+                    return Arrays.<List<Object>>asList(
+                        Arrays.<Object>asList(88, 9, 506, 4),
+                        Arrays.<Object>asList(89, 9, 509, 7));
                 }
                 if (sqlText.contains("SELECT id_product FROM furnitures WHERE id='75' AND id_room='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(505));
@@ -2646,6 +2652,13 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         assertEquals(Long.valueOf(86L), Handling.Proc_6_150_777FA0(4, "FH" + wireLong(86)));
         assertEquals(true, containsSend(handlingSends, "AX86\2" + "1\2"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Licence.global_00829310 = "";
+        assertEquals(1L, Handling.Proc_6_147_76E910(9, 2, 3));
+        assertEquals(true, Licence.global_00829310.contains("\1" + "9\t88\t4\2"));
+        assertEquals(true, containsSend(handlingSends, "AX88\2" + "4\2"));
+        assertEquals(false, containsSend(handlingSends, "AX89\2" + "7\2"));
         handlingSql.clear();
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
