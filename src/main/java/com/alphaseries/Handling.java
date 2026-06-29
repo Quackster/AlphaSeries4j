@@ -8273,8 +8273,10 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET settings_sound='" + soundSetting + "' WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            UserDao users = userDao();
+            if (users != null) {
+                users.updateSoundSetting(NumberUtils.parseLong(userId), soundSetting);
+            }
         } catch (Exception ignored) {
             // VB6 source suppresses dispatcher helper failures.
         }
