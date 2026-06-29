@@ -179,6 +179,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed staff moderator fallback socket lookup through `UserDao.activeUserSockets`, replacing raw user SQL plus `handlingField(fields, 0)`/tab-delimited parsing in `Handling`.
 - Routed catalog purchase balance checks and debits through typed `UserDao.CatalogPurchaseBalance`, replacing raw user balance SQL and tab-delimited parsing in `Handling`.
 - Routed gift purchase balance checks, recipient lookup, debit, and gift counters through `UserDao`, replacing raw user SQL and tab-delimited parsing in `Handling`.
+- Routed represented achievement progress reads through typed `UserDao` accessors, replacing raw user/log SQL and tab-delimited summary parsing in `Handling`.
 - Restored decompiled boot caption states and Figuredata cache validation/error logging.
 - Restored decompiled `ERR.log`/`SLOW.log` boot header text.
 - Restored decompiled `:about`, `:entwicklung`, and `:commands` chat command response literals.
@@ -213,9 +214,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 367
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 194
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 184
 - `Boot.java`: 1242 lines
-- `Handling.java`: 12505 lines
+- `Handling.java`: 12504 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 940 lines

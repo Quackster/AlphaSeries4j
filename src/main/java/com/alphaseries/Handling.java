@@ -11568,41 +11568,40 @@ public final class Handling {
     }
 
     public static long representedAchievementProgress(String userId, long achievementQuestId) {
-        String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-        long progress;
-        if (achievementQuestId == 1L) {
-            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(DISTINCT id_room) FROM logs_visitedrooms WHERE id_user='"
-                + escapedUserId + "'", 0, 0));
-        } else if (achievementQuestId == 2L) {
-            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT respect_received FROM users WHERE id='"
-                + escapedUserId + "' LIMIT 1", 0, 0));
-        } else if (achievementQuestId == 3L) {
-            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT respect_given FROM users WHERE id='"
-                + escapedUserId + "' LIMIT 1", 0, 0));
-        } else if (achievementQuestId == 4L) {
-            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT online_time FROM users WHERE id='"
-                + escapedUserId + "' LIMIT 1", 0, 0)) / 60L;
-        } else if (achievementQuestId == 6L) {
-            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT gifts_given FROM users WHERE id='"
-                + escapedUserId + "' LIMIT 1", 0, 0));
-        } else if (achievementQuestId == 7L) {
-            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT gifts_received FROM users WHERE id='"
-                + escapedUserId + "' LIMIT 1", 0, 0));
-        } else if (achievementQuestId == 8L) {
-            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT hc_periods FROM users WHERE id='"
-                + escapedUserId + "' LIMIT 1", 0, 0));
-        } else if (achievementQuestId == 9L) {
-            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT hc2_periods FROM users WHERE id='"
-                + escapedUserId + "' LIMIT 1", 0, 0));
-        } else if (achievementQuestId == 11L) {
-            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT amount_staffpicked FROM users WHERE id='"
-                + escapedUserId + "' LIMIT 1", 0, 0));
-        } else {
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT respect_received,respect_given,gifts_given,gifts_received FROM users WHERE id='"
-                + escapedUserId + "' LIMIT 1", 0, 0);
-            progress = NumberUtils.parseLong(handlingField(rowText.split("\t", -1), 0));
+        UserDao users = userDao();
+        if (users == null) {
+            return 0L;
         }
-        return Math.max(0L, progress);
+        long userIdValue = NumberUtils.parseLong(userId);
+        try {
+            long progress;
+            if (achievementQuestId == 1L) {
+                progress = users.distinctVisitedRoomCount(userIdValue);
+            } else if (achievementQuestId == 2L) {
+                progress = users.respectReceived(userIdValue);
+            } else if (achievementQuestId == 3L) {
+                progress = users.respectGiven(userIdValue);
+            } else if (achievementQuestId == 4L) {
+                progress = users.onlineTime(userIdValue) / 60L;
+            } else if (achievementQuestId == 6L) {
+                progress = users.giftsGiven(userIdValue);
+            } else if (achievementQuestId == 7L) {
+                progress = users.giftsReceived(userIdValue);
+            } else if (achievementQuestId == 8L) {
+                progress = users.hcPeriods(userIdValue);
+            } else if (achievementQuestId == 9L) {
+                progress = users.hc2Periods(userIdValue);
+            } else if (achievementQuestId == 11L) {
+                progress = users.staffPickedAmount(userIdValue);
+            } else {
+                progress = users.achievementProgressSummary(userIdValue)
+                    .map(UserDao.AchievementProgressSummary::respectReceived)
+                    .orElse(0L);
+            }
+            return Math.max(0L, progress);
+        } catch (Exception ignored) {
+            return 0L;
+        }
     }
 
     public static String achievementRewardPayload(long achievementIndex, String achievementRow, long badgeLevel, long badgeRowId) {

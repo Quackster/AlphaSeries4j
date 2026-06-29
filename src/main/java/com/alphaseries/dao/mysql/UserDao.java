@@ -102,6 +102,81 @@ public final class UserDao {
             .orElse(0L);
     }
 
+    public long respectGiven(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT respect_given FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public long distinctVisitedRoomCount(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT COUNT(DISTINCT id_room) FROM logs_visitedrooms WHERE id_user=?",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public long onlineTime(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT online_time FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public long giftsGiven(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT gifts_given FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public long giftsReceived(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT gifts_received FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public long hcPeriods(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT hc_periods FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public long hc2Periods(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT hc2_periods FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public long staffPickedAmount(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT amount_staffpicked FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public Optional<AchievementProgressSummary> achievementProgressSummary(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT respect_received,respect_given,gifts_given,gifts_received FROM users WHERE id=? LIMIT 1",
+            resultSet -> new AchievementProgressSummary(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4)),
+            userId);
+    }
+
     public int spendRespect(long userId) throws SQLException {
         return database.execute(
             "UPDATE users SET respect_amount=respect_amount-1,respect_given=respect_given+1 WHERE id=?",
@@ -479,5 +554,13 @@ public final class UserDao {
     }
 
     public record CatalogPurchaseBalance(long credits, long activityPoints, long clubLevel) {
+    }
+
+    public record AchievementProgressSummary(
+        long respectReceived,
+        long respectGiven,
+        long giftsGiven,
+        long giftsReceived
+    ) {
     }
 }
