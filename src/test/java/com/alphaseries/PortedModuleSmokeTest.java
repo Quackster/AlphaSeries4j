@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -971,6 +972,40 @@ public final class PortedModuleSmokeTest {
         assertEquals("custom", Updater.getUpdaterExecutableName("custom", "app"));
         assertEquals("app", Updater.getUpdaterExecutableName("", "app"));
         assertEquals("INSERT IGNORE INTO a\nINSERT IGNORE INTO b", Updater.normalizedUpdateSql("INSERT INTO a\r\ninsert into b"));
+        assertEquals(3, Updater.visibleBodyLines("line1\\n\\nline3", 25).length);
+        Licence.global_00829044 = "1\ttitle\tline1\\nline2\t0\t0\n2\tother\tbody\t1\t0";
+        updater.height = 1000;
+        updater.currentUpdateIndex = 0;
+        Updater.RenderStep renderStep = updater.timer3Step();
+        assertEquals(true, renderStep.rendered);
+        assertEquals("title", renderStep.title);
+        assertEquals("line2", renderStep.bodyLines[1]);
+        assertEquals(true, updater.freeFeature.visible);
+        assertEquals(11534L, updater.pendingProgressWidth);
+        Licence.global_00829040 = "custom-updater";
+        Updater.DownloadPlan downloadPlan = updater.downloadPlan("appname", LocalDateTime.of(2026, 6, 29, 13, 45, 6));
+        assertEquals("custom-updater", downloadPlan.executableName);
+        assertEquals(true, downloadPlan.destinationPath.endsWith("custom-updater.exe"));
+        assertEquals(true, downloadPlan.sourceUrl.contains("/custom-updater/file.database?timestamp="));
+        List<String> updaterSql = new ArrayList<>();
+        MySQL.configureDatabaseConnection(new Database() {
+            @Override
+            public void execute(String sqlText) {
+                updaterSql.add(sqlText);
+            }
+
+            @Override
+            public List<List<Object>> query(String sqlText) {
+                return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
+            }
+        });
+        Licence.global_00829048 = "INSERT INTO a\r\ninsert into b\n";
+        assertEquals(true, updater.formLoad(true));
+        assertEquals(true, containsSql(updaterSql, "INSERT IGNORE INTO a"));
+        assertEquals(true, containsSql(updaterSql, "INSERT IGNORE INTO b"));
+        assertEquals(1000L, updater.height);
+        assertEquals(0L, updater.imageWidth);
+        MySQL.configureDatabaseConnection(null);
 
         String httpRequest = PrivSockHTTP.buildGetRequest("/path", "example.com", "8080");
         assertEquals(true, httpRequest.startsWith("GET /path HTTP/1.1\r\nHost:   example.com:8080\r\n"));
