@@ -1,5 +1,10 @@
 package com.alphaseries;
 
+import com.alphaseries.dao.mysql.RoomDao;
+import com.alphaseries.dao.mysql.UserDao;
+import com.alphaseries.db.Database;
+import com.alphaseries.messages.outgoing.UserPayloads;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.vb.Vb;
 
 import java.io.InputStream;
@@ -8,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.sql.SQLException;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class Functions {
@@ -131,7 +137,7 @@ public final class Functions {
         }
         long firstValue = Vb.val(args[0]);
         long secondValue = args.length >= 2 ? Vb.val(args[1]) : 0L;
-        return Crypto.Proc_3_0_6D2AF0(firstValue, 0, "Dk") + Crypto.Proc_3_0_6D2AF0(secondValue, 0, "");
+        return PacketBuilder.message("Dk").appendInt(firstValue).appendInt(secondValue).build();
     }
 
     public static String Proc_10_9_80A680(Object... args) {
@@ -216,7 +222,7 @@ public final class Functions {
     }
 
     public static String inventoryRemovePayload(long furnitureId) {
-        return Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ac");
+        return PacketBuilder.message("Ac").appendInt(furnitureId).build();
     }
 
     public static long Proc_10_14_80B010(Object... args) {
@@ -297,21 +303,15 @@ public final class Functions {
     }
 
     public static String creditsRefreshPayload(long creditsValue) {
-        return "@F" + creditsValue + ".0" + '\2';
+        return UserPayloads.creditsRefresh(creditsValue);
     }
 
     public static String activityPointRefreshPayload(long pointType, long pointsValue) {
-        return Crypto.Proc_3_0_6D2AF0(pointType, null,
-            Crypto.Proc_3_0_6D2AF0(pointsValue, null, "Fv") + "H");
+        return UserPayloads.activityPointRefresh(pointType, pointsValue);
     }
 
     public static String activityPointRefreshPayloads(long... pointValues) {
-        StringBuilder payload = new StringBuilder();
-        for (long pointType = 0L; pointType <= 4L; pointType++) {
-            long pointsValue = pointValues != null && pointType < pointValues.length ? pointValues[(int) pointType] : 0L;
-            payload.append(activityPointRefreshPayload(pointType, pointsValue));
-        }
-        return payload.toString();
+        return UserPayloads.activityPointRefreshes(pointValues);
     }
 
     public static long Proc_10_16_80C480(Object... args) {
@@ -397,7 +397,7 @@ public final class Functions {
     }
 
     public static String roomAlertPayload(String alertType, String alertText) {
-        return "Ba" + Vb.cStr(alertType) + '\2' + Vb.cStr(alertText) + '\2';
+        return UserPayloads.roomAlert(alertType, alertText);
     }
 
     public static long Proc_10_20_80CF60(Object... args) {
@@ -456,11 +456,7 @@ public final class Functions {
     }
 
     public static String emailValidatedPayload(long emailState) {
-        long stateValue = emailState == 0L ? 1L : emailState;
-        return "L}" + stateValue + '\2'
-            + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + "HH";
+        return UserPayloads.emailValidated(emailState);
     }
 
     public static long Proc_10_19_80CCD0(Object... args) {
@@ -472,14 +468,14 @@ public final class Functions {
             if ("0".equals(userId)) {
                 return 0L;
             }
-            String escapedUserId = Proc_10_11_80A9C0(userId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET email_validated='1' WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0);
+            long numericUserId = Vb.val(userId);
+            UserDao userDao = userDao();
+            userDao.markEmailValidated(numericUserId);
             long socketIndex = Licence.Proc_9_9_808AC0(userId, 0, 0);
             if (socketIndex <= 0L) {
                 return 0L;
             }
-            long emailState = Vb.val(MySQL.Proc_5_2_6D4690(
-                "SELECT email_validated FROM users WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0));
+            long emailState = userDao.emailValidated(numericUserId);
             HandlingMUS.Proc_12_1_821AA0((int) socketIndex, emailValidatedPayload(emailState));
             return 1L;
         } catch (Exception ex) {
@@ -488,10 +484,7 @@ public final class Functions {
     }
 
     public static String userIdentityRefreshPayload(long userId, String mottoText, String figureText, String genderText) {
-        return Crypto.Proc_3_0_6D2AF0(userId, null, "DJ")
-            + Vb.cStr(mottoText) + '\2'
-            + Vb.cStr(genderText) + '\2'
-            + Vb.cStr(figureText) + '\2';
+        return UserPayloads.identityRefresh(userId, mottoText, figureText, genderText);
     }
 
     public static long Proc_10_22_80D460(Object... args) {
@@ -503,17 +496,12 @@ public final class Functions {
             if (requestedUserId.isEmpty() || "0".equals(requestedUserId)) {
                 return 0L;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_socket,motto,figure,gender FROM users WHERE id='"
-                + Proc_10_11_80A9C0(requestedUserId, 0, 0) + "' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            UserDao.UserIdentity identity = userDao().findIdentity(Vb.val(requestedUserId)).orElse(null);
+            if (identity == null) {
                 return 0L;
             }
-            String[] fields = rowText.split("\t", -1);
-            if (fields.length < 5) {
-                return 0L;
-            }
-            long userId = Vb.val(fields[0]);
-            long socketIndex = Vb.val(fields[1]);
+            long userId = identity.userId();
+            long socketIndex = identity.socketIndex();
             if (socketIndex <= 0L) {
                 socketIndex = Licence.Proc_9_9_808AC0(String.valueOf(userId), 0, 0);
             }
@@ -521,11 +509,26 @@ public final class Functions {
                 return 0L;
             }
             HandlingMUS.Proc_12_1_821AA0((int) socketIndex,
-                userIdentityRefreshPayload(userId, fields[2], fields[3], fields[4]));
+                userIdentityRefreshPayload(userId, identity.motto(), identity.figure(), identity.gender()));
             return 1L;
         } catch (Exception ex) {
             return 0L;
         }
+    }
+
+    private static UserDao userDao() throws SQLException {
+        return new UserDao(configuredDatabase());
+    }
+
+    private static RoomDao roomDao() throws SQLException {
+        return new RoomDao(configuredDatabase());
+    }
+
+    private static Database configuredDatabase() throws SQLException {
+        if (MySQL.configuredDatabase() == null) {
+            throw new SQLException("Database is not configured.");
+        }
+        return MySQL.configuredDatabase();
     }
 
     public static String clubPeriodUpdateQuery(long userId, long hcRank, long currentPeriods, long paidDays, long giftIncrementDefault) {
@@ -589,14 +592,13 @@ public final class Functions {
                 return 1L;
             }
 
-            long occupiedCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures WHERE id_room='"
-                + roomId + "' AND position_x='" + positionX + "' AND position_y='" + positionY + "'", 0, 0));
+            RoomDao roomDao = roomDao();
+            long occupiedCount = roomDao.furnitureCountAt(roomId, positionX, positionY);
             if (occupiedCount > 0L) {
                 return 0L;
             }
 
-            long botCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM bots WHERE id_room='"
-                + roomId + "' AND position_x='" + positionX + "' AND position_y='" + positionY + "'", 0, 0));
+            long botCount = roomDao.botCountAt(roomId, positionX, positionY);
             return representedPositionAvailable(roomId, occupiedCount, botCount);
         } catch (Exception ex) {
             return 0L;
@@ -622,14 +624,15 @@ public final class Functions {
             long roomSlot = Vb.val(representedBotRecordField(Licence.global_00829358, botEntityId, 0));
             long botId = Vb.val(representedBotRecordField(Licence.global_00829358, botEntityId, 1));
             long roomId = 0L;
+            RoomDao roomDao = roomDao();
             if (roomSlot > 0L) {
-                roomId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM rooms WHERE id_slot='" + roomSlot + "' LIMIT 1", 0, 0));
+                roomId = roomDao.roomIdBySlot(roomSlot);
             }
             if (roomId <= 0L) {
                 if (botId <= 0L) {
                     botId = botEntityId;
                 }
-                roomId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_room FROM bots WHERE id='" + botId + "' LIMIT 1", 0, 0));
+                roomId = roomDao.roomIdByBot(botId);
             }
             if (roomId <= 0L) {
                 return 1L;

@@ -1,5 +1,9 @@
 package com.alphaseries;
 
-public interface PacketSink {
-    void send(int socketIndex, String payload);
+/**
+ * @deprecated Use {@link com.alphaseries.server.packet.PacketSink}.
+ */
+@Deprecated(forRemoval = false)
+@FunctionalInterface
+public interface PacketSink extends com.alphaseries.server.packet.PacketSink {
 }

@@ -1,5 +1,7 @@
 package com.alphaseries;
 
+import com.alphaseries.config.AppDatabaseConfig;
+
 import java.nio.file.Path;
 
 public final class AlphaSeriesApp {

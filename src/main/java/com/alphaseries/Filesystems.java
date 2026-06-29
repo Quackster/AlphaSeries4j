@@ -1,5 +1,9 @@
 package com.alphaseries;
 
+import com.alphaseries.messages.incoming.IncomingContext;
+import com.alphaseries.messages.incoming.MessageRegistry;
+import com.alphaseries.messages.incoming.ReadyPacketRegistry;
+import com.alphaseries.server.packet.PacketSink;
 import com.alphaseries.vb.Vb;
 
 import java.util.ArrayList;
@@ -9,6 +13,7 @@ public final class Filesystems {
     public static String global_00829268 = "";
     public static boolean global_00829190 = false;
     private static PacketSink packetSink = (socketIndex, payload) -> { };
+    private static MessageRegistry readyPacketRegistry = ReadyPacketRegistry.create();
 
     private Filesystems() {
     }
@@ -20,6 +25,10 @@ public final class Filesystems {
 
     public static void configurePacketSink(PacketSink sink) {
         packetSink = sink == null ? (socketIndex, payload) -> { } : sink;
+    }
+
+    public static void configureReadyPacketRegistry(MessageRegistry registry) {
+        readyPacketRegistry = registry == null ? ReadyPacketRegistry.create() : registry;
     }
 
     public static long Proc_7_0_8034A0(Object... args) {
@@ -139,18 +148,6 @@ public final class Filesystems {
     }
 
     private static void dispatchReadyPacket(long socketIndex, String packetCode, String packetPayload) {
-        switch (Vb.cStr(packetCode)) {
-            case "CN":
-                Handling.Proc_6_162_7B3310(socketIndex, packetPayload, 0);
-                break;
-            case "F_":
-                Handling.Proc_6_163_7B3480(socketIndex, packetPayload, 0);
-                break;
-            case "CD":
-                Handling.Proc_7FA5A0(socketIndex, "CD", packetPayload);
-                break;
-            default:
-                break;
-        }
+        readyPacketRegistry.dispatch(new IncomingContext((int) socketIndex), Vb.cStr(packetCode), packetPayload);
     }
 }

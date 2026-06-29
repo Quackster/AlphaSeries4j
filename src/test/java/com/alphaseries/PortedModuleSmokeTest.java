@@ -1,5 +1,13 @@
 package com.alphaseries;
 
+import com.alphaseries.config.AppDatabaseConfig;
+import com.alphaseries.db.Database;
+import com.alphaseries.messages.incoming.MessageRegistry;
+import com.alphaseries.messages.incoming.ReadyPacketRegistry;
+import com.alphaseries.protocol.PacketBuilder;
+import com.alphaseries.protocol.PacketReader;
+import com.alphaseries.protocol.WireEncoding;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -21,6 +29,18 @@ public final class PortedModuleSmokeTest {
         assertEquals(4096L, Crypto.decodeVl64(Crypto.encodeVl64(4096)));
         assertEquals(1L, Crypto.Proc_3_2_6D30A0(Crypto.encodeVl64(0)));
         assertEquals(64L, Crypto.Proc_3_4_6D3620("@\u0080"));
+        assertEquals(Crypto.encodeVl64(4096), WireEncoding.encodeVl64(4096));
+        assertEquals(4096L, WireEncoding.decodeVl64(WireEncoding.encodeVl64(4096)));
+        assertEquals("DK" + Crypto.encodeVl64(2) + "figure\2",
+            PacketBuilder.message("DK").appendInt(2).appendString("figure").build());
+        PacketReader reader = PacketReader.of(Crypto.encodeVl64(7) + "@Dtesttail");
+        assertEquals(7L, reader.readInt());
+        assertEquals("test", reader.readString());
+        assertEquals("tail", reader.remaining());
+        MessageRegistry readyRegistry = ReadyPacketRegistry.create();
+        assertEquals(true, readyRegistry.headers().contains("CN"));
+        assertEquals(true, readyRegistry.headers().contains("F_"));
+        assertEquals(true, readyRegistry.headers().contains("CD"));
 
         String config = "mySQL_host=db\r\nmySQL_port=3307\nmySQL_db=alpha\nmySQL_username=user\nmySQL_password=pass";
         assertEquals("Driver={MySQL ODBC 3.51 Driver};Server=db;Port=3307;Database=alpha;User=user;Password=pass;Option=3;",

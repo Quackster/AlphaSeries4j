@@ -1,6 +1,7 @@
 package com.alphaseries;
 
-import com.alphaseries.vb.Vb;
+import com.alphaseries.db.Database;
+import com.alphaseries.protocol.WireEncoding;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,28 +24,28 @@ public final class Crypto {
         if (args == null || args.length == 0) {
             return "";
         }
-        long value = Vb.val(args[0]);
-        String prefix = args.length >= 3 ? Vb.cStr(args[2]) : "";
-        return prefix + encodeVl64(value);
+        long value = WireEncoding.parseLeadingLong(args[0]);
+        String prefix = args.length >= 3 ? text(args[2]) : "";
+        return prefix + WireEncoding.encodeVl64(value);
     }
 
     public static long Proc_3_1_6D2E00(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        String valueText = Vb.cStr(args[0]).replace('.', ',');
+        String valueText = text(args[0]).replace('.', ',');
         int comma = valueText.indexOf(',');
         if (comma >= 0) {
             valueText = valueText.substring(0, comma);
         }
-        return Vb.val(valueText) + 1L;
+        return WireEncoding.parseLeadingLong(valueText) + 1L;
     }
 
     public static long Proc_3_2_6D30A0(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        String encodedValue = Vb.cStr(args[0]);
+        String encodedValue = text(args[0]);
         if (encodedValue.isEmpty()) {
             return 0L;
         }
@@ -56,23 +57,14 @@ public final class Crypto {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return decodeVl64(Vb.cStr(args[0]));
+        return WireEncoding.decodeVl64(text(args[0]));
     }
 
     public static long Proc_3_4_6D3620(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        String encodedValue = Vb.cStr(args[0]);
-        if (encodedValue.length() == 1) {
-            encodedValue = "@" + encodedValue;
-        }
-        if (encodedValue.length() < 2) {
-            return 0L;
-        }
-        long firstValue = encodedValue.charAt(0) - 64L;
-        long secondValue = encodedValue.charAt(1) - 64L;
-        return (firstValue * 0x40L) + secondValue;
+        return WireEncoding.decodeBase64Length(text(args[0]));
     }
 
     public static String buildDatabaseConnectionString(Object... args) {
@@ -80,7 +72,7 @@ public final class Crypto {
             return "";
         }
 
-        String configText = Vb.cStr(args[0]);
+        String configText = text(args[0]);
         String hostName = "";
         String portNumber = "";
         String databaseName = "";
@@ -97,19 +89,19 @@ public final class Crypto {
             password = config.getOrDefault("mysql_password", "");
             driverName = config.getOrDefault("mysql_driver", "MySQL ODBC 3.51 Driver");
         } else if (args.length >= 6) {
-            hostName = Vb.cStr(args[0]);
-            portNumber = Vb.cStr(args[1]);
-            databaseName = Vb.cStr(args[2]);
-            userName = Vb.cStr(args[3]);
-            password = Vb.cStr(args[4]);
-            driverName = Vb.cStr(args[5]);
+            hostName = text(args[0]);
+            portNumber = text(args[1]);
+            databaseName = text(args[2]);
+            userName = text(args[3]);
+            password = text(args[4]);
+            driverName = text(args[5]);
         } else if (args.length >= 5) {
             hostName = "localhost";
-            portNumber = Vb.cStr(args[0]);
-            databaseName = Vb.cStr(args[1]);
-            userName = Vb.cStr(args[2]);
-            password = Vb.cStr(args[3]);
-            driverName = Vb.cStr(args[4]);
+            portNumber = text(args[0]);
+            databaseName = text(args[1]);
+            userName = text(args[2]);
+            password = text(args[3]);
+            driverName = text(args[4]);
         }
 
         if (databaseName.isEmpty() || driverName.isEmpty()) {
@@ -138,7 +130,7 @@ public final class Crypto {
 
     public static Map<String, String> parseConfig(String configText) {
         Map<String, String> result = new LinkedHashMap<>();
-        String normalized = Vb.cStr(configText).replace("\r\n", "\n").replace('\r', '\n');
+        String normalized = text(configText).replace("\r\n", "\n").replace('\r', '\n');
         for (String line : normalized.split("\n", -1)) {
             int equalsAt = line.indexOf('=');
             if (equalsAt > 0) {
@@ -149,48 +141,14 @@ public final class Crypto {
     }
 
     public static String encodeVl64(long value) {
-        long absoluteValue;
-        long negativeFlag = 0L;
-        if (value < 0) {
-            negativeFlag = 4L;
-            absoluteValue = Math.abs(value);
-        } else {
-            absoluteValue = value;
-        }
-
-        long lowBits = absoluteValue & 3L;
-        absoluteValue /= 4L;
-
-        StringBuilder encodedTail = new StringBuilder();
-        long encodedLength = 0L;
-        do {
-            encodedTail.append((char) ((absoluteValue & 0x3FL) + 64L));
-            absoluteValue /= 64L;
-            encodedLength++;
-        } while (absoluteValue > 0L && encodedLength < 5L);
-
-        return Character.toString((char) (64L + (encodedLength * 8L) + negativeFlag + lowBits)) + encodedTail;
+        return WireEncoding.encodeVl64(value);
     }
 
     public static long decodeVl64(String encodedValue) {
-        if (encodedValue == null || encodedValue.isEmpty()) {
-            return 0L;
-        }
+        return WireEncoding.decodeVl64(encodedValue);
+    }
 
-        long firstByte = encodedValue.charAt(0) - 64L;
-        long byteCount = (firstByte & 0x38L) / 8L;
-        boolean negativeValue = (firstByte & 4L) != 0L;
-        long decodedValue = firstByte & 3L;
-        long multiplier = 4L;
-
-        for (int index = 1; index <= byteCount; index++) {
-            if (index + 1 > encodedValue.length()) {
-                break;
-            }
-            decodedValue += (encodedValue.charAt(index) - 64L) * multiplier;
-            multiplier *= 64L;
-        }
-
-        return negativeValue ? -decodedValue : decodedValue;
+    private static String text(Object value) {
+        return value == null ? "" : String.valueOf(value);
     }
 }

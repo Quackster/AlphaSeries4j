@@ -1,5 +1,7 @@
 package com.alphaseries;
 
+import com.alphaseries.db.Database;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.vb.Vb;
 
 import java.sql.SQLException;
@@ -13,6 +15,10 @@ public final class MySQL {
 
     public static void configureDatabaseConnection(Database database) {
         databaseConnection = database;
+    }
+
+    public static Database configuredDatabase() {
+        return databaseConnection;
     }
 
     public static void Proc_5_0_6D3CD0(Object... args) {
@@ -225,65 +231,68 @@ public final class MySQL {
         long roomId = Vb.val(roomFields[0]);
         String roomName = roomFields[1];
         long modelType = Vb.val(roomFields[2]);
-        return Crypto.Proc_3_0_6D2AF0(roomId, null, "") + Crypto.Proc_3_0_6D2AF0(modelType, null, "")
-            + roomName + '\2';
+        return PacketBuilder.create()
+            .appendInt(roomId)
+            .appendInt(modelType)
+            .appendString(roomName)
+            .build();
     }
 
     public static String mySqlRoomChatLogRows(String chatRows) {
         if (chatRows == null || chatRows.isEmpty()) {
             return "";
         }
-        StringBuilder payload = new StringBuilder();
+        PacketBuilder payload = PacketBuilder.create();
         for (String row : chatRows.split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 5) {
-                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(fields[0]), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(fields[1]), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(fields[2]), null, ""));
-                    payload.append(fields[3]).append('\2');
-                    payload.append(fields[4]).append('\2');
+                    payload.appendInt(Vb.val(fields[0]))
+                        .appendInt(Vb.val(fields[1]))
+                        .appendInt(Vb.val(fields[2]))
+                        .appendString(fields[3])
+                        .appendString(fields[4]);
                 }
             }
         }
-        return payload.toString();
+        return payload.build();
     }
 
     public static String mySqlRoomInfoPayload(String[] roomFields, String[] eventFields) {
         if (roomFields == null || roomFields.length < 8) {
             return "";
         }
-        StringBuilder payload = new StringBuilder();
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(roomFields[0]), null, ""));
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(roomFields[1]), null, ""));
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(roomFields[2]), null, ""));
+        PacketBuilder payload = PacketBuilder.create()
+            .appendInt(Vb.val(roomFields[0]))
+            .appendInt(Vb.val(roomFields[1]))
+            .appendInt(Vb.val(roomFields[2]));
         for (int fieldIndex = 3; fieldIndex <= 7; fieldIndex++) {
-            payload.append(roomFields[fieldIndex]).append('\2');
+            payload.appendString(roomFields[fieldIndex]);
         }
 
         boolean hasEvent = eventFields != null && eventFields.length >= 4;
-        payload.append(Crypto.Proc_3_0_6D2AF0(hasEvent ? 1 : 0, null, ""));
+        payload.appendBoolean(hasEvent);
         if (hasEvent) {
             for (int fieldIndex = 0; fieldIndex <= 3; fieldIndex++) {
-                payload.append(eventFields[fieldIndex]).append('\2');
+                payload.appendString(eventFields[fieldIndex]);
             }
         }
-        return payload.toString();
+        return payload.build();
     }
 
     public static String mySqlCallForHelpChatLogPayload(long cfhId, String[] cfhFields, String chatRows) {
         if (cfhFields == null || cfhFields.length < 6) {
             return "";
         }
-        StringBuilder payload = new StringBuilder();
-        payload.append(Crypto.Proc_3_0_6D2AF0(cfhId, null, ""));
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(cfhFields[0]), null, ""));
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(cfhFields[2]), null, ""));
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(cfhFields[3]), null, ""));
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(cfhFields[4]), null, ""));
-        payload.append(cfhFields[1]).append('\2');
-        payload.append(mySqlRoomChatLogRows(chatRows));
-        return payload.toString();
+        return PacketBuilder.create()
+            .appendInt(cfhId)
+            .appendInt(Vb.val(cfhFields[0]))
+            .appendInt(Vb.val(cfhFields[2]))
+            .appendInt(Vb.val(cfhFields[3]))
+            .appendInt(Vb.val(cfhFields[4]))
+            .appendString(cfhFields[1])
+            .appendRaw(mySqlRoomChatLogRows(chatRows))
+            .build();
     }
 
     public static boolean isIgnorableSqlArg(String value) {

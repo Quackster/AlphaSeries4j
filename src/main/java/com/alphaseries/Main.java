@@ -1,5 +1,6 @@
 package com.alphaseries;
 
+import com.alphaseries.server.packet.PacketSink;
 import com.alphaseries.vb.Vb;
 
 import java.nio.file.Path;

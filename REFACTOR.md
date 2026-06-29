@@ -1,0 +1,68 @@
+# AlphaSeries4j Refactor Progress
+
+Last updated: 2026-06-29
+
+## Goal
+
+Refactor the VB6-port-shaped code into Java packages with stable domain APIs, typed database access, prepared statements, fluent packet builders, and smaller classes while preserving source compatibility and runtime behavior until each compatibility layer can be removed safely.
+
+## Completed Slices
+
+- Added `com.alphaseries.config` and moved database config into `AppDatabaseConfig`.
+- Added `com.alphaseries.db` with `Database`, `JdbcDatabase`, and `RowMapper`.
+- Switched `JdbcDatabase` to `PreparedStatement` for query and execute paths.
+- Added typed prepared-query defaults for legacy `Database` test doubles while preserving JDBC prepared statements.
+- Added `com.alphaseries.dao.mysql.UserDao` and migrated email-validation and identity-refresh user queries in `Functions` to typed DAO methods.
+- Added `com.alphaseries.dao.mysql.RoomDao` and migrated position-availability, room-slot, and bot-room lookups in `Functions` to typed DAO methods.
+- Added `com.alphaseries.protocol` with `WireEncoding`, `PacketBuilder`, `PacketReader`, and `OutgoingPayload`.
+- Moved VL64/base64 length encoding and leading numeric wire parsing out of `Crypto`.
+- Removed `Crypto`'s dependency on `com.alphaseries.vb.Vb`.
+- Added incoming-message registry types in `com.alphaseries.messages.incoming`.
+- Replaced the small ready-packet switch in `Filesystems` with `ReadyPacketRegistry`.
+- Added `com.alphaseries.messages.outgoing.UserPayloads` for user-state outgoing payloads.
+- Added `com.alphaseries.messages.outgoing.SocialPayloads` for room-user profile, badge, and tag outgoing payloads.
+- Added `com.alphaseries.messages.outgoing.PollPayloads` for poll outgoing payloads.
+- Added `com.alphaseries.messages.outgoing.AchievementPayloads` for achievement reward, award, and list outgoing payloads.
+- Added `com.alphaseries.messages.outgoing.RecyclerPayloads` for recycler status outgoing payloads.
+- Added `com.alphaseries.messages.outgoing.JukeboxPayloads` for song info, jukebox playlist, disk inventory, and playback outgoing payloads.
+- Added `com.alphaseries.game.inventory.InventoryMessagePayloads` for inventory item/list payload building.
+- Added `com.alphaseries.game.moderation.StaffPayloads` for call-for-help rows, staff user summaries, room visits, room chat history, and unsafe staff-alert checks.
+- Added `com.alphaseries.game.pet.PetPayloads` for pet race, inventory, name-validation, command, status, scratch, and action outgoing payloads.
+- Added `com.alphaseries.game.wired.WiredPayloads` for wired record formatting, cache replacement, selected-item checks, and state payload aggregation.
+- Added `com.alphaseries.messages.outgoing.MessengerPayloads` for friend, request, search, pending-request, and friend-list outgoing payloads.
+- Added `com.alphaseries.server.packet.PacketSink` and kept the root `PacketSink` as a deprecated compatibility alias.
+- Migrated several payload builders from string concatenation to fluent `PacketBuilder`.
+
+## VB Compatibility Class Removal Checklist
+
+Compared with `main`, the VB helper artifact currently present is:
+
+- `src/main/java/com/alphaseries/vb/Vb.java`
+
+Removal is blocked until all `Vb.` call sites are replaced with domain-specific APIs, protocol helpers, JDK calls, or typed parsing methods. Do not delete this class while root modules still import it.
+
+## Current Legacy Surface
+
+Measured on 2026-06-29:
+
+- Unique `Proc_*` symbols under `src/main/java`: 473
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1403
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 473
+- `Handling.java`: 12597 lines
+- `Functions.java`: 797 lines
+- `MySQL.java`: 301 lines
+- `Vb.java`: 106 lines
+
+## Next Targets
+
+- Continue migrating raw `MySQL.Proc_5_*` call clusters into `dao.mysql` classes with typed prepared methods.
+- Replace `Functions` and `Handling` user/account operations with domain services under `game.user` or `runtime.session`.
+- Move MUS handling into a `server.mus` package with compatibility shims for old entry points.
+- Extract navigator, room, moderation, pet, badge, poll, recycler, jukebox, and wired payload builders from `Handling`.
+- Replace remaining `Crypto.Proc_3_*` and direct `Vb.val`/`Vb.cStr` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
+- Delete deprecated compatibility aliases and `com.alphaseries.vb.Vb` only after call-site count reaches zero and tests pass.
+
+## Verification
+
+- Latest full verification command: `./gradlew test --no-daemon`
+- Latest result: passing

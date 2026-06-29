@@ -1,5 +1,6 @@
 package com.alphaseries;
 
+import com.alphaseries.server.packet.PacketSink;
 import com.alphaseries.vb.Vb;
 
 public final class HandlingMUS {

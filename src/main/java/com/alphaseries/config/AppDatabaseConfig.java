@@ -1,6 +1,7 @@
-package com.alphaseries;
+package com.alphaseries.config;
 
-import com.alphaseries.vb.Vb;
+import com.alphaseries.Crypto;
+import com.alphaseries.db.JdbcDatabase;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -26,11 +27,14 @@ public final class AppDatabaseConfig {
     }
 
     public static String jdbcUrl(String host, String port, String database) {
+        String hostText = text(host);
+        String portText = text(port);
+        String databaseText = text(database);
         StringBuilder url = new StringBuilder("jdbc:mysql://");
-        url.append(Vb.cStr(host).isEmpty() ? "localhost" : Vb.cStr(host));
-        url.append(':').append(Vb.cStr(port).isEmpty() ? "3306" : Vb.cStr(port));
-        if (!Vb.cStr(database).isEmpty()) {
-            url.append('/').append(Vb.cStr(database));
+        url.append(hostText.isEmpty() ? "localhost" : hostText);
+        url.append(':').append(portText.isEmpty() ? "3306" : portText);
+        if (!databaseText.isEmpty()) {
+            url.append('/').append(databaseText);
         }
         url.append("?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
         return url.toString();
@@ -38,7 +42,7 @@ public final class AppDatabaseConfig {
 
     public static Map<String, String> parseOdbcConnectionString(String connectionString) {
         Map<String, String> result = new LinkedHashMap<String, String>();
-        for (String part : Vb.cStr(connectionString).split(";", -1)) {
+        for (String part : text(connectionString).split(";", -1)) {
             int equalsAt = part.indexOf('=');
             if (equalsAt > 0) {
                 String key = part.substring(0, equalsAt).trim().toLowerCase();
@@ -55,5 +59,9 @@ public final class AppDatabaseConfig {
     private static String valueOrDefault(Map<String, String> values, String key, String defaultValue) {
         String value = values.get(key);
         return value == null || value.isEmpty() ? defaultValue : value;
+    }
+
+    private static String text(Object value) {
+        return value == null ? "" : String.valueOf(value);
     }
 }

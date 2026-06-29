@@ -1,5 +1,16 @@
 package com.alphaseries;
 
+import com.alphaseries.game.pet.PetPayloads;
+import com.alphaseries.game.inventory.InventoryMessagePayloads;
+import com.alphaseries.game.moderation.StaffPayloads;
+import com.alphaseries.game.wired.WiredPayloads;
+import com.alphaseries.messages.outgoing.AchievementPayloads;
+import com.alphaseries.messages.outgoing.JukeboxPayloads;
+import com.alphaseries.messages.outgoing.MessengerPayloads;
+import com.alphaseries.messages.outgoing.PollPayloads;
+import com.alphaseries.messages.outgoing.RecyclerPayloads;
+import com.alphaseries.messages.outgoing.SocialPayloads;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.vb.Vb;
 
 import java.io.IOException;
@@ -892,27 +903,19 @@ public final class Handling {
         if (args == null || args.length < 12) {
             return "";
         }
-        long baseValue = Vb.val(args[0]);
-        long firstValue = Vb.val(args[1]);
-        long secondValue = Vb.val(args[2]);
-        long thirdValue = Vb.val(args[3]);
-        String fourthValue = Vb.cStr(args[4]);
-        long fifthValue = Vb.val(args[5]);
-        String sixthValue = Vb.cStr(args[6]);
-        String seventhValue = Vb.cStr(args[7]);
-        long eighthValue = Vb.val(args[8]);
-        String ninthValue = Vb.cStr(args[9]);
-        long tenthValue = Vb.val(args[10]);
-        String eleventhValue = Vb.cStr(args[11]);
-
-        String payload = Crypto.Proc_3_0_6D2AF0(baseValue, null, "0");
-        payload = Crypto.Proc_3_0_6D2AF0(firstValue, null, payload) + "H";
-        payload = "0" + Crypto.Proc_3_0_6D2AF0(secondValue, null, payload) + "H";
-        payload = Crypto.Proc_3_0_6D2AF0(baseValue, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(thirdValue, null, payload) + fourthValue + '\2';
-        payload = Crypto.Proc_3_0_6D2AF0(fifthValue, null, payload) + sixthValue + '\2';
-        payload = Crypto.Proc_3_0_6D2AF0(eighthValue, null, payload) + ninthValue + '\2' + seventhValue + '\2';
-        return Crypto.Proc_3_0_6D2AF0(tenthValue, null, payload) + eleventhValue + '\2';
+        return StaffPayloads.callForHelp(
+            Vb.val(args[0]),
+            Vb.val(args[1]),
+            Vb.val(args[2]),
+            Vb.val(args[3]),
+            Vb.cStr(args[4]),
+            Vb.val(args[5]),
+            Vb.cStr(args[6]),
+            Vb.cStr(args[7]),
+            Vb.val(args[8]),
+            Vb.cStr(args[9]),
+            Vb.val(args[10]),
+            Vb.cStr(args[11]));
     }
 
     public static void Proc_6_30_70DC90(Object... args) {
@@ -10037,31 +10040,7 @@ public final class Handling {
     }
 
     public static String inventoryItemPayload(long itemId, long productId, String itemData, long extraValue) {
-        String[] productFields = Licence.Proc_9_3_807930(productId, 0, 0).split("\t", -1);
-        long productType = 0L;
-        String productName = "";
-        String productDescription = "";
-        String productSprite = "";
-        if (productFields.length >= 19) {
-            productType = Vb.val(productFields[1]);
-            productName = productFields[14];
-            productDescription = productFields[15];
-            productSprite = productFields[18];
-        }
-
-        String itemClass = productType == 9L ? "I" : "S";
-        String normalizedItemData = Vb.cStr(itemData).replace('\b', '\t');
-        return Crypto.Proc_3_0_6D2AF0(itemId, null, "0") + itemClass + '\2'
-            + Crypto.Proc_3_0_6D2AF0(itemId, null, "")
-            + Crypto.Proc_3_0_6D2AF0(productId, null, "")
-            + Crypto.Proc_3_0_6D2AF0(productType, null, "")
-            + normalizedItemData + '\2'
-            + Crypto.Proc_3_0_6D2AF0(extraValue, null, "")
-            + productName + '\2'
-            + productDescription + '\2'
-            + productSprite + '\2'
-            + "M" + '\2'
-            + Crypto.Proc_3_0_6D2AF0(extraValue, null, "");
+        return InventoryMessagePayloads.item(itemId, productId, itemData, extraValue);
     }
 
     public static String representedTradeOfferStore(
@@ -10206,24 +10185,11 @@ public final class Handling {
 
     public static InventoryPayloads inventoryPayloadsFromRows(String rowText) {
         InventoryPayloads result = new InventoryPayloads();
-        for (String row : Vb.cStr(rowText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                long furnitureId = Vb.val(navigatorField(fields, 0));
-                long productId = Vb.val(navigatorField(fields, 1));
-                String itemData = navigatorField(fields, 2);
-                long secondaryValue = Vb.val(navigatorField(fields, 3));
-                long productType = Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0));
-                String itemPayload = inventoryItemPayload(furnitureId, productId, itemData, secondaryValue);
-                if (productType == 9L) {
-                    result.iconPayload += itemPayload;
-                    result.iconCount++;
-                } else {
-                    result.regularPayload += itemPayload;
-                    result.regularCount++;
-                }
-            }
-        }
+        InventoryMessagePayloads.InventoryList inventory = InventoryMessagePayloads.listFromRows(rowText);
+        result.regularCount = inventory.regularCount;
+        result.regularPayload = inventory.regularPayload;
+        result.iconCount = inventory.iconCount;
+        result.iconPayload = inventory.iconPayload;
         return result;
     }
 
@@ -11105,36 +11071,21 @@ public final class Handling {
         String lastOnlineText,
         long relationshipState
     ) {
-        long followEnabled = Vb.val(Functions.Proc_10_0_809570("com.client.messenger.follow.enabled", 0));
-        String payload = Crypto.Proc_3_0_6D2AF0(userId, null, "0") + Vb.cStr(userName) + '\2';
-        payload = Crypto.Proc_3_0_6D2AF0(rankValue, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(isOnline, null, payload);
-
-        if (isOnline == 1L) {
-            payload = Crypto.Proc_3_0_6D2AF0(followEnabled != 0L && followCount > isOnline ? 1L : 0L, null, payload)
-                + Vb.cStr(motto);
-        } else if (isOnline == 0L) {
-            payload = payload + '\2' + "H" + Vb.cStr(figure) + '\2' + relationshipState;
-        }
-        return payload + '\2' + Vb.cStr(lastOnlineText) + '\2' + '\2';
+        return MessengerPayloads.friend(
+            userId,
+            userName,
+            motto,
+            figure,
+            rankValue,
+            followCount,
+            isOnline,
+            lastOnlineText,
+            relationshipState,
+            messengerFollowEnabled());
     }
 
     public static String messengerFriendSummaryPayloadFromRow(String rowText, long relationshipState) {
-        String[] fields = Vb.cStr(rowText).split("\t", -1);
-        if (fields.length < 7) {
-            return "";
-        }
-        long socketIndex = Vb.val(fields[5]);
-        return messengerFriendPayload(
-            Vb.val(fields[0]),
-            fields[1],
-            fields[2],
-            fields[3],
-            Vb.val(fields[4]),
-            socketIndex > 0L ? 2L : 0L,
-            socketIndex > 0L ? 1L : 0L,
-            fields[6],
-            relationshipState);
+        return MessengerPayloads.friendSummaryFromRow(rowText, relationshipState, messengerFollowEnabled());
     }
 
     public static String messengerFriendSummaryPayload(String userId, long relationshipState) {
@@ -11165,11 +11116,11 @@ public final class Handling {
         String lastOnlineText,
         long isOnline
     ) {
-        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(userId), null, "");
-        payload += Vb.cStr(userName) + '\2' + Vb.cStr(mottoText) + '\2';
-        payload = "1" + Crypto.Proc_3_0_6D2AF0(isOnline, null, payload) + "H" + '\2';
-        payload += Vb.cStr(nicknameText) + '\2' + Vb.cStr(figureText) + '\2' + Vb.cStr(lastOnlineText) + '\2';
-        return payload;
+        return MessengerPayloads.searchResult(userId, userName, figureText, mottoText, nicknameText, lastOnlineText, isOnline);
+    }
+
+    public static boolean messengerFollowEnabled() {
+        return Vb.val(Functions.Proc_10_0_809570("com.client.messenger.follow.enabled", 0)) != 0L;
     }
 
     public static long messengerMaxFriends(long configIndex) {
@@ -11239,77 +11190,35 @@ public final class Handling {
     }
 
     public static String messengerAcceptedFriendsPayload(String payloadRows, long acceptedCount) {
-        return acceptedCount > 0L ? Crypto.Proc_3_0_6D2AF0(acceptedCount, null, "@MH") + Vb.cStr(payloadRows) : "";
+        return MessengerPayloads.acceptedFriends(payloadRows, acceptedCount);
     }
 
     public static String messengerRemoveFriendsPayload(String targetIdsPayload, long removedCount) {
-        return removedCount > 0L ? Crypto.Proc_3_0_6D2AF0(removedCount, null, "@MM") + Vb.cStr(targetIdsPayload) : "";
+        return MessengerPayloads.removeFriends(targetIdsPayload, removedCount);
     }
 
     public static String messengerRemovedIdPayload(long targetUserId) {
-        return Crypto.Proc_3_0_6D2AF0(targetUserId, null, "");
+        return MessengerPayloads.removedId(targetUserId);
     }
 
     public static String messengerRequestAcceptedCallerPayload(long targetUserId) {
-        return Crypto.Proc_3_0_6D2AF0(targetUserId, null, "DD") + "H";
+        return MessengerPayloads.requestAcceptedCaller(targetUserId);
     }
 
     public static String messengerRequestDeniedPayload() {
-        return "DDH" + '\2';
+        return MessengerPayloads.requestDenied();
     }
 
     public static String messengerRequestNotifyPayload(long userId, String userName) {
-        return Crypto.Proc_3_0_6D2AF0(userId, null, "BD") + Vb.cStr(userName) + '\2' + userId + '\2';
+        return MessengerPayloads.requestNotify(userId, userName);
     }
 
     public static String messengerPendingRequestsPayload(String rowText) {
-        long requestCount = 0L;
-        StringBuilder requestPayload = new StringBuilder();
-        for (String row : Vb.cStr(rowText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                long requesterId = Vb.val(handlingField(fields, 0));
-                String requesterName = handlingField(fields, 1);
-                if (requesterId > 0L) {
-                    requestPayload.append('0').append(Crypto.Proc_3_0_6D2AF0(requesterId, null, ""));
-                    requestPayload.append(requesterName).append('\2').append(requesterName).append('\2');
-                    requestCount++;
-                }
-            }
-        }
-        String payload = Crypto.Proc_3_0_6D2AF0(requestCount, null, "Dz");
-        payload += Crypto.Proc_3_0_6D2AF0(requestCount, null, "Dz");
-        return Crypto.Proc_3_0_6D2AF0(requestCount, null, payload) + requestPayload;
+        return MessengerPayloads.pendingRequests(rowText);
     }
 
     public static String messengerFriendListPayload(String rowText, long maxFriends0, long maxFriends1, long maxFriends2) {
-        long friendCount = 0L;
-        StringBuilder friendPayload = new StringBuilder();
-        for (String row : Vb.cStr(rowText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 7) {
-                    long friendSocketIndex = Vb.val(fields[2]);
-                    long friendOnline = friendSocketIndex > 0L ? 1L : 0L;
-                    friendPayload.append(messengerFriendPayload(
-                        Vb.val(fields[0]),
-                        fields[1],
-                        fields[4],
-                        fields[3],
-                        Vb.val(fields[5]),
-                        friendOnline == 1L ? 2L : 0L,
-                        friendOnline,
-                        fields[6],
-                        1L));
-                    friendCount++;
-                }
-            }
-        }
-        String payload = Crypto.Proc_3_0_6D2AF0(maxFriends0, null, "@L");
-        payload += Crypto.Proc_3_0_6D2AF0(maxFriends1, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(maxFriends2, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(friendCount, null, "") + friendPayload + "PYH";
-        return payload;
+        return MessengerPayloads.friendList(rowText, maxFriends0, maxFriends1, maxFriends2, messengerFollowEnabled());
     }
 
     public static FriendTargetList friendRemoveTargetsFromPayload(String packetPayload, String callerUserId) {
@@ -11343,112 +11252,27 @@ public final class Handling {
     }
 
     public static String petRaceListPayload(String productPet, String rowText, long rankIndex, long hcLevel) {
-        long raceCount = 0L;
-        StringBuilder racePayload = new StringBuilder();
-        for (String row : Vb.cStr(rowText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 4) {
-                    long breedId = Vb.val(fields[1]);
-                    long minRank = Vb.val(fields[2]);
-                    long minHcRank = Vb.val(fields[3]);
-                    if (rankIndex >= minRank && hcLevel >= minHcRank) {
-                        racePayload.append(Crypto.Proc_3_0_6D2AF0(breedId, null, "")).append("II");
-                        raceCount++;
-                    }
-                }
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(raceCount, null, "L{" + Vb.cStr(productPet) + '\2') + racePayload;
+        return PetPayloads.raceList(productPet, rowText, rankIndex, hcLevel);
     }
 
     public static String petInventoryListPayload(String rowText) {
-        long petCount = 0L;
-        StringBuilder petPayload = new StringBuilder();
-        for (String row : Vb.cStr(rowText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 4) {
-                    String rowPayload = petInventoryRowPayload(fields);
-                    if (!rowPayload.isEmpty()) {
-                        petPayload.append(rowPayload);
-                        petCount++;
-                    }
-                }
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(petCount, null, "IX") + petPayload;
+        return PetPayloads.inventoryList(rowText);
     }
 
     public static String petInventoryRowPayload(String[] fields) {
-        long petId = Vb.val(handlingField(fields, 0));
-        if (petId <= 0L) {
-            return "";
-        }
-        String petName = handlingField(fields, 1);
-        String petFigure = handlingField(fields, 2).toLowerCase();
-        long scratches = Vb.val(handlingField(fields, 3));
-        String[] figureParts = petFigure.split(" ", -1);
-        long petType = figureParts.length >= 1 ? Vb.val(figureParts[0]) : 0L;
-        long petRace = figureParts.length >= 2 ? Vb.val(figureParts[1]) : 0L;
-        String petColor = figureParts.length >= 3 ? figureParts[2] : "";
-
-        String payload = "0" + Crypto.Proc_3_0_6D2AF0(petId, null, "") + petName + '\2';
-        payload += Crypto.Proc_3_0_6D2AF0(petType, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(petRace, null, "");
-        payload += "0" + petColor + '\2';
-        payload += Crypto.Proc_3_0_6D2AF0(scratches, null, "");
-        return payload;
+        return PetPayloads.inventoryRow(fields);
     }
 
     public static long petNameValidationCode(String candidateName) {
-        String name = Vb.cStr(candidateName);
-        if (name.length() > 30) {
-            return 1L;
-        }
-        if (name.length() < 1) {
-            return 2L;
-        }
-        for (int index = 0; index < name.length(); index++) {
-            char ch = name.charAt(index);
-            boolean valid = (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
-            if (!valid) {
-                return 2L;
-            }
-        }
-        return 0L;
+        return PetPayloads.nameValidationCode(candidateName);
     }
 
     public static String petNameValidationPayload(String candidateName) {
-        return Crypto.Proc_3_0_6D2AF0(petNameValidationCode(candidateName), null, "@d");
+        return PetPayloads.nameValidation(candidateName);
     }
 
     public static String petCommandListPayload(long petLevel, Object commandRows) {
-        long resolvedLevel = Math.max(0L, petLevel);
-        String[] rows = normalizeRows(commandRows);
-        long allCount = 0L;
-        long availableCount = 0L;
-        StringBuilder allPayload = new StringBuilder();
-        StringBuilder availablePayload = new StringBuilder();
-        for (String row : rows) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                long commandId = Vb.val(handlingField(fields, 0));
-                long requiredLevel = Vb.val(handlingField(fields, 1));
-                if (commandId > 0L) {
-                    allPayload.append('0').append(Crypto.Proc_3_0_6D2AF0(commandId, null, ""));
-                    allCount++;
-                    if (requiredLevel <= resolvedLevel) {
-                        availablePayload.append('0').append(Crypto.Proc_3_0_6D2AF0(commandId, null, ""));
-                        availableCount++;
-                    }
-                }
-            }
-        }
-        String payload = Crypto.Proc_3_0_6D2AF0(resolvedLevel, null, "I]");
-        payload += Crypto.Proc_3_0_6D2AF0(allCount, null, "") + allPayload;
-        payload += Crypto.Proc_3_0_6D2AF0(availableCount, null, "") + availablePayload;
-        return payload;
+        return PetPayloads.commandList(petLevel, commandRows);
     }
 
     public static PetCommandAction petCommandAction(long commandId, Object commandRows) {
@@ -11479,29 +11303,7 @@ public final class Handling {
     }
 
     public static String representedPetStatusPayload(long botEntityId, String[] petFields) {
-        if (botEntityId <= 0L || petFields == null || petFields.length < 11) {
-            return "";
-        }
-        String petName = handlingField(petFields, 1);
-        String petFigure = handlingField(petFields, 2);
-        long petLevel = Vb.val(handlingField(petFields, 3));
-        long petExperience = Vb.val(handlingField(petFields, 4));
-        long petEnergy = Vb.val(handlingField(petFields, 5));
-        long petNutrition = Vb.val(handlingField(petFields, 6));
-        long petScratches = Vb.val(handlingField(petFields, 7));
-        long petAgeDays = Vb.val(handlingField(petFields, 8));
-        long ownerId = Vb.val(handlingField(petFields, 9));
-        String ownerName = handlingField(petFields, 10);
-
-        String payload = "IY" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "") + petName + '\2';
-        payload += Crypto.Proc_3_0_6D2AF0(petLevel, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(petExperience, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(petEnergy, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(petNutrition, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(petScratches, null, "") + petFigure + '\2';
-        payload += Crypto.Proc_3_0_6D2AF0(petAgeDays, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(ownerId, null, "") + ownerName + '\2';
-        return payload;
+        return PetPayloads.status(botEntityId, petFields);
     }
 
     public static PetExperienceUpdate petExperienceUpdate(
@@ -11531,9 +11333,7 @@ public final class Handling {
         result.petLevel = nextLevel;
         result.petExperience = nextExperience;
         result.statusPayload = petExperienceStatusPayload(botEntityId, petName, petFigure, nextLevel, nextExperience, petEnergy, petNutrition, petScratches);
-        result.experiencePayload = "Ia" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
-            + Crypto.Proc_3_0_6D2AF0(experienceDelta, null, "")
-            + Crypto.Proc_3_0_6D2AF0(nextExperience, null, "");
+        result.experiencePayload = PetPayloads.experience(botEntityId, experienceDelta, nextExperience);
         return result;
     }
 
@@ -11559,30 +11359,15 @@ public final class Handling {
         long petNutrition,
         long petScratches
     ) {
-        String payload = "IY" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "") + Vb.cStr(petName) + '\2';
-        payload += Crypto.Proc_3_0_6D2AF0(petLevel, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(petExperience, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(petEnergy, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(petNutrition, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(petScratches, null, "") + Vb.cStr(petFigure) + '\2';
-        return payload;
+        return PetPayloads.experienceStatus(botEntityId, petName, petFigure, petLevel, petExperience, petEnergy, petNutrition, petScratches);
     }
 
     public static String petScratchPayload(long botEntityId, long userId, long scratches, String petName, String petFigure) {
-        String payload = "I^" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(userId, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(scratches, null, "");
-        payload += Vb.cStr(petName) + '\2' + Vb.cStr(petFigure) + '\2';
-        return payload;
+        return PetPayloads.scratch(botEntityId, userId, scratches, petName, petFigure);
     }
 
     public static String petCommandActionPayload(long botEntityId, String commandAction, long commandId) {
-        if (Vb.cStr(commandAction).isEmpty()) {
-            return "";
-        }
-        return "IZ" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
-            + Vb.cStr(commandAction) + '\2'
-            + Crypto.Proc_3_0_6D2AF0(commandId, null, "");
+        return PetPayloads.commandAction(botEntityId, commandAction, commandId);
     }
 
     public static long reserveRepresentedBotSlot() {
@@ -11779,69 +11564,27 @@ public final class Handling {
         long achievementScore,
         String figureText
     ) {
-        if (roomUserIndex <= 0L) {
-            return "";
-        }
-        String payload = Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Jf");
-        payload += Vb.cStr(userName) + '\2';
-        payload += Vb.cStr(mottoText) + '\2';
-        payload += Crypto.Proc_3_0_6D2AF0(achievementScore, null, "");
-        payload += Vb.cStr(figureText) + '\2';
-        return payload;
+        return SocialPayloads.roomUserProfile(roomUserIndex, userName, mottoText, achievementScore, figureText);
     }
 
     public static String badgeInventoryPayload(String inventoryRows, String equippedPayload) {
-        long inventoryCount = 0L;
-        StringBuilder inventoryPayload = new StringBuilder();
-        for (String row : Vb.cStr(inventoryRows).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                String badgeId = handlingField(fields, 0);
-                long badgeRowId = Vb.val(handlingField(fields, 2));
-                if (!badgeId.isEmpty()) {
-                    inventoryPayload.append('0').append(Crypto.Proc_3_0_6D2AF0(badgeRowId, null, "")).append(badgeId).append('\2');
-                    inventoryCount++;
-                }
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(inventoryCount, null, "Ce") + inventoryPayload + Vb.cStr(equippedPayload);
+        return SocialPayloads.badgeInventory(inventoryRows, equippedPayload);
     }
 
     public static String equippedBadgePayload(String badgeRows) {
-        long equippedCount = 0L;
-        StringBuilder equippedPayload = new StringBuilder();
-        for (String row : Vb.cStr(badgeRows).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                String badgeId = handlingField(fields, 0);
-                long badgeSlot = Vb.val(handlingField(fields, 1));
-                if (!badgeId.isEmpty()) {
-                    equippedPayload.append('0').append(Crypto.Proc_3_0_6D2AF0(badgeSlot, null, "")).append(badgeId).append('\2');
-                    equippedCount++;
-                }
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(equippedCount, null, "") + equippedPayload;
+        return SocialPayloads.equippedBadges(badgeRows);
     }
 
     public static String badgeDisplayPayload(long userId, String equippedPayload) {
-        return "Cd" + Crypto.Proc_3_0_6D2AF0(userId, null, "") + Vb.cStr(equippedPayload);
+        return SocialPayloads.badgeDisplay(userId, equippedPayload);
     }
 
     public static String tagListPayload(String tagRows) {
-        long tagCount = 0L;
-        StringBuilder tagPayload = new StringBuilder();
-        for (String row : Vb.cStr(tagRows).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                tagPayload.append(row).append('\2');
-                tagCount++;
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(tagCount, null, "") + tagPayload;
+        return SocialPayloads.tags(tagRows);
     }
 
     public static String tagDisplayPayload(long userId, String tagPayload) {
-        return "E^" + Crypto.Proc_3_0_6D2AF0(userId, null, "") + Vb.cStr(tagPayload);
+        return SocialPayloads.tagDisplay(userId, tagPayload);
     }
 
     public static String representedRoomUserStatusPayload(long roomUserIndex, long statusCode) {
@@ -11878,45 +11621,7 @@ public final class Handling {
     }
 
     public static String pollPayloadFromRows(String pollRow, String questionRows, Map<Long, String> answerRowsByQuestionId) {
-        String[] pollFields = Vb.cStr(pollRow).split("\t", -1);
-        if (pollFields.length < 3) {
-            return "";
-        }
-        long pollId = Vb.val(pollFields[0]);
-        String questionPayload = "";
-        long questionCount = 0L;
-        for (String questionRow : Vb.cStr(questionRows).split("\r", -1)) {
-            if (!questionRow.isEmpty()) {
-                String[] questionFields = questionRow.split("\t", -1);
-                if (questionFields.length >= 3) {
-                    long questionId = Vb.val(questionFields[0]);
-                    String questionText = questionFields[1];
-                    long questionType = Vb.val(questionFields[2]);
-                    String answerPayload = "";
-                    long answerCount = 0L;
-                    String answerRows = answerRowsByQuestionId != null ? answerRowsByQuestionId.get(questionId) : null;
-                    for (String answerRow : Vb.cStr(answerRows).split("\r", -1)) {
-                        if (!answerRow.isEmpty()) {
-                            String[] answerFields = answerRow.split("\t", -1);
-                            if (answerFields.length >= 3) {
-                                answerPayload += answerFields[2] + '\2';
-                                answerCount++;
-                            }
-                        }
-                    }
-                    questionCount++;
-                    questionPayload = Crypto.Proc_3_0_6D2AF0(questionId, null, questionPayload);
-                    questionPayload = Crypto.Proc_3_0_6D2AF0(questionCount, null, questionPayload);
-                    questionPayload = Crypto.Proc_3_0_6D2AF0(questionType, null, questionPayload);
-                    questionPayload += questionText + '\2';
-                    questionPayload = Crypto.Proc_3_0_6D2AF0(answerCount, null, questionPayload);
-                    questionPayload = Crypto.Proc_3_0_6D2AF0(0, null, questionPayload);
-                    questionPayload = Crypto.Proc_3_0_6D2AF0(answerCount, null, questionPayload) + answerPayload;
-                }
-            }
-        }
-        String payload = Crypto.Proc_3_0_6D2AF0(pollId, null, "D}") + pollFields[1] + '\2' + pollFields[2] + '\2';
-        return Crypto.Proc_3_0_6D2AF0(questionCount, null, payload) + questionPayload;
+        return PollPayloads.poll(pollRow, questionRows, answerRowsByQuestionId);
     }
 
     public static String achievementRowsFromGlobal() {
@@ -12012,40 +11717,11 @@ public final class Handling {
     }
 
     public static String achievementRewardPayload(long achievementIndex, String achievementRow, long badgeLevel, long badgeRowId) {
-        String[] fields = Vb.cStr(achievementRow).split("\t", -1);
-        if (fields.length < 7) {
-            return "";
-        }
-        long achievementId = Vb.val(fields[0]);
-        String badgePrefix = fields[1];
-        long rewardIncrease = Vb.val(fields[3]);
-        long levelTotal = Vb.val(fields[4]);
-        long scoreIncrease = Vb.val(fields[5]);
-        if (achievementId == 0L || badgePrefix.isEmpty()) {
-            return "";
-        }
-        long normalizedBadgeLevel = badgeLevel <= 0L ? 1L : badgeLevel;
-        String badgeId = badgePrefix + normalizedBadgeLevel;
-        String payload = Crypto.Proc_3_0_6D2AF0(achievementIndex, null, "Fu");
-        payload = Crypto.Proc_3_0_6D2AF0(achievementId, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(badgeRowId, null, payload) + badgeId + '\2';
-        payload = Crypto.Proc_3_0_6D2AF0(rewardIncrease, null, Crypto.Proc_3_0_6D2AF0(scoreIncrease, null, payload));
-        return payload + "HHH\2" + levelTotal + '\2';
+        return AchievementPayloads.reward(achievementIndex, achievementRow, badgeLevel, badgeRowId);
     }
 
     public static String achievementAwardPayload(String achievementRow) {
-        String[] fields = Vb.cStr(achievementRow).split("\t", -1);
-        if (fields.length < 7) {
-            return "";
-        }
-        long rewardIncrease = Vb.val(fields[3]);
-        long scoreIncrease = Vb.val(fields[5]);
-        long rewardType = Vb.val(fields[6]);
-        if (rewardIncrease == 0L && scoreIncrease == 0L) {
-            return "";
-        }
-        return Crypto.Proc_3_0_6D2AF0(rewardType, null,
-            Crypto.Proc_3_0_6D2AF0(rewardIncrease, null, Crypto.Proc_3_0_6D2AF0(scoreIncrease, null, "Fv")));
+        return AchievementPayloads.award(achievementRow);
     }
 
     public static AchievementProgressDecision achievementProgressDecision(
@@ -12086,54 +11762,11 @@ public final class Handling {
     }
 
     public static String achievementListPayload(String achievementRows, Map<String, Long> currentLevelsByBadgePrefix) {
-        StringBuilder payload = new StringBuilder();
-        long achievementCount = 0L;
-        for (String row : Vb.cStr(achievementRows).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 7) {
-                    long achievementId = Vb.val(fields[0]);
-                    String badgePrefix = fields[1];
-                    if (achievementId > 0L && !badgePrefix.isEmpty()) {
-                        long progressRequired = Vb.val(fields[2]);
-                        long rewardIncrease = Vb.val(fields[3]);
-                        long levelTotal = Vb.val(fields[4]);
-                        long scoreIncrease = Vb.val(fields[5]);
-                        long rewardType = Vb.val(fields[6]);
-                        if (levelTotal <= 0L) {
-                            levelTotal = 1L;
-                        }
-                        long currentLevel = currentLevelsByBadgePrefix != null && currentLevelsByBadgePrefix.containsKey(badgePrefix)
-                            ? currentLevelsByBadgePrefix.get(badgePrefix) : 0L;
-                        if (currentLevel < 0L) {
-                            currentLevel = 0L;
-                        }
-                        if (currentLevel > levelTotal) {
-                            currentLevel = levelTotal;
-                        }
-                        long currentProgress = currentLevel > 0L ? progressRequired * currentLevel : 0L;
-                        if (currentProgress < 0L) {
-                            currentProgress = 0L;
-                        }
-                        String entryPayload = Crypto.Proc_3_0_6D2AF0(achievementId, null, "");
-                        entryPayload = Crypto.Proc_3_0_6D2AF0(currentLevel, null, entryPayload);
-                        entryPayload = Crypto.Proc_3_0_6D2AF0(currentProgress, null, entryPayload);
-                        entryPayload = Crypto.Proc_3_0_6D2AF0(progressRequired, null, entryPayload);
-                        entryPayload = Crypto.Proc_3_0_6D2AF0(rewardIncrease, null, entryPayload);
-                        entryPayload = Crypto.Proc_3_0_6D2AF0(scoreIncrease, null, entryPayload);
-                        entryPayload = Crypto.Proc_3_0_6D2AF0(rewardType, null, entryPayload);
-                        entryPayload = Crypto.Proc_3_0_6D2AF0(levelTotal, null, entryPayload);
-                        payload.append(entryPayload).append(badgePrefix).append('\2').append(currentLevel).append('\2');
-                        achievementCount++;
-                    }
-                }
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(achievementCount, null, "Ft") + payload;
+        return AchievementPayloads.list(achievementRows, currentLevelsByBadgePrefix);
     }
 
     public static String wiredSpecialStatePayload(long itemState) {
-        return itemState == 1507L ? "5;1;7;1;5;0;" : "";
+        return WiredPayloads.specialState(itemState);
     }
 
     public static String handlingRepresentedWiredEdit(
@@ -12394,94 +12027,23 @@ public final class Handling {
         String textValue,
         String extraValue
     ) {
-        if (wiredCode <= 0L || furnitureId <= 0L) {
-            return "";
-        }
-        String recordText = "\1" + wiredCode + '\2' + furnitureId + '\3' + Vb.cStr(selectedIdsText)
-            + '\4' + Vb.cStr(parameterValues) + '\5' + left(textValue, 125) + '\6';
-        if (!Vb.cStr(extraValue).isEmpty()) {
-            recordText += Vb.cStr(extraValue);
-        }
-        return recordText;
+        return WiredPayloads.recordText(wiredCode, furnitureId, selectedIdsText, parameterValues, textValue, extraValue);
     }
 
     public static String wiredRecordMarker(String recordText) {
-        String code = wiredRecordField(recordText, 0);
-        String furnitureId = wiredRecordField(recordText, 1);
-        if (code.isEmpty() || furnitureId.isEmpty()) {
-            return "";
-        }
-        return "\1" + code + '\2' + furnitureId + '\3';
+        return WiredPayloads.recordMarker(recordText);
     }
 
     public static String wiredCacheWithRecord(String cacheText, String recordText) {
-        String record = Vb.cStr(recordText);
-        if (record.isEmpty()) {
-            return Vb.cStr(cacheText);
-        }
-        String cache = removeRepresentedLineRecord(cacheText, wiredRecordMarker(record));
-        return cache.isEmpty() ? record : record + '\n' + cache;
+        return WiredPayloads.cacheWithRecord(cacheText, recordText);
     }
 
     public static String wiredRecordField(String recordText, long fieldIndex) {
-        String bodyText = Vb.cStr(recordText);
-        if (bodyText.startsWith("\1")) {
-            bodyText = bodyText.substring(1);
-        }
-        String[] parts = bodyText.split("\2", 2);
-        if (fieldIndex == 0L) {
-            return parts.length >= 1 ? parts[0] : "";
-        }
-        if (parts.length < 2) {
-            return "";
-        }
-        String restText = parts[1];
-        parts = restText.split("\3", 2);
-        if (fieldIndex == 1L) {
-            return parts.length >= 1 ? parts[0] : "";
-        }
-        if (parts.length < 2) {
-            return "";
-        }
-        restText = parts[1];
-        parts = restText.split("\4", 2);
-        if (fieldIndex == 2L) {
-            return parts.length >= 1 ? parts[0] : "";
-        }
-        if (parts.length < 2) {
-            return "";
-        }
-        restText = parts[1];
-        parts = restText.split("\5", 2);
-        if (fieldIndex == 3L) {
-            return parts.length >= 1 ? parts[0] : "";
-        }
-        if (parts.length < 2) {
-            return "";
-        }
-        restText = parts[1];
-        parts = restText.split("\6", 2);
-        if (fieldIndex == 4L) {
-            return parts.length >= 1 ? parts[0] : "";
-        }
-        if (fieldIndex == 5L && parts.length >= 2) {
-            return parts[1];
-        }
-        return "";
+        return WiredPayloads.recordField(recordText, fieldIndex);
     }
 
     public static boolean wiredSelectedItemsExist(String selectedIds, String existingIds) {
-        String selected = Vb.cStr(selectedIds);
-        if (selected.isEmpty()) {
-            return true;
-        }
-        for (String idPart : selected.replace(',', ';').split(";", -1)) {
-            long furnitureId = Vb.val(idPart);
-            if (furnitureId > 0L && !containsDelimitedId(existingIds, furnitureId)) {
-                return false;
-            }
-        }
-        return true;
+        return WiredPayloads.selectedItemsExist(selectedIds, existingIds);
     }
 
     public static WiredApplyResult wiredApplySelected(
@@ -12490,20 +12052,15 @@ public final class Handling {
         long selectedFurnitureId,
         String existingIds
     ) {
+        WiredPayloads.ApplyResult applied = WiredPayloads.applySelected(
+            selectedIds,
+            parameterText,
+            selectedFurnitureId,
+            existingIds,
+            Handling::furnitureStatePayload);
         WiredApplyResult result = new WiredApplyResult();
-        String effectiveSelectedIds = selectedFurnitureId > 0L ? String.valueOf(selectedFurnitureId) : Vb.cStr(selectedIds);
-        if (effectiveSelectedIds.isEmpty()) {
-            return result;
-        }
-        String[] parameterParts = (Vb.cStr(parameterText) + ";").split(";", -1);
-        long stateValue = Vb.val(parameterParts.length > 0 ? parameterParts[0] : "");
-        for (String idPart : effectiveSelectedIds.replace(',', ';').split(";", -1)) {
-            long furnitureId = Vb.val(idPart);
-            if (furnitureId > 0L && containsDelimitedId(existingIds, furnitureId)) {
-                result.statePayloads += furnitureStatePayload(furnitureId, stateValue);
-                result.appliedCount++;
-            }
-        }
+        result.appliedCount = applied.appliedCount;
+        result.statePayloads = applied.statePayloads;
         return result;
     }
 
@@ -12537,26 +12094,7 @@ public final class Handling {
     }
 
     public static String songInfoPayload(String cdRows) {
-        long responseCount = 0L;
-        StringBuilder cdPayload = new StringBuilder();
-        for (String row : Vb.cStr(cdRows).split("\r", -1)) {
-            String rowValue = row.trim();
-            if (!rowValue.isEmpty()) {
-                String[] fields = rowValue.split("\t", -1);
-                if (fields.length >= 5) {
-                    long cdId = Vb.val(handlingField(fields, 4));
-                    long sequenceId = Vb.val(handlingField(fields, 1));
-                    String rowPayload = Crypto.Proc_3_0_6D2AF0(cdId, null, "");
-                    rowPayload = Crypto.Proc_3_0_6D2AF0(sequenceId, null, rowPayload);
-                    rowPayload += handlingField(fields, 0) + '\2';
-                    rowPayload += handlingField(fields, 2) + '\2';
-                    rowPayload += handlingField(fields, 3) + '\2';
-                    cdPayload.append(rowPayload);
-                    responseCount++;
-                }
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(responseCount, null, "Dl") + cdPayload;
+        return JukeboxPayloads.songInfo(cdRows);
     }
 
     public static String removeSoundMachineMarkers(String representedRoomCache, long jukeboxId, long activeDestinationId) {
@@ -12623,54 +12161,15 @@ public final class Handling {
     }
 
     public static String jukeboxPlaylistPayload(long playlistLimit, String playlistRows) {
-        long effectiveLimit = playlistLimit <= 0L ? 100L : playlistLimit;
-        long playlistCount = 0L;
-        StringBuilder playlistPayload = new StringBuilder();
-        for (String row : Vb.cStr(playlistRows).split("\r", -1)) {
-            String rowValue = row.trim();
-            if (!rowValue.isEmpty()) {
-                String[] fields = rowValue.split("\t", -1);
-                long cdId = Vb.val(handlingField(fields, 0));
-                long destinationId = Vb.val(handlingField(fields, 1));
-                if (cdId > 0L) {
-                    playlistPayload.append(Crypto.Proc_3_0_6D2AF0(cdId, null, ""));
-                    playlistPayload.append(Crypto.Proc_3_0_6D2AF0(destinationId, null, ""));
-                    playlistCount++;
-                }
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(effectiveLimit, null, Crypto.Proc_3_0_6D2AF0(playlistCount, null, "EN"))
-            + playlistPayload;
+        return JukeboxPayloads.playlist(playlistLimit, playlistRows);
     }
 
     public static String songDiskInventoryPayload(String diskRows) {
-        long diskCount = 0L;
-        StringBuilder diskPayload = new StringBuilder();
-        for (String row : Vb.cStr(diskRows).split("\r", -1)) {
-            String rowValue = row.trim();
-            if (!rowValue.isEmpty()) {
-                String[] fields = rowValue.split("\t", -1);
-                long diskId = Vb.val(handlingField(fields, 0));
-                long destinationId = Vb.val(handlingField(fields, 1));
-                if (diskId > 0L) {
-                    diskPayload.append(Crypto.Proc_3_0_6D2AF0(diskId, null, ""));
-                    diskPayload.append(Crypto.Proc_3_0_6D2AF0(destinationId, null, ""));
-                    diskCount++;
-                }
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(diskCount, null, "EM") + diskPayload;
+        return JukeboxPayloads.diskInventory(diskRows);
     }
 
     public static String jukeboxPlaybackPayload(long startedAt, long sequenceId, long destinationId, long diskFurnitureId) {
-        if (destinationId <= 0L || sequenceId <= 0L) {
-            return "";
-        }
-        String payload = Crypto.Proc_3_0_6D2AF0(startedAt, null, "EG");
-        payload = Crypto.Proc_3_0_6D2AF0(sequenceId, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(destinationId, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(diskFurnitureId, null, payload);
-        return Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(0, null, payload));
+        return JukeboxPayloads.playback(startedAt, sequenceId, destinationId, diskFurnitureId);
     }
 
     public static String[] badgeUpdateSelectionsFromWire(String packetPayload) {
@@ -12705,9 +12204,7 @@ public final class Handling {
     }
 
     public static String recyclerStatusPayload(long enabledValue, long remainingBlockTime) {
-        long normalizedEnabled = enabledValue != 0L ? 1L : 0L;
-        String payload = Crypto.Proc_3_0_6D2AF0(normalizedEnabled, null, "G{");
-        return Crypto.Proc_3_0_6D2AF0(remainingBlockTime, null, payload);
+        return RecyclerPayloads.status(enabledValue, remainingBlockTime);
     }
 
     public static RecyclerSelection recyclerSelectionFromWire(String packetPayload) {
@@ -12828,41 +12325,11 @@ public final class Handling {
     }
 
     public static String callForHelpRowPayload(String rowText, Map<Long, String> userNamesById) {
-        String[] fields = Vb.cStr(rowText).split("\t", -1);
-        long callForHelpId = Vb.val(handlingField(fields, 0));
-        long callerId = Vb.val(handlingField(fields, 2));
-        String callerName = handlingField(fields, 3);
-        long partnerId = Vb.val(handlingField(fields, 4));
-        long roomId = Vb.val(handlingField(fields, 5));
-        long categoryId = Vb.val(handlingField(fields, 6));
-        String descriptionText = handlingField(fields, 7);
-        String roomName = handlingField(fields, 9);
-        long pickerId = Vb.val(handlingField(fields, 10));
-        String partnerName = userNamesById != null && partnerId > 0L ? Vb.cStr(userNamesById.get(partnerId)) : "";
-        String pickerName = userNamesById != null && pickerId > 0L ? Vb.cStr(userNamesById.get(pickerId)) : "";
-        return Proc_6_29_70D800(0, 0, categoryId, callerId, callerName, partnerId, partnerName,
-            descriptionText, roomId, roomName, callForHelpId, pickerName);
+        return StaffPayloads.callForHelpRow(rowText, userNamesById);
     }
 
     public static String staffCallForHelpWhereClause(String packetPayload) {
-        String requestPayload = Vb.cStr(packetPayload);
-        LongRef offset = new LongRef(1);
-        long requestedCount = readWireLong(requestPayload, offset);
-        if (requestedCount < 1L || requestedCount > 150L) {
-            return "";
-        }
-        StringBuilder whereClause = new StringBuilder();
-        for (long requestIndex = 0L; requestIndex < requestedCount; requestIndex++) {
-            long callForHelpId = readWireLong(requestPayload, offset);
-            if (callForHelpId <= 0L) {
-                return "";
-            }
-            if (whereClause.length() > 0) {
-                whereClause.append(" OR ");
-            }
-            whereClause.append("id='").append(callForHelpId).append('\'');
-        }
-        return whereClause.toString();
+        return StaffPayloads.callForHelpWhereClause(packetPayload);
     }
 
     public static String staffUserSummaryPayload(
@@ -12872,29 +12339,11 @@ public final class Handling {
         long cautionCount,
         long banCount
     ) {
-        String[] fields = Vb.cStr(rowText).split("\t", -1);
-        long userId = Vb.val(handlingField(fields, 0));
-        String userName = handlingField(fields, 1);
-        long createdMinutes = Vb.val(handlingField(fields, 2));
-        long lastOnlineMinutes = Vb.val(handlingField(fields, 3));
-        long socketIndex = Vb.val(handlingField(fields, 4));
-        String payload = Crypto.Proc_3_0_6D2AF0(userId, null, "HU") + userName + '\2';
-        payload = Crypto.Proc_3_0_6D2AF0(createdMinutes, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(lastOnlineMinutes, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(socketIndex > 0L ? 1L : 0L, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(callForHelpCount, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(pickedCallForHelpCount, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(cautionCount, null, payload);
-        return Crypto.Proc_3_0_6D2AF0(banCount, null, payload);
+        return StaffPayloads.userSummary(rowText, callForHelpCount, pickedCallForHelpCount, cautionCount, banCount);
     }
 
     public static String staffRoomVisitPayload(String rowText) {
-        String[] fields = Vb.cStr(rowText).split("\t", -1);
-        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 0)), null, "");
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 1)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 3)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 4)), null, payload);
-        return payload + handlingField(fields, 2) + '\2';
+        return StaffPayloads.roomVisit(rowText);
     }
 
     public static long staffNestedUserIdFromWire(String packetPayload) {
@@ -12917,38 +12366,19 @@ public final class Handling {
     }
 
     public static StaffChatRowsPayload staffRoomChatRowsPayload(String chatRows) {
+        StaffPayloads.ChatRows chatRowsPayload = StaffPayloads.roomChatRows(chatRows);
         StaffChatRowsPayload result = new StaffChatRowsPayload();
-        StringBuilder chatPayload = new StringBuilder();
-        for (String row : Vb.cStr(chatRows).split("\r", -1)) {
-            String rowValue = row.trim();
-            if (!rowValue.isEmpty()) {
-                String[] fields = rowValue.split("\t", -1);
-                if (fields.length >= 5) {
-                    chatPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 0)), null, ""));
-                    chatPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 1)), null, ""));
-                    chatPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 2)), null, ""));
-                    chatPayload.append(handlingField(fields, 3)).append('\2');
-                    chatPayload.append(handlingField(fields, 4)).append('\2');
-                    result.chatCount++;
-                }
-            }
-        }
-        result.payload = chatPayload.toString();
+        result.chatCount = chatRowsPayload.chatCount;
+        result.payload = chatRowsPayload.payload;
         return result;
     }
 
     public static String staffRoomChatHistoryPayload(String visitRowText, String chatRows) {
-        String[] fields = Vb.cStr(visitRowText).split("\t", -1);
-        StaffChatRowsPayload chatRowsPayload = staffRoomChatRowsPayload(chatRows);
-        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 0)), null, "");
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 1)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(chatRowsPayload.chatCount, null, payload);
-        return payload + handlingField(fields, 2) + '\2' + chatRowsPayload.payload;
+        return StaffPayloads.roomChatHistory(visitRowText, chatRows);
     }
 
     public static boolean containsUnsafeStaffAlert(String messageText) {
-        String lowerMessage = Vb.cStr(messageText).toLowerCase();
-        return lowerMessage.contains("cookie") && lowerMessage.contains("javascript:");
+        return StaffPayloads.containsUnsafeAlert(messageText);
     }
 
     private static String[] normalizeRows(Object rowSource) {
