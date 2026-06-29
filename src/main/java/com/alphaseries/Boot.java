@@ -1,11 +1,16 @@
 package com.alphaseries;
 
+import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.pet.PetCommandCacheRow;
+import com.alphaseries.game.pet.PetLevelCacheRow;
+import com.alphaseries.game.pet.PetRaceCacheRow;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class Boot {
@@ -145,32 +150,44 @@ public final class Boot {
     }
 
     public static void Proc_1_6_6C5830(Object... args) {
-        Licence.setPetRaceRows(buildPetRaceCache(MySQL.Proc_5_2_6D4690(
-            "SELECT product_pet,id_pet,breed,min_rank,min_hcrank,name FROM settings_petraces", 0, 0)));
+        try {
+            BotDao bots = botDao();
+            if (bots == null) {
+                return;
+            }
+            Licence.setPetRaceRows(buildPetRaceCache(bots.petRaceCacheRows()));
+        } catch (Exception ignored) {
+            // VB6 source suppresses boot cache failures.
+        }
     }
 
     public static void Proc_1_7_6C5E10(Object... args) {
-        long maxLevelId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id_level) FROM bots_petlevels", 0, 0)));
-        String[] levels = new String[(int) maxLevelId + 1];
-        for (Map.Entry<Long, String> entry : buildPetLevelCache(MySQL.Proc_5_2_6D4690(
-                "SELECT id_level,max_energy,max_exp,max_nutrition FROM bots_petlevels ORDER BY id_level ASC", 0, 0)).entrySet()) {
-            if (entry.getKey() >= 0L && entry.getKey() < levels.length) {
-                levels[entry.getKey().intValue()] = entry.getValue();
+        try {
+            BotDao bots = botDao();
+            if (bots == null) {
+                return;
             }
-        }
-        Licence.setPetLevelRows(levels);
-        long commandCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id_command) FROM bots_petcommands", 0, 0));
-        long maxCommandId = Math.max(commandCount,
-            NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id_command) FROM bots_petcommands", 0, 0)));
-        String[] commands = new String[(int) Math.max(0L, maxCommandId) + 1];
-        PetCommandCache cache = buildPetCommandCache(MySQL.Proc_5_2_6D4690(
-            "SELECT id_command,petlevel_required,command,command_action FROM bots_petcommands", 0, 0));
-        for (Map.Entry<Long, String> entry : cache.commandById.entrySet()) {
-            if (entry.getKey() >= 0L && entry.getKey() < commands.length) {
-                commands[entry.getKey().intValue()] = entry.getValue();
+            long maxLevelId = Math.max(0L, bots.maxPetLevelId());
+            String[] levels = new String[(int) maxLevelId + 1];
+            for (Map.Entry<Long, String> entry : buildPetLevelCache(bots.petLevelCacheRows()).entrySet()) {
+                if (entry.getKey() >= 0L && entry.getKey() < levels.length) {
+                    levels[entry.getKey().intValue()] = entry.getValue();
+                }
             }
+            Licence.setPetLevelRows(levels);
+            long commandCount = bots.petCommandCount();
+            long maxCommandId = Math.max(commandCount, bots.maxPetCommandId());
+            String[] commands = new String[(int) Math.max(0L, maxCommandId) + 1];
+            PetCommandCache cache = buildPetCommandCache(bots.petCommandCacheRows());
+            for (Map.Entry<Long, String> entry : cache.commandById.entrySet()) {
+                if (entry.getKey() >= 0L && entry.getKey() < commands.length) {
+                    commands[entry.getKey().intValue()] = entry.getValue();
+                }
+            }
+            Licence.setPetCommandRows(commands, commandCount);
+        } catch (Exception ignored) {
+            // VB6 source suppresses boot cache failures.
         }
-        Licence.setPetCommandRows(commands, commandCount);
     }
 
     public static void Proc_1_8_6C6850(Object... args) {
@@ -545,6 +562,23 @@ public final class Boot {
         return payload.toString();
     }
 
+    public static String buildPetRaceCache(List<PetRaceCacheRow> raceRows) {
+        StringBuilder payload = new StringBuilder();
+        if (raceRows != null) {
+            for (PetRaceCacheRow row : raceRows) {
+                if (row != null) {
+                    payload.append('[').append(StringUtils.text(row.productPet())).append('\t');
+                    payload.append(row.petId()).append('\t');
+                    payload.append(row.breed()).append('\t');
+                    payload.append(row.minRank()).append('\t');
+                    payload.append(row.minHcRank()).append('\t');
+                    payload.append(StringUtils.text(row.name())).append(']');
+                }
+            }
+        }
+        return payload.toString();
+    }
+
     public static Map<Long, String> buildPetLevelCache(String levelRows) {
         Map<Long, String> cache = new LinkedHashMap<Long, String>();
         for (String row : StringUtils.text(levelRows).split("\r", -1)) {
@@ -559,6 +593,18 @@ public final class Boot {
         return cache;
     }
 
+    public static Map<Long, String> buildPetLevelCache(List<PetLevelCacheRow> levelRows) {
+        Map<Long, String> cache = new LinkedHashMap<Long, String>();
+        if (levelRows != null) {
+            for (PetLevelCacheRow row : levelRows) {
+                if (row != null) {
+                    cache.put(row.level(), row.maxEnergy() + "\t" + row.maxExperience() + "\t" + row.maxNutrition());
+                }
+            }
+        }
+        return cache;
+    }
+
     public static PetCommandCache buildPetCommandCache(String commandRows) {
         PetCommandCache cache = new PetCommandCache();
         for (String row : StringUtils.text(commandRows).split("\r", -1)) {
@@ -567,6 +613,21 @@ public final class Boot {
                 if (fields.length >= 4) {
                     long commandId = NumberUtils.parseLong(fields[0]);
                     cache.commandById.put(commandId, commandId + "\t" + NumberUtils.parseLong(fields[1]) + "\t" + fields[2] + "\t" + fields[3]);
+                    cache.commandCount++;
+                }
+            }
+        }
+        return cache;
+    }
+
+    public static PetCommandCache buildPetCommandCache(List<PetCommandCacheRow> commandRows) {
+        PetCommandCache cache = new PetCommandCache();
+        if (commandRows != null) {
+            for (PetCommandCacheRow row : commandRows) {
+                if (row != null) {
+                    cache.commandById.put(row.commandId(),
+                        row.commandId() + "\t" + row.requiredLevel() + "\t"
+                            + StringUtils.text(row.command()) + "\t" + StringUtils.text(row.action()));
                     cache.commandCount++;
                 }
             }
@@ -1126,5 +1187,10 @@ public final class Boot {
     private static ServerMaintenanceDao serverMaintenanceDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new ServerMaintenanceDao(database);
+    }
+
+    private static BotDao botDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new BotDao(database);
     }
 }

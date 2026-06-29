@@ -2,11 +2,14 @@ package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetCommandActionRow;
+import com.alphaseries.game.pet.PetCommandCacheRow;
 import com.alphaseries.game.pet.PetCommandTargetRow;
 import com.alphaseries.game.pet.PetExperienceStateRow;
 import com.alphaseries.game.pet.PetInventoryRow;
+import com.alphaseries.game.pet.PetLevelCacheRow;
 import com.alphaseries.game.pet.PetLevelExperienceRow;
 import com.alphaseries.game.pet.PetPlacementRow;
+import com.alphaseries.game.pet.PetRaceCacheRow;
 import com.alphaseries.game.pet.PetRaceRow;
 import com.alphaseries.game.pet.PetScratchRow;
 import com.alphaseries.game.pet.PetStatusRow;
@@ -61,6 +64,59 @@ public final class BotDao {
                 resultSet.getLong(4),
                 resultSet.getString(5)),
             productPet);
+    }
+
+    public List<PetRaceCacheRow> petRaceCacheRows() throws SQLException {
+        return database.query(
+            "SELECT product_pet,id_pet,breed,min_rank,min_hcrank,name FROM settings_petraces",
+            resultSet -> new PetRaceCacheRow(
+                resultSet.getString(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5),
+                resultSet.getString(6)));
+    }
+
+    public long maxPetLevelId() throws SQLException {
+        return database.queryOne(
+            "SELECT MAX(id_level) FROM bots_petlevels",
+            resultSet -> resultSet.getLong(1))
+            .orElse(0L);
+    }
+
+    public List<PetLevelCacheRow> petLevelCacheRows() throws SQLException {
+        return database.query(
+            "SELECT id_level,max_energy,max_exp,max_nutrition FROM bots_petlevels ORDER BY id_level ASC",
+            resultSet -> new PetLevelCacheRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4)));
+    }
+
+    public long petCommandCount() throws SQLException {
+        return database.queryOne(
+            "SELECT COUNT(id_command) FROM bots_petcommands",
+            resultSet -> resultSet.getLong(1))
+            .orElse(0L);
+    }
+
+    public long maxPetCommandId() throws SQLException {
+        return database.queryOne(
+            "SELECT MAX(id_command) FROM bots_petcommands",
+            resultSet -> resultSet.getLong(1))
+            .orElse(0L);
+    }
+
+    public List<PetCommandCacheRow> petCommandCacheRows() throws SQLException {
+        return database.query(
+            "SELECT id_command,petlevel_required,command,command_action FROM bots_petcommands",
+            resultSet -> new PetCommandCacheRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getString(4)));
     }
 
     public List<PetInventoryRow> inventoryPets(long userId) throws SQLException {
