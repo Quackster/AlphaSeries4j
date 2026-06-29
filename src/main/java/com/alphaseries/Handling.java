@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
+import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
@@ -8925,71 +8926,19 @@ public final class Handling {
     }
 
     public static String representedRoomRecord(String roomCacheText, long roomSlot) {
-        if (roomSlot <= 0L) {
-            return "";
-        }
-        String cacheText = Vb.cStr(roomCacheText);
-        String markerText = "\1" + roomSlot + '\t';
-        int startAt = cacheText.indexOf(markerText);
-        if (startAt < 0) {
-            markerText = "\1" + roomSlot + '\2';
-            startAt = cacheText.indexOf(markerText);
-        }
-        if (startAt < 0) {
-            return "";
-        }
-        int recordStart = startAt + 1;
-        int recordEnd = cacheText.indexOf('\2', recordStart);
-        if (recordEnd < 0) {
-            recordEnd = cacheText.length();
-        }
-        return cacheText.substring(recordStart, recordEnd);
+        return RepresentedRoomCache.fromLegacy(roomCacheText).record(roomSlot);
     }
 
     public static String representedRoomRecordSet(String roomCacheText, long roomSlot, String roomRecord) {
-        if (roomSlot <= 0L) {
-            return Vb.cStr(roomCacheText);
-        }
-        String cacheText = removeRepresentedCacheRecord(roomCacheText, "\1" + roomSlot + '\t');
-        cacheText = removeRepresentedCacheRecord(cacheText, "\1" + roomSlot + '\2');
-        while (cacheText.startsWith("\2")) {
-            cacheText = cacheText.substring(1);
-        }
-        return cacheText + '\1' + Vb.cStr(roomRecord) + '\2';
+        return RepresentedRoomCache.fromLegacy(roomCacheText).setRecord(roomSlot, roomRecord).cacheText();
     }
 
     public static MovementPosition representedMovementPosition(String roomCacheText, long roomSlot, long entityIndex) {
         MovementPosition result = new MovementPosition();
-        String roomRecord = representedRoomRecord(roomCacheText, roomSlot);
-        if (roomRecord.isEmpty()) {
-            return result;
-        }
-        String[] fields = roomRecord.split("\t", -1);
-        if (fields.length < 5) {
-            return result;
-        }
-        StringBuilder movementText = new StringBuilder();
-        for (int fieldIndex = 4; fieldIndex < fields.length; fieldIndex++) {
-            if (fieldIndex > 4) {
-                movementText.append('\t');
-            }
-            movementText.append(fields[fieldIndex]);
-        }
-        for (String part : movementText.toString().split("\1", -1)) {
-            String movementRecord = part;
-            if (!movementRecord.isEmpty()) {
-                if (movementRecord.endsWith("\2")) {
-                    movementRecord = movementRecord.substring(0, movementRecord.length() - 1);
-                }
-                String[] movementFields = movementRecord.split("\t", -1);
-                if (movementFields.length >= 3 && Vb.val(handlingField(movementFields, 0)) == entityIndex) {
-                    result.positionX = Vb.val(handlingField(movementFields, 1));
-                    result.positionY = Vb.val(handlingField(movementFields, 2));
-                    result.found = true;
-                    return result;
-                }
-            }
-        }
+        RepresentedRoomCache.Position position = RepresentedRoomCache.fromLegacy(roomCacheText).movementPosition(roomSlot, entityIndex);
+        result.positionX = position.positionX;
+        result.positionY = position.positionY;
+        result.found = position.found;
         return result;
     }
 
@@ -9012,30 +8961,9 @@ public final class Handling {
         long directionValue,
         long movingValue
     ) {
-        if (roomSlot <= 0L || entityIndex <= 0L) {
-            return Vb.cStr(roomCacheText);
-        }
-        String roomRecord = representedRoomRecord(roomCacheText, roomSlot);
-        if (roomRecord.isEmpty()) {
-            roomRecord = roomSlot + "\t\t\t0";
-        }
-        String[] rawFields = ensureHandlingFieldCount(roomRecord.split("\t", -1), 4);
-        String[] fields = new String[5];
-        for (int fieldIndex = 0; fieldIndex < 4; fieldIndex++) {
-            fields[fieldIndex] = rawFields[fieldIndex];
-        }
-        StringBuilder movementText = new StringBuilder();
-        for (int fieldIndex = 4; fieldIndex < rawFields.length; fieldIndex++) {
-            if (fieldIndex > 4) {
-                movementText.append('\t');
-            }
-            movementText.append(rawFields[fieldIndex]);
-        }
-        fields[4] = movementText.toString();
-        String movementRecord = entityIndex + "\t" + positionX + "\t" + positionY + "\t" + directionValue + "\t" + movingValue;
-        fields[4] = removeMovementRecord(handlingField(fields, 4), "\1" + entityIndex + '\t');
-        fields[4] = fields[4] + '\1' + movementRecord + '\2';
-        return representedRoomRecordSet(roomCacheText, roomSlot, joinTab(fields));
+        return RepresentedRoomCache.fromLegacy(roomCacheText)
+            .moveOccupant(roomSlot, entityIndex, positionX, positionY, directionValue, movingValue)
+            .cacheText();
     }
 
     public static String Proc_6_239_7FC170(Object... args) {
@@ -9115,25 +9043,7 @@ public final class Handling {
     }
 
     public static String removeRepresentedCacheRecord(String cacheText, String markerText) {
-        String cache = Vb.cStr(cacheText);
-        String marker = Vb.cStr(markerText);
-        if (cache.isEmpty() || marker.isEmpty()) {
-            return cache;
-        }
-        int markerAt = cache.indexOf(marker);
-        while (markerAt >= 0) {
-            int recordStart = cache.lastIndexOf('\1', markerAt);
-            if (recordStart < 0) {
-                recordStart = markerAt;
-            }
-            int recordEnd = cache.indexOf('\2', markerAt + marker.length());
-            if (recordEnd < 0) {
-                recordEnd = markerAt + marker.length() - 1;
-            }
-            cache = cache.substring(0, recordStart) + cache.substring(recordEnd + 1);
-            markerAt = cache.indexOf(marker);
-        }
-        return cache;
+        return RepresentedRoomCache.removeRecord(cacheText, markerText);
     }
 
     public static String readWireString(String packetPayload, LongRef offset) {
@@ -12163,37 +12073,6 @@ public final class Handling {
             rows.append('\r');
         }
         rows.append(rowText);
-    }
-
-    private static String[] ensureHandlingFieldCount(String[] fields, int lastIndex) {
-        if (fields.length > lastIndex) {
-            return fields;
-        }
-        String[] expanded = new String[lastIndex + 1];
-        for (int index = 0; index < expanded.length; index++) {
-            expanded[index] = index < fields.length ? fields[index] : "";
-        }
-        return expanded;
-    }
-
-    private static String joinTab(String[] fields) {
-        return String.join("\t", fields);
-    }
-
-    private static String removeMovementRecord(String movementText, String markerText) {
-        String result = Vb.cStr(movementText);
-        String marker = Vb.cStr(markerText);
-        int markerAt = result.indexOf(marker);
-        while (markerAt >= 0) {
-            int endAt = result.indexOf('\2', markerAt + marker.length());
-            if (endAt < 0) {
-                result = result.substring(0, markerAt);
-            } else {
-                result = result.substring(0, markerAt) + result.substring(endAt + 1);
-            }
-            markerAt = result.indexOf(marker);
-        }
-        return result;
     }
 
     private static String[] userQuestFields(String userQuestText, long questId) {

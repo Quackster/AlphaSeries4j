@@ -796,7 +796,7 @@ public final class Main {
     }
 
     public static String mainRepresentedRoomRecord(long roomSlot) {
-        return mainRepresentedRecordByKey(Licence.global_00829310, roomSlot);
+        return Licence.representedRooms().record(roomSlot);
     }
 
     public static String mainRepresentedRoomRecordField(long roomSlot, long fieldIndex) {
@@ -808,9 +808,7 @@ public final class Main {
         if (roomSlot <= 0L) {
             return;
         }
-        String cacheText = mainRepresentedCacheRemove(Licence.global_00829310, "\1" + roomSlot + '\t');
-        cacheText = mainRepresentedCacheRemove(cacheText, "\1" + roomSlot + '\2');
-        Licence.global_00829310 = cacheText + '\1' + Vb.cStr(roomRecord) + '\2';
+        Licence.setRepresentedRooms(Licence.representedRooms().setRecord(roomSlot, roomRecord));
     }
 
     public static String mainRepresentedCacheRemove(String cacheText, String markerText) {
