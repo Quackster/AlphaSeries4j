@@ -5,6 +5,7 @@ import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.dao.mysql.ClubDao;
 import com.alphaseries.dao.mysql.RoomDao;
+import com.alphaseries.dao.mysql.FurnitureDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -1912,19 +1913,19 @@ public final class Handling {
             if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign,caption,position_wall FROM furnitures WHERE id='"
-                + note.furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            String[] fields = rowText.split("\t", -1);
-            if (rowText.isEmpty() || fields.length < 2) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return;
             }
-            long productId = NumberUtils.parseLong(handlingField(fields, 1));
+            FurnitureDao.RoomFurnitureWithWall sticky = furniture.roomFurnitureWithWall(note.furnitureId, roomId).orElse(null);
+            if (sticky == null) {
+                return;
+            }
+            long productId = sticky.productId();
             if (!isPostItProduct(productId)) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='"
-                + Functions.Proc_10_11_80A9C0(note.noteColor, 0, 0) + "',caption='"
-                + Functions.Proc_10_11_80A9C0(note.noteCaption, 0, 0) + "' WHERE id='" + note.furnitureId + "'", 0, 0);
+            furniture.updatePostIt(note.furnitureId, note.noteColor, note.noteCaption);
             String broadcastPayload = "AT" + note.furnitureId + '\1' + "AS" + note.furnitureId + '\2';
             broadcastPayload = Crypto.Proc_3_0_6D2AF0(productId, null, broadcastPayload)
                 + productId + '\2' + note.noteColor + '\2';
@@ -1950,21 +1951,23 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign,caption FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            String[] fields = rowText.split("\t", -1);
-            if (rowText.isEmpty() || fields.length < 4) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return;
             }
-            long productId = NumberUtils.parseLong(handlingField(fields, 1));
+            FurnitureDao.RoomFurniture sticky = furniture.roomFurniture(furnitureId, roomId).orElse(null);
+            if (sticky == null) {
+                return;
+            }
+            long productId = sticky.productId();
             if (!isPostItProduct(productId)) {
                 return;
             }
-            String noteColor = StringUtils.left(handlingField(fields, 2), 6);
+            String noteColor = StringUtils.left(sticky.sign(), 6);
             if (noteColor.isEmpty()) {
                 noteColor = "FFFF33";
             }
-            String noteCaption = handlingField(fields, 3).replace('\u001f', '\r');
+            String noteCaption = StringUtils.text(sticky.caption()).replace('\u001f', '\r');
             Proc_6_244_801E80(socketIndex, "@p" + furnitureId + '\2' + noteColor + '\r' + noteCaption + '\2', 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1987,17 +1990,19 @@ public final class Handling {
             if (roomId <= 0L || !handlingUserOwnsRoom(callerUserId, roomId)) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign,caption FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            String[] fields = rowText.split("\t", -1);
-            if (rowText.isEmpty() || fields.length < 2) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return;
             }
-            long productId = NumberUtils.parseLong(handlingField(fields, 1));
+            FurnitureDao.RoomFurniture sticky = furniture.roomFurniture(furnitureId, roomId).orElse(null);
+            if (sticky == null) {
+                return;
+            }
+            long productId = sticky.productId();
             if (!isPostItProduct(productId)) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM furnitures WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
+            furniture.deleteFurniture(furnitureId);
             Proc_6_247_8027E0(socketIndex, "AT" + furnitureId, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -2020,15 +2025,17 @@ public final class Handling {
             if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,id_destination,sign_extra FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            String[] fields = rowText.split("\t", -1);
-            if (rowText.isEmpty() || fields.length < 3) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return;
             }
-            long boxProductId = NumberUtils.parseLong(handlingField(fields, 1));
-            long openedProductId = NumberUtils.parseLong(handlingField(fields, 2));
-            String openedSign = handlingField(fields, 3);
+            FurnitureDao.GiftBoxFurniture giftBox = furniture.giftBox(furnitureId, roomId).orElse(null);
+            if (giftBox == null) {
+                return;
+            }
+            long boxProductId = giftBox.boxProductId();
+            long openedProductId = giftBox.openedProductId();
+            String openedSign = StringUtils.text(giftBox.openedSign());
             if (boxProductId <= 0L || openedProductId <= 0L) {
                 return;
             }
@@ -2037,11 +2044,8 @@ public final class Handling {
                 return;
             }
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM furnitures WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time) VALUES('"
-                + openedProductId + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0) + "','"
-                + Functions.Proc_10_11_80A9C0(openedSign, 0, 0) + "','"
-                + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0) + "',UNIX_TIMESTAMP())", 0, 0);
+            furniture.deleteFurniture(furnitureId);
+            furniture.insertInventoryFurniture(openedProductId, NumberUtils.parseLong(callerUserId), openedSign);
             long openedProductType = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(openedProductId, 0, 0));
             String responseClass = "i";
             if (openedProductType == 2L) {
@@ -2074,17 +2078,19 @@ public final class Handling {
             if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign,position_wall FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' AND position_wall IS NOT NULL LIMIT 1", 0, 0);
-            String[] fields = rowText.split("\t", -1);
-            if (rowText.isEmpty() || fields.length < 3) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return;
             }
-            long productId = NumberUtils.parseLong(handlingField(fields, 1));
+            FurnitureDao.WallStateFurniture wallState = furniture.wallState(furnitureId, roomId).orElse(null);
+            if (wallState == null) {
+                return;
+            }
+            long productId = wallState.productId();
             if (productId <= 0L) {
                 return;
             }
-            long currentState = NumberUtils.parseLong(handlingField(fields, 2));
+            long currentState = NumberUtils.parseLong(wallState.sign());
             long stateCount = Licence.Proc_9_0_806F70(productId, 5, 0);
             if (stateCount <= 0L) {
                 stateCount = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 10, 0));
@@ -2099,7 +2105,7 @@ public final class Handling {
             if (nextState < 0L) {
                 nextState = 0L;
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + nextState + "' WHERE id='" + furnitureId + "'", 0, 0);
+            furniture.updateSign(furnitureId, nextState);
             String payload = Crypto.Proc_3_0_6D2AF0(productId, null, "AU" + furnitureId + '\2')
                 + nextState + '\2' + "0" + '\2';
             Proc_6_247_8027E0(socketIndex, payload, 0);
@@ -12118,6 +12124,11 @@ public final class Handling {
     private static RoomDao roomDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new RoomDao(database);
+    }
+
+    private static FurnitureDao furnitureDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new FurnitureDao(database);
     }
 
     private static String[] normalizeRows(Object rowSource) {

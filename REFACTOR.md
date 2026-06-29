@@ -7,6 +7,18 @@ Last updated: 2026-06-29
 Refactor the VB6-port-shaped code into Java packages with stable domain APIs, typed database access, prepared statements, fluent packet builders, and smaller classes while preserving source compatibility and runtime behavior until each compatibility layer can be removed safely.
 Keep common string/number helpers in shared utility classes, and move raw `Licence` globals toward typed collections in the relevant `game.*` package.
 
+## Refactor Rules
+
+- Preserve current source compatibility and runtime behavior for every slice; compatibility shims may stay temporarily, but each slice must move the implementation toward typed Java boundaries.
+- Keep tests working throughout the refactor. Run `./gradlew test --no-daemon` before committing behavior-affecting slices, and do not mark a milestone complete unless the suite passes or the failure is explicitly documented.
+- Use prepared DAO methods for database access. Handlers and services should not concatenate SQL strings or call raw `MySQL.Proc_5_*` helpers once a DAO boundary exists.
+- Load database rows into typed classes or records with named fields. Do not map result sets into tab-delimited strings such as `getString(1) + "\t" + getString(2)` except at a deliberate legacy compatibility boundary that is documented and scheduled for removal.
+- Keep row parsing, wire parsing, and payload construction separate. Payloads should use fluent `PacketBuilder`/payload classes instead of ad hoc string concatenation where the surrounding protocol support exists.
+- Split huge root classes by domain, following the existing package direction: `dao.mysql` for persistence, `game.*` for domain state and collections, `messages.*` for packet payloads, `server.*` for runtime/server concerns, and `util` for shared string/number helpers.
+- Do not duplicate common conversion helpers. Use `StringUtils`, `NumberUtils`, and protocol utilities instead of reintroducing VB-style local helper methods.
+- Move raw `Licence.global_*` string caches into typed collection-backed state holders under the appropriate `game.*` package, keeping legacy serialization only at explicit compatibility boundaries.
+- Commit only verified milestones with `REFACTOR.md` metrics updated when the legacy surface changes.
+
 ## Completed Slices
 
 - Added `com.alphaseries.config` and moved database config into `AppDatabaseConfig`.
@@ -85,6 +97,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `RoomDao`/`UserDao` for room enter/leave lifecycle queries and writes, including visit logs, visitor counts, and represented room slot clearing.
 - Expanded `RoomDao`/`UserDao` for room rating and room-right grant/revoke operations.
 - Expanded `RoomDao` for room-right wipe notifications, batch right revocation, and room deletion operations.
+- Added `com.alphaseries.dao.mysql.FurnitureDao` with typed row records for sticky-note, gift-box, and wall-state furniture handlers, avoiding tab-delimited DAO row strings.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for socket-user and permission-level lookups, removing remaining inline user lookup SQL from `MySQL` helper paths.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for credit and activity-point refresh lookups, routing `Functions` refresh helpers through prepared DAO methods.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for wardrobe rows, wardrobe slot replacement, tutorial-clothes updates, and motto lookup.
@@ -122,9 +135,9 @@ Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 468
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 374
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 364
 - `Boot.java`: 1130 lines
-- `Handling.java`: 12304 lines
+- `Handling.java`: 12320 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 922 lines
