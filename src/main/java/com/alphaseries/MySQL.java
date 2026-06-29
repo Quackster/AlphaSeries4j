@@ -1,5 +1,6 @@
 package com.alphaseries;
 
+import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.vb.Vb;
@@ -51,21 +52,13 @@ public final class MySQL {
             if (cfhId <= 0L) {
                 return;
             }
-            String cfhRow = Proc_5_2_6D4690("SELECT rooms.id,rooms.name,models.type,staff_cfh.id_user,staff_cfh.id_partner,staff_cfh.timestamp_sent FROM rooms,models,staff_cfh WHERE staff_cfh.id='"
-                + cfhId + "' AND rooms.id=staff_cfh.id_room AND models.id=rooms.id_model LIMIT 1", 0, 0);
-            if (cfhRow.isEmpty()) {
+            StaffModerationDao moderationDao = staffModerationDao();
+            StaffModerationDao.CallForHelpRoom cfhRoom = moderationDao.callForHelpRoom(cfhId).orElse(null);
+            if (cfhRoom == null) {
                 return;
             }
-            String[] cfhFields = cfhRow.split("\t", -1);
-            if (cfhFields.length < 6) {
-                return;
-            }
-            long roomId = Vb.val(cfhFields[0]);
-            long timestampSent = Vb.val(cfhFields[5]);
-            String chatRows = Proc_5_2_6D4690("SELECT DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%H'),DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%i'),users.id,users.name,logs_chat.description FROM logs_chat,rooms,users WHERE logs_chat.id_room='"
-                + roomId + "' AND logs_chat.timestamp < " + timestampSent + " AND logs_chat.timestamp > "
-                + (timestampSent - 600L) + " AND users.id=logs_chat.id_user GROUP BY logs_chat.id ORDER BY logs_chat.id DESC LIMIT 100", 0, 0);
-            HandlingMUS.Proc_12_1_821AA0(socketIndex, "HV" + mySqlCallForHelpChatLogPayload(cfhId, cfhFields, chatRows), 0);
+            String chatRows = moderationDao.recentChatRowsBefore(cfhRoom.roomId(), cfhRoom.timestampSent());
+            HandlingMUS.Proc_12_1_821AA0(socketIndex, "HV" + mySqlCallForHelpChatLogPayload(cfhId, cfhRoom.toFields(), chatRows), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -85,15 +78,14 @@ public final class MySQL {
             if (roomId <= 0L) {
                 return;
             }
-            String roomRow = Proc_5_2_6D4690("SELECT rooms.id,rooms.name,models.type FROM rooms,models WHERE rooms.id='"
-                + roomId + "' AND models.id=rooms.id_model LIMIT 1", 0, 0);
-            if (roomRow.isEmpty()) {
+            StaffModerationDao moderationDao = staffModerationDao();
+            StaffModerationDao.RoomChatHeader room = moderationDao.roomChatHeader(roomId).orElse(null);
+            if (room == null) {
                 return;
             }
-            String chatRows = Proc_5_2_6D4690("SELECT DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%H'),DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%i'),users.id,users.name,logs_chat.description FROM logs_chat,rooms,users WHERE logs_chat.id_room='"
-                + roomId + "' AND logs_chat.timestamp > UNIX_TIMESTAMP()-600 AND users.id=logs_chat.id_user GROUP BY logs_chat.id ORDER BY logs_chat.id DESC LIMIT 100", 0, 0);
+            String chatRows = moderationDao.recentChatRows(roomId);
             HandlingMUS.Proc_12_1_821AA0(socketIndex,
-                "HW" + mySqlRoomChatLogHeader(roomRow.split("\t", -1)) + mySqlRoomChatLogRows(chatRows), 0);
+                "HW" + mySqlRoomChatLogHeader(room.toFields()) + mySqlRoomChatLogRows(chatRows), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -111,16 +103,16 @@ public final class MySQL {
             if (roomId <= 0L) {
                 return;
             }
-            String roomRow = Proc_5_2_6D4690("SELECT rooms.id,rooms.visitors_now,users.id,users.name,rooms.name,rooms.description,rooms.tag_1,rooms.tag_2 FROM rooms,users WHERE rooms.id='"
-                + roomId + "' AND users.id=rooms.id_owner LIMIT 1", 0, 0);
-            if (roomRow.isEmpty()) {
+            StaffModerationDao moderationDao = staffModerationDao();
+            StaffModerationDao.RoomInfo room = moderationDao.roomInfo(roomId).orElse(null);
+            if (room == null) {
                 return;
             }
-            String eventRow = Proc_5_2_6D4690("SELECT name,description,tag_1,tag_2 FROM rooms_events WHERE id_room='"
-                + roomId + "' LIMIT 1", 0, 0);
-            String[] eventFields = eventRow.isEmpty() ? null : eventRow.split("\t", -1);
+            String[] eventFields = moderationDao.roomEvent(roomId)
+                .map(StaffModerationDao.RoomEvent::toFields)
+                .orElse(null);
             HandlingMUS.Proc_12_1_821AA0(socketIndex,
-                "HZ" + mySqlRoomInfoPayload(roomRow.split("\t", -1), eventFields), 0);
+                "HZ" + mySqlRoomInfoPayload(room.toFields(), eventFields), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -140,6 +132,10 @@ public final class MySQL {
             }
         }
         return sql.toString().replace("\\'", "/'");
+    }
+
+    private static StaffModerationDao staffModerationDao() {
+        return new StaffModerationDao(databaseConnection);
     }
 
     public static int mySqlSocketIndex(Object... args) {
