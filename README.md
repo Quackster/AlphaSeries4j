@@ -19,6 +19,33 @@ still need exact behavior mapping.
 mvn test
 ```
 
+## Local Database Setup
+
+The repo includes `config.ini` configured for the local MariaDB/MySQL instance:
+
+```ini
+mySQL_host=127.0.0.1
+mySQL_port=3306
+mySQL_db=alphaseries
+mySQL_username=root
+mySQL_password=verysecret
+```
+
+Create the database with:
+
+```sh
+scripts/setup-database.sh
+```
+
+If you have a matching AlphaSeries SQL dump, import it with:
+
+```sh
+scripts/setup-database.sh /path/to/alphaseries.sql
+```
+
+The sibling repos under `/opt/git` contain Havana/Lisbon/Kepler/Holograph dumps,
+but those schemas do not match the AlphaSeries table names used by this port.
+
 ## Porting Notes
 
 The VB6 source is partly reconstructed from decompiled output and keeps many

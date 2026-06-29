@@ -41,6 +41,10 @@ public final class PortedModuleSmokeTest {
         });
         assertEquals(1L, Crypto.Proc_3_5_6D3880(config));
         assertEquals(Crypto.buildDatabaseConnectionString(config), connectionStrings.get(0));
+        assertEquals("jdbc:mysql://db:3307/alpha?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC",
+            AppDatabaseConfig.jdbcUrl("db", "3307", "alpha"));
+        assertEquals("db", AppDatabaseConfig.parseOdbcConnectionString(connectionStrings.get(0)).get("server"));
+        assertEquals("pass", AppDatabaseConfig.parseOdbcConnectionString(connectionStrings.get(0)).get("password"));
         assertEquals("connected", MySQL.Proc_5_2_6D4690("SELECT 1"));
         assertEquals(0L, Crypto.Proc_3_5_6D3880(""));
         Crypto.configureDatabaseConnector(connectionString -> {
