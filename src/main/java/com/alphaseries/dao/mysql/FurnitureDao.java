@@ -245,6 +245,28 @@ public final class FurnitureDao {
             roomId);
     }
 
+    public long roomIdByFurniture(long furnitureId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_room FROM furnitures WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            furnitureId)
+            .orElse(0L);
+    }
+
+    public long floorFurnitureCountAtExcluding(long roomId, long excludedFurnitureId, long positionX, long positionY)
+        throws SQLException {
+
+        return database.queryOne(
+            "SELECT COUNT(*) FROM furnitures WHERE id_room=? AND position_wall IS NULL AND position_x=? "
+                + "AND position_y=? AND id<>? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            roomId,
+            positionX,
+            positionY,
+            excludedFurnitureId)
+            .orElse(0L);
+    }
+
     public int updatePostIt(long furnitureId, String sign, String caption) throws SQLException {
         return database.execute(
             "UPDATE furnitures SET sign=?,caption=? WHERE id=?",

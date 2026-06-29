@@ -5332,25 +5332,24 @@ public final class Handling {
             if (footprintY <= 0L) {
                 footprintY = 1L;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_room FROM furnitures WHERE id='"
-                + furnitureId + "' LIMIT 1", 0, 0);
-            long roomId;
-            if (!rowText.isEmpty()) {
-                roomId = NumberUtils.parseLong(rowText);
-            } else {
+            FurnitureDao furniture = furnitureDao();
+            RoomDao rooms = roomDao();
+            if (furniture == null || rooms == null) {
+                return 0L;
+            }
+            long roomId = furniture.roomIdByFurniture(furnitureId);
+            if (roomId <= 0L) {
                 roomId = furnitureId;
                 furnitureId = 0L;
             }
             if (roomId <= 0L || positionX < 0L || positionY < 0L) {
                 return 0L;
             }
-            rowText = MySQL.Proc_5_2_6D4690("SELECT models.map,rooms.allow_walkthrough,rooms.id_slot FROM rooms,models WHERE rooms.id='"
-                + roomId + "' AND models.id=rooms.id_model LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            RoomDao.RoomPlacementState placementState = rooms.roomPlacementState(roomId).orElse(null);
+            if (placementState == null) {
                 return 0L;
             }
-            String[] fields = rowText.split("\t", -1);
-            String modelMap = handlingField(fields, 0).replace('\n', '\r');
+            String modelMap = StringUtils.text(placementState.modelMap()).replace('\n', '\r');
             while (modelMap.contains("\r\r")) {
                 modelMap = modelMap.replace("\r\r", "\r");
             }
@@ -5358,8 +5357,8 @@ public final class Handling {
                 modelMap = modelMap.substring(0, modelMap.length() - 1);
             }
             String[] mapRows = modelMap.split("\r", -1);
-            long allowWalkthrough = NumberUtils.parseLong(handlingField(fields, 1));
-            long roomSlot = NumberUtils.parseLong(handlingField(fields, 2));
+            long allowWalkthrough = placementState.allowWalkthrough();
+            long roomSlot = placementState.roomSlot();
             for (long tileY = positionY; tileY <= positionY + footprintY - 1L; tileY++) {
                 if (tileY < 0L || tileY >= mapRows.length) {
                     return 0L;
@@ -5373,22 +5372,16 @@ public final class Handling {
                     if (mapCell.isEmpty() || "x".equals(mapCell)) {
                         return 0L;
                     }
-                    long occupiedCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures WHERE id_room='"
-                        + roomId + "' AND position_wall IS NULL AND position_x='" + tileX + "' AND position_y='"
-                        + tileY + "' AND id<>'" + furnitureId + "' LIMIT 1", 0, 0));
+                    long occupiedCount = furniture.floorFurnitureCountAtExcluding(roomId, furnitureId, tileX, tileY);
                     if (occupiedCount > 0L) {
                         return 0L;
                     }
-                    occupiedCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM bots WHERE id_room='"
-                        + roomId + "' AND position_x='" + tileX + "' AND position_y='" + tileY + "' LIMIT 1", 0, 0));
+                    occupiedCount = rooms.botCountAtLimited(roomId, tileX, tileY);
                     if (occupiedCount > 0L) {
                         return 0L;
                     }
                     if (allowWalkthrough == 0L && roomSlot > 0L) {
-                        String occupantText = MySQL.Proc_5_2_6D4690("SELECT id FROM logs_visitedrooms WHERE id_room='"
-                            + roomId + "' AND timestamp_left IS NULL LIMIT 250", 0, 0);
-                        for (String occupantRow : occupantText.split("\r", -1)) {
-                            long occupantRoomUserIndex = NumberUtils.parseLong(occupantRow);
+                        for (long occupantRoomUserIndex : rooms.activeVisitIdsByRoom(roomId)) {
                             if (occupantRoomUserIndex > 0L) {
                                 MovementPosition movementPosition = movementPosition(
                                     Licence.representedRooms().movementPosition(roomSlot, occupantRoomUserIndex));

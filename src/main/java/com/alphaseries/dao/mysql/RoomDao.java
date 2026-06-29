@@ -33,6 +33,16 @@ public final class RoomDao {
             .orElse(0L);
     }
 
+    public long botCountAtLimited(long roomId, long positionX, long positionY) throws SQLException {
+        return database.queryOne(
+            "SELECT COUNT(*) FROM bots WHERE id_room=? AND position_x=? AND position_y=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            roomId,
+            positionX,
+            positionY)
+            .orElse(0L);
+    }
+
     public long roomIdBySlot(long roomSlot) throws SQLException {
         return database.queryOne(
             "SELECT id FROM rooms WHERE id_slot=? LIMIT 1",
@@ -189,6 +199,13 @@ public final class RoomDao {
             "SELECT users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_room=? "
                 + "AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user "
                 + "AND users.id_socket IS NOT NULL",
+            resultSet -> resultSet.getLong(1),
+            roomId);
+    }
+
+    public List<Long> activeVisitIdsByRoom(long roomId) throws SQLException {
+        return database.query(
+            "SELECT id FROM logs_visitedrooms WHERE id_room=? AND timestamp_left IS NULL LIMIT 250",
             resultSet -> resultSet.getLong(1),
             roomId);
     }
@@ -418,6 +435,17 @@ public final class RoomDao {
             roomId);
     }
 
+    public Optional<RoomPlacementState> roomPlacementState(long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT models.map,rooms.allow_walkthrough,rooms.id_slot FROM rooms,models WHERE rooms.id=? "
+                + "AND models.id=rooms.id_model LIMIT 1",
+            resultSet -> new RoomPlacementState(
+                resultSet.getString(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3)),
+            roomId);
+    }
+
     public int insertRoomEvent(
         long roomId,
         long userId,
@@ -493,6 +521,9 @@ public final class RoomDao {
     }
 
     public record RoomModelEntry(long modelId, String modelMap) {
+    }
+
+    public record RoomPlacementState(String modelMap, long allowWalkthrough, long roomSlot) {
     }
 
     public enum RoomDecoration {
