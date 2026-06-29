@@ -88,29 +88,27 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `Licence.Proc_9_0` through `Proc_9_5` to `CatalogRegistry`, added named cache setters, and removed `Licence`'s dependency on `Vb`.
 - Migrated `Main` identity/startup/game-server/session-cache helpers off `Vb` conversions and onto shared `StringUtils`/`NumberUtils`.
 - Migrated `Boot` cache refresh/build helper conversions off `Vb` and onto shared `StringUtils`/`NumberUtils`.
+- Migrated remaining `Handling` conversions off `Vb` and onto shared `StringUtils`/`NumberUtils`, then removed the unused `com.alphaseries.vb.Vb` compatibility class.
 - Migrated several payload builders from string concatenation to fluent `PacketBuilder`.
 
 ## VB Compatibility Class Removal Checklist
 
-Compared with `main`, the VB helper artifact currently present is:
+Compared with `main`, the VB helper artifact has been removed:
 
-- `src/main/java/com/alphaseries/vb/Vb.java`
-
-Removal is blocked until all `Vb.` call sites are replaced with domain-specific APIs, protocol helpers, JDK calls, or typed parsing methods. Do not delete this class while root modules still import it.
+- Removed `src/main/java/com/alphaseries/vb/Vb.java` after all direct `Vb.` call sites and imports reached zero.
 
 ## Current Legacy Surface
 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 470
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 904
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 472
 - `Boot.java`: 1116 lines
-- `Handling.java`: 12148 lines
+- `Handling.java`: 12147 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 878 lines
-- `Vb.java`: 106 lines
 
 ## Next Targets
 
@@ -118,10 +116,10 @@ Measured on 2026-06-29:
 - Replace `Functions` and `Handling` user/account operations with domain services under `game.user` or `runtime.session`.
 - Move MUS handling into a `server.mus` package with compatibility shims for old entry points.
 - Extract navigator, room, moderation, pet, badge, poll, recycler, jukebox, and wired payload builders from `Handling`.
-- Replace remaining `Crypto.Proc_3_*` and direct `Vb.val`/`Vb.cStr` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
+- Replace remaining `Crypto.Proc_3_*` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
 - Continue replacing duplicated local string/number helpers in root compatibility classes with `StringUtils` and `NumberUtils`.
 - Move remaining raw `Licence.global_*` caches into typed state holders under the appropriate `game.*` package.
-- Delete deprecated compatibility aliases and `com.alphaseries.vb.Vb` only after call-site count reaches zero and tests pass.
+- Delete remaining deprecated compatibility aliases only after their call sites reach zero and tests pass.
 
 ## Verification
 

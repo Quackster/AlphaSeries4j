@@ -26,7 +26,6 @@ import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
-import com.alphaseries.vb.Vb;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -50,7 +49,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "GF");
-            long targetUserId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long targetUserId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             if (targetUserId <= 0L) {
                 targetUserId = readWireLong(requestPayload, new LongRef(1));
             }
@@ -69,10 +68,10 @@ public final class Handling {
                 return;
             }
             String payload = staffUserSummaryPayload(userRow,
-                Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM staff_cfh WHERE id_user='" + targetUserId + "'", 0, 0)),
-                Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM staff_cfh WHERE id_user='" + targetUserId + "' AND id_closed='2'", 0, 0)),
-                Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM users_cautions WHERE id_user='" + targetUserId + "'", 0, 0)),
-                Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM users_bans WHERE id_user='" + targetUserId + "'", 0, 0)));
+                NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM staff_cfh WHERE id_user='" + targetUserId + "'", 0, 0)),
+                NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM staff_cfh WHERE id_user='" + targetUserId + "' AND id_closed='2'", 0, 0)),
+                NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM users_cautions WHERE id_user='" + targetUserId + "'", 0, 0)),
+                NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM users_bans WHERE id_user='" + targetUserId + "'", 0, 0)));
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -96,7 +95,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long targetUserId = readWireLong(requestPayload, offset);
             if (targetUserId <= 0L) {
-                targetUserId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                targetUserId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             String banMessage = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
             if (banMessage.isEmpty()) {
@@ -104,7 +103,7 @@ public final class Handling {
             }
             long banHours = readWireLong(requestPayload, offset);
             if (banHours <= 0L) {
-                banHours = Vb.val(Functions.Proc_10_6_809F10(Vb.mid(requestPayload, (int) offset.value), 0, 0));
+                banHours = NumberUtils.parseLong(Functions.Proc_10_6_809F10(StringUtils.mid(requestPayload, (int) offset.value), 0, 0));
             }
             String callerUserId = handlingUserIdFromSocket(socketIndex);
             if (targetUserId <= 0L || banMessage.isEmpty() || banHours <= 0L
@@ -151,7 +150,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long actionType = readWireLong(requestPayload, offset);
             if (actionType <= 0L) {
-                actionType = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                actionType = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             String messageText = readWireString(requestPayload, offset);
             if (messageText.isEmpty()) {
@@ -168,7 +167,7 @@ public final class Handling {
             }
             String roomText = MySQL.Proc_5_2_6D4690("SELECT id_slot,id_owner FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0);
             String[] roomFields = roomText.split("\t", -1);
-            String roomOwnerId = String.valueOf(Vb.val(handlingField(roomFields, 1)));
+            String roomOwnerId = String.valueOf(NumberUtils.parseLong(handlingField(roomFields, 1)));
             if (roomOwnerId.isEmpty() || "0".equals(roomOwnerId)) {
                 return 0L;
             }
@@ -195,8 +194,8 @@ public final class Handling {
 
     public static void Proc_6_5_6DC340(Object... args) {
         try {
-            long callForHelpId = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
-            int socketIndex = args != null && args.length >= 2 ? (int) Vb.val(args[1]) : 0;
+            long callForHelpId = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
+            int socketIndex = args != null && args.length >= 2 ? (int) NumberUtils.parseLong(args[1]) : 0;
             if (callForHelpId <= 0L) {
                 return;
             }
@@ -247,7 +246,7 @@ public final class Handling {
             if (callForHelpId <= 0L) {
                 return;
             }
-            String reporterUserId = String.valueOf(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_user FROM staff_cfh WHERE id='"
+            String reporterUserId = String.valueOf(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_user FROM staff_cfh WHERE id='"
                 + callForHelpId + "' LIMIT 1", 0, 0)));
             int reporterSocketIndex = handlingSocketFromUserId(reporterUserId);
             if (reporterSocketIndex > 0) {
@@ -318,7 +317,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "A]");
-            long danceId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long danceId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             if (danceId <= 0L) {
                 danceId = readWireLong(requestPayload, new LongRef(1));
             }
@@ -362,9 +361,9 @@ public final class Handling {
                 if (!row.isEmpty()) {
                     String[] fields = row.split("\t", -1);
                     if (fields.length >= 3) {
-                        long slotId = Vb.val(handlingField(fields, 0));
+                        long slotId = NumberUtils.parseLong(handlingField(fields, 0));
                         if (slotId >= 1L && slotId <= maxSlots) {
-                            String genderText = Vb.left(handlingField(fields, 2).toUpperCase(), 1);
+                            String genderText = StringUtils.left(handlingField(fields, 2).toUpperCase(), 1);
                             if (!"M".equals(genderText) && !"F".equals(genderText)) {
                                 genderText = "M";
                             }
@@ -387,7 +386,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long slotId = readWireLong(requestPayload, offset);
             String figureText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
-            String genderText = Vb.left(readWireString(requestPayload, offset).toUpperCase(), 1);
+            String genderText = StringUtils.left(readWireString(requestPayload, offset).toUpperCase(), 1);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId) || !handlingUserHasPermission(userId, "fuse_use_wardrobe")) {
                 return;
@@ -417,7 +416,7 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "@l");
             LongRef offset = new LongRef(1);
-            String genderText = Vb.left(readWireString(requestPayload, offset).toUpperCase(), 1);
+            String genderText = StringUtils.left(readWireString(requestPayload, offset).toUpperCase(), 1);
             String figureText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId) || (!"M".equals(genderText) && !"F".equals(genderText))) {
@@ -433,7 +432,7 @@ public final class Handling {
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
             String mottoText = MySQL.Proc_5_2_6D4690("SELECT motto FROM users WHERE id='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
-            String payload = userIdentityPayload(Vb.val(userId), mottoText, genderText, figureText);
+            String payload = userIdentityPayload(NumberUtils.parseLong(userId), mottoText, genderText, figureText);
             Proc_6_244_801E80(socketIndex, payload, 0);
             Proc_6_247_8027E0(socketIndex, payload, 0);
         } catch (Exception ignored) {
@@ -455,13 +454,13 @@ public final class Handling {
                 if (!row.isEmpty()) {
                     String[] fields = row.split("\t", -1);
                     if (fields.length >= 5) {
-                        long months = Vb.val(handlingField(fields, 2));
-                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 0)), null, ""));
+                        long months = NumberUtils.parseLong(handlingField(fields, 2));
+                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 0)), null, ""));
                         offerPayload.append(handlingField(fields, 1)).append('\2');
                         offerPayload.append(Crypto.Proc_3_0_6D2AF0(months, null, ""));
                         offerPayload.append(Crypto.Proc_3_0_6D2AF0(months * 31L, null, ""));
-                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 3)), null, ""));
-                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 4)), null, ""));
+                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 3)), null, ""));
+                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 4)), null, ""));
                         offerPayload.append(Crypto.Proc_3_0_6D2AF0(0, null, ""));
                         offerCount++;
                     }
@@ -471,13 +470,13 @@ public final class Handling {
                 + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0) FROM users WHERE id='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
             String[] userFields = rowText.split("\t", -1);
-            long hcLevel = Vb.val(handlingField(userFields, 0));
-            long hcDays = Vb.val(handlingField(userFields, 1));
-            long vipDays = Vb.val(handlingField(userFields, 2));
-            long hcPeriods = Vb.val(handlingField(userFields, 3));
-            long vipPeriods = Vb.val(handlingField(userFields, 4));
-            long presentsAvailable = Vb.val(handlingField(userFields, 5));
-            long daysSinceStart = Vb.val(handlingField(userFields, 6));
+            long hcLevel = NumberUtils.parseLong(handlingField(userFields, 0));
+            long hcDays = NumberUtils.parseLong(handlingField(userFields, 1));
+            long vipDays = NumberUtils.parseLong(handlingField(userFields, 2));
+            long hcPeriods = NumberUtils.parseLong(handlingField(userFields, 3));
+            long vipPeriods = NumberUtils.parseLong(handlingField(userFields, 4));
+            long presentsAvailable = NumberUtils.parseLong(handlingField(userFields, 5));
+            long daysSinceStart = NumberUtils.parseLong(handlingField(userFields, 6));
             long activeDays = hcLevel > 1L ? vipDays : hcDays;
             long periodsLeft = hcLevel > 1L ? vipPeriods : hcPeriods;
             long daysLeft = activeDays - daysSinceStart;
@@ -504,8 +503,8 @@ public final class Handling {
             if (socketIndex <= 0) {
                 return "";
             }
-            String cachedPayload = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
-            String packetPrefix = args != null && args.length >= 3 ? Vb.cStr(args[2]) : "";
+            String cachedPayload = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
+            String packetPrefix = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
             if (packetPrefix.isEmpty()) {
                 packetPrefix = "Gz";
             }
@@ -559,7 +558,7 @@ public final class Handling {
     }
 
     public static void Proc_6_53_718E00(Object... args) {
-        int socketIndex = args != null && args.length >= 1 ? (int) Vb.val(args[0]) : 0;
+        int socketIndex = args != null && args.length >= 1 ? (int) NumberUtils.parseLong(args[0]) : 0;
         if (socketIndex <= 0) {
             return;
         }
@@ -903,7 +902,7 @@ public final class Handling {
             if (userId.isEmpty()) {
                 return;
             }
-            long callForHelpId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM staff_cfh WHERE id_user='"
+            long callForHelpId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM staff_cfh WHERE id_user='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0)
                 + "' AND id_closed='0' AND timestamp_sent > UNIX_TIMESTAMP()-600 ORDER BY id DESC LIMIT 1", 0, 0));
             if (callForHelpId > 0L) {
@@ -956,7 +955,7 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
-            long lastClosedState = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_closed FROM staff_cfh WHERE id_user='"
+            long lastClosedState = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_closed FROM staff_cfh WHERE id_user='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0)
                 + "' AND timestamp_sent > UNIX_TIMESTAMP()-600 ORDER BY id DESC LIMIT 1", 0, 0));
             if (lastClosedState == 0L && !MySQL.Proc_5_2_6D4690("SELECT id_closed FROM staff_cfh WHERE id_user='"
@@ -974,7 +973,7 @@ public final class Handling {
                 categoryId = readWireLong(requestPayload, offset);
             }
             long partnerUserId = readWireLong(requestPayload, offset);
-            if (partnerUserId == Vb.val(userId)) {
+            if (partnerUserId == NumberUtils.parseLong(userId)) {
                 partnerUserId = 0L;
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
@@ -984,7 +983,7 @@ public final class Handling {
             MySQL.Proc_5_0_6D3CD0("INSERT INTO staff_cfh(id_user,id_room,id_category,id_partner,description,timestamp_sent) VALUES('"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "','" + categoryId + "','"
                 + partnerUserId + "','" + Functions.Proc_10_11_80A9C0(descriptionText, 0, 0) + "',UNIX_TIMESTAMP())", 0, 0);
-            long callForHelpId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM staff_cfh", 0, 0));
+            long callForHelpId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM staff_cfh", 0, 0));
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(callForHelpId, null, "EA"), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1039,7 +1038,7 @@ public final class Handling {
                 if (!row.isEmpty()) {
                     String[] fields = row.split("\t", -1);
                     if (fields.length >= 2) {
-                        resultPayload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 0)), null, resultPayload)
+                        resultPayload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 0)), null, resultPayload)
                             + handlingField(fields, 1) + '\2';
                         resultCount++;
                     }
@@ -1058,7 +1057,7 @@ public final class Handling {
             long faqId = 0L;
             if (packetPayload.length() >= 3) {
                 String requestPayload = packetPayload.substring(2);
-                faqId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                faqId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
                 if (faqId <= 0L) {
                     faqId = readWireLong(requestPayload, new LongRef(1));
                 }
@@ -1105,8 +1104,8 @@ public final class Handling {
                 return 0L;
             }
             int socketIndex = handlingSocketIndex(args);
-            boolean checkOnly = Vb.val(args[1]) < 0L;
-            String candidateName = Vb.cStr(args[2]).trim();
+            boolean checkOnly = NumberUtils.parseLong(args[1]) < 0L;
+            String candidateName = StringUtils.text(args[2]).trim();
             if (socketIndex <= 0) {
                 return 0L;
             }
@@ -1118,7 +1117,7 @@ public final class Handling {
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
             MySQL.Proc_5_2_6D4690("SELECT gender FROM users WHERE id='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
-            long existingCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM users WHERE name='"
+            long existingCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM users WHERE name='"
                 + Functions.Proc_10_11_80A9C0(candidateName, 0, 0) + "'", 0, 0));
             long validationCode = avatarNameValidationCode(candidateName, oldName, existingCount);
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(validationCode, null, "H{") + candidateName + '\2', 0);
@@ -1134,7 +1133,7 @@ public final class Handling {
             if (roomId > 0L) {
                 long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
                 Proc_6_247_8027E0(socketIndex,
-                    Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, Crypto.Proc_3_0_6D2AF0(Vb.val(userId), null, "H|"))
+                    Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(userId), null, "H|"))
                         + candidateName + '\2', 0);
                 String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                     + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
@@ -1152,17 +1151,17 @@ public final class Handling {
             return "";
         }
         String[] values = normalizeUserEntryArgs(args);
-        long userId = Vb.val(values[0]);
+        long userId = NumberUtils.parseLong(values[0]);
         String userName = values[1];
         String figureText = values[2];
         String mottoText = values[3];
         String genderText = values[4];
-        long roomUserIndex = Vb.val(values[5]);
-        long xValue = Vb.val(values[6]);
-        long yValue = Vb.val(values[7]);
+        long roomUserIndex = NumberUtils.parseLong(values[5]);
+        long xValue = NumberUtils.parseLong(values[6]);
+        long yValue = NumberUtils.parseLong(values[7]);
         String zValue = values[8];
-        long firstState = Vb.val(values[9]);
-        long secondState = Vb.val(values[10]);
+        long firstState = NumberUtils.parseLong(values[9]);
+        long secondState = NumberUtils.parseLong(values[10]);
         if (roomUserIndex <= 0L) {
             roomUserIndex = userId;
         }
@@ -1181,15 +1180,15 @@ public final class Handling {
             return "";
         }
         String[] values = normalizeObjectEntryArgs(args);
-        long entityId = Vb.val(values[0]);
+        long entityId = NumberUtils.parseLong(values[0]);
         String displayName = values[1];
         String figureText = values[2];
         String genderText = values[3];
-        long roomUserIndex = Vb.val(values[4]);
-        long xValue = Vb.val(values[5]);
-        long yValue = Vb.val(values[6]);
+        long roomUserIndex = NumberUtils.parseLong(values[4]);
+        long xValue = NumberUtils.parseLong(values[5]);
+        long yValue = NumberUtils.parseLong(values[6]);
         String zValue = values[7];
-        long objectType = Vb.val(values[8]);
+        long objectType = NumberUtils.parseLong(values[8]);
         if (roomUserIndex <= 0L) {
             roomUserIndex = entityId;
         }
@@ -1218,7 +1217,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "FF");
-            long requestedRoomId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long requestedRoomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             if (requestedRoomId <= 0L) {
                 requestedRoomId = readWireLong(requestPayload, new LongRef(1));
             }
@@ -1312,7 +1311,7 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            long doorStatus = Vb.val(MySQL.Proc_5_2_6D4690("SELECT status_door FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            long doorStatus = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT status_door FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
             Proc_6_244_801E80(socketIndex, doorStatus != 0L ? "EoHK" : "EoIH", 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1354,7 +1353,7 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            long doorStatus = Vb.val(MySQL.Proc_5_2_6D4690("SELECT status_door FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            long doorStatus = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT status_door FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
             if (doorStatus != 0L) {
                 Proc_6_244_801E80(socketIndex, "EoHK", 0);
                 return;
@@ -1419,9 +1418,9 @@ public final class Handling {
                 + "FROM users,logs_visitedrooms WHERE users.name='" + Functions.Proc_10_11_80A9C0(targetName, 0, 0)
                 + "' AND users.id=logs_visitedrooms.id_user AND logs_visitedrooms.timestamp_left IS NULL LIMIT 1", 0, 0);
             String[] targetFields = targetRow.split("\t", -1);
-            long targetUserId = Vb.val(handlingField(targetFields, 0));
-            long targetSocketIndex = Vb.val(handlingField(targetFields, 1));
-            long targetRoomId = Vb.val(handlingField(targetFields, 2));
+            long targetUserId = NumberUtils.parseLong(handlingField(targetFields, 0));
+            long targetSocketIndex = NumberUtils.parseLong(handlingField(targetFields, 1));
+            long targetRoomId = NumberUtils.parseLong(handlingField(targetFields, 2));
             if (targetUserId <= 0L || targetSocketIndex <= 0L || targetRoomId <= 0L) {
                 Proc_6_244_801E80(socketIndex, "BC", 0);
                 return;
@@ -1492,7 +1491,7 @@ public final class Handling {
             if (args == null || args.length == 0) {
                 return "-1" + '\2';
             }
-            long roomId = Vb.val(args[0]);
+            long roomId = NumberUtils.parseLong(args[0]);
             if (roomId <= 0L) {
                 return "-1" + '\2';
             }
@@ -1512,9 +1511,9 @@ public final class Handling {
             for (int fieldIndex = 4; fieldIndex <= 8; fieldIndex++) {
                 payload.append(handlingField(fields, fieldIndex)).append('\2');
             }
-            String result = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 0)), null, payload.toString());
-            result = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 2)), null, result);
-            return Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 3)), null, result);
+            String result = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 0)), null, payload.toString());
+            result = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 2)), null, result);
+            return Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 3)), null, result);
         } catch (Exception ignored) {
             return "-1" + '\2';
         }
@@ -1524,8 +1523,8 @@ public final class Handling {
         long reservedSlot = 0L;
         try {
             int socketIndex = handlingSocketIndex(args);
-            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
-            long preferredSlot = args != null && args.length >= 3 ? Vb.val(args[2]) : 0L;
+            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
+            long preferredSlot = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
             if (socketIndex <= 0 || roomId <= 0L) {
                 return 0L;
             }
@@ -1580,9 +1579,9 @@ public final class Handling {
                 return 0L;
             }
             String[] fields = roomRow.split("\t", -1);
-            long visitId = Vb.val(handlingField(fields, 0));
-            long roomId = Vb.val(handlingField(fields, 1));
-            long slotId = Vb.val(handlingField(fields, 2));
+            long visitId = NumberUtils.parseLong(handlingField(fields, 0));
+            long roomId = NumberUtils.parseLong(handlingField(fields, 1));
+            long slotId = NumberUtils.parseLong(handlingField(fields, 2));
             if (roomId <= 0L) {
                 return 0L;
             }
@@ -1613,7 +1612,7 @@ public final class Handling {
     public static void Proc_6_56_71E730(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            long roomMode = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            long roomMode = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             Proc_6_244_801E80(socketIndex, "@S", 0);
             Proc_6_244_801E80(socketIndex, "Bf/client.php" + '\2', 0);
             Proc_6_244_801E80(socketIndex, roomMode == 0L ? "@i" : "@{", 0);
@@ -1625,8 +1624,8 @@ public final class Handling {
     public static long Proc_6_57_71E8F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
-            String suppliedPassword = args != null && args.length >= 3 ? Vb.cStr(args[2]) : "";
+            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
+            String suppliedPassword = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
             if (roomId <= 0L) {
                 Proc_6_244_801E80(socketIndex, "C`H", 0);
                 return 0L;
@@ -1642,15 +1641,15 @@ public final class Handling {
                 return 0L;
             }
             String[] fields = roomRow.split("\t", -1);
-            long visitorsNow = Vb.val(handlingField(fields, 0));
-            long visitorsMax = Vb.val(handlingField(fields, 1));
-            long doorStatus = Vb.val(handlingField(fields, 2));
+            long visitorsNow = NumberUtils.parseLong(handlingField(fields, 0));
+            long visitorsMax = NumberUtils.parseLong(handlingField(fields, 1));
+            long doorStatus = NumberUtils.parseLong(handlingField(fields, 2));
             String roomPassword = handlingField(fields, 3);
-            long roomSlot = Vb.val(handlingField(fields, 4));
-            String ownerUserId = String.valueOf(Vb.val(handlingField(fields, 5)));
-            boolean isOwner = ownerUserId.equals(String.valueOf(Vb.val(userId)));
+            long roomSlot = NumberUtils.parseLong(handlingField(fields, 4));
+            String ownerUserId = String.valueOf(NumberUtils.parseLong(handlingField(fields, 5)));
+            boolean isOwner = ownerUserId.equals(String.valueOf(NumberUtils.parseLong(userId)));
             if (!isOwner) {
-                boolean isBanned = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_user FROM rooms_bans WHERE id_user='"
+                boolean isBanned = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_user FROM rooms_bans WHERE id_user='"
                     + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0)) > 0L;
                 if (isBanned) {
                     Proc_6_53_718E00(socketIndex, 0, 0);
@@ -1692,7 +1691,7 @@ public final class Handling {
             if (roomIdText.isEmpty()) {
                 roomIdText = packetPayload;
             }
-            long roomId = Vb.val(roomIdText);
+            long roomId = NumberUtils.parseLong(roomIdText);
             int passwordStart = 2 + roomIdText.length();
             String roomPassword = "";
             if (passwordStart < packetPayload.length()) {
@@ -1782,7 +1781,7 @@ public final class Handling {
             }
             MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms_rates(id_user,id_room,timestamp) VALUES('"
                 + escapedUserId + "','" + roomId + "',UNIX_TIMESTAMP())", 0, 0);
-            long roomRate = Vb.val(MySQL.Proc_5_2_6D4690("SELECT rate FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            long roomRate = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT rate FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
             if (roomRate < 0L) {
                 roomRate = 0L;
             }
@@ -1811,7 +1810,7 @@ public final class Handling {
             if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
                 return;
             }
-            String targetUserId = String.valueOf(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
+            String targetUserId = String.valueOf(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
                 + targetName + "' LIMIT 1", 0, 0)));
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return;
@@ -1875,7 +1874,7 @@ public final class Handling {
             if (rowText.isEmpty() || fields.length < 2) {
                 return;
             }
-            long productId = Vb.val(handlingField(fields, 1));
+            long productId = NumberUtils.parseLong(handlingField(fields, 1));
             if (!isPostItProduct(productId)) {
                 return;
             }
@@ -1913,11 +1912,11 @@ public final class Handling {
             if (rowText.isEmpty() || fields.length < 4) {
                 return;
             }
-            long productId = Vb.val(handlingField(fields, 1));
+            long productId = NumberUtils.parseLong(handlingField(fields, 1));
             if (!isPostItProduct(productId)) {
                 return;
             }
-            String noteColor = Vb.left(handlingField(fields, 2), 6);
+            String noteColor = StringUtils.left(handlingField(fields, 2), 6);
             if (noteColor.isEmpty()) {
                 noteColor = "FFFF33";
             }
@@ -1950,7 +1949,7 @@ public final class Handling {
             if (rowText.isEmpty() || fields.length < 2) {
                 return;
             }
-            long productId = Vb.val(handlingField(fields, 1));
+            long productId = NumberUtils.parseLong(handlingField(fields, 1));
             if (!isPostItProduct(productId)) {
                 return;
             }
@@ -1983,8 +1982,8 @@ public final class Handling {
             if (rowText.isEmpty() || fields.length < 3) {
                 return;
             }
-            long boxProductId = Vb.val(handlingField(fields, 1));
-            long openedProductId = Vb.val(handlingField(fields, 2));
+            long boxProductId = NumberUtils.parseLong(handlingField(fields, 1));
+            long openedProductId = NumberUtils.parseLong(handlingField(fields, 2));
             String openedSign = handlingField(fields, 3);
             if (boxProductId <= 0L || openedProductId <= 0L) {
                 return;
@@ -1999,7 +1998,7 @@ public final class Handling {
                 + openedProductId + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0) + "','"
                 + Functions.Proc_10_11_80A9C0(openedSign, 0, 0) + "','"
                 + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0) + "',UNIX_TIMESTAMP())", 0, 0);
-            long openedProductType = Vb.val(DataManager.Proc_8_12_806C30(openedProductId, 0, 0));
+            long openedProductType = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(openedProductId, 0, 0));
             String responseClass = "i";
             if (openedProductType == 2L) {
                 responseClass = "s";
@@ -2037,14 +2036,14 @@ public final class Handling {
             if (rowText.isEmpty() || fields.length < 3) {
                 return;
             }
-            long productId = Vb.val(handlingField(fields, 1));
+            long productId = NumberUtils.parseLong(handlingField(fields, 1));
             if (productId <= 0L) {
                 return;
             }
-            long currentState = Vb.val(handlingField(fields, 2));
+            long currentState = NumberUtils.parseLong(handlingField(fields, 2));
             long stateCount = Licence.Proc_9_0_806F70(productId, 5, 0);
             if (stateCount <= 0L) {
-                stateCount = Vb.val(DataManager.Proc_8_12_806C30(productId, 10, 0));
+                stateCount = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 10, 0));
             }
             if (stateCount <= 0L) {
                 stateCount = 1L;
@@ -2079,8 +2078,8 @@ public final class Handling {
             String socketRows = MySQL.Proc_5_2_6D4690("SELECT users.id_socket FROM rooms_rights,users WHERE rooms_rights.id_room='"
                 + roomId + "' AND users.id=rooms_rights.id_user AND users.id_socket IS NOT NULL", 0, 0);
             MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_rights WHERE id_room='" + roomId + "'", 0, 0);
-            for (String row : Vb.cStr(socketRows).split("\r", -1)) {
-                int targetSocketIndex = (int) Vb.val(row);
+            for (String row : StringUtils.text(socketRows).split("\r", -1)) {
+                int targetSocketIndex = (int) NumberUtils.parseLong(row);
                 if (targetSocketIndex > 0) {
                     Proc_6_244_801E80(targetSocketIndex, "@k", 0);
                 }
@@ -2094,7 +2093,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "@W");
-            long requestFlag = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long requestFlag = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             if (requestFlag == 0L && !requestPayload.isEmpty()) {
                 requestFlag = readWireLong(requestPayload, new LongRef(1));
             }
@@ -2134,7 +2133,7 @@ public final class Handling {
             if (furnitureId <= 0L) {
                 return;
             }
-            long productId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id_room='"
+            long productId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id_room='"
                 + roomId + "' AND id='" + furnitureId + "' LIMIT 1", 0, 0));
             if (productId <= 0L) {
                 return;
@@ -2150,13 +2149,13 @@ public final class Handling {
             if (productParts.length < 2) {
                 return;
             }
-            long creditValue = Vb.val(productParts[1]);
+            long creditValue = NumberUtils.parseLong(productParts[1]);
             if (creditValue <= 0L) {
                 return;
             }
             String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
             MySQL.Proc_5_0_6D3CD0("UPDATE users SET credits=credits+" + creditValue + " WHERE id='" + escapedUserId + "'", 0, 0);
-            long updatedCredits = Vb.val(MySQL.Proc_5_2_6D4690("SELECT credits FROM users WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0));
+            long updatedCredits = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT credits FROM users WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0));
             Proc_6_244_801E80(socketIndex, "@F" + updatedCredits + ".0" + '\2', 0);
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
             MySQL.Proc_5_0_6D3CD0("DELETE FROM furnitures WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
@@ -2217,7 +2216,7 @@ public final class Handling {
             if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
                 return;
             }
-            String targetUserId = String.valueOf(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
+            String targetUserId = String.valueOf(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
                 + targetName + "' LIMIT 1", 0, 0)));
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return;
@@ -2247,7 +2246,7 @@ public final class Handling {
             if (targetSocketIndex <= 0) {
                 return "";
             }
-            long respectAmount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT respect_amount FROM users WHERE id='"
+            long respectAmount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT respect_amount FROM users WHERE id='"
                 + Functions.Proc_10_11_80A9C0(giverUserId, 0, 0) + "' LIMIT 1", 0, 0));
             if (respectAmount <= 0L) {
                 return "";
@@ -2258,9 +2257,9 @@ public final class Handling {
                 + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "'", 0, 0);
             Proc_6_205_7D9780(socketIndex, 3);
             Proc_6_205_7D9780(targetSocketIndex, 2);
-            long respectReceived = Vb.val(MySQL.Proc_5_2_6D4690("SELECT respect_received FROM users WHERE id='"
+            long respectReceived = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT respect_received FROM users WHERE id='"
                 + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' LIMIT 1", 0, 0));
-            String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(targetUserId), null, "Fx")
+            String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(targetUserId), null, "Fx")
                 + Crypto.Proc_3_0_6D2AF0(respectReceived, null, "");
             Proc_6_247_8027E0(socketIndex, payload, 0);
             return payload;
@@ -2316,7 +2315,7 @@ public final class Handling {
                 return;
             }
             String[] fields = roomRow.split("\t", -1);
-            long modelId = Vb.val(handlingField(fields, 4));
+            long modelId = NumberUtils.parseLong(handlingField(fields, 4));
             String modelPayload = normalizeRoomModelMap(handlingField(fields, 9));
             Proc_6_244_801E80(socketIndex, "Bf" + "/client.php" + '\2', 0);
             Proc_6_244_801E80(socketIndex, "AE" + roomId + '\2' + "H", 0);
@@ -2359,19 +2358,19 @@ public final class Handling {
                 return;
             }
             String[] fields = roomRow.split("\t", -1);
-            long modelId = Vb.val(handlingField(fields, 4));
+            long modelId = NumberUtils.parseLong(handlingField(fields, 4));
             String floorPattern = handlingField(fields, 5);
             String wallpaperPattern = handlingField(fields, 6);
             String landscapePattern = handlingField(fields, 7);
-            long roomRate = Vb.val(handlingField(fields, 8));
+            long roomRate = NumberUtils.parseLong(handlingField(fields, 8));
             if (roomRate < 0L) {
                 roomRate = 0L;
             }
             String modelPayload = normalizeRoomModelMap(handlingField(fields, 9));
-            String ownerUserId = String.valueOf((long) Vb.val(handlingField(fields, 2)));
-            long disableWalls = Vb.val(handlingField(fields, 14));
-            long thicknessFloor = Vb.val(handlingField(fields, 21));
-            long thicknessWallpaper = Vb.val(handlingField(fields, 22));
+            String ownerUserId = String.valueOf((long) NumberUtils.parseLong(handlingField(fields, 2)));
+            long disableWalls = NumberUtils.parseLong(handlingField(fields, 14));
+            long thicknessFloor = NumberUtils.parseLong(handlingField(fields, 21));
+            long thicknessWallpaper = NumberUtils.parseLong(handlingField(fields, 22));
             boolean hasControl = handlingUserHasRoomRight(userId, roomId)
                 || handlingUserHasPermission(userId, "fuse_any_room_controller");
             boolean hasVoted = !MySQL.Proc_5_2_6D4690("SELECT id_user FROM rooms_rates WHERE id_user='"
@@ -2386,7 +2385,7 @@ public final class Handling {
             if (hasControl) {
                 Proc_6_244_801E80(socketIndex, "@j", 0);
             }
-            if (ownerUserId.equals(String.valueOf((long) Vb.val(userId)))) {
+            if (ownerUserId.equals(String.valueOf((long) NumberUtils.parseLong(userId)))) {
                 Proc_6_244_801E80(socketIndex, "@o", 0);
             }
             if (!modelPayload.isEmpty()) {
@@ -2421,7 +2420,7 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
-            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             if (roomId <= 0L) {
                 roomId = handlingCurrentRoomId(socketIndex, userId);
             }
@@ -2437,12 +2436,12 @@ public final class Handling {
             }
             String[] fields = rowText.split("\t", -1);
             long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
-            long positionX = Vb.val(handlingField(fields, 5));
-            long positionY = Vb.val(handlingField(fields, 6));
+            long positionX = NumberUtils.parseLong(handlingField(fields, 5));
+            long positionY = NumberUtils.parseLong(handlingField(fields, 6));
             String positionZ = "0.0";
             long directionValue = 0L;
             String entryPayload = Proc_6_41_712730(
-                Vb.val(handlingField(fields, 0)),
+                NumberUtils.parseLong(handlingField(fields, 0)),
                 handlingField(fields, 1),
                 handlingField(fields, 2),
                 handlingField(fields, 3),
@@ -2464,7 +2463,7 @@ public final class Handling {
     public static void Proc_6_81_730010(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             if (roomId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId)) {
@@ -2474,7 +2473,7 @@ public final class Handling {
             if (socketIndex <= 0 || roomId <= 0L) {
                 return;
             }
-            long roomSlot = Vb.val(MySQL.Proc_5_2_6D4690("SELECT rooms.id_slot FROM rooms WHERE rooms.id='"
+            long roomSlot = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT rooms.id_slot FROM rooms WHERE rooms.id='"
                 + roomId + "' LIMIT 1", 0, 0));
             StringBuilder occupantPayload = new StringBuilder();
             StringBuilder statusPayload = new StringBuilder();
@@ -2488,15 +2487,15 @@ public final class Handling {
             for (String row : rowText.split("\r", -1)) {
                 if (!row.trim().isEmpty()) {
                     String[] fields = row.split("\t", -1);
-                    long roomUserIndex = Vb.val(handlingField(fields, 0));
-                    long occupantUserId = Vb.val(handlingField(fields, 1));
+                    long roomUserIndex = NumberUtils.parseLong(handlingField(fields, 0));
+                    long occupantUserId = NumberUtils.parseLong(handlingField(fields, 1));
                     String genderText = handlingField(fields, 5).toUpperCase();
                     genderText = genderText.isEmpty() ? "M" : genderText.substring(0, 1);
                     if (!"M".equals(genderText) && !"F".equals(genderText)) {
                         genderText = "M";
                     }
-                    long positionX = Vb.val(handlingField(fields, 6));
-                    long positionY = Vb.val(handlingField(fields, 7));
+                    long positionX = NumberUtils.parseLong(handlingField(fields, 6));
+                    long positionY = NumberUtils.parseLong(handlingField(fields, 7));
                     if (roomSlot > 0L) {
                         MovementPosition movementPosition = movementPosition(Licence.representedRooms().movementPosition(roomSlot, roomUserIndex));
                         if (movementPosition.found) {
@@ -2518,7 +2517,7 @@ public final class Handling {
             if (roomSlot > 0L) {
                 String botEntities = representedBotEntitiesForRoom(roomSlot, 0);
                 for (String botRow : botEntities.split("\r", -1)) {
-                    long botEntityId = Vb.val(botRow);
+                    long botEntityId = NumberUtils.parseLong(botRow);
                     if (botEntityId > 0L) {
                         String botName = representedBotRecordField(botEntityId, 2);
                         String botFigure = representedBotRecordField(botEntityId, 10);
@@ -2552,7 +2551,7 @@ public final class Handling {
     public static void Proc_6_82_731070(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             if (roomId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId)) {
@@ -2567,11 +2566,11 @@ public final class Handling {
                 + "' AND logs_visitedrooms.timestamp_left IS NULL AND users_effects.id_user=logs_visitedrooms.id_user "
                 + "AND users_effects.timestamp_expire IS NOT NULL AND users_effects.timestamp_expire>UNIX_TIMESTAMP() "
                 + "ORDER BY logs_visitedrooms.timestamp_enter ASC LIMIT 250", 0, 0);
-            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            for (String row : StringUtils.text(rowText).split("\r", -1)) {
                 if (!row.trim().isEmpty()) {
                     String[] fields = row.split("\t", -1);
-                    long roomUserIndex = Vb.val(handlingField(fields, 0));
-                    long effectId = Vb.val(handlingField(fields, 1));
+                    long roomUserIndex = NumberUtils.parseLong(handlingField(fields, 0));
+                    long effectId = NumberUtils.parseLong(handlingField(fields, 1));
                     if (roomUserIndex > 0L && effectId > 0L) {
                         String effectPayload = Crypto.Proc_3_0_6D2AF0(effectId, null,
                             Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Ge"));
@@ -2590,16 +2589,16 @@ public final class Handling {
             long modelId = 0L;
             if (args != null && args.length >= 2) {
                 socketIndex = handlingSocketIndex(args);
-                modelId = Vb.val(args[1]);
+                modelId = NumberUtils.parseLong(args[1]);
             } else if (args != null && args.length >= 1) {
-                modelId = Vb.val(args[0]);
+                modelId = NumberUtils.parseLong(args[0]);
             }
             if (modelId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId)) {
                     long roomId = handlingCurrentRoomId(socketIndex, userId);
                     if (roomId > 0L) {
-                        modelId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_model FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+                        modelId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_model FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
                     }
                 }
             }
@@ -2610,23 +2609,23 @@ public final class Handling {
                 + "action,action_rotation,action_height FROM models_furnitures WHERE id_model='" + modelId + "' LIMIT 500", 0, 0);
             long itemCount = 0L;
             StringBuilder itemPayload = new StringBuilder();
-            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            for (String row : StringUtils.text(rowText).split("\r", -1)) {
                 String trimmedRow = row.trim();
                 if (!trimmedRow.isEmpty()) {
                     String[] fields = trimmedRow.split("\t", -1);
-                    long productId = Vb.val(handlingField(fields, 0));
-                    long sourceId = Vb.val(handlingField(fields, 1));
+                    long productId = NumberUtils.parseLong(handlingField(fields, 0));
+                    long sourceId = NumberUtils.parseLong(handlingField(fields, 1));
                     if (sourceId <= 0L) {
                         sourceId = itemCount + 1L;
                     }
                     if (productId <= 0L) {
                         productId = sourceId;
                     }
-                    long positionX = Vb.val(handlingField(fields, 3));
-                    long positionY = Vb.val(handlingField(fields, 4));
-                    long positionZ = Vb.val(handlingField(fields, 5));
+                    long positionX = NumberUtils.parseLong(handlingField(fields, 3));
+                    long positionY = NumberUtils.parseLong(handlingField(fields, 4));
+                    long positionZ = NumberUtils.parseLong(handlingField(fields, 5));
                     String itemData = handlingField(fields, 6);
-                    long rotation = Vb.val(handlingField(fields, 7));
+                    long rotation = NumberUtils.parseLong(handlingField(fields, 7));
                     itemPayload.append(Proc_6_161_7B2EE0(sourceId, positionX, positionY, rotation, positionZ, "", itemData, 0, productId));
                     itemCount++;
                 }
@@ -2645,7 +2644,7 @@ public final class Handling {
         String payload = "Di" + Licence.wiredSettings().statePayload();
         try {
             int socketIndex = args != null && args.length >= 1 ? handlingSocketIndex(args) : 0;
-            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             if (roomId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId)) {
@@ -2675,7 +2674,7 @@ public final class Handling {
     public static String Proc_6_85_73A8E0(Object... args) {
         try {
             int socketIndex = args != null && args.length >= 1 ? handlingSocketIndex(args) : 0;
-            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             if (roomId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId)) {
@@ -2689,15 +2688,15 @@ public final class Handling {
                 + roomId + "' AND id_owner IS NULL AND position_wall IS NOT NULL LIMIT 100", 0, 0);
             long itemCount = 0L;
             StringBuilder itemPayload = new StringBuilder();
-            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            for (String row : StringUtils.text(rowText).split("\r", -1)) {
                 String trimmedRow = row.trim();
                 if (!trimmedRow.isEmpty()) {
                     String[] fields = trimmedRow.split("\t", -1);
-                    long furnitureId = Vb.val(handlingField(fields, 0));
-                    long productId = Vb.val(handlingField(fields, 1));
+                    long furnitureId = NumberUtils.parseLong(handlingField(fields, 0));
+                    long productId = NumberUtils.parseLong(handlingField(fields, 1));
                     String wallPosition = handlingField(fields, 2);
                     String signText = handlingField(fields, 3);
-                    long secondaryValue = Vb.val(handlingField(fields, 4));
+                    long secondaryValue = NumberUtils.parseLong(handlingField(fields, 4));
                     if (furnitureId > 0L && productId > 0L && !wallPosition.isEmpty()) {
                         itemPayload.append(Proc_6_156_7972B0(furnitureId, productId, wallPosition, signText, secondaryValue));
                         itemCount++;
@@ -2724,7 +2723,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long furnitureId = readWireLong(requestPayload, offset);
             if (furnitureId <= 0L) {
-                furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             if (socketIndex <= 0 || furnitureId <= 0L) {
                 return "";
@@ -2742,7 +2741,7 @@ public final class Handling {
             if (rowText.isEmpty()) {
                 return "";
             }
-            long productId = Vb.val(handlingField(rowText.split("\t", -1), 0));
+            long productId = NumberUtils.parseLong(handlingField(rowText.split("\t", -1), 0));
             if (productId <= 0L) {
                 return "";
             }
@@ -2753,7 +2752,7 @@ public final class Handling {
             }
             String[] packageFields = packageRow.split("\t", -1);
             String packageType = handlingField(packageFields, 1).toLowerCase();
-            long containedPetId = Vb.val(handlingField(packageFields, 2));
+            long containedPetId = NumberUtils.parseLong(handlingField(packageFields, 2));
             if (!"packages_pets".equals(packageType) || containedPetId <= 0L) {
                 return "";
             }
@@ -2763,13 +2762,13 @@ public final class Handling {
                 return "";
             }
             String[] petFields = petRow.split("\t", -1);
-            long petType = Vb.val(handlingField(petFields, 0));
-            long petRace = Vb.val(handlingField(petFields, 1));
+            long petType = NumberUtils.parseLong(handlingField(petFields, 0));
+            long petRace = NumberUtils.parseLong(handlingField(petFields, 1));
             String petColor = handlingField(petFields, 2);
             String payload = Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ly");
             payload = Crypto.Proc_3_0_6D2AF0(petType, null, payload);
             payload = Crypto.Proc_3_0_6D2AF0(petRace, null, payload);
-            payload = Crypto.Proc_3_0_6D2AF0(Vb.val(petColor), null, payload) + petColor + '\2';
+            payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(petColor), null, payload) + petColor + '\2';
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -2784,7 +2783,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long furnitureId = readWireLong(requestPayload, offset);
             if (furnitureId <= 0L) {
-                furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             String petName = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
             if (petName.isEmpty()) {
@@ -2813,8 +2812,8 @@ public final class Handling {
                 return "";
             }
             String[] fields = rowText.split("\t", -1);
-            long productId = Vb.val(handlingField(fields, 0));
-            String ownerId = String.valueOf((long) Vb.val(handlingField(fields, 1)));
+            long productId = NumberUtils.parseLong(handlingField(fields, 0));
+            String ownerId = String.valueOf((long) NumberUtils.parseLong(handlingField(fields, 1)));
             if (productId <= 0L || !ownerId.equals(userId)
                 && !handlingUserOwnsRoom(userId, roomId)
                 && !handlingUserHasRoomRight(userId, roomId)) {
@@ -2827,7 +2826,7 @@ public final class Handling {
             }
             String[] packageFields = packageRow.split("\t", -1);
             String packageType = handlingField(packageFields, 1).toLowerCase();
-            long containedPetId = Vb.val(handlingField(packageFields, 2));
+            long containedPetId = NumberUtils.parseLong(handlingField(packageFields, 2));
             if (!"packages_pets".equals(packageType) || containedPetId <= 0L) {
                 return "";
             }
@@ -2837,14 +2836,14 @@ public final class Handling {
                 return "";
             }
             String[] petFields = petRow.split("\t", -1);
-            String petFigure = String.valueOf((long) Vb.val(handlingField(petFields, 0))) + ' '
-                + String.valueOf((long) Vb.val(handlingField(petFields, 1))) + ' '
+            String petFigure = String.valueOf((long) NumberUtils.parseLong(handlingField(petFields, 0))) + ' '
+                + String.valueOf((long) NumberUtils.parseLong(handlingField(petFields, 1))) + ' '
                 + handlingField(petFields, 2);
             String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
             MySQL.Proc_5_0_6D3CD0("INSERT INTO bots(id_user,figure,name,id_handle) VALUES('" + escapedUserId
                 + "','" + Functions.Proc_10_11_80A9C0(petFigure.toLowerCase(), 0, 0) + "','"
                 + Functions.Proc_10_11_80A9C0(petName, 0, 0) + "','3')", 0, 0);
-            long botId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM bots WHERE id_user='" + escapedUserId
+            long botId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM bots WHERE id_user='" + escapedUserId
                 + "' AND id_handle='3' ORDER BY id DESC LIMIT 1", 0, 0));
             if (botId <= 0L) {
                 return "";
@@ -2953,12 +2952,12 @@ public final class Handling {
             if (sourceRoomUserIndex <= 0L) {
                 return;
             }
-            int targetSocketIndex = args != null && args.length >= 2 ? (int) Vb.val(args[1]) : 0;
+            int targetSocketIndex = args != null && args.length >= 2 ? (int) NumberUtils.parseLong(args[1]) : 0;
             if (targetSocketIndex <= 0) {
                 targetSocketIndex = representedInteractionPartner(socketIndex);
             }
             long interactionState = args != null && args.length >= 3
-                ? Vb.val(args[2])
+                ? NumberUtils.parseLong(args[2])
                 : representedInteractionState(socketIndex);
             if (targetSocketIndex <= 0) {
                 return;
@@ -3009,9 +3008,9 @@ public final class Handling {
                 return "";
             }
             String[] fields = rowText.split("\t", -1);
-            long productId = Vb.val(handlingField(fields, 1));
+            long productId = NumberUtils.parseLong(handlingField(fields, 1));
             String signText = handlingField(fields, 2);
-            long secondaryValue = Vb.val(handlingField(fields, 3));
+            long secondaryValue = NumberUtils.parseLong(handlingField(fields, 3));
             if (productId <= 0L) {
                 return "";
             }
@@ -3080,7 +3079,7 @@ public final class Handling {
             String requestPayload = handlingRequestPayload(args, "AG");
             long requestedRoomUserIndex = readWireLong(requestPayload, new LongRef(1));
             if (requestedRoomUserIndex <= 0L) {
-                requestedRoomUserIndex = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                requestedRoomUserIndex = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             if (requestedRoomUserIndex <= 0L) {
                 return;
@@ -3107,9 +3106,9 @@ public final class Handling {
                 return;
             }
             String[] targetFields = targetRow.split("\t", -1);
-            long targetRoomUserIndex = Vb.val(handlingField(targetFields, 0));
-            String targetUserId = String.valueOf(Vb.val(handlingField(targetFields, 1)));
-            int targetSocketIndex = (int) Vb.val(handlingField(targetFields, 2));
+            long targetRoomUserIndex = NumberUtils.parseLong(handlingField(targetFields, 0));
+            String targetUserId = String.valueOf(NumberUtils.parseLong(handlingField(targetFields, 1)));
+            int targetSocketIndex = (int) NumberUtils.parseLong(handlingField(targetFields, 2));
             if (targetRoomUserIndex <= 0L || targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return;
             }
@@ -3120,10 +3119,10 @@ public final class Handling {
                 return;
             }
             storeRepresentedInteractionPair(socketIndex, targetSocketIndex, 1L);
-            String callerPayload = Crypto.Proc_3_0_6D2AF0(Vb.val(targetUserId), null,
-                Crypto.Proc_3_0_6D2AF0(Vb.val(callerUserId), null, "Ah"));
-            String targetPayload = Crypto.Proc_3_0_6D2AF0(Vb.val(callerUserId), null,
-                Crypto.Proc_3_0_6D2AF0(Vb.val(targetUserId), null, "Ah"));
+            String callerPayload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(targetUserId), null,
+                Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(callerUserId), null, "Ah"));
+            String targetPayload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(callerUserId), null,
+                Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(targetUserId), null, "Ah"));
             Proc_6_244_801E80(socketIndex, callerPayload, 0);
             Proc_6_244_801E80(targetSocketIndex, targetPayload, 0);
         } catch (Exception ignored) {
@@ -3145,7 +3144,7 @@ public final class Handling {
             if (sourceRoomUserIndex <= 0L) {
                 return;
             }
-            int targetSocketIndex = args != null && args.length >= 2 ? (int) Vb.val(args[1]) : 0;
+            int targetSocketIndex = args != null && args.length >= 2 ? (int) NumberUtils.parseLong(args[1]) : 0;
             if (targetSocketIndex <= 0) {
                 targetSocketIndex = representedInteractionPartner(socketIndex);
             }
@@ -3188,7 +3187,7 @@ public final class Handling {
             if (rowText.isEmpty()) {
                 return "";
             }
-            long productId = Vb.val(handlingField(rowText.split("\t", -1), 3));
+            long productId = NumberUtils.parseLong(handlingField(rowText.split("\t", -1), 3));
             String productAction = DataManager.Proc_8_12_806C30(productId, 17, 0);
             return "habbowheel".equals(productAction) ? String.valueOf(furnitureId) : "";
         } catch (Exception ignored) {
@@ -3228,11 +3227,11 @@ public final class Handling {
                 if (!row.isEmpty()) {
                     String[] fields = row.split("\t", -1);
                     if (fields.length >= 5) {
-                        long lightLevel = Vb.val(handlingField(fields, 0));
-                        long presetId = Vb.val(handlingField(fields, 1));
-                        long backgroundId = Vb.val(handlingField(fields, 2));
+                        long lightLevel = NumberUtils.parseLong(handlingField(fields, 0));
+                        long presetId = NumberUtils.parseLong(handlingField(fields, 1));
+                        long backgroundId = NumberUtils.parseLong(handlingField(fields, 2));
                         String colourText = handlingField(fields, 3);
-                        long stateId = Vb.val(handlingField(fields, 4));
+                        long stateId = NumberUtils.parseLong(handlingField(fields, 4));
                         if (stateId == 2L || currentPresetId == 0L) {
                             currentPresetId = presetId;
                         }
@@ -3281,14 +3280,14 @@ public final class Handling {
             if (fields.length < 7) {
                 return 0L;
             }
-            long lightLevel = Vb.val(handlingField(fields, 0));
-            long presetId = Vb.val(handlingField(fields, 1));
-            long backgroundId = Vb.val(handlingField(fields, 2));
+            long lightLevel = NumberUtils.parseLong(handlingField(fields, 0));
+            long presetId = NumberUtils.parseLong(handlingField(fields, 1));
+            long backgroundId = NumberUtils.parseLong(handlingField(fields, 2));
             String colourText = handlingField(fields, 3);
-            long productId = Vb.val(handlingField(fields, 4));
+            long productId = NumberUtils.parseLong(handlingField(fields, 4));
             String wallPosition = handlingField(fields, 5);
             String currentSign = handlingField(fields, 6);
-            long currentState = currentSign.isEmpty() ? 0L : Vb.val(currentSign.substring(0, 1));
+            long currentState = currentSign.isEmpty() ? 0L : NumberUtils.parseLong(currentSign.substring(0, 1));
             if (currentState <= 0L) {
                 currentState = 2L;
             }
@@ -3345,7 +3344,7 @@ public final class Handling {
                 + dimmerFurnitureId + "' LIMIT 1", 0, 0);
             String[] fields = rowText.split("\t", -1);
             if (fields.length >= 2) {
-                long productId = Vb.val(handlingField(fields, 0));
+                long productId = NumberUtils.parseLong(handlingField(fields, 0));
                 String wallPosition = handlingField(fields, 1);
                 Proc_6_247_8027E0(socketIndex, "AU" + dimmerFurnitureId + '\2'
                     + Crypto.Proc_3_0_6D2AF0(productId, null, "") + wallPosition + '\2' + signText + '\2', 0);
@@ -3368,15 +3367,15 @@ public final class Handling {
                 + "FROM users_effects WHERE id_user='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
                 + "' GROUP BY users_effects.id_effect LIMIT 50", 0, 0);
             StringBuilder effectsPayload = new StringBuilder();
-            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            for (String row : StringUtils.text(rowText).split("\r", -1)) {
                 if (!row.isEmpty()) {
                     String[] fields = row.split("\t", -1);
                     if (fields.length >= 5) {
-                        long effectId = Vb.val(handlingField(fields, 0));
-                        long rentSeconds = Vb.val(handlingField(fields, 1));
-                        long effectCount = Vb.val(handlingField(fields, 2));
-                        long expireTimestamp = Vb.val(handlingField(fields, 3));
-                        long currentTimestamp = Vb.val(handlingField(fields, 4));
+                        long effectId = NumberUtils.parseLong(handlingField(fields, 0));
+                        long rentSeconds = NumberUtils.parseLong(handlingField(fields, 1));
+                        long effectCount = NumberUtils.parseLong(handlingField(fields, 2));
+                        long expireTimestamp = NumberUtils.parseLong(handlingField(fields, 3));
+                        long currentTimestamp = NumberUtils.parseLong(handlingField(fields, 4));
                         if (effectId > 0L) {
                             effectsPayload.append(Crypto.Proc_3_0_6D2AF0(effectId, null, ""));
                             effectsPayload.append(Crypto.Proc_3_0_6D2AF0(rentSeconds, null, ""));
@@ -3404,7 +3403,7 @@ public final class Handling {
             if (requestPayload.length() >= 3) {
                 requestPayload = requestPayload.substring(2);
             }
-            long effectId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long effectId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             if (effectId <= 0L) {
                 effectId = readWireLong(requestPayload, new LongRef(1));
             }
@@ -3422,8 +3421,8 @@ public final class Handling {
             if (fields.length < 2) {
                 return 0L;
             }
-            long effectRowId = Vb.val(handlingField(fields, 0));
-            long rentSeconds = Vb.val(handlingField(fields, 1));
+            long effectRowId = NumberUtils.parseLong(handlingField(fields, 0));
+            long rentSeconds = NumberUtils.parseLong(handlingField(fields, 1));
             if (effectRowId <= 0L || rentSeconds <= 0L) {
                 return 0L;
             }
@@ -3448,12 +3447,12 @@ public final class Handling {
                 + "AND users_effects.timestamp_expire<UNIX_TIMESTAMP() AND users.id=users_effects.id_user "
                 + "AND users.id_socket IS NOT NULL LIMIT 500";
             String rowText = MySQL.Proc_5_2_6D4690(queryText, 1, 0);
-            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            for (String row : StringUtils.text(rowText).split("\r", -1)) {
                 if (!row.isEmpty()) {
                     String[] fields = row.split("\t", -1);
                     if (fields.length >= 3) {
-                        long effectId = Vb.val(handlingField(fields, 0));
-                        int socketIndex = (int) Vb.val(handlingField(fields, 1));
+                        long effectId = NumberUtils.parseLong(handlingField(fields, 0));
+                        int socketIndex = (int) NumberUtils.parseLong(handlingField(fields, 1));
                         if (socketIndex > 0 && effectId > 0L) {
                             Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(socketIndex, null, "Ge") + "H", 0);
                             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(effectId, null, "GO"), 0);
@@ -3474,8 +3473,8 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
-            long maxOwnedRooms = Vb.val(Functions.Proc_10_0_809570("com.server.socket.game.rooms.own.max", 0, 0));
-            long ownedRoomCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM rooms WHERE id_owner='"
+            long maxOwnedRooms = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.rooms.own.max", 0, 0));
+            long ownedRoomCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM rooms WHERE id_owner='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0));
             String payload = Crypto.Proc_3_0_6D2AF0(maxOwnedRooms, null, "H@");
             payload = Crypto.Proc_3_0_6D2AF0(ownedRoomCount, null, payload);
@@ -3493,8 +3492,8 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
-            long maxOwnedRooms = Vb.val(Functions.Proc_10_0_809570("com.server.socket.game.rooms.own.max", 0, 0));
-            long ownedRoomCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM rooms WHERE id_owner='"
+            long maxOwnedRooms = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.rooms.own.max", 0, 0));
+            long ownedRoomCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM rooms WHERE id_owner='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0));
             if (maxOwnedRooms > 0L && ownedRoomCount >= maxOwnedRooms) {
                 return;
@@ -3508,8 +3507,8 @@ public final class Handling {
             String modelRow = MySQL.Proc_5_2_6D4690("SELECT id,visitors_max FROM models WHERE create_min_level_hc <= '"
                 + handlingUserHcLevel(userId) + "' AND type='0' AND name='" + modelName + "' LIMIT 1", 0, 0);
             String[] modelFields = modelRow.split("\t", -1);
-            long modelId = Vb.val(handlingField(modelFields, 0));
-            long visitorsMax = Vb.val(handlingField(modelFields, 1));
+            long modelId = NumberUtils.parseLong(handlingField(modelFields, 0));
+            long visitorsMax = NumberUtils.parseLong(handlingField(modelFields, 1));
             if (modelId <= 0L) {
                 return;
             }
@@ -3520,7 +3519,7 @@ public final class Handling {
             MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms(id_owner,name,visitors_max,id_model,timestamp_created) VALUES('"
                 + escapedUserId + "','" + Functions.Proc_10_11_80A9C0(roomName, 0, 0) + "','" + visitorsMax
                 + "','" + modelId + "',UNIX_TIMESTAMP())", 0, 0);
-            long roomId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM rooms", 0, 0));
+            long roomId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM rooms", 0, 0));
             if (roomId <= 0L) {
                 return;
             }
@@ -3535,7 +3534,7 @@ public final class Handling {
     public static void Proc_6_106_74B750(Object... args) {
         try {
             if (args != null && args.length >= 1) {
-                Files.deleteIfExists(Path.of(Vb.cStr(args[0])));
+                Files.deleteIfExists(Path.of(StringUtils.text(args[0])));
             }
         } catch (Exception ignored) {
             // VB6 source suppresses file delete failures.
@@ -3557,18 +3556,18 @@ public final class Handling {
             if (ownerUserId.isEmpty()) {
                 return;
             }
-            long currentPicked = Vb.val(MySQL.Proc_5_2_6D4690(
+            long currentPicked = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690(
                 "SELECT is_staff_picked FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
             long newPicked = currentPicked == 0L ? 1L : 0L;
-            long categoryId = Vb.val(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.category.id.default", 0, 0));
+            long categoryId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.category.id.default", 0, 0));
             if (categoryId <= 0L) {
                 categoryId = 1L;
             }
             MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_official WHERE id_parent='" + categoryId
                 + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
             if (newPicked != 0L) {
-                long styleId = Vb.val(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.style.default", 0, 0));
-                long iconId = Vb.val(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.category.icon.default", 0, 0));
+                long styleId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.style.default", 0, 0));
+                long iconId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.category.icon.default", 0, 0));
                 MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms_official(id_parent,id_room,id_style,id_type,icon) VALUES('"
                     + categoryId + "','" + roomId + "','" + styleId + "','2','" + iconId + "')", 0, 0);
                 MySQL.Proc_5_0_6D3CD0("UPDATE users SET amount_staffpicked=amount_staffpicked+1 WHERE id='"
@@ -3588,7 +3587,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
-            long maxFavorites = Vb.val(Functions.Proc_10_0_809570("com.server.socket.game.rooms.favourites.max", 30, 0));
+            long maxFavorites = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.rooms.favourites.max", 30, 0));
             if (maxFavorites <= 0L) {
                 maxFavorites = 30L;
             }
@@ -3596,9 +3595,9 @@ public final class Handling {
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT " + maxFavorites, 0, 0);
             StringBuilder roomIds = new StringBuilder();
             long roomCount = 0L;
-            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            for (String row : StringUtils.text(rowText).split("\r", -1)) {
                 if (!row.isEmpty()) {
-                    roomIds.append(Crypto.Proc_3_0_6D2AF0(Vb.val(row), null, ""));
+                    roomIds.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(row), null, ""));
                     roomCount++;
                 }
             }
@@ -3615,7 +3614,7 @@ public final class Handling {
             String requestPayload = handlingRequestPayload(args, "@T");
             long roomId = readWireLong(requestPayload, new LongRef(1));
             if (roomId <= 0L) {
-                roomId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                roomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             String userId = handlingUserIdFromSocket(socketIndex);
             MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_favourites WHERE id_room='" + roomId + "' AND id_user='"
@@ -3632,7 +3631,7 @@ public final class Handling {
             String requestPayload = handlingRequestPayload(args, "@S");
             long roomId = readWireLong(requestPayload, new LongRef(1));
             if (roomId <= 0L) {
-                roomId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                roomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             String userId = handlingUserIdFromSocket(socketIndex);
             MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms_favourites(id_user,id_room,timestamp) VALUES('"
@@ -3646,8 +3645,8 @@ public final class Handling {
     public static void Proc_6_111_74DF70(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            long rankIndex = args != null && args.length >= 4 ? Vb.val(args[3]) : 0L;
-            long hcLevel = args != null && args.length >= 5 ? Vb.val(args[4]) : 0L;
+            long rankIndex = args != null && args.length >= 4 ? NumberUtils.parseLong(args[3]) : 0L;
+            long hcLevel = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
             if (rankIndex < 0L) {
                 rankIndex = 0L;
             }
@@ -3672,8 +3671,8 @@ public final class Handling {
             if (args == null || args.length < 2) {
                 return "";
             }
-            String eventQueryTail = Vb.cStr(args[0]);
-            String roomQueryTail = Vb.cStr(args[1]);
+            String eventQueryTail = StringUtils.text(args[0]);
+            String roomQueryTail = StringUtils.text(args[1]);
             String eventRows = "";
             String roomRows = "";
             if (!eventQueryTail.isEmpty()) {
@@ -3701,7 +3700,7 @@ public final class Handling {
             if (args == null || args.length == 0) {
                 return "";
             }
-            String queryTail = Vb.cStr(args[0]);
+            String queryTail = StringUtils.text(args[0]);
             if (queryTail.isEmpty()) {
                 return Crypto.Proc_3_0_6D2AF0(0, null, "");
             }
@@ -3854,10 +3853,10 @@ public final class Handling {
                 + "AND users.id=rooms.id_owner GROUP BY 2) as a GROUP BY get_two ORDER BY 1 DESC LIMIT " + limitValue;
             String rowText = MySQL.Proc_5_2_6D4690(queryText, 0, 0);
             StringBuilder payload = new StringBuilder();
-            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+            for (String row : StringUtils.text(rowText).split("\r", -1)) {
                 if (!row.isEmpty()) {
                     String[] fields = row.split("\t", -1);
-                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 0)), null, ""));
+                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 0)), null, ""));
                     payload.append(navigatorField(fields, 1)).append('\2');
                 }
             }
@@ -3929,7 +3928,7 @@ public final class Handling {
             long catalogProductId = readWireLong(requestPayload, offset);
             String signText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 1, 1);
             if (catalogProductId <= 0L) {
-                catalogProductId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                catalogProductId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             if (signText.isEmpty()) {
                 signText = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 1, 1);
@@ -3946,12 +3945,12 @@ public final class Handling {
                 return "";
             }
             String[] catalogFields = catalogRow.split("\t", -1);
-            long productId = Vb.val(handlingField(catalogFields, 2));
+            long productId = NumberUtils.parseLong(handlingField(catalogFields, 2));
             String typeSecondary = handlingField(catalogFields, 4).toLowerCase();
-            long creditPrice = Vb.val(handlingField(catalogFields, 7));
-            long activityPrice = Vb.val(handlingField(catalogFields, 8));
-            long activityType = Vb.val(handlingField(catalogFields, 9));
-            long minClubLevel = Vb.val(handlingField(catalogFields, 11));
+            long creditPrice = NumberUtils.parseLong(handlingField(catalogFields, 7));
+            long activityPrice = NumberUtils.parseLong(handlingField(catalogFields, 8));
+            long activityType = NumberUtils.parseLong(handlingField(catalogFields, 9));
+            long minClubLevel = NumberUtils.parseLong(handlingField(catalogFields, 11));
             if (productId <= 0L) {
                 return "";
             }
@@ -3965,9 +3964,9 @@ public final class Handling {
                 return "";
             }
             String[] userFields = userRow.split("\t", -1);
-            long userCredits = Vb.val(handlingField(userFields, 0));
-            long userActivityPoints = Vb.val(handlingField(userFields, 1));
-            long userClubLevel = Vb.val(handlingField(userFields, 2));
+            long userCredits = NumberUtils.parseLong(handlingField(userFields, 0));
+            long userActivityPoints = NumberUtils.parseLong(handlingField(userFields, 1));
+            long userClubLevel = NumberUtils.parseLong(handlingField(userFields, 2));
             if (minClubLevel > 0L && userClubLevel < minClubLevel) {
                 Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(3, null, ""), 0);
                 return "";
@@ -3980,7 +3979,7 @@ public final class Handling {
                 Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(2, null, ""), 0);
                 return "";
             }
-            long grantedFurnitureId = Vb.val(Proc_6_129_7583C0(socketIndex, catalogProductId, signText));
+            long grantedFurnitureId = NumberUtils.parseLong(Proc_6_129_7583C0(socketIndex, catalogProductId, signText));
             if (grantedFurnitureId <= 0L) {
                 return "";
             }
@@ -3997,7 +3996,7 @@ public final class Handling {
             }
             String itemClass = "i";
             if (!"products_deals".equals(typeSecondary)
-                && Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 8L) {
+                && NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 8L) {
                 itemClass = "I";
             }
             String purchasePayload = Crypto.Proc_3_0_6D2AF0(catalogProductId, null, "AC");
@@ -4018,8 +4017,8 @@ public final class Handling {
     public static String Proc_6_129_7583C0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            long catalogProductId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
-            String signText = args != null && args.length >= 3 ? Vb.cStr(args[2]) : "";
+            long catalogProductId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
+            String signText = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
             if (socketIndex <= 0 || catalogProductId <= 0L) {
                 return "";
             }
@@ -4028,7 +4027,7 @@ public final class Handling {
                 return "";
             }
             String[] catalogFields = catalogRow.split("\t", -1);
-            long productId = Vb.val(handlingField(catalogFields, 2));
+            long productId = NumberUtils.parseLong(handlingField(catalogFields, 2));
             String typeSecondary = handlingField(catalogFields, 4).toLowerCase();
             if (productId <= 0L) {
                 return "";
@@ -4049,7 +4048,7 @@ public final class Handling {
                 String[] dealItems = dealRow.replace(',', ';').split(";", -1);
                 productIds = new long[dealItems.length];
                 for (String dealItem : dealItems) {
-                    long dealProductId = Vb.val(dealItem);
+                    long dealProductId = NumberUtils.parseLong(dealItem);
                     if (dealProductId > 0L) {
                         productIds[itemCount++] = dealProductId;
                     }
@@ -4063,7 +4062,7 @@ public final class Handling {
             }
             long firstFurnitureId = 0L;
             for (int index = 0; index < itemCount; index++) {
-                long furnitureId = index < grantedIds.length ? Vb.val(grantedIds[index]) : 0L;
+                long furnitureId = index < grantedIds.length ? NumberUtils.parseLong(grantedIds[index]) : 0L;
                 long itemProductId = productIds[index];
                 if (furnitureId > 0L && itemProductId > 0L) {
                     if (firstFurnitureId == 0L) {
@@ -4073,7 +4072,7 @@ public final class Handling {
                     if (itemData.isEmpty()) {
                         itemData = DataManager.Proc_8_12_806C30(itemProductId, 4, 0);
                     }
-                    long productType = Vb.val(DataManager.Proc_8_12_806C30(itemProductId, 0, 0));
+                    long productType = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(itemProductId, 0, 0));
                     Proc_6_244_801E80(socketIndex, "Ab" + Proc_6_138_7678A0(furnitureId, itemProductId, itemData, 0)
                         + '\2', 0);
                     if ("TROPHY_VAR".equalsIgnoreCase(DataManager.Proc_8_12_806C30(itemProductId, 4, 0))) {
@@ -4085,7 +4084,7 @@ public final class Handling {
                     }
                     if (productType == 8L) {
                         Proc_6_244_801E80(socketIndex, "GM" + Crypto.Proc_3_0_6D2AF0(furnitureId, null, "")
-                            + Crypto.Proc_3_0_6D2AF0(Vb.val(DataManager.Proc_8_12_806C30(itemProductId, 20, 0)), null, ""), 0);
+                            + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(DataManager.Proc_8_12_806C30(itemProductId, 20, 0)), null, ""), 0);
                     }
                 }
             }
@@ -4099,11 +4098,11 @@ public final class Handling {
     public static String Proc_6_133_760400(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            long catalogProductId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
-            String signText = args != null && args.length >= 3 ? Vb.cStr(args[2]) : "";
+            long catalogProductId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
+            String signText = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
             if (socketIndex <= 0 || catalogProductId <= 0L) {
-                catalogProductId = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
-                signText = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
+                catalogProductId = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
+                signText = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
                 socketIndex = 0;
             }
             String userId = socketIndex > 0 ? handlingUserIdFromSocket(socketIndex) : "";
@@ -4115,9 +4114,9 @@ public final class Handling {
                 return "";
             }
             String[] catalogFields = catalogRow.split("\t", -1);
-            long productId = Vb.val(handlingField(catalogFields, 2));
+            long productId = NumberUtils.parseLong(handlingField(catalogFields, 2));
             String typeSecondary = handlingField(catalogFields, 4).toLowerCase();
-            long amount = Vb.val(handlingField(catalogFields, 5));
+            long amount = NumberUtils.parseLong(handlingField(catalogFields, 5));
             if (amount <= 0L) {
                 amount = 1L;
             }
@@ -4133,7 +4132,7 @@ public final class Handling {
                     dealRow = dealFields[1];
                 }
                 for (String dealItem : dealRow.replace(',', ';').split(";", -1)) {
-                    long dealProductId = Vb.val(dealItem);
+                    long dealProductId = NumberUtils.parseLong(dealItem);
                     if (dealProductId > 0L) {
                         String defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(dealProductId, 4, 0), 0, 0);
                         if (defaultSign.isEmpty()) {
@@ -4155,8 +4154,8 @@ public final class Handling {
                 }
                 if (!containsClubRow.isEmpty()) {
                     String[] containsClubFields = containsClubRow.split("\t", -1);
-                    long hcMonths = Vb.val(handlingField(containsClubFields, 0));
-                    long hcLevel = Vb.val(handlingField(containsClubFields, 1));
+                    long hcMonths = NumberUtils.parseLong(handlingField(containsClubFields, 0));
+                    long hcLevel = NumberUtils.parseLong(handlingField(containsClubFields, 1));
                     if (hcLevel <= 0L) {
                         hcLevel = 1L;
                     }
@@ -4173,7 +4172,7 @@ public final class Handling {
                     if (!badgeId.equals(existingBadge)) {
                         MySQL.Proc_5_0_6D3CD0("INSERT INTO users_badges(id_user,id_slot,id_badge) VALUES('"
                             + escapedUserId + "','0','" + Functions.Proc_10_11_80A9C0(badgeId, 0, 0) + "')", 0, 0);
-                        long badgeRowId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users_badges WHERE id_user='"
+                        long badgeRowId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users_badges WHERE id_user='"
                             + escapedUserId + "' AND id_badge='" + Functions.Proc_10_11_80A9C0(badgeId, 0, 0)
                             + "' ORDER BY id DESC LIMIT 1", 0, 0));
                         Proc_6_195_7D38D0(userId, 0, 0);
@@ -4204,9 +4203,9 @@ public final class Handling {
             String newestIds = MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_owner='"
                 + escapedUserId + "' ORDER BY id DESC LIMIT " + grantedCount, 0, 0);
             String grantedIds = newestIds.replace('\r', ',');
-            long firstGrantedId = Vb.val(grantedIds);
+            long firstGrantedId = NumberUtils.parseLong(grantedIds);
             if (!"products_deals".equals(typeSecondary)
-                && Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 9L && firstGrantedId > 0L) {
+                && NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 9L && firstGrantedId > 0L) {
                 MySQL.Proc_5_0_6D3CD0("INSERT INTO furnitures_dimmerpresets(id_furni,id_preset,id_state) VALUES('"
                     + firstGrantedId + "','1','2'),('" + firstGrantedId + "','2','1'),('"
                     + firstGrantedId + "','3','1')", 0, 0);
@@ -4238,7 +4237,7 @@ public final class Handling {
             if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            long catalogProductId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM catalog_products WHERE sprite='"
+            long catalogProductId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM catalog_products WHERE sprite='"
                 + Functions.Proc_10_11_80A9C0(requestedSprite, 0, 0) + "' LIMIT 1", 0, 0));
             if (catalogProductId <= 0L) {
                 return "";
@@ -4256,11 +4255,11 @@ public final class Handling {
                 return "";
             }
             String[] userFields = rowText.split("\t", -1);
-            long hcLevel = Vb.val(handlingField(userFields, 0));
-            long hcDays = Vb.val(handlingField(userFields, 1));
-            long vipDays = Vb.val(handlingField(userFields, 2));
-            long presentsAvailable = Vb.val(handlingField(userFields, 3));
-            long daysSinceStart = Vb.val(handlingField(userFields, 4));
+            long hcLevel = NumberUtils.parseLong(handlingField(userFields, 0));
+            long hcDays = NumberUtils.parseLong(handlingField(userFields, 1));
+            long vipDays = NumberUtils.parseLong(handlingField(userFields, 2));
+            long presentsAvailable = NumberUtils.parseLong(handlingField(userFields, 3));
+            long daysSinceStart = NumberUtils.parseLong(handlingField(userFields, 4));
             long activeDays = (hcLevel > 1L ? vipDays : hcDays) - daysSinceStart;
             if (activeDays < 0L) {
                 activeDays = 0L;
@@ -4273,9 +4272,9 @@ public final class Handling {
             MySQL.Proc_5_0_6D3CD0("INSERT INTO furnitures(id_product,id_ctlgproduct,id_owner,task_owner,task_time,position_r,sign) VALUES('"
                 + productId + "','" + catalogProductId + "','" + escapedUserId + "','" + escapedUserId
                 + "',UNIX_TIMESTAMP(),'0','" + Functions.Proc_10_11_80A9C0(itemData, 0, 0) + "')", 0, 0);
-            long insertedFurnitureId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_owner='"
+            long insertedFurnitureId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_owner='"
                 + escapedUserId + "' AND id_product='" + productId + "' ORDER BY id DESC LIMIT 1", 0, 0));
-            String itemClass = Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 9L ? "I" : "i";
+            String itemClass = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 9L ? "I" : "i";
             String responsePayload = Crypto.Proc_3_0_6D2AF0(productId, null, "AC")
                 + DataManager.Proc_8_12_806C30(productId, 24, 0) + '\2'
                 + "HHHI" + itemClass + '\2';
@@ -4301,11 +4300,11 @@ public final class Handling {
                 + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0) FROM users WHERE id='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
             String[] userFields = rowText.split("\t", -1);
-            long hcLevel = Vb.val(handlingField(userFields, 0));
-            long hcDays = Vb.val(handlingField(userFields, 1));
-            long vipDays = Vb.val(handlingField(userFields, 2));
-            long presentsAvailable = Vb.val(handlingField(userFields, 3));
-            long daysSinceStart = Vb.val(handlingField(userFields, 4));
+            long hcLevel = NumberUtils.parseLong(handlingField(userFields, 0));
+            long hcDays = NumberUtils.parseLong(handlingField(userFields, 1));
+            long vipDays = NumberUtils.parseLong(handlingField(userFields, 2));
+            long presentsAvailable = NumberUtils.parseLong(handlingField(userFields, 3));
+            long daysSinceStart = NumberUtils.parseLong(handlingField(userFields, 4));
             long activeDays = (hcLevel > 1L ? vipDays : hcDays) - daysSinceStart;
             if (activeDays < 0L) {
                 activeDays = 0L;
@@ -4347,7 +4346,7 @@ public final class Handling {
             long ribbonId = readWireLong(requestPayload, offset);
             long colorId = readWireLong(requestPayload, offset);
             if (catalogProductId <= 0L) {
-                catalogProductId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                catalogProductId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             if (recipientName.isEmpty()) {
                 recipientName = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 1, 1);
@@ -4364,22 +4363,22 @@ public final class Handling {
                 return "";
             }
             String[] catalogFields = catalogRow.split("\t", -1);
-            long productId = Vb.val(handlingField(catalogFields, 2));
-            long creditPrice = Vb.val(handlingField(catalogFields, 7));
-            long activityPrice = Vb.val(handlingField(catalogFields, 8));
-            long activityType = Vb.val(handlingField(catalogFields, 9));
-            long allowGifts = Vb.val(handlingField(catalogFields, 10));
-            long minClubLevel = Vb.val(handlingField(catalogFields, 11));
+            long productId = NumberUtils.parseLong(handlingField(catalogFields, 2));
+            long creditPrice = NumberUtils.parseLong(handlingField(catalogFields, 7));
+            long activityPrice = NumberUtils.parseLong(handlingField(catalogFields, 8));
+            long activityType = NumberUtils.parseLong(handlingField(catalogFields, 9));
+            long allowGifts = NumberUtils.parseLong(handlingField(catalogFields, 10));
+            long minClubLevel = NumberUtils.parseLong(handlingField(catalogFields, 11));
             if (productId <= 0L || allowGifts == 0L || expectedProductId > 0L && expectedProductId != productId) {
                 return "";
             }
             if (activityType < 0L || activityType > 4L) {
                 activityType = 0L;
             }
-            if (Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.enabled", 0, 0)) != 0L) {
-                long wrapPrice = Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.price", 0, 0));
+            if (NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.enabled", 0, 0)) != 0L) {
+                long wrapPrice = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.price", 0, 0));
                 if (wrapProductId <= 0L) {
-                    wrapProductId = Vb.val(MySQL.Proc_5_2_6D4690(
+                    wrapProductId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690(
                         "SELECT id FROM products WHERE sprite LIKE 'present_wrap%' ORDER BY id ASC LIMIT 1", 0, 0));
                 }
                 if (wrapProductId > 0L && !Licence.giftSettings().containsGiftWrapProduct(wrapProductId)) {
@@ -4394,9 +4393,9 @@ public final class Handling {
                 return "";
             }
             String[] userFields = userRow.split("\t", -1);
-            long userCredits = Vb.val(handlingField(userFields, 0));
-            long userActivityPoints = Vb.val(handlingField(userFields, 1));
-            long userClubLevel = Vb.val(handlingField(userFields, 2));
+            long userCredits = NumberUtils.parseLong(handlingField(userFields, 0));
+            long userActivityPoints = NumberUtils.parseLong(handlingField(userFields, 1));
+            long userClubLevel = NumberUtils.parseLong(handlingField(userFields, 2));
             if (minClubLevel > 0L && userClubLevel < minClubLevel) {
                 Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(3, null, ""), 0);
                 return "";
@@ -4409,12 +4408,12 @@ public final class Handling {
                 Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(2, null, ""), 0);
                 return "";
             }
-            String recipientUserId = String.valueOf(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
+            String recipientUserId = String.valueOf(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
                 + Functions.Proc_10_11_80A9C0(recipientName, 0, 0) + "' LIMIT 1", 0, 0)));
             if (recipientUserId.isEmpty() || "0".equals(recipientUserId)) {
                 recipientUserId = senderUserId;
             }
-            long grantedFurnitureId = Vb.val(Proc_6_133_760400(socketIndex, catalogProductId, giftMessage));
+            long grantedFurnitureId = NumberUtils.parseLong(Proc_6_133_760400(socketIndex, catalogProductId, giftMessage));
             if (grantedFurnitureId <= 0L) {
                 return "";
             }
@@ -4469,12 +4468,12 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "oV");
-            long itemId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long itemId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             if (itemId <= 0L) {
                 itemId = readWireLong(requestPayload, new LongRef(1));
             }
-            long itemType = Vb.val(Licence.Proc_9_1_8072B0(itemId, 9, 0));
-            long giftEnabled = itemType == 1L ? Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.enabled", 0, 0)) : 0L;
+            long itemType = NumberUtils.parseLong(Licence.Proc_9_1_8072B0(itemId, 9, 0));
+            long giftEnabled = itemType == 1L ? NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.enabled", 0, 0)) : 0L;
             String responsePayload = Crypto.Proc_3_0_6D2AF0(itemId, null, "In");
             responsePayload = Crypto.Proc_3_0_6D2AF0(giftEnabled, null, responsePayload) + '\2';
             Proc_6_244_801E80(socketIndex, responsePayload, 0);
@@ -4487,8 +4486,8 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String defaultPayload = "0" + Crypto.Proc_3_0_6D2AF0(
-                Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.enabled", 0, 0)), null, "Il");
-            long giftWrapPrice = Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.price", defaultPayload, 0));
+                NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.enabled", 0, 0)), null, "Il");
+            long giftWrapPrice = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.price", defaultPayload, 0));
             Proc_6_244_801E80(socketIndex,
                 Crypto.Proc_3_0_6D2AF0(giftWrapPrice, null, "") + Licence.giftSettings().giftWrapPayload(), 0);
         } catch (Exception ignored) {
@@ -4503,7 +4502,7 @@ public final class Handling {
             if (requestPayload.length() >= 3) {
                 requestPayload = requestPayload.substring(2);
             }
-            long pageId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long pageId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             if (pageId <= 0L) {
                 pageId = readWireLong(requestPayload, new LongRef(1));
             }
@@ -4541,11 +4540,11 @@ public final class Handling {
                 return;
             }
             String productSprite = handlingField(fields, 0);
-            long creditsValue = Vb.val(handlingField(fields, 1));
-            long shellsValue = Vb.val(handlingField(fields, 2));
+            long creditsValue = NumberUtils.parseLong(handlingField(fields, 1));
+            long shellsValue = NumberUtils.parseLong(handlingField(fields, 2));
             String rewardPayload = "";
             if (productSprite.length() > 2) {
-                long productId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_product FROM catalog_products WHERE sprite='"
+                long productId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_product FROM catalog_products WHERE sprite='"
                     + Functions.Proc_10_11_80A9C0(productSprite, 0, 0) + "' LIMIT 1", 0, 0));
                 if (productId != 0L) {
                     rewardPayload = DataManager.Proc_8_12_806C30(productId, 13, 0) + '\2'
@@ -4590,10 +4589,10 @@ public final class Handling {
                 return;
             }
             String[] fields = rowText.split("\t", -1);
-            long productId = Vb.val(navigatorField(fields, 1));
+            long productId = NumberUtils.parseLong(navigatorField(fields, 1));
             String decoValue = navigatorField(fields, 2);
             String[] productFields = Licence.Proc_9_3_807930(productId, 0, 0).split("\t", -1);
-            long productType = Vb.val(navigatorField(productFields, 1));
+            long productType = NumberUtils.parseLong(navigatorField(productFields, 1));
             String decoName;
             String decoColumn;
             if (productType == 2L) {
@@ -4700,8 +4699,8 @@ public final class Handling {
                 return;
             }
             String[] fields = rowText.split("\t", -1);
-            long productId = Vb.val(handlingField(fields, 0));
-            String ownerId = String.valueOf((long) Vb.val(handlingField(fields, 1)));
+            long productId = NumberUtils.parseLong(handlingField(fields, 0));
+            String ownerId = String.valueOf((long) NumberUtils.parseLong(handlingField(fields, 1)));
             if (productId <= 0L || ownerId.isEmpty() || "0".equals(ownerId)) {
                 return;
             }
@@ -4731,14 +4730,14 @@ public final class Handling {
             long roomId = 0L;
             long furnitureId = 0L;
             if (args != null && args.length >= 3) {
-                socketIndex = (int) Vb.val(args[0]);
-                roomId = Vb.val(args[1]);
-                furnitureId = Vb.val(args[2]);
+                socketIndex = (int) NumberUtils.parseLong(args[0]);
+                roomId = NumberUtils.parseLong(args[1]);
+                furnitureId = NumberUtils.parseLong(args[2]);
             } else if (args != null && args.length >= 2) {
-                roomId = Vb.val(args[0]);
-                furnitureId = Vb.val(args[1]);
+                roomId = NumberUtils.parseLong(args[0]);
+                furnitureId = NumberUtils.parseLong(args[1]);
             } else if (args != null && args.length >= 1) {
-                furnitureId = Vb.val(args[0]);
+                furnitureId = NumberUtils.parseLong(args[0]);
             }
             if (roomId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
@@ -4772,27 +4771,27 @@ public final class Handling {
             long furnitureId = 0L;
             long productId = 0L;
             if (args != null && args.length >= 3) {
-                socketIndex = (int) Vb.val(args[0]);
-                furnitureId = Vb.val(args[1]);
-                productId = Vb.val(args[2]);
+                socketIndex = (int) NumberUtils.parseLong(args[0]);
+                furnitureId = NumberUtils.parseLong(args[1]);
+                productId = NumberUtils.parseLong(args[2]);
             } else if (args != null && args.length >= 2) {
-                furnitureId = Vb.val(args[0]);
-                productId = Vb.val(args[1]);
+                furnitureId = NumberUtils.parseLong(args[0]);
+                productId = NumberUtils.parseLong(args[1]);
             } else if (args != null && args.length >= 1) {
-                furnitureId = Vb.val(args[0]);
+                furnitureId = NumberUtils.parseLong(args[0]);
             }
             if (furnitureId <= 0L) {
                 return;
             }
             if (productId <= 0L) {
-                productId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id='"
+                productId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id='"
                     + furnitureId + "' LIMIT 1", 0, 0));
             }
             String rowText = MySQL.Proc_5_2_6D4690("SELECT id_room FROM furnitures WHERE id='"
                 + furnitureId + "' LIMIT 1", 0, 0);
             long roomId = 0L;
             if (!rowText.isEmpty()) {
-                roomId = Vb.val(handlingField(rowText.split("\t", -1), 0));
+                roomId = NumberUtils.parseLong(handlingField(rowText.split("\t", -1), 0));
             }
             FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
             FurnitureCacheState state = removeFurnitureCacheMarker(
@@ -4822,12 +4821,12 @@ public final class Handling {
             long positionX;
             long positionY;
             if (args != null && args.length >= 3) {
-                roomId = Vb.val(args[0]);
-                positionX = Vb.val(args[1]);
-                positionY = Vb.val(args[2]);
+                roomId = NumberUtils.parseLong(args[0]);
+                positionX = NumberUtils.parseLong(args[1]);
+                positionY = NumberUtils.parseLong(args[2]);
             } else if (args != null && args.length >= 2) {
-                positionX = Vb.val(args[0]);
-                positionY = Vb.val(args[1]);
+                positionX = NumberUtils.parseLong(args[0]);
+                positionY = NumberUtils.parseLong(args[1]);
             } else {
                 return 0L;
             }
@@ -4845,9 +4844,9 @@ public final class Handling {
             for (String row : rowText.split("\r", -1)) {
                 if (!row.isEmpty()) {
                     String[] fields = row.split("\t", -1);
-                    long furnitureId = Vb.val(handlingField(fields, 0));
-                    long rowRoomId = roomId > 0L ? roomId : Vb.val(handlingField(fields, 1));
-                    long productId = Vb.val(handlingField(fields, 2));
+                    long furnitureId = NumberUtils.parseLong(handlingField(fields, 0));
+                    long rowRoomId = roomId > 0L ? roomId : NumberUtils.parseLong(handlingField(fields, 1));
+                    long productId = NumberUtils.parseLong(handlingField(fields, 2));
                     String stateText = handlingField(fields, 3);
                     if (furnitureId > 0L && rowRoomId > 0L && productId > 0L) {
                         String productAction = DataManager.Proc_8_12_806C30(productId, 7, 0).toLowerCase();
@@ -4857,7 +4856,7 @@ public final class Handling {
                         }
                         if (productAction.isEmpty() || productAction.contains("switch") || productAction.contains("click")
                             || productAction.contains("score") || productSprite.contains("score") || productSprite.contains("dice")) {
-                            long stateValue = Vb.val(stateText);
+                            long stateValue = NumberUtils.parseLong(stateText);
                             Proc_6_151_78AC20(rowRoomId, furnitureId, stateValue);
                             Proc_6_246_8024C0(rowRoomId, furnitureStatePayload(furnitureId, stateValue), 0);
                             refreshCount++;
@@ -4878,22 +4877,22 @@ public final class Handling {
                 return;
             }
             int socketIndex = handlingSocketIndex(args);
-            long productId = Vb.val(args[1]);
-            long furnitureId = Vb.val(args[2]);
+            long productId = NumberUtils.parseLong(args[1]);
+            long furnitureId = NumberUtils.parseLong(args[2]);
             if (socketIndex <= 0 || productId <= 0L || furnitureId <= 0L) {
                 return;
             }
             String[] productFields = Licence.Proc_9_3_807930(productId, 0, 0).split("\t", -1);
-            long hasCharge = Vb.val(navigatorField(productFields, 34));
+            long hasCharge = NumberUtils.parseLong(navigatorField(productFields, 34));
             if (hasCharge == 0L) {
                 return;
             }
-            long chargeSize = Vb.val(navigatorField(productFields, 34));
-            long chargePriceCredits = Vb.val(navigatorField(productFields, 35));
-            long chargePricePoints = Vb.val(navigatorField(productFields, 36));
-            long chargePointType = Vb.val(navigatorField(productFields, 37));
+            long chargeSize = NumberUtils.parseLong(navigatorField(productFields, 34));
+            long chargePriceCredits = NumberUtils.parseLong(navigatorField(productFields, 35));
+            long chargePricePoints = NumberUtils.parseLong(navigatorField(productFields, 36));
+            long chargePointType = NumberUtils.parseLong(navigatorField(productFields, 37));
             Path chargePath = Path.of(Functions.applicationPath, "cache", "items_charges", furnitureId + ".cache");
-            long currentCharges = Vb.val(Proc_6_239_7FC170(chargePath.toString(), 0, 0));
+            long currentCharges = NumberUtils.parseLong(Proc_6_239_7FC170(chargePath.toString(), 0, 0));
             if (currentCharges < 1L) {
                 String payload = Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Iu")
                     + Crypto.Proc_3_0_6D2AF0(currentCharges, null, "")
@@ -4935,12 +4934,12 @@ public final class Handling {
                 return;
             }
             String[] fields = rowText.split("\t", -1);
-            long productId = Vb.val(handlingField(fields, 0));
+            long productId = NumberUtils.parseLong(handlingField(fields, 0));
             String signText = handlingField(fields, 1);
             if (productId <= 0L) {
                 return;
             }
-            long productType = Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0));
+            long productType = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0));
             if (productType == 9L) {
                 return;
             }
@@ -4948,8 +4947,8 @@ public final class Handling {
             if (productSprite.isEmpty()) {
                 productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0).toLowerCase();
             }
-            long currentState = Vb.val(signText);
-            long maxState = Vb.val(DataManager.Proc_8_12_806C30(productId, 12, 0));
+            long currentState = NumberUtils.parseLong(signText);
+            long maxState = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 12, 0));
             long nextState = nextFurnitureState(productSprite, currentState, maxState);
             MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + nextState + "',task_owner='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "',task_time=UNIX_TIMESTAMP() WHERE id='"
@@ -4957,7 +4956,7 @@ public final class Handling {
             Proc_6_151_78AC20(roomId, furnitureId, nextState);
             String payload = furnitureStatePayload(furnitureId, nextState);
             Proc_6_247_8027E0(socketIndex, payload, 0);
-            if (Vb.val(DataManager.Proc_8_12_806C30(productId, 34, 0)) != 0L) {
+            if (NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 34, 0)) != 0L) {
                 Proc_6_148_7756D0(socketIndex, productId, furnitureId);
             }
         } catch (Exception ignored) {
@@ -4975,7 +4974,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long furnitureId = readWireLong(requestPayload, offset);
             if (furnitureId <= 0L) {
-                furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             if (furnitureId <= 0L) {
                 return "";
@@ -4993,7 +4992,7 @@ public final class Handling {
             if (rowText.isEmpty()) {
                 return "";
             }
-            long productId = Vb.val(handlingField(rowText.split("\t", -1), 0));
+            long productId = NumberUtils.parseLong(handlingField(rowText.split("\t", -1), 0));
             if (productId <= 0L) {
                 return "";
             }
@@ -5002,7 +5001,7 @@ public final class Handling {
             if (!packageRow.isEmpty()) {
                 String[] packageFields = packageRow.split("\t", -1);
                 String packageType = handlingField(packageFields, 1).toLowerCase();
-                long containedId = Vb.val(handlingField(packageFields, 2));
+                long containedId = NumberUtils.parseLong(handlingField(packageFields, 2));
                 if ("packages_pets".equals(packageType) && containedId > 0L) {
                     return Proc_6_86_73B0D0(socketIndex, "FH", requestPayload);
                 } else if (!packageType.isEmpty()) {
@@ -5025,14 +5024,14 @@ public final class Handling {
             long furnitureId = 0L;
             long stateValue = 0L;
             if (args != null && args.length >= 3) {
-                roomId = Vb.val(args[0]);
-                furnitureId = Vb.val(args[1]);
-                stateValue = Vb.val(args[2]);
+                roomId = NumberUtils.parseLong(args[0]);
+                furnitureId = NumberUtils.parseLong(args[1]);
+                stateValue = NumberUtils.parseLong(args[2]);
             } else if (args != null && args.length >= 2) {
-                roomId = Vb.val(args[0]);
-                furnitureId = Vb.val(args[1]);
+                roomId = NumberUtils.parseLong(args[0]);
+                furnitureId = NumberUtils.parseLong(args[1]);
             } else if (args != null && args.length >= 1) {
-                furnitureId = Vb.val(args[0]);
+                furnitureId = NumberUtils.parseLong(args[0]);
             }
             if (roomId <= 0L || furnitureId <= 0L) {
                 return;
@@ -5066,8 +5065,8 @@ public final class Handling {
             if (args == null || args.length == 0) {
                 return "";
             }
-            long furnitureId = Vb.val(args[0]);
-            long productId = args.length >= 2 ? Vb.val(args[1]) : 0L;
+            long furnitureId = NumberUtils.parseLong(args[0]);
+            long productId = args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             if (furnitureId <= 0L) {
                 return "";
             }
@@ -5077,20 +5076,20 @@ public final class Handling {
                 return "";
             }
             String[] fields = rowText.split("\t", -1);
-            long roomId = Vb.val(handlingField(fields, 0));
+            long roomId = NumberUtils.parseLong(handlingField(fields, 0));
             if (productId <= 0L) {
-                productId = Vb.val(handlingField(fields, 1));
+                productId = NumberUtils.parseLong(handlingField(fields, 1));
             }
             String signText = handlingField(fields, 2);
             if (roomId <= 0L || productId <= 0L) {
                 return "";
             }
-            long productType = Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0));
+            long productType = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0));
             String productSprite = DataManager.Proc_8_12_806C30(productId, 17, 0);
             if (productSprite.isEmpty()) {
                 productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0);
             }
-            long stateValue = Vb.val(signText);
+            long stateValue = NumberUtils.parseLong(signText);
             String lowerSprite = productSprite.toLowerCase();
             if ((lowerSprite.startsWith("bb_score_") || lowerSprite.startsWith("es_score_")) && stateValue < 0L) {
                 stateValue = 0L;
@@ -5127,8 +5126,8 @@ public final class Handling {
                 return;
             }
             String[] fields = rowText.split("\t", -1);
-            long productId = Vb.val(handlingField(fields, 0));
-            String ownerId = String.valueOf((long) Vb.val(handlingField(fields, 1)));
+            long productId = NumberUtils.parseLong(handlingField(fields, 0));
+            String ownerId = String.valueOf((long) NumberUtils.parseLong(handlingField(fields, 1)));
             if (productId <= 0L) {
                 return;
             }
@@ -5166,7 +5165,7 @@ public final class Handling {
             if (socketIndex <= 0) {
                 return;
             }
-            String wallPayload = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
+            String wallPayload = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
             if (wallPayload.startsWith("rv")) {
                 wallPayload = wallPayload.substring(2);
             }
@@ -5179,16 +5178,16 @@ public final class Handling {
                     Object[] values = (Object[]) itemArg;
                     itemFields = new String[values.length];
                     for (int index = 0; index < values.length; index++) {
-                        itemFields[index] = Vb.cStr(values[index]);
+                        itemFields[index] = StringUtils.text(values[index]);
                     }
                 } else {
-                    itemFields = Vb.cStr(itemArg).split("\t", -1);
+                    itemFields = StringUtils.text(itemArg).split("\t", -1);
                 }
             }
-            long furnitureId = Vb.val(handlingField(itemFields, 1));
-            long productId = Vb.val(handlingField(itemFields, 0));
+            long furnitureId = NumberUtils.parseLong(handlingField(itemFields, 1));
+            long productId = NumberUtils.parseLong(handlingField(itemFields, 0));
             if (furnitureId <= 0L) {
-                furnitureId = Vb.val(Functions.Proc_10_6_809F10(wallPayload, 0, 0));
+                furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(wallPayload, 0, 0));
             }
             if (furnitureId <= 0L) {
                 return;
@@ -5209,9 +5208,9 @@ public final class Handling {
                 if (!itemRow.isEmpty()) {
                     itemFields = itemRow.split("\t", -1);
                 }
-                productId = Vb.val(handlingField(itemFields, 0));
+                productId = NumberUtils.parseLong(handlingField(itemFields, 0));
             }
-            if (productId <= 0L || Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0)) != 9L) {
+            if (productId <= 0L || NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) != 9L) {
                 return;
             }
             WallPlacement placement = new WallPlacement();
@@ -5226,7 +5225,7 @@ public final class Handling {
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room IS NULL LIMIT 1", 0, 0);
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ac"), 0);
             String payload = Proc_6_156_7972B0(furnitureId, productId, wallPosition,
-                handlingField(itemFields, 2), Vb.val(handlingField(itemFields, 3)));
+                handlingField(itemFields, 2), NumberUtils.parseLong(handlingField(itemFields, 3)));
             if (!payload.isEmpty()) {
                 Proc_6_247_8027E0(socketIndex, "AS" + payload, 0);
             }
@@ -5243,11 +5242,11 @@ public final class Handling {
             if (args == null || args.length < 3) {
                 return 0L;
             }
-            long furnitureId = Vb.val(args[0]);
-            long positionX = Vb.val(args[1]);
-            long positionY = Vb.val(args[2]);
-            long footprintX = args.length >= 4 ? Vb.val(args[3]) : 1L;
-            long footprintY = args.length >= 5 ? Vb.val(args[4]) : 1L;
+            long furnitureId = NumberUtils.parseLong(args[0]);
+            long positionX = NumberUtils.parseLong(args[1]);
+            long positionY = NumberUtils.parseLong(args[2]);
+            long footprintX = args.length >= 4 ? NumberUtils.parseLong(args[3]) : 1L;
+            long footprintY = args.length >= 5 ? NumberUtils.parseLong(args[4]) : 1L;
             if (footprintX <= 0L) {
                 footprintX = 1L;
             }
@@ -5258,7 +5257,7 @@ public final class Handling {
                 + furnitureId + "' LIMIT 1", 0, 0);
             long roomId;
             if (!rowText.isEmpty()) {
-                roomId = Vb.val(rowText);
+                roomId = NumberUtils.parseLong(rowText);
             } else {
                 roomId = furnitureId;
                 furnitureId = 0L;
@@ -5280,8 +5279,8 @@ public final class Handling {
                 modelMap = modelMap.substring(0, modelMap.length() - 1);
             }
             String[] mapRows = modelMap.split("\r", -1);
-            long allowWalkthrough = Vb.val(handlingField(fields, 1));
-            long roomSlot = Vb.val(handlingField(fields, 2));
+            long allowWalkthrough = NumberUtils.parseLong(handlingField(fields, 1));
+            long roomSlot = NumberUtils.parseLong(handlingField(fields, 2));
             for (long tileY = positionY; tileY <= positionY + footprintY - 1L; tileY++) {
                 if (tileY < 0L || tileY >= mapRows.length) {
                     return 0L;
@@ -5295,13 +5294,13 @@ public final class Handling {
                     if (mapCell.isEmpty() || "x".equals(mapCell)) {
                         return 0L;
                     }
-                    long occupiedCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures WHERE id_room='"
+                    long occupiedCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures WHERE id_room='"
                         + roomId + "' AND position_wall IS NULL AND position_x='" + tileX + "' AND position_y='"
                         + tileY + "' AND id<>'" + furnitureId + "' LIMIT 1", 0, 0));
                     if (occupiedCount > 0L) {
                         return 0L;
                     }
-                    occupiedCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM bots WHERE id_room='"
+                    occupiedCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM bots WHERE id_room='"
                         + roomId + "' AND position_x='" + tileX + "' AND position_y='" + tileY + "' LIMIT 1", 0, 0));
                     if (occupiedCount > 0L) {
                         return 0L;
@@ -5310,7 +5309,7 @@ public final class Handling {
                         String occupantText = MySQL.Proc_5_2_6D4690("SELECT id FROM logs_visitedrooms WHERE id_room='"
                             + roomId + "' AND timestamp_left IS NULL LIMIT 250", 0, 0);
                         for (String occupantRow : occupantText.split("\r", -1)) {
-                            long occupantRoomUserIndex = Vb.val(occupantRow);
+                            long occupantRoomUserIndex = NumberUtils.parseLong(occupantRow);
                             if (occupantRoomUserIndex > 0L) {
                                 MovementPosition movementPosition = movementPosition(
                                     Licence.representedRooms().movementPosition(roomSlot, occupantRoomUserIndex));
@@ -5346,8 +5345,8 @@ public final class Handling {
     public static String Proc_6_160_7A71A0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            long firstId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
-            long secondId = args != null && args.length >= 3 ? Vb.val(args[2]) : 0L;
+            long firstId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
+            long secondId = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
             long furnitureId = 0L;
             long productId = 0L;
             String rowText = "";
@@ -5377,16 +5376,16 @@ public final class Handling {
                 return "";
             }
             String[] fields = rowText.split("\t", -1);
-            long roomId = Vb.val(handlingField(fields, 0));
+            long roomId = NumberUtils.parseLong(handlingField(fields, 0));
             if (productId <= 0L) {
-                productId = Vb.val(handlingField(fields, 1));
+                productId = NumberUtils.parseLong(handlingField(fields, 1));
             }
             String signText = handlingField(fields, 2);
             if (roomId <= 0L || productId <= 0L) {
                 return "";
             }
             if (furnitureId <= 0L) {
-                furnitureId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_room='"
+                furnitureId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_room='"
                     + roomId + "' AND id_product='" + productId + "' ORDER BY id DESC LIMIT 1", 0, 0));
             }
             if (furnitureId <= 0L) {
@@ -5397,8 +5396,8 @@ public final class Handling {
                 productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0).toLowerCase();
             }
             if (productSprite.startsWith("bb_score_") || productSprite.startsWith("es_score_")) {
-                long stateValue = Vb.val(signText);
-                long maxState = Vb.val(DataManager.Proc_8_12_806C30(productId, 12, 0));
+                long stateValue = NumberUtils.parseLong(signText);
+                long maxState = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 12, 0));
                 if (maxState <= 0L) {
                     maxState = 99L;
                 }
@@ -5437,7 +5436,7 @@ public final class Handling {
     public static String Proc_6_163_7B3480(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            String packetPayload = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
+            String packetPayload = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
             String loginTicket = handlingLoginTicketFromPayload(packetPayload);
             if (loginTicket.isEmpty() || "NULL".equalsIgnoreCase(loginTicket)) {
                 if (socketIndex > 0) {
@@ -5461,29 +5460,29 @@ public final class Handling {
                 return "";
             }
             String[] fields = userRow.split("\t", -1);
-            String userId = String.valueOf((long) Vb.val(handlingField(fields, 0)));
+            String userId = String.valueOf((long) NumberUtils.parseLong(handlingField(fields, 0)));
             if (userId.isEmpty() || "0".equals(userId)) {
                 if (socketIndex > 0) {
                     Proc_6_243_7FFEB0(socketIndex, 0, 0);
                 }
                 return "";
             }
-            int oldSocketIndex = (int) Vb.val(handlingField(fields, 12));
+            int oldSocketIndex = (int) NumberUtils.parseLong(handlingField(fields, 12));
             if (oldSocketIndex > 0 && oldSocketIndex != socketIndex) {
                 Proc_6_243_7FFEB0(oldSocketIndex, 0, 0);
             }
             String userName = handlingField(fields, 1);
-            long rankIndex = Vb.val(handlingField(fields, 2));
-            long creditsValue = Vb.val(handlingField(fields, 7));
-            long homeRoomId = Vb.val(handlingField(fields, 14));
-            long updateAgeDays = Vb.val(handlingField(fields, 26));
-            long emailValidated = Vb.val(handlingField(fields, 41));
+            long rankIndex = NumberUtils.parseLong(handlingField(fields, 2));
+            long creditsValue = NumberUtils.parseLong(handlingField(fields, 7));
+            long homeRoomId = NumberUtils.parseLong(handlingField(fields, 14));
+            long updateAgeDays = NumberUtils.parseLong(handlingField(fields, 26));
+            long emailValidated = NumberUtils.parseLong(handlingField(fields, 41));
             long[] pointValues = new long[]{
-                Vb.val(handlingField(fields, 6)),
-                Vb.val(handlingField(fields, 35)),
-                Vb.val(handlingField(fields, 39)),
-                Vb.val(handlingField(fields, 45)),
-                Vb.val(handlingField(fields, 46))
+                NumberUtils.parseLong(handlingField(fields, 6)),
+                NumberUtils.parseLong(handlingField(fields, 35)),
+                NumberUtils.parseLong(handlingField(fields, 39)),
+                NumberUtils.parseLong(handlingField(fields, 45)),
+                NumberUtils.parseLong(handlingField(fields, 46))
             };
             String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
             MySQL.Proc_5_0_6D3CD0("UPDATE users SET login_ticket=null,id_socket = '" + socketIndex
@@ -5507,18 +5506,18 @@ public final class Handling {
                 Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(emailValidated, null, "DX"), 0);
             }
             Proc_6_244_801E80(socketIndex, "@a" + "com.server.socket.location" + '\2' + "invalid.location" + '\2', 0);
-            if (Vb.val(Functions.Proc_10_0_809570("com.client.motd.message.enabled", 0, 0)) != 0L) {
+            if (NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.motd.message.enabled", 0, 0)) != 0L) {
                 String motdMessage = Functions.Proc_10_0_809570("com.client.motd.message", "", 0).replace("\\n", "\n");
                 if (!motdMessage.isEmpty()) {
                     Proc_6_244_801E80(socketIndex, Console.Proc_2_4_6D28B0(motdMessage.length(), 0, 0)
                         + " " + motdMessage + '\2', 0);
                 }
             }
-            Proc_6_244_801E80(socketIndex, "Cd" + Crypto.Proc_3_0_6D2AF0(Vb.val(userId), null, "")
+            Proc_6_244_801E80(socketIndex, "Cd" + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(userId), null, "")
                 + Proc_6_195_7D38D0(userId, 0, 0), 0);
-            Proc_6_244_801E80(socketIndex, "E^" + Crypto.Proc_3_0_6D2AF0(Vb.val(userId), null, "")
+            Proc_6_244_801E80(socketIndex, "E^" + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(userId), null, "")
                 + Proc_6_196_7D3ED0(userId, 0, 0), 0);
-            long favouriteGroupId = Vb.val(handlingField(fields, 36));
+            long favouriteGroupId = NumberUtils.parseLong(handlingField(fields, 36));
             if (favouriteGroupId > 0L) {
                 String groupRow = MySQL.Proc_5_3_6D4CF0("SELECT group_name,group_description,id_badge,id_room FROM users_groups WHERE id='"
                     + favouriteGroupId + "' LIMIT 1", 0, 0);
@@ -5528,7 +5527,7 @@ public final class Handling {
                         + handlingField(groupFields, 0) + '\2'
                         + handlingField(groupFields, 1) + '\2'
                         + handlingField(groupFields, 2) + '\2'
-                        + Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(groupFields, 3)), null, "") + "H";
+                        + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(groupFields, 3)), null, "") + "H";
                     Proc_6_244_801E80(socketIndex, groupPayload, 0);
                 }
             }
@@ -5545,7 +5544,7 @@ public final class Handling {
     public static String Proc_6_165_7BE0B0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            int targetSocketIndex = args != null && args.length >= 2 ? (int) Vb.val(args[1]) : 0;
+            int targetSocketIndex = args != null && args.length >= 2 ? (int) NumberUtils.parseLong(args[1]) : 0;
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
@@ -5566,7 +5565,7 @@ public final class Handling {
                 for (String row : rowText.split("\r", -1)) {
                     if (!row.isEmpty()) {
                         String[] fields = row.split("\t", -1);
-                        targetSocketIndex = (int) Vb.val(handlingField(fields, 0));
+                        targetSocketIndex = (int) NumberUtils.parseLong(handlingField(fields, 0));
                         if (targetSocketIndex > 0 && Guardian.Proc_11_2_821390(targetSocketIndex, 0, 0) == 1L) {
                             Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
                         }
@@ -5699,7 +5698,7 @@ public final class Handling {
                     if (fields.length >= 7) {
                         String targetUserId = handlingField(fields, 0);
                         if (!targetUserId.equals(userId)) {
-                            long isOnline = Vb.val(handlingField(fields, 2)) > 0L ? 1L : 0L;
+                            long isOnline = NumberUtils.parseLong(handlingField(fields, 2)) > 0L ? 1L : 0L;
                             String resultPayload = messengerSearchResultPayload(
                                 targetUserId,
                                 handlingField(fields, 1),
@@ -5745,7 +5744,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
-                targetUserId = String.valueOf((long) Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0)));
+                targetUserId = String.valueOf((long) NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0)));
             }
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
@@ -5773,7 +5772,7 @@ public final class Handling {
                 + Functions.Proc_10_11_80A9C0("(Chat To:     " + handlingUserName(targetUserId) + ") -- " + messageText, 0, 0)
                 + "','3','" + socketIndex + "')", 0, 0);
             String filteredText = Proc_6_22_6E9300(messageText, 0, 0);
-            String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(userId), null, "BF") + filteredText + '\2';
+            String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(userId), null, "BF") + filteredText + '\2';
             Proc_6_244_801E80(targetSocketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -5799,7 +5798,7 @@ public final class Handling {
             if (targetName.isEmpty()) {
                 return "";
             }
-            String targetUserId = String.valueOf((long) Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
+            String targetUserId = String.valueOf((long) NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
                 + Functions.Proc_10_11_80A9C0(targetName, 0, 0) + "' LIMIT 1", 0, 0)));
             if (targetUserId.isEmpty() || "0".equals(targetUserId) || targetUserId.equals(userId)) {
                 String callerPayload = messengerRequestDeniedPayload();
@@ -5811,7 +5810,7 @@ public final class Handling {
                 + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "') OR (id_user='"
                 + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_friend='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "') LIMIT 1", 0, 0);
-            long acceptFriends = Vb.val(MySQL.Proc_5_2_6D4690("SELECT accept_friends FROM users WHERE id='"
+            long acceptFriends = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT accept_friends FROM users WHERE id='"
                 + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' LIMIT 1", 0, 0));
             if (!friendshipRow.isEmpty() || acceptFriends != 1L) {
                 String callerPayload = messengerRequestDeniedPayload();
@@ -5824,9 +5823,9 @@ public final class Handling {
             String userName = handlingUserName(userId);
             int targetSocketIndex = handlingSocketFromUserId(targetUserId);
             if (targetSocketIndex > 0) {
-                Proc_6_244_801E80(targetSocketIndex, messengerRequestNotifyPayload(Vb.val(userId), userName), 0);
+                Proc_6_244_801E80(targetSocketIndex, messengerRequestNotifyPayload(NumberUtils.parseLong(userId), userName), 0);
             }
-            String callerPayload = messengerRequestAcceptedCallerPayload(Vb.val(targetUserId));
+            String callerPayload = messengerRequestAcceptedCallerPayload(NumberUtils.parseLong(targetUserId));
             Proc_6_244_801E80(socketIndex, callerPayload, 0);
             return callerPayload;
         } catch (Exception ignored) {
@@ -5879,15 +5878,15 @@ public final class Handling {
                     String[] fields = row.split("\t", -1);
                     if (fields.length >= 7) {
                         String friendUserId = handlingField(fields, 0);
-                        int friendSocketIndex = (int) Vb.val(handlingField(fields, 2));
+                        int friendSocketIndex = (int) NumberUtils.parseLong(handlingField(fields, 2));
                         long friendOnline = friendSocketIndex > 0
                             && Guardian.Proc_11_2_821390(friendSocketIndex, 0, 0) == 1L ? 1L : 0L;
                         friendPayload.append(messengerFriendPayload(
-                            Vb.val(friendUserId),
+                            NumberUtils.parseLong(friendUserId),
                             handlingField(fields, 1),
                             handlingField(fields, 4),
                             handlingField(fields, 3),
-                            Vb.val(handlingField(fields, 5)),
+                            NumberUtils.parseLong(handlingField(fields, 5)),
                             friendOnline == 1L ? 2L : 0L,
                             friendOnline,
                             handlingField(fields, 6),
@@ -5960,7 +5959,7 @@ public final class Handling {
 
     public static long Proc_6_179_7C7790(Object... args) {
         try {
-            if (Vb.val(Functions.Proc_10_0_809570("com.client.rooms.bots.pets.enabled", "0", 0)) == 0L) {
+            if (NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.rooms.bots.pets.enabled", "0", 0)) == 0L) {
                 return 0L;
             }
             int socketIndex = handlingSocketIndex(args);
@@ -5981,11 +5980,11 @@ public final class Handling {
             if (roomId <= 0L) {
                 return 0L;
             }
-            long roomSlot = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            long roomSlot = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
             if (roomSlot <= 0L) {
                 return 0L;
             }
-            String positionZ = String.valueOf(Vb.val(MySQL.Proc_5_2_6D4690("SELECT heightmap FROM models,rooms WHERE rooms.id='"
+            String positionZ = String.valueOf(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT heightmap FROM models,rooms WHERE rooms.id='"
                 + roomId + "' AND models.id=rooms.id_model LIMIT 1", 0, 0)));
             String rowText = MySQL.Proc_5_2_6D4690("SELECT bots.id,bots.name,bots.motto,bots.speech,bots.responses,'"
                 + positionX + "','" + positionY + "','" + Functions.Proc_10_11_80A9C0(positionZ, 0, 0) + "','"
@@ -6019,7 +6018,7 @@ public final class Handling {
     public static long Proc_6_180_7C96F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            long botEntityId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            long botEntityId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             if (botEntityId <= 0L) {
                 return 0L;
             }
@@ -6033,7 +6032,7 @@ public final class Handling {
             Proc_6_247_8027E0(socketIndex, "@]" + botEntityId + '\2', 0);
             String petName = representedBotRecordField(botEntityId, 2);
             String petFigure = representedBotRecordField(botEntityId, 10).toLowerCase();
-            long scratches = Vb.val(MySQL.Proc_5_2_6D4690("SELECT scratches FROM bots_petdata WHERE id_bot='" + botId + "' LIMIT 1", 0, 0));
+            long scratches = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT scratches FROM bots_petdata WHERE id_bot='" + botId + "' LIMIT 1", 0, 0));
             String pickupPayload = petInventoryRowPayload(new String[]{String.valueOf(botId), petName, petFigure, String.valueOf(scratches)});
             if (!pickupPayload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, "I[" + pickupPayload, 0);
@@ -6051,7 +6050,7 @@ public final class Handling {
             if (args == null || args.length == 0) {
                 return 2L;
             }
-            return petNameValidationCode(Vb.cStr(args[0]));
+            return petNameValidationCode(StringUtils.text(args[0]));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 2L;
@@ -6129,9 +6128,9 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             long petLevel = 0L;
             if (args != null && args.length >= 2) {
-                petLevel = Vb.val(args[1]);
+                petLevel = NumberUtils.parseLong(args[1]);
             } else if (args != null && args.length >= 1) {
-                petLevel = Vb.val(args[0]);
+                petLevel = NumberUtils.parseLong(args[0]);
             }
             String payload = Licence.petSettings().commandListPayload(petLevel);
             if (socketIndex > 0) {
@@ -6156,7 +6155,7 @@ public final class Handling {
             long petLevel = 0L;
             String userId = handlingUserIdFromSocket(socketIndex);
             if (!userId.isEmpty() && !"0".equals(userId) && botId > 0L) {
-                petLevel = Vb.val(MySQL.Proc_5_2_6D4690("SELECT bots_petdata.id_level FROM bots,bots_petdata WHERE bots.id='"
+                petLevel = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT bots_petdata.id_level FROM bots,bots_petdata WHERE bots.id='"
                     + botId + "' AND bots.id_user='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
                     + "' AND bots_petdata.id_bot=bots.id LIMIT 1", 0, 0));
             }
@@ -6208,9 +6207,9 @@ public final class Handling {
             if (petFields.length < 5) {
                 return 0L;
             }
-            long petLevel = Vb.val(handlingField(petFields, 2));
-            long petEnergy = Vb.val(handlingField(petFields, 3));
-            long petNutrition = Vb.val(handlingField(petFields, 4));
+            long petLevel = NumberUtils.parseLong(handlingField(petFields, 2));
+            long petEnergy = NumberUtils.parseLong(handlingField(petFields, 3));
+            long petNutrition = NumberUtils.parseLong(handlingField(petFields, 4));
             PetCommandAction commandAction = petCommandAction(commandId, Licence.petSettings().commandRows());
             if (!commandAction.found || commandAction.requiredLevel > petLevel) {
                 return 0L;
@@ -6243,8 +6242,8 @@ public final class Handling {
             if (args == null || args.length == 0) {
                 return 0L;
             }
-            long botEntityId = Vb.val(args[0]);
-            long experienceDelta = args.length >= 2 ? Vb.val(args[1]) : 0L;
+            long botEntityId = NumberUtils.parseLong(args[0]);
+            long experienceDelta = args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             if (botEntityId <= 0L) {
                 return 0L;
             }
@@ -6268,12 +6267,12 @@ public final class Handling {
             }
             String petName = handlingField(fields, 0);
             String petFigure = handlingField(fields, 1);
-            long petLevel = Vb.val(handlingField(fields, 2));
-            long petExperience = Vb.val(handlingField(fields, 3));
-            long petEnergy = Vb.val(handlingField(fields, 4));
-            long petNutrition = Vb.val(handlingField(fields, 5));
-            long petScratches = Vb.val(handlingField(fields, 6));
-            long roomId = Vb.val(handlingField(fields, 7));
+            long petLevel = NumberUtils.parseLong(handlingField(fields, 2));
+            long petExperience = NumberUtils.parseLong(handlingField(fields, 3));
+            long petEnergy = NumberUtils.parseLong(handlingField(fields, 4));
+            long petNutrition = NumberUtils.parseLong(handlingField(fields, 5));
+            long petScratches = NumberUtils.parseLong(handlingField(fields, 6));
+            long roomId = NumberUtils.parseLong(handlingField(fields, 7));
             if (botEntityId <= 0L) {
                 botEntityId = botId;
             }
@@ -6330,7 +6329,7 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
-            long scratchAmount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT scratch_amount FROM users WHERE id='"
+            long scratchAmount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT scratch_amount FROM users WHERE id='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
             if (scratchAmount <= 0L) {
                 return 0L;
@@ -6344,14 +6343,14 @@ public final class Handling {
             if (fields.length < 4) {
                 return 0L;
             }
-            long scratches = Vb.val(handlingField(fields, 3)) + 1L;
+            long scratches = NumberUtils.parseLong(handlingField(fields, 3)) + 1L;
             MySQL.Proc_5_0_6D3CD0("UPDATE bots_petdata SET scratches='" + scratches + "' WHERE id_bot='" + botId + "'", 0, 0);
             MySQL.Proc_5_0_6D3CD0("UPDATE users SET scratch_amount=scratch_amount-1,scratch_given=scratch_given+1 WHERE id='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
             if (botEntityId <= 0L) {
                 botEntityId = botId;
             }
-            Proc_6_247_8027E0(socketIndex, petScratchPayload(botEntityId, Vb.val(userId), scratches,
+            Proc_6_247_8027E0(socketIndex, petScratchPayload(botEntityId, NumberUtils.parseLong(userId), scratches,
                 handlingField(fields, 1), handlingField(fields, 2)), 0);
             return scratches;
         } catch (Exception ignored) {
@@ -6365,13 +6364,13 @@ public final class Handling {
             if (args == null || args.length < 2) {
                 return 0L;
             }
-            long roomSlot = Vb.val(args[0]);
+            long roomSlot = NumberUtils.parseLong(args[0]);
             Object fieldSource = args[1];
             String[] botFields;
             if (fieldSource instanceof String[]) {
                 botFields = (String[]) fieldSource;
             } else {
-                botFields = Vb.cStr(fieldSource).split("\t", -1);
+                botFields = StringUtils.text(fieldSource).split("\t", -1);
             }
             return allocateRepresentedBot(roomSlot, botFields);
         } catch (Exception ignored) {
@@ -6390,24 +6389,24 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
-            long tutorialGuide = Vb.val(MySQL.Proc_5_2_6D4690("SELECT tutorial_guide FROM users WHERE id='"
+            long tutorialGuide = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT tutorial_guide FROM users WHERE id='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
             if (tutorialGuide == 0L) {
                 MySQL.Proc_5_0_6D3CD0("UPDATE users SET tutorial_guide='1' WHERE id='"
                     + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
             }
-            if (Vb.val(Functions.Proc_10_0_809570("com.client.rooms.bots.guide.enabled", "0", 0)) == 0L) {
+            if (NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.rooms.bots.guide.enabled", "0", 0)) == 0L) {
                 return 0L;
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
             if (roomId <= 0L) {
                 return 0L;
             }
-            long roomSlot = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            long roomSlot = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
             if (roomSlot <= 0L) {
                 return 0L;
             }
-            long guideBotId = Vb.val(Functions.Proc_10_0_809570("com.client.bot.guide.id", "0", 0));
+            long guideBotId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.bot.guide.id", "0", 0));
             if (guideBotId <= 0L || isRepresentedBotAllocated(roomSlot, guideBotId)) {
                 return 0L;
             }
@@ -6445,7 +6444,7 @@ public final class Handling {
             if (roomId <= 0L) {
                 return 0L;
             }
-            long roomSlot = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            long roomSlot = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
             if (roomSlot <= 0L) {
                 return 0L;
             }
@@ -6455,7 +6454,7 @@ public final class Handling {
                     entityList = String.valueOf(requestedEntityId);
                 }
             } else {
-                long guideBotId = Vb.val(Functions.Proc_10_0_809570("com.client.bot.guide.id", "0", 0));
+                long guideBotId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.bot.guide.id", "0", 0));
                 entityList = representedBotEntitiesForRoom(roomSlot, guideBotId);
             }
             if (entityList.isEmpty()) {
@@ -6463,7 +6462,7 @@ public final class Handling {
             }
             long removedCount = 0L;
             for (String entityIdText : entityList.split("\r", -1)) {
-                long botEntityId = Vb.val(entityIdText);
+                long botEntityId = NumberUtils.parseLong(entityIdText);
                 if (botEntityId > 0L) {
                     Proc_6_248_802B80(roomId, "@]" + botEntityId + '\2', 0);
                     removeRepresentedBotRecord(botEntityId);
@@ -6512,10 +6511,10 @@ public final class Handling {
                 return "";
             }
             String payload = representedRoomUserProfilePayload(
-                Vb.val(handlingField(fields, 0)),
+                NumberUtils.parseLong(handlingField(fields, 0)),
                 handlingField(fields, 1),
                 handlingField(fields, 2),
-                Vb.val(handlingField(fields, 3)),
+                NumberUtils.parseLong(handlingField(fields, 3)),
                 handlingField(fields, 4));
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
@@ -6540,7 +6539,7 @@ public final class Handling {
             if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
                 return "";
             }
-            int targetSocketIndex = (int) Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE id='"
+            int targetSocketIndex = (int) NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE id='"
                 + requestedUserId + "' LIMIT 1", 0, 0));
             if (targetSocketIndex <= 0 && handlingCurrentRoomId(socketIndex, callerUserId) <= 0L) {
                 return "";
@@ -6583,12 +6582,12 @@ public final class Handling {
                 return "";
             }
             String[] targetFields = targetRow.split("\t", -1);
-            long targetRoomUserIndex = Vb.val(handlingField(targetFields, 0));
-            String targetUserId = String.valueOf((long) Vb.val(handlingField(targetFields, 1)));
+            long targetRoomUserIndex = NumberUtils.parseLong(handlingField(targetFields, 0));
+            String targetUserId = String.valueOf((long) NumberUtils.parseLong(handlingField(targetFields, 1)));
             if (targetRoomUserIndex <= 0L || targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
             }
-            String targetBadgePayload = badgeDisplayPayload(Vb.val(targetUserId), Proc_6_195_7D38D0(targetUserId, 0, 0));
+            String targetBadgePayload = badgeDisplayPayload(NumberUtils.parseLong(targetUserId), Proc_6_195_7D38D0(targetUserId, 0, 0));
             Proc_6_244_801E80(socketIndex, targetBadgePayload, 0);
             if (callerRoomUserIndex > 0L && callerRoomUserIndex != targetRoomUserIndex) {
                 String callerStatusPayload = representedRoomUserStatusPayload(callerRoomUserIndex, 0L);
@@ -6622,7 +6621,7 @@ public final class Handling {
             String equippedPayload = Proc_6_195_7D38D0(userId, 0, 0);
             String payload = badgeInventoryPayload(inventoryRows, equippedPayload);
             Proc_6_244_801E80(socketIndex, payload, 0);
-            Proc_6_244_801E80(socketIndex, badgeDisplayPayload(Vb.val(userId), equippedPayload), 0);
+            Proc_6_244_801E80(socketIndex, badgeDisplayPayload(NumberUtils.parseLong(userId), equippedPayload), 0);
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6652,7 +6651,7 @@ public final class Handling {
                 }
             }
             String equippedPayload = Proc_6_195_7D38D0(userId, 0, 0);
-            String displayPayload = badgeDisplayPayload(Vb.val(userId), equippedPayload);
+            String displayPayload = badgeDisplayPayload(NumberUtils.parseLong(userId), equippedPayload);
             Proc_6_244_801E80(socketIndex, displayPayload, 0);
             if (handlingCurrentRoomId(socketIndex, userId) > 0L) {
                 Proc_6_247_8027E0(socketIndex, displayPayload, 0);
@@ -6667,8 +6666,8 @@ public final class Handling {
     public static String Proc_6_195_7D38D0(Object... args) {
         try {
             String userId = "";
-            if (args != null && args.length >= 1 && Vb.val(args[0]) > 0L) {
-                userId = String.valueOf((long) Vb.val(args[0]));
+            if (args != null && args.length >= 1 && NumberUtils.parseLong(args[0]) > 0L) {
+                userId = String.valueOf((long) NumberUtils.parseLong(args[0]));
             }
             if (userId.isEmpty() || "0".equals(userId)) {
                 int socketIndex = handlingSocketIndex(args);
@@ -6691,8 +6690,8 @@ public final class Handling {
     public static String Proc_6_196_7D3ED0(Object... args) {
         try {
             String userId = "";
-            if (args != null && args.length >= 1 && Vb.val(args[0]) > 0L) {
-                userId = String.valueOf((long) Vb.val(args[0]));
+            if (args != null && args.length >= 1 && NumberUtils.parseLong(args[0]) > 0L) {
+                userId = String.valueOf((long) NumberUtils.parseLong(args[0]));
             }
             if (userId.isEmpty() || "0".equals(userId)) {
                 int socketIndex = handlingSocketIndex(args);
@@ -6723,8 +6722,8 @@ public final class Handling {
             long lookX = readWireLong(requestPayload, offset);
             long lookY = readWireLong(requestPayload, offset);
             if (lookX == 0L && lookY == 0L) {
-                lookX = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
-                lookY = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                lookX = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                lookY = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             if (lookX < 0L || lookY < 0L) {
                 return "";
@@ -6763,8 +6762,8 @@ public final class Handling {
             long targetX = readWireLong(requestPayload, offset);
             long targetY = readWireLong(requestPayload, offset);
             if (targetX == 0L && targetY == 0L) {
-                targetX = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
-                targetY = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                targetX = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                targetY = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             if (targetX < 0L || targetY < 0L) {
                 return "";
@@ -6886,7 +6885,7 @@ public final class Handling {
                 if (!questionRow.isEmpty()) {
                     String[] questionFields = questionRow.split("\t", -1);
                     if (questionFields.length >= 3) {
-                        long questionId = Vb.val(handlingField(questionFields, 0));
+                        long questionId = NumberUtils.parseLong(handlingField(questionFields, 0));
                         String answerRows = MySQL.Proc_5_2_6D4690("SELECT id,id_question,caption FROM poll_answers WHERE id_question='"
                             + questionId + "' LIMIT 5", 0, 0);
                         answerRowsByQuestionId.put(questionId, answerRows);
@@ -6910,7 +6909,7 @@ public final class Handling {
             if (socketIndex <= 0) {
                 return "";
             }
-            long enabledValue = Vb.val(Functions.Proc_10_0_809570("com.client.catalog.recycler.enabled", 0, 0));
+            long enabledValue = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.recycler.enabled", 0, 0));
             if (enabledValue == 0L) {
                 return "";
             }
@@ -6927,7 +6926,7 @@ public final class Handling {
             if (itemWhere.isEmpty()) {
                 return "";
             }
-            long validCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures,products WHERE "
+            long validCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures,products WHERE "
                 + itemWhere, 0, 0));
             if (validCount != selection.requestedCount) {
                 return "";
@@ -6936,7 +6935,7 @@ public final class Handling {
             if (rewardProductId <= 0L) {
                 return "";
             }
-            long rewardDestinationId = Vb.val(MySQL.Proc_5_2_6D4690(
+            long rewardDestinationId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690(
                 "SELECT id_destination FROM catalog_products WHERE id_product='" + rewardProductId
                     + "' ORDER BY id DESC LIMIT 1", 0, 0));
             if (rewardDestinationId <= 0L) {
@@ -6954,7 +6953,7 @@ public final class Handling {
                 + Functions.Proc_10_11_80A9C0(selection.selectedItems, 0, 0) + "','"
                 + rewardProductId + "','0')", 0, 0);
             for (String furnitureId : selection.selectedItems.split(",", -1)) {
-                long selectedFurnitureId = Vb.val(furnitureId);
+                long selectedFurnitureId = NumberUtils.parseLong(furnitureId);
                 if (selectedFurnitureId > 0L) {
                     Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(selectedFurnitureId, null, "Ac"), 0);
                 }
@@ -6971,7 +6970,7 @@ public final class Handling {
     public static String Proc_6_203_7D7F80(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            long enabledValue = Vb.val(Functions.Proc_10_0_809570("com.client.catalog.recycler.enabled", 0, 0));
+            long enabledValue = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.recycler.enabled", 0, 0));
             String payload = recyclerStatusPayload(enabledValue, 0L);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
@@ -6988,8 +6987,8 @@ public final class Handling {
             }
             int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
-            long achievementIndex = Vb.val(args[1]);
-            long badgeLevel = args.length >= 3 ? Vb.val(args[2]) : 1L;
+            long achievementIndex = NumberUtils.parseLong(args[1]);
+            long badgeLevel = args.length >= 3 ? NumberUtils.parseLong(args[2]) : 1L;
             if (badgeLevel <= 0L) {
                 badgeLevel = 1L;
             }
@@ -7000,7 +6999,7 @@ public final class Handling {
             }
             String badgePrefix = handlingField(fields, 1);
             String badgeId = badgePrefix + badgeLevel;
-            if (Vb.val(handlingField(fields, 0)) == 0L || badgePrefix.isEmpty()) {
+            if (NumberUtils.parseLong(handlingField(fields, 0)) == 0L || badgePrefix.isEmpty()) {
                 return "";
             }
             String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
@@ -7010,15 +7009,15 @@ public final class Handling {
                 + "' AND id_badge LIKE '" + escapedBadgePrefix + "%' LIMIT 1", 0, 0);
             MySQL.Proc_5_0_6D3CD0("INSERT INTO users_badges(id_user,id_badge) VALUES('"
                 + escapedUserId + "','" + escapedBadgeId + "')", 0, 0);
-            long badgeRowId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users_badges WHERE id_user='"
+            long badgeRowId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users_badges WHERE id_user='"
                 + escapedUserId + "' AND id_badge='" + escapedBadgeId + "' ORDER BY id DESC LIMIT 1", 0, 0));
             String payload = achievementRewardPayload(achievementIndex, achievementRow, badgeLevel, badgeRowId);
             Proc_6_244_801E80(socketIndex, payload, 0);
             String awardPayload = achievementAwardPayload(achievementRow);
             if (!awardPayload.isEmpty()) {
-                long rewardIncrease = Vb.val(handlingField(fields, 3));
-                long scoreIncrease = Vb.val(handlingField(fields, 5));
-                long rewardType = Vb.val(handlingField(fields, 6));
+                long rewardIncrease = NumberUtils.parseLong(handlingField(fields, 3));
+                long scoreIncrease = NumberUtils.parseLong(handlingField(fields, 5));
+                long rewardType = NumberUtils.parseLong(handlingField(fields, 6));
                 MySQL.Proc_5_0_6D3CD0("UPDATE users SET activitypoints_" + rewardType + "=activitypoints_"
                     + rewardType + "+" + rewardIncrease + ",achievement_score=achievement_score+" + scoreIncrease
                     + " WHERE id='" + escapedUserId + "'", 0, 0);
@@ -7038,9 +7037,9 @@ public final class Handling {
             }
             int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0 && args.length >= 2) {
-                socketIndex = (int) Vb.val(args[1]);
+                socketIndex = (int) NumberUtils.parseLong(args[1]);
             }
-            long achievementQuestId = Vb.val(args[args.length - 1]);
+            long achievementQuestId = NumberUtils.parseLong(args[args.length - 1]);
             if (socketIndex <= 0 || achievementQuestId <= 0L) {
                 return "";
             }
@@ -7098,9 +7097,9 @@ public final class Handling {
                 }
             }
             if (roomId <= 0L && args != null && args.length >= 2) {
-                roomId = Vb.val(args[1]);
+                roomId = NumberUtils.parseLong(args[1]);
             }
-            long triggerCode = args != null && args.length >= 3 ? Vb.val(args[2]) : 0L;
+            long triggerCode = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
             return handlingRepresentedWiredTrigger(roomId, triggerCode, socketIndex);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7153,7 +7152,7 @@ public final class Handling {
             if (args == null || args.length == 0) {
                 return "";
             }
-            return wiredSpecialStatePayload(Vb.val(args[0]));
+            return wiredSpecialStatePayload(NumberUtils.parseLong(args[0]));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
@@ -7175,7 +7174,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long furnitureId = readWireLong(requestPayload, offset);
             if (furnitureId <= 0L) {
-                furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             if (socketIndex <= 0 || furnitureId <= 0L) {
                 return "";
@@ -7194,8 +7193,8 @@ public final class Handling {
                 return "";
             }
             String[] fields = rowText.split("\t", -1);
-            long productId = Vb.val(handlingField(fields, 0));
-            long wiredCode = Vb.val(DataManager.Proc_8_12_806C30(productId, 27, 0));
+            long productId = NumberUtils.parseLong(handlingField(fields, 0));
+            long wiredCode = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 27, 0));
             if (productId <= 0L || wiredCode <= 0L) {
                 return "";
             }
@@ -7248,8 +7247,8 @@ public final class Handling {
     public static String Proc_6_224_7EF5A0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
-            long jukeboxId = args != null && args.length >= 3 ? Vb.val(args[2]) : 0L;
+            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
+            long jukeboxId = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
             if (socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId) && roomId <= 0L) {
@@ -7257,10 +7256,10 @@ public final class Handling {
                 }
             }
             if (jukeboxId <= 0L && roomId > 0L) {
-                jukeboxId = Vb.val(handlingField(jukeboxRow(roomId), 0));
+                jukeboxId = NumberUtils.parseLong(handlingField(jukeboxRow(roomId), 0));
             }
             if (jukeboxId > 0L) {
-                long activeDestinationId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_destination FROM soundmachine_jb_playlist WHERE id_jukebox='"
+                long activeDestinationId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_destination FROM soundmachine_jb_playlist WHERE id_jukebox='"
                     + jukeboxId + "' AND id_order='0' LIMIT 1", 0, 0));
                 FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
                 cacheState.pendingFurnitureCache = removeSoundMachineMarkers(cacheState.pendingFurnitureCache, jukeboxId, activeDestinationId);
@@ -7289,26 +7288,26 @@ public final class Handling {
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
             String[] jukeboxFields = jukeboxRow(roomId);
-            long jukeboxId = Vb.val(handlingField(jukeboxFields, 0));
-            long jukeboxProductId = Vb.val(handlingField(jukeboxFields, 1));
+            long jukeboxId = NumberUtils.parseLong(handlingField(jukeboxFields, 0));
+            long jukeboxProductId = NumberUtils.parseLong(handlingField(jukeboxFields, 1));
             if (jukeboxId <= 0L) {
                 return "";
             }
             String maxOrderText = MySQL.Proc_5_2_6D4690("SELECT MAX(id_order) FROM soundmachine_jb_playlist WHERE id_jukebox='"
                 + jukeboxId + "'", 0, 0);
-            long playlistCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM soundmachine_jb_playlist WHERE id_jukebox='"
+            long playlistCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM soundmachine_jb_playlist WHERE id_jukebox='"
                 + jukeboxId + "'", 0, 0));
-            long playlistLimit = Vb.val(Functions.Proc_10_0_809570(
+            long playlistLimit = NumberUtils.parseLong(Functions.Proc_10_0_809570(
                 "com.server.socket.game.jukebox." + jukeboxProductId + ".soundsets.max", 0, 0));
             if (!jukeboxCanAddDisk(request.playlistOrder, maxOrderText, playlistCount, playlistLimit)) {
                 return "";
             }
-            long songDiskProductId = Vb.val(Functions.Proc_10_0_809570("com.server.socket.game.default.songdisk", 0, 0));
+            long songDiskProductId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.default.songdisk", 0, 0));
             if (songDiskProductId <= 0L) {
                 return "";
             }
             String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            long destinationId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_destination FROM furnitures WHERE id_owner='"
+            long destinationId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_destination FROM furnitures WHERE id_owner='"
                 + escapedUserId + "' AND id='" + request.diskFurnitureId + "' AND id_product='"
                 + songDiskProductId + "' LIMIT 1", 0, 0));
             if (destinationId <= 0L) {
@@ -7342,17 +7341,17 @@ public final class Handling {
             long playlistOrder = jukeboxRemoveOrderFromWire(handlingPacketPayload(args));
             long roomId = handlingCurrentRoomId(socketIndex, userId);
             String[] jukeboxFields = jukeboxRow(roomId);
-            long jukeboxId = Vb.val(handlingField(jukeboxFields, 0));
+            long jukeboxId = NumberUtils.parseLong(handlingField(jukeboxFields, 0));
             if (jukeboxId <= 0L) {
                 return "";
             }
-            long cdFurnitureId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_cd FROM soundmachine_jb_playlist WHERE id_jukebox='"
+            long cdFurnitureId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_cd FROM soundmachine_jb_playlist WHERE id_jukebox='"
                 + jukeboxId + "' AND id_order='" + playlistOrder + "' LIMIT 1", 0, 0));
             if (cdFurnitureId <= 0L) {
                 return "";
             }
             String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            long songDiskProductId = Vb.val(Functions.Proc_10_0_809570("com.server.socket.game.default.songdisk", 0, 0));
+            long songDiskProductId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.default.songdisk", 0, 0));
             if (songDiskProductId > 0L) {
                 MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner='" + escapedUserId + "' WHERE id='"
                     + cdFurnitureId + "' AND id_product='" + songDiskProductId + "' LIMIT 1", 0, 0);
@@ -7388,14 +7387,14 @@ public final class Handling {
                 return "";
             }
             String[] jukeboxFields = jukeboxRow(roomId);
-            long jukeboxId = Vb.val(handlingField(jukeboxFields, 0));
-            long jukeboxProductId = Vb.val(handlingField(jukeboxFields, 1));
+            long jukeboxId = NumberUtils.parseLong(handlingField(jukeboxFields, 0));
+            long jukeboxProductId = NumberUtils.parseLong(handlingField(jukeboxFields, 1));
             if (jukeboxId <= 0L) {
                 return "";
             }
-            long playlistLimit = Vb.val(Functions.Proc_10_0_809570("com.server.socket.game.jukebox." + jukeboxProductId + ".soundsets.max", 0, 0));
+            long playlistLimit = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.jukebox." + jukeboxProductId + ".soundsets.max", 0, 0));
             if (playlistLimit <= 0L) {
-                playlistLimit = Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id_order)+1 FROM soundmachine_jb_playlist WHERE id_jukebox='"
+                playlistLimit = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id_order)+1 FROM soundmachine_jb_playlist WHERE id_jukebox='"
                     + jukeboxId + "'", 0, 0));
             }
             if (playlistLimit <= 0L) {
@@ -7419,7 +7418,7 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            long songDiskProductId = Vb.val(Functions.Proc_10_0_809570("com.server.socket.game.default.songdisk", 0, 0));
+            long songDiskProductId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.default.songdisk", 0, 0));
             if (songDiskProductId <= 0L) {
                 return "";
             }
@@ -7440,14 +7439,14 @@ public final class Handling {
             if (socketIndex <= 0) {
                 return "";
             }
-            long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
-            long jukeboxId = args != null && args.length >= 3 ? Vb.val(args[2]) : 0L;
+            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
+            long jukeboxId = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
             String userId = handlingUserIdFromSocket(socketIndex);
             if (!userId.isEmpty() && !"0".equals(userId) && roomId <= 0L) {
                 roomId = handlingCurrentRoomId(socketIndex, userId);
             }
             if (jukeboxId <= 0L && roomId > 0L) {
-                jukeboxId = Vb.val(handlingField(jukeboxRow(roomId), 0));
+                jukeboxId = NumberUtils.parseLong(handlingField(jukeboxRow(roomId), 0));
             }
             if (jukeboxId <= 0L) {
                 return "";
@@ -7460,9 +7459,9 @@ public final class Handling {
                 return "";
             }
             String[] fields = rowText.split("\t", -1);
-            long destinationId = Vb.val(handlingField(fields, 0));
-            long diskFurnitureId = Vb.val(handlingField(fields, 1));
-            long sequenceId = Vb.val(handlingField(fields, 2));
+            long destinationId = NumberUtils.parseLong(handlingField(fields, 0));
+            long diskFurnitureId = NumberUtils.parseLong(handlingField(fields, 1));
+            long sequenceId = NumberUtils.parseLong(handlingField(fields, 2));
             String payload = jukeboxPlaybackPayload(System.currentTimeMillis() / 1000L, sequenceId, destinationId, diskFurnitureId);
             if (payload.isEmpty()) {
                 return "";
@@ -7505,7 +7504,7 @@ public final class Handling {
             if (!"M".equals(genderText) && !"F".equals(genderText)) {
                 genderText = "M";
             }
-            String payload = userIdentityPayload(Vb.val(userId), mottoText, genderText, figureText);
+            String payload = userIdentityPayload(NumberUtils.parseLong(userId), mottoText, genderText, figureText);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -7525,7 +7524,7 @@ public final class Handling {
             if (valueText.isEmpty()) {
                 valueText = readWireString(requestPayload, new LongRef(1));
             }
-            return Vb.val(valueText);
+            return NumberUtils.parseLong(valueText);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
@@ -7551,7 +7550,7 @@ public final class Handling {
             }
             long requestedQuestId = questRequestIdFromWire(handlingPacketPayload(args), "p^");
             if (requestedQuestId <= 0L) {
-                requestedQuestId = Vb.val(Functions.Proc_10_6_809F10(handlingRequestPayload(args, "p^"), 0, 0));
+                requestedQuestId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(handlingRequestPayload(args, "p^"), 0, 0));
             }
             if (requestedQuestId <= 0L) {
                 return "";
@@ -7560,9 +7559,9 @@ public final class Handling {
             if (questFields.length < 11) {
                 return "";
             }
-            long questId = Vb.val(handlingField(questFields, 0));
-            long activityCount = Vb.val(handlingField(questFields, 9));
-            long waitAmount = Vb.val(handlingField(questFields, 10));
+            long questId = NumberUtils.parseLong(handlingField(questFields, 0));
+            long activityCount = NumberUtils.parseLong(handlingField(questFields, 9));
+            long waitAmount = NumberUtils.parseLong(handlingField(questFields, 10));
             if (activityCount <= 0L) {
                 activityCount = 1L;
             }
@@ -7579,7 +7578,7 @@ public final class Handling {
                 MySQL.Proc_5_0_6D3CD0("INSERT INTO users_quests(id_user,id_quest,id_level,id_numericquest,timestamp_accepted) VALUES('"
                     + escapedUserId + "','" + questId + "','0','" + requestedQuestId + "',UNIX_TIMESTAMP())", 0, 0);
             }
-            long progressValue = Vb.val(MySQL.Proc_5_2_6D4690("SELECT progress FROM users_quests WHERE id_user='"
+            long progressValue = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT progress FROM users_quests WHERE id_user='"
                 + escapedUserId + "' AND id_quest='" + questId + "' LIMIT 1", 0, 0));
             if (waitAmount > 0L && progressValue > 0L && progressValue < activityCount) {
                 String timeNextText = MySQL.Proc_5_2_6D4690("SELECT time_next FROM users_quests WHERE id_user='"
@@ -7659,12 +7658,12 @@ public final class Handling {
                 return "";
             }
             String[] fields = activeRow.split("\t", -1);
-            long questId = Vb.val(handlingField(fields, 0));
-            long numericQuestId = Vb.val(handlingField(fields, 1));
+            long questId = NumberUtils.parseLong(handlingField(fields, 0));
+            long numericQuestId = NumberUtils.parseLong(handlingField(fields, 1));
             String timeNextText = handlingField(fields, 4);
             long remainingWait = 0L;
             if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
-                remainingWait = Vb.val(MySQL.Proc_5_2_6D4690("SELECT GREATEST(0,UNIX_TIMESTAMP('"
+                remainingWait = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT GREATEST(0,UNIX_TIMESTAMP('"
                     + Functions.Proc_10_11_80A9C0(timeNextText, 0, 0) + "')-UNIX_TIMESTAMP())", 0, 0));
             }
             QuestProgressDecision decision = questProgressDecision(activeRow, questRowsFromSource(), remainingWait);
@@ -7742,15 +7741,15 @@ public final class Handling {
             StringBuilder sentPayloads = new StringBuilder();
             String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
             for (long pointType = 0L; pointType <= 4L; pointType++) {
-                long intervalSeconds = Vb.val(Functions.Proc_10_0_809570(
+                long intervalSeconds = NumberUtils.parseLong(Functions.Proc_10_0_809570(
                     "com.server.socket.game.activitypoints_" + pointType + ".interval", 0, 0));
                 if (intervalSeconds > 0L && sessionSeconds % intervalSeconds == 0L) {
                     String columnName = "activitypoints_" + pointType;
-                    long maxPoints = Vb.val(Functions.Proc_10_0_809570(
+                    long maxPoints = NumberUtils.parseLong(Functions.Proc_10_0_809570(
                         "com.server.socket.game.activitypoints_" + pointType + ".max", 1, 0));
-                    long currentPoints = Vb.val(MySQL.Proc_5_2_6D4690("SELECT " + columnName + " FROM users WHERE id='"
+                    long currentPoints = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT " + columnName + " FROM users WHERE id='"
                         + escapedUserId + "' LIMIT 1", 0, 0));
-                    long awardAmount = Vb.val(Functions.Proc_10_0_809570(
+                    long awardAmount = NumberUtils.parseLong(Functions.Proc_10_0_809570(
                         "com.server.socket.game.activitypoints_" + pointType + ".amount", 0, 0));
                     ActivityPointAward award = activityPointAwardDecision(
                         sessionSeconds, pointType, intervalSeconds, maxPoints, awardAmount, currentPoints);
@@ -7816,7 +7815,7 @@ public final class Handling {
                 }
             }
             String filteredText = Proc_6_22_6E9300(inviteText, 0, 0);
-            String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(userId), null, "BG") + filteredText + '\2';
+            String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(userId), null, "BG") + filteredText + '\2';
             if (targetList.length() > 0) {
                 for (String targetUserId : targetList.toString().split(",", -1)) {
                     int targetSocketIndex = handlingSocketFromUserId(targetUserId);
@@ -7884,13 +7883,13 @@ public final class Handling {
                 if (!rowText.isEmpty()) {
                     String[] fields = rowText.split("\t", -1);
                     if (fields.length >= 7) {
-                        int targetSocketIndex = (int) Vb.val(handlingField(fields, 5));
+                        int targetSocketIndex = (int) NumberUtils.parseLong(handlingField(fields, 5));
                         payloadRows.append('H').append(messengerFriendPayload(
-                            Vb.val(handlingField(fields, 0)),
+                            NumberUtils.parseLong(handlingField(fields, 0)),
                             handlingField(fields, 1),
                             handlingField(fields, 2),
                             handlingField(fields, 3),
-                            Vb.val(handlingField(fields, 4)),
+                            NumberUtils.parseLong(handlingField(fields, 4)),
                             targetSocketIndex > 0 ? 2L : 0L,
                             targetSocketIndex > 0 ? 1L : 0L,
                             handlingField(fields, 6),
@@ -7935,7 +7934,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
-                targetUserId = String.valueOf((long) Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0)));
+                targetUserId = String.valueOf((long) NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0)));
             }
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
@@ -7966,12 +7965,12 @@ public final class Handling {
     }
 
     public static String handlingField(String[] fields, long fieldIndex) {
-        return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
+        return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? StringUtils.text(fields[(int) fieldIndex]) : "";
     }
 
     public static String handlingUserName(String userId) {
         try {
-            if (Vb.cStr(userId).isEmpty() || "0".equals(Vb.cStr(userId))) {
+            if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))) {
                 return "";
             }
             return MySQL.Proc_5_2_6D4690("SELECT name FROM users WHERE id='"
@@ -7986,26 +7985,26 @@ public final class Handling {
             if (args == null || args.length < 2) {
                 return;
             }
-            long socketIndex = Vb.val(args[0]);
-            String packetBuffer = Functions.Proc_10_9_80A680(Vb.cStr(args[1]), 0, 0);
+            long socketIndex = NumberUtils.parseLong(args[0]);
+            String packetBuffer = Functions.Proc_10_9_80A680(StringUtils.text(args[1]), 0, 0);
             if (socketIndex <= 0L || Guardian.Proc_11_2_821390(socketIndex, 0, 0) != 1) {
                 return;
             }
             long packetCount = 0L;
             while (packetBuffer.length() > 2 && packetCount < 10L) {
                 packetBuffer = packetBuffer.substring(1);
-                long packetLength = Crypto.Proc_3_4_6D3620(Vb.left(packetBuffer, 2));
+                long packetLength = Crypto.Proc_3_4_6D3620(StringUtils.left(packetBuffer, 2));
                 if (packetLength <= 0L || packetBuffer.length() < packetLength + 2L) {
                     break;
                 }
-                String packetPayload = Vb.mid(packetBuffer, 3, (int) packetLength);
-                String packetCode = Vb.left(packetPayload, 2);
+                String packetPayload = StringUtils.mid(packetBuffer, 3, (int) packetLength);
+                String packetCode = StringUtils.left(packetPayload, 2);
                 if (Licence.runtimeState().shouldTracePackets()) {
                     Console.Proc_2_0_6D1510("[" + socketIndex + "] " + packetPayload, "GAME", "16711680");
                 }
                 dispatchPreReadyPacket((int) socketIndex, packetCode, packetPayload);
                 packetCount++;
-                packetBuffer = Vb.mid(packetBuffer, (int) packetLength + 3);
+                packetBuffer = StringUtils.mid(packetBuffer, (int) packetLength + 3);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -8014,7 +8013,7 @@ public final class Handling {
 
     public static void dispatchPreReadyPacket(int socketIndex, String packetCode, String packetPayload) {
         try {
-            switch (Vb.cStr(packetCode)) {
+            switch (StringUtils.text(packetCode)) {
                 case "~\u00e4": System.exit(0); break;
                 case "oD": Proc_6_231_7F4510(socketIndex, packetPayload, 0); break;
                 case "Gd": Proc_6_230_7F3D20(socketIndex, packetPayload, 0); break;
@@ -8207,7 +8206,7 @@ public final class Handling {
                 case "FS":
                 case "AF":
                     Proc_6_244_801E80(socketIndex,
-                        Vb.cStr(Functions.Proc_10_0_809570("com.client.park.infobus.theme.title", "AQ")) + '\2',
+                        StringUtils.text(Functions.Proc_10_0_809570("com.client.park.infobus.theme.title", "AQ")) + '\2',
                         0);
                     break;
                 case "oL": Proc_7F44D0(socketIndex, "oL", packetPayload); break;
@@ -8299,29 +8298,29 @@ public final class Handling {
         if (args == null || args.length < 2) {
             return;
         }
-        int socketIndex = (int) Vb.val(args[0]);
+        int socketIndex = (int) NumberUtils.parseLong(args[0]);
         if (socketIndex <= 0 || Guardian.Proc_11_2_821390(socketIndex, 0, 0) != 1
             || Licence.representedSockets().isBusy(socketIndex)) {
             return;
         }
-        HandlingMUS.Proc_12_1_821AA0(socketIndex, Vb.cStr(args[1]) + '\1', 0);
+        HandlingMUS.Proc_12_1_821AA0(socketIndex, StringUtils.text(args[1]) + '\1', 0);
     }
 
     public static long Proc_6_245_801FA0(Object... args) {
         if (args == null || args.length < 2) {
             return 0L;
         }
-        int socketIndex = (int) Vb.val(args[0]);
+        int socketIndex = (int) NumberUtils.parseLong(args[0]);
         String userId = handlingUserIdFromSocket(socketIndex);
         long roomId = handlingCurrentRoomId(socketIndex, userId);
-        return broadcastToRoomUsers(roomId, Vb.cStr(args[1]));
+        return broadcastToRoomUsers(roomId, StringUtils.text(args[1]));
     }
 
     public static long Proc_6_246_8024C0(Object... args) {
         if (args == null || args.length < 2) {
             return 0L;
         }
-        return broadcastToRoomUsers(Vb.val(args[0]), Vb.cStr(args[1]));
+        return broadcastToRoomUsers(NumberUtils.parseLong(args[0]), StringUtils.text(args[1]));
     }
 
     public static long Proc_6_247_8027E0(Object... args) {
@@ -8331,41 +8330,41 @@ public final class Handling {
         int socketIndex = handlingSocketIndex(args);
         String userId = handlingUserIdFromSocket(socketIndex);
         long roomId = handlingCurrentRoomId(socketIndex, userId);
-        return broadcastToRoomUsers(roomId, Vb.cStr(args[1]));
+        return broadcastToRoomUsers(roomId, StringUtils.text(args[1]));
     }
 
     public static long Proc_6_248_802B80(Object... args) {
         if (args == null || args.length < 2) {
             return 0L;
         }
-        return broadcastToRoomUsers(Vb.val(args[0]), Vb.cStr(args[1]));
+        return broadcastToRoomUsers(NumberUtils.parseLong(args[0]), StringUtils.text(args[1]));
     }
 
     public static long Proc_6_249_802F10(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return broadcastToStaffModerators(Vb.cStr(args[0]));
+        return broadcastToStaffModerators(StringUtils.text(args[0]));
     }
 
     public static int handlingSocketIndex(Object... args) {
-        return args != null && args.length >= 1 ? (int) Vb.val(args[0]) : 0;
+        return args != null && args.length >= 1 ? (int) NumberUtils.parseLong(args[0]) : 0;
     }
 
     public static String handlingPacketPayload(Object... args) {
         if (args == null) {
             return "";
         }
-        String payload = args.length >= 3 ? Vb.cStr(args[2]) : "";
+        String payload = args.length >= 3 ? StringUtils.text(args[2]) : "";
         if (payload.isEmpty() && args.length >= 2) {
-            payload = Vb.cStr(args[1]);
+            payload = StringUtils.text(args[1]);
         }
         return payload;
     }
 
     public static String handlingRequestPayload(Object[] args, String prefix) {
         String payload = handlingPacketPayload(args);
-        String expectedPrefix = Vb.cStr(prefix);
+        String expectedPrefix = StringUtils.text(prefix);
         if (!expectedPrefix.isEmpty() && payload.startsWith(expectedPrefix)) {
             return payload.substring(expectedPrefix.length());
         }
@@ -8379,22 +8378,22 @@ public final class Handling {
         String recordPayload = Licence.getSessionRecordPayload("1:", String.valueOf(socketIndex));
         if (!recordPayload.isEmpty()) {
             String[] fields = recordPayload.split("\2", -1);
-            String userId = String.valueOf(Vb.val(handlingField(fields, 0)));
+            String userId = String.valueOf(NumberUtils.parseLong(handlingField(fields, 0)));
             if (!userId.isEmpty() && !"0".equals(userId)) {
                 return userId;
             }
         }
-        return String.valueOf(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE id_socket='" + socketIndex + "' LIMIT 1", 0, 0)));
+        return String.valueOf(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE id_socket='" + socketIndex + "' LIMIT 1", 0, 0)));
     }
 
     public static int handlingSocketFromUserId(String userId) {
-        String idText = String.valueOf(Vb.val(userId));
+        String idText = String.valueOf(NumberUtils.parseLong(userId));
         if (idText.isEmpty() || "0".equals(idText)) {
             return 0;
         }
         long socketIndex = Licence.Proc_9_8_8086A0(idText, 0, 0);
         if (socketIndex <= 0L) {
-            socketIndex = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE id='"
+            socketIndex = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE id='"
                 + Functions.Proc_10_11_80A9C0(idText, 0, 0) + "' LIMIT 1", 0, 0));
         }
         return (int) socketIndex;
@@ -8406,27 +8405,27 @@ public final class Handling {
             return roomId;
         }
         String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-        if (!Vb.cStr(userId).isEmpty() && !"0".equals(Vb.cStr(userId))) {
-            roomId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_room FROM logs_visitedrooms WHERE id_user='"
+        if (!StringUtils.text(userId).isEmpty() && !"0".equals(StringUtils.text(userId))) {
+            roomId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_room FROM logs_visitedrooms WHERE id_user='"
                 + escapedUserId + "' AND timestamp_left IS NULL ORDER BY timestamp_enter DESC LIMIT 1", 0, 0));
         }
         if (roomId <= 0L) {
-            roomId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM rooms WHERE id_slot='" + socketIndex + "' LIMIT 1", 0, 0));
+            roomId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM rooms WHERE id_slot='" + socketIndex + "' LIMIT 1", 0, 0));
         }
         return roomId;
     }
 
     public static long representedRoomUserIndex(int socketIndex, String userId) {
-        long roomUserIndex = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM logs_visitedrooms WHERE id_user='"
+        long roomUserIndex = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM logs_visitedrooms WHERE id_user='"
             + Functions.Proc_10_11_80A9C0(userId, 0, 0)
             + "' AND timestamp_left IS NULL ORDER BY timestamp_enter DESC LIMIT 1", 0, 0));
         return roomUserIndex > 0L ? roomUserIndex : socketIndex;
     }
 
     public static boolean handlingUserHasPermission(String userId, String permissionName) {
-        long rankIndex = Vb.val(MySQL.Proc_5_2_6D4690("SELECT level FROM users WHERE id='"
+        long rankIndex = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT level FROM users WHERE id='"
             + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
-        long hcLevel = Vb.val(MySQL.Proc_5_2_6D4690("SELECT level_hc FROM users WHERE id='"
+        long hcLevel = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT level_hc FROM users WHERE id='"
             + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
         return Functions.Proc_10_1_809790(rankIndex, "", permissionName, hcLevel);
     }
@@ -8476,12 +8475,12 @@ public final class Handling {
     }
 
     public static long handlingUserRank(String userId) {
-        return Vb.val(MySQL.Proc_5_2_6D4690("SELECT level FROM users WHERE id='"
+        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT level FROM users WHERE id='"
             + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
     }
 
     public static long handlingUserHcLevel(String userId) {
-        long hcLevel = Vb.val(MySQL.Proc_5_2_6D4690("SELECT level_hc FROM users WHERE id='"
+        long hcLevel = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT level_hc FROM users WHERE id='"
             + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
         if (hcLevel < 0L) {
             return 0L;
@@ -8490,7 +8489,7 @@ public final class Handling {
     }
 
     public static String handlingUserSessionId(String userId) {
-        if (Vb.cStr(userId).isEmpty() || "0".equals(Vb.cStr(userId))) {
+        if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))) {
             return "";
         }
         return MySQL.Proc_5_2_6D4690("SELECT id_session FROM users WHERE id='"
@@ -8498,7 +8497,7 @@ public final class Handling {
     }
 
     public static boolean handlingUserOwnsRoom(String userId, long roomId) {
-        if (Vb.cStr(userId).isEmpty() || "0".equals(Vb.cStr(userId)) || roomId <= 0L) {
+        if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId)) || roomId <= 0L) {
             return false;
         }
         return !MySQL.Proc_5_2_6D4690("SELECT id FROM rooms WHERE id='" + roomId + "' AND id_owner='"
@@ -8506,7 +8505,7 @@ public final class Handling {
     }
 
     public static boolean handlingUserHasRoomRight(String userId, long roomId) {
-        if (Vb.cStr(userId).isEmpty() || "0".equals(Vb.cStr(userId)) || roomId <= 0L) {
+        if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId)) || roomId <= 0L) {
             return false;
         }
         if (!MySQL.Proc_5_2_6D4690("SELECT id_owner FROM rooms WHERE id='" + roomId + "' AND id_owner='"
@@ -8520,15 +8519,15 @@ public final class Handling {
     public static long roomCategoryForUser(long categoryId, String userId) {
         long rankIndex = handlingUserRank(userId);
         long hcLevel = handlingUserHcLevel(userId);
-        return Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM rooms_categories WHERE id='" + categoryId
+        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM rooms_categories WHERE id='" + categoryId
             + "' AND level_minrequired <= '" + rankIndex + "' AND hclevel_minrequired <= '" + hcLevel + "' LIMIT 1", 0, 0));
     }
 
     public static int handlingSocketIndexForUserName(String userName) {
-        if (Vb.cStr(userName).isEmpty()) {
+        if (StringUtils.text(userName).isEmpty()) {
             return 0;
         }
-        return (int) Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE name='"
+        return (int) NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE name='"
             + Functions.Proc_10_11_80A9C0(userName, 0, 0) + "' AND id_socket IS NOT NULL LIMIT 1", 0, 0));
     }
 
@@ -8543,11 +8542,11 @@ public final class Handling {
         }
         if (cache instanceof String[]) {
             String[] values = (String[]) cache;
-            return idx < values.length ? Vb.cStr(values[idx]) : "";
+            return idx < values.length ? StringUtils.text(values[idx]) : "";
         }
         if (cache instanceof Object[]) {
             Object[] values = (Object[]) cache;
-            return idx < values.length ? Vb.cStr(values[idx]) : "";
+            return idx < values.length ? StringUtils.text(values[idx]) : "";
         }
         return "";
     }
@@ -8573,7 +8572,7 @@ public final class Handling {
 
     public static void loadRepresentedRoomBots(long roomSlot, long roomId) {
         if (roomSlot <= 0L || roomId <= 0L
-            || Vb.val(Functions.Proc_10_0_809570("com.client.rooms.bots.enabled", "-1", 0)) == 0L) {
+            || NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.rooms.bots.enabled", "-1", 0)) == 0L) {
             return;
         }
         String rowText = MySQL.Proc_5_2_6D4690("SELECT id,name,motto,speech,responses,position_x,position_y,position_z,"
@@ -8587,7 +8586,7 @@ public final class Handling {
     }
 
     public static long broadcastToRoomUsers(long roomId, String payload) {
-        if (roomId <= 0L || Vb.cStr(payload).isEmpty()) {
+        if (roomId <= 0L || StringUtils.text(payload).isEmpty()) {
             return 0L;
         }
         String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_room='"
@@ -8599,7 +8598,7 @@ public final class Handling {
         String sentMarkers = "";
         long sentCount = 0L;
         for (String row : rowText.split("\r", -1)) {
-            int socketIndex = (int) Vb.val(row);
+            int socketIndex = (int) NumberUtils.parseLong(row);
             String marker = "[" + socketIndex + "]";
             if (socketIndex > 0 && !sentMarkers.contains(marker)) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
@@ -8611,7 +8610,7 @@ public final class Handling {
     }
 
     public static long broadcastToStaffModerators(String payload) {
-        if (Vb.cStr(payload).isEmpty()) {
+        if (StringUtils.text(payload).isEmpty()) {
             return 0L;
         }
         String sentMarkers = "";
@@ -8632,8 +8631,8 @@ public final class Handling {
         String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_socket FROM users WHERE id_socket IS NOT NULL", 0, 0);
         for (String row : rowText.split("\r", -1)) {
             String[] fields = row.split("\t", -1);
-            String candidateUserId = String.valueOf(Vb.val(handlingField(fields, 0)));
-            int candidateSocket = (int) Vb.val(handlingField(fields, 1));
+            String candidateUserId = String.valueOf(NumberUtils.parseLong(handlingField(fields, 0)));
+            int candidateSocket = (int) NumberUtils.parseLong(handlingField(fields, 1));
             String marker = "[" + candidateSocket + "]";
             if (candidateSocket > 0 && !sentMarkers.contains(marker) && handlingUserHasPermission(candidateUserId, "fuse_mod")) {
                 Proc_6_244_801E80(candidateSocket, payload, 0);
@@ -8739,7 +8738,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long targetUserId = readWireLong(requestPayload, offset);
             if (targetUserId <= 0L) {
-                targetUserId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                targetUserId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             String messageText = readWireString(requestPayload, offset);
             if (messageText.isEmpty()) {
@@ -8817,7 +8816,7 @@ public final class Handling {
                 return;
             }
             long targetUserId = includeChatRows ? staffNestedUserIdFromWire(requestPayload)
-                : Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                : NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             if (targetUserId <= 0L) {
                 return;
             }
@@ -8827,7 +8826,7 @@ public final class Handling {
                 return;
             }
             String[] targetFields = targetRow.split("\t", -1);
-            targetUserId = Vb.val(handlingField(targetFields, 0));
+            targetUserId = NumberUtils.parseLong(handlingField(targetFields, 0));
             if (targetUserId <= 0L) {
                 return;
             }
@@ -8852,9 +8851,9 @@ public final class Handling {
                 if (!row.isEmpty()) {
                     if (includeChatRows) {
                         String[] fields = row.split("\t", -1);
-                        long roomId = Vb.val(handlingField(fields, 1));
-                        long timestampEnter = Vb.val(handlingField(fields, 3));
-                        long timestampLeft = Vb.val(handlingField(fields, 4));
+                        long roomId = NumberUtils.parseLong(handlingField(fields, 1));
+                        long timestampEnter = NumberUtils.parseLong(handlingField(fields, 3));
+                        long timestampLeft = NumberUtils.parseLong(handlingField(fields, 4));
                         String chatRows = MySQL.Proc_5_2_6D4690("SELECT DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%H'),"
                             + "DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%i'),users.id,users.name,logs_chat.description "
                             + "FROM logs_chat,users WHERE logs_chat.id_room='" + roomId + "' AND logs_chat.id_user='"
@@ -8879,7 +8878,7 @@ public final class Handling {
     }
 
     public static long avatarNameValidationCode(String candidateName, String currentName, long existingCount) {
-        String candidate = Vb.cStr(candidateName).trim();
+        String candidate = StringUtils.text(candidateName).trim();
         if (candidate.length() < 3) {
             return 2L;
         }
@@ -8901,15 +8900,15 @@ public final class Handling {
                 return 2L;
             }
         }
-        if (candidate.equalsIgnoreCase(Vb.cStr(currentName))) {
+        if (candidate.equalsIgnoreCase(StringUtils.text(currentName))) {
             return 0L;
         }
         return existingCount > 0L ? 3L : 0L;
     }
 
     public static long handlingMovementField(String movementText, long fieldIndex) {
-        String[] fields = Vb.cStr(movementText).split("\0", -1);
-        return fieldIndex >= 0 && fieldIndex < fields.length ? Vb.val(fields[(int) fieldIndex]) : 0L;
+        String[] fields = StringUtils.text(movementText).split("\0", -1);
+        return fieldIndex >= 0 && fieldIndex < fields.length ? NumberUtils.parseLong(fields[(int) fieldIndex]) : 0L;
     }
 
     public static long handlingDirectionCode(long deltaX, long deltaY) {
@@ -8944,8 +8943,8 @@ public final class Handling {
     public static MovementPosition representedUserPosition(Object[] args) {
         MovementPosition result = new MovementPosition();
         if (args != null && args.length >= 5) {
-            result.positionX = Vb.val(args[3]);
-            result.positionY = Vb.val(args[4]);
+            result.positionX = NumberUtils.parseLong(args[3]);
+            result.positionY = NumberUtils.parseLong(args[4]);
             result.found = true;
         }
         return result;
@@ -8969,18 +8968,18 @@ public final class Handling {
         if (args == null || args.length == 0) {
             return "";
         }
-        return readFile(Vb.cStr(args[0]));
+        return readFile(StringUtils.text(args[0]));
     }
 
     public static void Proc_6_240_7FC2B0(Object... args) {
         if (args == null || args.length < 2) {
             return;
         }
-        writeFile(Vb.cStr(args[0]), Vb.cStr(args[1]));
+        writeFile(StringUtils.text(args[0]), StringUtils.text(args[1]));
     }
 
     public static String readFile(String filePath) {
-        if (Vb.cStr(filePath).isEmpty()) {
+        if (StringUtils.text(filePath).isEmpty()) {
             return "";
         }
         Path path = Path.of(filePath);
@@ -8996,7 +8995,7 @@ public final class Handling {
     }
 
     public static void writeFile(String filePath, String fileText) {
-        if (Vb.cStr(filePath).isEmpty()) {
+        if (StringUtils.text(filePath).isEmpty()) {
             return;
         }
         try {
@@ -9005,15 +9004,15 @@ public final class Handling {
             if (parent != null) {
                 Files.createDirectories(parent);
             }
-            Files.write(path, (Vb.cStr(fileText) + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
+            Files.write(path, (StringUtils.text(fileText) + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
         } catch (IOException ignored) {
             // VB6 source suppresses write failures.
         }
     }
 
     public static String removeRepresentedLineRecord(String cacheText, String markerText) {
-        String cache = Vb.cStr(cacheText);
-        String marker = Vb.cStr(markerText);
+        String cache = StringUtils.text(cacheText);
+        String marker = StringUtils.text(markerText);
         if (cache.isEmpty() || marker.isEmpty()) {
             return cache;
         }
@@ -9031,7 +9030,7 @@ public final class Handling {
     }
 
     public static String handlingEnsureRoomCacheFile(String cachePath) {
-        if (Vb.cStr(cachePath).isEmpty()) {
+        if (StringUtils.text(cachePath).isEmpty()) {
             return "";
         }
         Path path = Path.of(cachePath);
@@ -9049,7 +9048,7 @@ public final class Handling {
         if (offset == null) {
             return "";
         }
-        String payload = Vb.cStr(packetPayload);
+        String payload = StringUtils.text(packetPayload);
         if (offset.value < 1L) {
             offset.value = 1L;
         }
@@ -9074,7 +9073,7 @@ public final class Handling {
         if (offset == null) {
             return 0L;
         }
-        String payload = Vb.cStr(packetPayload);
+        String payload = StringUtils.text(packetPayload);
         if (offset.value < 1L) {
             offset.value = 1L;
         }
@@ -9092,7 +9091,7 @@ public final class Handling {
     }
 
     private static long wireLongFieldLength(String encodedValue) {
-        String value = Vb.cStr(encodedValue);
+        String value = StringUtils.text(encodedValue);
         if (value.isEmpty()) {
             return 0L;
         }
@@ -9108,18 +9107,18 @@ public final class Handling {
         if (update == null) {
             return false;
         }
-        String payload = Vb.cStr(packetPayload);
+        String payload = StringUtils.text(packetPayload);
         String idText = Functions.Proc_10_6_809F10(payload);
-        long furnitureId = Vb.val(idText);
+        long furnitureId = NumberUtils.parseLong(idText);
         String notePayload = "";
         if (furnitureId <= 0L) {
             LongRef offset = new LongRef(1);
             furnitureId = readWireLong(payload, offset);
-            notePayload = Vb.mid(payload, (int) offset.value);
+            notePayload = StringUtils.mid(payload, (int) offset.value);
         } else {
             long idLengthSize = Crypto.Proc_3_2_6D30A0(payload);
             if (idLengthSize > 0L) {
-                notePayload = Vb.mid(payload, (int) idLengthSize + idText.length() + 1);
+                notePayload = StringUtils.mid(payload, (int) idLengthSize + idText.length() + 1);
             }
         }
         if (notePayload.isEmpty()) {
@@ -9159,12 +9158,12 @@ public final class Handling {
     }
 
     public static boolean isStickyNoteColor(String noteColor) {
-        String color = Vb.cStr(noteColor).toUpperCase();
+        String color = StringUtils.text(noteColor).toUpperCase();
         return "9CFF9C".equals(color) || "FFFF33".equals(color) || "FF9CFF".equals(color) || "9CCEFF".equals(color);
     }
 
     public static long stickyFurnitureIdFromPayload(String requestPayload) {
-        long furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        long furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
         if (furnitureId <= 0L) {
             furnitureId = readWireLong(requestPayload, new LongRef(1));
         }
@@ -9190,13 +9189,13 @@ public final class Handling {
                 return "";
             }
             String[] fields = rowText.split("\t", -1);
-            long furnitureX = Vb.val(handlingField(fields, 1));
-            long furnitureY = Vb.val(handlingField(fields, 2));
-            long productId = Vb.val(handlingField(fields, 3));
-            if (productId <= 0L || Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0)) != 0L) {
+            long furnitureX = NumberUtils.parseLong(handlingField(fields, 1));
+            long furnitureY = NumberUtils.parseLong(handlingField(fields, 2));
+            long productId = NumberUtils.parseLong(handlingField(fields, 3));
+            if (productId <= 0L || NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) != 0L) {
                 return "";
             }
-            long roomSlot = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            long roomSlot = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
             MovementPosition userPosition = representedUserPosition(args);
             if (!userPosition.found) {
                 userPosition = movementPosition(
@@ -9252,21 +9251,21 @@ public final class Handling {
                 return "";
             }
             String[] itemFields = itemRow.split("\t", -1);
-            long productId = Vb.val(navigatorField(itemFields, 0));
+            long productId = NumberUtils.parseLong(navigatorField(itemFields, 0));
             String itemData = navigatorField(itemFields, 2);
-            long secondaryValue = Vb.val(navigatorField(itemFields, 3));
+            long secondaryValue = NumberUtils.parseLong(navigatorField(itemFields, 3));
             if (productId <= 0L) {
                 return "";
             }
             String[] productFields = Licence.Proc_9_3_807930(productId, 0, 0).split("\t", -1);
-            long productType = Vb.val(navigatorField(productFields, 1));
+            long productType = NumberUtils.parseLong(navigatorField(productFields, 1));
             if (productType == 9L) {
                 if (fromInventory) {
                     Proc_6_157_7974B0(socketIndex, requestPayload, itemFields);
                 }
                 return "";
             }
-            String positionZ = String.valueOf((long) Vb.val(navigatorField(productFields, 24)));
+            String positionZ = String.valueOf((long) NumberUtils.parseLong(navigatorField(productFields, 24)));
             if (fromInventory) {
                 MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner=NULL,id_room='" + roomId
                     + "',position_x='" + placement.positionX + "',position_y='" + placement.positionY
@@ -9285,7 +9284,7 @@ public final class Handling {
             }
             String placementPayload = Proc_6_161_7B2EE0(
                 placement.furnitureId, placement.positionX, placement.positionY, placement.rotation,
-                Vb.val(positionZ), "", itemData, secondaryValue, productId);
+                NumberUtils.parseLong(positionZ), "", itemData, secondaryValue, productId);
             String payload = (fromInventory ? "A]" : "A_") + placementPayload;
             if (!placementPayload.isEmpty()) {
                 Proc_6_247_8027E0(socketIndex, payload, 0);
@@ -9304,7 +9303,7 @@ public final class Handling {
 
     public static FloorFurniturePlacement floorFurniturePlacementFromPayload(String packetPayload) {
         FloorFurniturePlacement placement = new FloorFurniturePlacement();
-        String normalizedPayload = Vb.cStr(packetPayload)
+        String normalizedPayload = StringUtils.text(packetPayload)
             .replace('\1', ' ')
             .replace('\2', ' ')
             .replace('\t', ' ')
@@ -9317,20 +9316,20 @@ public final class Handling {
         if (!normalizedPayload.isEmpty()) {
             String[] tokens = normalizedPayload.split(" ", -1);
             if (tokens.length >= 1) {
-                placement.furnitureId = Vb.val(tokens[0]);
+                placement.furnitureId = NumberUtils.parseLong(tokens[0]);
             }
             if (tokens.length >= 2) {
-                placement.positionX = Vb.val(tokens[1]);
+                placement.positionX = NumberUtils.parseLong(tokens[1]);
             }
             if (tokens.length >= 3) {
-                placement.positionY = Vb.val(tokens[2]);
+                placement.positionY = NumberUtils.parseLong(tokens[2]);
             }
             if (tokens.length >= 4) {
-                placement.rotation = Vb.val(tokens[3]);
+                placement.rotation = NumberUtils.parseLong(tokens[3]);
             }
         }
         if (placement.furnitureId <= 0L) {
-            placement.furnitureId = readWireLong(Vb.cStr(packetPayload), new LongRef(1));
+            placement.furnitureId = readWireLong(StringUtils.text(packetPayload), new LongRef(1));
         }
         return placement;
     }
@@ -9343,13 +9342,13 @@ public final class Handling {
         if (roomId <= 0L) {
             return 0L;
         }
-        return Vb.val(MySQL.Proc_5_2_6D4690(
+        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690(
             "SELECT furnitures.id FROM furnitures,products WHERE furnitures.id_room='" + roomId
                 + "' AND products.id_type='9' AND furnitures.id_product=products.id LIMIT 1", 0, 0));
     }
 
     public static boolean isDimmerColour(String colourText) {
-        String color = Vb.cStr(colourText).toUpperCase();
+        String color = StringUtils.text(colourText).toUpperCase();
         return "#0053F7".equals(color)
             || "#74F5F5".equals(color)
             || "#E759DE".equals(color)
@@ -9363,7 +9362,7 @@ public final class Handling {
         if (placement == null) {
             return false;
         }
-        String normalizedPayload = Vb.cStr(packetPayload)
+        String normalizedPayload = StringUtils.text(packetPayload)
             .replace('\1', ' ')
             .replace('\2', ' ')
             .replace('\t', ' ')
@@ -9386,10 +9385,10 @@ public final class Handling {
         if (wallParts.length < 2 || localParts.length < 2) {
             return false;
         }
-        placement.wallX = Vb.val(wallParts[0]);
-        placement.wallY = Vb.val(wallParts[1]);
-        placement.localX = Vb.val(localParts[0]);
-        placement.localY = Vb.val(localParts[1]);
+        placement.wallX = NumberUtils.parseLong(wallParts[0]);
+        placement.wallY = NumberUtils.parseLong(wallParts[1]);
+        placement.localX = NumberUtils.parseLong(localParts[0]);
+        placement.localY = NumberUtils.parseLong(localParts[1]);
         return true;
     }
 
@@ -9532,12 +9531,12 @@ public final class Handling {
 
         StringBuilder rightsPayload = new StringBuilder();
         long rightsCount = 0L;
-        if (!Vb.cStr(rightsRow).isEmpty()) {
-            for (String row : Vb.cStr(rightsRow).split("\r", -1)) {
+        if (!StringUtils.text(rightsRow).isEmpty()) {
+            for (String row : StringUtils.text(rightsRow).split("\r", -1)) {
                 if (!row.isEmpty()) {
                     String[] rightsFields = row.split("\t", -1);
                     if (rightsFields.length >= 2) {
-                        rightsPayload = new StringBuilder(Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(rightsFields, 0)), null, rightsPayload.toString()));
+                        rightsPayload = new StringBuilder(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(rightsFields, 0)), null, rightsPayload.toString()));
                         rightsPayload.append(handlingField(rightsFields, 1)).append('\2');
                         rightsCount++;
                     }
@@ -9545,19 +9544,19 @@ public final class Handling {
             }
         }
 
-        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 0)), null, "GQ");
+        String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 0)), null, "GQ");
         payload = payload + handlingField(roomFields, 1) + '\2';
         payload = payload + handlingField(roomFields, 2) + '\2';
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 3)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 4)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 5)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 6)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 3)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 4)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 5)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 6)), null, payload);
         payload = Crypto.Proc_3_0_6D2AF0(tagCount, null, payload) + tagPayload;
         payload = Crypto.Proc_3_0_6D2AF0(rightsCount, null, payload) + rightsPayload + "H";
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 10)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 11)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 12)), null, payload);
-        return Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(roomFields, 13)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 10)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 11)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 12)), null, payload);
+        return Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 13)), null, payload);
     }
 
     public static long roomSettingsFlag(long flagValue) {
@@ -9575,11 +9574,11 @@ public final class Handling {
     }
 
     public static String nullableSqlText(String valueText) {
-        return Vb.cStr(valueText).isEmpty() ? "null" : "'" + Functions.Proc_10_11_80A9C0(valueText) + "'";
+        return StringUtils.text(valueText).isEmpty() ? "null" : "'" + Functions.Proc_10_11_80A9C0(valueText) + "'";
     }
 
     public static long navigatorListLimit() {
-        long limit = Vb.val(Functions.Proc_10_0_809570("com.client.navigator.list.limit", 50));
+        long limit = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.list.limit", 50));
         return limit <= 0L ? 50L : limit;
     }
 
@@ -9589,7 +9588,7 @@ public final class Handling {
 
     public static long navigatorCategoryIdFromPacket(Object[] args, String packetPrefix) {
         String requestPayload = handlingRequestPayload(args, packetPrefix);
-        long categoryId = Vb.val(Functions.Proc_10_7_80A190(requestPayload, 0, 0));
+        long categoryId = NumberUtils.parseLong(Functions.Proc_10_7_80A190(requestPayload, 0, 0));
         if (categoryId <= 0L) {
             categoryId = readWireLong(requestPayload, new LongRef(1));
         }
@@ -9664,16 +9663,16 @@ public final class Handling {
     }
 
     public static String navigatorField(String[] fields, long fieldIndex) {
-        return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
+        return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? StringUtils.text(fields[(int) fieldIndex]) : "";
     }
 
     public static String navigatorEventFragment(String[] fields) {
-        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 0)), null, "");
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 4)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 5)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 9)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 10)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 7)), null, payload);
+        String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 0)), null, "");
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 4)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 5)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 9)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 10)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 7)), null, payload);
         return payload + " "
             + navigatorField(fields, 1) + '\2'
             + navigatorField(fields, 2) + '\2'
@@ -9687,14 +9686,14 @@ public final class Handling {
     }
 
     public static String navigatorRoomFragment(String[] fields) {
-        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 0)), null, "");
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 4)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 5)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 9)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 10)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 7)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 14)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 15)), null, payload);
+        String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 0)), null, "");
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 4)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 5)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 9)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 10)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 7)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 14)), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 15)), null, payload);
         return payload
             + navigatorField(fields, 1) + '\2'
             + navigatorField(fields, 2) + '\2'
@@ -9709,7 +9708,7 @@ public final class Handling {
     public static String navigatorRoomListPayloadFromRows(String rowText) {
         long roomCount = 0L;
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+        for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 payload.append(navigatorRoomFragment(row.split("\t", -1)));
                 roomCount++;
@@ -9732,7 +9731,7 @@ public final class Handling {
             if (args == null || args.length == 0) {
                 return Crypto.Proc_3_0_6D2AF0(0, null, "");
             }
-            String queryTail = Vb.cStr(args[0]);
+            String queryTail = StringUtils.text(args[0]);
             if (queryTail.isEmpty()) {
                 return Crypto.Proc_3_0_6D2AF0(0, null, "");
             }
@@ -9749,7 +9748,7 @@ public final class Handling {
     public static String navigatorEventListPayloadFromRows(String rowText) {
         long eventCount = 0L;
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+        for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 payload.append(navigatorEventFragment(row.split("\t", -1)));
                 eventCount++;
@@ -9761,13 +9760,13 @@ public final class Handling {
     public static String navigatorCombinedRoomListPayloadFromRows(String eventRows, String roomRows) {
         long itemCount = 0L;
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(eventRows).split("\r", -1)) {
+        for (String row : StringUtils.text(eventRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 payload.append(navigatorEventFragment(row.split("\t", -1)));
                 itemCount++;
             }
         }
-        for (String row : Vb.cStr(roomRows).split("\r", -1)) {
+        for (String row : StringUtils.text(roomRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 payload.append(navigatorRoomFragment(row.split("\t", -1)));
                 itemCount++;
@@ -9781,14 +9780,14 @@ public final class Handling {
             return "";
         }
         boolean includeCountPrefix = args.length >= 2
-            && (args[1] instanceof Boolean ? (Boolean) args[1] : Vb.val(args[1]) != 0L);
-        return officialNavigatorRowsPayload(Vb.cStr(args[0]), includeCountPrefix);
+            && (args[1] instanceof Boolean ? (Boolean) args[1] : NumberUtils.parseLong(args[1]) != 0L);
+        return officialNavigatorRowsPayload(StringUtils.text(args[0]), includeCountPrefix);
     }
 
     public static String officialNavigatorRowsPayload(String rowText, boolean includeCountPrefix) {
         long itemCount = 0L;
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+        for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 27) {
@@ -9808,16 +9807,16 @@ public final class Handling {
             return "";
         }
         StringBuilder payload = new StringBuilder();
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 0)), null, ""));
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 1)), null, ""));
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 2)), null, ""));
+        payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 0)), null, ""));
+        payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 1)), null, ""));
+        payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 2)), null, ""));
         for (int fieldIndex = 3; fieldIndex <= 24; fieldIndex++) {
             payload.append(navigatorField(fields, fieldIndex)).append('\2');
         }
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 25)), null, ""));
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 26)), null, ""));
+        payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 25)), null, ""));
+        payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 26)), null, ""));
         if (fields.length >= 28) {
-            payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 27)), null, ""));
+            payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 27)), null, ""));
         }
         return payload.toString();
     }
@@ -9826,9 +9825,9 @@ public final class Handling {
         if (args == null || args.length < 2) {
             return "";
         }
-        return inventoryItemPayload(Vb.val(args[0]), Vb.val(args[1]),
-            args.length >= 3 ? Vb.cStr(args[2]) : "",
-            args.length >= 4 ? Vb.val(args[3]) : 0L);
+        return inventoryItemPayload(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]),
+            args.length >= 3 ? StringUtils.text(args[2]) : "",
+            args.length >= 4 ? NumberUtils.parseLong(args[3]) : 0L);
     }
 
     public static String inventoryItemPayload(long itemId, long productId, String itemData, long extraValue) {
@@ -9844,17 +9843,17 @@ public final class Handling {
         long secondaryValue
     ) {
         if (socketIndex <= 0L || furnitureId <= 0L || productId <= 0L) {
-            return Vb.cStr(tradeOffersText);
+            return StringUtils.text(tradeOffersText);
         }
         String rowText = socketIndex + "\t" + furnitureId + "\t" + productId + "\t"
-            + Vb.cStr(signText).replace("\r", "") + "\t" + secondaryValue;
+            + StringUtils.text(signText).replace("\r", "") + "\t" + secondaryValue;
         StringBuilder rebuiltText = new StringBuilder();
         boolean replacedExisting = false;
-        for (String row : Vb.cStr(tradeOffersText).split("\r", -1)) {
+        for (String row : StringUtils.text(tradeOffersText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 2) {
-                    if (Vb.val(handlingField(fields, 0)) == socketIndex && Vb.val(handlingField(fields, 1)) == furnitureId) {
+                    if (NumberUtils.parseLong(handlingField(fields, 0)) == socketIndex && NumberUtils.parseLong(handlingField(fields, 1)) == furnitureId) {
                         appendRow(rebuiltText, rowText);
                         replacedExisting = true;
                     } else {
@@ -9870,16 +9869,16 @@ public final class Handling {
     }
 
     public static String representedTradeOfferRemove(String tradeOffersText, long socketIndex, long furnitureId) {
-        if (socketIndex <= 0L || Vb.cStr(tradeOffersText).isEmpty()) {
-            return Vb.cStr(tradeOffersText);
+        if (socketIndex <= 0L || StringUtils.text(tradeOffersText).isEmpty()) {
+            return StringUtils.text(tradeOffersText);
         }
         StringBuilder rebuiltText = new StringBuilder();
-        for (String row : Vb.cStr(tradeOffersText).split("\r", -1)) {
+        for (String row : StringUtils.text(tradeOffersText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 2) {
-                    long rowSocketIndex = Vb.val(handlingField(fields, 0));
-                    long rowFurnitureId = Vb.val(handlingField(fields, 1));
+                    long rowSocketIndex = NumberUtils.parseLong(handlingField(fields, 0));
+                    long rowFurnitureId = NumberUtils.parseLong(handlingField(fields, 1));
                     if (rowSocketIndex != socketIndex || (furnitureId > 0L && rowFurnitureId != furnitureId)) {
                         appendRow(rebuiltText, row);
                     }
@@ -9890,15 +9889,15 @@ public final class Handling {
     }
 
     public static String representedTradeOfferSqlIds(String tradeOffersText, long socketIndex) {
-        if (socketIndex <= 0L || Vb.cStr(tradeOffersText).isEmpty()) {
+        if (socketIndex <= 0L || StringUtils.text(tradeOffersText).isEmpty()) {
             return "";
         }
         StringBuilder sqlIds = new StringBuilder();
-        for (String row : Vb.cStr(tradeOffersText).split("\r", -1)) {
+        for (String row : StringUtils.text(tradeOffersText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                if (fields.length >= 2 && Vb.val(handlingField(fields, 0)) == socketIndex) {
-                    long furnitureId = Vb.val(handlingField(fields, 1));
+                if (fields.length >= 2 && NumberUtils.parseLong(handlingField(fields, 0)) == socketIndex) {
+                    long furnitureId = NumberUtils.parseLong(handlingField(fields, 1));
                     if (furnitureId > 0L) {
                         if (sqlIds.length() > 0) {
                             sqlIds.append(',');
@@ -9912,16 +9911,16 @@ public final class Handling {
     }
 
     public static String representedTradeOfferLogItems(String tradeOffersText, long socketIndex) {
-        if (socketIndex <= 0L || Vb.cStr(tradeOffersText).isEmpty()) {
+        if (socketIndex <= 0L || StringUtils.text(tradeOffersText).isEmpty()) {
             return "";
         }
         StringBuilder logItems = new StringBuilder();
-        for (String row : Vb.cStr(tradeOffersText).split("\r", -1)) {
+        for (String row : StringUtils.text(tradeOffersText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                if (fields.length >= 3 && Vb.val(handlingField(fields, 0)) == socketIndex) {
-                    long furnitureId = Vb.val(handlingField(fields, 1));
-                    long productId = Vb.val(handlingField(fields, 2));
+                if (fields.length >= 3 && NumberUtils.parseLong(handlingField(fields, 0)) == socketIndex) {
+                    long furnitureId = NumberUtils.parseLong(handlingField(fields, 1));
+                    long productId = NumberUtils.parseLong(handlingField(fields, 2));
                     if (furnitureId > 0L) {
                         if (logItems.length() > 0) {
                             logItems.append('\1');
@@ -9936,19 +9935,19 @@ public final class Handling {
 
     public static TradeOfferItemPayload representedTradeOfferItemPayload(String tradeOffersText, long socketIndex) {
         TradeOfferItemPayload result = new TradeOfferItemPayload();
-        if (socketIndex <= 0L || Vb.cStr(tradeOffersText).isEmpty()) {
+        if (socketIndex <= 0L || StringUtils.text(tradeOffersText).isEmpty()) {
             return result;
         }
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(tradeOffersText).split("\r", -1)) {
+        for (String row : StringUtils.text(tradeOffersText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                if (fields.length >= 5 && Vb.val(handlingField(fields, 0)) == socketIndex) {
+                if (fields.length >= 5 && NumberUtils.parseLong(handlingField(fields, 0)) == socketIndex) {
                     payload.append(inventoryItemPayload(
-                        Vb.val(handlingField(fields, 1)),
-                        Vb.val(handlingField(fields, 2)),
+                        NumberUtils.parseLong(handlingField(fields, 1)),
+                        NumberUtils.parseLong(handlingField(fields, 2)),
                         handlingField(fields, 3),
-                        Vb.val(handlingField(fields, 4))));
+                        NumberUtils.parseLong(handlingField(fields, 4))));
                     result.itemCount++;
                 }
             }
@@ -9969,8 +9968,8 @@ public final class Handling {
         }
         TradeOfferItemPayload sourceItems = representedTradeOfferItemPayload(tradeOffersText, sourceSocketIndex);
         TradeOfferItemPayload targetItems = representedTradeOfferItemPayload(tradeOffersText, targetSocketIndex);
-        String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(sourceUserId), null, "Al");
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(targetUserId), null, payload);
+        String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(sourceUserId), null, "Al");
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(targetUserId), null, payload);
         payload = Crypto.Proc_3_0_6D2AF0(sourceItems.itemCount, null, payload) + sourceItems.payload;
         return Crypto.Proc_3_0_6D2AF0(targetItems.itemCount, null, payload) + targetItems.payload;
     }
@@ -9987,7 +9986,7 @@ public final class Handling {
 
     public static FurnitureMoveRequest furnitureMoveRequestFromPayload(String packetPayload) {
         FurnitureMoveRequest request = new FurnitureMoveRequest();
-        String requestPayload = Vb.cStr(packetPayload);
+        String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("A[")) {
             requestPayload = requestPayload.substring(2);
         }
@@ -10005,10 +10004,10 @@ public final class Handling {
 
         if (!normalizedPayload.isEmpty()) {
             String[] tokens = normalizedPayload.split(" ", -1);
-            request.furnitureId = tokens.length >= 1 ? Vb.val(tokens[0]) : 0L;
-            request.positionX = tokens.length >= 2 ? Vb.val(tokens[1]) : 0L;
-            request.positionY = tokens.length >= 3 ? Vb.val(tokens[2]) : 0L;
-            request.rotation = tokens.length >= 4 ? Vb.val(tokens[3]) : 0L;
+            request.furnitureId = tokens.length >= 1 ? NumberUtils.parseLong(tokens[0]) : 0L;
+            request.positionX = tokens.length >= 2 ? NumberUtils.parseLong(tokens[1]) : 0L;
+            request.positionY = tokens.length >= 3 ? NumberUtils.parseLong(tokens[2]) : 0L;
+            request.rotation = tokens.length >= 4 ? NumberUtils.parseLong(tokens[3]) : 0L;
         }
 
         if (request.furnitureId <= 0L) {
@@ -10019,11 +10018,11 @@ public final class Handling {
     }
 
     public static String activityPointBalancePayload(String rowText) {
-        String[] fields = Vb.cStr(rowText).split("\t", -1);
+        String[] fields = StringUtils.text(rowText).split("\t", -1);
         long itemCount = 0L;
         StringBuilder itemPayload = new StringBuilder();
         for (long pointType = 1L; pointType <= 4L; pointType++) {
-            long pointValue = Vb.val(navigatorField(fields, pointType - 1L));
+            long pointValue = NumberUtils.parseLong(navigatorField(fields, pointType - 1L));
             itemPayload.append(Crypto.Proc_3_0_6D2AF0(pointType, null, ""));
             itemPayload.append(Crypto.Proc_3_0_6D2AF0(pointValue, null, ""));
             itemCount++;
@@ -10032,11 +10031,11 @@ public final class Handling {
     }
 
     public static long pickupFurnitureIdFromPayload(String packetPayload) {
-        String requestPayload = Vb.cStr(packetPayload);
+        String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("AZ")) {
             requestPayload = requestPayload.substring(2);
         }
-        long furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        long furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
         if (furnitureId <= 0L) {
             LongRef offset = new LongRef(1);
             furnitureId = readWireLong(requestPayload, offset);
@@ -10066,7 +10065,7 @@ public final class Handling {
     }
 
     public static long nextFurnitureState(String productSprite, long currentState, long maxState) {
-        String sprite = Vb.cStr(productSprite).toLowerCase();
+        String sprite = StringUtils.text(productSprite).toLowerCase();
         if (sprite.contains("dice")) {
             return Functions.Proc_10_4_809CA0(1, 6);
         }
@@ -10114,18 +10113,18 @@ public final class Handling {
             long furnitureId = 0L;
             String stateText = "";
             if (args != null && args.length >= 3) {
-                roomId = Vb.val(args[0]);
-                furnitureId = Vb.val(args[1]);
-                stateText = Vb.cStr(args[2]);
+                roomId = NumberUtils.parseLong(args[0]);
+                furnitureId = NumberUtils.parseLong(args[1]);
+                stateText = StringUtils.text(args[2]);
             } else if (args != null && args.length >= 2) {
-                furnitureId = Vb.val(args[0]);
-                stateText = Vb.cStr(args[1]);
+                furnitureId = NumberUtils.parseLong(args[0]);
+                stateText = StringUtils.text(args[1]);
             }
             if (furnitureId <= 0L) {
                 return;
             }
             if (roomId <= 0L) {
-                roomId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_room FROM furnitures WHERE id='"
+                roomId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_room FROM furnitures WHERE id='"
                     + furnitureId + "' LIMIT 1", 0, 0));
             }
             FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
@@ -10174,11 +10173,11 @@ public final class Handling {
         if (args == null || args.length == 0) {
             return "";
         }
-        long baseValue = Vb.val(args[0]);
-        long firstValue = args.length >= 2 ? Vb.val(args[1]) : 0L;
-        String secondValue = args.length >= 3 ? Vb.cStr(args[2]) : "";
-        String thirdValue = args.length >= 4 ? Vb.cStr(args[3]) : "";
-        long fourthValue = args.length >= 5 ? Vb.val(args[4]) : 0L;
+        long baseValue = NumberUtils.parseLong(args[0]);
+        long firstValue = args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
+        String secondValue = args.length >= 3 ? StringUtils.text(args[2]) : "";
+        String thirdValue = args.length >= 4 ? StringUtils.text(args[3]) : "";
+        long fourthValue = args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
         return wallInventoryPlacementPayload(baseValue, firstValue, secondValue, thirdValue, fourthValue);
     }
 
@@ -10190,8 +10189,8 @@ public final class Handling {
         long secondaryValue
     ) {
         String payload = Crypto.Proc_3_0_6D2AF0(productId, null, furnitureId + "\2")
-            + Vb.cStr(wallPosition) + '\2'
-            + Vb.cStr(itemData) + '\2';
+            + StringUtils.text(wallPosition) + '\2'
+            + StringUtils.text(itemData) + '\2';
         return "0" + Crypto.Proc_3_0_6D2AF0(secondaryValue, null, payload);
     }
 
@@ -10200,15 +10199,15 @@ public final class Handling {
             return "";
         }
         return floorItemPlacementPayload(
-            Vb.val(args[0]),
-            args.length >= 2 ? Vb.val(args[1]) : 0L,
-            args.length >= 3 ? Vb.val(args[2]) : 0L,
-            args.length >= 4 ? Vb.val(args[3]) : 0L,
-            args.length >= 5 ? Vb.val(args[4]) : 0L,
-            args.length >= 6 ? Vb.cStr(args[5]) : "",
-            args.length >= 7 ? Vb.cStr(args[6]) : "",
-            args.length >= 8 ? Vb.val(args[7]) : 0L,
-            args.length >= 9 ? Vb.val(args[8]) : 0L);
+            NumberUtils.parseLong(args[0]),
+            args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L,
+            args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L,
+            args.length >= 4 ? NumberUtils.parseLong(args[3]) : 0L,
+            args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L,
+            args.length >= 6 ? StringUtils.text(args[5]) : "",
+            args.length >= 7 ? StringUtils.text(args[6]) : "",
+            args.length >= 8 ? NumberUtils.parseLong(args[7]) : 0L,
+            args.length >= 9 ? NumberUtils.parseLong(args[8]) : 0L);
     }
 
     public static String floorItemPlacementPayload(
@@ -10222,18 +10221,18 @@ public final class Handling {
         long secondaryValue,
         long productId
     ) {
-        String normalizedItemData = Vb.cStr(itemData).replace('\b', '\t').replace("{{9}}", "\t");
+        String normalizedItemData = StringUtils.text(itemData).replace('\b', '\t').replace("{{9}}", "\t");
         String payload = Crypto.Proc_3_0_6D2AF0(furnitureId, null, "0");
         payload = Crypto.Proc_3_0_6D2AF0(positionX, null, payload);
         payload = "0" + Crypto.Proc_3_0_6D2AF0(positionY, null, payload);
         payload = "0" + Crypto.Proc_3_0_6D2AF0(rotation, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(positionZ, null, payload) + Vb.cStr(stateText) + '\2';
+        payload = Crypto.Proc_3_0_6D2AF0(positionZ, null, payload) + StringUtils.text(stateText) + '\2';
         payload = Crypto.Proc_3_0_6D2AF0(secondaryValue, null, payload) + normalizedItemData + '\2' + "M";
         return Crypto.Proc_3_0_6D2AF0(productId, null, payload);
     }
 
     public static String systemHandshakePayload(String configuredDateFormat) {
-        String dateFormat = Vb.cStr(configuredDateFormat);
+        String dateFormat = StringUtils.text(configuredDateFormat);
         if (dateFormat.isEmpty()) {
             dateFormat = "DAQBHHIIKHJHPAHQA";
         }
@@ -10241,7 +10240,7 @@ public final class Handling {
     }
 
     public static String handlingLoginTicketFromPayload(String packetPayload) {
-        String requestPayload = Vb.cStr(packetPayload);
+        String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("F_")) {
             requestPayload = requestPayload.substring(2);
         }
@@ -10257,7 +10256,7 @@ public final class Handling {
     }
 
     public static String normalizeRoomModelMap(String modelMap) {
-        String modelPayload = Vb.cStr(modelMap).replace('\n', '\r');
+        String modelPayload = StringUtils.text(modelMap).replace('\n', '\r');
         while (modelPayload.contains("\r\r")) {
             modelPayload = modelPayload.replace("\r\r", "\r");
         }
@@ -10265,7 +10264,7 @@ public final class Handling {
     }
 
     public static void sendRoomPollPrompt(int socketIndex, String userId, long roomId) {
-        if (socketIndex <= 0 || Vb.cStr(userId).isEmpty() || roomId <= 0L) {
+        if (socketIndex <= 0 || StringUtils.text(userId).isEmpty() || roomId <= 0L) {
             return;
         }
         String pollRow = MySQL.Proc_5_2_6D4690("SELECT id,description_title FROM poll WHERE id_room='"
@@ -10274,7 +10273,7 @@ public final class Handling {
             return;
         }
         String[] pollFields = pollRow.split("\t", -1);
-        long pollId = Vb.val(handlingField(pollFields, 0));
+        long pollId = NumberUtils.parseLong(handlingField(pollFields, 0));
         if (pollId <= 0L) {
             return;
         }
@@ -10301,7 +10300,7 @@ public final class Handling {
     }
 
     public static long representedActivityPointSessionSeconds(long socketIndex, String userId) {
-        if (socketIndex <= 0L || Vb.cStr(userId).isEmpty()) {
+        if (socketIndex <= 0L || StringUtils.text(userId).isEmpty()) {
             return 0L;
         }
         String marker = "[" + socketIndex + "]";
@@ -10313,11 +10312,11 @@ public final class Handling {
             if (endAt < 0) {
                 endAt = representedActivityPointTicks.length();
             }
-            tickValue = Vb.val(representedActivityPointTicks.substring(valueStart, endAt));
+            tickValue = NumberUtils.parseLong(representedActivityPointTicks.substring(valueStart, endAt));
             representedActivityPointTicks = representedActivityPointTicks.substring(0, startAt)
                 + representedActivityPointTicks.substring(endAt);
         } else {
-            tickValue = Vb.val(MySQL.Proc_5_2_6D4690("SELECT online_time FROM users WHERE id='"
+            tickValue = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT online_time FROM users WHERE id='"
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
         }
         tickValue += 60L;
@@ -10354,11 +10353,11 @@ public final class Handling {
     }
 
     public static String ownProfilePayload(String userRow) {
-        String[] fields = Vb.cStr(userRow).split("\t", -1);
+        String[] fields = StringUtils.text(userRow).split("\t", -1);
         if (fields.length < 6) {
             return "";
         }
-        long userId = Vb.val(handlingField(fields, 0));
+        long userId = NumberUtils.parseLong(handlingField(fields, 0));
         if (userId <= 0L) {
             return "";
         }
@@ -10369,8 +10368,8 @@ public final class Handling {
         if (!"M".equals(genderText) && !"F".equals(genderText)) {
             genderText = "M";
         }
-        long respectAmount = Vb.val(handlingField(fields, 4));
-        long scratchAmount = Vb.val(handlingField(fields, 5));
+        long respectAmount = NumberUtils.parseLong(handlingField(fields, 4));
+        long scratchAmount = NumberUtils.parseLong(handlingField(fields, 5));
         String payload = "@E" + userId + '\2' + userName + '\2' + mottoText + '\2';
         payload += genderText + "\2\2\2H\2HIH";
         payload = Crypto.Proc_3_0_6D2AF0(respectAmount, null, payload);
@@ -10378,27 +10377,27 @@ public final class Handling {
     }
 
     public static long soundSettingFromWire(String packetPayload) {
-        String requestPayload = Vb.cStr(packetPayload);
+        String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("Ce")) {
             requestPayload = requestPayload.substring(2);
         }
-        long soundSetting = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        long soundSetting = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
         if (soundSetting <= 0L) {
-            soundSetting = Vb.val(requestPayload);
+            soundSetting = NumberUtils.parseLong(requestPayload);
         }
         return soundSetting > 0L && soundSetting < 101L ? soundSetting : 0L;
     }
 
     public static String loginGroupPayload(long groupId, String groupRow) {
-        if (groupId <= 0L || Vb.cStr(groupRow).isEmpty()) {
+        if (groupId <= 0L || StringUtils.text(groupRow).isEmpty()) {
             return "";
         }
-        String[] fields = Vb.cStr(groupRow).split("\t", -1);
+        String[] fields = StringUtils.text(groupRow).split("\t", -1);
         String payload = Crypto.Proc_3_0_6D2AF0(groupId, null, "Dt");
         payload += handlingField(fields, 0) + '\2';
         payload += handlingField(fields, 1) + '\2';
         payload += handlingField(fields, 2) + '\2';
-        payload += Crypto.Proc_3_0_6D2AF0(Vb.val(handlingField(fields, 3)), null, "") + "H";
+        payload += Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 3)), null, "") + "H";
         return payload;
     }
 
@@ -10423,7 +10422,7 @@ public final class Handling {
         for (String row : representedInteractionPairs.split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                if (fields.length >= 1 && Vb.val(handlingField(fields, 0)) != socketIndex) {
+                if (fields.length >= 1 && NumberUtils.parseLong(handlingField(fields, 0)) != socketIndex) {
                     appendRow(rebuilt, row);
                 }
             }
@@ -10439,8 +10438,8 @@ public final class Handling {
         for (String row : representedInteractionPairs.split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                if (fields.length >= 2 && Vb.val(handlingField(fields, 0)) == socketIndex) {
-                    return (int) Vb.val(handlingField(fields, 1));
+                if (fields.length >= 2 && NumberUtils.parseLong(handlingField(fields, 0)) == socketIndex) {
+                    return (int) NumberUtils.parseLong(handlingField(fields, 1));
                 }
             }
         }
@@ -10454,8 +10453,8 @@ public final class Handling {
         for (String row : representedInteractionPairs.split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                if (fields.length >= 3 && Vb.val(handlingField(fields, 0)) == socketIndex) {
-                    return Vb.val(handlingField(fields, 2));
+                if (fields.length >= 3 && NumberUtils.parseLong(handlingField(fields, 0)) == socketIndex) {
+                    return NumberUtils.parseLong(handlingField(fields, 2));
                 }
             }
         }
@@ -10480,7 +10479,7 @@ public final class Handling {
         long activityCount
     ) {
         long resolvedActivityCount = activityCount <= 0L ? 1L : activityCount;
-        String payload = Crypto.Proc_3_0_6D2AF0(campaignId, null, "") + Vb.cStr(questName) + '\2';
+        String payload = Crypto.Proc_3_0_6D2AF0(campaignId, null, "") + StringUtils.text(questName) + '\2';
         payload += Crypto.Proc_3_0_6D2AF0(campaignLevelCount, null, "");
         payload += Crypto.Proc_3_0_6D2AF0(questId, null, "");
         payload += Crypto.Proc_3_0_6D2AF0(userQuestLevel, null, "");
@@ -10497,10 +10496,10 @@ public final class Handling {
     public static long nextQuestId(String questRows, String activeRow) {
         long currentQuestId = 0L;
         long currentLevel = 0L;
-        if (!Vb.cStr(activeRow).isEmpty()) {
-            String[] activeFields = Vb.cStr(activeRow).split("\t", -1);
-            currentQuestId = Vb.val(handlingField(activeFields, 0));
-            currentLevel = Vb.val(handlingField(activeFields, 1));
+        if (!StringUtils.text(activeRow).isEmpty()) {
+            String[] activeFields = StringUtils.text(activeRow).split("\t", -1);
+            currentQuestId = NumberUtils.parseLong(handlingField(activeFields, 0));
+            currentLevel = NumberUtils.parseLong(handlingField(activeFields, 1));
         }
 
         long currentCampaignId = 0L;
@@ -10508,14 +10507,14 @@ public final class Handling {
         long fallbackCampaignId = 0L;
         long fallbackLevel = Integer.MAX_VALUE;
         boolean foundCurrent = false;
-        for (String row : Vb.cStr(questRows).split("\r", -1)) {
+        for (String row : StringUtils.text(questRows).split("\r", -1)) {
             String rowValue = row.trim();
             if (!rowValue.isEmpty()) {
                 String[] fields = rowValue.split("\t", -1);
                 if (fields.length >= 9) {
-                    long rowQuestId = Vb.val(handlingField(fields, 0));
-                    long rowLevel = Vb.val(handlingField(fields, 1));
-                    long rowCampaignId = Vb.val(handlingField(fields, 8));
+                    long rowQuestId = NumberUtils.parseLong(handlingField(fields, 0));
+                    long rowLevel = NumberUtils.parseLong(handlingField(fields, 1));
+                    long rowCampaignId = NumberUtils.parseLong(handlingField(fields, 8));
                     if (fallbackQuestId <= 0L || rowLevel < fallbackLevel) {
                         fallbackQuestId = rowQuestId;
                         fallbackCampaignId = rowCampaignId;
@@ -10536,14 +10535,14 @@ public final class Handling {
 
         long requestedQuestId = 0L;
         long bestLevel = Integer.MAX_VALUE;
-        for (String row : Vb.cStr(questRows).split("\r", -1)) {
+        for (String row : StringUtils.text(questRows).split("\r", -1)) {
             String rowValue = row.trim();
             if (!rowValue.isEmpty()) {
                 String[] fields = rowValue.split("\t", -1);
                 if (fields.length >= 9) {
-                    long rowQuestId = Vb.val(handlingField(fields, 0));
-                    long rowLevel = Vb.val(handlingField(fields, 1));
-                    long rowCampaignId = Vb.val(handlingField(fields, 8));
+                    long rowQuestId = NumberUtils.parseLong(handlingField(fields, 0));
+                    long rowLevel = NumberUtils.parseLong(handlingField(fields, 1));
+                    long rowCampaignId = NumberUtils.parseLong(handlingField(fields, 8));
                     if (rowCampaignId == currentCampaignId && rowLevel > currentLevel && rowLevel < bestLevel) {
                         requestedQuestId = rowQuestId;
                         bestLevel = rowLevel;
@@ -10556,26 +10555,26 @@ public final class Handling {
 
     public static QuestProgressDecision questProgressDecision(String activeRow, String questRows, long remainingWait) {
         QuestProgressDecision decision = new QuestProgressDecision();
-        if (Vb.cStr(activeRow).isEmpty()) {
+        if (StringUtils.text(activeRow).isEmpty()) {
             return decision;
         }
-        String[] activeFields = Vb.cStr(activeRow).split("\t", -1);
-        decision.questId = Vb.val(handlingField(activeFields, 0));
-        decision.numericQuestId = Vb.val(handlingField(activeFields, 1));
-        decision.progressValue = Vb.val(handlingField(activeFields, 2));
+        String[] activeFields = StringUtils.text(activeRow).split("\t", -1);
+        decision.questId = NumberUtils.parseLong(handlingField(activeFields, 0));
+        decision.numericQuestId = NumberUtils.parseLong(handlingField(activeFields, 1));
+        decision.progressValue = NumberUtils.parseLong(handlingField(activeFields, 2));
         String timeNextText = handlingField(activeFields, 4);
         if (decision.questId <= 0L) {
             return decision;
         }
 
         boolean matchedQuest = false;
-        for (String row : Vb.cStr(questRows).split("\r", -1)) {
+        for (String row : StringUtils.text(questRows).split("\r", -1)) {
             String rowValue = row.trim();
             if (!rowValue.isEmpty()) {
                 String[] fields = rowValue.split("\t", -1);
-                if (fields.length >= 11 && Vb.val(handlingField(fields, 0)) == decision.questId) {
-                    decision.amountRequired = Vb.val(handlingField(fields, 9));
-                    decision.waitAmount = Vb.val(handlingField(fields, 10));
+                if (fields.length >= 11 && NumberUtils.parseLong(handlingField(fields, 0)) == decision.questId) {
+                    decision.amountRequired = NumberUtils.parseLong(handlingField(fields, 9));
+                    decision.waitAmount = NumberUtils.parseLong(handlingField(fields, 10));
                     matchedQuest = true;
                     break;
                 }
@@ -10609,24 +10608,24 @@ public final class Handling {
     }
 
     public static String questListPayload(String questRows, String userQuestRows) {
-        String userQuestText = "\r" + Vb.cStr(userQuestRows) + "\r";
+        String userQuestText = "\r" + StringUtils.text(userQuestRows) + "\r";
         long lastCampaignId = -1L;
         long campaignLevelCount = 0L;
         long questCount = 0L;
         StringBuilder questPayload = new StringBuilder();
-        for (String row : Vb.cStr(questRows).split("\r", -1)) {
+        for (String row : StringUtils.text(questRows).split("\r", -1)) {
             String questRow = row.trim();
             if (!questRow.isEmpty()) {
                 String[] questFields = questRow.split("\t", -1);
                 if (questFields.length >= 11) {
-                    long questId = Vb.val(handlingField(questFields, 0));
-                    long questLevel = Vb.val(handlingField(questFields, 1));
+                    long questId = NumberUtils.parseLong(handlingField(questFields, 0));
+                    long questLevel = NumberUtils.parseLong(handlingField(questFields, 1));
                     String questName = handlingField(questFields, 2);
-                    long rewardAmount = Vb.val(handlingField(questFields, 4));
-                    long rewardType = Vb.val(handlingField(questFields, 5));
-                    long campaignId = Vb.val(handlingField(questFields, 8));
-                    long activityCount = Vb.val(handlingField(questFields, 9));
-                    long waitSeconds = Vb.val(handlingField(questFields, 10));
+                    long rewardAmount = NumberUtils.parseLong(handlingField(questFields, 4));
+                    long rewardType = NumberUtils.parseLong(handlingField(questFields, 5));
+                    long campaignId = NumberUtils.parseLong(handlingField(questFields, 8));
+                    long activityCount = NumberUtils.parseLong(handlingField(questFields, 9));
+                    long waitSeconds = NumberUtils.parseLong(handlingField(questFields, 10));
 
                     if (campaignId != lastCampaignId) {
                         lastCampaignId = campaignId;
@@ -10635,12 +10634,12 @@ public final class Handling {
                     campaignLevelCount++;
 
                     String[] userQuestFields = userQuestFields(userQuestText, questId);
-                    long userLevel = Vb.val(handlingField(userQuestFields, 1));
+                    long userLevel = NumberUtils.parseLong(handlingField(userQuestFields, 1));
                     String timestampDone = handlingField(userQuestFields, 2);
                     String timestampAccepted = handlingField(userQuestFields, 3);
                     String timeNextText = handlingField(userQuestFields, 4);
-                    long progressValue = Vb.val(handlingField(userQuestFields, 5));
-                    long remainingWait = Vb.val(handlingField(userQuestFields, 6));
+                    long progressValue = NumberUtils.parseLong(handlingField(userQuestFields, 5));
+                    long remainingWait = NumberUtils.parseLong(handlingField(userQuestFields, 6));
 
                     long stateCode = 0L;
                     if (!timestampDone.isEmpty() && !"0".equals(timestampDone)) {
@@ -10675,15 +10674,15 @@ public final class Handling {
     }
 
     public static String Proc_6_166_7BE940(Object... args) {
-        long userId = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
-        String userName = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
-        String motto = args != null && args.length >= 3 ? Vb.cStr(args[2]) : "";
-        String figure = args != null && args.length >= 4 ? Vb.cStr(args[3]) : "";
-        long rankValue = args != null && args.length >= 5 ? Vb.val(args[4]) : 0L;
-        long followCount = args != null && args.length >= 6 ? Vb.val(args[5]) : 0L;
-        long isOnline = args != null && args.length >= 7 ? Vb.val(args[6]) : 0L;
-        String lastOnlineText = args != null && args.length >= 8 ? Vb.cStr(args[7]) : "";
-        long relationshipState = args != null && args.length >= 9 ? Vb.val(args[8]) : 0L;
+        long userId = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
+        String userName = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
+        String motto = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
+        String figure = args != null && args.length >= 4 ? StringUtils.text(args[3]) : "";
+        long rankValue = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
+        long followCount = args != null && args.length >= 6 ? NumberUtils.parseLong(args[5]) : 0L;
+        long isOnline = args != null && args.length >= 7 ? NumberUtils.parseLong(args[6]) : 0L;
+        String lastOnlineText = args != null && args.length >= 8 ? StringUtils.text(args[7]) : "";
+        long relationshipState = args != null && args.length >= 9 ? NumberUtils.parseLong(args[8]) : 0L;
         return messengerFriendPayload(userId, userName, motto, figure, rankValue, followCount, isOnline, lastOnlineText, relationshipState);
     }
 
@@ -10694,8 +10693,8 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            long questId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
-            long numericQuestId = args != null && args.length >= 3 ? Vb.val(args[2]) : 0L;
+            long questId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
+            long numericQuestId = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
             String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
             String activeRow;
             if (questId <= 0L) {
@@ -10709,12 +10708,12 @@ public final class Handling {
                 return "";
             }
             String[] activeFields = activeRow.split("\t", -1);
-            questId = Vb.val(handlingField(activeFields, 0));
+            questId = NumberUtils.parseLong(handlingField(activeFields, 0));
             if (numericQuestId <= 0L) {
-                numericQuestId = Vb.val(handlingField(activeFields, 1));
+                numericQuestId = NumberUtils.parseLong(handlingField(activeFields, 1));
             }
-            long progressValue = Vb.val(handlingField(activeFields, 2));
-            long userQuestLevel = Vb.val(handlingField(activeFields, 3));
+            long progressValue = NumberUtils.parseLong(handlingField(activeFields, 2));
+            long userQuestLevel = NumberUtils.parseLong(handlingField(activeFields, 3));
             if (questId <= 0L) {
                 return "";
             }
@@ -10724,19 +10723,19 @@ public final class Handling {
                 return "";
             }
             String questName = handlingField(questFields, 2);
-            long rewardAmount = Vb.val(handlingField(questFields, 4));
-            long rewardType = Vb.val(handlingField(questFields, 5));
-            long campaignId = Vb.val(handlingField(questFields, 8));
-            long activityCount = Vb.val(handlingField(questFields, 9));
+            long rewardAmount = NumberUtils.parseLong(handlingField(questFields, 4));
+            long rewardType = NumberUtils.parseLong(handlingField(questFields, 5));
+            long campaignId = NumberUtils.parseLong(handlingField(questFields, 8));
+            long activityCount = NumberUtils.parseLong(handlingField(questFields, 9));
             if (activityCount <= 0L) {
                 activityCount = 1L;
             }
             long campaignLevelCount = 0L;
-            for (String row : Vb.cStr(questRows).split("\r", -1)) {
+            for (String row : StringUtils.text(questRows).split("\r", -1)) {
                 String rowText = row.trim();
                 if (!rowText.isEmpty()) {
                     String[] fields = rowText.split("\t", -1);
-                    if (fields.length >= 9 && Vb.val(handlingField(fields, 8)) == campaignId) {
+                    if (fields.length >= 9 && NumberUtils.parseLong(handlingField(fields, 8)) == campaignId) {
                         campaignLevelCount++;
                     }
                 }
@@ -10749,7 +10748,7 @@ public final class Handling {
             }
             if (rewardAmount != 0L && rewardType >= 0L && rewardType <= 20L) {
                 String pointColumn = "activitypoints_" + rewardType;
-                long currentPoints = Vb.val(MySQL.Proc_5_2_6D4690("SELECT " + pointColumn + " FROM users WHERE id='"
+                long currentPoints = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT " + pointColumn + " FROM users WHERE id='"
                     + escapedUserId + "' LIMIT 1", 0, 0));
                 MySQL.Proc_5_0_6D3CD0("UPDATE users SET " + pointColumn + "=" + pointColumn + "+" + rewardAmount
                     + " WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0);
@@ -10796,7 +10795,7 @@ public final class Handling {
 
     public static String messengerFriendSummaryPayload(String userId, long relationshipState) {
         try {
-            if (Vb.cStr(userId).isEmpty() || "0".equals(Vb.cStr(userId))) {
+            if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))) {
                 return "";
             }
             String dateFormat = Functions.Proc_10_0_809570("com.mysql.format.date", "%d-%m-%Y", 0);
@@ -10826,7 +10825,7 @@ public final class Handling {
     }
 
     public static boolean messengerFollowEnabled() {
-        return Vb.val(Functions.Proc_10_0_809570("com.client.messenger.follow.enabled", 0)) != 0L;
+        return NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.messenger.follow.enabled", 0)) != 0L;
     }
 
     public static long messengerMaxFriends(long configIndex) {
@@ -10834,8 +10833,8 @@ public final class Handling {
     }
 
     public static String requestTextFromWirePayload(String packetPayload, String prefix, int maxLength) {
-        String requestPayload = Vb.cStr(packetPayload);
-        if (!Vb.cStr(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
+        String requestPayload = StringUtils.text(packetPayload);
+        if (!StringUtils.text(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
             requestPayload = requestPayload.substring(prefix.length());
         }
         String value = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
@@ -10850,7 +10849,7 @@ public final class Handling {
     }
 
     public static FriendTargetList friendDeleteTargetsFromPayload(String packetPayload) {
-        String requestPayload = Vb.cStr(packetPayload);
+        String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("@f")) {
             requestPayload = requestPayload.substring(2);
         }
@@ -10920,7 +10919,7 @@ public final class Handling {
     }
 
     public static FriendTargetList friendRemoveTargetsFromPayload(String packetPayload, String callerUserId) {
-        String requestPayload = Vb.cStr(packetPayload);
+        String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("@h")) {
             requestPayload = requestPayload.substring(2);
         }
@@ -10937,7 +10936,7 @@ public final class Handling {
         for (long removeIndex = 1L; removeIndex <= removeCount; removeIndex++) {
             long targetUserId = readWireLong(requestPayload, offset);
             String token = String.valueOf(targetUserId);
-            if (targetUserId > 0L && !token.equals(Vb.cStr(callerUserId)) && !("," + targetList + ",").contains("," + token + ",")) {
+            if (targetUserId > 0L && !token.equals(StringUtils.text(callerUserId)) && !("," + targetList + ",").contains("," + token + ",")) {
                 if (targetList.length() > 0) {
                     targetList.append(',');
                 }
@@ -10981,8 +10980,8 @@ public final class Handling {
         for (String row : normalizeRows(commandRows)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                if (Vb.val(handlingField(fields, 0)) == commandId) {
-                    result.requiredLevel = Vb.val(handlingField(fields, 1));
+                if (NumberUtils.parseLong(handlingField(fields, 0)) == commandId) {
+                    result.requiredLevel = NumberUtils.parseLong(handlingField(fields, 1));
                     result.action = handlingField(fields, 3);
                     result.found = true;
                     return result;
@@ -10993,7 +10992,7 @@ public final class Handling {
             + commandId + "' LIMIT 1", 0, 0);
         if (!rowText.isEmpty()) {
             String[] fields = rowText.split("\t", -1);
-            result.requiredLevel = Vb.val(handlingField(fields, 0));
+            result.requiredLevel = NumberUtils.parseLong(handlingField(fields, 0));
             result.action = handlingField(fields, 1);
             result.found = true;
         }
@@ -11039,12 +11038,12 @@ public final class Handling {
         for (String row : normalizeRows(levelRows)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                if (Vb.val(handlingField(fields, 0)) == petLevel) {
-                    return Vb.val(handlingField(fields, 1));
+                if (NumberUtils.parseLong(handlingField(fields, 0)) == petLevel) {
+                    return NumberUtils.parseLong(handlingField(fields, 1));
                 }
             }
         }
-        return Vb.val(MySQL.Proc_5_2_6D4690("SELECT max_exp FROM bots_petlevels WHERE id_level='" + petLevel + "' LIMIT 1", 0, 0));
+        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT max_exp FROM bots_petlevels WHERE id_level='" + petLevel + "' LIMIT 1", 0, 0));
     }
 
     public static String petExperienceStatusPayload(
@@ -11076,7 +11075,7 @@ public final class Handling {
     }
 
     public static String representedBotField(String[] botFields, long fieldIndex) {
-        return botFields != null && fieldIndex >= 0 && fieldIndex < botFields.length ? Vb.cStr(botFields[(int) fieldIndex]) : "";
+        return botFields != null && fieldIndex >= 0 && fieldIndex < botFields.length ? StringUtils.text(botFields[(int) fieldIndex]) : "";
     }
 
     public static long allocateRepresentedBot(long roomSlot, String[] botFields) {
@@ -11092,22 +11091,22 @@ public final class Handling {
     }
 
     public static String representedBotRecordFromFields(long roomSlot, String[] botFields) {
-        long botId = Vb.val(representedBotField(botFields, 0));
+        long botId = NumberUtils.parseLong(representedBotField(botFields, 0));
         String botName = representedBotField(botFields, 1);
         String botMotto = representedBotField(botFields, 2);
         String botSpeech = representedBotField(botFields, 3);
         String botResponses = representedBotField(botFields, 4);
-        long positionX = Vb.val(representedBotField(botFields, 5));
-        long positionY = Vb.val(representedBotField(botFields, 6));
+        long positionX = NumberUtils.parseLong(representedBotField(botFields, 5));
+        long positionY = NumberUtils.parseLong(representedBotField(botFields, 6));
         String positionZ = representedBotField(botFields, 7);
-        long positionR = Vb.val(representedBotField(botFields, 8));
+        long positionR = NumberUtils.parseLong(representedBotField(botFields, 8));
         String botFigure = representedBotField(botFields, 9);
-        long handleId = Vb.val(representedBotField(botFields, 11));
-        long handleActionId = Vb.val(representedBotField(botFields, 12));
+        long handleId = NumberUtils.parseLong(representedBotField(botFields, 11));
+        long handleActionId = NumberUtils.parseLong(representedBotField(botFields, 12));
         String cacheAction = representedBotField(botFields, 13);
         String speechSubmit = representedBotField(botFields, 14);
-        long allowWalk = Vb.val(representedBotField(botFields, 15));
-        long maxFieldsAway = Vb.val(representedBotField(botFields, 16));
+        long allowWalk = NumberUtils.parseLong(representedBotField(botFields, 15));
+        long maxFieldsAway = NumberUtils.parseLong(representedBotField(botFields, 16));
 
         return roomSlot + "\2" + botId + "\2"
             + botName + '\2' + botMotto + '\2'
@@ -11223,8 +11222,8 @@ public final class Handling {
 
     public static PollAnswerSubmission pollAnswerFromWire(String packetPayload, String prefix) {
         PollAnswerSubmission submission = new PollAnswerSubmission();
-        String requestPayload = Vb.cStr(packetPayload);
-        if (!Vb.cStr(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
+        String requestPayload = StringUtils.text(packetPayload);
+        if (!StringUtils.text(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
             requestPayload = requestPayload.substring(prefix.length());
         }
         LongRef offset = new LongRef(1);
@@ -11233,7 +11232,7 @@ public final class Handling {
         submission.answerValue = readWireLong(requestPayload, offset);
         submission.answerText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
         if (submission.pollId <= 0L) {
-            submission.pollId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            submission.pollId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
         }
         if (submission.answerText.isEmpty() && submission.answerValue > 0L) {
             submission.answerText = String.valueOf(submission.answerValue);
@@ -11257,13 +11256,13 @@ public final class Handling {
     public static Map<String, Long> achievementCurrentLevels(String userId, String achievementRows) {
         Map<String, Long> result = new HashMap<>();
         String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-        for (String row : Vb.cStr(achievementRows).split("\r", -1)) {
+        for (String row : StringUtils.text(achievementRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 String badgePrefix = handlingField(fields, 1);
                 if (!badgePrefix.isEmpty() && !result.containsKey(badgePrefix)) {
                     String escapedBadgePrefix = Functions.Proc_10_11_80A9C0(badgePrefix, 0, 0);
-                    long currentLevel = Vb.val(MySQL.Proc_5_2_6D4690("SELECT REPLACE(id_badge,'"
+                    long currentLevel = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT REPLACE(id_badge,'"
                         + escapedBadgePrefix + "','') FROM users_badges WHERE id_user='" + escapedUserId
                         + "' AND id_badge LIKE '" + escapedBadgePrefix + "%' ORDER BY id DESC LIMIT 1", 0, 0));
                     result.put(badgePrefix, Math.max(0L, currentLevel));
@@ -11277,36 +11276,36 @@ public final class Handling {
         String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
         long progress;
         if (achievementQuestId == 1L) {
-            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(DISTINCT id_room) FROM logs_visitedrooms WHERE id_user='"
+            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(DISTINCT id_room) FROM logs_visitedrooms WHERE id_user='"
                 + escapedUserId + "'", 0, 0));
         } else if (achievementQuestId == 2L) {
-            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT respect_received FROM users WHERE id='"
+            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT respect_received FROM users WHERE id='"
                 + escapedUserId + "' LIMIT 1", 0, 0));
         } else if (achievementQuestId == 3L) {
-            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT respect_given FROM users WHERE id='"
+            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT respect_given FROM users WHERE id='"
                 + escapedUserId + "' LIMIT 1", 0, 0));
         } else if (achievementQuestId == 4L) {
-            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT online_time FROM users WHERE id='"
+            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT online_time FROM users WHERE id='"
                 + escapedUserId + "' LIMIT 1", 0, 0)) / 60L;
         } else if (achievementQuestId == 6L) {
-            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT gifts_given FROM users WHERE id='"
+            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT gifts_given FROM users WHERE id='"
                 + escapedUserId + "' LIMIT 1", 0, 0));
         } else if (achievementQuestId == 7L) {
-            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT gifts_received FROM users WHERE id='"
+            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT gifts_received FROM users WHERE id='"
                 + escapedUserId + "' LIMIT 1", 0, 0));
         } else if (achievementQuestId == 8L) {
-            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT hc_periods FROM users WHERE id='"
+            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT hc_periods FROM users WHERE id='"
                 + escapedUserId + "' LIMIT 1", 0, 0));
         } else if (achievementQuestId == 9L) {
-            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT hc2_periods FROM users WHERE id='"
+            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT hc2_periods FROM users WHERE id='"
                 + escapedUserId + "' LIMIT 1", 0, 0));
         } else if (achievementQuestId == 11L) {
-            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT amount_staffpicked FROM users WHERE id='"
+            progress = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT amount_staffpicked FROM users WHERE id='"
                 + escapedUserId + "' LIMIT 1", 0, 0));
         } else {
             String rowText = MySQL.Proc_5_2_6D4690("SELECT respect_received,respect_given,gifts_given,gifts_received FROM users WHERE id='"
                 + escapedUserId + "' LIMIT 1", 0, 0);
-            progress = Vb.val(handlingField(rowText.split("\t", -1), 0));
+            progress = NumberUtils.parseLong(handlingField(rowText.split("\t", -1), 0));
         }
         return Math.max(0L, progress);
     }
@@ -11327,15 +11326,15 @@ public final class Handling {
     ) {
         AchievementProgressDecision decision = new AchievementProgressDecision();
         long achievementIndex = 0L;
-        for (String row : Vb.cStr(achievementRows).split("\r", -1)) {
+        for (String row : StringUtils.text(achievementRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 7) {
-                    long achievementId = Vb.val(fields[0]);
+                    long achievementId = NumberUtils.parseLong(fields[0]);
                     if (achievementId == achievementQuestId) {
                         String badgePrefix = fields[1];
-                        long progressStep = Vb.val(fields[2]);
-                        long levelTotal = Vb.val(fields[4]);
+                        long progressStep = NumberUtils.parseLong(fields[2]);
+                        long levelTotal = NumberUtils.parseLong(fields[4]);
                         if (levelTotal <= 0L) {
                             levelTotal = 1L;
                         }
@@ -11389,8 +11388,8 @@ public final class Handling {
             }
             String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id='" + furnitureId
                 + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            long productId = Vb.val(handlingField(rowText.split("\t", -1), 0));
-            long wiredCode = Vb.val(DataManager.Proc_8_12_806C30(productId, 27, 0));
+            long productId = NumberUtils.parseLong(handlingField(rowText.split("\t", -1), 0));
+            long wiredCode = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 27, 0));
             if (wiredCode < minimumCode || wiredCode > maximumCode) {
                 return "";
             }
@@ -11423,7 +11422,7 @@ public final class Handling {
                 }
             }
             if (roomId <= 0L && args != null && args.length >= 2) {
-                roomId = Vb.val(args[1]);
+                roomId = NumberUtils.parseLong(args[1]);
             }
             return handlingRepresentedWiredTrigger(roomId, triggerCode, socketIndex);
         } catch (Exception ignored) {
@@ -11443,9 +11442,9 @@ public final class Handling {
                 }
             }
             if (roomId <= 0L && args != null && args.length >= 2) {
-                roomId = Vb.val(args[1]);
+                roomId = NumberUtils.parseLong(args[1]);
             }
-            long selectedFurnitureId = args != null && args.length >= 3 ? Vb.val(args[2]) : 0L;
+            long selectedFurnitureId = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
             return handlingRepresentedWiredAction(roomId, actionCode, selectedFurnitureId, socketIndex);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -11461,7 +11460,7 @@ public final class Handling {
         for (String row : readWiredCache("wired_trigger", roomId).replace("\r", "").split("\n", -1)) {
             String recordText = row.trim();
             if (!recordText.isEmpty()) {
-                long recordCode = Vb.val(wiredRecordField(recordText, 0));
+                long recordCode = NumberUtils.parseLong(wiredRecordField(recordText, 0));
                 if ((triggerCode <= 0L || recordCode == triggerCode) && handlingRepresentedWiredConditionsPass(roomId)) {
                     executedCount += handlingRepresentedWiredAction(roomId, 0L, 0L, socketIndex);
                 }
@@ -11494,7 +11493,7 @@ public final class Handling {
         for (String row : readWiredCache("wired_action", roomId).replace("\r", "").split("\n", -1)) {
             String recordText = row.trim();
             if (!recordText.isEmpty()) {
-                long recordCode = Vb.val(wiredRecordField(recordText, 0));
+                long recordCode = NumberUtils.parseLong(wiredRecordField(recordText, 0));
                 if (actionCode <= 0L || recordCode == actionCode) {
                     actionCount += handlingRepresentedWiredApplySelected(
                         roomId, wiredRecordField(recordText, 2), wiredRecordField(recordText, 3), selectedFurnitureId);
@@ -11508,14 +11507,14 @@ public final class Handling {
         if (roomId <= 0L) {
             return 0L;
         }
-        String effectiveSelectedIds = selectedFurnitureId > 0L ? String.valueOf(selectedFurnitureId) : Vb.cStr(selectedIds);
+        String effectiveSelectedIds = selectedFurnitureId > 0L ? String.valueOf(selectedFurnitureId) : StringUtils.text(selectedIds);
         if (effectiveSelectedIds.isEmpty()) {
             return 0L;
         }
-        long stateValue = Vb.val((Vb.cStr(parameterText) + ";").split(";", -1)[0]);
+        long stateValue = NumberUtils.parseLong((StringUtils.text(parameterText) + ";").split(";", -1)[0]);
         long appliedCount = 0L;
         for (String idPart : effectiveSelectedIds.replace(',', ';').split(";", -1)) {
-            long furnitureId = Vb.val(idPart);
+            long furnitureId = NumberUtils.parseLong(idPart);
             if (furnitureId > 0L && handlingFurnitureExistsInRoom(roomId, furnitureId)) {
                 MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + stateValue + "' WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
                 Proc_6_151_78AC20(roomId, furnitureId, stateValue);
@@ -11530,8 +11529,8 @@ public final class Handling {
         if (roomId <= 0L) {
             return false;
         }
-        for (String idPart : Vb.cStr(selectedIds).replace(',', ';').split(";", -1)) {
-            long furnitureId = Vb.val(idPart);
+        for (String idPart : StringUtils.text(selectedIds).replace(',', ';').split(";", -1)) {
+            long furnitureId = NumberUtils.parseLong(idPart);
             if (furnitureId > 0L && !handlingFurnitureExistsInRoom(roomId, furnitureId)) {
                 return false;
             }
@@ -11540,17 +11539,17 @@ public final class Handling {
     }
 
     public static long firstWireLong(String packetPayload, String packetCode) {
-        String requestPayload = Vb.cStr(packetPayload);
-        if (!Vb.cStr(packetCode).isEmpty() && requestPayload.startsWith(packetCode)) {
-            requestPayload = requestPayload.substring(Vb.cStr(packetCode).length());
+        String requestPayload = StringUtils.text(packetPayload);
+        if (!StringUtils.text(packetCode).isEmpty() && requestPayload.startsWith(packetCode)) {
+            requestPayload = requestPayload.substring(StringUtils.text(packetCode).length());
         }
         LongRef offset = new LongRef(1);
         long value = readWireLong(requestPayload, offset);
-        return value > 0L ? value : Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        return value > 0L ? value : NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
     }
 
     public static String wiredCachePath(String cacheFolder, long roomId) {
-        return Path.of(Functions.applicationPath, "cache", Vb.cStr(cacheFolder), roomId + ".cache").toString();
+        return Path.of(Functions.applicationPath, "cache", StringUtils.text(cacheFolder), roomId + ".cache").toString();
     }
 
     public static String readWiredCache(String cacheFolder, long roomId) {
@@ -11561,19 +11560,19 @@ public final class Handling {
         if (roomId <= 0L || furnitureId <= 0L) {
             return false;
         }
-        return Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures WHERE id='" + furnitureId
+        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures WHERE id='" + furnitureId
             + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0)) > 0L;
     }
 
     public static String wiredEditRecordFromWire(String packetPayload, String packetCode, long wiredCode, boolean includeExtraValue) {
-        String requestPayload = Vb.cStr(packetPayload);
-        if (!Vb.cStr(packetCode).isEmpty() && requestPayload.startsWith(packetCode)) {
+        String requestPayload = StringUtils.text(packetPayload);
+        if (!StringUtils.text(packetCode).isEmpty() && requestPayload.startsWith(packetCode)) {
             requestPayload = requestPayload.substring(packetCode.length());
         }
         LongRef offset = new LongRef(1);
         long furnitureId = readWireLong(requestPayload, offset);
         if (furnitureId <= 0L) {
-            furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
         }
         if (furnitureId <= 0L || wiredCode <= 0L) {
             return "";
@@ -11661,14 +11660,14 @@ public final class Handling {
 
     public static SongInfoRequest songInfoRequestFromWire(String packetPayload) {
         SongInfoRequest request = new SongInfoRequest();
-        String requestPayload = Vb.cStr(packetPayload);
+        String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("C]")) {
             requestPayload = requestPayload.substring(2);
         }
         LongRef offset = new LongRef(1);
         long requestedCount = readWireLong(requestPayload, offset);
         if (requestedCount <= 0L) {
-            requestedCount = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            requestedCount = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
         }
         if (requestedCount > 60L) {
             requestedCount = 60L;
@@ -11693,7 +11692,7 @@ public final class Handling {
     }
 
     public static String removeSoundMachineMarkers(String representedRoomCache, long jukeboxId, long activeDestinationId) {
-        String cache = Vb.cStr(representedRoomCache);
+        String cache = StringUtils.text(representedRoomCache);
         if (activeDestinationId > 0L) {
             cache = cache.replaceFirst(Pattern.quote("\1" + activeDestinationId + '\2'), "");
         }
@@ -11705,7 +11704,7 @@ public final class Handling {
 
     public static JukeboxAddRequest jukeboxAddRequestFromWire(String packetPayload) {
         JukeboxAddRequest request = new JukeboxAddRequest();
-        String requestPayload = Vb.cStr(packetPayload);
+        String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("C" + '\177')) {
             requestPayload = requestPayload.substring(2);
         }
@@ -11737,8 +11736,8 @@ public final class Handling {
         if (playlistCount >= effectiveLimit) {
             return false;
         }
-        String maxText = Vb.cStr(maxOrderText);
-        long maxOrder = Vb.val(maxText);
+        String maxText = StringUtils.text(maxOrderText);
+        long maxOrder = NumberUtils.parseLong(maxText);
         if (!maxText.isEmpty()) {
             return playlistOrder == maxOrder || playlistOrder == maxOrder + 1L;
         }
@@ -11746,7 +11745,7 @@ public final class Handling {
     }
 
     public static long jukeboxRemoveOrderFromWire(String packetPayload) {
-        String requestPayload = Vb.cStr(packetPayload);
+        String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("D@")) {
             requestPayload = requestPayload.substring(2);
         }
@@ -11768,7 +11767,7 @@ public final class Handling {
     }
 
     public static String[] badgeUpdateSelectionsFromWire(String packetPayload) {
-        String requestPayload = Vb.cStr(packetPayload);
+        String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("B^")) {
             requestPayload = requestPayload.substring(2);
         }
@@ -11786,14 +11785,14 @@ public final class Handling {
     }
 
     public static long idRequestFromWire(String packetPayload, String prefix) {
-        String requestPayload = Vb.cStr(packetPayload);
-        if (!Vb.cStr(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
+        String requestPayload = StringUtils.text(packetPayload);
+        if (!StringUtils.text(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
             requestPayload = requestPayload.substring(prefix.length());
         }
         LongRef offset = new LongRef(1);
         long value = readWireLong(requestPayload, offset);
         if (value <= 0L) {
-            value = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            value = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
         }
         return value;
     }
@@ -11804,7 +11803,7 @@ public final class Handling {
 
     public static RecyclerSelection recyclerSelectionFromWire(String packetPayload) {
         RecyclerSelection selection = new RecyclerSelection();
-        String requestPayload = Vb.cStr(packetPayload);
+        String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("F^")) {
             requestPayload = requestPayload.substring(2);
         }
@@ -11835,8 +11834,8 @@ public final class Handling {
 
     public static String recyclerSelectionWhereClause(String selectedItems, String escapedUserId) {
         String whereClause = "";
-        for (String item : Vb.cStr(selectedItems).split(",", -1)) {
-            long furnitureId = Vb.val(item);
+        for (String item : StringUtils.text(selectedItems).split(",", -1)) {
+            long furnitureId = NumberUtils.parseLong(item);
             if (furnitureId <= 0L) {
                 continue;
             }
@@ -11872,11 +11871,11 @@ public final class Handling {
             }
             String rewardRows = MySQL.Proc_5_2_6D4690(
                 "SELECT id_product FROM settings_recycler ORDER BY chance DESC LIMIT 100", 0, 0);
-            String[] rows = Vb.cStr(rewardRows).split("\r", -1);
-            if (rows.length > 0 && !Vb.cStr(rewardRows).isEmpty()) {
-                int rowIndex = (int) Vb.val(Functions.Proc_10_4_809CA0(0, rows.length - 1L, 0));
+            String[] rows = StringUtils.text(rewardRows).split("\r", -1);
+            if (rows.length > 0 && !StringUtils.text(rewardRows).isEmpty()) {
+                int rowIndex = (int) NumberUtils.parseLong(Functions.Proc_10_4_809CA0(0, rows.length - 1L, 0));
                 rowIndex = Math.max(0, Math.min(rowIndex, rows.length - 1));
-                return Vb.val(rows[rowIndex]);
+                return NumberUtils.parseLong(rows[rowIndex]);
             }
             return 0L;
         } catch (Exception ignored) {
@@ -11894,7 +11893,7 @@ public final class Handling {
             if (productIds == null || productIds.isEmpty()) {
                 return 0L;
             }
-            int selectedIndex = (int) Vb.val(Functions.Proc_10_4_809CA0(0, productIds.size() - 1L, 0));
+            int selectedIndex = (int) NumberUtils.parseLong(Functions.Proc_10_4_809CA0(0, productIds.size() - 1L, 0));
             selectedIndex = Math.max(0, Math.min(selectedIndex, productIds.size() - 1));
             return productIds.get(selectedIndex);
         } catch (Exception ignored) {
@@ -11930,16 +11929,16 @@ public final class Handling {
     }
 
     public static long staffNestedUserIdFromWire(String packetPayload) {
-        String requestPayload = Vb.cStr(packetPayload);
-        long directValue = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        String requestPayload = StringUtils.text(packetPayload);
+        long directValue = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
         if (directValue > 0L) {
             return directValue;
         }
         LongRef offset = new LongRef(1);
         String nestedPayload = readWireString(requestPayload, offset);
-        long nestedValue = Vb.val(Functions.Proc_10_6_809F10(nestedPayload, 0, 0));
+        long nestedValue = NumberUtils.parseLong(Functions.Proc_10_6_809F10(nestedPayload, 0, 0));
         if (nestedValue <= 0L) {
-            nestedValue = Vb.val(nestedPayload);
+            nestedValue = NumberUtils.parseLong(nestedPayload);
         }
         if (nestedValue > 0L) {
             return nestedValue;
@@ -11968,7 +11967,7 @@ public final class Handling {
         if (rowSource instanceof String[]) {
             return (String[]) rowSource;
         }
-        return Vb.cStr(rowSource).split("\r", -1);
+        return StringUtils.text(rowSource).split("\r", -1);
     }
 
     private static boolean readRoomEventCommon(String packetPayload, LongRef offset, RoomEventPayload result, boolean requireText) {
@@ -12003,8 +12002,8 @@ public final class Handling {
 
     private static boolean containsDelimitedId(String idText, long wantedId) {
         String wanted = String.valueOf(wantedId);
-        for (String idPart : Vb.cStr(idText).replace(',', ';').split(";", -1)) {
-            if (wanted.equals(String.valueOf(Vb.val(idPart)))) {
+        for (String idPart : StringUtils.text(idText).replace(',', ';').split(";", -1)) {
+            if (wanted.equals(String.valueOf(NumberUtils.parseLong(idPart)))) {
                 return true;
             }
         }
@@ -12023,7 +12022,7 @@ public final class Handling {
             return new String[0];
         }
         String marker = "\r" + questId + '\t';
-        String text = Vb.cStr(userQuestText);
+        String text = StringUtils.text(userQuestText);
         int start = text.indexOf(marker);
         if (start < 0) {
             return new String[0];
@@ -12049,11 +12048,11 @@ public final class Handling {
         if (questId <= 0L) {
             return new String[0];
         }
-        for (String row : Vb.cStr(questRows).split("\r", -1)) {
+        for (String row : StringUtils.text(questRows).split("\r", -1)) {
             String rowText = row.trim();
             if (!rowText.isEmpty()) {
                 String[] fields = rowText.split("\t", -1);
-                if (fields.length >= 1 && Vb.val(handlingField(fields, 0)) == questId) {
+                if (fields.length >= 1 && NumberUtils.parseLong(handlingField(fields, 0)) == questId) {
                     return fields;
                 }
             }
@@ -12063,18 +12062,18 @@ public final class Handling {
 
     private static String questRowsWithRemainingWait(String userQuestRows) {
         StringBuilder rows = new StringBuilder();
-        for (String row : Vb.cStr(userQuestRows).split("\r", -1)) {
+        for (String row : StringUtils.text(userQuestRows).split("\r", -1)) {
             String rowText = row.trim();
             if (!rowText.isEmpty()) {
                 String[] fields = rowText.split("\t", -1);
                 String timeNextText = handlingField(fields, 4);
                 long remainingWait = 0L;
                 if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
-                    remainingWait = Vb.val(MySQL.Proc_5_2_6D4690("SELECT GREATEST(0,UNIX_TIMESTAMP('"
+                    remainingWait = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT GREATEST(0,UNIX_TIMESTAMP('"
                         + Functions.Proc_10_11_80A9C0(timeNextText, 0, 0)
                         + "')-UNIX_TIMESTAMP())", 0, 0));
                 } else if (fields.length >= 7) {
-                    remainingWait = Vb.val(handlingField(fields, 6));
+                    remainingWait = NumberUtils.parseLong(handlingField(fields, 6));
                 }
                 appendRow(rows, rowText + '\t' + remainingWait);
             }
@@ -12083,7 +12082,7 @@ public final class Handling {
     }
 
     private static String left(String value, int maxLength) {
-        String text = Vb.cStr(value);
+        String text = StringUtils.text(value);
         return text.length() <= maxLength ? text : text.substring(0, maxLength);
     }
 
@@ -12104,7 +12103,7 @@ public final class Handling {
             values[i] = "";
         }
         if (args.length == 1) {
-            String recordText = Vb.cStr(args[0]);
+            String recordText = StringUtils.text(args[0]);
             if (recordText.indexOf('\t') >= 0) {
                 String[] fields = recordText.split("\t", -1);
                 for (int i = 0; i < values.length; i++) {
@@ -12116,7 +12115,7 @@ public final class Handling {
             }
         } else {
             for (int i = 0; i < values.length && i < args.length; i++) {
-                values[i] = Vb.cStr(args[i]);
+                values[i] = StringUtils.text(args[i]);
             }
         }
         return values;
@@ -12128,7 +12127,7 @@ public final class Handling {
             values[i] = "";
         }
         if (args.length == 1) {
-            String recordText = Vb.cStr(args[0]);
+            String recordText = StringUtils.text(args[0]);
             if (recordText.indexOf('\t') >= 0) {
                 String[] fields = recordText.split("\t", -1);
                 for (int i = 0; i < values.length; i++) {
@@ -12140,7 +12139,7 @@ public final class Handling {
             }
         } else {
             for (int i = 0; i < values.length && i < args.length; i++) {
-                values[i] = Vb.cStr(args[i]);
+                values[i] = StringUtils.text(args[i]);
             }
         }
         return values;
