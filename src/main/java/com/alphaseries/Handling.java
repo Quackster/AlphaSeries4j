@@ -4497,6 +4497,63 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_171_7C1520(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "@h");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            LongRef offset = new LongRef(1);
+            long removeCount = readWireLong(requestPayload, offset);
+            if (removeCount <= 0L) {
+                return "";
+            }
+            removeCount = Math.min(removeCount, 75L);
+            StringBuilder targetList = new StringBuilder();
+            StringBuilder removedIdsPayload = new StringBuilder();
+            long removedCount = 0L;
+            for (long removeIndex = 1L; removeIndex <= removeCount; removeIndex++) {
+                long targetUserId = readWireLong(requestPayload, offset);
+                String targetId = String.valueOf(targetUserId);
+                if (targetUserId > 0L && !targetId.equals(userId)
+                    && !("," + targetList + ",").contains("," + targetId + ",")) {
+                    String friendshipRow = MySQL.Proc_5_2_6D4690("SELECT id_user FROM friendships WHERE has_accept='1' AND ((id_friend='"
+                        + Functions.Proc_10_11_80A9C0(targetId, 0, 0) + "' AND id_user='"
+                        + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "') OR (id_user='"
+                        + Functions.Proc_10_11_80A9C0(targetId, 0, 0) + "' AND id_friend='"
+                        + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "')) LIMIT 1", 0, 0);
+                    if (!friendshipRow.isEmpty()) {
+                        if (targetList.length() > 0) {
+                            targetList.append(',');
+                        }
+                        targetList.append(targetId);
+                        removedIdsPayload.append(messengerRemovedIdPayload(targetUserId));
+                        removedCount++;
+                        int targetSocketIndex = handlingSocketFromUserId(targetId);
+                        if (targetSocketIndex > 0) {
+                            Proc_6_244_801E80(targetSocketIndex, "@MMIM" + userId, 0);
+                        }
+                    }
+                }
+            }
+            if (targetList.length() == 0) {
+                return "";
+            }
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM friendships WHERE has_accept='1' AND ((id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_friend IN (" + targetList
+                + ")) OR (id_friend='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND id_user IN (" + targetList + "))) LIMIT 150", 0, 0);
+            String callerPayload = messengerRemoveFriendsPayload(removedIdsPayload.toString(), removedCount);
+            Proc_6_244_801E80(socketIndex, callerPayload, 0);
+            return callerPayload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);

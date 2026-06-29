@@ -1918,6 +1918,11 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id_user FROM friendships WHERE has_accept='1'") && sqlText.contains("id_friend='88'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(77));
                 }
+                if (sqlText.contains("SELECT id_user FROM friendships WHERE has_accept='1'")
+                    && sqlText.contains("id_friend='88'")
+                    && sqlText.contains("id_user='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(77));
+                }
                 if (sqlText.contains("SELECT name FROM users WHERE id='88'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("Target"));
                 }
@@ -2767,6 +2772,14 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "@MHIH"));
         assertEquals(true, containsSend(handlingSends, "User77"));
         assertEquals(true, containsSend(handlingSends, "@MH"));
+        handlingSql.clear();
+        handlingSends.clear();
+        String removePayload = Handling.Proc_6_171_7C1520(4, "@h" + wireLong(1) + wireLong(88));
+        assertEquals(Handling.messengerRemoveFriendsPayload(Handling.messengerRemovedIdPayload(88), 1), removePayload);
+        assertEquals(true, containsSql(handlingSql, "DELETE FROM friendships WHERE has_accept='1'"));
+        assertEquals(true, containsSql(handlingSql, "id_friend IN (88)"));
+        assertEquals(true, containsSend(handlingSends, "@MMIM77"));
+        assertEquals(true, containsSend(handlingSends, "@MM"));
         handlingSql.clear();
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
