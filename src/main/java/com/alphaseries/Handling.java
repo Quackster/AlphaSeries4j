@@ -10952,6 +10952,23 @@ public final class Handling {
         return MessengerPayloads.friendSummaryFromRow(rowText, relationshipState, messengerFollowEnabled());
     }
 
+    public static String messengerFriendSummaryPayload(MessengerDao.MessengerFriend friend, long relationshipState) {
+        if (friend == null) {
+            return "";
+        }
+        long socketIndex = friend.socketIndex();
+        return messengerFriendPayload(
+            friend.userId(),
+            friend.userName(),
+            friend.motto(),
+            friend.figure(),
+            friend.level(),
+            socketIndex > 0L ? 2L : 0L,
+            socketIndex > 0L ? 1L : 0L,
+            friend.lastOnline(),
+            relationshipState);
+    }
+
     public static String messengerFriendSummaryPayload(String userId, long relationshipState) {
         try {
             if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))) {
@@ -10959,13 +10976,14 @@ public final class Handling {
             }
             String dateFormat = Functions.Proc_10_0_809570("com.mysql.format.date", "%d-%m-%Y", 0);
             String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,name,motto,figure,level,id_socket,DATE_FORMAT(FROM_UNIXTIME(lastonline_time), '"
-                + Functions.Proc_10_11_80A9C0(dateFormat + " " + timeFormat, 0, 0)
-                + "') FROM users WHERE id='" + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            MessengerDao messenger = messengerDao();
+            if (messenger == null) {
                 return "";
             }
-            return messengerFriendSummaryPayloadFromRow(rowText, relationshipState);
+            MessengerDao.MessengerFriend friend = messenger
+                .messengerFriend(NumberUtils.parseLong(userId), dateFormat + " " + timeFormat)
+                .orElse(null);
+            return messengerFriendSummaryPayload(friend, relationshipState);
         } catch (Exception ignored) {
             return "";
         }
