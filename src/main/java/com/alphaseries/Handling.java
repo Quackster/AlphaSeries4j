@@ -11060,15 +11060,7 @@ public final class Handling {
     }
 
     public static long messengerMaxFriends(long configIndex) {
-        if (Licence.global_0082927C instanceof long[]) {
-            long[] values = (long[]) Licence.global_0082927C;
-            return configIndex >= 0 && configIndex < values.length ? values[(int) configIndex] : 0L;
-        }
-        if (Licence.global_0082927C instanceof String[]) {
-            String[] values = (String[]) Licence.global_0082927C;
-            return configIndex >= 0 && configIndex < values.length ? Vb.val(values[(int) configIndex]) : 0L;
-        }
-        return 0L;
+        return Licence.messengerSettings().maxFriends(configIndex);
     }
 
     public static String requestTextFromWirePayload(String packetPayload, String prefix, int maxLength) {

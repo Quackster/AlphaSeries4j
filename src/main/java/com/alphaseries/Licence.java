@@ -5,6 +5,7 @@ import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
+import com.alphaseries.game.messenger.MessengerSettings;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.session.SessionRegistry;
@@ -175,6 +176,14 @@ public final class Licence {
     public static void setVisitRoomAds(Object payloadsById, long count) {
         global_008291D4 = payloadsById == null ? "" : payloadsById;
         global_008291D8 = count;
+    }
+
+    public static MessengerSettings messengerSettings() {
+        return MessengerSettings.fromLegacy(global_0082927C);
+    }
+
+    public static void setMessengerFriendLimits(Object friendLimits) {
+        global_0082927C = friendLimits == null ? "" : friendLimits;
     }
 
     public static String Proc_9_6_808080(Object... args) {

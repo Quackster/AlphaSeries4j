@@ -129,10 +129,10 @@ public final class Boot {
         Proc_1_13_6C9820(0, 0, 0);
         Proc_1_22_6D0F00(0, 0, 0);
         buildChatSettingsCache();
-        Licence.global_0082927C = buildMessengerFriendLimitCache(
+        Licence.setMessengerFriendLimits(buildMessengerFriendLimitCache(
             Vb.val(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel0", 0, 0)),
             Vb.val(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel1", 0, 0)),
-            Vb.val(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel2", 0, 0)));
+            Vb.val(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel2", 0, 0))));
     }
 
     public static void Proc_1_6_6C5830(Object... args) {

@@ -1577,6 +1577,7 @@ public final class PortedModuleSmokeTest {
         expectedSearch = "1" + Crypto.Proc_3_0_6D2AF0(1, null, expectedSearch) + "H\2nick\2fig\2now\2";
         assertEquals(expectedSearch, Handling.messengerSearchResultPayload("8", "Carol", "fig", "hi", "nick", "now", 1));
         Licence.global_0082927C = new String[]{"10", "x", "20", "x", "30"};
+        assertEquals(20L, Licence.messengerSettings().maxFriends(2));
         assertEquals(20L, Handling.messengerMaxFriends(2));
         assertEquals(0L, Handling.messengerMaxFriends(99));
         assertEquals("hello world", Handling.requestTextFromWirePayload("@i@Khello world", "@i", 50));
