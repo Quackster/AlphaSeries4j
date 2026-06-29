@@ -1,5 +1,7 @@
 package com.alphaseries;
 
+import com.alphaseries.dao.mysql.ServerMaintenanceDao;
+import com.alphaseries.db.Database;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -89,10 +91,17 @@ public final class Boot {
         Proc_1_2_6BE280(0, 0, 0);
         Proc_1_5_6C4F80(0, 0, 0);
         Proc_1_7_6C5E10(0, 0, 0);
-        MySQL.Proc_5_0_6D3CD0("UPDATE users SET id_socket=null,lastonline_time=UNIX_TIMESTAMP() WHERE id_socket IS NOT NULL", 0, 0);
-        MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET id_slot=null, visitors_now='0' WHERE visitors_now != 0", 0, 0);
-        MySQL.Proc_5_0_6D3CD0("DELETE FROM logs_visitedrooms WHERE timestamp_left IS NULL", 0, 0);
-        MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_events", 0, 0);
+        ServerMaintenanceDao maintenanceDao = serverMaintenanceDao();
+        if (maintenanceDao != null) {
+            try {
+                maintenanceDao.resetConnectedUsers();
+                maintenanceDao.resetVisitedRoomSlots();
+                maintenanceDao.clearActiveVisitedRooms();
+                maintenanceDao.clearRoomEvents();
+            } catch (Exception ignored) {
+                // VB6 source suppresses boot-time maintenance failures.
+            }
+        }
         Proc_1_9_6C6DF0(0, 0, 0);
         Proc_1_8_6C6850(0, 0, 0);
         Proc_1_11_6C8D10(0, 0, 0);
@@ -1112,5 +1121,10 @@ public final class Boot {
         }
         String value = valuesById.get(id);
         return value == null ? "" : value;
+    }
+
+    private static ServerMaintenanceDao serverMaintenanceDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new ServerMaintenanceDao(database);
     }
 }

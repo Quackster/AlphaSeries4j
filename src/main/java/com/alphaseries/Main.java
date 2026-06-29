@@ -1,6 +1,8 @@
 package com.alphaseries;
 
 import com.alphaseries.dao.mysql.RoomDao;
+import com.alphaseries.dao.mysql.ServerMaintenanceDao;
+import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.server.packet.PacketSink;
@@ -177,8 +179,11 @@ public final class Main {
 
     public static boolean formQueryUnload() {
         try {
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET id_socket=null,lastonline_time=UNIX_TIMESTAMP() WHERE id_socket IS NOT NULL", 1, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET id_slot=null,visitors_now='0' WHERE id_slot IS NOT NULL OR visitors_now!='0'", 0, 0);
+            ServerMaintenanceDao maintenanceDao = serverMaintenanceDao();
+            if (maintenanceDao != null) {
+                maintenanceDao.resetConnectedUsers();
+                maintenanceDao.resetOccupiedRoomSlots();
+            }
             return true;
         } catch (Exception ignored) {
             return false;
@@ -730,7 +735,12 @@ public final class Main {
     public static String mainUserIdFromSocket(long socketIndex) {
         String userId = Licence.Proc_9_6_808080(String.valueOf(socketIndex), 0, 0);
         if (userId.isEmpty() || "0".equals(userId)) {
-            userId = MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE id_socket='" + socketIndex + "' LIMIT 1", 0, 0);
+            try {
+                long databaseUserId = userDao().userIdBySocket(socketIndex);
+                userId = databaseUserId <= 0L ? "0" : String.valueOf(databaseUserId);
+            } catch (SQLException ignored) {
+                userId = "";
+            }
         }
         return userId;
     }
@@ -890,6 +900,15 @@ public final class Main {
 
     private static RoomDao roomDao() throws SQLException {
         return new RoomDao(configuredDatabase());
+    }
+
+    private static UserDao userDao() throws SQLException {
+        return new UserDao(configuredDatabase());
+    }
+
+    private static ServerMaintenanceDao serverMaintenanceDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new ServerMaintenanceDao(database);
     }
 
     private static Database configuredDatabase() throws SQLException {
