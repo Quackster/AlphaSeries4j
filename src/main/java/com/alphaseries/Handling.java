@@ -3870,6 +3870,53 @@ public final class Handling {
         handlingRepresentedFurnitureStateWrite(args);
     }
 
+    public static String Proc_6_154_78F040(Object... args) {
+        try {
+            if (args == null || args.length == 0) {
+                return "";
+            }
+            long furnitureId = Vb.val(args[0]);
+            long productId = args.length >= 2 ? Vb.val(args[1]) : 0L;
+            if (furnitureId <= 0L) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_room,id_product,sign FROM furnitures WHERE id='"
+                + furnitureId + "' LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            String[] fields = rowText.split("\t", -1);
+            long roomId = Vb.val(handlingField(fields, 0));
+            if (productId <= 0L) {
+                productId = Vb.val(handlingField(fields, 1));
+            }
+            String signText = handlingField(fields, 2);
+            if (roomId <= 0L || productId <= 0L) {
+                return "";
+            }
+            long productType = Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0));
+            String productSprite = DataManager.Proc_8_12_806C30(productId, 17, 0);
+            if (productSprite.isEmpty()) {
+                productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0);
+            }
+            long stateValue = Vb.val(signText);
+            String lowerSprite = productSprite.toLowerCase();
+            if ((lowerSprite.startsWith("bb_score_") || lowerSprite.startsWith("es_score_")) && stateValue < 0L) {
+                stateValue = 0L;
+            }
+            Proc_6_151_78AC20(roomId, furnitureId, stateValue);
+            String payload = furnitureStatePayload(furnitureId, stateValue);
+            Proc_6_246_8024C0(roomId, payload, 0);
+            if (productType == 11L || lowerSprite.contains("soundmachine") || lowerSprite.contains("jukebox")) {
+                // Proc_6_224_7EF5A0 is not ported yet; the state refresh remains preserved.
+            }
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }

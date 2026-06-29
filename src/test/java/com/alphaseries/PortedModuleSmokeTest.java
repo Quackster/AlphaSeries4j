@@ -2039,6 +2039,9 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id_room FROM furnitures WHERE id='83' LIMIT 1")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(9));
                 }
+                if (sqlText.contains("SELECT id_room,id_product,sign FROM furnitures WHERE id='84' LIMIT 1")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(9, 506, 5));
+                }
                 if (sqlText.contains("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='505'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(505, "packages_pets", 12, ""));
                 }
@@ -2602,6 +2605,11 @@ public final class PortedModuleSmokeTest {
         Handling.Proc_6_153_78D980(83, "off");
         assertEquals(true, Licence.global_00829310.contains("\1" + "83\t9\toff\2"));
         assertEquals(false, Licence.global_00829310.contains("\1" + "83\t9\ton\2"));
+        handlingSends.clear();
+        String refreshPayload = Handling.Proc_6_154_78F040(84);
+        assertEquals("AX84\2" + "5\2", refreshPayload);
+        assertEquals(true, Licence.global_00829310.contains("\1" + "9\t84\t5\2"));
+        assertEquals(true, containsSend(handlingSends, "AX84\2" + "5\2"));
         handlingSql.clear();
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
