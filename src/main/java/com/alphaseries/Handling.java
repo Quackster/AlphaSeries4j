@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
+import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -1680,7 +1681,7 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String packetPayload = handlingRequestPayload(args, "FG");
             ensureRepresentedRoomSlotPool();
-            if (Licence.global_0082930C.isEmpty()) {
+            if (Licence.representedRoomSlots().isEmpty()) {
                 Proc_6_244_801E80(socketIndex, Functions.Proc_10_8_80A580(1, 0, 0), 0);
                 return 0L;
             }
@@ -8548,44 +8549,22 @@ public final class Handling {
     }
 
     public static void ensureRepresentedRoomSlotPool() {
-        if (!Licence.global_0082930C.isEmpty()) {
-            return;
-        }
-        StringBuilder slots = new StringBuilder();
-        for (long slotIndex = 1L; slotIndex <= 500L; slotIndex++) {
-            slots.append('[').append(slotIndex).append(']');
-        }
-        Licence.global_0082930C = slots.toString();
+        RepresentedRoomSlots representedRoomSlots = Licence.representedRoomSlots();
+        representedRoomSlots.ensureInitialized();
+        Licence.setRepresentedRoomSlots(representedRoomSlots);
     }
 
     public static long reserveRepresentedRoomSlot(long preferredSlot) {
-        ensureRepresentedRoomSlotPool();
-        if (preferredSlot > 0L) {
-            String marker = "[" + preferredSlot + "]";
-            if (Licence.global_0082930C.contains(marker)) {
-                Licence.global_0082930C = Licence.global_0082930C.replaceFirst(Pattern.quote(marker), "");
-                return preferredSlot;
-            }
-        }
-        for (String part : Licence.global_0082930C.split("\\]", -1)) {
-            long candidateSlot = Vb.val(part.replace("[", ""));
-            if (candidateSlot > 0L) {
-                String marker = "[" + candidateSlot + "]";
-                Licence.global_0082930C = Licence.global_0082930C.replaceFirst(Pattern.quote(marker), "");
-                return candidateSlot;
-            }
-        }
-        return 0L;
+        RepresentedRoomSlots representedRoomSlots = Licence.representedRoomSlots();
+        long slotId = representedRoomSlots.reserve(preferredSlot);
+        Licence.setRepresentedRoomSlots(representedRoomSlots);
+        return slotId;
     }
 
     public static void releaseRepresentedRoomSlot(long slotId) {
-        if (slotId <= 0L) {
-            return;
-        }
-        String marker = "[" + slotId + "]";
-        if (!Licence.global_0082930C.contains(marker)) {
-            Licence.global_0082930C += marker;
-        }
+        RepresentedRoomSlots representedRoomSlots = Licence.representedRoomSlots();
+        representedRoomSlots.release(slotId);
+        Licence.setRepresentedRoomSlots(representedRoomSlots);
     }
 
     public static void loadRepresentedRoomBots(long roomSlot, long roomId) {

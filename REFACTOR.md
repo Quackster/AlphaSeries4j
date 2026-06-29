@@ -46,6 +46,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.pet.RepresentedBotRegistry` as a typed adapter around represented bot allocation markers and bot record caches previously manipulated as raw `Licence` strings.
 - Added `com.alphaseries.game.quest.QuestSettings` as a typed adapter around cached quest rows previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.recycler.RecyclerSettings` as a typed adapter around recycler status payload, reward groups, and ecotron box product state previously walked through `Licence` globals.
+- Added `com.alphaseries.game.room.RepresentedRoomSlots` as a typed adapter around represented room slot allocation markers previously manipulated as a raw `Licence` string.
 - Added `com.alphaseries.game.session.SessionRegistry` as a typed adapter around the legacy `Licence.global_00829268` session cache.
 - Added `com.alphaseries.game.wired.WiredSettings` as a typed adapter around wired state payload previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.wired.WiredPayloads` for wired record formatting, cache replacement, selected-item checks, and state payload aggregation.
@@ -69,9 +70,9 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 472
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1373
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1372
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 476
-- `Handling.java`: 12361 lines
+- `Handling.java`: 12340 lines
 - `Functions.java`: 783 lines
 - `MySQL.java`: 301 lines
 - `Vb.java`: 106 lines
