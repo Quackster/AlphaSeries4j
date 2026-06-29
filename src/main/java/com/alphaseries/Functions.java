@@ -8,6 +8,8 @@ import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 import com.alphaseries.vb.Vb;
 
 import java.io.InputStream;
@@ -32,7 +34,7 @@ public final class Functions {
             return "";
         }
         Object defaultValue = args.length >= 2 ? args[1] : "";
-        return settingsCache().valueOrDefault(Vb.cStr(args[0]), defaultValue);
+        return settingsCache().valueOrDefault(StringUtils.text(args[0]), defaultValue);
     }
 
     public static boolean Proc_10_1_809790(Object... args) {
@@ -47,7 +49,7 @@ public final class Functions {
         if (args == null || args.length == 0) {
             return "";
         }
-        long requestedLength = Vb.val(args[0]);
+        long requestedLength = NumberUtils.parseLong(args[0]);
         if (requestedLength > 100L) {
             requestedLength = 100L;
         }
@@ -78,51 +80,51 @@ public final class Functions {
         if (args == null || args.length < 2) {
             return "";
         }
-        String sourceValue = Vb.cStr(args[0]);
-        int startAt = (int) Vb.val(args[1]);
+        String sourceValue = StringUtils.text(args[0]);
+        int startAt = NumberUtils.parseInt(args[1]);
         if (startAt < 1) {
             startAt = 1;
         }
-        if (args.length >= 3 && !Vb.cStr(args[2]).isEmpty()) {
-            int fieldLength = (int) Vb.val(args[2]);
+        if (args.length >= 3 && !StringUtils.text(args[2]).isEmpty()) {
+            int fieldLength = NumberUtils.parseInt(args[2]);
             if (fieldLength > 0) {
-                return Vb.mid(sourceValue, startAt, fieldLength);
+                return StringUtils.mid(sourceValue, startAt, fieldLength);
             }
         }
-        return Vb.mid(sourceValue, startAt);
+        return StringUtils.mid(sourceValue, startAt);
     }
 
     public static String Proc_10_6_809F10(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        String sourceValue = Vb.cStr(args[0]);
+        String sourceValue = StringUtils.text(args[0]);
         long encodedLengthSize = Crypto.Proc_3_2_6D30A0(sourceValue);
         long fieldLength = Crypto.Proc_3_3_6D3240(sourceValue);
         if (encodedLengthSize <= 0L || fieldLength <= 0L) {
             return "";
         }
-        return Vb.mid(sourceValue, (int) encodedLengthSize + 1, (int) fieldLength);
+        return StringUtils.mid(sourceValue, (int) encodedLengthSize + 1, (int) fieldLength);
     }
 
     public static String Proc_10_7_80A190(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        String sourceValue = Vb.cStr(args[0]);
+        String sourceValue = StringUtils.text(args[0]);
         long fieldLength = Crypto.Proc_3_4_6D3620(sourceValue);
         if (fieldLength <= 0L) {
             return "";
         }
-        return Vb.mid(sourceValue, 3, (int) fieldLength);
+        return StringUtils.mid(sourceValue, 3, (int) fieldLength);
     }
 
     public static String Proc_10_8_80A580(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        long firstValue = Vb.val(args[0]);
-        long secondValue = args.length >= 2 ? Vb.val(args[1]) : 0L;
+        long firstValue = NumberUtils.parseLong(args[0]);
+        long secondValue = args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
         return PacketBuilder.message("Dk").appendInt(firstValue).appendInt(secondValue).build();
     }
 
@@ -130,21 +132,21 @@ public final class Functions {
         if (args == null || args.length == 0) {
             return "";
         }
-        return Vb.cStr(args[0]).replace('\0', '\u00a0');
+        return StringUtils.text(args[0]).replace('\0', '\u00a0');
     }
 
     public static String Proc_10_10_80A7F0(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        return Vb.cStr(args[0]).replace('\n', ' ').replace('\r', ' ');
+        return StringUtils.text(args[0]).replace('\n', ' ').replace('\r', ' ');
     }
 
     public static String Proc_10_11_80A9C0(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        return Vb.cStr(args[0])
+        return StringUtils.text(args[0])
             .replace("'", "''")
             .replace("\\r", " ")
             .replace("\\n", " ")
@@ -155,7 +157,7 @@ public final class Functions {
         if (args == null || args.length < 2) {
             return 0L;
         }
-        return Filesystems.Proc_7_0_8034A0("Ba" + Vb.cStr(args[0]) + '\2' + Vb.cStr(args[1]) + '\2');
+        return Filesystems.Proc_7_0_8034A0(UserPayloads.roomAlert(StringUtils.text(args[0]), StringUtils.text(args[1])));
     }
 
     public static long Proc_10_13_80AEC0(Object... args) {
@@ -163,11 +165,11 @@ public final class Functions {
     }
 
     public static String inventoryCacheRecord(long furnitureId, long productId, String itemData, long secondaryValue) {
-        return "\1" + furnitureId + '\t' + productId + '\t' + Vb.cStr(itemData) + '\t' + secondaryValue + '\2';
+        return "\1" + furnitureId + '\t' + productId + '\t' + StringUtils.text(itemData) + '\t' + secondaryValue + '\2';
     }
 
     public static String trimInventoryCache(String cacheText) {
-        String text = Vb.cStr(cacheText);
+        String text = StringUtils.text(cacheText);
         while (!text.isEmpty() && (text.charAt(text.length() - 1) == '\r' || text.charAt(text.length() - 1) == '\n')) {
             text = text.substring(0, text.length() - 1);
         }

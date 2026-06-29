@@ -81,6 +81,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `HandlingMUS` off `Vb` helpers and onto shared `StringUtils`/`NumberUtils` conversions.
 - Migrated `Console` and `PrivSockHTTP` off `Vb` helpers and onto shared `StringUtils`/`NumberUtils` conversions.
 - Migrated `DataManager` licence/cache/file helpers off `Vb` conversions and added shared `StringUtils.mid` helpers for VB-style one-based substring compatibility.
+- Migrated core `Functions` setting/string/wire-field/inventory-cache helpers off `Vb` conversions and onto shared utility helpers/fluent alert payloads.
 - Migrated `Licence.Proc_9_0` through `Proc_9_5` to `CatalogRegistry`, added named cache setters, and removed `Licence`'s dependency on `Vb`.
 - Migrated several payload builders from string concatenation to fluent `PacketBuilder`.
 
@@ -97,10 +98,10 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 470
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1179
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1158
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 476
 - `Handling.java`: 12148 lines
-- `Functions.java`: 756 lines
+- `Functions.java`: 758 lines
 - `MySQL.java`: 316 lines
 - `Vb.java`: 106 lines
 
