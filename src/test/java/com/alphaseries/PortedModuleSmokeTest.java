@@ -2624,8 +2624,8 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT motto FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("Motto"));
                 }
-                if (sqlText.contains("SELECT figure,gender FROM users WHERE id='77'")) {
-                    return Arrays.<List<Object>>asList(Arrays.<Object>asList("hd-180-1", "M"));
+                if (sqlText.contains("SELECT id,id_socket,motto,figure,gender") && sqlText.contains("id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(77, 0, "New motto", "hd-180-1", "M"));
                 }
                 if (sqlText.contains("SELECT id_session FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("session-77"));

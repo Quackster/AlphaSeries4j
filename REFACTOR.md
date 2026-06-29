@@ -170,6 +170,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `RoomDao` with owned-room counts, creatable room model lookup, room insert, and newest-room id reads, replacing raw room-create SQL and model row parsing in `Handling`.
 - Expanded `RoomDao`/`UserDao` with staff-pick room state and official-room maintenance methods, replacing raw staff-pick SQL in `Handling`.
 - Expanded `UserDao` with typed user-group lookup and routed favourite-group login payloads through a `UserGroupRow` plus fluent `PacketBuilder`, replacing raw group SQL and tab-delimited handler parsing.
+- Expanded `UserDao` with prepared motto updates and reused typed `UserIdentity` loading for motto refresh payloads, replacing raw user update SQL and `figure,gender` tab-delimited parsing in `Handling`.
 - Migrated remaining `Functions` conversions for email validation, identity refresh, club period, occupancy, download, inventory path, movement, and random helpers off `Vb`.
 - Migrated remaining `MySQL` helper conversions and staff moderation payload builders off `Vb` helpers and onto shared `StringUtils`/`NumberUtils`.
 - Added `com.alphaseries.util.StringUtils` and `NumberUtils`; migrated new staff/session code away from duplicated local helper methods.
@@ -200,9 +201,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 472
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 211
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 209
 - `Boot.java`: 1225 lines
-- `Handling.java`: 12423 lines
+- `Handling.java`: 12426 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 929 lines

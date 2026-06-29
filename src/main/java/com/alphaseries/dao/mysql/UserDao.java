@@ -200,6 +200,10 @@ public final class UserDao {
             userId);
     }
 
+    public int updateMotto(long userId, String motto) throws SQLException {
+        return database.execute("UPDATE users SET motto=? WHERE id=?", motto, userId);
+    }
+
     public String wardrobeRows(long userId) throws SQLException {
         return String.join("\r", database.query(
             "SELECT id_slot,figure,gender FROM users_wardrobe WHERE id_user=? ORDER BY id_slot",

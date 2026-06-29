@@ -7533,17 +7533,20 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET motto='" + Functions.Proc_10_11_80A9C0(mottoText, 0, 0)
-                + "' WHERE id='" + escapedUserId + "'", 0, 0);
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT figure,gender FROM users WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0);
-            String[] fields = rowText.split("\t", -1);
-            String figureText = handlingField(fields, 0);
-            String genderText = left(handlingField(fields, 1).toUpperCase(), 1);
+            long numericUserId = NumberUtils.parseLong(userId);
+            UserDao users = userDao();
+            if (users == null) {
+                return "";
+            }
+            users.updateMotto(numericUserId, mottoText);
+            UserDao.UserIdentity identity = users.findIdentity(numericUserId)
+                .orElse(new UserDao.UserIdentity(numericUserId, 0L, "", "", "M"));
+            String figureText = StringUtils.text(identity.figure());
+            String genderText = left(StringUtils.text(identity.gender()).toUpperCase(), 1);
             if (!"M".equals(genderText) && !"F".equals(genderText)) {
                 genderText = "M";
             }
-            String payload = userIdentityPayload(NumberUtils.parseLong(userId), mottoText, genderText, figureText);
+            String payload = userIdentityPayload(numericUserId, mottoText, genderText, figureText);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
