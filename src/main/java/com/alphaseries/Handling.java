@@ -2634,21 +2634,17 @@ public final class Handling {
             if (socketIndex <= 0 || roomId <= 0L) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,users_effects.id_effect "
-                + "FROM logs_visitedrooms,users_effects WHERE logs_visitedrooms.id_room='" + roomId
-                + "' AND logs_visitedrooms.timestamp_left IS NULL AND users_effects.id_user=logs_visitedrooms.id_user "
-                + "AND users_effects.timestamp_expire IS NOT NULL AND users_effects.timestamp_expire>UNIX_TIMESTAMP() "
-                + "ORDER BY logs_visitedrooms.timestamp_enter ASC LIMIT 250", 0, 0);
-            for (String row : StringUtils.text(rowText).split("\r", -1)) {
-                if (!row.trim().isEmpty()) {
-                    String[] fields = row.split("\t", -1);
-                    long roomUserIndex = NumberUtils.parseLong(handlingField(fields, 0));
-                    long effectId = NumberUtils.parseLong(handlingField(fields, 1));
-                    if (roomUserIndex > 0L && effectId > 0L) {
-                        String effectPayload = Crypto.Proc_3_0_6D2AF0(effectId, null,
-                            Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Ge"));
-                        Proc_6_244_801E80(socketIndex, effectPayload, 0);
-                    }
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return;
+            }
+            for (RoomDao.ActiveRoomEffect activeEffect : rooms.activeRoomEffects(roomId)) {
+                long roomUserIndex = activeEffect.roomUserIndex();
+                long effectId = activeEffect.effectId();
+                if (roomUserIndex > 0L && effectId > 0L) {
+                    String effectPayload = Crypto.Proc_3_0_6D2AF0(effectId, null,
+                        Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Ge"));
+                    Proc_6_244_801E80(socketIndex, effectPayload, 0);
                 }
             }
         } catch (Exception ignored) {

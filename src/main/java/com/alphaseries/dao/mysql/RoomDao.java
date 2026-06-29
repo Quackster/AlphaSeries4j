@@ -193,6 +193,19 @@ public final class RoomDao {
             roomId);
     }
 
+    public List<ActiveRoomEffect> activeRoomEffects(long roomId) throws SQLException {
+        return database.query(
+            "SELECT logs_visitedrooms.id,users_effects.id_effect "
+                + "FROM logs_visitedrooms,users_effects WHERE logs_visitedrooms.id_room=? "
+                + "AND logs_visitedrooms.timestamp_left IS NULL AND users_effects.id_user=logs_visitedrooms.id_user "
+                + "AND users_effects.timestamp_expire IS NOT NULL AND users_effects.timestamp_expire>UNIX_TIMESTAMP() "
+                + "ORDER BY logs_visitedrooms.timestamp_enter ASC LIMIT 250",
+            resultSet -> new ActiveRoomEffect(
+                resultSet.getLong(1),
+                resultSet.getLong(2)),
+            roomId);
+    }
+
     public String settingsRow(long roomId) throws SQLException {
         return database.queryOne(
             "SELECT rooms.id,rooms.name,rooms.description,rooms.status_door,"
@@ -446,6 +459,9 @@ public final class RoomDao {
     }
 
     public record ActiveRoomVisit(long visitId, long roomId, long slotId) {
+    }
+
+    public record ActiveRoomEffect(long roomUserIndex, long effectId) {
     }
 
     public record RoomEntryState(

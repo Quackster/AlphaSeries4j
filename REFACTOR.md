@@ -1,6 +1,6 @@
 # AlphaSeries4j Refactor Progress
 
-Last updated: 2026-06-29
+Last updated: 2026-06-30
 
 ## Goal
 
@@ -99,6 +99,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `RoomDao`/`UserDao` for room enter/leave lifecycle queries and writes, including visit logs, visitor counts, and represented room slot clearing.
 - Expanded `RoomDao`/`UserDao` for room rating and room-right grant/revoke operations.
 - Expanded `RoomDao` with prepared room-rating existence checks for room entry payloads.
+- Expanded `RoomDao` with typed active room effect rows for room effect payload broadcasts.
 - Expanded `RoomDao` for room-right wipe notifications, batch right revocation, and room deletion operations.
 - Expanded `RoomDao` with typed `OfficialRoomModel` loading for official-room model/caption payloads.
 - Expanded `RoomDao` with typed `RoomModelEntry` loading for room model entry payload setup.
@@ -144,13 +145,13 @@ Compared with `main`, the VB helper artifact has been removed:
 
 ## Current Legacy Surface
 
-Measured on 2026-06-29:
+Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 463
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 342
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 341
 - `Boot.java`: 1130 lines
-- `Handling.java`: 12326 lines
+- `Handling.java`: 12322 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 920 lines
