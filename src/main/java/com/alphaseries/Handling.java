@@ -31,6 +31,9 @@ import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.session.SocketMarkerSet;
 import com.alphaseries.game.social.BadgeRow;
+import com.alphaseries.game.user.ExpiredUserEffectRow;
+import com.alphaseries.game.user.UserEffectActivationRow;
+import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -3436,30 +3439,22 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_effect,time_rent,COUNT(id_effect),timestamp_expire,UNIX_TIMESTAMP() "
-                + "FROM users_effects WHERE id_user='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "' GROUP BY users_effects.id_effect LIMIT 50", 0, 0);
+            UserDao users = userDao();
+            if (users == null) {
+                return 0L;
+            }
             StringBuilder effectsPayload = new StringBuilder();
-            for (String row : StringUtils.text(rowText).split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    String[] fields = row.split("\t", -1);
-                    if (fields.length >= 5) {
-                        long effectId = NumberUtils.parseLong(handlingField(fields, 0));
-                        long rentSeconds = NumberUtils.parseLong(handlingField(fields, 1));
-                        long effectCount = NumberUtils.parseLong(handlingField(fields, 2));
-                        long expireTimestamp = NumberUtils.parseLong(handlingField(fields, 3));
-                        long currentTimestamp = NumberUtils.parseLong(handlingField(fields, 4));
-                        if (effectId > 0L) {
-                            effectsPayload.append(Crypto.Proc_3_0_6D2AF0(effectId, null, ""));
-                            effectsPayload.append(Crypto.Proc_3_0_6D2AF0(rentSeconds, null, ""));
-                            effectsPayload.append(Crypto.Proc_3_0_6D2AF0(effectCount, null, ""));
-                            long remainingSeconds = expireTimestamp - currentTimestamp;
-                            effectsPayload.append(expireTimestamp > 0L && remainingSeconds > 0L
-                                ? Crypto.Proc_3_0_6D2AF0(remainingSeconds, null, "")
-                                : "M");
-                            listedEffects++;
-                        }
-                    }
+            for (UserEffectSummaryRow effect : users.userEffectSummaries(NumberUtils.parseLong(userId))) {
+                long effectId = effect.effectId();
+                if (effectId > 0L) {
+                    effectsPayload.append(Crypto.Proc_3_0_6D2AF0(effectId, null, ""));
+                    effectsPayload.append(Crypto.Proc_3_0_6D2AF0(effect.rentSeconds(), null, ""));
+                    effectsPayload.append(Crypto.Proc_3_0_6D2AF0(effect.effectCount(), null, ""));
+                    long remainingSeconds = effect.expireTimestamp() - effect.currentTimestamp();
+                    effectsPayload.append(effect.expireTimestamp() > 0L && remainingSeconds > 0L
+                        ? Crypto.Proc_3_0_6D2AF0(remainingSeconds, null, "")
+                        : "M");
+                    listedEffects++;
                 }
             }
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(listedEffects, null, "GL") + effectsPayload, 0);
@@ -3487,20 +3482,20 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
-            String effectRow = MySQL.Proc_5_2_6D4690("SELECT id,time_rent,timestamp_expire FROM users_effects WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_effect='" + effectId
-                + "' ORDER BY timestamp_expire DESC LIMIT 1", 0, 0);
-            String[] fields = effectRow.split("\t", -1);
-            if (fields.length < 2) {
+            UserDao users = userDao();
+            if (users == null) {
                 return 0L;
             }
-            long effectRowId = NumberUtils.parseLong(handlingField(fields, 0));
-            long rentSeconds = NumberUtils.parseLong(handlingField(fields, 1));
+            UserEffectActivationRow effect = users.userEffectActivation(NumberUtils.parseLong(userId), effectId).orElse(null);
+            if (effect == null) {
+                return 0L;
+            }
+            long effectRowId = effect.rowId();
+            long rentSeconds = effect.rentSeconds();
             if (effectRowId <= 0L || rentSeconds <= 0L) {
                 return 0L;
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE users_effects SET timestamp_expire=UNIX_TIMESTAMP()+time_rent WHERE id='"
-                + effectRowId + "' LIMIT 1", 0, 0);
+            users.activateUserEffect(effectRowId);
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(rentSeconds, null,
                 Crypto.Proc_3_0_6D2AF0(effectId, null, "GN")), 0);
             String broadcastPayload = Crypto.Proc_3_0_6D2AF0(socketIndex, null, "Ge");
@@ -3515,27 +3510,20 @@ public final class Handling {
     public static long Proc_6_103_74A510(Object... args) {
         long expiredCount = 0L;
         try {
-            String queryText = "SELECT users_effects.id_effect,users.id_socket,users_effects.id "
-                + "FROM users_effects,users WHERE users_effects.timestamp_expire IS NOT NULL "
-                + "AND users_effects.timestamp_expire<UNIX_TIMESTAMP() AND users.id=users_effects.id_user "
-                + "AND users.id_socket IS NOT NULL LIMIT 500";
-            String rowText = MySQL.Proc_5_2_6D4690(queryText, 1, 0);
-            for (String row : StringUtils.text(rowText).split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    String[] fields = row.split("\t", -1);
-                    if (fields.length >= 3) {
-                        long effectId = NumberUtils.parseLong(handlingField(fields, 0));
-                        int socketIndex = (int) NumberUtils.parseLong(handlingField(fields, 1));
-                        if (socketIndex > 0 && effectId > 0L) {
-                            Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(socketIndex, null, "Ge") + "H", 0);
-                            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(effectId, null, "GO"), 0);
-                            expiredCount++;
-                        }
-                    }
+            UserDao users = userDao();
+            if (users == null) {
+                return 0L;
+            }
+            for (ExpiredUserEffectRow effect : users.expiredUserEffects()) {
+                long effectId = effect.effectId();
+                int socketIndex = (int) effect.socketIndex();
+                if (socketIndex > 0 && effectId > 0L) {
+                    Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(socketIndex, null, "Ge") + "H", 0);
+                    Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(effectId, null, "GO"), 0);
+                    expiredCount++;
                 }
             }
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM users_effects WHERE users_effects.timestamp_expire IS NOT NULL "
-                + "AND users_effects.timestamp_expire<UNIX_TIMESTAMP() LIMIT 500", 0, 0);
+            users.deleteExpiredUserEffects();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

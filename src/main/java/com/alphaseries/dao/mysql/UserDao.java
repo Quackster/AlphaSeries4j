@@ -2,6 +2,9 @@ package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
 import com.alphaseries.game.social.BadgeRow;
+import com.alphaseries.game.user.ExpiredUserEffectRow;
+import com.alphaseries.game.user.UserEffectActivationRow;
+import com.alphaseries.game.user.UserEffectSummaryRow;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -320,6 +323,55 @@ public final class UserDao {
 
     public int updateHomeRoom(long userId, long roomId) throws SQLException {
         return database.execute("UPDATE users SET homeroom=? WHERE id=?", roomId, userId);
+    }
+
+    public List<UserEffectSummaryRow> userEffectSummaries(long userId) throws SQLException {
+        return database.query(
+            "SELECT id_effect,time_rent,COUNT(id_effect),timestamp_expire,UNIX_TIMESTAMP() "
+                + "FROM users_effects WHERE id_user=? GROUP BY users_effects.id_effect LIMIT 50",
+            resultSet -> new UserEffectSummaryRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5)),
+            userId);
+    }
+
+    public Optional<UserEffectActivationRow> userEffectActivation(long userId, long effectId) throws SQLException {
+        return database.queryOne(
+            "SELECT id,time_rent,timestamp_expire FROM users_effects WHERE id_user=? AND id_effect=? "
+                + "ORDER BY timestamp_expire DESC LIMIT 1",
+            resultSet -> new UserEffectActivationRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3)),
+            userId,
+            effectId);
+    }
+
+    public int activateUserEffect(long rowId) throws SQLException {
+        return database.execute(
+            "UPDATE users_effects SET timestamp_expire=UNIX_TIMESTAMP()+time_rent WHERE id=? LIMIT 1",
+            rowId);
+    }
+
+    public List<ExpiredUserEffectRow> expiredUserEffects() throws SQLException {
+        return database.query(
+            "SELECT users_effects.id_effect,users.id_socket,users_effects.id "
+                + "FROM users_effects,users WHERE users_effects.timestamp_expire IS NOT NULL "
+                + "AND users_effects.timestamp_expire<UNIX_TIMESTAMP() AND users.id=users_effects.id_user "
+                + "AND users.id_socket IS NOT NULL LIMIT 500",
+            resultSet -> new ExpiredUserEffectRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3)));
+    }
+
+    public void deleteExpiredUserEffects() throws SQLException {
+        database.execute(
+            "DELETE FROM users_effects WHERE users_effects.timestamp_expire IS NOT NULL "
+                + "AND users_effects.timestamp_expire<UNIX_TIMESTAMP() LIMIT 500");
     }
 
     public record UserIdentity(long userId, long socketIndex, String motto, String figure, String gender) {
