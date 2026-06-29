@@ -55,6 +55,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.room.RepresentedRoomCache` for represented room record lookup, replacement, and occupant movement state previously implemented inline in `Handling` and `Main`.
 - Added `com.alphaseries.game.room.RepresentedRoomSlots` as a typed adapter around represented room slot allocation markers previously manipulated as a raw `Licence` string.
 - Added `com.alphaseries.game.session.GameServerSessionState` as a typed adapter around queued game-server packet data and ready-session markers previously manipulated as raw `Licence` strings.
+- Migrated `GameServerSessionState` internals from raw string mutation to collection-backed queued packets and ready socket marker storage, keeping legacy serialization only at the compatibility boundary.
 - Added `com.alphaseries.game.session.RepresentedSocketCache` as a typed adapter around represented socket records, room slots, and busy checks previously parsed directly from a raw `Licence` global.
 - Added `com.alphaseries.game.session.SessionRegistry` as a typed adapter around the legacy `Licence.global_00829268` session cache.
 - Added typed `SessionRegistry.SocketSession` iteration and migrated staff broadcast away from direct session-cache string parsing.

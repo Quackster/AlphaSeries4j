@@ -1,14 +1,21 @@
 package com.alphaseries.game.session;
 
+import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 public final class GameServerSessionState {
-    private String queuedPacketData;
-    private String readySessionMarkers;
+    private final List<QueuedPacket> queuedPackets = new ArrayList<>();
+    private final Set<Long> readySocketIndexes = new LinkedHashSet<>();
 
     private GameServerSessionState(String queuedPacketData, String readySessionMarkers) {
-        this.queuedPacketData = StringUtils.text(queuedPacketData);
-        this.readySessionMarkers = StringUtils.text(readySessionMarkers);
+        parseQueuedPackets(StringUtils.text(queuedPacketData));
+        parseReadyMarkers(StringUtils.text(readySessionMarkers));
     }
 
     public static GameServerSessionState fromLegacy(String queuedPacketData, String readySessionMarkers) {
@@ -16,11 +23,19 @@ public final class GameServerSessionState {
     }
 
     public String queuedPacketData() {
-        return queuedPacketData;
+        StringBuilder data = new StringBuilder();
+        for (QueuedPacket packet : queuedPackets) {
+            data.append('[').append(packet.socketIndex).append(':').append(packet.payload).append(']');
+        }
+        return data.toString();
     }
 
     public String readySessionMarkers() {
-        return readySessionMarkers;
+        StringBuilder markers = new StringBuilder();
+        for (Long socketIndex : readySocketIndexes) {
+            markers.append('[').append(socketIndex).append(']');
+        }
+        return markers.toString();
     }
 
     public void appendPacketData(long socketIndex, String[] fields) {
@@ -35,37 +50,62 @@ public final class GameServerSessionState {
             payload.append(StringUtils.text(fields[fieldIndex]));
         }
         if (payload.length() > 0) {
-            queuedPacketData += "[" + socketIndex + ":" + payload + "]";
+            queuedPackets.add(new QueuedPacket(socketIndex, payload.toString()));
         }
     }
 
     public String popPacketData(long socketIndex) {
-        String marker = "[" + socketIndex + ":";
-        int recordStart = queuedPacketData.indexOf(marker);
-        if (recordStart < 0) {
-            return "";
+        for (Iterator<QueuedPacket> iterator = queuedPackets.iterator(); iterator.hasNext();) {
+            QueuedPacket packet = iterator.next();
+            if (packet.socketIndex == socketIndex) {
+                iterator.remove();
+                return packet.payload;
+            }
         }
-        int payloadStart = recordStart + marker.length();
-        int recordEnd = queuedPacketData.indexOf(']', payloadStart);
-        if (recordEnd < 0) {
-            return "";
-        }
-        String payload = queuedPacketData.substring(payloadStart, recordEnd);
-        queuedPacketData = queuedPacketData.substring(0, recordStart) + queuedPacketData.substring(recordEnd + 1);
-        return payload;
+        return "";
     }
 
     public boolean isReady(long socketIndex) {
-        return readySessionMarkers.contains(marker(socketIndex));
+        return readySocketIndexes.contains(socketIndex);
     }
 
     public void removeSocket(long socketIndex) {
-        String marker = marker(socketIndex);
-        queuedPacketData = queuedPacketData.replace(marker, "");
-        readySessionMarkers = readySessionMarkers.replace(marker, "");
+        queuedPackets.removeIf(packet -> packet.socketIndex == socketIndex);
+        readySocketIndexes.remove(socketIndex);
     }
 
-    private static String marker(long socketIndex) {
-        return "[" + socketIndex + "]";
+    private void parseQueuedPackets(String queuedPacketData) {
+        for (String record : queuedPacketData.split("\\[", -1)) {
+            int payloadAt = record.indexOf(':');
+            int endAt = record.indexOf(']', payloadAt + 1);
+            if (payloadAt > 0 && endAt > payloadAt) {
+                long socketIndex = NumberUtils.parseLong(record.substring(0, payloadAt));
+                if (socketIndex > 0L) {
+                    queuedPackets.add(new QueuedPacket(socketIndex, record.substring(payloadAt + 1, endAt)));
+                }
+            }
+        }
+    }
+
+    private void parseReadyMarkers(String readySessionMarkers) {
+        for (String part : readySessionMarkers.split("\\]", -1)) {
+            String marker = part.replace("[", "");
+            if (!marker.isEmpty()) {
+                long socketIndex = NumberUtils.parseLong(marker);
+                if (socketIndex > 0L) {
+                    readySocketIndexes.add(socketIndex);
+                }
+            }
+        }
+    }
+
+    private static final class QueuedPacket {
+        private final long socketIndex;
+        private final String payload;
+
+        private QueuedPacket(long socketIndex, String payload) {
+            this.socketIndex = socketIndex;
+            this.payload = StringUtils.text(payload);
+        }
     }
 }
