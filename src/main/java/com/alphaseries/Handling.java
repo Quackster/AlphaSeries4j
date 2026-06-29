@@ -24,6 +24,8 @@ import com.alphaseries.messages.outgoing.RecyclerPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 import com.alphaseries.vb.Vb;
 
 import java.io.IOException;
@@ -745,8 +747,8 @@ public final class Handling {
     }
 
     public static boolean isValidWardrobeFigure(String figureText, String genderText, String figureData) {
-        String figure = Vb.cStr(figureText);
-        String gender = Vb.cStr(genderText).toUpperCase();
+        String figure = StringUtils.text(figureText);
+        String gender = StringUtils.text(genderText).toUpperCase();
         if (figure.isEmpty() || figure.length() > 255 || figure.indexOf('\'') >= 0 || figure.indexOf('"') >= 0) {
             return false;
         }
@@ -760,11 +762,11 @@ public final class Handling {
                 }
                 String figureType = piece[0].toLowerCase();
                 String setId = piece[1];
-                if (!allowedTypes.contains(";" + figureType + ";") || Vb.val(setId) <= 0L) {
+                if (!allowedTypes.contains(";" + figureType + ";") || NumberUtils.parseLong(setId) <= 0L) {
                     return false;
                 }
 
-                if (!Vb.cStr(figureData).isEmpty()) {
+                if (!StringUtils.text(figureData).isEmpty()) {
                     String lowerFigureData = figureData.toLowerCase();
                     String setTypeMarker = "<settype type=\"" + figureType + "\"";
                     int setTypeStart = lowerFigureData.indexOf(setTypeMarker.toLowerCase());
@@ -776,7 +778,7 @@ public final class Handling {
                         return false;
                     }
                     String setTypeXml = figureData.substring(setTypeStart, setTypeEnd);
-                    String setMarker = "<set id=\"" + Vb.val(setId) + "\"";
+                    String setMarker = "<set id=\"" + NumberUtils.parseLong(setId) + "\"";
                     if (!setTypeXml.toLowerCase().contains(setMarker.toLowerCase())) {
                         return false;
                     }
@@ -790,8 +792,8 @@ public final class Handling {
     }
 
     public static boolean figureSetAllowsGender(String setTypeXml, String setMarker, String genderText) {
-        String setType = Vb.cStr(setTypeXml);
-        String marker = Vb.cStr(setMarker);
+        String setType = StringUtils.text(setTypeXml);
+        String marker = StringUtils.text(setMarker);
         int setStart = setType.toLowerCase().indexOf(marker.toLowerCase());
         if (setStart < 0) {
             return false;
@@ -813,7 +815,7 @@ public final class Handling {
             return false;
         }
         String genderValue = setXml.substring(genderStart + 8, genderStart + 9).toUpperCase();
-        String gender = Vb.cStr(genderText).toUpperCase();
+        String gender = StringUtils.text(genderText).toUpperCase();
         return "U".equals(genderValue) || genderValue.equals(gender);
     }
 
@@ -829,12 +831,12 @@ public final class Handling {
         if (args == null || args.length == 0) {
             return "";
         }
-        return extractUrlList(Vb.cStr(args[0]));
+        return extractUrlList(StringUtils.text(args[0]));
     }
 
     public static String extractUrlList(String messageText) {
         StringBuilder urlList = new StringBuilder();
-        for (String word : Vb.cStr(messageText).split(" ", -1)) {
+        for (String word : StringUtils.text(messageText).split(" ", -1)) {
             String candidate = word.trim();
             String lowered = candidate.toLowerCase();
             if (!candidate.isEmpty()) {
@@ -854,9 +856,9 @@ public final class Handling {
         if (args == null || args.length == 0) {
             return "";
         }
-        boolean enabled = Vb.val(Functions.Proc_10_0_809570("com.client.chat.filter.enabled", 0)) != 0L;
+        boolean enabled = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.chat.filter.enabled", 0)) != 0L;
         String replacement = Functions.Proc_10_0_809570("com.client.chat.filter.replacement", "");
-        return Licence.chatSettings().filterText(Vb.cStr(args[0]), enabled, replacement);
+        return Licence.chatSettings().filterText(StringUtils.text(args[0]), enabled, replacement);
     }
 
     public static String filterChatText(String messageText, boolean filterEnabled, String replacementText, String filterRows) {
@@ -867,8 +869,8 @@ public final class Handling {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        boolean enabled = Vb.val(Functions.Proc_10_0_809570("com.client.chat.gesture.enabled", 0)) != 0L;
-        return Licence.chatSettings().gestureId(Vb.cStr(args[0]), enabled);
+        boolean enabled = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.chat.gesture.enabled", 0)) != 0L;
+        return Licence.chatSettings().gestureId(StringUtils.text(args[0]), enabled);
     }
 
     public static long findGestureId(String messageText, boolean gestureEnabled, String gestureRows) {
@@ -880,18 +882,18 @@ public final class Handling {
             return "";
         }
         return StaffPayloads.callForHelp(
-            Vb.val(args[0]),
-            Vb.val(args[1]),
-            Vb.val(args[2]),
-            Vb.val(args[3]),
-            Vb.cStr(args[4]),
-            Vb.val(args[5]),
-            Vb.cStr(args[6]),
-            Vb.cStr(args[7]),
-            Vb.val(args[8]),
-            Vb.cStr(args[9]),
-            Vb.val(args[10]),
-            Vb.cStr(args[11]));
+            NumberUtils.parseLong(args[0]),
+            NumberUtils.parseLong(args[1]),
+            NumberUtils.parseLong(args[2]),
+            NumberUtils.parseLong(args[3]),
+            StringUtils.text(args[4]),
+            NumberUtils.parseLong(args[5]),
+            StringUtils.text(args[6]),
+            StringUtils.text(args[7]),
+            NumberUtils.parseLong(args[8]),
+            StringUtils.text(args[9]),
+            NumberUtils.parseLong(args[10]),
+            StringUtils.text(args[11]));
     }
 
     public static void Proc_6_30_70DC90(Object... args) {
