@@ -218,7 +218,7 @@ public final class Functions {
             return 0L;
         }
         try {
-            long furnitureId = Vb.val(args[0]);
+            long furnitureId = NumberUtils.parseLong(args[0]);
             if (furnitureId <= 0L) {
                 return 0L;
             }
@@ -229,10 +229,10 @@ public final class Functions {
             if (rowText.isEmpty() || fields.length < 2) {
                 return 0L;
             }
-            long productId = Vb.val(fields[0]);
-            long ownerId = Vb.val(fields[1]);
+            long productId = NumberUtils.parseLong(fields[0]);
+            long ownerId = NumberUtils.parseLong(fields[1]);
             String itemData = fields.length >= 3 ? fields[2] : "";
-            long secondaryValue = fields.length >= 4 ? Vb.val(fields[3]) : 0L;
+            long secondaryValue = fields.length >= 4 ? NumberUtils.parseLong(fields[3]) : 0L;
             if (ownerId <= 0L) {
                 return 0L;
             }
@@ -259,7 +259,7 @@ public final class Functions {
             return 0L;
         }
         try {
-            long furnitureId = Vb.val(args[0]);
+            long furnitureId = NumberUtils.parseLong(args[0]);
             if (furnitureId <= 0L) {
                 return 0L;
             }
@@ -269,7 +269,7 @@ public final class Functions {
             if (rowText.isEmpty() || fields.length < 2) {
                 return 0L;
             }
-            long ownerId = Vb.val(fields[1]);
+            long ownerId = NumberUtils.parseLong(fields[1]);
             if (ownerId <= 0L) {
                 return 0L;
             }
@@ -307,7 +307,7 @@ public final class Functions {
             return 0L;
         }
         try {
-            String userId = Vb.cStr(args[0]);
+            String userId = StringUtils.text(args[0]);
             if (userId.isEmpty()) {
                 return 0L;
             }
@@ -315,8 +315,7 @@ public final class Functions {
             if (socketIndex == 0L) {
                 return 0L;
             }
-            long creditsValue = Vb.val(MySQL.Proc_5_2_6D4690(
-                "SELECT credits FROM users WHERE id='" + userId + "' LIMIT 1"));
+            long creditsValue = userDao().credits(NumberUtils.parseLong(userId));
             HandlingMUS.Proc_12_1_821AA0((int) socketIndex, creditsRefreshPayload(creditsValue));
             return 1L;
         } catch (Exception ex) {
@@ -329,7 +328,7 @@ public final class Functions {
             return 0L;
         }
         try {
-            String userId = Vb.cStr(args[0]);
+            String userId = StringUtils.text(args[0]);
             if (userId.isEmpty()) {
                 return 0L;
             }
@@ -337,10 +336,11 @@ public final class Functions {
             if (socketIndex == 0L) {
                 return 0L;
             }
+            UserDao users = userDao();
+            long numericUserId = NumberUtils.parseLong(userId);
             long sentCount = 0L;
             for (long pointType = 0L; pointType <= 4L; pointType++) {
-                long pointsValue = Vb.val(MySQL.Proc_5_2_6D4690("SELECT activitypoints_" + pointType
-                    + " FROM users WHERE id='" + userId + "' LIMIT 1"));
+                long pointsValue = users.activityPoints(numericUserId, pointType);
                 HandlingMUS.Proc_12_1_821AA0((int) socketIndex, activityPointRefreshPayload(pointType, pointsValue));
                 sentCount++;
             }

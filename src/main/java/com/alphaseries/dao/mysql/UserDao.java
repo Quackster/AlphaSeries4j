@@ -48,6 +48,22 @@ public final class UserDao {
             .orElse(0L);
     }
 
+    public long credits(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT credits FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public long activityPoints(long userId, long pointType) throws SQLException {
+        return database.queryOne(
+            "SELECT activitypoints_" + pointType + " FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
     public Optional<UserIdentity> findIdentity(long userId) throws SQLException {
         return database.queryOne(
             "SELECT id,id_socket,motto,figure,gender FROM users WHERE id=? LIMIT 1",
