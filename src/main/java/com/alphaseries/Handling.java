@@ -6,6 +6,7 @@ import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.session.GameServerSessionState;
+import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -8615,27 +8616,17 @@ public final class Handling {
         }
         String sentMarkers = "";
         long sentCount = 0L;
-        for (String recordText : Vb.cStr(Licence.global_00829268).split("\\[", -1)) {
-            if (recordText.startsWith("1:")) {
-                int payloadStart = recordText.indexOf('\1');
-                int payloadEnd = recordText.indexOf(']', payloadStart + 1);
-                if (payloadStart > 0) {
-                    if (payloadEnd < 0) {
-                        payloadEnd = recordText.length();
-                    }
-                    String[] fields = recordText.substring(payloadStart + 1, payloadEnd).split("\2", -1);
-                    String candidateUserId = String.valueOf(Vb.val(handlingField(fields, 0)));
-                    int candidateSocket = (int) Vb.val(handlingField(fields, 1));
-                    if ("0".equals(candidateUserId)) {
-                        candidateUserId = handlingUserIdFromSocket(candidateSocket);
-                    }
-                    String marker = "[" + candidateSocket + "]";
-                    if (candidateSocket > 0 && !sentMarkers.contains(marker) && handlingUserHasPermission(candidateUserId, "fuse_mod")) {
-                        Proc_6_244_801E80(candidateSocket, payload, 0);
-                        sentMarkers += marker;
-                        sentCount++;
-                    }
-                }
+        for (SessionRegistry.SocketSession session : Licence.socketSessions()) {
+            String candidateUserId = String.valueOf(session.userId());
+            int candidateSocket = session.socketIndex();
+            if ("0".equals(candidateUserId)) {
+                candidateUserId = handlingUserIdFromSocket(candidateSocket);
+            }
+            String marker = "[" + candidateSocket + "]";
+            if (candidateSocket > 0 && !sentMarkers.contains(marker) && handlingUserHasPermission(candidateUserId, "fuse_mod")) {
+                Proc_6_244_801E80(candidateSocket, payload, 0);
+                sentMarkers += marker;
+                sentCount++;
             }
         }
         String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_socket FROM users WHERE id_socket IS NOT NULL", 0, 0);

@@ -30,6 +30,7 @@ import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public final class Licence {
     public static Object global_008292BC = "";
@@ -456,6 +457,10 @@ public final class Licence {
         SessionRegistry registry = sessionRegistry();
         registry.storeSocketSession(socketIndex, sessionRecord);
         global_00829268 = registry.toLegacyCache();
+    }
+
+    public static List<SessionRegistry.SocketSession> socketSessions() {
+        return sessionRegistry().socketSessions();
     }
 
     private static SessionRegistry sessionRegistry() {

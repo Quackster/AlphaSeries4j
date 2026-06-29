@@ -57,6 +57,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.session.GameServerSessionState` as a typed adapter around queued game-server packet data and ready-session markers previously manipulated as raw `Licence` strings.
 - Added `com.alphaseries.game.session.RepresentedSocketCache` as a typed adapter around represented socket records, room slots, and busy checks previously parsed directly from a raw `Licence` global.
 - Added `com.alphaseries.game.session.SessionRegistry` as a typed adapter around the legacy `Licence.global_00829268` session cache.
+- Added typed `SessionRegistry.SocketSession` iteration and migrated staff broadcast away from direct session-cache string parsing.
 - Added `com.alphaseries.game.wired.WiredSettings` as a typed adapter around wired state payload previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.wired.WiredPayloads` for wired record formatting, cache replacement, selected-item checks, and state payload aggregation.
 - Added `com.alphaseries.messages.outgoing.MessengerPayloads` for friend, request, search, pending-request, and friend-list outgoing payloads.
@@ -80,9 +81,9 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 472
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1330
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1327
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 476
-- `Handling.java`: 12157 lines
+- `Handling.java`: 12148 lines
 - `Functions.java`: 756 lines
 - `MySQL.java`: 301 lines
 - `Vb.java`: 106 lines

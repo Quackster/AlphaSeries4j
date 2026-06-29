@@ -79,6 +79,18 @@ public final class SessionRegistry {
         return NumberUtils.parseLong(linkedValue(recordId, useBracketCount));
     }
 
+    public List<SocketSession> socketSessions() {
+        List<SocketSession> sessions = new ArrayList<>();
+        for (Record record : records) {
+            if (record.key.startsWith("1:")) {
+                long userId = record.fields.length >= 1 ? NumberUtils.parseLong(record.fields[0]) : 0L;
+                int socketIndex = record.fields.length >= 2 ? NumberUtils.parseInt(record.fields[1]) : 0;
+                sessions.add(new SocketSession(userId, socketIndex));
+            }
+        }
+        return sessions;
+    }
+
     public void storeSocketSession(int socketIndex, String sessionRecord) {
         if (socketIndex <= 0 || StringUtils.text(sessionRecord).isEmpty()) {
             return;
@@ -141,6 +153,24 @@ public final class SessionRegistry {
             this.key = StringUtils.text(key);
             this.payload = StringUtils.text(payload);
             this.fields = this.payload.split("\2", -1);
+        }
+    }
+
+    public static final class SocketSession {
+        private final long userId;
+        private final int socketIndex;
+
+        private SocketSession(long userId, int socketIndex) {
+            this.userId = userId;
+            this.socketIndex = socketIndex;
+        }
+
+        public long userId() {
+            return userId;
+        }
+
+        public int socketIndex() {
+            return socketIndex;
         }
     }
 }
