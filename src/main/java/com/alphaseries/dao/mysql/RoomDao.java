@@ -4,6 +4,7 @@ import com.alphaseries.db.Database;
 import com.alphaseries.game.navigator.NavigatorRoom;
 import com.alphaseries.game.navigator.NavigatorTagPopularity;
 import com.alphaseries.game.navigator.NewFriendRooms;
+import com.alphaseries.game.navigator.OfficialNavigatorItem;
 import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.game.room.RoomOccupantRow;
 import com.alphaseries.game.room.RoomUserEntryRow;
@@ -108,6 +109,38 @@ public final class RoomDao {
                 resultSet.getLong(1),
                 resultSet.getString(2)),
             limit);
+    }
+
+    public List<OfficialNavigatorItem> officialNavigatorItems() throws SQLException {
+        return database.query(officialNavigatorQuery(), resultSet -> new OfficialNavigatorItem(
+            resultSet.getLong(1),
+            resultSet.getLong(2),
+            resultSet.getLong(3),
+            resultSet.getString(4),
+            resultSet.getString(5),
+            resultSet.getString(6),
+            resultSet.getString(7),
+            resultSet.getString(8),
+            resultSet.getString(9),
+            resultSet.getString(10),
+            resultSet.getString(11),
+            resultSet.getString(12),
+            resultSet.getString(13),
+            resultSet.getString(14),
+            resultSet.getString(15),
+            resultSet.getString(16),
+            resultSet.getString(17),
+            resultSet.getString(18),
+            resultSet.getString(19),
+            resultSet.getString(20),
+            resultSet.getString(21),
+            resultSet.getString(22),
+            resultSet.getString(23),
+            resultSet.getString(24),
+            resultSet.getString(25),
+            resultSet.getLong(26),
+            resultSet.getLong(27),
+            resultSet.getLong(28)));
     }
 
     public long ownedRoomCount(long ownerId) throws SQLException {
@@ -911,5 +944,50 @@ public final class RoomDao {
 
     private static String nullableText(String value) {
         return value == null || value.isEmpty() ? null : value;
+    }
+
+    private static String officialNavigatorQuery() {
+        String separator = " UNION ALL ";
+        StringBuilder queryText = new StringBuilder();
+        queryText.append("SELECT rooms_official.id_type,rooms_official.id_style,rooms_official.icon,");
+        queryText.append("rooms_official.caption,rooms_official.caption_2,rooms_official.caption_3,");
+        queryText.append("NULL,rooms.id,rooms.name,users.name,rooms.status_door,rooms.visitors_now,");
+        queryText.append("rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,");
+        queryText.append("rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,");
+        queryText.append("rooms.allow_otherspets,NULL,NULL,NULL,rooms_official.id_parent,");
+        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM users,rooms,");
+        queryText.append("rooms_categories,rooms_official WHERE rooms_official.id_type='2' ");
+        queryText.append("AND rooms_official.id_room IS NOT NULL AND rooms.id=rooms_official.id_room ");
+        queryText.append("AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category ");
+        queryText.append("GROUP BY rooms_official.id");
+
+        queryText.append(separator).append("SELECT rooms_official.id_type,rooms_official.id_style,");
+        queryText.append("rooms_official.icon,rooms_official.caption,rooms_official.caption_2,");
+        queryText.append("rooms_official.caption_3,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
+        queryText.append("NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,rooms_official.id_parent,");
+        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM rooms_official ");
+        queryText.append("WHERE rooms_official.id_type='1' GROUP BY rooms_official.id");
+
+        queryText.append(separator).append("SELECT rooms_official.id_type,rooms_official.id_style,");
+        queryText.append("rooms_official.icon,rooms_official.caption,rooms_official.caption_2,");
+        queryText.append("rooms_official.caption_3,NULL,rooms.id,rooms.name,NULL,rooms.status_door,");
+        queryText.append("rooms.visitors_now,rooms.visitors_max,rooms.description,");
+        queryText.append("rooms_categories.has_trading,NULL,rooms.rate,rooms.id_category,rooms.icon,");
+        queryText.append("rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,models.name,");
+        queryText.append("models.required_files,models.visitors_max,rooms_official.id_parent,");
+        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM models,rooms,");
+        queryText.append("rooms_categories,rooms_official WHERE rooms_official.id_type='3' ");
+        queryText.append("AND rooms_official.id_room IS NOT NULL AND rooms.id=rooms_official.id_room ");
+        queryText.append("AND models.id=rooms.id_model AND rooms_categories.id=rooms.id_category ");
+        queryText.append("GROUP BY rooms_official.id");
+
+        queryText.append(separator).append("SELECT rooms_official.id_type,rooms_official.id_style,");
+        queryText.append("rooms_official.icon,rooms_official.caption,rooms_official.caption_2,");
+        queryText.append("rooms_official.caption_3,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
+        queryText.append("NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,rooms_official.id_parent,");
+        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM rooms_official ");
+        queryText.append("WHERE rooms_official.id_type='4' GROUP BY rooms_official.id ");
+        queryText.append("ORDER BY 27 ASC LIMIT 255");
+        return queryText.toString();
     }
 }

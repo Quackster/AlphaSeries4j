@@ -58,6 +58,7 @@ import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.NavigatorRoom;
 import com.alphaseries.game.navigator.NavigatorTagPopularity;
+import com.alphaseries.game.navigator.OfficialNavigatorItem;
 import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
@@ -3936,8 +3937,11 @@ public final class Handling {
     public static void Proc_6_123_754020(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            String rowText = MySQL.Proc_5_2_6D4690(officialNavigatorQuery(), 0, 0);
-            Proc_6_244_801E80(socketIndex, "GB" + officialNavigatorRowsPayload(rowText, true), 0);
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return;
+            }
+            Proc_6_244_801E80(socketIndex, "GB" + officialNavigatorPayload(rooms.officialNavigatorItems(), true), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -9948,6 +9952,36 @@ public final class Handling {
             return Crypto.Proc_3_0_6D2AF0(itemCount, null, "") + payload;
         }
         return payload.toString();
+    }
+
+    public static String officialNavigatorPayload(List<OfficialNavigatorItem> items, boolean includeCountPrefix) {
+        PacketBuilder payload = PacketBuilder.create();
+        long itemCount = 0L;
+        for (OfficialNavigatorItem item : items == null ? List.<OfficialNavigatorItem>of() : items) {
+            payload.appendRaw(officialNavigatorItemPayload(item));
+            itemCount++;
+        }
+        if (includeCountPrefix) {
+            return PacketBuilder.create().appendInt(itemCount).appendRaw(payload.build()).build();
+        }
+        return payload.build();
+    }
+
+    public static String officialNavigatorItemPayload(OfficialNavigatorItem item) {
+        if (item == null) {
+            return "";
+        }
+        PacketBuilder payload = PacketBuilder.create()
+            .appendInt(item.typeId())
+            .appendInt(item.styleId())
+            .appendInt(item.iconId());
+        for (String textField : item.textFields()) {
+            payload.appendString(textField);
+        }
+        payload.appendInt(item.parentId())
+            .appendInt(item.officialId())
+            .appendInt(item.requiredLevel());
+        return payload.build();
     }
 
     public static String officialNavigatorRowPayload(String[] fields) {
