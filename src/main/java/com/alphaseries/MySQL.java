@@ -4,7 +4,8 @@ import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.vb.Vb;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -49,7 +50,7 @@ public final class MySQL {
                 || !mySqlUserHasPermission(userId, "fuse_receive_calls_for_help")) {
                 return;
             }
-            long cfhId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long cfhId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             if (cfhId <= 0L) {
                 return;
             }
@@ -75,7 +76,7 @@ public final class MySQL {
                 || !mySqlUserHasPermission(userId, "fuse_chatlog")) {
                 return;
             }
-            long roomId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long roomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             if (roomId <= 0L) {
                 return;
             }
@@ -100,7 +101,7 @@ public final class MySQL {
             if (userId.isEmpty() || "0".equals(userId) || !mySqlUserHasPermission(userId, "fuse_mod")) {
                 return;
             }
-            long roomId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long roomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             if (roomId <= 0L) {
                 return;
             }
@@ -126,7 +127,7 @@ public final class MySQL {
         StringBuilder sql = new StringBuilder();
         for (Object arg : args) {
             if (arg != null) {
-                String part = Vb.cStr(arg);
+                String part = StringUtils.text(arg);
                 if (!isIgnorableSqlArg(part)) {
                     sql.append(part);
                 }
@@ -147,23 +148,23 @@ public final class MySQL {
         if (args == null || args.length == 0) {
             return 0;
         }
-        return (int) Vb.val(args[0]);
+        return NumberUtils.parseInt(args[0]);
     }
 
     public static String mySqlPacketPayload(Object... args) {
         if (args == null) {
             return "";
         }
-        String payload = args.length >= 3 ? Vb.cStr(args[2]) : "";
+        String payload = args.length >= 3 ? StringUtils.text(args[2]) : "";
         if (payload.isEmpty() && args.length >= 2) {
-            payload = Vb.cStr(args[1]);
+            payload = StringUtils.text(args[1]);
         }
         return payload;
     }
 
     public static String mySqlRequestPayload(String packetPayload, String expectedPrefix) {
-        String payload = Vb.cStr(packetPayload);
-        String prefix = Vb.cStr(expectedPrefix);
+        String payload = StringUtils.text(packetPayload);
+        String prefix = StringUtils.text(expectedPrefix);
         if (!prefix.isEmpty() && payload.startsWith(prefix)) {
             return payload.substring(prefix.length());
         }
@@ -186,7 +187,7 @@ public final class MySQL {
         if (databaseConnection == null) {
             return false;
         }
-        long numericUserId = Vb.val(userId);
+        long numericUserId = NumberUtils.parseLong(userId);
         try {
             UserDao users = userDao();
             long rankIndex = users.rankLevel(numericUserId);
@@ -242,9 +243,9 @@ public final class MySQL {
         if (roomFields == null || roomFields.length < 3) {
             return "";
         }
-        long roomId = Vb.val(roomFields[0]);
+        long roomId = NumberUtils.parseLong(roomFields[0]);
         String roomName = roomFields[1];
-        long modelType = Vb.val(roomFields[2]);
+        long modelType = NumberUtils.parseLong(roomFields[2]);
         return PacketBuilder.create()
             .appendInt(roomId)
             .appendInt(modelType)
@@ -261,9 +262,9 @@ public final class MySQL {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 5) {
-                    payload.appendInt(Vb.val(fields[0]))
-                        .appendInt(Vb.val(fields[1]))
-                        .appendInt(Vb.val(fields[2]))
+                    payload.appendInt(NumberUtils.parseLong(fields[0]))
+                        .appendInt(NumberUtils.parseLong(fields[1]))
+                        .appendInt(NumberUtils.parseLong(fields[2]))
                         .appendString(fields[3])
                         .appendString(fields[4]);
                 }
@@ -277,9 +278,9 @@ public final class MySQL {
             return "";
         }
         PacketBuilder payload = PacketBuilder.create()
-            .appendInt(Vb.val(roomFields[0]))
-            .appendInt(Vb.val(roomFields[1]))
-            .appendInt(Vb.val(roomFields[2]));
+            .appendInt(NumberUtils.parseLong(roomFields[0]))
+            .appendInt(NumberUtils.parseLong(roomFields[1]))
+            .appendInt(NumberUtils.parseLong(roomFields[2]));
         for (int fieldIndex = 3; fieldIndex <= 7; fieldIndex++) {
             payload.appendString(roomFields[fieldIndex]);
         }
@@ -300,10 +301,10 @@ public final class MySQL {
         }
         return PacketBuilder.create()
             .appendInt(cfhId)
-            .appendInt(Vb.val(cfhFields[0]))
-            .appendInt(Vb.val(cfhFields[2]))
-            .appendInt(Vb.val(cfhFields[3]))
-            .appendInt(Vb.val(cfhFields[4]))
+            .appendInt(NumberUtils.parseLong(cfhFields[0]))
+            .appendInt(NumberUtils.parseLong(cfhFields[2]))
+            .appendInt(NumberUtils.parseLong(cfhFields[3]))
+            .appendInt(NumberUtils.parseLong(cfhFields[4]))
             .appendString(cfhFields[1])
             .appendRaw(mySqlRoomChatLogRows(chatRows))
             .build();
