@@ -4451,8 +4451,11 @@ public final class Handling {
             if (NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.enabled", 0, 0)) != 0L) {
                 long wrapPrice = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.price", 0, 0));
                 if (wrapProductId <= 0L) {
-                    wrapProductId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690(
-                        "SELECT id FROM products WHERE sprite LIKE 'present_wrap%' ORDER BY id ASC LIMIT 1", 0, 0));
+                    CatalogDao catalog = catalogDao();
+                    if (catalog == null) {
+                        return "";
+                    }
+                    wrapProductId = catalog.firstGiftWrapProductId();
                 }
                 if (wrapProductId > 0L && !Licence.giftSettings().containsGiftWrapProduct(wrapProductId)) {
                     return "";

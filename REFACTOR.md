@@ -243,6 +243,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed messenger friend summary lookup through typed `MessengerDao.MessengerFriend` records, replacing raw user SQL and tab-delimited summary parsing in `Handling`.
 - Routed achievement badge current-level lookups through `UserDao`, replacing raw `users_badges` SQL in `Handling`.
 - Routed login ticket user loading through typed `UserDao.LoginUser`, replacing the raw login SQL and tab-delimited field parsing in `Handling`.
+- Routed gift-wrap product fallback lookup through `CatalogDao`, replacing another raw product SQL helper in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -256,9 +257,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 62
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 61
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12520 lines
+- `Handling.java`: 12523 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines

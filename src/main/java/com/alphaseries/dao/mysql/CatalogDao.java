@@ -26,4 +26,12 @@ public final class CatalogDao {
             sprite)
             .orElse(0L);
     }
+
+    public long firstGiftWrapProductId() throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM products WHERE sprite LIKE ? ORDER BY id ASC LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            "present_wrap%")
+            .orElse(0L);
+    }
 }
