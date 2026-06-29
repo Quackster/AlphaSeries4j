@@ -5967,6 +5967,47 @@ public final class Handling {
         return handlingRepresentedWiredEdit(args, "ok", 501, 1000, "wired_action", true);
     }
 
+    public static String Proc_6_221_7ED1E0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "on");
+            LongRef offset = new LongRef(1);
+            long furnitureId = readWireLong(requestPayload, offset);
+            if (furnitureId <= 0L) {
+                furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            }
+            if (socketIndex <= 0 || furnitureId <= 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L || (!handlingUserHasRoomRight(userId, roomId) && !handlingUserOwnsRoom(userId, roomId))) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id='"
+                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            String[] fields = rowText.split("\t", -1);
+            long productId = Vb.val(handlingField(fields, 0));
+            long wiredCode = Vb.val(DataManager.Proc_8_12_806C30(productId, 27, 0));
+            if (productId <= 0L || wiredCode <= 0L) {
+                return "";
+            }
+            Path snapshotPath = Path.of(Functions.applicationPath, "cache", "wired_snapshots", furnitureId + ".cache");
+            Files.createDirectories(snapshotPath.getParent());
+            DataManager.Proc_8_10_8068E0(snapshotPath.toString(), Licence.global_00829310, wiredCode);
+            return snapshotPath.toString();
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_222_7ED710(Object... args) {
         return handlingRepresentedWiredEdit(args, "ol", 1001, 1500, "wired_condition", false);
     }

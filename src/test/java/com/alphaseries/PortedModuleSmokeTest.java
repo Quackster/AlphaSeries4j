@@ -1676,6 +1676,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(wiredRecord, liveWiredRecord);
         assertEquals(true, Handling.Proc_6_239_7FC170(
             wiredRoot.resolve("cache").resolve("wired_action").resolve("9.cache").toString()).contains(wiredRecord));
+        Licence.global_00829310 = "snapshot-room-cache";
+        String snapshotPath = Handling.Proc_6_221_7ED1E0(4, "on" + Crypto.Proc_3_0_6D2AF0(44, null, ""));
+        assertEquals(wiredRoot.resolve("cache").resolve("wired_snapshots").resolve("44.cache").toString(), snapshotPath);
+        assertEquals("snapshot-room-cache" + System.lineSeparator(), new String(Files.readAllBytes(Path.of(snapshotPath)), "UTF-8"));
         String triggerRecord = Handling.wiredRecordText(1001, 55, "", "", "", "");
         Handling.Proc_6_240_7FC2B0(wiredRoot.resolve("cache").resolve("wired_trigger").resolve("9.cache").toString(), triggerRecord);
         assertEquals(2L, Handling.Proc_6_212_7E36C0(4));
