@@ -90,6 +90,16 @@ public final class FurnitureDao {
             roomId);
     }
 
+    public Optional<FloorStateFurniture> floorStateFurniture(long furnitureId, long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_product,sign FROM furnitures WHERE id=? AND id_room=? AND position_wall IS NULL LIMIT 1",
+            resultSet -> new FloorStateFurniture(
+                resultSet.getLong(1),
+                resultSet.getString(2)),
+            furnitureId,
+            roomId);
+    }
+
     public Optional<InventoryFurniture> inventoryFurniture(long furnitureId) throws SQLException {
         return database.queryOne(
             "SELECT id_product,id_owner,sign,id_secondary FROM furnitures WHERE id =? LIMIT 1",
@@ -200,6 +210,15 @@ public final class FurnitureDao {
         return database.execute("UPDATE furnitures SET sign=? WHERE id=? LIMIT 1", sign, furnitureId);
     }
 
+    public int updateRoomFurnitureState(long furnitureId, long roomId, long ownerId, long sign) throws SQLException {
+        return database.execute(
+            "UPDATE furnitures SET sign=?,task_owner=?,task_time=UNIX_TIMESTAMP() WHERE id=? AND id_room=? LIMIT 1",
+            sign,
+            ownerId,
+            furnitureId,
+            roomId);
+    }
+
     public int updateRoomPosition(long furnitureId, long roomId, long positionX, long positionY, String positionZ)
         throws SQLException {
 
@@ -251,6 +270,9 @@ public final class FurnitureDao {
     }
 
     public record RoomFurnitureOwnerProduct(long productId, long ownerId) {
+    }
+
+    public record FloorStateFurniture(long productId, String sign) {
     }
 
     public record InventoryFurniture(long productId, long ownerId, String itemData, long secondaryValue) {

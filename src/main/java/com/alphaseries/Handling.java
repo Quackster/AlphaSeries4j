@@ -4996,14 +4996,16 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product,sign FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' AND position_wall IS NULL LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return;
             }
-            String[] fields = rowText.split("\t", -1);
-            long productId = NumberUtils.parseLong(handlingField(fields, 0));
-            String signText = handlingField(fields, 1);
+            FurnitureDao.FloorStateFurniture stateFurniture = furniture.floorStateFurniture(furnitureId, roomId).orElse(null);
+            if (stateFurniture == null) {
+                return;
+            }
+            long productId = stateFurniture.productId();
+            String signText = StringUtils.text(stateFurniture.sign());
             if (productId <= 0L) {
                 return;
             }
@@ -5018,9 +5020,7 @@ public final class Handling {
             long currentState = NumberUtils.parseLong(signText);
             long maxState = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 12, 0));
             long nextState = nextFurnitureState(productSprite, currentState, maxState);
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + nextState + "',task_owner='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "',task_time=UNIX_TIMESTAMP() WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            furniture.updateRoomFurnitureState(furnitureId, roomId, NumberUtils.parseLong(userId), nextState);
             Proc_6_151_78AC20(roomId, furnitureId, nextState);
             String payload = furnitureStatePayload(furnitureId, nextState);
             Proc_6_247_8027E0(socketIndex, payload, 0);
