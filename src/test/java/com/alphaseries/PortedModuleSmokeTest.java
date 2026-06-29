@@ -1076,6 +1076,9 @@ public final class PortedModuleSmokeTest {
         assertEquals("licence", failedLicenceStartup.stage);
         assertEquals("Das Lizenzsystem ist zurzeit nicht erreichbar. Versuch es sp\u00e4ter wieder!", failedLicenceStartup.message);
         DataManager.configureLicenceHttpFetcher(null);
+        assertEquals("Server Exit Suburned following error: \r\nfatal",
+            Main.serverExitErrorMessage("fatal"));
+        assertEquals("Unbekanntes Problem", Main.UNKNOWN_PROBLEM_MESSAGE);
         assertEquals("ACCEPT 16387", Main.gameServerUnknownEventAccept());
         assertEquals(1, Guardian.Proc_11_2_821390());
         assertEquals("LISTEN", Main.gameServerUnknownEventListen());

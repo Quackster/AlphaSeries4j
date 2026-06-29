@@ -22,6 +22,8 @@ public final class Main {
     public static final String INITIALIZING_CAPTION_TEMPLATE = "Alpha Series [INITIALISIERE] - [%%]";
     public static final String INITIALIZED_STATE_TEXT = "INITIALISIERT";
     public static final String RUNNING_STATE_TEXT = "RUNNING";
+    public static final String SERVER_EXIT_ERROR_PREFIX = "Server Exit Suburned following error: \r\n";
+    public static final String UNKNOWN_PROBLEM_MESSAGE = "Unbekanntes Problem";
 
     private static PacketSink preSessionPacketSink = (socketIndex, payload) -> { };
 
@@ -266,6 +268,10 @@ public final class Main {
         title = title.replace("INITIALISIERE", INITIALIZED_STATE_TEXT);
         title = title.replace("INITIALIZING", RUNNING_STATE_TEXT);
         return title;
+    }
+
+    public static String serverExitErrorMessage(String description) {
+        return SERVER_EXIT_ERROR_PREFIX + StringUtils.text(description);
     }
 
     public static String gameServerUnknownEventAccept() {
