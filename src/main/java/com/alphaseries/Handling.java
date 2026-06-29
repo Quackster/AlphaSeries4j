@@ -3533,6 +3533,142 @@ public final class Handling {
         }
     }
 
+    public static void Proc_6_137_766470(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "BA");
+            String voucherCode = requestPayload.startsWith("@")
+                ? readWireString(requestPayload, new LongRef(1))
+                : requestPayload;
+            voucherCode = voucherCode.replace(' ', '0');
+            if (voucherCode.length() != 8) {
+                Proc_6_244_801E80(socketIndex, "CU" + voucherCode + '\2', 0);
+                return;
+            }
+            String voucherRows = MySQL.Proc_5_2_6D4690("SELECT contain_product,contain_credits,contain_shells FROM vouchers WHERE name='"
+                + Functions.Proc_10_11_80A9C0(voucherCode, 0, 0) + "' LIMIT 1", 0, 0);
+            String[] fields = voucherRows.split("\t", -1);
+            if (voucherRows.isEmpty() || fields.length < 3) {
+                Proc_6_244_801E80(socketIndex, "CU" + voucherCode + '\2', 0);
+                return;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, "CU" + voucherCode + '\2', 0);
+                return;
+            }
+            String productSprite = handlingField(fields, 0);
+            long creditsValue = Vb.val(handlingField(fields, 1));
+            long shellsValue = Vb.val(handlingField(fields, 2));
+            String rewardPayload = "";
+            if (productSprite.length() > 2) {
+                long productId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_product FROM catalog_products WHERE sprite='"
+                    + Functions.Proc_10_11_80A9C0(productSprite, 0, 0) + "' LIMIT 1", 0, 0));
+                if (productId != 0L) {
+                    rewardPayload = DataManager.Proc_8_12_806C30(productId, 13, 0) + '\2'
+                        + DataManager.Proc_8_12_806C30(productId, 14, 0) + '\2';
+                }
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            if (creditsValue != 0L) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE users SET credits=credits+" + creditsValue + " WHERE id='" + escapedUserId + "'", 0, 0);
+                Functions.Proc_10_16_80C480(userId, 0, 0);
+            }
+            if (shellsValue != 0L) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE users SET activitypoints_0=activitypoints_0+" + shellsValue
+                    + " WHERE id='" + escapedUserId + "'", 0, 0);
+                Functions.Proc_10_17_80C6B0(userId, 0, 0);
+            }
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM vouchers WHERE name='"
+                + Functions.Proc_10_11_80A9C0(voucherCode, 0, 0) + "' LIMIT 1", 0, 0);
+            Proc_6_244_801E80(socketIndex, "CT" + rewardPayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_139_768100(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "AB");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (userId.isEmpty() || roomId <= 0L) {
+                return;
+            }
+            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            if (furnitureId <= 0L) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign FROM furnitures WHERE id_owner='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id='" + furnitureId
+                + "' AND id_room IS NULL LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return;
+            }
+            String[] fields = rowText.split("\t", -1);
+            long productId = Vb.val(navigatorField(fields, 1));
+            String decoValue = navigatorField(fields, 2);
+            String[] productFields = Licence.Proc_9_3_807930(productId, 0, 0).split("\t", -1);
+            long productType = Vb.val(navigatorField(productFields, 1));
+            String decoName;
+            String decoColumn;
+            if (productType == 2L) {
+                decoName = "wallpaper";
+                decoColumn = "id_wallpaper";
+            } else if (productType == 3L) {
+                decoName = "floor";
+                decoColumn = "id_floor";
+            } else if (productType == 4L) {
+                decoName = "landscape";
+                decoColumn = "id_landscape";
+            } else {
+                return;
+            }
+            if (decoValue.isEmpty() || "0".equals(decoValue)) {
+                decoValue = navigatorField(productFields, 20);
+            }
+            if (decoValue.isEmpty()) {
+                decoValue = navigatorField(productFields, 18);
+            }
+            if (decoValue.isEmpty()) {
+                return;
+            }
+            Proc_6_247_8027E0(socketIndex, "@n" + decoName + '\2' + decoValue + '\2', 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET " + decoColumn + "='"
+                + Functions.Proc_10_11_80A9C0(decoValue, 0, 0) + "' WHERE id='" + roomId + "'", 0, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ac"), 0);
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM furnitures WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
+            Proc_6_140_769400(socketIndex, "FT", "");
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_140_769400(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty()) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign,id_secondary FROM furnitures WHERE id_owner='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room IS NULL LIMIT 1000", 0, 0);
+            InventoryPayloads payloads = inventoryPayloadsFromRows(rowText);
+            Proc_6_244_801E80(socketIndex, '\2' + Crypto.Proc_3_0_6D2AF0(payloads.regularCount, null, "BLS" + '\2' + "II")
+                + payloads.regularPayload, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(payloads.iconCount, null, "BL" + '\2' + "II")
+                + payloads.iconPayload, 0);
+            String payload = Crypto.Proc_3_0_6D2AF0(0, null,
+                Crypto.Proc_3_0_6D2AF0(0, null,
+                    Crypto.Proc_3_0_6D2AF0(0, null,
+                        Crypto.Proc_3_0_6D2AF0(0, null, "Id") + "HHH"))) + "H";
+            Proc_6_244_801E80(socketIndex, payload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }

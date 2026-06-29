@@ -1749,13 +1749,14 @@ public final class PortedModuleSmokeTest {
         Files.createDirectories(figureCachePath.resolve("cache").resolve("rooms"));
         Files.write(figureCachePath.resolve("cache").resolve("wired_trigger").resolve("9.cache"), "trigger-cache".getBytes());
         Files.write(figureCachePath.resolve("cache").resolve("rooms").resolve("9.cache"), "room-cache".getBytes());
-        String[] stickyProducts = new String[507];
+        String[] stickyProducts = new String[508];
         stickyProducts[500] = productRow(500, "18", "post.it.vd");
         stickyProducts[501] = productRow(501, "17", "present_wrap_basic");
         stickyProducts[502] = productRow(502, "0", "2", "24", "Opened Sofa");
         stickyProducts[503] = productRow(503, "10", "2");
         stickyProducts[504] = productRow(504, "17", "CF_10");
-        stickyProducts[506] = productRow(506, "1", "1", "14", "Trade Chair", "15", "Trade Desc", "18", "trade_sprite");
+        stickyProducts[506] = productRow(506, "1", "1", "13", "RewardA", "14", "Trade Chair", "15", "Trade Desc", "18", "trade_sprite");
+        stickyProducts[507] = productRow(507, "1", "2", "14", "Wallpaper", "15", "Wallpaper Desc", "18", "paper_sprite", "20", "paper1");
         DataManager.global_008292BC = stickyProducts;
         Licence.global_008292BC = stickyProducts;
         String[] catalogProducts = new String[82];
@@ -1795,6 +1796,9 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id FROM users WHERE id_socket='8'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88));
+                }
+                if (sqlText.contains("SELECT activitypoints_0 FROM users WHERE id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(70));
                 }
                 if (sqlText.contains("SELECT level_hc FROM users")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
@@ -1900,6 +1904,14 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id,id_product,sign FROM furnitures WHERE id='76'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(76, 506, "trade-state"));
+                }
+                if (sqlText.contains("SELECT id,id_product,sign FROM furnitures WHERE id_owner='77' AND id='79'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(79, 507, "paper1"));
+                }
+                if (sqlText.contains("SELECT id,id_product,sign,id_secondary FROM furnitures WHERE id_owner='77' AND id_room IS NULL LIMIT 1000")) {
+                    return Arrays.<List<Object>>asList(
+                        Arrays.<Object>asList(76, 506, "trade-state", 4),
+                        Arrays.<Object>asList(79, 507, "paper1", 0));
                 }
                 if (sqlText.contains("SELECT furnitures.id FROM furnitures,products WHERE furnitures.id_room='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(78));
@@ -2046,6 +2058,12 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id_room FROM rooms_favourites WHERE id_user='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(9), Arrays.<Object>asList(10));
+                }
+                if (sqlText.contains("SELECT contain_product,contain_credits,contain_shells FROM vouchers WHERE name='ABCD0000'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList("trade_sprite", 5, 7));
+                }
+                if (sqlText.contains("SELECT id_product FROM catalog_products WHERE sprite='trade_sprite'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(506));
                 }
                 if (sqlText.contains("logs_visitedrooms.id_user='88'") && sqlText.contains("models.type")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(1, 9, "Room", 12, 30));
@@ -2522,6 +2540,26 @@ public final class PortedModuleSmokeTest {
         Handling.Proc_6_136_765F10(4, "xx" + wireLong(2));
         assertEquals(true, containsSend(handlingSends, "A\u007f"));
         assertEquals(true, containsSend(handlingSends, "PAGE_PAYLOAD"));
+        handlingSends.clear();
+        Handling.Proc_6_140_769400(4);
+        assertEquals(true, containsSend(handlingSends, "BLS"));
+        assertEquals(true, containsSend(handlingSends, "Id"));
+        handlingSends.clear();
+        handlingSql.clear();
+        Handling.Proc_6_137_766470(4, "BAABCD    ");
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET credits=credits+5"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_0=activitypoints_0+7"));
+        assertEquals(true, containsSql(handlingSql, "DELETE FROM vouchers WHERE name='ABCD0000'"));
+        assertEquals(true, containsSend(handlingSends, "CTRewardA"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Handling.Proc_6_139_768100(4, "AB" + wireLong(79));
+        assertEquals(true, containsSend(handlingSends, "@nwallpaper\2paper1\2"));
+        assertEquals(true, containsSend(handlingSends, "Ac"));
+        assertEquals(true, containsSend(handlingSends, "BLS"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET id_wallpaper='paper1'"));
+        assertEquals(true, containsSql(handlingSql, "DELETE FROM furnitures WHERE id='79' LIMIT 1"));
+        handlingSql.clear();
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
