@@ -282,7 +282,10 @@ public final class Handling {
             readWireLong(requestPayload, offset);
             long lockFlag = readWireLong(requestPayload, offset);
             if (roomId > 0L && lockFlag == 1L) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET status_door='1', name='Inappropriate to hotel management' WHERE id='" + roomId + "'", 0, 0);
+                StaffModerationDao moderationDao = staffModerationDao();
+                if (moderationDao != null) {
+                    moderationDao.lockRoomForModeration(roomId);
+                }
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.

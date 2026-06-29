@@ -218,6 +218,14 @@ public final class StaffModerationDao {
         return database.execute("UPDATE staff_cfh SET id_closed=?,id_tab=? WHERE id=?", closeState, 0L, callForHelpId);
     }
 
+    public int lockRoomForModeration(long roomId) throws SQLException {
+        return database.execute(
+            "UPDATE rooms SET status_door=?, name=? WHERE id=?",
+            1L,
+            "Inappropriate to hotel management",
+            roomId);
+    }
+
     private long countCallForHelpByUser(long userId) throws SQLException {
         return database.queryOne(
             "SELECT COUNT(id) FROM staff_cfh WHERE id_user=?",
