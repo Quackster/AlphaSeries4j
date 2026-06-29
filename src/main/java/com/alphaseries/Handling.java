@@ -3304,12 +3304,11 @@ public final class Handling {
             if (furnitureId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,position_x,position_y,id_product FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao.SimpleFloorFurniture item = furnitureDao().simpleFloorFurniture(furnitureId, roomId).orElse(null);
+            if (item == null) {
                 return "";
             }
-            long productId = NumberUtils.parseLong(handlingField(rowText.split("\t", -1), 3));
+            long productId = item.productId();
             String productAction = DataManager.Proc_8_12_806C30(productId, 17, 0);
             return "habbowheel".equals(productAction) ? String.valueOf(furnitureId) : "";
         } catch (Exception ignored) {
@@ -9316,15 +9315,13 @@ public final class Handling {
             if (furnitureId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,position_x,position_y,id_product FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao.SimpleFloorFurniture item = furnitureDao().simpleFloorFurniture(furnitureId, roomId).orElse(null);
+            if (item == null) {
                 return "";
             }
-            String[] fields = rowText.split("\t", -1);
-            long furnitureX = NumberUtils.parseLong(handlingField(fields, 1));
-            long furnitureY = NumberUtils.parseLong(handlingField(fields, 2));
-            long productId = NumberUtils.parseLong(handlingField(fields, 3));
+            long furnitureX = item.positionX();
+            long furnitureY = item.positionY();
+            long productId = item.productId();
             if (productId <= 0L || NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) != 0L) {
                 return "";
             }
