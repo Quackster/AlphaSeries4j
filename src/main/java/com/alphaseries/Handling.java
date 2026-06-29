@@ -5861,6 +5861,51 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_230_7F3D20(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "Gd");
+            String rawMotto = readWireString(requestPayload, new LongRef(1));
+            if (rawMotto.isEmpty()) {
+                rawMotto = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            }
+            if (rawMotto.isEmpty()) {
+                rawMotto = requestPayload;
+            }
+            String mottoText = left(Functions.Proc_10_10_80A7F0(rawMotto, 0, 0), 255);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET motto='" + Functions.Proc_10_11_80A9C0(mottoText, 0, 0)
+                + "' WHERE id='" + escapedUserId + "'", 0, 0);
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT figure,gender FROM users WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0);
+            String[] fields = rowText.split("\t", -1);
+            String figureText = handlingField(fields, 0);
+            String genderText = left(handlingField(fields, 1).toUpperCase(), 1);
+            if (!"M".equals(genderText) && !"F".equals(genderText)) {
+                genderText = "M";
+            }
+            String payload = userIdentityPayload(Vb.val(userId), mottoText, genderText, figureText);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_231_7F4510(Object... args) {
+        try {
+            Proc_6_244_801E80(handlingSocketIndex(args), "Ic" + "IQA", 0);
+            return "";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);

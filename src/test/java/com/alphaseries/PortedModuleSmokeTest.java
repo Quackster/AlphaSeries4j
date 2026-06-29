@@ -2169,6 +2169,9 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT motto FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("Motto"));
                 }
+                if (sqlText.contains("SELECT figure,gender FROM users WHERE id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList("hd-180-1", "M"));
+                }
                 if (sqlText.contains("SELECT id_session FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("session-77"));
                 }
@@ -3111,6 +3114,16 @@ public final class PortedModuleSmokeTest {
         String playbackPayload = Handling.Proc_6_229_7F3070(4);
         assertEquals(true, playbackPayload.startsWith("EG"));
         assertEquals(true, containsSend(handlingSends, "EG"));
+        handlingSends.clear();
+        handlingSql.clear();
+        String mottoPayload = Handling.Proc_6_230_7F3D20(4, "Gd" + wireString("New motto"));
+        assertEquals(Handling.userIdentityPayload(77, "New motto", "M", "hd-180-1"), mottoPayload);
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET motto='New motto' WHERE id='77'"));
+        assertEquals(true, containsSend(handlingSends, "DJ"));
+        assertEquals(true, containsSend(handlingSends, "New motto"));
+        handlingSends.clear();
+        Handling.Proc_6_231_7F4510(4);
+        assertEquals(true, containsSend(handlingSends, "IcIQA"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
