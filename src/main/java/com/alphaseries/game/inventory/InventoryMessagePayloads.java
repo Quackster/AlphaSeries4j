@@ -6,6 +6,8 @@ import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
+import java.util.List;
+
 public final class InventoryMessagePayloads {
     private InventoryMessagePayloads() {
     }
@@ -57,6 +59,34 @@ public final class InventoryMessagePayloads {
                 }
             }
         }
+        return result;
+    }
+
+    public static InventoryList listFromItems(List<InventoryItemRow> items) {
+        InventoryList result = new InventoryList();
+        if (items == null) {
+            return result;
+        }
+        StringBuilder regularPayload = new StringBuilder();
+        StringBuilder iconPayload = new StringBuilder();
+        for (InventoryItemRow item : items) {
+            if (item != null) {
+                String itemPayload = item(
+                    item.furnitureId(),
+                    item.productId(),
+                    item.itemData(),
+                    item.secondaryValue());
+                if (NumberUtils.parseLong(DataManager.Proc_8_12_806C30(item.productId(), 0, 0)) == 9L) {
+                    iconPayload.append(itemPayload);
+                    result.iconCount++;
+                } else {
+                    regularPayload.append(itemPayload);
+                    result.regularCount++;
+                }
+            }
+        }
+        result.regularPayload = regularPayload.toString();
+        result.iconPayload = iconPayload.toString();
         return result;
     }
 

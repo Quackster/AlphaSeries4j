@@ -1,6 +1,7 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.inventory.InventoryItemRow;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -98,6 +99,17 @@ public final class FurnitureDao {
                 resultSet.getString(3),
                 resultSet.getLong(4)),
             furnitureId);
+    }
+
+    public List<InventoryItemRow> inventoryFurnitureForOwner(long ownerId) throws SQLException {
+        return database.query(
+            "SELECT id,id_product,sign,id_secondary FROM furnitures WHERE id_owner=? AND id_room IS NULL LIMIT 1000",
+            resultSet -> new InventoryItemRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getLong(4)),
+            ownerId);
     }
 
     public Optional<TradeFurniture> tradeFurniture(long furnitureId, long ownerId) throws SQLException {

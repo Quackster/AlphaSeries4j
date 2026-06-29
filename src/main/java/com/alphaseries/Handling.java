@@ -4704,9 +4704,13 @@ public final class Handling {
             if (userId.isEmpty()) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign,id_secondary FROM furnitures WHERE id_owner='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room IS NULL LIMIT 1000", 0, 0);
-            InventoryPayloads payloads = inventoryPayloadsFromRows(rowText);
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
+                return;
+            }
+            InventoryPayloads payloads = inventoryPayloadsFromInventory(
+                InventoryMessagePayloads.listFromItems(
+                    furniture.inventoryFurnitureForOwner(NumberUtils.parseLong(userId))));
             Proc_6_244_801E80(socketIndex, '\2' + Crypto.Proc_3_0_6D2AF0(payloads.regularCount, null, "BLS" + '\2' + "II")
                 + payloads.regularPayload, 0);
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(payloads.iconCount, null, "BL" + '\2' + "II")
@@ -10120,14 +10124,20 @@ public final class Handling {
         return Crypto.Proc_3_0_6D2AF0(targetItems.itemCount, null, payload) + targetItems.payload;
     }
 
-    public static InventoryPayloads inventoryPayloadsFromRows(String rowText) {
+    public static InventoryPayloads inventoryPayloadsFromInventory(InventoryMessagePayloads.InventoryList inventory) {
         InventoryPayloads result = new InventoryPayloads();
-        InventoryMessagePayloads.InventoryList inventory = InventoryMessagePayloads.listFromRows(rowText);
+        if (inventory == null) {
+            return result;
+        }
         result.regularCount = inventory.regularCount;
         result.regularPayload = inventory.regularPayload;
         result.iconCount = inventory.iconCount;
         result.iconPayload = inventory.iconPayload;
         return result;
+    }
+
+    public static InventoryPayloads inventoryPayloadsFromRows(String rowText) {
+        return inventoryPayloadsFromInventory(InventoryMessagePayloads.listFromRows(rowText));
     }
 
     public static FurnitureMoveRequest furnitureMoveRequestFromPayload(String packetPayload) {
