@@ -409,6 +409,10 @@ public final class Licence {
         global_00829090 = expiresAt;
     }
 
+    public static void setNewFriendRooms(List<NewFriendRooms.RoomPick> rooms, LocalDateTime expiresAt) {
+        setNewFriendRooms(NewFriendRooms.fromRoomPicks(rooms, expiresAt).toLegacyRows(), expiresAt);
+    }
+
     public static StaffSettings staffSettings() {
         return StaffSettings.fromLegacy(global_008292D8);
     }

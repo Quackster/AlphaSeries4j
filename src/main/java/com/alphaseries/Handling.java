@@ -3009,9 +3009,11 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             LocalDateTime now = LocalDateTime.now();
             if (Licence.newFriendRooms().shouldRefresh(now)) {
-                Licence.setNewFriendRooms(MySQL.Proc_5_2_6D4690("SELECT rooms.id,models.type FROM rooms_categories,rooms,models "
-                    + "WHERE rooms_categories.is_newfriends='1' AND rooms.id_category=rooms_categories.id "
-                    + "AND models.id=rooms.id_model ORDER BY rooms.visitors_now DESC LIMIT 15", 0, 0), now.plusSeconds(90L));
+                RoomDao rooms = roomDao();
+                if (rooms == null) {
+                    return;
+                }
+                Licence.setNewFriendRooms(rooms.newFriendRoomPicks(), now.plusSeconds(90L));
             }
             NewFriendRooms.RoomPick roomPick = Licence.newFriendRooms().randomRoom();
             String payload = Crypto.Proc_3_0_6D2AF0(roomPick.roomId(), null, "L\u007f");

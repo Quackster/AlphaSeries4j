@@ -1,6 +1,7 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.game.room.RoomOccupantRow;
 import com.alphaseries.game.room.RoomUserEntryRow;
@@ -55,6 +56,17 @@ public final class RoomDao {
             resultSet -> resultSet.getLong(1),
             roomSlot)
             .orElse(0L);
+    }
+
+    public List<NewFriendRooms.RoomPick> newFriendRoomPicks() throws SQLException {
+        return database.query(
+            "SELECT rooms.id,models.type FROM rooms_categories,rooms,models "
+                + "WHERE rooms_categories.is_newfriends=? AND rooms.id_category=rooms_categories.id "
+                + "AND models.id=rooms.id_model ORDER BY rooms.visitors_now DESC LIMIT 15",
+            resultSet -> new NewFriendRooms.RoomPick(
+                resultSet.getLong(1),
+                resultSet.getLong(2)),
+            1L);
     }
 
     public long ownedRoomCount(long ownerId) throws SQLException {

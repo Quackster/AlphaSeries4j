@@ -4,39 +4,69 @@ import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class NewFriendRooms {
-    private final String rows;
+    private final List<RoomPick> rooms;
     private final LocalDateTime expiresAt;
 
-    private NewFriendRooms(String rows, LocalDateTime expiresAt) {
-        this.rows = StringUtils.text(rows);
+    private NewFriendRooms(List<RoomPick> rooms, LocalDateTime expiresAt) {
+        this.rooms = List.copyOf(rooms);
         this.expiresAt = expiresAt;
     }
 
     public static NewFriendRooms fromLegacy(String rows, LocalDateTime expiresAt) {
-        return new NewFriendRooms(rows, expiresAt);
+        List<RoomPick> rooms = new ArrayList<>();
+        String rowText = StringUtils.text(rows);
+        if (rowText.isEmpty()) {
+            return new NewFriendRooms(rooms, expiresAt);
+        }
+        for (String row : rowText.split("\r", -1)) {
+            if (row.isEmpty()) {
+                rooms.add(RoomPick.empty());
+                continue;
+            }
+            String[] fields = row.split("\t", -1);
+            if (fields.length < 2) {
+                rooms.add(RoomPick.empty());
+                continue;
+            }
+            rooms.add(new RoomPick(NumberUtils.parseLong(fields[0]), NumberUtils.parseLong(fields[1])));
+        }
+        return new NewFriendRooms(rooms, expiresAt);
+    }
+
+    public static NewFriendRooms fromRoomPicks(List<RoomPick> rooms, LocalDateTime expiresAt) {
+        return new NewFriendRooms(rooms, expiresAt);
     }
 
     public boolean shouldRefresh(LocalDateTime now) {
-        return rows.isEmpty() || expiresAt == null || !expiresAt.isAfter(now);
+        return rooms.isEmpty() || expiresAt == null || !expiresAt.isAfter(now);
     }
 
     public RoomPick randomRoom() {
-        if (rows.isEmpty()) {
+        if (rooms.isEmpty()) {
             return RoomPick.empty();
         }
-        String[] rowArray = rows.split("\r", -1);
-        int rowIndex = ThreadLocalRandom.current().nextInt(0, rowArray.length);
-        if (rowIndex < 0 || rowIndex >= rowArray.length || rowArray[rowIndex].isEmpty()) {
+        int rowIndex = ThreadLocalRandom.current().nextInt(0, rooms.size());
+        if (rowIndex < 0 || rowIndex >= rooms.size()) {
             return RoomPick.empty();
         }
-        String[] fields = rowArray[rowIndex].split("\t", -1);
-        if (fields.length < 2) {
-            return RoomPick.empty();
+        return rooms.get(rowIndex);
+    }
+
+    public String toLegacyRows() {
+        List<String> rowTexts = new ArrayList<>();
+        for (RoomPick room : rooms) {
+            if (room.roomId() <= 0L && room.modelType() <= 0L) {
+                rowTexts.add("");
+                continue;
+            }
+            rowTexts.add(room.roomId() + "\t" + room.modelType());
         }
-        return new RoomPick(NumberUtils.parseLong(fields[0]), NumberUtils.parseLong(fields[1]));
+        return String.join("\r", rowTexts);
     }
 
     public record RoomPick(long roomId, long modelType) {
