@@ -2,7 +2,8 @@ package com.alphaseries;
 
 import com.alphaseries.game.catalog.ProductCache;
 import com.alphaseries.game.room.RoomEventLocales;
-import com.alphaseries.vb.Vb;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -38,8 +39,8 @@ public final class DataManager {
         }
 
         public LicenceCheckContext(String productKey, String version, LocalDateTime localTime) {
-            this.productKey = Vb.cStr(productKey);
-            this.version = Vb.cStr(version);
+            this.productKey = StringUtils.text(productKey);
+            this.version = StringUtils.text(version);
             this.localTime = localTime == null ? LocalDateTime.now() : localTime;
         }
     }
@@ -68,21 +69,21 @@ public final class DataManager {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return Vb.val(args[0]) * Functions.Proc_10_4_809CA0(1, 4);
+        return NumberUtils.parseLong(args[0]) * Functions.Proc_10_4_809CA0(1, 4);
     }
 
     public static String Proc_8_0_804330(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        return PrivSockHTTP.readHTTP(Vb.cStr(args[0]), optionalColumnIndex(args, 1, 0));
+        return PrivSockHTTP.readHTTP(StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
     }
 
     public static long Proc_8_2_804490(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return Vb.val(args[0]) * Functions.Proc_10_4_809CA0(60, 90);
+        return NumberUtils.parseLong(args[0]) * Functions.Proc_10_4_809CA0(60, 90);
     }
 
     public static String Proc_8_3_804530(Object... args) {
@@ -93,14 +94,14 @@ public final class DataManager {
         if (saltValue == 0L) {
             saltValue = 1L;
         }
-        long markerValue = Vb.val(Functions.Proc_10_3_809B90(0x5A, 0x41));
-        return buildLicenceToken(Vb.cStr(args[0]), saltValue, markerValue, null);
+        long markerValue = NumberUtils.parseLong(Functions.Proc_10_3_809B90(0x5A, 0x41));
+        return buildLicenceToken(StringUtils.text(args[0]), saltValue, markerValue, null);
     }
 
     public static String buildLicenceToken(String sourceValue, long saltValue, long markerValue, String fillerCharacters) {
-        String source = Vb.cStr(sourceValue);
+        String source = StringUtils.text(sourceValue);
         long salt = saltValue == 0L ? 1L : saltValue;
-        String fillers = Vb.cStr(fillerCharacters);
+        String fillers = StringUtils.text(fillerCharacters);
         StringBuilder token = new StringBuilder();
         token.append(source.length() + salt).append((char) markerValue);
         for (int index = 0; index < source.length(); index++) {
@@ -119,7 +120,7 @@ public final class DataManager {
         if (args == null || args.length == 0) {
             return "";
         }
-        String encodedValue = Vb.cStr(args[0]);
+        String encodedValue = StringUtils.text(args[0]);
         if (encodedValue.isEmpty()) {
             return "";
         }
@@ -136,7 +137,7 @@ public final class DataManager {
         if (args == null || args.length == 0) {
             return 0;
         }
-        String keyName = Vb.cStr(args[0]);
+        String keyName = StringUtils.text(args[0]);
         String marker = "\r" + keyName + ":" + global_00829054 + "=";
         if (global_00829050.contains(marker + "1")) {
             return 1;
@@ -148,7 +149,7 @@ public final class DataManager {
         int valueStart = markerAt + marker.length();
         int valueEnd = global_00829050.indexOf('\r', valueStart);
         String value = valueEnd >= 0 ? global_00829050.substring(valueStart, valueEnd) : global_00829050.substring(valueStart);
-        return (int) Vb.val(value);
+        return NumberUtils.parseInt(value);
     }
 
     public static boolean Proc_8_7_8051C0(Object... args) {
@@ -159,7 +160,7 @@ public final class DataManager {
         if (args[0] instanceof LicenceCheckContext) {
             return checkLicence((LicenceCheckContext) args[0]);
         }
-        return applyLicenceResponse(Vb.cStr(args[0]), LICENCE_TIME_FORMAT, 0L);
+        return applyLicenceResponse(StringUtils.text(args[0]), LICENCE_TIME_FORMAT, 0L);
     }
 
     public static boolean checkLicence(LicenceCheckContext context) {
@@ -193,8 +194,8 @@ public final class DataManager {
     }
 
     public static String licenceBlockFromResponse(String responseText, String timeFormat) {
-        String response = Vb.cStr(responseText);
-        String marker = Vb.cStr(timeFormat);
+        String response = StringUtils.text(responseText);
+        String marker = StringUtils.text(timeFormat);
         if (response.isEmpty()) {
             return "";
         }
@@ -214,11 +215,11 @@ public final class DataManager {
     }
 
     public static String licenceCacheTextFromBlock(String licenseBlock) {
-        return "\r" + Vb.cStr(licenseBlock).replace('\n', '\r') + "\r";
+        return "\r" + StringUtils.text(licenseBlock).replace('\n', '\r') + "\r";
     }
 
     public static String blockedLicenceMessage(String responseText) {
-        String response = Vb.cStr(responseText);
+        String response = StringUtils.text(responseText);
         if (!response.contains("{BLOCKED ")) {
             return "";
         }
@@ -226,7 +227,7 @@ public final class DataManager {
     }
 
     public static boolean applyLicenceResponse(String responseText, String timeFormat, long checksumSalt) {
-        String response = Vb.cStr(responseText);
+        String response = StringUtils.text(responseText);
         String blockedMessage = blockedLicenceMessage(response);
         if (!blockedMessage.isEmpty()) {
             lastLicenceFailureMessage = blockedMessage;
@@ -239,7 +240,7 @@ public final class DataManager {
 
         String licenseBlock = licenceBlockFromResponse(response, timeFormat);
         global_00829050 = licenceCacheTextFromBlock(licenseBlock);
-        global_00829054 = (int) Vb.val(extractLicenceSetting(global_00829050, "rank"));
+        global_00829054 = NumberUtils.parseInt(extractLicenceSetting(global_00829050, "rank"));
         for (int rankIndex = 1; rankIndex < global_00829068.length; rankIndex++) {
             global_00829068[rankIndex] = Proc_8_6_804D80(String.valueOf(rankIndex));
         }
@@ -252,12 +253,15 @@ public final class DataManager {
     }
 
     public static boolean licenceChecksumValid(String licenseBlock, long checksumSalt) {
-        String block = Vb.cStr(licenseBlock);
+        String block = StringUtils.text(licenseBlock);
         String[] parts = block.split("-", -1);
         if (parts.length < 3 || block.length() < 14) {
             return true;
         }
-        long licenseCheck = Vb.val(parts[2]) - Vb.val(Vb.mid(block, 9, 6)) + Vb.val(parts[1]) - checksumSalt;
+        long licenseCheck = NumberUtils.parseLong(parts[2])
+            - NumberUtils.parseLong(StringUtils.mid(block, 9, 6))
+            + NumberUtils.parseLong(parts[1])
+            - checksumSalt;
         return licenseCheck == 0L;
     }
 
@@ -265,7 +269,7 @@ public final class DataManager {
         if (args == null || args.length == 0) {
             return false;
         }
-        return Files.exists(Path.of(Vb.cStr(args[0])));
+        return Files.exists(Path.of(StringUtils.text(args[0])));
     }
 
     public static void Proc_8_9_806810(Object... args) {
@@ -273,7 +277,7 @@ public final class DataManager {
             return;
         }
         try {
-            Files.writeString(Path.of(Vb.cStr(args[0])), Vb.cStr(args[1]) + System.lineSeparator(),
+            Files.writeString(Path.of(StringUtils.text(args[0])), StringUtils.text(args[1]) + System.lineSeparator(),
                 StandardCharsets.UTF_8, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
         } catch (IOException ignored) {
             // VB6 source suppresses append failures.
@@ -285,7 +289,7 @@ public final class DataManager {
             return;
         }
         try {
-            Files.writeString(Path.of(Vb.cStr(args[0])), Vb.cStr(args[1]) + System.lineSeparator(), StandardCharsets.UTF_8);
+            Files.writeString(Path.of(StringUtils.text(args[0])), StringUtils.text(args[1]) + System.lineSeparator(), StandardCharsets.UTF_8);
         } catch (IOException ignored) {
             // VB6 source suppresses write failures.
         }
@@ -295,18 +299,18 @@ public final class DataManager {
         if (args == null || args.length == 0) {
             return "";
         }
-        return roomEventLocales().field(Vb.cStr(args[0]), optionalColumnIndex(args, 1, 0));
+        return roomEventLocales().field(StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
     }
 
     public static String Proc_8_12_806C30(Object... args) {
         if (args == null || args.length < 2) {
             return "";
         }
-        return getProductCacheCell(Vb.val(args[0]), Vb.val(args[1]));
+        return getProductCacheCell(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]));
     }
 
     public static String extractLicenceSetting(String sourceText, String keyName) {
-        String source = Vb.cStr(sourceText);
+        String source = StringUtils.text(sourceText);
         String marker = "\r" + keyName + "=";
         int markerAt = source.indexOf(marker);
         if (markerAt < 0) {
@@ -323,9 +327,9 @@ public final class DataManager {
 
     public static int optionalColumnIndex(Object[] args, int argumentIndex, int defaultValue) {
         if (args != null && argumentIndex >= 0 && argumentIndex < args.length) {
-            String value = Vb.cStr(args[argumentIndex]);
+            String value = StringUtils.text(args[argumentIndex]);
             if (!value.isEmpty()) {
-                return (int) Vb.val(value);
+                return NumberUtils.parseInt(value);
             }
         }
         return defaultValue;
@@ -365,7 +369,7 @@ public final class DataManager {
         for (String row : rows) {
             if (!row.isEmpty()) {
                 String[] columns = row.split("\t", -1);
-                if (columns.length > 0 && Vb.val(columns[0]) == productId) {
+                if (columns.length > 0 && NumberUtils.parseLong(columns[0]) == productId) {
                     return row;
                 }
             }

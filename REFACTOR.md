@@ -80,6 +80,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated adjacent wardrobe validation, URL extraction, chat filter/gesture, and call-for-help payload shims in `Handling` from `Vb` conversions to shared utility helpers.
 - Migrated `HandlingMUS` off `Vb` helpers and onto shared `StringUtils`/`NumberUtils` conversions.
 - Migrated `Console` and `PrivSockHTTP` off `Vb` helpers and onto shared `StringUtils`/`NumberUtils` conversions.
+- Migrated `DataManager` licence/cache/file helpers off `Vb` conversions and added shared `StringUtils.mid` helpers for VB-style one-based substring compatibility.
 - Migrated `Licence.Proc_9_0` through `Proc_9_5` to `CatalogRegistry`, added named cache setters, and removed `Licence`'s dependency on `Vb`.
 - Migrated several payload builders from string concatenation to fluent `PacketBuilder`.
 
@@ -96,7 +97,7 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 470
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1215
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1179
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 476
 - `Handling.java`: 12148 lines
 - `Functions.java`: 756 lines
