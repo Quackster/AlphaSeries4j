@@ -70,6 +70,15 @@ public final class FurnitureDao {
             furnitureId);
     }
 
+    public Optional<PendingFurnitureState> pendingFurnitureState(long furnitureId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_room,sign FROM furnitures WHERE id=? LIMIT 1",
+            resultSet -> new PendingFurnitureState(
+                resultSet.getLong(1),
+                resultSet.getLong(2)),
+            furnitureId);
+    }
+
     public int updatePostIt(long furnitureId, String sign, String caption) throws SQLException {
         return database.execute(
             "UPDATE furnitures SET sign=?,caption=? WHERE id=?",
@@ -80,6 +89,10 @@ public final class FurnitureDao {
 
     public int updateSign(long furnitureId, long sign) throws SQLException {
         return database.execute("UPDATE furnitures SET sign=? WHERE id=?", sign, furnitureId);
+    }
+
+    public int updateSignLimited(long furnitureId, long sign) throws SQLException {
+        return database.execute("UPDATE furnitures SET sign=? WHERE id=? LIMIT 1", sign, furnitureId);
     }
 
     public int deleteFurniture(long furnitureId) throws SQLException {
@@ -108,5 +121,8 @@ public final class FurnitureDao {
     }
 
     public record RoomFurnitureProduct(long productId) {
+    }
+
+    public record PendingFurnitureState(long roomId, long sign) {
     }
 }

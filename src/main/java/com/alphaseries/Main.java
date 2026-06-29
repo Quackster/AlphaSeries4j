@@ -1,5 +1,6 @@
 package com.alphaseries;
 
+import com.alphaseries.dao.mysql.FurnitureDao;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.dao.mysql.UserDao;
@@ -319,6 +320,7 @@ public final class Main {
     public static long signerTimer() {
         long processed = 0L;
         try {
+            FurnitureDao furniture = furnitureDao();
             FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
             String furnitureMarkers = mainRepresentedEntityIds(cacheState.pendingFurnitureCache);
             String[] markerParts = furnitureMarkers.split("\\]", -1);
@@ -327,20 +329,17 @@ public final class Main {
                 if (furnitureId <= 0L) {
                     continue;
                 }
-                String rowText = MySQL.Proc_5_2_6D4690("SELECT id_room,sign FROM furnitures WHERE id='"
-                    + furnitureId + "' LIMIT 1", 0, 0);
-                if (rowText.isEmpty()) {
+                FurnitureDao.PendingFurnitureState pendingState = furniture.pendingFurnitureState(furnitureId).orElse(null);
+                if (pendingState == null) {
                     cacheState.pendingFurnitureCache = FurnitureRoomCache.removePendingFurniture(cacheState.pendingFurnitureCache, furnitureId);
                     Licence.setFurnitureRoomCache(cacheState);
                     continue;
                 }
-                String[] fields = rowText.split("\t", -1);
-                long roomId = NumberUtils.parseLong(mainArrayField(fields, 0));
-                long signValue = NumberUtils.parseLong(mainArrayField(fields, 1));
+                long roomId = pendingState.roomId();
+                long signValue = pendingState.sign();
                 if (roomId > 0L && signValue > 0L) {
                     long nextSignValue = signValue - 1L;
-                    MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + nextSignValue + "' WHERE id='"
-                        + furnitureId + "' LIMIT 1", 0, 0);
+                    furniture.updateSignLimited(furnitureId, nextSignValue);
                     Handling.Proc_6_151_78AC20(roomId, furnitureId, nextSignValue);
                     Handling.Proc_6_246_8024C0(roomId, "AX" + furnitureId + '\2' + nextSignValue + '\2', 0);
                     processed++;
@@ -906,6 +905,10 @@ public final class Main {
 
     private static UserDao userDao() throws SQLException {
         return new UserDao(configuredDatabase());
+    }
+
+    private static FurnitureDao furnitureDao() throws SQLException {
+        return new FurnitureDao(configuredDatabase());
     }
 
     private static ServerMaintenanceDao serverMaintenanceDao() {
