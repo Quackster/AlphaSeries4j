@@ -8,6 +8,7 @@ import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.messenger.MessengerSettings;
 import com.alphaseries.game.navigator.RecommendedRooms;
+import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.util.NumberUtils;
@@ -194,6 +195,23 @@ public final class Licence {
     public static void setAchievementSettings(String questIdPayload, Object rows) {
         global_008291E4 = StringUtils.text(questIdPayload);
         global_008291E8 = rows == null ? "" : rows;
+    }
+
+    public static PetSettings petSettings() {
+        return PetSettings.fromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
+    }
+
+    public static void setPetRaceRows(String raceRows) {
+        global_008291EC = StringUtils.text(raceRows);
+    }
+
+    public static void setPetLevelRows(Object levelRows) {
+        global_008292D0 = levelRows == null ? "" : levelRows;
+    }
+
+    public static void setPetCommandRows(Object commandRows, long commandCount) {
+        global_008292CC = commandRows == null ? "" : commandRows;
+        global_008292C8 = commandCount;
     }
 
     public static String Proc_9_6_808080(Object... args) {

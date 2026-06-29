@@ -6158,7 +6158,7 @@ public final class Handling {
             } else if (args != null && args.length >= 1) {
                 petLevel = Vb.val(args[0]);
             }
-            String payload = petCommandListPayload(petLevel, Licence.global_008292CC);
+            String payload = Licence.petSettings().commandListPayload(petLevel);
             if (socketIndex > 0) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -6236,7 +6236,7 @@ public final class Handling {
             long petLevel = Vb.val(handlingField(petFields, 2));
             long petEnergy = Vb.val(handlingField(petFields, 3));
             long petNutrition = Vb.val(handlingField(petFields, 4));
-            PetCommandAction commandAction = petCommandAction(commandId, Licence.global_008292CC);
+            PetCommandAction commandAction = petCommandAction(commandId, Licence.petSettings().commandRows());
             if (!commandAction.found || commandAction.requiredLevel > petLevel) {
                 return 0L;
             }

@@ -135,8 +135,8 @@ public final class Boot {
     }
 
     public static void Proc_1_6_6C5830(Object... args) {
-        Licence.global_008291EC = buildPetRaceCache(MySQL.Proc_5_2_6D4690(
-            "SELECT product_pet,id_pet,breed,min_rank,min_hcrank,name FROM settings_petraces", 0, 0));
+        Licence.setPetRaceRows(buildPetRaceCache(MySQL.Proc_5_2_6D4690(
+            "SELECT product_pet,id_pet,breed,min_rank,min_hcrank,name FROM settings_petraces", 0, 0)));
     }
 
     public static void Proc_1_7_6C5E10(Object... args) {
@@ -148,9 +148,9 @@ public final class Boot {
                 levels[entry.getKey().intValue()] = entry.getValue();
             }
         }
-        Licence.global_008292D0 = levels;
-        Licence.global_008292C8 = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id_command) FROM bots_petcommands", 0, 0));
-        long maxCommandId = Math.max(Licence.global_008292C8,
+        Licence.setPetLevelRows(levels);
+        long commandCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id_command) FROM bots_petcommands", 0, 0));
+        long maxCommandId = Math.max(commandCount,
             Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id_command) FROM bots_petcommands", 0, 0)));
         String[] commands = new String[(int) Math.max(0L, maxCommandId) + 1];
         PetCommandCache cache = buildPetCommandCache(MySQL.Proc_5_2_6D4690(
@@ -160,7 +160,7 @@ public final class Boot {
                 commands[entry.getKey().intValue()] = entry.getValue();
             }
         }
-        Licence.global_008292CC = commands;
+        Licence.setPetCommandRows(commands, commandCount);
     }
 
     public static void Proc_1_8_6C6850(Object... args) {

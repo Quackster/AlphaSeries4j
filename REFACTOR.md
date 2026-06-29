@@ -37,6 +37,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.messenger.MessengerSettings` as a typed adapter around messenger friend-limit state previously decoded directly from `Licence` globals.
 - Added `com.alphaseries.game.navigator.RecommendedRooms` as a typed adapter around the recommended-room payload cache previously read through `Licence` globals.
 - Added `com.alphaseries.game.pet.PetPayloads` for pet race, inventory, name-validation, command, status, scratch, and action outgoing payloads.
+- Added `com.alphaseries.game.pet.PetSettings` as a typed adapter around pet race, level, and command state previously read and written through raw `Licence` globals.
 - Added `com.alphaseries.game.recycler.RecyclerSettings` as a typed adapter around recycler reward groups and ecotron box product state previously walked through `Licence` globals.
 - Added `com.alphaseries.game.session.SessionRegistry` as a typed adapter around the legacy `Licence.global_00829268` session cache.
 - Added `com.alphaseries.game.wired.WiredPayloads` for wired record formatting, cache replacement, selected-item checks, and state payload aggregation.
