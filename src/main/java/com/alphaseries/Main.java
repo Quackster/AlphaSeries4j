@@ -15,6 +15,7 @@ import com.alphaseries.util.StringUtils;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 public final class Main {
@@ -438,24 +439,17 @@ public final class Main {
             if (roomId <= 0L) {
                 return 0L;
             }
-            String rollerRows = MySQL.Proc_5_2_6D4690("SELECT furnitures.id,furnitures.position_x,furnitures.position_y,"
-                + "furnitures.position_z,furnitures.position_r FROM furnitures,products WHERE furnitures.id_room='"
-                + roomId + "' AND furnitures.id_product=products.id AND (products.action LIKE '%roller%' OR "
-                + "products.name LIKE '%roller%' OR products.sprite LIKE '%roller%') ORDER BY furnitures.id", 0, 0);
-            if (rollerRows.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            List<FurnitureDao.RollerFurniture> rollers = furniture.rollerFurnitureInRoom(roomId);
+            if (rollers.isEmpty()) {
                 return 0L;
             }
-            for (String rollerRow : rollerRows.split("\r", -1)) {
-                rollerRow = rollerRow.trim();
-                if (rollerRow.isEmpty()) {
-                    continue;
-                }
-                String[] fields = rollerRow.split("\t", -1);
-                long rollerId = NumberUtils.parseLong(mainArrayField(fields, 0));
-                long rollerX = NumberUtils.parseLong(mainArrayField(fields, 1));
-                long rollerY = NumberUtils.parseLong(mainArrayField(fields, 2));
-                String rollerZ = mainArrayField(fields, 3);
-                long rollerR = NumberUtils.parseLong(mainArrayField(fields, 4));
+            for (FurnitureDao.RollerFurniture roller : rollers) {
+                long rollerId = roller.furnitureId();
+                long rollerX = roller.positionX();
+                long rollerY = roller.positionY();
+                String rollerZ = StringUtils.text(roller.positionZ());
+                long rollerR = roller.rotation();
                 long targetX = rollerX + mainRollerDeltaX(rollerR);
                 long targetY = rollerY + mainRollerDeltaY(rollerR);
                 if (rollerId <= 0L || (targetX == rollerX && targetY == rollerY)
@@ -465,9 +459,7 @@ public final class Main {
                 long movedId = mainRollerFurnitureOnTile(roomId, rollerId, rollerX, rollerY);
                 if (movedId > 0L) {
                     String movedZ = mainRollerTargetHeight(roomId, targetX, targetY, rollerZ);
-                    MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET position_x='" + targetX + "',position_y='"
-                        + targetY + "',position_z='" + Functions.Proc_10_11_80A9C0(movedZ, 0, 0)
-                        + "' WHERE id='" + movedId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+                    furniture.updateRoomPosition(movedId, roomId, targetX, targetY, movedZ);
                     Handling.Proc_6_151_78AC20(roomId, movedId, 0);
                     String payload = mainRollerMovePayload(movedId, targetX, targetY, movedZ);
                     if (!payload.isEmpty()) {

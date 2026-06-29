@@ -102,6 +102,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.dao.mysql.FurnitureDao` with typed row records for sticky-note, gift-box, and wall-state furniture handlers, avoiding tab-delimited DAO row strings.
 - Expanded `FurnitureDao` with typed product lookup for credit-furniture redemption and routed the furniture delete through the DAO.
 - Expanded `FurnitureDao` with typed pending-furniture timer state and routed `Main.signerTimer` through prepared DAO methods.
+- Expanded `FurnitureDao` with typed roller furniture rows and prepared room-position updates for `Main.rollersTimer`.
 - Expanded `RoomDao` with typed `RoomEntryState` loading and room-ban checks for room entry validation.
 - Expanded `UserDao` for respect balance reads and respect-give updates, routing the respect handler through prepared DAO methods.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for socket-user and permission-level lookups, removing remaining inline user lookup SQL from `MySQL` helper paths.
@@ -139,14 +140,14 @@ Compared with `main`, the VB helper artifact has been removed:
 
 Measured on 2026-06-29:
 
-- Unique `Proc_*` symbols under `src/main/java`: 468
+- Unique `Proc_*` symbols under `src/main/java`: 466
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 353
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 351
 - `Boot.java`: 1130 lines
 - `Handling.java`: 12320 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 316 lines
-- `Main.java`: 925 lines
+- `Main.java`: 917 lines
 
 ## Next Targets
 

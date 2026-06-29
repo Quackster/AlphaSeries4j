@@ -3,6 +3,7 @@ package com.alphaseries.dao.mysql;
 import com.alphaseries.db.Database;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 public final class FurnitureDao {
@@ -79,6 +80,21 @@ public final class FurnitureDao {
             furnitureId);
     }
 
+    public List<RollerFurniture> rollerFurnitureInRoom(long roomId) throws SQLException {
+        return database.query(
+            "SELECT furnitures.id,furnitures.position_x,furnitures.position_y,"
+                + "furnitures.position_z,furnitures.position_r FROM furnitures,products WHERE furnitures.id_room=? "
+                + "AND furnitures.id_product=products.id AND (products.action LIKE '%roller%' OR "
+                + "products.name LIKE '%roller%' OR products.sprite LIKE '%roller%') ORDER BY furnitures.id",
+            resultSet -> new RollerFurniture(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getString(4),
+                resultSet.getLong(5)),
+            roomId);
+    }
+
     public int updatePostIt(long furnitureId, String sign, String caption) throws SQLException {
         return database.execute(
             "UPDATE furnitures SET sign=?,caption=? WHERE id=?",
@@ -93,6 +109,18 @@ public final class FurnitureDao {
 
     public int updateSignLimited(long furnitureId, long sign) throws SQLException {
         return database.execute("UPDATE furnitures SET sign=? WHERE id=? LIMIT 1", sign, furnitureId);
+    }
+
+    public int updateRoomPosition(long furnitureId, long roomId, long positionX, long positionY, String positionZ)
+        throws SQLException {
+
+        return database.execute(
+            "UPDATE furnitures SET position_x=?,position_y=?,position_z=? WHERE id=? AND id_room=? LIMIT 1",
+            positionX,
+            positionY,
+            positionZ,
+            furnitureId,
+            roomId);
     }
 
     public int deleteFurniture(long furnitureId) throws SQLException {
@@ -124,5 +152,8 @@ public final class FurnitureDao {
     }
 
     public record PendingFurnitureState(long roomId, long sign) {
+    }
+
+    public record RollerFurniture(long furnitureId, long positionX, long positionY, String positionZ, long rotation) {
     }
 }
