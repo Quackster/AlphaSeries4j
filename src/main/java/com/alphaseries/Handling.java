@@ -3296,27 +3296,19 @@ public final class Handling {
             if (dimmerFurnitureId <= 0L) {
                 return 0L;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_light,id_preset,id_background,colour,id_state "
-                + "FROM furnitures_dimmerpresets WHERE id_furni='" + dimmerFurnitureId + "' LIMIT 3", 0, 0);
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
+                return 0L;
+            }
             StringBuilder presetPayload = new StringBuilder();
-            for (String row : rowText.split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    String[] fields = row.split("\t", -1);
-                    if (fields.length >= 5) {
-                        long lightLevel = NumberUtils.parseLong(handlingField(fields, 0));
-                        long presetId = NumberUtils.parseLong(handlingField(fields, 1));
-                        long backgroundId = NumberUtils.parseLong(handlingField(fields, 2));
-                        String colourText = handlingField(fields, 3);
-                        long stateId = NumberUtils.parseLong(handlingField(fields, 4));
-                        if (stateId == 2L || currentPresetId == 0L) {
-                            currentPresetId = presetId;
-                        }
-                        presetPayload.append(Crypto.Proc_3_0_6D2AF0(presetId, null, ""));
-                        presetPayload.append(Crypto.Proc_3_0_6D2AF0(backgroundId, null, ""));
-                        presetPayload.append(Crypto.Proc_3_0_6D2AF0(lightLevel, null, ""));
-                        presetPayload.append(colourText).append('\2');
-                    }
+            for (FurnitureDao.DimmerPreset preset : furniture.dimmerPresets(dimmerFurnitureId)) {
+                if (preset.stateId() == 2L || currentPresetId == 0L) {
+                    currentPresetId = preset.presetId();
                 }
+                presetPayload.append(Crypto.Proc_3_0_6D2AF0(preset.presetId(), null, ""));
+                presetPayload.append(Crypto.Proc_3_0_6D2AF0(preset.backgroundId(), null, ""));
+                presetPayload.append(Crypto.Proc_3_0_6D2AF0(preset.lightLevel(), null, ""));
+                presetPayload.append(preset.colour()).append('\2');
             }
             String payload = Crypto.Proc_3_0_6D2AF0(currentPresetId, null,
                 Crypto.Proc_3_0_6D2AF0(0, null, "Em")) + presetPayload;
@@ -3343,26 +3335,15 @@ public final class Handling {
             if (dimmerFurnitureId <= 0L) {
                 return 0L;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT furnitures_dimmerpresets.id_light,"
-                + "furnitures_dimmerpresets.id_preset,furnitures_dimmerpresets.id_background,"
-                + "furnitures_dimmerpresets.colour,furnitures.id_product,furnitures.position_wall,furnitures.sign "
-                + "FROM furnitures_dimmerpresets,furnitures WHERE furnitures_dimmerpresets.id_furni='"
-                + dimmerFurnitureId + "' AND furnitures_dimmerpresets.id_state='2' "
-                + "AND furnitures.id=furnitures_dimmerpresets.id_furni LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return 0L;
             }
-            String[] fields = rowText.split("\t", -1);
-            if (fields.length < 7) {
+            FurnitureDao.ActiveDimmerState dimmer = furniture.activeDimmerState(dimmerFurnitureId).orElse(null);
+            if (dimmer == null) {
                 return 0L;
             }
-            long lightLevel = NumberUtils.parseLong(handlingField(fields, 0));
-            long presetId = NumberUtils.parseLong(handlingField(fields, 1));
-            long backgroundId = NumberUtils.parseLong(handlingField(fields, 2));
-            String colourText = handlingField(fields, 3);
-            long productId = NumberUtils.parseLong(handlingField(fields, 4));
-            String wallPosition = handlingField(fields, 5);
-            String currentSign = handlingField(fields, 6);
+            String currentSign = StringUtils.text(dimmer.sign());
             long currentState = currentSign.isEmpty() ? 0L : NumberUtils.parseLong(currentSign.substring(0, 1));
             if (currentState <= 0L) {
                 currentState = 2L;
@@ -3371,11 +3352,11 @@ public final class Handling {
             if (nextState < 1L) {
                 nextState = 2L;
             }
-            String signText = nextState + "," + presetId + "," + backgroundId + "," + colourText + "," + lightLevel;
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='"
-                + Functions.Proc_10_11_80A9C0(signText, 0, 0) + "' WHERE id='" + dimmerFurnitureId + "'", 0, 0);
+            String signText = nextState + "," + dimmer.presetId() + "," + dimmer.backgroundId()
+                + "," + dimmer.colour() + "," + dimmer.lightLevel();
+            furniture.updateSignText(dimmerFurnitureId, signText);
             Proc_6_247_8027E0(socketIndex, "AU" + dimmerFurnitureId + '\2'
-                + Crypto.Proc_3_0_6D2AF0(productId, null, "") + wallPosition + '\2' + signText + '\2', 0);
+                + Crypto.Proc_3_0_6D2AF0(dimmer.productId(), null, "") + dimmer.wallPosition() + '\2' + signText + '\2', 0);
             return nextState;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -3409,21 +3390,18 @@ public final class Handling {
                 return 0L;
             }
             String signText = "2," + presetId + "," + backgroundId + "," + colourText + "," + lightLevel;
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures_dimmerpresets SET id_state='1' WHERE id_furni='"
-                + dimmerFurnitureId + "'", 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures_dimmerpresets SET id_state='2',id_light='" + lightLevel
-                + "',id_background='" + backgroundId + "',colour='" + Functions.Proc_10_11_80A9C0(colourText, 0, 0)
-                + "' WHERE id_furni='" + dimmerFurnitureId + "' AND id_preset='" + presetId + "'", 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + Functions.Proc_10_11_80A9C0(signText, 0, 0)
-                + "' WHERE id='" + dimmerFurnitureId + "'", 0, 0);
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product,position_wall FROM furnitures WHERE id='"
-                + dimmerFurnitureId + "' LIMIT 1", 0, 0);
-            String[] fields = rowText.split("\t", -1);
-            if (fields.length >= 2) {
-                long productId = NumberUtils.parseLong(handlingField(fields, 0));
-                String wallPosition = handlingField(fields, 1);
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
+                return 0L;
+            }
+            furniture.resetDimmerPresetStates(dimmerFurnitureId);
+            furniture.updateDimmerPreset(dimmerFurnitureId, presetId, lightLevel, backgroundId, colourText);
+            furniture.updateSignText(dimmerFurnitureId, signText);
+            FurnitureDao.WallProductPosition wallPosition = furniture.wallProductPosition(dimmerFurnitureId).orElse(null);
+            if (wallPosition != null) {
                 Proc_6_247_8027E0(socketIndex, "AU" + dimmerFurnitureId + '\2'
-                    + Crypto.Proc_3_0_6D2AF0(productId, null, "") + wallPosition + '\2' + signText + '\2', 0);
+                    + Crypto.Proc_3_0_6D2AF0(wallPosition.productId(), null, "") + wallPosition.wallPosition()
+                    + '\2' + signText + '\2', 0);
             }
             return dimmerFurnitureId;
         } catch (Exception ignored) {

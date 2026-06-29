@@ -285,6 +285,47 @@ public final class FurnitureDao {
             roomId);
     }
 
+    public List<DimmerPreset> dimmerPresets(long furnitureId) throws SQLException {
+        return database.query(
+            "SELECT id_light,id_preset,id_background,colour,id_state FROM furnitures_dimmerpresets "
+                + "WHERE id_furni=? LIMIT 3",
+            resultSet -> new DimmerPreset(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getString(4),
+                resultSet.getLong(5)),
+            furnitureId);
+    }
+
+    public Optional<ActiveDimmerState> activeDimmerState(long furnitureId) throws SQLException {
+        return database.queryOne(
+            "SELECT furnitures_dimmerpresets.id_light,furnitures_dimmerpresets.id_preset,"
+                + "furnitures_dimmerpresets.id_background,furnitures_dimmerpresets.colour,"
+                + "furnitures.id_product,furnitures.position_wall,furnitures.sign "
+                + "FROM furnitures_dimmerpresets,furnitures WHERE furnitures_dimmerpresets.id_furni=? "
+                + "AND furnitures_dimmerpresets.id_state=? AND furnitures.id=furnitures_dimmerpresets.id_furni LIMIT 1",
+            resultSet -> new ActiveDimmerState(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getString(4),
+                resultSet.getLong(5),
+                resultSet.getString(6),
+                resultSet.getString(7)),
+            furnitureId,
+            2L);
+    }
+
+    public Optional<WallProductPosition> wallProductPosition(long furnitureId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_product,position_wall FROM furnitures WHERE id=? LIMIT 1",
+            resultSet -> new WallProductPosition(
+                resultSet.getLong(1),
+                resultSet.getString(2)),
+            furnitureId);
+    }
+
     public long roomIdByFurniture(long furnitureId) throws SQLException {
         return database.queryOne(
             "SELECT id_room FROM furnitures WHERE id=? LIMIT 1",
@@ -321,6 +362,26 @@ public final class FurnitureDao {
 
     public int updateSignLimited(long furnitureId, long sign) throws SQLException {
         return database.execute("UPDATE furnitures SET sign=? WHERE id=? LIMIT 1", sign, furnitureId);
+    }
+
+    public int updateSignText(long furnitureId, String sign) throws SQLException {
+        return database.execute("UPDATE furnitures SET sign=? WHERE id=?", sign, furnitureId);
+    }
+
+    public int resetDimmerPresetStates(long furnitureId) throws SQLException {
+        return database.execute("UPDATE furnitures_dimmerpresets SET id_state=? WHERE id_furni=?", 1L, furnitureId);
+    }
+
+    public int updateDimmerPreset(long furnitureId, long presetId, long lightLevel, long backgroundId, String colour) throws SQLException {
+        return database.execute(
+            "UPDATE furnitures_dimmerpresets SET id_state=?,id_light=?,id_background=?,colour=? "
+                + "WHERE id_furni=? AND id_preset=?",
+            2L,
+            lightLevel,
+            backgroundId,
+            colour,
+            furnitureId,
+            presetId);
     }
 
     public int updateRoomFurnitureState(long furnitureId, long roomId, long ownerId, long sign) throws SQLException {
@@ -444,5 +505,22 @@ public final class FurnitureDao {
     }
 
     public record WallFurniture(long furnitureId, long productId, String wallPosition, String sign, long secondaryValue) {
+    }
+
+    public record DimmerPreset(long lightLevel, long presetId, long backgroundId, String colour, long stateId) {
+    }
+
+    public record ActiveDimmerState(
+        long lightLevel,
+        long presetId,
+        long backgroundId,
+        String colour,
+        long productId,
+        String wallPosition,
+        String sign
+    ) {
+    }
+
+    public record WallProductPosition(long productId, String wallPosition) {
     }
 }
