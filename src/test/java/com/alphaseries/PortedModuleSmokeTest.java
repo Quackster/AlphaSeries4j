@@ -613,6 +613,8 @@ public final class PortedModuleSmokeTest {
         Boot.printStartupCredits();
         assertEquals(3, Console.entries().size());
         assertEquals(49344L, Console.entries().get(0).foreColor());
+        assertEquals("Server has Exit Suburned following error:       socket failed",
+            Boot.serverReturnedErrorMessage("socket failed"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "a\2b\2c\2d\2",
             Boot.buildCampaignReplacementCache("a\tb\rc\td"));
         Boot.AchievementSettingsCache achievementSettings = Boot.buildAchievementSettingsCache(

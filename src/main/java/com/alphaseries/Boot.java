@@ -25,6 +25,7 @@ public final class Boot {
         "         Server Autor: Privilege, Deutsche \u00dcbersetzung: Medaillon",
         "         Shoutouts: Tweeney, Pure, MoBaT, Donkjam, Arths, Jairo, Moogly and Bloopser"
     };
+    public static final String SERVER_RETURNED_ERROR_PREFIX = "Server has Exit Suburned following error:       ";
 
     private Boot() {
     }
@@ -467,6 +468,10 @@ public final class Boot {
             return INITIALIZATION_INTEGRITY_FAILURE_MESSAGE;
         }
         return "";
+    }
+
+    public static String serverReturnedErrorMessage(String description) {
+        return SERVER_RETURNED_ERROR_PREFIX + StringUtils.text(description);
     }
 
     public static String bootErrorLogHeader(String productName, String nowText) {

@@ -185,6 +185,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Restored decompiled `ERR.log`/`SLOW.log` boot header text.
 - Restored decompiled boot initialization integrity failure literal.
 - Restored decompiled boot startup credit/version literals.
+- Restored decompiled boot server-error prefix literal.
 - Restored decompiled `:about`, `:entwicklung`, and `:commands` chat command response literals.
 - Restored decompiled `:whosonline` active-user chat command response.
 - Migrated remaining `Functions` conversions for email validation, identity refresh, club period, occupancy, download, inventory path, movement, and random helpers off `Vb`.
