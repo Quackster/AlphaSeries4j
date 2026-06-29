@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -5453,6 +5454,111 @@ public final class Handling {
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return Crypto.Proc_3_0_6D2AF0(0, null, "");
+        }
+    }
+
+    public static String Proc_6_199_7D54E0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long pollId = pollIdFromWire(handlingPacketPayload(args), "Ck");
+            if (pollId <= 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return "";
+            }
+            String pollRow = MySQL.Proc_5_2_6D4690("SELECT id,description_title,description_thanks FROM poll WHERE id='"
+                + pollId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            if (pollRow.isEmpty()) {
+                return "";
+            }
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO poll_exit(id_user,id_poll) VALUES('"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + pollId + "')", 0, 0);
+            return "";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_200_7D5770(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            PollAnswerSubmission submission = pollAnswerFromWire(handlingPacketPayload(args), "Cl");
+            if (!submission.valid) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return "";
+            }
+            String pollRow = MySQL.Proc_5_2_6D4690("SELECT id,description_title,description_thanks FROM poll WHERE id='"
+                + submission.pollId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            if (pollRow.isEmpty()) {
+                return "";
+            }
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO poll_results(id_poll,id_question,message_answer,id_user,timestamp) VALUES('"
+                + submission.pollId + "','" + submission.questionId + "','"
+                + Functions.Proc_10_11_80A9C0(submission.answerText, 0, 0) + "','"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "',UNIX_TIMESTAMP())", 0, 0);
+            return "";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_201_7D5AC0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long pollId = pollIdFromWire(handlingPacketPayload(args), "Cj");
+            if (pollId <= 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return "";
+            }
+            String pollRow = MySQL.Proc_5_2_6D4690("SELECT id,description_title,description_thanks FROM poll WHERE id='"
+                + pollId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            if (pollRow.isEmpty()) {
+                return "";
+            }
+            String questionRows = MySQL.Proc_5_2_6D4690("SELECT id,description_question,id_type FROM poll_questions WHERE id_poll='"
+                + pollId + "' LIMIT 50", 0, 0);
+            Map<Long, String> answerRowsByQuestionId = new HashMap<>();
+            for (String questionRow : questionRows.split("\r", -1)) {
+                if (!questionRow.isEmpty()) {
+                    String[] questionFields = questionRow.split("\t", -1);
+                    if (questionFields.length >= 3) {
+                        long questionId = Vb.val(handlingField(questionFields, 0));
+                        String answerRows = MySQL.Proc_5_2_6D4690("SELECT id,id_question,caption FROM poll_answers WHERE id_question='"
+                            + questionId + "' LIMIT 5", 0, 0);
+                        answerRowsByQuestionId.put(questionId, answerRows);
+                    }
+                }
+            }
+            String payload = pollPayloadFromRows(pollRow, questionRows, answerRowsByQuestionId);
+            if (!payload.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, payload, 0);
+            }
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
         }
     }
 

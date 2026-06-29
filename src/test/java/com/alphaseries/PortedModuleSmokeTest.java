@@ -1896,6 +1896,15 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT name FROM users_tags WHERE id_user='88'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("target"));
                 }
+                if (sqlText.contains("SELECT id,description_title,description_thanks FROM poll WHERE id='7' AND id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(7, "Title", "Thanks"));
+                }
+                if (sqlText.contains("SELECT id,description_question,id_type FROM poll_questions WHERE id_poll='7'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(8, "Question?", 2));
+                }
+                if (sqlText.contains("SELECT id,id_question,caption FROM poll_answers WHERE id_question='8'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(1, 8, "Yes"), Arrays.<Object>asList(2, 8, "No"));
+                }
                 if (sqlText.contains("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket")
                     && sqlText.contains("logs_visitedrooms.id='61'")
                     && sqlText.contains("logs_visitedrooms.id_room='9'")) {
@@ -3008,6 +3017,20 @@ public final class PortedModuleSmokeTest {
         assertEquals(Handling.tagDisplayPayload(88, Handling.tagListPayload("target")), tagDisplay);
         assertEquals(true, containsSend(handlingSends, "E^"));
         assertEquals(true, containsSend(handlingSends, "target"));
+        handlingSends.clear();
+        handlingSql.clear();
+        Handling.Proc_6_199_7D54E0(4, "Ck" + wireLong(7));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO poll_exit(id_user,id_poll) VALUES('77','7')"));
+        handlingSql.clear();
+        Handling.Proc_6_200_7D5770(4, "Cl" + wireLong(7) + wireLong(8) + wireLong(4) + wireString("yes"));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO poll_results(id_poll,id_question,message_answer,id_user,timestamp) VALUES('7','8','yes','77',UNIX_TIMESTAMP())"));
+        handlingSends.clear();
+        Map<Long, String> livePollAnswers = new HashMap<>();
+        livePollAnswers.put(8L, "1\t8\tYes\r2\t8\tNo");
+        String livePollPayload = Handling.Proc_6_201_7D5AC0(4, "Cj" + wireLong(7));
+        assertEquals(Handling.pollPayloadFromRows("7\tTitle\tThanks", "8\tQuestion?\t2", livePollAnswers), livePollPayload);
+        assertEquals(true, containsSend(handlingSends, "D}"));
+        assertEquals(true, containsSend(handlingSends, "Question?"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
