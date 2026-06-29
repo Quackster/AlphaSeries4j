@@ -5210,9 +5210,11 @@ public final class Handling {
             }
             if (!ownerId.equals(userId)) {
                 String sessionId = handlingUserSessionId(userId);
-                MySQL.Proc_5_1_6D4110("INSERT INTO logs_moderation(id_type,id_user,id_target,id_target_2,timestamp,message,id_session) VALUES('8','"
-                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "','" + furnitureId
-                    + "',UNIX_TIMESTAMP(),'','" + Functions.Proc_10_11_80A9C0(sessionId, 0, 0) + "')", 0, 0);
+                StaffModerationDao moderationDao = staffModerationDao();
+                if (moderationDao == null) {
+                    return;
+                }
+                moderationDao.insertFurniturePickupLog(NumberUtils.parseLong(userId), roomId, furnitureId, sessionId);
             }
             Proc_6_146_76D300(socketIndex, furnitureId, productId);
             furniture.moveRoomFurnitureToInventory(furnitureId, roomId, NumberUtils.parseLong(userId));

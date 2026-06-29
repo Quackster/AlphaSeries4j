@@ -235,6 +235,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed call-for-help tab updates through typed call ID parsing and `StaffModerationDao` prepared updates, keeping the legacy where-clause helper only as a compatibility wrapper.
 - Added typed staff room-history records and routed staff visit/chat history lookups through `StaffModerationDao` plus fluent `PacketBuilder` payloads, replacing raw SQL and tab-delimited parsing in `Handling`.
 - Routed room chat log insertion through `RoomDao`, replacing the raw `logs_chat` insert in the represented chat handler.
+- Routed furniture pickup moderation logging through `StaffModerationDao`, replacing another raw `logs_moderation` insert in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -248,9 +249,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 72
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 71
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12499 lines
+- `Handling.java`: 12501 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines

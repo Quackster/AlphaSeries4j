@@ -204,6 +204,23 @@ public final class StaffModerationDao {
             sessionId);
     }
 
+    public int insertFurniturePickupLog(
+        long userId,
+        long roomId,
+        long furnitureId,
+        String sessionId
+    ) throws SQLException {
+        return database.execute(
+            "INSERT INTO logs_moderation(id_type,id_user,id_target,id_target_2,timestamp,message,id_session) "
+                + "VALUES(?,?,?,?,UNIX_TIMESTAMP(),?,?)",
+            8L,
+            userId,
+            roomId,
+            furnitureId,
+            "",
+            sessionId);
+    }
+
     public int deleteRoomEvent(long roomId) throws SQLException {
         return database.execute("DELETE FROM rooms_events WHERE id_room=? LIMIT 1", roomId);
     }
