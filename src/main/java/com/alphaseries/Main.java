@@ -587,8 +587,7 @@ public final class Main {
         if (roomSlot > 0L) {
             return roomSlot;
         }
-        String[] fields = mainRepresentedRecordByBracket(Vb.cStr(Licence.global_0082934C), socketIndex).split("\2", -1);
-        return fields.length >= 2 ? Vb.val(fields[1]) : 0L;
+        return Licence.representedSockets().roomSlot(socketIndex);
     }
 
     public static long mainRepresentedBotRoomSlot(long entityIndex) {

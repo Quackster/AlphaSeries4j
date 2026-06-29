@@ -20,6 +20,7 @@ import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.session.GameServerSessionState;
+import com.alphaseries.game.session.RepresentedSocketCache;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.wired.WiredSettings;
 import com.alphaseries.util.NumberUtils;
@@ -268,6 +269,10 @@ public final class Licence {
         }
         global_00829350 = sessionState.queuedPacketData();
         global_00829354 = sessionState.readySessionMarkers();
+    }
+
+    public static RepresentedSocketCache representedSockets() {
+        return RepresentedSocketCache.fromLegacy(global_0082934C);
     }
 
     public static CatalogPages catalogPages() {

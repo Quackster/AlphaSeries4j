@@ -8299,7 +8299,7 @@ public final class Handling {
         }
         int socketIndex = (int) Vb.val(args[0]);
         if (socketIndex <= 0 || Guardian.Proc_11_2_821390(socketIndex, 0, 0) != 1
-            || isSocketMarkedBusy(Vb.cStr(Licence.global_0082934C), socketIndex)) {
+            || Licence.representedSockets().isBusy(socketIndex)) {
             return;
         }
         HandlingMUS.Proc_12_1_821AA0(socketIndex, Vb.cStr(args[1]) + '\1', 0);
@@ -10497,23 +10497,7 @@ public final class Handling {
     }
 
     public static boolean isSocketMarkedBusy(String representedSocketCache, long socketIndex) {
-        String cache = Vb.cStr(representedSocketCache);
-        if (socketIndex <= 0L || cache.isEmpty()) {
-            return false;
-        }
-        String marker = "[" + socketIndex + "]";
-        int startAt = cache.indexOf(marker);
-        if (startAt < 0) {
-            return false;
-        }
-        int recordStart = startAt + marker.length();
-        int recordEnd = cache.indexOf('[', recordStart);
-        if (recordEnd < 0) {
-            recordEnd = cache.length();
-        }
-        String recordText = cache.substring(recordStart, recordEnd);
-        String[] fields = recordText.split("\2", -1);
-        return fields.length >= 6 && Vb.val(fields[5]) != 0L;
+        return com.alphaseries.game.session.RepresentedSocketCache.fromLegacy(representedSocketCache).isBusy(socketIndex);
     }
 
     public static String ownProfilePayload(String userRow) {
