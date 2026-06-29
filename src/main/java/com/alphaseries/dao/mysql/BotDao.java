@@ -7,6 +7,7 @@ import com.alphaseries.game.pet.PetExperienceStateRow;
 import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.pet.PetLevelExperienceRow;
 import com.alphaseries.game.pet.PetRaceRow;
+import com.alphaseries.game.pet.PetScratchRow;
 import com.alphaseries.game.pet.PetStatusRow;
 
 import java.sql.SQLException;
@@ -192,6 +193,26 @@ public final class BotDao {
             "UPDATE bots_petdata SET id_level=?,experience=? WHERE id_bot=?",
             level,
             experience,
+            botId);
+    }
+
+    public Optional<PetScratchRow> scratchTarget(long botId) throws SQLException {
+        return database.queryOne(
+            "SELECT bots.id,bots.name,bots.figure,bots_petdata.scratches FROM bots,bots_petdata "
+                + "WHERE bots.id=? AND bots.id_handle=? AND bots.id_room IS NOT NULL AND bots_petdata.id_bot=bots.id LIMIT 1",
+            resultSet -> new PetScratchRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getLong(4)),
+            botId,
+            3L);
+    }
+
+    public int updatePetScratches(long botId, long scratches) throws SQLException {
+        return database.execute(
+            "UPDATE bots_petdata SET scratches=? WHERE id_bot=?",
+            scratches,
             botId);
     }
 }

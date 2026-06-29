@@ -16,6 +16,7 @@ import com.alphaseries.game.pet.PetCommandTargetRow;
 import com.alphaseries.game.pet.PetExperienceStateRow;
 import com.alphaseries.game.pet.PetLevelExperienceRow;
 import com.alphaseries.game.pet.PetPayloads;
+import com.alphaseries.game.pet.PetScratchRow;
 import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.room.FurnitureRoomCache;
@@ -6382,29 +6383,27 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
-            long scratchAmount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT scratch_amount FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+            long userIdValue = NumberUtils.parseLong(userId);
+            UserDao users = userDao();
+            BotDao bots = botDao();
+            if (users == null || bots == null) {
+                return 0L;
+            }
+            long scratchAmount = users.scratchAmount(userIdValue);
             if (scratchAmount <= 0L) {
                 return 0L;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT bots.id,bots.name,bots.figure,bots_petdata.scratches FROM bots,bots_petdata WHERE bots.id='"
-                + botId + "' AND bots.id_handle='3' AND bots.id_room IS NOT NULL AND bots_petdata.id_bot=bots.id LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            PetScratchRow pet = bots.scratchTarget(botId).orElse(null);
+            if (pet == null) {
                 return 0L;
             }
-            String[] fields = rowText.split("\t", -1);
-            if (fields.length < 4) {
-                return 0L;
-            }
-            long scratches = NumberUtils.parseLong(handlingField(fields, 3)) + 1L;
-            MySQL.Proc_5_0_6D3CD0("UPDATE bots_petdata SET scratches='" + scratches + "' WHERE id_bot='" + botId + "'", 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET scratch_amount=scratch_amount-1,scratch_given=scratch_given+1 WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
+            long scratches = pet.scratches() + 1L;
+            bots.updatePetScratches(botId, scratches);
+            users.spendScratch(userIdValue);
             if (botEntityId <= 0L) {
                 botEntityId = botId;
             }
-            Proc_6_247_8027E0(socketIndex, petScratchPayload(botEntityId, NumberUtils.parseLong(userId), scratches,
-                handlingField(fields, 1), handlingField(fields, 2)), 0);
+            Proc_6_247_8027E0(socketIndex, petScratchPayload(botEntityId, userIdValue, scratches, pet.name(), pet.figure()), 0);
             return scratches;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.

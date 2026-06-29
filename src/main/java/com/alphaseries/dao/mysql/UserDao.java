@@ -96,6 +96,20 @@ public final class UserDao {
             userId);
     }
 
+    public long scratchAmount(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT scratch_amount FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public int spendScratch(long userId) throws SQLException {
+        return database.execute(
+            "UPDATE users SET scratch_amount=scratch_amount-1,scratch_given=scratch_given+1 WHERE id=?",
+            userId);
+    }
+
     public long activityPoints(long userId, long pointType) throws SQLException {
         return database.queryOne(
             "SELECT activitypoints_" + pointType + " FROM users WHERE id=? LIMIT 1",
