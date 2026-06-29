@@ -10,6 +10,12 @@ import java.time.format.DateTimeFormatter;
 
 public final class Updater {
     public static final long PROGRESS_WIDTH_MAX = 11535L;
+    public static final String RETRY_ERROR_MESSAGE = "Es ist ein Fehler aufgetreten. Versuche es erneut!";
+    public static final String MYSQL_CONNECTION_ERROR_MESSAGE =
+        "Es kann keine Verbindung zur MySQL Datenbank hergestellt werden.";
+    public static final String SUCCESS_FORUM_MESSAGE =
+        "Bitte schauen Sie doch einmal in unserem User Voice Forum nach neuen Meldungen. "
+            + "Die Webseite wurde automatisch ge\u00f6ffnet.";
 
     public long height = 1000L;
     public long imageWidth = 0L;
@@ -272,6 +278,12 @@ public final class Updater {
 
     public static String normalizedUpdateSql(String updateSql) {
         return UpdaterSettings.fromLegacy("", "", updateSql).normalizedUpdateSql();
+    }
+
+    public static String successfulDownloadMessage(String executableName) {
+        return "Update erfolgreich heruntergeladen. Die Datei wurde nach \""
+            + StringUtils.text(executableName) + ".exe\" benannt.\r\n\r\n"
+            + SUCCESS_FORUM_MESSAGE;
     }
 
     public static String[] visibleBodyLines(String bodyText, int maxLines) {
