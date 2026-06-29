@@ -1800,6 +1800,9 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT activitypoints_0 FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(70));
                 }
+                if (sqlText.contains("SELECT activitypoints_1,activitypoints_2,activitypoints_3,activitypoints_4 FROM users WHERE id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, 20, 30, 40));
+                }
                 if (sqlText.contains("SELECT level_hc FROM users")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
                 }
@@ -2026,6 +2029,9 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id_product FROM furnitures WHERE id='75' AND id_room='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(505));
+                }
+                if (sqlText.contains("SELECT id_product,id_owner FROM furnitures WHERE id='80' AND id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(506, 77));
                 }
                 if (sqlText.contains("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='505'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(505, "packages_pets", 12, ""));
@@ -2559,6 +2565,16 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "BLS"));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET id_wallpaper='paper1'"));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM furnitures WHERE id='79' LIMIT 1"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Handling.Proc_6_143_76BB80(4);
+        assertEquals(true, containsSend(handlingSends, "M@"));
+        handlingSends.clear();
+        handlingSql.clear();
+        Handling.Proc_6_144_76BE70(4, "AZ" + wireLong(80));
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_room=NULL"));
+        assertEquals(true, containsSend(handlingSends, "A^80\2"));
+        assertEquals(true, containsSend(handlingSends, "BLS"));
         handlingSql.clear();
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
