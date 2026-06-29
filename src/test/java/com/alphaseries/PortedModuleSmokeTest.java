@@ -1222,6 +1222,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Handling.legacyChatCommandPayload(":commands").contains(
             "Please note that some commands require additional syntax"));
         assertEquals("", Handling.legacyChatCommandPayload(":unknown"));
+        assertEquals("BKActive users:\r\rAlice, Bob\2\2", Handling.legacyActiveUsersPayload("Alice, Bob"));
         assertEquals("www.example.com;http://alpha;https://beta;",
             Handling.extractUrlList("see www.example.com and http://alpha or https://beta"));
         assertEquals("", Handling.extractUrlList("www bad example.com"));
@@ -2859,6 +2860,12 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, aboutCommandPayload.startsWith("BKAlpha Series"));
         assertEquals(true, handlingSends.get(0).contains(
             "This is a copy of the unique Alpha Series written in Visual Basic 2006."));
+        assertEquals(sqlBeforeCommand, handlingSql.size());
+        handlingSends.clear();
+        String onlineCommandPayload = Handling.Proc_6_25_6EEAC0(4, ":whosonline");
+        assertEquals(true, onlineCommandPayload.startsWith("BKActive users:"));
+        assertEquals(true, onlineCommandPayload.contains("OldName"));
+        assertEquals(true, onlineCommandPayload.contains("Target"));
         assertEquals(sqlBeforeCommand, handlingSql.size());
         handlingSends.clear();
         assertEquals(2L, Handling.broadcastToRoomUsers(9, "ROOM"));

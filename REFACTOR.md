@@ -179,6 +179,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed staff moderator fallback socket lookup through `UserDao.activeUserSockets`, replacing raw user SQL plus `handlingField(fields, 0)`/tab-delimited parsing in `Handling`.
 - Restored decompiled boot caption states and Figuredata cache validation/error logging.
 - Restored decompiled `:about`, `:entwicklung`, and `:commands` chat command response literals.
+- Restored decompiled `:whosonline` active-user chat command response.
 - Migrated remaining `Functions` conversions for email validation, identity refresh, club period, occupancy, download, inventory path, movement, and random helpers off `Vb`.
 - Migrated remaining `MySQL` helper conversions and staff moderation payload builders off `Vb` helpers and onto shared `StringUtils`/`NumberUtils`.
 - Added `com.alphaseries.util.StringUtils` and `NumberUtils`; migrated new staff/session code away from duplicated local helper methods.

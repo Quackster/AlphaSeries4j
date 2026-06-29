@@ -618,6 +618,11 @@ public final class Handling {
         return buildText.isEmpty() ? "ALPHASERIES_FINAL (PREMIUM)" : buildText;
     }
 
+    public static String legacyActiveUsersPayload(String userNamesText) {
+        String names = StringUtils.text(userNamesText).trim();
+        return "BK" + "Active users:" + '\r' + '\r' + names + '\2' + '\2';
+    }
+
     public static String Proc_6_26_7034C0(Object... args) {
         return handlingRepresentedChatRoute(args, 0L);
     }
@@ -8849,6 +8854,9 @@ public final class Handling {
             }
             if (chatType == 0L && messageText.startsWith(":")) {
                 String commandPayload = legacyChatCommandPayload(messageText);
+                if (commandPayload.isEmpty()) {
+                    commandPayload = legacyDynamicChatCommandPayload(messageText);
+                }
                 if (!commandPayload.isEmpty()) {
                     Proc_6_244_801E80(socketIndex, commandPayload, 0);
                     return commandPayload;
@@ -8894,6 +8902,32 @@ public final class Handling {
         } catch (Exception ignored) {
             return "";
         }
+    }
+
+    public static String legacyDynamicChatCommandPayload(String messageText) {
+        String command = StringUtils.text(messageText).trim().toLowerCase(Locale.ROOT);
+        if (!":whosonline".equals(command)) {
+            return "";
+        }
+        StringBuilder users = new StringBuilder();
+        String seenSockets = "";
+        for (SessionRegistry.SocketSession session : Licence.socketSessions()) {
+            int socketIndex = session.socketIndex();
+            String socketMarker = "[" + socketIndex + "]";
+            if (socketIndex <= 0 || seenSockets.contains(socketMarker)) {
+                continue;
+            }
+            String userName = handlingUserName(String.valueOf(session.userId()));
+            if (userName.isEmpty()) {
+                continue;
+            }
+            if (users.length() > 0) {
+                users.append(", ");
+            }
+            users.append(userName);
+            seenSockets += socketMarker;
+        }
+        return legacyActiveUsersPayload(users.toString());
     }
 
     private static void staffDirectMessage(
