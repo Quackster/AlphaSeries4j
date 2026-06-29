@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.vb.Vb;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 public final class Main {
     private static PacketSink preSessionPacketSink = (socketIndex, payload) -> { };
@@ -105,6 +106,56 @@ public final class Main {
                     "ERROR] " + packetData + " (" + ex.getMessage() + ")\r\n0\r\n\r\n\r\n");
                 Functions.Proc_10_8_80A580(socketIndex, 0x60, 0);
             }
+        }
+    }
+
+    public static boolean dataProcessTimer(long socketIndex) {
+        try {
+            if (Guardian.Proc_11_2_821390(socketIndex, 1, 0) != 1) {
+                return false;
+            }
+            String packetData = popGameServerPacketData(socketIndex);
+            if (packetData.isEmpty()) {
+                return false;
+            }
+            Proc_0_25_68FBC0(socketIndex, packetData);
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    public static void processGameServerData(String incomingData) {
+        try {
+            for (String packet : Vb.cStr(incomingData).split("\1", -1)) {
+                if (packet.isEmpty()) {
+                    continue;
+                }
+                String[] fields = packet.split("\2", -1);
+                String commandName = fields.length > 0 ? Vb.cStr(fields[0]).toUpperCase(Locale.ROOT) : "";
+                long socketIndex;
+                if ("SHUTDOWN".equals(commandName)) {
+                    if (fields.length >= 2) {
+                        socketIndex = Vb.val(fields[1]);
+                        Handling.Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                    }
+                } else if ("LISTEN".equals(commandName)) {
+                    if (fields.length >= 2) {
+                        socketIndex = Vb.val(fields[1]);
+                        Guardian.Proc_11_3_821440(socketIndex, 0, 0);
+                    }
+                } else if ("DATA".equals(commandName)) {
+                    if (fields.length >= 3) {
+                        socketIndex = Vb.val(fields[1]);
+                        appendGameServerPacketData(socketIndex, fields);
+                    }
+                } else if (fields.length >= 1) {
+                    socketIndex = Vb.val(fields[0]);
+                    Handling.Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                }
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses game-server read failures.
         }
     }
 

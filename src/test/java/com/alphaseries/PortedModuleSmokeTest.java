@@ -770,6 +770,11 @@ public final class PortedModuleSmokeTest {
         Main.appendGameServerPacketData(7, new String[]{"ignored", "ignored", "A", "B", "C"});
         assertEquals("A\2B\2C", Main.popGameServerPacketData(7));
         assertEquals("", Licence.global_00829350);
+        Guardian.global_008291A0 = "";
+        Guardian.global_0082919C = 0;
+        Main.processGameServerData("DATA\2" + "7\2queued\2packet\1LISTEN\2" + "9");
+        assertEquals("queued\2packet", Main.popGameServerPacketData(7));
+        assertEquals(true, Guardian.global_008291A0.contains("[9]"));
         assertEquals("bcd", Main.shiftIdentityText("abc", 1));
         assertEquals("abc", Main.easyGetIdentity(Main.shiftIdentityText("abc", 25)));
         assertEquals("cde", Main.createSuperEasyIdentity("abc"));
@@ -787,7 +792,8 @@ public final class PortedModuleSmokeTest {
         List<String> preSessionPackets = new ArrayList<>();
         Main.configurePreSessionPacketSink((socketIndex, payload) -> preSessionPackets.add(socketIndex + ":" + payload));
         Licence.global_00829354 = "";
-        Main.Proc_0_25_68FBC0(7, "login-data");
+        Main.appendGameServerPacketData(7, new String[]{"ignored", "ignored", "login-data"});
+        assertEquals(true, Main.dataProcessTimer(7));
         assertEquals(Arrays.asList("7:login-data"), preSessionPackets);
         List<String> readyPacketsSent = new ArrayList<>();
         HandlingMUS.configureMusSink((socketIndex, payload) -> readyPacketsSent.add(socketIndex + ":" + payload));
