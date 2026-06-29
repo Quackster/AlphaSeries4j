@@ -17,6 +17,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Split huge root classes by domain, following the existing package direction: `dao.mysql` for persistence, `game.*` for domain state and collections, `messages.*` for packet payloads, `server.*` for runtime/server concerns, and `util` for shared string/number helpers.
 - Do not duplicate common conversion helpers. Use `StringUtils`, `NumberUtils`, and protocol utilities instead of reintroducing VB-style local helper methods.
 - Move raw `Licence.global_*` string caches into typed collection-backed state holders under the appropriate `game.*` package, keeping legacy serialization only at explicit compatibility boundaries.
+- Each domain module should expose a single module-level manager/registry for its live instances and cached state instead of relying on `Licence.java` globals or scattered static ownership. `Licence` accessors are only temporary compatibility bridges while callers migrate to those managers.
 - Commit only verified milestones with `REFACTOR.md` metrics updated when the legacy surface changes.
 
 ## Completed Slices
