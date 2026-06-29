@@ -1703,8 +1703,8 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String advertisementPayload = "\2\2";
-            if (Licence.global_008291D8 > 0L) {
-                String candidate = indexedPayload(Licence.global_008291D4, Vb.val(Functions.Proc_10_3_809B90(Licence.global_008291D8, 1, 0)));
+            if (Licence.visitRoomAds().count() > 0L) {
+                String candidate = Licence.visitRoomAds().randomPayload();
                 if (!candidate.isEmpty()) {
                     advertisementPayload = candidate;
                 }

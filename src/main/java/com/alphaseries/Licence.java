@@ -1,5 +1,6 @@
 package com.alphaseries;
 
+import com.alphaseries.game.advertising.VisitRoomAds;
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -165,6 +166,15 @@ public final class Licence {
     public static void setChatSettings(String filterRows, String gestureRows) {
         global_00829290 = StringUtils.text(filterRows);
         global_00829294 = StringUtils.text(gestureRows);
+    }
+
+    public static VisitRoomAds visitRoomAds() {
+        return VisitRoomAds.fromLegacy(global_008291D4, global_008291D8);
+    }
+
+    public static void setVisitRoomAds(Object payloadsById, long count) {
+        global_008291D4 = payloadsById == null ? "" : payloadsById;
+        global_008291D8 = count;
     }
 
     public static String Proc_9_6_808080(Object... args) {

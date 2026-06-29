@@ -367,8 +367,7 @@ public final class Boot {
                 visitRooms[entry.getKey().intValue()] = entry.getValue();
             }
         }
-        Licence.global_008291D4 = visitRooms;
-        Licence.global_008291D8 = cache.count;
+        Licence.setVisitRoomAds(visitRooms, cache.count);
     }
 
     public static void Proc_1_23_6D1480(Object... args) {

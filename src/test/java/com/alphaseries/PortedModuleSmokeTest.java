@@ -820,6 +820,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.helpCenterCache().descriptionPayload(5L).contains("line1\rline2"));
         Boot.Proc_1_22_6D0F00();
         assertEquals("/ad/4\2/cafe\2", ((String[]) Licence.global_008291D4)[4]);
+        assertEquals("/ad/4\2/cafe\2", Licence.visitRoomAds().payload(4L));
         Boot.Proc_1_23_6D1480("booted", "DEBUG");
         Boot.Proc_1_5_6C4F80();
         assertEquals("7\2", Licence.global_008291E4);
