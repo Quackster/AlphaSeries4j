@@ -110,6 +110,18 @@ public final class UserDao {
             userId);
     }
 
+    public long tutorialGuide(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT tutorial_guide FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public int markTutorialGuide(long userId) throws SQLException {
+        return database.execute("UPDATE users SET tutorial_guide=? WHERE id=?", 1L, userId);
+    }
+
     public long activityPoints(long userId, long pointType) throws SQLException {
         return database.queryOne(
             "SELECT activitypoints_" + pointType + " FROM users WHERE id=? LIMIT 1",

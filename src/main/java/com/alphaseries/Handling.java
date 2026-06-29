@@ -11,6 +11,7 @@ import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.dao.mysql.TradeDao;
 import com.alphaseries.dao.mysql.MessengerDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.pet.BotRoomEntryRow;
 import com.alphaseries.game.pet.PetCommandActionRow;
 import com.alphaseries.game.pet.PetCommandTargetRow;
 import com.alphaseries.game.pet.PetExperienceStateRow;
@@ -6438,11 +6439,16 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
-            long tutorialGuide = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT tutorial_guide FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+            long userIdValue = NumberUtils.parseLong(userId);
+            UserDao users = userDao();
+            RoomDao rooms = roomDao();
+            BotDao bots = botDao();
+            if (users == null || rooms == null || bots == null) {
+                return 0L;
+            }
+            long tutorialGuide = users.tutorialGuide(userIdValue);
             if (tutorialGuide == 0L) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE users SET tutorial_guide='1' WHERE id='"
-                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
+                users.markTutorialGuide(userIdValue);
             }
             if (NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.rooms.bots.guide.enabled", "0", 0)) == 0L) {
                 return 0L;
@@ -6451,7 +6457,7 @@ public final class Handling {
             if (roomId <= 0L) {
                 return 0L;
             }
-            long roomSlot = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            long roomSlot = rooms.roomSlot(roomId);
             if (roomSlot <= 0L) {
                 return 0L;
             }
@@ -6459,13 +6465,11 @@ public final class Handling {
             if (guideBotId <= 0L || isRepresentedBotAllocated(roomSlot, guideBotId)) {
                 return 0L;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,name,motto,speech,responses,position_x,position_y,position_z,position_r,figure,NULL,"
-                + "id_handle,id_handleaction,cache_action,speech_submit,allow_walk,max_fields_away FROM bots WHERE id='"
-                + guideBotId + "' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            BotRoomEntryRow guide = bots.botRoomEntry(guideBotId).orElse(null);
+            if (guide == null) {
                 return 0L;
             }
-            long botEntityId = Proc_6_187_7CD700(roomSlot, rowText.split("\t", -1), 0);
+            long botEntityId = Proc_6_187_7CD700(roomSlot, guide.representedBotFields(), 0);
             if (botEntityId > 0L) {
                 Proc_6_244_801E80(socketIndex, "@a" + "YjO", 0);
             }

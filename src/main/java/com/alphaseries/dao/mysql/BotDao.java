@@ -1,6 +1,7 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.pet.BotRoomEntryRow;
 import com.alphaseries.game.pet.PetCommandActionRow;
 import com.alphaseries.game.pet.PetCommandCacheRow;
 import com.alphaseries.game.pet.PetCommandTargetRow;
@@ -303,6 +304,31 @@ public final class BotDao {
         return database.execute(
             "UPDATE bots_petdata SET scratches=? WHERE id_bot=?",
             scratches,
+            botId);
+    }
+
+    public Optional<BotRoomEntryRow> botRoomEntry(long botId) throws SQLException {
+        return database.queryOne(
+            "SELECT id,name,motto,speech,responses,position_x,position_y,position_z,position_r,figure,"
+                + "NULL,id_handle,id_handleaction,cache_action,speech_submit,allow_walk,max_fields_away "
+                + "FROM bots WHERE id=? LIMIT 1",
+            resultSet -> new BotRoomEntryRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getString(4),
+                resultSet.getString(5),
+                resultSet.getLong(6),
+                resultSet.getLong(7),
+                resultSet.getString(8),
+                resultSet.getLong(9),
+                resultSet.getString(10),
+                resultSet.getLong(12),
+                resultSet.getLong(13),
+                resultSet.getString(14),
+                resultSet.getString(15),
+                resultSet.getLong(16),
+                resultSet.getLong(17)),
             botId);
     }
 }
