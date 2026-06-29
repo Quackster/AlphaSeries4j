@@ -4048,25 +4048,23 @@ public final class Handling {
             if (activityType < 0L || activityType > 4L) {
                 activityType = 0L;
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            String userRow = MySQL.Proc_5_2_6D4690("SELECT credits,activitypoints_" + activityType
-                + ",level_hc FROM users WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0);
-            if (userRow.isEmpty()) {
+            long userIdValue = NumberUtils.parseLong(userId);
+            UserDao users = userDao();
+            UserDao.CatalogPurchaseBalance balance = users == null
+                ? null
+                : users.catalogPurchaseBalance(userIdValue, activityType).orElse(null);
+            if (balance == null) {
                 return "";
             }
-            String[] userFields = userRow.split("\t", -1);
-            long userCredits = NumberUtils.parseLong(handlingField(userFields, 0));
-            long userActivityPoints = NumberUtils.parseLong(handlingField(userFields, 1));
-            long userClubLevel = NumberUtils.parseLong(handlingField(userFields, 2));
-            if (minClubLevel > 0L && userClubLevel < minClubLevel) {
+            if (minClubLevel > 0L && balance.clubLevel() < minClubLevel) {
                 Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(3, null, ""), 0);
                 return "";
             }
-            if (userCredits < creditPrice) {
+            if (balance.credits() < creditPrice) {
                 Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(1, null, ""), 0);
                 return "";
             }
-            if (userActivityPoints < activityPrice) {
+            if (balance.activityPoints() < activityPrice) {
                 Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(2, null, ""), 0);
                 return "";
             }
@@ -4075,9 +4073,7 @@ public final class Handling {
                 return "";
             }
             if (creditPrice > 0L || activityPrice > 0L) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE users SET credits=credits-" + creditPrice + ",activitypoints_"
-                    + activityType + "=activitypoints_" + activityType + "-" + activityPrice + " WHERE id='"
-                    + escapedUserId + "'", 0, 0);
+                users.spendCatalogPurchaseBalance(userIdValue, creditPrice, activityType, activityPrice);
                 if (creditPrice > 0L) {
                     Functions.Proc_10_16_80C480(userId, 0, 0);
                 }

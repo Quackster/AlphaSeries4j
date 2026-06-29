@@ -200,6 +200,27 @@ public final class UserDao {
             userId);
     }
 
+    public Optional<CatalogPurchaseBalance> catalogPurchaseBalance(long userId, long activityType) throws SQLException {
+        return database.queryOne(
+            "SELECT credits,activitypoints_" + activityType + ",level_hc FROM users WHERE id=? LIMIT 1",
+            resultSet -> new CatalogPurchaseBalance(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3)),
+            userId);
+    }
+
+    public int spendCatalogPurchaseBalance(
+        long userId,
+        long creditPrice,
+        long activityType,
+        long activityPrice) throws SQLException {
+        return database.execute(
+            "UPDATE users SET credits=credits-" + creditPrice + ",activitypoints_" + activityType
+                + "=activitypoints_" + activityType + "-" + activityPrice + " WHERE id=?",
+            userId);
+    }
+
     public Optional<UserIdentity> findIdentity(long userId) throws SQLException {
         return database.queryOne(
             "SELECT id,id_socket,motto,figure,gender FROM users WHERE id=? LIMIT 1",
@@ -447,5 +468,8 @@ public final class UserDao {
             }
             return 0L;
         }
+    }
+
+    public record CatalogPurchaseBalance(long credits, long activityPoints, long clubLevel) {
     }
 }
