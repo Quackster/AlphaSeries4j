@@ -6704,14 +6704,17 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE users_badges SET id_slot='0' WHERE id_user='" + escapedUserId + "'", 0, 0);
+            long userIdValue = NumberUtils.parseLong(userId);
+            UserDao users = userDao();
+            if (users == null) {
+                return "";
+            }
+            users.clearEquippedBadges(userIdValue);
             String[] slots = badgeUpdateSelectionsFromWire(packetPayload);
             for (int slotIndex = 0; slotIndex < slots.length; slotIndex++) {
                 String badgeId = slots[slotIndex];
                 if (!badgeId.isEmpty()) {
-                    MySQL.Proc_5_0_6D3CD0("UPDATE users_badges SET id_slot='" + (slotIndex + 1)
-                        + "' WHERE id_badge='" + badgeId + "' AND id_user='" + escapedUserId + "'", 0, 0);
+                    users.equipBadge(userIdValue, badgeId, slotIndex + 1L);
                 }
             }
             String equippedPayload = Proc_6_195_7D38D0(userId, 0, 0);

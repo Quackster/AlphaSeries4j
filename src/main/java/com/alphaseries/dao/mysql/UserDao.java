@@ -153,6 +153,18 @@ public final class UserDao {
             userId);
     }
 
+    public int clearEquippedBadges(long userId) throws SQLException {
+        return database.execute("UPDATE users_badges SET id_slot=? WHERE id_user=?", 0L, userId);
+    }
+
+    public int equipBadge(long userId, String badgeId, long slot) throws SQLException {
+        return database.execute(
+            "UPDATE users_badges SET id_slot=? WHERE id_badge=? AND id_user=?",
+            slot,
+            badgeId,
+            userId);
+    }
+
     public long activityPoints(long userId, long pointType) throws SQLException {
         return database.queryOne(
             "SELECT activitypoints_" + pointType + " FROM users WHERE id=? LIMIT 1",
