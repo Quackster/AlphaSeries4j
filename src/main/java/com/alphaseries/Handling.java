@@ -4471,6 +4471,32 @@ public final class Handling {
         }
     }
 
+    public static long Proc_6_170_7C1100(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            FriendTargetList targets = friendDeleteTargetsFromPayload(handlingPacketPayload(args));
+            if (targets.deleteAllPending) {
+                MySQL.Proc_5_0_6D3CD0("DELETE FROM friendships WHERE id_user='"
+                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND has_accept='0' LIMIT 75", 0, 0);
+                return 1L;
+            }
+            if (targets.targetList.isEmpty()) {
+                return 0L;
+            }
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM friendships WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND has_accept='0' AND id_friend IN (" + targets.targetList + ") LIMIT 75", 0, 0);
+            return 1L;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }

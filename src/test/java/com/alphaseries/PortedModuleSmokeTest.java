@@ -2716,6 +2716,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "@MHIH"));
         assertEquals(true, containsSend(handlingSends, "User77"));
         handlingSends.clear();
+        handlingSql.clear();
+        assertEquals(1L, Handling.Proc_6_170_7C1100(4, "@fA"));
+        assertEquals(true, containsSql(handlingSql, "DELETE FROM friendships WHERE id_user='77' AND has_accept='0' LIMIT 75"));
+        handlingSql.clear();
+        assertEquals(1L, Handling.Proc_6_170_7C1100(4, "@fCABA"));
+        assertEquals(true, containsSql(handlingSql, "id_friend IN (1,2) LIMIT 75"));
+        handlingSql.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
         assertEquals(4, Handling.representedInteractionPartner(8));
