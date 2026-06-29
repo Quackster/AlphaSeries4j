@@ -2794,6 +2794,15 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, searchPayload.contains("Targus"));
         assertEquals(true, containsSend(handlingSends, "Fs"));
         handlingSends.clear();
+        handlingSql.clear();
+        String chatWire = wireLong(88) + wireString("Private hello");
+        String chatText = Functions.Proc_10_7_80A190(chatWire, 0, 0);
+        String privateChatPayload = Handling.Proc_6_173_7C3430(4, "@a" + chatWire);
+        assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BF") + chatText + "\2", privateChatPayload);
+        assertEquals(true, containsSql(handlingSql, "(Chat To:     Target) -- " + chatText));
+        assertEquals(true, containsSend(handlingSends, "BF"));
+        handlingSql.clear();
+        handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
         assertEquals(4, Handling.representedInteractionPartner(8));

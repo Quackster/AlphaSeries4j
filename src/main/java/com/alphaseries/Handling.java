@@ -4625,6 +4625,54 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_173_7C3430(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "@a");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            LongRef offset = new LongRef(1);
+            String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
+            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                targetUserId = String.valueOf((long) Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0)));
+            }
+            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return "";
+            }
+            String messageText = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            if (messageText.length() > 122) {
+                messageText = messageText.substring(0, 122);
+            }
+            if (messageText.isEmpty()) {
+                messageText = readWireString(requestPayload, offset);
+                if (messageText.length() > 122) {
+                    messageText = messageText.substring(0, 122);
+                }
+            }
+            if (messageText.isEmpty() || messageText.length() > 255) {
+                return "";
+            }
+            int targetSocketIndex = handlingSocketFromUserId(targetUserId);
+            if (targetSocketIndex <= 0) {
+                return "";
+            }
+            long currentRoomId = handlingCurrentRoomId(socketIndex, userId);
+            MySQL.Proc_5_1_6D4110("INSERT INTO logs_chat(id_user,id_room,timestamp,description,id_type,id_session) VALUES('"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + currentRoomId + "',UNIX_TIMESTAMP(),'"
+                + Functions.Proc_10_11_80A9C0("(Chat To:     " + handlingUserName(targetUserId) + ") -- " + messageText, 0, 0)
+                + "','3','" + socketIndex + "')", 0, 0);
+            String filteredText = Proc_6_22_6E9300(messageText, 0, 0);
+            String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(userId), null, "BF") + filteredText + '\2';
+            Proc_6_244_801E80(targetSocketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
