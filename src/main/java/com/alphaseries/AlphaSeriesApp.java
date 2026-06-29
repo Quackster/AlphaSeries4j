@@ -18,7 +18,7 @@ public final class AlphaSeriesApp {
         }
         Boot.Proc_1_23_6D1480("Verbindung zum MySQL Server hergestellt",
             "DEBUG, time: " + elapsedMillis(databaseStartedAt) + " ms");
-        Main.LifecycleResult lifecycle = Main.formInitialize("AlphaSeries %% [!]");
+        Main.LifecycleResult lifecycle = Main.formInitialize(Main.INITIALIZING_CAPTION_TEMPLATE);
         System.setProperty("alphaseries.consoleTitle", lifecycle.consoleTitle);
         if (!lifecycle.success) {
             System.err.println("AlphaSeries startup failed");
@@ -31,6 +31,9 @@ public final class AlphaSeriesApp {
             System.err.println("AlphaSeries server startup failed at " + startup.stage + ": " + startup.message);
             System.exit(1);
         }
+        lifecycle.consoleTitle = Main.initializedConsoleTitle(lifecycle.consoleTitle);
+        lifecycle.caption = Main.javaCaptionFromConsoleTitle(lifecycle.consoleTitle);
+        System.setProperty("alphaseries.consoleTitle", lifecycle.consoleTitle);
         System.out.println(lifecycle.caption);
         try (AlphaSeriesRuntime runtime = AlphaSeriesRuntime.start()) {
             runtime.await();

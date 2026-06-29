@@ -19,6 +19,10 @@ import java.util.List;
 import java.util.Locale;
 
 public final class Main {
+    public static final String INITIALIZING_CAPTION_TEMPLATE = "Alpha Series [INITIALISIERE] - [%%]";
+    public static final String INITIALIZED_STATE_TEXT = "INITIALISIERT";
+    public static final String RUNNING_STATE_TEXT = "RUNNING";
+
     private static PacketSink preSessionPacketSink = (socketIndex, payload) -> { };
 
     private Main() {
@@ -255,6 +259,13 @@ public final class Main {
 
     public static String javaCaptionFromConsoleTitle(String consoleTitle) {
         return StringUtils.text(consoleTitle).replace("[!]", "").trim().replaceAll(" {2,}", " ");
+    }
+
+    public static String initializedConsoleTitle(String consoleTitle) {
+        String title = StringUtils.text(consoleTitle);
+        title = title.replace("INITIALISIERE", INITIALIZED_STATE_TEXT);
+        title = title.replace("INITIALIZING", RUNNING_STATE_TEXT);
+        return title;
     }
 
     public static String gameServerUnknownEventAccept() {

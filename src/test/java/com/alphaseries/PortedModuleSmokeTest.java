@@ -470,6 +470,40 @@ public final class PortedModuleSmokeTest {
         assertEquals("secret", Console.entries().get(2).lineText());
         assertEquals("[GAME] shown", Console.entries().get(3).lineText());
 
+        String previousFigureApplicationPath = Functions.applicationPath;
+        Path emptyFigureRoot = Files.createTempDirectory("alphaseries-empty-figuredata");
+        Functions.applicationPath = emptyFigureRoot.toString();
+        MySQL.configureDatabaseConnection(new Database() {
+            @Override
+            public void execute(String sqlText) {
+            }
+
+            @Override
+            public List<List<Object>> query(String sqlText) {
+                return Arrays.<List<Object>>asList(Arrays.<Object>asList(""));
+            }
+        });
+        Console.clear();
+        Boot.runTimed("Figuredata im Cache gespeichert", Boot::writeFiguredataCache);
+        assertEquals("[ERROR] \"Figuredata\" Datei konnte nicht gefunden werden!",
+            Console.entries().get(0).lineText());
+        assertEquals(1, Console.entries().size());
+        MySQL.configureDatabaseConnection(new Database() {
+            @Override
+            public void execute(String sqlText) {
+            }
+
+            @Override
+            public List<List<Object>> query(String sqlText) {
+                return Arrays.<List<Object>>asList(Arrays.<Object>asList("<settype type=\"hd\"/>"));
+            }
+        });
+        Console.clear();
+        Boot.runTimed("Figuredata im Cache gespeichert", Boot::writeFiguredataCache);
+        assertEquals(true, Console.entries().get(0).lineText().contains("Figuredata im Cache gespeichert"));
+        Functions.applicationPath = previousFigureApplicationPath;
+        MySQL.configureDatabaseConnection(null);
+
         List<String> sent = new ArrayList<>();
         Filesystems.configurePacketSink((socketIndex, payload) -> sent.add(socketIndex + ":" + payload));
         Filesystems.global_00829268 = "[1:\1Alice\2" + "5][1:\1Bob\2" + "6]";
@@ -1032,6 +1066,13 @@ public final class PortedModuleSmokeTest {
         assertEquals("ALPHASERIES_FINAL (PREMIUM)", lifecycleResult.caption);
         assertEquals("ALPHASERIES_FINAL (PREMIUM) [!]", lifecycleResult.consoleTitle);
         assertEquals("PRODUCT-KEY", lifecycleResult.productKey);
+        Main.LifecycleResult bootTitleLifecycle = Main.formInitialize(Main.INITIALIZING_CAPTION_TEMPLATE);
+        assertEquals("Alpha Series [INITIALISIERE] - [ALPHASERIES_FINAL (PREMIUM)]",
+            bootTitleLifecycle.consoleTitle);
+        assertEquals("Alpha Series [INITIALISIERT] - [ALPHASERIES_FINAL (PREMIUM)]",
+            Main.initializedConsoleTitle(bootTitleLifecycle.consoleTitle));
+        assertEquals("Alpha Series [RUNNING] - [ALPHASERIES_FINAL (PREMIUM)]",
+            Main.initializedConsoleTitle("Alpha Series [INITIALIZING] - [ALPHASERIES_FINAL (PREMIUM)]"));
         assertEquals(false, Files.exists(lifecycleRoot.resolve("CACHE").resolve("ROOMS")));
         assertEquals(0xFFFFFFL, Licence.global_0082904C);
         assertEquals(0x17L, Licence.global_0082903C);

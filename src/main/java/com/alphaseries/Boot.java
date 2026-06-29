@@ -12,6 +12,7 @@ import com.alphaseries.util.StringUtils;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 
 public final class Boot {
     private Boot() {
@@ -427,9 +428,25 @@ public final class Boot {
         Proc_1_23_6D1480(messageText, "DEBUG, time: " + elapsedMillis + " ms");
     }
 
-    public static void writeFiguredataCache() {
+    public static void runTimed(String messageText, BooleanSupplier action) {
+        long startedAt = System.nanoTime();
+        boolean success = action == null || action.getAsBoolean();
+        if (!success) {
+            return;
+        }
+        long elapsedMillis = Math.max(0L, (System.nanoTime() - startedAt) / 1_000_000L);
+        Proc_1_23_6D1480(messageText, "DEBUG, time: " + elapsedMillis + " ms");
+    }
+
+    public static boolean writeFiguredataCache() {
         String figureData = MySQL.Proc_5_2_6D4690("SELECT value FROM settings WHERE variable='com.cache.figuredata'", 0, 0);
-        Handling.Proc_6_240_7FC2B0(java.nio.file.Path.of(Functions.applicationPath, "figuredata.cache").toString(), figureData);
+        String cachePath = java.nio.file.Path.of(Functions.applicationPath, "figuredata.cache").toString();
+        Handling.Proc_6_240_7FC2B0(cachePath, figureData);
+        if (Handling.Proc_6_239_7FC170(cachePath, 0, 0).trim().isEmpty()) {
+            Console.Proc_2_0_6D1510("\"Figuredata\" Datei konnte nicht gefunden werden!", "ERROR", 255);
+            return false;
+        }
+        return true;
     }
 
     public static void cacheRowsById(String[] targetCache, String rowText) {
