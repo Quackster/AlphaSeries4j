@@ -1786,7 +1786,9 @@ public final class PortedModuleSmokeTest {
             + "[com.client.catalog.gifts.enabled=1]"
             + "[com.client.catalog.gifts.wrap.enabled=1]"
             + "[com.client.catalog.gifts.wrap.price=7]"
-            + "[com.client.rooms.bots.pets.enabled=1]";
+            + "[com.client.rooms.bots.pets.enabled=1]"
+            + "[com.client.rooms.bots.guide.enabled=1]"
+            + "[com.client.bot.guide.id=20]";
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_mod\2fuse_alert\2fuse_kick\2fuse_receive_calls_for_help\2fuse_chatlog\2"
             + "fuse_use_wardrobe\2fuse_larger_wardrobe\2fuse_client_staff\2"}};
         MySQL.configureDatabaseConnection(new Database() {
@@ -1863,6 +1865,9 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT scratch_amount FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(2));
                 }
+                if (sqlText.contains("SELECT tutorial_guide FROM users WHERE id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
+                }
                 if (sqlText.contains("SELECT bots.id,bots.name,bots.figure,bots_petdata.scratches FROM bots,bots_petdata WHERE bots.id='10'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, "Rex", "1 2 ff", 4));
                 }
@@ -1910,6 +1915,15 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT scratches FROM bots_petdata WHERE id_bot='10'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(5));
+                }
+                if (sqlText.contains("SELECT id,name,motto,speech,responses,position_x,position_y,position_z,position_r,figure")
+                    && sqlText.contains("FROM bots WHERE id='20'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(
+                        20, "Guide", "guide motto", "speech", "responses", 1, 2, "0", 3, "guide-fig", "", 0, 0, "", "submit", 1, 6));
+                }
+                if (sqlText.contains("SELECT logs_visitedrooms.id,users.name,users.motto,users.achievement_score,users.figure")
+                    && sqlText.contains("logs_visitedrooms.id='61'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(61, "Target", "Motto", 123, "fig"));
                 }
                 if (sqlText.contains("SELECT id FROM rooms WHERE id_slot='4'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(9));
@@ -2940,6 +2954,24 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET id_level=id_level,energy=energy,experience=experience,nutrition=nutrition,scratches=scratches WHERE id_bot='10'"));
         assertEquals(true, containsSend(handlingSends, "@]"));
         assertEquals(true, containsSend(handlingSends, "I["));
+        handlingSends.clear();
+        handlingSql.clear();
+        Licence.global_008292D4 = "";
+        Licence.global_00829358 = "";
+        long guideEntityId = Handling.Proc_6_188_7CF3C0(4);
+        assertEquals(true, guideEntityId > 0L);
+        assertEquals("20", Handling.representedBotRecordField(guideEntityId, 1));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET tutorial_guide='1' WHERE id='77'"));
+        assertEquals(true, containsSend(handlingSends, "@aYjO"));
+        handlingSends.clear();
+        assertEquals(1L, Handling.Proc_6_189_7D0630(4, "Fy" + wireLong(0)));
+        assertEquals("", Handling.representedBotRecordText(guideEntityId));
+        assertEquals(true, containsSend(handlingSends, "@]"));
+        handlingSends.clear();
+        String profilePayload = Handling.Proc_6_190_7D11D0(4, "Cg" + wireLong(61));
+        assertEquals(Handling.representedRoomUserProfilePayload(61, "Target", "Motto", 123, "fig"), profilePayload);
+        assertEquals(true, containsSend(handlingSends, "Jf"));
+        assertEquals(true, containsSend(handlingSends, "Target"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));

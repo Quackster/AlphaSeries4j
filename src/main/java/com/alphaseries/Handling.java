@@ -5177,6 +5177,153 @@ public final class Handling {
         }
     }
 
+    public static long Proc_6_188_7CF3C0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return 0L;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            long tutorialGuide = Vb.val(MySQL.Proc_5_2_6D4690("SELECT tutorial_guide FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+            if (tutorialGuide == 0L) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE users SET tutorial_guide='1' WHERE id='"
+                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
+            }
+            if (Vb.val(Functions.Proc_10_0_809570("com.client.rooms.bots.guide.enabled", "0", 0)) == 0L) {
+                return 0L;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return 0L;
+            }
+            long roomSlot = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            if (roomSlot <= 0L) {
+                return 0L;
+            }
+            long guideBotId = Vb.val(Functions.Proc_10_0_809570("com.client.bot.guide.id", "0", 0));
+            if (guideBotId <= 0L || isRepresentedBotAllocated(roomSlot, guideBotId)) {
+                return 0L;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,name,motto,speech,responses,position_x,position_y,position_z,position_r,figure,NULL,"
+                + "id_handle,id_handleaction,cache_action,speech_submit,allow_walk,max_fields_away FROM bots WHERE id='"
+                + guideBotId + "' LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return 0L;
+            }
+            long botEntityId = Proc_6_187_7CD700(roomSlot, rowText.split("\t", -1), 0);
+            if (botEntityId > 0L) {
+                Proc_6_244_801E80(socketIndex, "@a" + "YjO", 0);
+            }
+            return botEntityId;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
+    public static long Proc_6_189_7D0630(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "Fy");
+            LongRef offset = new LongRef(1);
+            long requestedEntityId = readWireLong(requestPayload, offset);
+            if (socketIndex <= 0) {
+                return 0L;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return 0L;
+            }
+            long roomSlot = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            if (roomSlot <= 0L) {
+                return 0L;
+            }
+            String entityList = "";
+            if (requestedEntityId > 0L) {
+                if (representedBotRecordLong(requestedEntityId, 0) == roomSlot) {
+                    entityList = String.valueOf(requestedEntityId);
+                }
+            } else {
+                long guideBotId = Vb.val(Functions.Proc_10_0_809570("com.client.bot.guide.id", "0", 0));
+                entityList = representedBotEntitiesForRoom(roomSlot, guideBotId);
+            }
+            if (entityList.isEmpty()) {
+                return 0L;
+            }
+            long removedCount = 0L;
+            for (String entityIdText : entityList.split("\r", -1)) {
+                long botEntityId = Vb.val(entityIdText);
+                if (botEntityId > 0L) {
+                    Proc_6_248_802B80(roomId, "@]" + botEntityId + '\2', 0);
+                    removeRepresentedBotRecord(botEntityId);
+                    removedCount++;
+                }
+            }
+            return removedCount;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
+    public static String Proc_6_190_7D11D0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "Cg");
+            LongRef offset = new LongRef(1);
+            long requestedRoomUserIndex = readWireLong(requestPayload, offset);
+            if (socketIndex <= 0 || requestedRoomUserIndex <= 0L) {
+                return "";
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (roomId <= 0L) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,users.name,users.motto,users.achievement_score,users.figure "
+                + "FROM logs_visitedrooms,users WHERE logs_visitedrooms.id='" + requestedRoomUserIndex
+                + "' AND logs_visitedrooms.id_room='" + roomId
+                + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                rowText = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,users.name,users.motto,users.achievement_score,users.figure "
+                    + "FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_user='" + requestedRoomUserIndex
+                    + "' AND logs_visitedrooms.id_room='" + roomId
+                    + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1", 0, 0);
+            }
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            String[] fields = rowText.split("\t", -1);
+            if (fields.length < 5) {
+                return "";
+            }
+            String payload = representedRoomUserProfilePayload(
+                Vb.val(handlingField(fields, 0)),
+                handlingField(fields, 1),
+                handlingField(fields, 2),
+                Vb.val(handlingField(fields, 3)),
+                handlingField(fields, 4));
+            if (!payload.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, payload, 0);
+            }
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
