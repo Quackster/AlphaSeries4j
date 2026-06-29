@@ -46,6 +46,18 @@ public final class UserDao {
             .orElse(0L);
     }
 
+    public int assignLoginSocket(long userId, long socketIndex) throws SQLException {
+        return database.execute("UPDATE users SET login_ticket=null,id_socket = ? WHERE id = ?", socketIndex, userId);
+    }
+
+    public int resetDailyInteractionCounters(long userId) throws SQLException {
+        return database.execute(
+            "UPDATE users SET respect_amount=?,scratch_amount=?,update_time=UNIX_TIMESTAMP() WHERE id=? LIMIT 1",
+            5L,
+            5L,
+            userId);
+    }
+
     public long rankLevel(long userId) throws SQLException {
         return database.queryOne(
             "SELECT level FROM users WHERE id=? LIMIT 1",

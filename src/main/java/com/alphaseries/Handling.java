@@ -5535,12 +5535,13 @@ public final class Handling {
                 NumberUtils.parseLong(handlingField(fields, 45)),
                 NumberUtils.parseLong(handlingField(fields, 46))
             };
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET login_ticket=null,id_socket = '" + socketIndex
-                + "' WHERE id = '" + escapedUserId + "'", 0, 0);
+            UserDao users = userDao();
+            if (users == null) {
+                return "";
+            }
+            users.assignLoginSocket(NumberUtils.parseLong(userId), socketIndex);
             if (updateAgeDays > 0L) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE users SET respect_amount='5',scratch_amount='5',update_time=UNIX_TIMESTAMP() WHERE id='"
-                    + escapedUserId + "' LIMIT 1", 0, 0);
+                users.resetDailyInteractionCounters(NumberUtils.parseLong(userId));
             }
             handlingStoreSocketSession(socketIndex, userId + '\2' + socketIndex + '\2' + userName + '\2'
                 + rankIndex + '\2' + loginTicket + '\2');
@@ -5570,7 +5571,6 @@ public final class Handling {
                 + Proc_6_196_7D3ED0(userId, 0, 0), 0);
             long favouriteGroupId = NumberUtils.parseLong(handlingField(fields, 36));
             if (favouriteGroupId > 0L) {
-                UserDao users = userDao();
                 UserGroupRow groupRow = users == null ? null : users.userGroup(favouriteGroupId).orElse(null);
                 if (groupRow != null) {
                     String groupPayload = loginGroupPayload(favouriteGroupId, groupRow);
