@@ -5,6 +5,7 @@ import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.user.ExpiredUserEffectRow;
 import com.alphaseries.game.user.UserEffectActivationRow;
 import com.alphaseries.game.user.UserEffectSummaryRow;
+import com.alphaseries.game.user.UserGroupRow;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -327,6 +328,17 @@ public final class UserDao {
 
     public int incrementStaffPickedCount(long userId) throws SQLException {
         return database.execute("UPDATE users SET amount_staffpicked=amount_staffpicked+1 WHERE id=?", userId);
+    }
+
+    public Optional<UserGroupRow> userGroup(long groupId) throws SQLException {
+        return database.queryOne(
+            "SELECT group_name,group_description,id_badge,id_room FROM users_groups WHERE id=? LIMIT 1",
+            resultSet -> new UserGroupRow(
+                resultSet.getString(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getLong(4)),
+            groupId);
     }
 
     public List<UserEffectSummaryRow> userEffectSummaries(long userId) throws SQLException {

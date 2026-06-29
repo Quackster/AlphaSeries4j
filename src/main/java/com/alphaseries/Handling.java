@@ -34,6 +34,7 @@ import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.user.ExpiredUserEffectRow;
 import com.alphaseries.game.user.UserEffectActivationRow;
 import com.alphaseries.game.user.UserEffectSummaryRow;
+import com.alphaseries.game.user.UserGroupRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -5569,15 +5570,10 @@ public final class Handling {
                 + Proc_6_196_7D3ED0(userId, 0, 0), 0);
             long favouriteGroupId = NumberUtils.parseLong(handlingField(fields, 36));
             if (favouriteGroupId > 0L) {
-                String groupRow = MySQL.Proc_5_3_6D4CF0("SELECT group_name,group_description,id_badge,id_room FROM users_groups WHERE id='"
-                    + favouriteGroupId + "' LIMIT 1", 0, 0);
-                if (!groupRow.isEmpty()) {
-                    String[] groupFields = groupRow.split("\t", -1);
-                    String groupPayload = Crypto.Proc_3_0_6D2AF0(favouriteGroupId, null, "Dt")
-                        + handlingField(groupFields, 0) + '\2'
-                        + handlingField(groupFields, 1) + '\2'
-                        + handlingField(groupFields, 2) + '\2'
-                        + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(groupFields, 3)), null, "") + "H";
+                UserDao users = userDao();
+                UserGroupRow groupRow = users == null ? null : users.userGroup(favouriteGroupId).orElse(null);
+                if (groupRow != null) {
+                    String groupPayload = loginGroupPayload(favouriteGroupId, groupRow);
                     Proc_6_244_801E80(socketIndex, groupPayload, 0);
                 }
             }
@@ -10529,12 +10525,26 @@ public final class Handling {
             return "";
         }
         String[] fields = StringUtils.text(groupRow).split("\t", -1);
-        String payload = Crypto.Proc_3_0_6D2AF0(groupId, null, "Dt");
-        payload += handlingField(fields, 0) + '\2';
-        payload += handlingField(fields, 1) + '\2';
-        payload += handlingField(fields, 2) + '\2';
-        payload += Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 3)), null, "") + "H";
-        return payload;
+        return loginGroupPayload(groupId, new UserGroupRow(
+            handlingField(fields, 0),
+            handlingField(fields, 1),
+            handlingField(fields, 2),
+            NumberUtils.parseLong(handlingField(fields, 3))));
+    }
+
+    public static String loginGroupPayload(long groupId, UserGroupRow groupRow) {
+        if (groupId <= 0L || groupRow == null) {
+            return "";
+        }
+        return PacketBuilder.create()
+            .appendRaw("Dt")
+            .appendInt(groupId)
+            .appendString(groupRow.name())
+            .appendString(groupRow.description())
+            .appendString(groupRow.badgeId())
+            .appendInt(groupRow.roomId())
+            .appendRaw('H')
+            .build();
     }
 
     public static void storeRepresentedInteractionPair(long sourceSocketIndex, long targetSocketIndex, long interactionState) {
