@@ -19,7 +19,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Move raw `Licence.global_*` string caches into typed collection-backed state holders under the appropriate `game.*` package, keeping legacy serialization only at explicit compatibility boundaries.
 - Each domain module should expose a single module-level manager/registry for its live instances and cached state instead of relying on `Licence.java` globals or scattered static ownership. `Licence` accessors are only temporary compatibility bridges while callers migrate to those managers.
 - Keep the refactor branch current with required runtime fixes from `dev`; commit `099dd4d17cd83efeecdb088ac1d94c8ff8404621` (`Fix AlphaSeries boot runtime`) is intentionally merged into this branch.
-- Restore the missing decompiled literals listed in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into the matching Java classes and methods, preserving source text unless a deliberate compatibility boundary documents otherwise.
+- Insert the missing decompiled string literals listed in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into the matching Java classes and methods, preserving source text unless a deliberate compatibility boundary documents otherwise.
 - Commit only verified milestones with `REFACTOR.md` metrics updated when the legacy surface changes.
 
 ## Completed Slices
@@ -186,6 +186,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed catalog purchase balance checks and debits through typed `UserDao.CatalogPurchaseBalance`, replacing raw user balance SQL and tab-delimited parsing in `Handling`.
 - Routed gift purchase balance checks, recipient lookup, debit, and gift counters through `UserDao`, replacing raw user SQL and tab-delimited parsing in `Handling`.
 - Routed represented achievement progress reads through typed `UserDao` accessors, replacing raw user/log SQL and tab-delimited summary parsing in `Handling`.
+- Routed activity-point tick balance reads and awards through `UserDao`, replacing raw activity-point SQL in `Handling`.
 - Added `VoucherDao` and routed voucher reward lookup, catalog product lookup, user reward updates, and voucher deletion through typed DAO methods.
 - Restored decompiled boot caption states and Figuredata cache validation/error logging.
 - Restored decompiled `ERR.log`/`SLOW.log` boot header text.
@@ -229,9 +230,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 367
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 117
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 115
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12509 lines
+- `Handling.java`: 12507 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines

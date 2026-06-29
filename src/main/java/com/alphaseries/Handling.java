@@ -7780,23 +7780,21 @@ public final class Handling {
                 return "";
             }
             StringBuilder sentPayloads = new StringBuilder();
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            UserDao users = userDao();
+            long userIdValue = NumberUtils.parseLong(userId);
             for (long pointType = 0L; pointType <= 4L; pointType++) {
                 long intervalSeconds = NumberUtils.parseLong(Functions.Proc_10_0_809570(
                     "com.server.socket.game.activitypoints_" + pointType + ".interval", 0, 0));
                 if (intervalSeconds > 0L && sessionSeconds % intervalSeconds == 0L) {
-                    String columnName = "activitypoints_" + pointType;
                     long maxPoints = NumberUtils.parseLong(Functions.Proc_10_0_809570(
                         "com.server.socket.game.activitypoints_" + pointType + ".max", 1, 0));
-                    long currentPoints = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT " + columnName + " FROM users WHERE id='"
-                        + escapedUserId + "' LIMIT 1", 0, 0));
+                    long currentPoints = users.activityPoints(userIdValue, pointType);
                     long awardAmount = NumberUtils.parseLong(Functions.Proc_10_0_809570(
                         "com.server.socket.game.activitypoints_" + pointType + ".amount", 0, 0));
                     ActivityPointAward award = activityPointAwardDecision(
                         sessionSeconds, pointType, intervalSeconds, maxPoints, awardAmount, currentPoints);
                     if (award.shouldAward) {
-                        MySQL.Proc_5_0_6D3CD0("UPDATE users SET " + columnName + "=" + columnName + "+"
-                            + awardAmount + " WHERE id='" + escapedUserId + "'", 0, 0);
+                        users.addActivityPoints(userIdValue, pointType, awardAmount);
                         Proc_6_244_801E80(socketIndex, award.payload, 0);
                         sentPayloads.append(award.payload);
                     }
