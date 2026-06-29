@@ -6208,6 +6208,100 @@ public final class Handling {
         }
     }
 
+    public static String Proc_7CC190(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "n|");
+            long requestedId = readWireLong(requestPayload, new LongRef(1));
+            long botId = representedBotRecordLong(requestedId, 1);
+            if (botId <= 0L) {
+                botId = requestedId;
+            }
+            long petLevel = 0L;
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (!userId.isEmpty() && !"0".equals(userId) && botId > 0L) {
+                petLevel = Vb.val(MySQL.Proc_5_2_6D4690("SELECT bots_petdata.id_level FROM bots,bots_petdata WHERE bots.id='"
+                    + botId + "' AND bots.id_user='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                    + "' AND bots_petdata.id_bot=bots.id LIMIT 1", 0, 0));
+            }
+            return Proc_6_184_7CBDA0(socketIndex, petLevel, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static long Proc_7CA730(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return 0L;
+            }
+            String requestPayload = handlingRequestPayload(args, "n{");
+            LongRef offset = new LongRef(1);
+            long requestedId = readWireLong(requestPayload, offset);
+            long commandId = readWireLong(requestPayload, offset);
+            if (requestedId <= 0L || commandId <= 0L) {
+                return 0L;
+            }
+            long botEntityId = requestedId;
+            long botId = representedBotRecordLong(botEntityId, 1);
+            if (botId <= 0L) {
+                botId = requestedId;
+                botEntityId = representedBotEntityFromBotId(botId);
+            }
+            if (botId <= 0L) {
+                return 0L;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return 0L;
+            }
+            String petRow = MySQL.Proc_5_2_6D4690("SELECT bots.id,bots.id_room,bots_petdata.id_level,bots_petdata.energy,"
+                + "bots_petdata.nutrition FROM bots,bots_petdata WHERE bots.id='" + botId
+                + "' AND bots.id_handle='3' AND bots.id_room='" + roomId
+                + "' AND bots_petdata.id_bot=bots.id LIMIT 1", 0, 0);
+            if (petRow.isEmpty()) {
+                return 0L;
+            }
+            String[] petFields = petRow.split("\t", -1);
+            if (petFields.length < 5) {
+                return 0L;
+            }
+            long petLevel = Vb.val(handlingField(petFields, 2));
+            long petEnergy = Vb.val(handlingField(petFields, 3));
+            long petNutrition = Vb.val(handlingField(petFields, 4));
+            PetCommandAction commandAction = petCommandAction(commandId, Licence.global_008292CC);
+            if (!commandAction.found || commandAction.requiredLevel > petLevel) {
+                return 0L;
+            }
+            if (!commandAction.action.isEmpty()) {
+                String payload = "IZ" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
+                    + commandAction.action + '\2' + Crypto.Proc_3_0_6D2AF0(commandId, null, "");
+                Proc_6_248_802B80(roomId, payload, 0);
+            }
+            if (petEnergy < 250L || petNutrition < 250L) {
+                String commandSpeech = Functions.Proc_10_4_809CA0(0, 2, -1) == 0L
+                    ? Functions.Proc_10_0_809570("com.client.bot.pet.sad.speech", "gst thr", 0)
+                    : Functions.Proc_10_0_809570("com.client.bot.pet.angry.speech", "gst grr", 0);
+                if (!commandSpeech.isEmpty()) {
+                    Proc_6_248_802B80(roomId, "@X" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
+                        + commandSpeech + '\2' + "H", 0);
+                }
+            } else {
+                Proc_6_185_7CC2D0(botEntityId, commandId * 10L, 0);
+            }
+            return commandId;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
     public static long Proc_6_185_7CC2D0(Object... args) {
         try {
             if (args == null || args.length == 0) {
@@ -7482,6 +7576,24 @@ public final class Handling {
         }
     }
 
+    public static long Proc_7F44D0(Object... args) {
+        try {
+            String packetPayload = handlingPacketPayload(args);
+            String requestPayload = packetPayload.startsWith("oL") ? packetPayload.substring(2) : packetPayload;
+            if (packetPayload.length() >= 3) {
+                Functions.Proc_10_5_809D80(packetPayload, 3, 0);
+            }
+            String valueText = Functions.Proc_10_6_809F10(requestPayload, 0, 0);
+            if (valueText.isEmpty()) {
+                valueText = readWireString(requestPayload, new LongRef(1));
+            }
+            return Vb.val(valueText);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
     public static String Proc_6_231_7F4510(Object... args) {
         try {
             Proc_6_244_801E80(handlingSocketIndex(args), "Ic" + "IQA", 0);
@@ -7672,6 +7784,10 @@ public final class Handling {
             // VB6 source suppresses handler failures.
             return "";
         }
+    }
+
+    public static String Proc_7FA5A0(Object... args) {
+        return "";
     }
 
     public static String Proc_6_238_7FA670(Object... args) {
@@ -7974,6 +8090,8 @@ public final class Handling {
                 case "AB": Proc_6_139_768100(socketIndex, "AB", packetPayload); break;
                 case "BA": Proc_6_137_766470(socketIndex, "BA", packetPayload); break;
                 case "n~": Proc_6_87_73C120(socketIndex, "n~", packetPayload); break;
+                case "n|": Proc_7CC190(socketIndex, "n|", packetPayload); break;
+                case "n{": Proc_7CA730(socketIndex, "n{", packetPayload); break;
                 case "p`":
                 case "rt": Proc_6_86_73B0D0(socketIndex, packetCode, packetPayload); break;
                 case "ny": Proc_6_183_7CABF0(socketIndex, "ny", packetPayload); break;
@@ -8018,6 +8136,8 @@ public final class Handling {
                 case "Ci": Proc_6_175_7C4800(socketIndex, "Ci", packetPayload); break;
                 case "@L": Proc_6_176_7C4EE0(socketIndex, "@L", packetPayload); break;
                 case "pa": Proc_6_244_801E80(socketIndex, "J|H", 0); break;
+                case "CD": Proc_7FA5A0(socketIndex, "CD", packetPayload); break;
+                case "oL": Proc_7F44D0(socketIndex, "oL", packetPayload); break;
                 default:
                     if (Licence.global_00829034) {
                         Console.Proc_2_0_6D1510(packetPayload, "UNHANDLED -- index: " + socketIndex, "255");

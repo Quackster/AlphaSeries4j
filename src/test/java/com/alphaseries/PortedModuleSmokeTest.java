@@ -1951,6 +1951,13 @@ public final class PortedModuleSmokeTest {
                     && sqlText.contains("WHERE bots.id='10'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("Rex", "1 2 ff", 2, 18, 100, 90, 4, 9));
                 }
+                if (sqlText.contains("SELECT bots_petdata.id_level FROM bots,bots_petdata WHERE bots.id='10'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(3));
+                }
+                if (sqlText.contains("SELECT bots.id,bots.id_room,bots_petdata.id_level,bots_petdata.energy")
+                    && sqlText.contains("WHERE bots.id='10'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, 9, 3, 300, 300));
+                }
                 if (sqlText.contains("SELECT id_level,max_exp FROM bots_petlevels ORDER BY id_level ASC")) {
                     return Arrays.<List<Object>>asList(
                         Arrays.<Object>asList(1, 10),
@@ -3319,6 +3326,24 @@ public final class PortedModuleSmokeTest {
         String petCommandPayload = Handling.Proc_6_184_7CBDA0(4, 2);
         assertEquals(Handling.petCommandListPayload(2, Licence.global_008292CC), petCommandPayload);
         assertEquals(true, containsSend(handlingSends, "I]"));
+        handlingSends.clear();
+        handlingSql.clear();
+        String routedCommandPayload = Handling.Proc_7CC190(4, "n|" + wireLong(10));
+        assertEquals(Handling.petCommandListPayload(3, Licence.global_008292CC), routedCommandPayload);
+        assertEquals(true, containsSend(handlingSends, "I]"));
+        handlingSends.clear();
+        String originalBotRecordCacheForCommand = Licence.global_00829358;
+        Licence.global_00829358 = "[300:4\2" + "10\2Rex\2hello\2speech\2responses\2" + "2\2" + "3\2" + "0.0\2" + "0\2" + "1 2 ff\2]";
+        handlingSql.clear();
+        assertEquals(1L, Handling.Proc_7CA730(4, "n{" + wireLong(300) + wireLong(1)));
+        assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET id_level='3',experience='0' WHERE id_bot='10'"));
+        assertEquals(true, containsSend(handlingSends, "IZ"));
+        assertEquals(true, containsSend(handlingSends, "gst sit"));
+        Licence.global_00829358 = originalBotRecordCacheForCommand;
+        handlingSends.clear();
+        handlingSql.clear();
+        assertEquals(42L, Handling.Proc_7F44D0(4, "oL" + wireString("42")));
+        assertEquals("", Handling.Proc_7FA5A0(4, "CD"));
         handlingSends.clear();
         handlingSql.clear();
         assertEquals(3L, Handling.Proc_6_185_7CC2D0(10, 3));
