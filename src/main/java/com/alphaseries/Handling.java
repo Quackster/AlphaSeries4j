@@ -3917,6 +3917,58 @@ public final class Handling {
         }
     }
 
+    public static void Proc_6_155_795C90(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "AC");
+            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            if (socketIndex <= 0 || furnitureId <= 0L) {
+                return;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (userId.isEmpty() || "0".equals(userId) || roomId <= 0L) {
+                return;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product,id_owner FROM furnitures WHERE id='"
+                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return;
+            }
+            String[] fields = rowText.split("\t", -1);
+            long productId = Vb.val(handlingField(fields, 0));
+            String ownerId = String.valueOf((long) Vb.val(handlingField(fields, 1)));
+            if (productId <= 0L) {
+                return;
+            }
+            boolean canPickUpAny = handlingUserHasPermission(userId, "fuse_pick_up_any_furni");
+            if (!ownerId.equals(userId) && !handlingUserOwnsRoom(userId, roomId) && !canPickUpAny) {
+                return;
+            }
+            if (!handlingUserHasRoomRight(userId, roomId) && !ownerId.equals(userId) && !canPickUpAny) {
+                return;
+            }
+            if (!ownerId.equals(userId)) {
+                String sessionId = handlingUserSessionId(userId);
+                MySQL.Proc_5_1_6D4110("INSERT INTO logs_moderation(id_type,id_user,id_target,id_target_2,timestamp,message,id_session) VALUES('8','"
+                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "','" + furnitureId
+                    + "',UNIX_TIMESTAMP(),'','" + Functions.Proc_10_11_80A9C0(sessionId, 0, 0) + "')", 0, 0);
+            }
+            Proc_6_146_76D300(socketIndex, furnitureId, productId);
+            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_room=NULL,position_x=NULL,position_y=NULL,position_z=NULL,"
+                + "position_r='0',position_wall=NULL,id_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "',task_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "',task_time=UNIX_TIMESTAMP() WHERE id='" + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ac"), 0);
+            Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2', 0);
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            Proc_6_140_769400(socketIndex, "FT", "");
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }
