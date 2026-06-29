@@ -89,4 +89,38 @@ public final class MessengerDao {
             userId);
         return String.join("\r", rows);
     }
+
+    public long userIdByName(String userName) throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM users WHERE name=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userName)
+            .orElse(0L);
+    }
+
+    public boolean friendshipExists(long userId, long targetUserId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_user FROM friendships WHERE (id_user=? AND id_friend=?) OR (id_user=? AND id_friend=?) LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId,
+            targetUserId,
+            targetUserId,
+            userId)
+            .orElse(0L) > 0L;
+    }
+
+    public long acceptFriends(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT accept_friends FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public int insertFriendRequest(long targetUserId, long userId) throws SQLException {
+        return database.execute(
+            "INSERT IGNORE INTO friendships(id_user,id_friend) VALUES(?,?)",
+            targetUserId,
+            userId);
+    }
 }

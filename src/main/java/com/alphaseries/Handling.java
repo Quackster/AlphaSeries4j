@@ -5868,34 +5868,30 @@ public final class Handling {
             if (targetName.isEmpty()) {
                 return "";
             }
-            String targetUserId = String.valueOf((long) NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
-                + Functions.Proc_10_11_80A9C0(targetName, 0, 0) + "' LIMIT 1", 0, 0)));
+            MessengerDao messenger = messengerDao();
+            if (messenger == null) {
+                return "";
+            }
+            String targetUserId = String.valueOf(messenger.userIdByName(targetName));
             if (targetUserId.isEmpty() || "0".equals(targetUserId) || targetUserId.equals(userId)) {
                 String callerPayload = messengerRequestDeniedPayload();
                 Proc_6_244_801E80(socketIndex, callerPayload, 0);
                 return callerPayload;
             }
-            String friendshipRow = MySQL.Proc_5_2_6D4690("SELECT id_user FROM friendships WHERE (id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_friend='"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "') OR (id_user='"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_friend='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "') LIMIT 1", 0, 0);
-            long acceptFriends = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT accept_friends FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' LIMIT 1", 0, 0));
-            if (!friendshipRow.isEmpty() || acceptFriends != 1L) {
+            long callerUserId = NumberUtils.parseLong(userId);
+            long targetUserIdValue = NumberUtils.parseLong(targetUserId);
+            if (messenger.friendshipExists(callerUserId, targetUserIdValue) || messenger.acceptFriends(targetUserIdValue) != 1L) {
                 String callerPayload = messengerRequestDeniedPayload();
                 Proc_6_244_801E80(socketIndex, callerPayload, 0);
                 return callerPayload;
             }
-            MySQL.Proc_5_0_6D3CD0("INSERT IGNORE INTO friendships(id_user,id_friend) VALUES('"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "')", 0, 0);
+            messenger.insertFriendRequest(targetUserIdValue, callerUserId);
             String userName = handlingUserName(userId);
             int targetSocketIndex = handlingSocketFromUserId(targetUserId);
             if (targetSocketIndex > 0) {
-                Proc_6_244_801E80(targetSocketIndex, messengerRequestNotifyPayload(NumberUtils.parseLong(userId), userName), 0);
+                Proc_6_244_801E80(targetSocketIndex, messengerRequestNotifyPayload(callerUserId, userName), 0);
             }
-            String callerPayload = messengerRequestAcceptedCallerPayload(NumberUtils.parseLong(targetUserId));
+            String callerPayload = messengerRequestAcceptedCallerPayload(targetUserIdValue);
             Proc_6_244_801E80(socketIndex, callerPayload, 0);
             return callerPayload;
         } catch (Exception ignored) {
