@@ -3673,6 +3673,305 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_128_756190(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "Ad");
+            LongRef offset = new LongRef(1);
+            long catalogProductId = readWireLong(requestPayload, offset);
+            String signText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 1, 1);
+            if (catalogProductId <= 0L) {
+                catalogProductId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            }
+            if (signText.isEmpty()) {
+                signText = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 1, 1);
+            }
+            if (catalogProductId <= 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String catalogRow = Licence.Proc_9_4_807B90(catalogProductId, 0, 0);
+            if (catalogRow.isEmpty()) {
+                return "";
+            }
+            String[] catalogFields = catalogRow.split("\t", -1);
+            long productId = Vb.val(handlingField(catalogFields, 2));
+            String typeSecondary = handlingField(catalogFields, 4).toLowerCase();
+            long creditPrice = Vb.val(handlingField(catalogFields, 7));
+            long activityPrice = Vb.val(handlingField(catalogFields, 8));
+            long activityType = Vb.val(handlingField(catalogFields, 9));
+            long minClubLevel = Vb.val(handlingField(catalogFields, 11));
+            if (productId <= 0L) {
+                return "";
+            }
+            if (activityType < 0L || activityType > 4L) {
+                activityType = 0L;
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            String userRow = MySQL.Proc_5_2_6D4690("SELECT credits,activitypoints_" + activityType
+                + ",level_hc FROM users WHERE id='" + escapedUserId + "' LIMIT 1", 0, 0);
+            if (userRow.isEmpty()) {
+                return "";
+            }
+            String[] userFields = userRow.split("\t", -1);
+            long userCredits = Vb.val(handlingField(userFields, 0));
+            long userActivityPoints = Vb.val(handlingField(userFields, 1));
+            long userClubLevel = Vb.val(handlingField(userFields, 2));
+            if (minClubLevel > 0L && userClubLevel < minClubLevel) {
+                Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(3, null, ""), 0);
+                return "";
+            }
+            if (userCredits < creditPrice) {
+                Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(1, null, ""), 0);
+                return "";
+            }
+            if (userActivityPoints < activityPrice) {
+                Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(2, null, ""), 0);
+                return "";
+            }
+            long grantedFurnitureId = Vb.val(Proc_6_129_7583C0(socketIndex, catalogProductId, signText));
+            if (grantedFurnitureId <= 0L) {
+                return "";
+            }
+            if (creditPrice > 0L || activityPrice > 0L) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE users SET credits=credits-" + creditPrice + ",activitypoints_"
+                    + activityType + "=activitypoints_" + activityType + "-" + activityPrice + " WHERE id='"
+                    + escapedUserId + "'", 0, 0);
+                if (creditPrice > 0L) {
+                    Functions.Proc_10_16_80C480(userId, 0, 0);
+                }
+                if (activityPrice > 0L) {
+                    Functions.Proc_10_17_80C6B0(userId, activityType, 0);
+                }
+            }
+            String itemClass = "i";
+            if (!"products_deals".equals(typeSecondary)
+                && Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 8L) {
+                itemClass = "I";
+            }
+            String purchasePayload = Crypto.Proc_3_0_6D2AF0(catalogProductId, null, "AC");
+            purchasePayload = Crypto.Proc_3_0_6D2AF0(creditPrice, null, purchasePayload);
+            purchasePayload = Crypto.Proc_3_0_6D2AF0(activityPrice, null, purchasePayload);
+            purchasePayload = Crypto.Proc_3_0_6D2AF0(activityType, null, purchasePayload);
+            purchasePayload = Crypto.Proc_3_0_6D2AF0(grantedFurnitureId, null, purchasePayload) + '\2'
+                + itemClass + '\2' + "IHH";
+            Proc_6_244_801E80(socketIndex, purchasePayload, 0);
+            Proc_6_140_769400(socketIndex, "FT", "");
+            return purchasePayload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_129_7583C0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long catalogProductId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            String signText = args != null && args.length >= 3 ? Vb.cStr(args[2]) : "";
+            if (socketIndex <= 0 || catalogProductId <= 0L) {
+                return "";
+            }
+            String catalogRow = Licence.Proc_9_4_807B90(catalogProductId, 0, 0);
+            if (catalogRow.isEmpty()) {
+                return "";
+            }
+            String[] catalogFields = catalogRow.split("\t", -1);
+            long productId = Vb.val(handlingField(catalogFields, 2));
+            String typeSecondary = handlingField(catalogFields, 4).toLowerCase();
+            if (productId <= 0L) {
+                return "";
+            }
+            String grantResult = Proc_6_133_760400(socketIndex, catalogProductId, signText);
+            if (grantResult.isEmpty()) {
+                return "";
+            }
+            String[] grantedIds = grantResult.split("[,\r]", -1);
+            long[] productIds;
+            int itemCount = 0;
+            if ("products_deals".equals(typeSecondary)) {
+                String dealRow = Licence.Proc_9_5_807DF0(productId, 0, 0);
+                String[] dealFields = dealRow.split("\t", -1);
+                if (dealFields.length >= 2) {
+                    dealRow = dealFields[1];
+                }
+                String[] dealItems = dealRow.replace(',', ';').split(";", -1);
+                productIds = new long[dealItems.length];
+                for (String dealItem : dealItems) {
+                    long dealProductId = Vb.val(dealItem);
+                    if (dealProductId > 0L) {
+                        productIds[itemCount++] = dealProductId;
+                    }
+                }
+            } else {
+                itemCount = Math.max(1, grantedIds.length);
+                productIds = new long[itemCount];
+                for (int index = 0; index < itemCount; index++) {
+                    productIds[index] = productId;
+                }
+            }
+            long firstFurnitureId = 0L;
+            for (int index = 0; index < itemCount; index++) {
+                long furnitureId = index < grantedIds.length ? Vb.val(grantedIds[index]) : 0L;
+                long itemProductId = productIds[index];
+                if (furnitureId > 0L && itemProductId > 0L) {
+                    if (firstFurnitureId == 0L) {
+                        firstFurnitureId = furnitureId;
+                    }
+                    String itemData = DataManager.Proc_8_12_806C30(itemProductId, 24, 0);
+                    if (itemData.isEmpty()) {
+                        itemData = DataManager.Proc_8_12_806C30(itemProductId, 4, 0);
+                    }
+                    long productType = Vb.val(DataManager.Proc_8_12_806C30(itemProductId, 0, 0));
+                    Proc_6_244_801E80(socketIndex, "Ab" + Proc_6_138_7678A0(furnitureId, itemProductId, itemData, 0)
+                        + '\2', 0);
+                    if ("TROPHY_VAR".equalsIgnoreCase(DataManager.Proc_8_12_806C30(itemProductId, 4, 0))) {
+                        String trophySign = handlingUserName(handlingUserIdFromSocket(socketIndex)) + '\b'
+                            + recyclerRewardSign() + '\b' + signText;
+                        MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='"
+                            + Functions.Proc_10_11_80A9C0(Functions.Proc_10_10_80A7F0(trophySign, 1, 1), 0, 0)
+                            + "' WHERE id='" + furnitureId + "'", 0, 0);
+                    }
+                    if (productType == 8L) {
+                        Proc_6_244_801E80(socketIndex, "GM" + Crypto.Proc_3_0_6D2AF0(furnitureId, null, "")
+                            + Crypto.Proc_3_0_6D2AF0(Vb.val(DataManager.Proc_8_12_806C30(itemProductId, 20, 0)), null, ""), 0);
+                    }
+                }
+            }
+            return String.valueOf(firstFurnitureId);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_133_760400(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long catalogProductId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            String signText = args != null && args.length >= 3 ? Vb.cStr(args[2]) : "";
+            if (socketIndex <= 0 || catalogProductId <= 0L) {
+                catalogProductId = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
+                signText = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
+                socketIndex = 0;
+            }
+            String userId = socketIndex > 0 ? handlingUserIdFromSocket(socketIndex) : "";
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String catalogRow = Licence.Proc_9_4_807B90(catalogProductId, 0, 0);
+            if (catalogRow.isEmpty()) {
+                return "";
+            }
+            String[] catalogFields = catalogRow.split("\t", -1);
+            long productId = Vb.val(handlingField(catalogFields, 2));
+            String typeSecondary = handlingField(catalogFields, 4).toLowerCase();
+            long amount = Vb.val(handlingField(catalogFields, 5));
+            if (amount <= 0L) {
+                amount = 1L;
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            long grantedCount = 0L;
+            if ("products_deals".equals(typeSecondary)) {
+                String dealRow = Licence.Proc_9_5_807DF0(productId, 0, 0);
+                if (dealRow.isEmpty()) {
+                    return "";
+                }
+                String[] dealFields = dealRow.split("\t", -1);
+                if (dealFields.length >= 2) {
+                    dealRow = dealFields[1];
+                }
+                for (String dealItem : dealRow.replace(',', ';').split(";", -1)) {
+                    long dealProductId = Vb.val(dealItem);
+                    if (dealProductId > 0L) {
+                        String defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(dealProductId, 4, 0), 0, 0);
+                        if (defaultSign.isEmpty()) {
+                            defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(dealProductId, 5, 0), 0, 0);
+                        }
+                        MySQL.Proc_5_0_6D3CD0("INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time,id_ctlgproduct) VALUES('"
+                            + dealProductId + "','" + escapedUserId + "','"
+                            + Functions.Proc_10_11_80A9C0(defaultSign, 0, 0) + "','" + escapedUserId
+                            + "',UNIX_TIMESTAMP(),'" + catalogProductId + "')", 0, 0);
+                        grantedCount++;
+                    }
+                }
+            } else {
+                String containsClubRow = MySQL.Proc_5_2_6D4690("SELECT months,level FROM products_containshc WHERE id_product='"
+                    + catalogProductId + "' LIMIT 1", 0, 0);
+                if (containsClubRow.isEmpty()) {
+                    containsClubRow = MySQL.Proc_5_2_6D4690("SELECT months,level FROM products_containshc WHERE id_product='"
+                        + productId + "' LIMIT 1", 0, 0);
+                }
+                if (!containsClubRow.isEmpty()) {
+                    String[] containsClubFields = containsClubRow.split("\t", -1);
+                    long hcMonths = Vb.val(handlingField(containsClubFields, 0));
+                    long hcLevel = Vb.val(handlingField(containsClubFields, 1));
+                    if (hcLevel <= 0L) {
+                        hcLevel = 1L;
+                    }
+                    Functions.Proc_10_23_80E110(userId, hcLevel, hcMonths, hcMonths * 31L);
+                }
+                String badgeId = DataManager.Proc_8_12_806C30(productId, 26, 0).toUpperCase();
+                if (badgeId.isEmpty()) {
+                    badgeId = DataManager.Proc_8_12_806C30(productId, 27, 0).toUpperCase();
+                }
+                if (badgeId.length() > 2) {
+                    String existingBadge = MySQL.Proc_5_2_6D4690("SELECT id_badge FROM users_badges WHERE id_user='"
+                        + escapedUserId + "' AND id_badge='" + Functions.Proc_10_11_80A9C0(badgeId, 0, 0)
+                        + "' LIMIT 1", 0, 0).toUpperCase();
+                    if (!badgeId.equals(existingBadge)) {
+                        MySQL.Proc_5_0_6D3CD0("INSERT INTO users_badges(id_user,id_slot,id_badge) VALUES('"
+                            + escapedUserId + "','0','" + Functions.Proc_10_11_80A9C0(badgeId, 0, 0) + "')", 0, 0);
+                        long badgeRowId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users_badges WHERE id_user='"
+                            + escapedUserId + "' AND id_badge='" + Functions.Proc_10_11_80A9C0(badgeId, 0, 0)
+                            + "' ORDER BY id DESC LIMIT 1", 0, 0));
+                        Proc_6_195_7D38D0(userId, 0, 0);
+                        Proc_6_193_7D2BB0(socketIndex, "Ce", "");
+                        if (badgeRowId > 0L) {
+                            Proc_6_143_76BB80(socketIndex, 0, 0);
+                        }
+                    }
+                }
+                String defaultSign = signText;
+                if (defaultSign.isEmpty()) {
+                    defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(productId, 4, 0), 0, 0);
+                }
+                if (defaultSign.isEmpty()) {
+                    defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(productId, 5, 0), 0, 0);
+                }
+                for (long itemIndex = 1L; itemIndex <= amount; itemIndex++) {
+                    MySQL.Proc_5_0_6D3CD0("INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time,id_ctlgproduct) VALUES('"
+                        + productId + "','" + escapedUserId + "','"
+                        + Functions.Proc_10_11_80A9C0(defaultSign, 0, 0) + "','" + escapedUserId
+                        + "',UNIX_TIMESTAMP(),'" + catalogProductId + "')", 0, 0);
+                    grantedCount++;
+                }
+            }
+            if (grantedCount <= 0L) {
+                return "";
+            }
+            String newestIds = MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_owner='"
+                + escapedUserId + "' ORDER BY id DESC LIMIT " + grantedCount, 0, 0);
+            String grantedIds = newestIds.replace('\r', ',');
+            long firstGrantedId = Vb.val(grantedIds);
+            if (!"products_deals".equals(typeSecondary)
+                && Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 9L && firstGrantedId > 0L) {
+                MySQL.Proc_5_0_6D3CD0("INSERT INTO furnitures_dimmerpresets(id_furni,id_preset,id_state) VALUES('"
+                    + firstGrantedId + "','1','2'),('" + firstGrantedId + "','2','1'),('"
+                    + firstGrantedId + "','3','1')", 0, 0);
+                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='1,1,1,#000000,166' WHERE id='"
+                    + firstGrantedId + "'", 0, 0);
+            }
+            return grantedIds;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_130_75B770(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);

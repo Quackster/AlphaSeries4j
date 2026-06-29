@@ -1838,7 +1838,7 @@ public final class PortedModuleSmokeTest {
         DataManager.global_008292BC = stickyProducts;
         Licence.global_008292BC = stickyProducts;
         String[] catalogProducts = new String[82];
-        catalogProducts[81] = productRow(81, "2", "506", "9", "1");
+        catalogProducts[81] = productRow(81, "2", "506", "4", "products", "5", "1", "7", "3", "8", "2", "9", "0", "11", "0");
         Licence.global_008292C0 = catalogProducts;
         String[][] categoryPayloads = new String[21][3];
         categoryPayloads[2][1] = "CATEGORY_PAYLOAD";
@@ -2469,6 +2469,12 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id FROM furnitures WHERE id_owner='77' AND id_product='506' ORDER BY id DESC LIMIT 1")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(96));
                 }
+                if (sqlText.contains("SELECT credits,activitypoints_0,level_hc FROM users WHERE id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(100, 70, 2));
+                }
+                if (sqlText.contains("SELECT id FROM furnitures WHERE id_owner='77' ORDER BY id DESC LIMIT 1")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(97));
+                }
                 if (sqlText.contains("logs_visitedrooms.id_user='88'") && sqlText.contains("models.type")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(1, 9, "Room", 12, 30));
                 }
@@ -2951,6 +2957,15 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, hcGiftPayload.contains("AC"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO furnitures(id_product,id_ctlgproduct,id_owner,task_owner,task_time,position_r,sign) VALUES('506','81','77','77',UNIX_TIMESTAMP(),'0','')"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET hc_presents=hc_presents-1 WHERE id='77'"));
+        assertEquals(true, containsSend(handlingSends, "AC"));
+        assertEquals(true, containsSend(handlingSends, "BLS"));
+        handlingSends.clear();
+        handlingSql.clear();
+        String purchasePayload = Handling.Proc_6_128_756190(4, "Ad" + wireLong(81) + wireString("catalog sign"));
+        assertEquals(true, purchasePayload.contains("AC"));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time,id_ctlgproduct) VALUES('506','77','catalog sign','77',UNIX_TIMESTAMP(),'81')"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET credits=credits-3,activitypoints_0=activitypoints_0-2 WHERE id='77'"));
+        assertEquals(true, containsSend(handlingSends, "Ab"));
         assertEquals(true, containsSend(handlingSends, "AC"));
         assertEquals(true, containsSend(handlingSends, "BLS"));
         handlingSends.clear();
