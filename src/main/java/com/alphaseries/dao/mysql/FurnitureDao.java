@@ -100,6 +100,30 @@ public final class FurnitureDao {
             furnitureId);
     }
 
+    public Optional<TradeFurniture> tradeFurniture(long furnitureId, long ownerId) throws SQLException {
+        return database.queryOne(
+            "SELECT id,id_product,sign,id_secondary FROM furnitures WHERE id=? AND id_owner=? AND id_room IS NULL LIMIT 1",
+            resultSet -> new TradeFurniture(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getLong(4)),
+            furnitureId,
+            ownerId);
+    }
+
+    public Optional<TradeFurniture> tradeFurnitureForRemoval(long furnitureId, long ownerId) throws SQLException {
+        return database.queryOne(
+            "SELECT id,id_product,sign FROM furnitures WHERE id=? AND id_owner=? AND id_room IS NULL LIMIT 1",
+            resultSet -> new TradeFurniture(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                0L),
+            furnitureId,
+            ownerId);
+    }
+
     public Optional<PendingFurnitureState> pendingFurnitureState(long furnitureId) throws SQLException {
         return database.queryOne(
             "SELECT id_room,sign FROM furnitures WHERE id=? LIMIT 1",
@@ -197,6 +221,9 @@ public final class FurnitureDao {
     }
 
     public record InventoryFurniture(long productId, long ownerId, String itemData, long secondaryValue) {
+    }
+
+    public record TradeFurniture(long furnitureId, long productId, String sign, long secondaryValue) {
     }
 
     public record PendingFurnitureState(long roomId, long sign) {

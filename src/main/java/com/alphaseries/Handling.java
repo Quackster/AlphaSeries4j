@@ -3068,16 +3068,18 @@ public final class Handling {
             if (furnitureId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign,id_secondary FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "' AND id_room IS NULL LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return "";
             }
-            String[] fields = rowText.split("\t", -1);
-            long productId = NumberUtils.parseLong(handlingField(fields, 1));
-            String signText = handlingField(fields, 2);
-            long secondaryValue = NumberUtils.parseLong(handlingField(fields, 3));
+            FurnitureDao.TradeFurniture tradeFurniture = furniture.tradeFurniture(furnitureId, NumberUtils.parseLong(userId))
+                .orElse(null);
+            if (tradeFurniture == null) {
+                return "";
+            }
+            long productId = tradeFurniture.productId();
+            String signText = StringUtils.text(tradeFurniture.sign());
+            long secondaryValue = tradeFurniture.secondaryValue();
             if (productId <= 0L) {
                 return "";
             }
@@ -3116,10 +3118,11 @@ public final class Handling {
             if (furnitureId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_product,sign FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "' AND id_room IS NULL LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
+                return "";
+            }
+            if (furniture.tradeFurnitureForRemoval(furnitureId, NumberUtils.parseLong(userId)).isEmpty()) {
                 return "";
             }
             removeRepresentedTradeOffer(socketIndex, furnitureId);
