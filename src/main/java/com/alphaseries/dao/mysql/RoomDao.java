@@ -126,6 +126,44 @@ public final class RoomDao {
         return database.execute("UPDATE rooms SET icon=? WHERE id=?", iconPayload, roomId);
     }
 
+    public int updateSettings(
+        long roomId,
+        long thicknessFloor,
+        long thicknessWallpaper,
+        String roomName,
+        String roomPassword,
+        String roomDescription,
+        long doorStatus,
+        long categoryId,
+        String tagOne,
+        String tagTwo,
+        long allowOthersPets,
+        long allowFeedPets,
+        long allowWalkthrough,
+        long visitorsMax,
+        long disableWalls
+    ) throws SQLException {
+        return database.execute(
+            "UPDATE rooms SET thickness_floor=?,thickness_wallpaper=?,name=?,password=?,description=?,"
+                + "status_door=?,id_category=?,tag_1=?,tag_2=?,allow_otherspets=?,allow_feedpets=?,"
+                + "allow_walkthrough=?,visitors_max=?,disable_walls=? WHERE id=?",
+            thicknessFloor,
+            thicknessWallpaper,
+            roomName,
+            roomPassword,
+            roomDescription,
+            doorStatus,
+            categoryId,
+            nullableText(tagOne),
+            nullableText(tagTwo),
+            allowOthersPets,
+            allowFeedPets,
+            allowWalkthrough,
+            visitorsMax,
+            disableWalls,
+            roomId);
+    }
+
     public int deleteRoomEvents(long roomId) throws SQLException {
         return database.execute("DELETE FROM rooms_events WHERE id_room=?", roomId);
     }
@@ -221,6 +259,20 @@ public final class RoomDao {
             nullableText(tagOne),
             nullableText(tagTwo),
             roomId);
+    }
+
+    public String eventRow(long roomId, String timeFormat) throws SQLException {
+        return database.queryOne(
+            "SELECT users.id,users.name,rooms_events.id_room,rooms_events.id_category,"
+                + "rooms_events.name,rooms_events.description,DATE_FORMAT(FROM_UNIXTIME(rooms_events.timestamp), ?),"
+                + "rooms_events.tag_1,rooms_events.tag_2 FROM rooms_events,users WHERE rooms_events.id_room=? "
+                + "AND users.id=rooms_events.id_user LIMIT 1",
+            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
+                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5) + "\t" + resultSet.getString(6)
+                + "\t" + resultSet.getString(7) + "\t" + resultSet.getString(8) + "\t" + resultSet.getString(9),
+            timeFormat,
+            roomId)
+            .orElse("");
     }
 
     private static String nullableText(String value) {

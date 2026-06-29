@@ -145,6 +145,18 @@ public final class UserDao {
             .orElse(0L);
     }
 
+    public Optional<ActiveUserLocation> activeLocationByName(String name) throws SQLException {
+        return database.queryOne(
+            "SELECT users.id,users.id_socket,logs_visitedrooms.id_room "
+                + "FROM users,logs_visitedrooms WHERE users.name=? "
+                + "AND users.id=logs_visitedrooms.id_user AND logs_visitedrooms.timestamp_left IS NULL LIMIT 1",
+            resultSet -> new ActiveUserLocation(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3)),
+            name);
+    }
+
     public String gender(long userId) throws SQLException {
         return database.queryOne(
             "SELECT gender FROM users WHERE id=? LIMIT 1",
@@ -183,5 +195,8 @@ public final class UserDao {
     }
 
     public record UserIdentity(long userId, long socketIndex, String motto, String figure, String gender) {
+    }
+
+    public record ActiveUserLocation(long userId, long socketIndex, long roomId) {
     }
 }

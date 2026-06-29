@@ -1452,18 +1452,13 @@ public final class Handling {
                 Proc_6_244_801E80(socketIndex, "BC", 0);
                 return;
             }
-            String targetRow = MySQL.Proc_5_2_6D4690("SELECT users.id,users.id_socket,logs_visitedrooms.id_room "
-                + "FROM users,logs_visitedrooms WHERE users.name='" + Functions.Proc_10_11_80A9C0(targetName, 0, 0)
-                + "' AND users.id=logs_visitedrooms.id_user AND logs_visitedrooms.timestamp_left IS NULL LIMIT 1", 0, 0);
-            String[] targetFields = targetRow.split("\t", -1);
-            long targetUserId = NumberUtils.parseLong(handlingField(targetFields, 0));
-            long targetSocketIndex = NumberUtils.parseLong(handlingField(targetFields, 1));
-            long targetRoomId = NumberUtils.parseLong(handlingField(targetFields, 2));
-            if (targetUserId <= 0L || targetSocketIndex <= 0L || targetRoomId <= 0L) {
+            UserDao users = userDao();
+            UserDao.ActiveUserLocation target = users == null ? null : users.activeLocationByName(targetName).orElse(null);
+            if (target == null || target.userId() <= 0L || target.socketIndex() <= 0L || target.roomId() <= 0L) {
                 Proc_6_244_801E80(socketIndex, "BC", 0);
                 return;
             }
-            Proc_6_57_71E8F0(socketIndex, targetRoomId, "");
+            Proc_6_57_71E8F0(socketIndex, target.roomId(), "");
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1495,21 +1490,26 @@ public final class Handling {
             if (settings.disableWalls != 0L && !handlingUserHasPermission(userId, "fuse_hide_room_walls")) {
                 settings.disableWalls = 0L;
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET thickness_floor='" + settings.thicknessFloor
-                + "',thickness_wallpaper='" + settings.thicknessWallpaper
-                + "',name='" + Functions.Proc_10_11_80A9C0(settings.roomName, 0, 0)
-                + "',password='" + Functions.Proc_10_11_80A9C0(settings.roomPassword, 0, 0)
-                + "',description='" + Functions.Proc_10_11_80A9C0(settings.roomDescription, 0, 0)
-                + "',status_door='" + settings.doorStatus
-                + "',id_category='" + settings.categoryId
-                + "',tag_1=" + nullableSqlText(settings.tagOne)
-                + ",tag_2=" + nullableSqlText(settings.tagTwo)
-                + ",allow_otherspets='" + settings.allowOthersPets
-                + "',allow_feedpets='" + settings.allowFeedPets
-                + "',allow_walkthrough='" + settings.allowWalkthrough
-                + "',visitors_max='" + settings.visitorsMax
-                + "',disable_walls='" + settings.disableWalls
-                + "' WHERE id='" + roomId + "'", 0, 0);
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return;
+            }
+            rooms.updateSettings(
+                roomId,
+                settings.thicknessFloor,
+                settings.thicknessWallpaper,
+                settings.roomName,
+                settings.roomPassword,
+                settings.roomDescription,
+                settings.doorStatus,
+                settings.categoryId,
+                settings.tagOne,
+                settings.tagTwo,
+                settings.allowOthersPets,
+                settings.allowFeedPets,
+                settings.allowWalkthrough,
+                settings.visitorsMax,
+                settings.disableWalls);
             String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                 + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
             Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
@@ -1534,10 +1534,8 @@ public final class Handling {
                 return "-1" + '\2';
             }
             String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name,rooms_events.id_room,rooms_events.id_category,"
-                + "rooms_events.name,rooms_events.description,DATE_FORMAT(FROM_UNIXTIME(rooms_events.timestamp), '"
-                + timeFormat + "'),rooms_events.tag_1,rooms_events.tag_2 FROM rooms_events,users WHERE rooms_events.id_room='"
-                + roomId + "' AND users.id=rooms_events.id_user LIMIT 1", 0, 0);
+            RoomDao rooms = roomDao();
+            String rowText = rooms == null ? "" : rooms.eventRow(roomId, timeFormat);
             if (rowText.isEmpty()) {
                 return "-1" + '\2';
             }
