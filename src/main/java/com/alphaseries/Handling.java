@@ -5324,6 +5324,138 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_191_7D18B0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "DG");
+            LongRef offset = new LongRef(1);
+            long requestedUserId = readWireLong(requestPayload, offset);
+            if (socketIndex <= 0 || requestedUserId <= 0L) {
+                return "";
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return "";
+            }
+            int targetSocketIndex = (int) Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE id='"
+                + requestedUserId + "' LIMIT 1", 0, 0));
+            if (targetSocketIndex <= 0 && handlingCurrentRoomId(socketIndex, callerUserId) <= 0L) {
+                return "";
+            }
+            String payload = tagDisplayPayload(requestedUserId, Proc_6_196_7D3ED0(requestedUserId, 0, 0));
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_193_7D2BB0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String inventoryRows = MySQL.Proc_5_2_6D4690("SELECT id_badge,id_slot,id FROM users_badges WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_slot='0' LIMIT 1000", 0, 0);
+            String equippedPayload = Proc_6_195_7D38D0(userId, 0, 0);
+            String payload = badgeInventoryPayload(inventoryRows, equippedPayload);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            Proc_6_244_801E80(socketIndex, badgeDisplayPayload(Vb.val(userId), equippedPayload), 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_194_7D3180(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            String packetPayload = handlingPacketPayload(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE users_badges SET id_slot='0' WHERE id_user='" + escapedUserId + "'", 0, 0);
+            String[] slots = badgeUpdateSelectionsFromWire(packetPayload);
+            for (int slotIndex = 0; slotIndex < slots.length; slotIndex++) {
+                String badgeId = slots[slotIndex];
+                if (!badgeId.isEmpty()) {
+                    MySQL.Proc_5_0_6D3CD0("UPDATE users_badges SET id_slot='" + (slotIndex + 1)
+                        + "' WHERE id_badge='" + badgeId + "' AND id_user='" + escapedUserId + "'", 0, 0);
+                }
+            }
+            String equippedPayload = Proc_6_195_7D38D0(userId, 0, 0);
+            String displayPayload = badgeDisplayPayload(Vb.val(userId), equippedPayload);
+            Proc_6_244_801E80(socketIndex, displayPayload, 0);
+            if (handlingCurrentRoomId(socketIndex, userId) > 0L) {
+                Proc_6_247_8027E0(socketIndex, displayPayload, 0);
+            }
+            return equippedPayload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_195_7D38D0(Object... args) {
+        try {
+            String userId = "";
+            if (args != null && args.length >= 1 && Vb.val(args[0]) > 0L) {
+                userId = String.valueOf((long) Vb.val(args[0]));
+            }
+            if (userId.isEmpty() || "0".equals(userId)) {
+                int socketIndex = handlingSocketIndex(args);
+                if (socketIndex > 0) {
+                    userId = handlingUserIdFromSocket(socketIndex);
+                }
+            }
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+            }
+            String rows = MySQL.Proc_5_2_6D4690("SELECT id_badge,id_slot,id FROM users_badges WHERE id_slot != '0' AND id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 5", 0, 0);
+            return equippedBadgePayload(rows);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return Crypto.Proc_3_0_6D2AF0(0, null, "");
+        }
+    }
+
+    public static String Proc_6_196_7D3ED0(Object... args) {
+        try {
+            String userId = "";
+            if (args != null && args.length >= 1 && Vb.val(args[0]) > 0L) {
+                userId = String.valueOf((long) Vb.val(args[0]));
+            }
+            if (userId.isEmpty() || "0".equals(userId)) {
+                int socketIndex = handlingSocketIndex(args);
+                if (socketIndex > 0) {
+                    userId = handlingUserIdFromSocket(socketIndex);
+                }
+            }
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+            }
+            String rows = MySQL.Proc_5_2_6D4690("SELECT name FROM users_tags WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 30", 0, 0);
+            return tagListPayload(rows);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return Crypto.Proc_3_0_6D2AF0(0, null, "");
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);

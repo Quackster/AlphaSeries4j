@@ -1882,6 +1882,20 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id_socket FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(4));
                 }
+                if (sqlText.contains("SELECT id_badge,id_slot,id FROM users_badges WHERE id_user='77' AND id_slot='0'")) {
+                    return Arrays.<List<Object>>asList(
+                        Arrays.<Object>asList("ACH1", 0, 201),
+                        Arrays.<Object>asList("MOD", 0, 202));
+                }
+                if (sqlText.contains("SELECT id_badge,id_slot,id FROM users_badges WHERE id_slot != '0' AND id_user='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList("VIP", 1, 203));
+                }
+                if (sqlText.contains("SELECT name FROM users_tags WHERE id_user='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList("alpha"), Arrays.<Object>asList("beta"));
+                }
+                if (sqlText.contains("SELECT name FROM users_tags WHERE id_user='88'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList("target"));
+                }
                 if (sqlText.contains("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket")
                     && sqlText.contains("logs_visitedrooms.id='61'")
                     && sqlText.contains("logs_visitedrooms.id_room='9'")) {
@@ -2972,6 +2986,28 @@ public final class PortedModuleSmokeTest {
         assertEquals(Handling.representedRoomUserProfilePayload(61, "Target", "Motto", 123, "fig"), profilePayload);
         assertEquals(true, containsSend(handlingSends, "Jf"));
         assertEquals(true, containsSend(handlingSends, "Target"));
+        handlingSends.clear();
+        handlingSql.clear();
+        String badgeInventoryPayload = Handling.Proc_6_193_7D2BB0(4);
+        assertEquals(Handling.badgeInventoryPayload("ACH1\t0\t201\rMOD\t0\t202", Handling.equippedBadgePayload("VIP\t1\t203")),
+            badgeInventoryPayload);
+        assertEquals(true, containsSend(handlingSends, "Ce"));
+        assertEquals(true, containsSend(handlingSends, "Cd"));
+        handlingSends.clear();
+        String badgeUpdateWire = "B^" + wireLong(1) + wireString("VIP")
+            + wireLong(0) + wireLong(0) + wireLong(0) + wireLong(0);
+        String updatedBadgesPayload = Handling.Proc_6_194_7D3180(4, badgeUpdateWire);
+        assertEquals(Handling.equippedBadgePayload("VIP\t1\t203"), updatedBadgesPayload);
+        assertEquals(true, containsSql(handlingSql, "UPDATE users_badges SET id_slot='0' WHERE id_user='77'"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users_badges SET id_slot='1' WHERE id_badge='VIP' AND id_user='77'"));
+        assertEquals(true, containsSend(handlingSends, "Cd"));
+        handlingSends.clear();
+        assertEquals(Handling.equippedBadgePayload("VIP\t1\t203"), Handling.Proc_6_195_7D38D0("77"));
+        assertEquals(Handling.tagListPayload("alpha\rbeta"), Handling.Proc_6_196_7D3ED0("77"));
+        String tagDisplay = Handling.Proc_6_191_7D18B0(4, "DG" + wireLong(88));
+        assertEquals(Handling.tagDisplayPayload(88, Handling.tagListPayload("target")), tagDisplay);
+        assertEquals(true, containsSend(handlingSends, "E^"));
+        assertEquals(true, containsSend(handlingSends, "target"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
