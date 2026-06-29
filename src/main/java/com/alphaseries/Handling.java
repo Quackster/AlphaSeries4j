@@ -8015,8 +8015,8 @@ public final class Handling {
             if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))) {
                 return "";
             }
-            return MySQL.Proc_5_2_6D4690("SELECT name FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            UserDao users = userDao();
+            return users == null ? "" : users.name(NumberUtils.parseLong(userId));
         } catch (Exception ignored) {
             return "";
         }

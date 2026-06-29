@@ -174,6 +174,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `UserDao` with prepared sound-setting updates, replacing raw pre-ready sound-setting SQL in `Handling`.
 - Expanded `UserDao` with prepared socket clearing, replacing raw disconnect socket SQL in `Handling`.
 - Expanded `UserDao` with prepared login socket assignment and daily counter reset, replacing raw login SQL in `Handling`.
+- Routed `Handling` user-name lookups through `UserDao.name`, replacing another raw user SQL helper.
 - Restored decompiled boot caption states and Figuredata cache validation/error logging.
 - Migrated remaining `Functions` conversions for email validation, identity refresh, club period, occupancy, download, inventory path, movement, and random helpers off `Vb`.
 - Migrated remaining `MySQL` helper conversions and staff moderation payload builders off `Vb` helpers and onto shared `StringUtils`/`NumberUtils`.
@@ -203,9 +204,9 @@ Compared with `main`, the VB helper artifact has been removed:
 
 Measured on 2026-06-30:
 
-- Unique `Proc_*` symbols under `src/main/java`: 472
+- Unique `Proc_*` symbols under `src/main/java`: 473
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 205
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 204
 - `Boot.java`: 1242 lines
 - `Handling.java`: 12430 lines
 - `Functions.java`: 746 lines
