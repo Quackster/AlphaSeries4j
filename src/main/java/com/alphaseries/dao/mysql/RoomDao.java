@@ -1,6 +1,7 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.game.room.RoomOccupantRow;
 import com.alphaseries.game.room.RoomUserEntryRow;
 
@@ -249,6 +250,23 @@ public final class RoomDao {
             resultSet -> resultSet.getLong(1),
             roomId)
             .orElse(0L);
+    }
+
+    public List<RoomModelFurnitureRow> modelFurnitureRows(long modelId) throws SQLException {
+        return database.query(
+            "SELECT id_type,id_source,id_sprite,position_x,position_y,position_z,"
+                + "action,action_rotation,action_height FROM models_furnitures WHERE id_model=? LIMIT 500",
+            resultSet -> new RoomModelFurnitureRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getString(7),
+                resultSet.getLong(8),
+                resultSet.getLong(9)),
+            modelId);
     }
 
     public List<Long> activeSocketIndexesByRoom(long roomId) throws SQLException {

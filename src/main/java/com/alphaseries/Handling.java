@@ -22,6 +22,7 @@ import com.alphaseries.game.pet.PetScratchRow;
 import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.room.FurnitureRoomCache;
+import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.game.room.RoomOccupantRow;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
@@ -2686,28 +2687,24 @@ public final class Handling {
             if (modelId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_type,id_source,id_sprite,position_x,position_y,position_z,"
-                + "action,action_rotation,action_height FROM models_furnitures WHERE id_model='" + modelId + "' LIMIT 500", 0, 0);
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return "";
+            }
             long itemCount = 0L;
             StringBuilder itemPayload = new StringBuilder();
-            for (String row : StringUtils.text(rowText).split("\r", -1)) {
-                String trimmedRow = row.trim();
-                if (!trimmedRow.isEmpty()) {
-                    String[] fields = trimmedRow.split("\t", -1);
-                    long productId = NumberUtils.parseLong(handlingField(fields, 0));
-                    long sourceId = NumberUtils.parseLong(handlingField(fields, 1));
+            for (RoomModelFurnitureRow row : rooms.modelFurnitureRows(modelId)) {
+                if (row != null) {
+                    long productId = row.productId();
+                    long sourceId = row.sourceId();
                     if (sourceId <= 0L) {
                         sourceId = itemCount + 1L;
                     }
                     if (productId <= 0L) {
                         productId = sourceId;
                     }
-                    long positionX = NumberUtils.parseLong(handlingField(fields, 3));
-                    long positionY = NumberUtils.parseLong(handlingField(fields, 4));
-                    long positionZ = NumberUtils.parseLong(handlingField(fields, 5));
-                    String itemData = handlingField(fields, 6);
-                    long rotation = NumberUtils.parseLong(handlingField(fields, 7));
-                    itemPayload.append(Proc_6_161_7B2EE0(sourceId, positionX, positionY, rotation, positionZ, "", itemData, 0, productId));
+                    itemPayload.append(Proc_6_161_7B2EE0(sourceId, row.positionX(), row.positionY(), row.rotation(),
+                        row.positionZ(), "", row.action(), 0, productId));
                     itemCount++;
                 }
             }
