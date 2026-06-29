@@ -63,4 +63,30 @@ public final class MessengerDao {
             userId,
             userId);
     }
+
+    public String pendingRequestRows(long userId) throws SQLException {
+        List<String> rows = database.query(
+            "SELECT users.id,users.name FROM users,friendships WHERE friendships.has_accept=? AND friendships.id_user=? "
+                + "AND users.id=friendships.id_friend LIMIT 50",
+            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2),
+            0L,
+            userId);
+        return String.join("\r", rows);
+    }
+
+    public String acceptedFriendRows(long userId, String dateTimeFormat, long limit) throws SQLException {
+        long queryLimit = limit > 0L ? limit : 200L;
+        List<String> rows = database.query(
+            "SELECT users.id,users.name,users.id_socket,users.figure,users.motto,users.level,"
+                + "DATE_FORMAT(FROM_UNIXTIME(users.lastonline_time), ?) FROM friendships,users "
+                + "WHERE friendships.has_accept=? AND friendships.id_user=? AND users.id=friendships.id_friend "
+                + "LIMIT " + queryLimit,
+            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
+                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5) + "\t" + resultSet.getString(6)
+                + "\t" + resultSet.getString(7),
+            dateTimeFormat,
+            1L,
+            userId);
+        return String.join("\r", rows);
+    }
 }

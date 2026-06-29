@@ -5911,8 +5911,11 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name FROM users,friendships WHERE friendships.has_accept='0' AND friendships.id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND users.id=friendships.id_friend LIMIT 50", 0, 0);
+            MessengerDao messenger = messengerDao();
+            if (messenger == null) {
+                return "";
+            }
+            String rowText = messenger.pendingRequestRows(NumberUtils.parseLong(userId));
             String payload = messengerPendingRequestsPayload(rowText);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
@@ -5935,11 +5938,11 @@ public final class Handling {
             long queryLimit = maxFriends2 > 0L ? maxFriends2 : 200L;
             String dateFormat = Functions.Proc_10_0_809570("com.mysql.format.date", "%d-%m-%Y", 0);
             String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name,users.id_socket,users.figure,users.motto,users.level,"
-                + "DATE_FORMAT(FROM_UNIXTIME(users.lastonline_time), '"
-                + Functions.Proc_10_11_80A9C0(dateFormat + " " + timeFormat, 0, 0)
-                + "') FROM friendships,users WHERE friendships.has_accept='1' AND friendships.id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND users.id=friendships.id_friend LIMIT " + queryLimit, 0, 0);
+            MessengerDao messenger = messengerDao();
+            if (messenger == null) {
+                return "";
+            }
+            String rowText = messenger.acceptedFriendRows(NumberUtils.parseLong(userId), dateFormat + " " + timeFormat, queryLimit);
             String callerSummary = messengerFriendSummaryPayload(userId, 1L);
             long friendCount = 0L;
             StringBuilder friendPayload = new StringBuilder();
