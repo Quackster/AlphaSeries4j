@@ -12,6 +12,31 @@ public final class PrivSockHTTP {
     private PrivSockHTTP() {
     }
 
+    public static final class AliveState {
+        public long ticks;
+        public boolean enabled = true;
+        public String responseBuffer = "";
+        public String requestPath = "";
+        public String requestHost = "";
+        public String requestPort = "";
+    }
+
+    public static String tmrCheckAliveTimer(AliveState state) {
+        if (state == null || !state.enabled) {
+            return "";
+        }
+        if (state.ticks >= 200L) {
+            state.enabled = false;
+            return "";
+        }
+        state.ticks++;
+        if ("-1".equals(state.responseBuffer) || state.requestPath.isEmpty() || state.requestHost.isEmpty()) {
+            return "";
+        }
+        state.responseBuffer = "";
+        return buildGetRequest(state.requestPath, state.requestHost, state.requestPort);
+    }
+
     public static String buildGetRequest(String requestPath, String requestHost, String requestPort) {
         if (Vb.cStr(requestPath).isEmpty() || Vb.cStr(requestHost).isEmpty()) {
             return "";

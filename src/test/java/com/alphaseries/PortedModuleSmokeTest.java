@@ -904,6 +904,16 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(mainSql, "UPDATE users SET id_socket=null,lastonline_time=UNIX_TIMESTAMP() WHERE id_socket IS NOT NULL"));
         assertEquals(true, containsSql(mainSql, "UPDATE rooms SET id_slot=null,visitors_now='0' WHERE id_slot IS NOT NULL OR visitors_now!='0'"));
         assertEquals(true, Main.runServer("[!] Alpha", ""));
+        assertEquals("ACCEPT 16387", Main.gameServerUnknownEventAccept());
+        assertEquals(1, Guardian.Proc_11_2_821390());
+        assertEquals("LISTEN", Main.gameServerUnknownEventListen());
+        Guardian.setGameServerConnected(false);
+        Main.ResizeResult resizeResult = Main.formResize(1000, 1000, 800, 700);
+        assertEquals(11085L, resizeResult.width);
+        assertEquals(10245L, resizeResult.height);
+        assertEquals(800L, resizeResult.logWidth);
+        assertEquals(175L, resizeResult.logHeight);
+        assertEquals("88", Main.mainUserIdFromSocket(8));
         Guardian.setSocketConnected(8, false);
         MySQL.configureDatabaseConnection(null);
         Path lifecycleRoot = Files.createTempDirectory("alphaseries-main-lifecycle");
@@ -1005,12 +1015,23 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(updaterSql, "INSERT IGNORE INTO b"));
         assertEquals(1000L, updater.height);
         assertEquals(0L, updater.imageWidth);
+        assertEquals(true, updater.formUnload());
+        assertEquals(true, updater.formQueryUnload());
         MySQL.configureDatabaseConnection(null);
 
         String httpRequest = PrivSockHTTP.buildGetRequest("/path", "example.com", "8080");
         assertEquals(true, httpRequest.startsWith("GET /path HTTP/1.1\r\nHost:   example.com:8080\r\n"));
         assertEquals(true, httpRequest.contains("User-Agent:   FireFox/1.0\r\n"));
         assertEquals("", PrivSockHTTP.buildGetRequest("", "example.com", "80"));
+        PrivSockHTTP.AliveState aliveState = new PrivSockHTTP.AliveState();
+        aliveState.requestPath = "/alive";
+        aliveState.requestHost = "example.com";
+        aliveState.requestPort = "8080";
+        assertEquals(true, PrivSockHTTP.tmrCheckAliveTimer(aliveState).startsWith("GET /alive HTTP/1.1"));
+        assertEquals(1L, aliveState.ticks);
+        aliveState.ticks = 200L;
+        assertEquals("", PrivSockHTTP.tmrCheckAliveTimer(aliveState));
+        assertEquals(false, aliveState.enabled);
         assertEquals("", DataManager.Proc_8_0_804330(""));
 
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "hd-180-1\2M\2",

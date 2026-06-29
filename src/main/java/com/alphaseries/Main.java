@@ -90,6 +90,14 @@ public final class Main {
         public String productKey = "";
     }
 
+    public static final class ResizeResult {
+        public long width;
+        public long height;
+        public long logWidth;
+        public long logHeight;
+        public long frameWidth;
+    }
+
     public static void Proc_0_24_68EEF0(Object... args) {
         // Empty in the recovered VB6 reference.
     }
@@ -181,6 +189,26 @@ public final class Main {
         }
         String[] lines = configParts[7].split("\\r?\\n", -1);
         return lines.length > 0 ? Vb.cStr(lines[0]) : "";
+    }
+
+    public static String gameServerUnknownEventAccept() {
+        Guardian.setGameServerConnected(true);
+        return "ACCEPT 16387";
+    }
+
+    public static String gameServerUnknownEventListen() {
+        Guardian.setGameServerConnected(true);
+        return "LISTEN";
+    }
+
+    public static ResizeResult formResize(long width, long height, long scaleWidth, long scaleHeight) {
+        ResizeResult result = new ResizeResult();
+        result.width = Math.max(width, 11085L);
+        result.height = Math.max(height, 10245L);
+        result.logWidth = scaleWidth;
+        result.logHeight = scaleHeight - 525L;
+        result.frameWidth = scaleWidth;
+        return result;
     }
 
     public static boolean dataProcessTimer(long socketIndex) {
@@ -675,6 +703,14 @@ public final class Main {
         return Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_room FROM logs_visitedrooms WHERE id_user='"
             + Functions.Proc_10_11_80A9C0(userId, 0, 0)
             + "' AND timestamp_left IS NULL ORDER BY timestamp_enter DESC LIMIT 1", 0, 0));
+    }
+
+    public static String mainUserIdFromSocket(long socketIndex) {
+        String userId = Licence.Proc_9_6_808080(String.valueOf(socketIndex), 0, 0);
+        if (userId.isEmpty() || "0".equals(userId)) {
+            userId = MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE id_socket='" + socketIndex + "' LIMIT 1", 0, 0);
+        }
+        return userId;
     }
 
     public static String mainRollerMovePayload(long furnitureId, long positionX, long positionY, String positionZ) {

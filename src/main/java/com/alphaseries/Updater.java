@@ -198,6 +198,14 @@ public final class Updater {
         }
     }
 
+    public boolean formUnload() {
+        return true;
+    }
+
+    public boolean formQueryUnload() {
+        return true;
+    }
+
     public static HeightStep heightTimerStep(long currentHeight, long targetHeight) {
         HeightStep step = new HeightStep();
         step.height = currentHeight;
