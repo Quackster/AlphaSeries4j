@@ -11448,11 +11448,19 @@ public final class Handling {
                 String[] fields = row.split("\t", -1);
                 if (Vb.val(handlingField(fields, 0)) == commandId) {
                     result.requiredLevel = Vb.val(handlingField(fields, 1));
-                    result.action = handlingField(fields, 2);
+                    result.action = handlingField(fields, 3);
                     result.found = true;
                     return result;
                 }
             }
+        }
+        String rowText = MySQL.Proc_5_2_6D4690("SELECT petlevel_required,command_action FROM bots_petcommands WHERE id_command='"
+            + commandId + "' LIMIT 1", 0, 0);
+        if (!rowText.isEmpty()) {
+            String[] fields = rowText.split("\t", -1);
+            result.requiredLevel = Vb.val(handlingField(fields, 0));
+            result.action = handlingField(fields, 1);
+            result.found = true;
         }
         return result;
     }
@@ -11525,7 +11533,7 @@ public final class Handling {
                 }
             }
         }
-        return 0L;
+        return Vb.val(MySQL.Proc_5_2_6D4690("SELECT max_exp FROM bots_petlevels WHERE id_level='" + petLevel + "' LIMIT 1", 0, 0));
     }
 
     public static String petExperienceStatusPayload(

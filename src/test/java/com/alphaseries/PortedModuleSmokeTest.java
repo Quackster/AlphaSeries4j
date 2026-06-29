@@ -1579,7 +1579,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(2L, Handling.petNameValidationCode(""));
         assertEquals(2L, Handling.petNameValidationCode("Rex1"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "@d"), Handling.petNameValidationPayload("Rex1"));
-        String commandRows = "1\t0\tgst ok\r2\t3\tgst jump\r3\t5\tgst high";
+        String commandRows = "1\t0\tsit\tgst ok\r2\t3\tjump\tgst jump\r3\t5\thigh\tgst high";
         String expectedCommandList = Crypto.Proc_3_0_6D2AF0(3, null, "I]")
             + Crypto.Proc_3_0_6D2AF0(3, null, "")
             + "0" + Crypto.Proc_3_0_6D2AF0(1, null, "")
@@ -1594,6 +1594,28 @@ public final class PortedModuleSmokeTest {
         assertEquals(3L, commandAction.requiredLevel);
         assertEquals("gst jump", commandAction.action);
         assertEquals(false, Handling.petCommandAction(9, commandRows).found);
+        MySQL.configureDatabaseConnection(new Database() {
+            @Override
+            public void execute(String sqlText) {
+            }
+
+            @Override
+            public List<List<Object>> query(String sqlText) {
+                if (sqlText.contains("bots_petcommands WHERE id_command='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(7, "fallback-action"));
+                }
+                if (sqlText.contains("bots_petlevels WHERE id_level='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(42));
+                }
+                return Arrays.<List<Object>>asList(Arrays.<Object>asList());
+            }
+        });
+        Handling.PetCommandAction fallbackCommandAction = Handling.petCommandAction(9, "");
+        assertEquals(true, fallbackCommandAction.found);
+        assertEquals(7L, fallbackCommandAction.requiredLevel);
+        assertEquals("fallback-action", fallbackCommandAction.action);
+        assertEquals(42L, Handling.petLevelMaxExperience(9, ""));
+        MySQL.configureDatabaseConnection(null);
         String expectedPetStatus = "IY" + Crypto.Proc_3_0_6D2AF0(50, null, "") + "Rex\2"
             + Crypto.Proc_3_0_6D2AF0(2, null, "")
             + Crypto.Proc_3_0_6D2AF0(7, null, "")
@@ -3485,7 +3507,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "IY"));
         assertEquals(true, containsSend(handlingSends, "Owner"));
         handlingSends.clear();
-        Licence.global_008292CC = new String[]{"", "1\t0\tgst sit", "2\t3\tgst jump"};
+        Licence.global_008292CC = new String[]{"", "1\t0\tsit\tgst sit", "2\t3\tjump\tgst jump"};
         String petCommandPayload = Handling.Proc_6_184_7CBDA0(4, 2);
         assertEquals(Handling.petCommandListPayload(2, Licence.global_008292CC), petCommandPayload);
         assertEquals(true, containsSend(handlingSends, "I]"));
