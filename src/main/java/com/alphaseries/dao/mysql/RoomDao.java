@@ -51,6 +51,22 @@ public final class RoomDao {
             .orElse(0L);
     }
 
+    public long roomSlot(long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_slot FROM rooms WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            roomId)
+            .orElse(0L);
+    }
+
+    public String modelHeightmap(long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT heightmap FROM models,rooms WHERE rooms.id=? AND models.id=rooms.id_model LIMIT 1",
+            resultSet -> resultSet.getString(1),
+            roomId)
+            .orElse("");
+    }
+
     public long currentRoomIdByUser(long userId) throws SQLException {
         return database.queryOne(
             "SELECT id_room FROM logs_visitedrooms WHERE id_user=? AND timestamp_left IS NULL "

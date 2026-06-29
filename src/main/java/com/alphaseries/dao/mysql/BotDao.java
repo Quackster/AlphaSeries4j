@@ -72,6 +72,19 @@ public final class BotDao {
         return database.execute("UPDATE bots SET id_room=null WHERE id=?", botId);
     }
 
+    public int placeBotInRoom(long botId, long roomId, long positionX, long positionY, String positionZ, long rotation)
+        throws SQLException {
+
+        return database.execute(
+            "UPDATE bots SET id_room=?,position_x=?,position_y=?,position_z=?,position_r=? WHERE id=?",
+            roomId,
+            positionX,
+            positionY,
+            positionZ,
+            rotation,
+            botId);
+    }
+
     public int touchPetData(long botId) throws SQLException {
         return database.execute(
             "UPDATE bots_petdata SET id_level=id_level,energy=energy,experience=experience,nutrition=nutrition,scratches=scratches "

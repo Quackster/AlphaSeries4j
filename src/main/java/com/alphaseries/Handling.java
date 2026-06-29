@@ -6044,12 +6044,16 @@ public final class Handling {
             if (roomId <= 0L) {
                 return 0L;
             }
-            long roomSlot = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            RoomDao rooms = roomDao();
+            BotDao bots = botDao();
+            if (rooms == null || bots == null) {
+                return 0L;
+            }
+            long roomSlot = rooms.roomSlot(roomId);
             if (roomSlot <= 0L) {
                 return 0L;
             }
-            String positionZ = String.valueOf(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT heightmap FROM models,rooms WHERE rooms.id='"
-                + roomId + "' AND models.id=rooms.id_model LIMIT 1", 0, 0)));
+            String positionZ = String.valueOf(NumberUtils.parseLong(rooms.modelHeightmap(roomId)));
             String rowText = MySQL.Proc_5_2_6D4690("SELECT bots.id,bots.name,bots.motto,bots.speech,bots.responses,'"
                 + positionX + "','" + positionY + "','" + Functions.Proc_10_11_80A9C0(positionZ, 0, 0) + "','"
                 + positionR + "',bots.figure,NULL,bots.id_handle,bots.id_handleaction,NULL,bots.speech_submit,bots.allow_walk,bots.max_fields_away "
@@ -6064,9 +6068,7 @@ public final class Handling {
                 return 0L;
             }
             storeRepresentedBotPosition(botEntityId, positionX, positionY, positionZ, positionR);
-            MySQL.Proc_5_0_6D3CD0("UPDATE bots SET id_room='" + roomId + "',position_x='" + positionX
-                + "',position_y='" + positionY + "',position_z='" + Functions.Proc_10_11_80A9C0(positionZ, 0, 0)
-                + "',position_r='" + positionR + "' WHERE id='" + petId + "'", 0, 0);
+            bots.placeBotInRoom(petId, roomId, positionX, positionY, positionZ, positionR);
             String placementPayload = representedBotRoomEntryPayload(botEntityId);
             if (!placementPayload.isEmpty()) {
                 Proc_6_247_8027E0(socketIndex, placementPayload, 0);
