@@ -1627,6 +1627,70 @@ public final class PortedModuleSmokeTest {
         Handling.WiredApplyResult wiredOverride = Handling.wiredApplySelected("100", "7", 101, "100;101");
         assertEquals(1L, wiredOverride.appliedCount);
         assertEquals(Handling.furnitureStatePayload(101, 7), wiredOverride.statePayloads);
+        Path previousApplicationPathForWired = Path.of(Functions.applicationPath);
+        Object previousProductCacheForWired = DataManager.global_008292BC;
+        Path wiredRoot = Files.createTempDirectory("alphaseries-wired");
+        Functions.applicationPath = wiredRoot.toString();
+        String[] wiredProducts = new String[601];
+        wiredProducts[600] = productRow(600, "27", "502");
+        DataManager.global_008292BC = wiredProducts;
+        final List<String> wiredSql = new ArrayList<>();
+        final List<String> wiredSends = new ArrayList<>();
+        HandlingMUS.configureMusSink((socketIndex, payload) -> wiredSends.add(socketIndex + ":" + payload));
+        MySQL.configureDatabaseConnection(new Database() {
+            @Override
+            public void execute(String sqlText) {
+                wiredSql.add(sqlText);
+            }
+
+            @Override
+            public List<List<Object>> query(String sqlText) {
+                if (sqlText.contains("SELECT id FROM users WHERE id_socket='4'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(77));
+                }
+                if (sqlText.contains("SELECT id_room FROM logs_visitedrooms WHERE id_user='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(9));
+                }
+                if (sqlText.contains("rooms WHERE id='9' AND id_owner='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(9));
+                }
+                if (sqlText.contains("SELECT id_product FROM furnitures WHERE id='44' AND id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(600));
+                }
+                if (sqlText.contains("SELECT COUNT(*) FROM furnitures WHERE id='100' AND id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
+                }
+                if (sqlText.contains("SELECT COUNT(*) FROM furnitures WHERE id='101' AND id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
+                }
+                if (sqlText.contains("SELECT COUNT(*) FROM furnitures WHERE id='102' AND id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
+                }
+                if (sqlText.contains("SELECT users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(4));
+                }
+                return new ArrayList<List<Object>>();
+            }
+        });
+        String liveWiredRecord = Handling.Proc_6_220_7EBA50(4, wiredWire);
+        assertEquals(wiredRecord, liveWiredRecord);
+        assertEquals(true, Handling.Proc_6_239_7FC170(
+            wiredRoot.resolve("cache").resolve("wired_action").resolve("9.cache").toString()).contains(wiredRecord));
+        String triggerRecord = Handling.wiredRecordText(1001, 55, "", "", "", "");
+        Handling.Proc_6_240_7FC2B0(wiredRoot.resolve("cache").resolve("wired_trigger").resolve("9.cache").toString(), triggerRecord);
+        assertEquals(2L, Handling.Proc_6_212_7E36C0(4));
+        assertEquals(true, containsSql(wiredSql, "UPDATE furnitures SET sign='7' WHERE id='100' LIMIT 1"));
+        assertEquals(true, containsSql(wiredSql, "UPDATE furnitures SET sign='7' WHERE id='101' LIMIT 1"));
+        wiredSql.clear();
+        wiredSends.clear();
+        String action503 = Handling.wiredRecordText(503, 45, "102", "8", "", "");
+        Handling.Proc_6_240_7FC2B0(wiredRoot.resolve("cache").resolve("wired_action").resolve("9.cache").toString(), action503);
+        assertEquals(1L, Handling.Proc_6_215_7E6770(4));
+        assertEquals(true, containsSql(wiredSql, "UPDATE furnitures SET sign='8' WHERE id='102' LIMIT 1"));
+        HandlingMUS.configureMusSink(null);
+        MySQL.configureDatabaseConnection(null);
+        Functions.applicationPath = previousApplicationPathForWired.toString();
+        DataManager.global_008292BC = previousProductCacheForWired;
         String songInfoWire = "C]" + Crypto.Proc_3_0_6D2AF0(2, null, "")
             + Crypto.Proc_3_0_6D2AF0(50, null, "")
             + Crypto.Proc_3_0_6D2AF0(51, null, "");

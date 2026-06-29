@@ -5682,8 +5682,65 @@ public final class Handling {
         }
     }
 
+    public static long Proc_6_207_7DB0D0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long roomId = 0L;
+            if (socketIndex > 0) {
+                String userId = handlingUserIdFromSocket(socketIndex);
+                if (!userId.isEmpty() && !"0".equals(userId)) {
+                    roomId = handlingCurrentRoomId(socketIndex, userId);
+                }
+            }
+            if (roomId <= 0L && args != null && args.length >= 2) {
+                roomId = Vb.val(args[1]);
+            }
+            long triggerCode = args != null && args.length >= 3 ? Vb.val(args[2]) : 0L;
+            return handlingRepresentedWiredTrigger(roomId, triggerCode, socketIndex);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
+    public static long Proc_6_208_7DC030(Object... args) {
+        return handlingRepresentedWiredActionCall(args, 506);
+    }
+
+    public static long Proc_6_209_7DE480(Object... args) {
+        return handlingRepresentedWiredActionCall(args, 505);
+    }
+
     public static String Proc_6_210_7E1DC0(Object... args) {
         return "";
+    }
+
+    public static long Proc_6_211_7E1E40(Object... args) {
+        return handlingRepresentedWiredTriggerCall(args, 1004);
+    }
+
+    public static long Proc_6_212_7E36C0(Object... args) {
+        return handlingRepresentedWiredTriggerCall(args, 1001);
+    }
+
+    public static long Proc_6_213_7E3FA0(Object... args) {
+        return handlingRepresentedWiredTriggerCall(args, 1003);
+    }
+
+    public static long Proc_6_214_7E60C0(Object... args) {
+        return handlingRepresentedWiredTriggerCall(args, 1002);
+    }
+
+    public static long Proc_6_215_7E6770(Object... args) {
+        return handlingRepresentedWiredActionCall(args, 503);
+    }
+
+    public static long Proc_6_216_7E8120(Object... args) {
+        return handlingRepresentedWiredActionCall(args, 502);
+    }
+
+    public static long Proc_6_217_7E9780(Object... args) {
+        return handlingRepresentedWiredActionCall(args, 501);
     }
 
     public static String Proc_6_218_7EA200(Object... args) {
@@ -5696,6 +5753,18 @@ public final class Handling {
             // VB6 source suppresses handler failures.
             return "";
         }
+    }
+
+    public static String Proc_6_219_7EA390(Object... args) {
+        return handlingRepresentedWiredEdit(args, "oj", 1, 500, "wired_trigger", false);
+    }
+
+    public static String Proc_6_220_7EBA50(Object... args) {
+        return handlingRepresentedWiredEdit(args, "ok", 501, 1000, "wired_action", true);
+    }
+
+    public static String Proc_6_222_7ED710(Object... args) {
+        return handlingRepresentedWiredEdit(args, "ol", 1001, 1500, "wired_condition", false);
     }
 
     public static String Proc_6_223_7EEDD0(Object... args) {
@@ -9976,6 +10045,207 @@ public final class Handling {
 
     public static String wiredSpecialStatePayload(long itemState) {
         return itemState == 1507L ? "5;1;7;1;5;0;" : "";
+    }
+
+    public static String handlingRepresentedWiredEdit(
+        Object[] args,
+        String packetCode,
+        long minimumCode,
+        long maximumCode,
+        String cacheFolder,
+        boolean includeExtraValue
+    ) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String packetPayload = handlingPacketPayload(args);
+            long furnitureId = firstWireLong(packetPayload, packetCode);
+            if (socketIndex <= 0 || furnitureId <= 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L || (!handlingUserHasRoomRight(userId, roomId) && !handlingUserOwnsRoom(userId, roomId))) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id='" + furnitureId
+                + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            long productId = Vb.val(handlingField(rowText.split("\t", -1), 0));
+            long wiredCode = Vb.val(DataManager.Proc_8_12_806C30(productId, 27, 0));
+            if (wiredCode < minimumCode || wiredCode > maximumCode) {
+                return "";
+            }
+            String recordText = wiredEditRecordFromWire(packetPayload, packetCode, wiredCode, includeExtraValue);
+            if (recordText.isEmpty()) {
+                return "";
+            }
+            String selectedIds = wiredRecordField(recordText, 2);
+            if (!selectedIds.isEmpty() && !handlingRepresentedWiredSelectedItemsExist(roomId, selectedIds)) {
+                return "";
+            }
+            String cachePath = wiredCachePath(cacheFolder, roomId);
+            String cacheText = Proc_6_239_7FC170(cachePath, 0, 0);
+            Proc_6_240_7FC2B0(cachePath, wiredCacheWithRecord(cacheText, recordText));
+            return recordText;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static long handlingRepresentedWiredTriggerCall(Object[] args, long triggerCode) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long roomId = 0L;
+            if (socketIndex > 0) {
+                String userId = handlingUserIdFromSocket(socketIndex);
+                if (!userId.isEmpty() && !"0".equals(userId)) {
+                    roomId = handlingCurrentRoomId(socketIndex, userId);
+                }
+            }
+            if (roomId <= 0L && args != null && args.length >= 2) {
+                roomId = Vb.val(args[1]);
+            }
+            return handlingRepresentedWiredTrigger(roomId, triggerCode, socketIndex);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
+    public static long handlingRepresentedWiredActionCall(Object[] args, long actionCode) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long roomId = 0L;
+            if (socketIndex > 0) {
+                String userId = handlingUserIdFromSocket(socketIndex);
+                if (!userId.isEmpty() && !"0".equals(userId)) {
+                    roomId = handlingCurrentRoomId(socketIndex, userId);
+                }
+            }
+            if (roomId <= 0L && args != null && args.length >= 2) {
+                roomId = Vb.val(args[1]);
+            }
+            long selectedFurnitureId = args != null && args.length >= 3 ? Vb.val(args[2]) : 0L;
+            return handlingRepresentedWiredAction(roomId, actionCode, selectedFurnitureId, socketIndex);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
+    public static long handlingRepresentedWiredTrigger(long roomId, long triggerCode, int socketIndex) {
+        if (roomId <= 0L) {
+            return 0L;
+        }
+        long executedCount = 0L;
+        for (String row : readWiredCache("wired_trigger", roomId).replace("\r", "").split("\n", -1)) {
+            String recordText = row.trim();
+            if (!recordText.isEmpty()) {
+                long recordCode = Vb.val(wiredRecordField(recordText, 0));
+                if ((triggerCode <= 0L || recordCode == triggerCode) && handlingRepresentedWiredConditionsPass(roomId)) {
+                    executedCount += handlingRepresentedWiredAction(roomId, 0L, 0L, socketIndex);
+                }
+            }
+        }
+        return executedCount;
+    }
+
+    public static boolean handlingRepresentedWiredConditionsPass(long roomId) {
+        if (roomId <= 0L) {
+            return false;
+        }
+        for (String row : readWiredCache("wired_condition", roomId).replace("\r", "").split("\n", -1)) {
+            String recordText = row.trim();
+            if (!recordText.isEmpty()) {
+                String selectedIds = wiredRecordField(recordText, 2);
+                if (!selectedIds.isEmpty() && !handlingRepresentedWiredSelectedItemsExist(roomId, selectedIds)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public static long handlingRepresentedWiredAction(long roomId, long actionCode, long selectedFurnitureId, int socketIndex) {
+        if (roomId <= 0L) {
+            return 0L;
+        }
+        long actionCount = 0L;
+        for (String row : readWiredCache("wired_action", roomId).replace("\r", "").split("\n", -1)) {
+            String recordText = row.trim();
+            if (!recordText.isEmpty()) {
+                long recordCode = Vb.val(wiredRecordField(recordText, 0));
+                if (actionCode <= 0L || recordCode == actionCode) {
+                    actionCount += handlingRepresentedWiredApplySelected(
+                        roomId, wiredRecordField(recordText, 2), wiredRecordField(recordText, 3), selectedFurnitureId);
+                }
+            }
+        }
+        return actionCount;
+    }
+
+    public static long handlingRepresentedWiredApplySelected(long roomId, String selectedIds, String parameterText, long selectedFurnitureId) {
+        if (roomId <= 0L) {
+            return 0L;
+        }
+        String effectiveSelectedIds = selectedFurnitureId > 0L ? String.valueOf(selectedFurnitureId) : Vb.cStr(selectedIds);
+        if (effectiveSelectedIds.isEmpty()) {
+            return 0L;
+        }
+        long stateValue = Vb.val((Vb.cStr(parameterText) + ";").split(";", -1)[0]);
+        long appliedCount = 0L;
+        for (String idPart : effectiveSelectedIds.replace(',', ';').split(";", -1)) {
+            long furnitureId = Vb.val(idPart);
+            if (furnitureId > 0L && handlingFurnitureExistsInRoom(roomId, furnitureId)) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + stateValue + "' WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
+                Proc_6_151_78AC20(roomId, furnitureId, stateValue);
+                Proc_6_246_8024C0(roomId, furnitureStatePayload(furnitureId, stateValue), 0);
+                appliedCount++;
+            }
+        }
+        return appliedCount;
+    }
+
+    public static boolean handlingRepresentedWiredSelectedItemsExist(long roomId, String selectedIds) {
+        if (roomId <= 0L) {
+            return false;
+        }
+        for (String idPart : Vb.cStr(selectedIds).replace(',', ';').split(";", -1)) {
+            long furnitureId = Vb.val(idPart);
+            if (furnitureId > 0L && !handlingFurnitureExistsInRoom(roomId, furnitureId)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static long firstWireLong(String packetPayload, String packetCode) {
+        String requestPayload = Vb.cStr(packetPayload);
+        if (!Vb.cStr(packetCode).isEmpty() && requestPayload.startsWith(packetCode)) {
+            requestPayload = requestPayload.substring(Vb.cStr(packetCode).length());
+        }
+        LongRef offset = new LongRef(1);
+        long value = readWireLong(requestPayload, offset);
+        return value > 0L ? value : Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+    }
+
+    public static String wiredCachePath(String cacheFolder, long roomId) {
+        return Path.of(Functions.applicationPath, "cache", Vb.cStr(cacheFolder), roomId + ".cache").toString();
+    }
+
+    public static String readWiredCache(String cacheFolder, long roomId) {
+        return roomId <= 0L ? "" : Proc_6_239_7FC170(wiredCachePath(cacheFolder, roomId), 0, 0);
+    }
+
+    public static boolean handlingFurnitureExistsInRoom(long roomId, long furnitureId) {
+        if (roomId <= 0L || furnitureId <= 0L) {
+            return false;
+        }
+        return Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures WHERE id='" + furnitureId
+            + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0)) > 0L;
     }
 
     public static String wiredEditRecordFromWire(String packetPayload, String packetCode, long wiredCode, boolean includeExtraValue) {
