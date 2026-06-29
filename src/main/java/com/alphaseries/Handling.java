@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.dao.mysql.StaffModerationDao;
+import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.dao.mysql.ClubDao;
@@ -6965,17 +6966,17 @@ public final class Handling {
             if (rewardProductId <= 0L) {
                 return "";
             }
-            long rewardDestinationId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690(
-                "SELECT id_destination FROM catalog_products WHERE id_product='" + rewardProductId
-                    + "' ORDER BY id DESC LIMIT 1", 0, 0));
+            CatalogDao catalog = catalogDao();
+            long rewardDestinationId = catalog == null ? 0L : catalog.destinationIdByProduct(rewardProductId);
             if (rewardDestinationId <= 0L) {
                 rewardDestinationId = rewardProductId;
             }
             String rewardSign = recyclerRewardSign();
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='"
-                + Functions.Proc_10_11_80A9C0(rewardSign, 0, 0) + "',id_owner='" + escapedUserId
-                + "',id_destination='" + rewardDestinationId + "' WHERE id_owner='" + escapedUserId
-                + "' AND id_product='" + Licence.recyclerSettings().boxProductId() + "' ORDER BY id DESC LIMIT 1", 1, 0);
+            furnitureDao().updateRecyclerRewardBox(
+                NumberUtils.parseLong(userId),
+                Licence.recyclerSettings().boxProductId(),
+                rewardSign,
+                rewardDestinationId);
             MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner=NULL WHERE id_owner='" + escapedUserId
                 + "' AND id_room IS NULL AND id IN (" + selection.selectedItems + ")", 0, 0);
             MySQL.Proc_5_1_6D4110("INSERT INTO logs_recycler(id_user,timestamp,items,id_reward,id_session) VALUES('"
@@ -12265,6 +12266,11 @@ public final class Handling {
     private static ClubDao clubDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new ClubDao(database);
+    }
+
+    private static CatalogDao catalogDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new CatalogDao(database);
     }
 
     private static RoomDao roomDao() {

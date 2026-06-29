@@ -386,6 +386,17 @@ public final class FurnitureDao {
             furnitureId);
     }
 
+    public int updateRecyclerRewardBox(long ownerId, long boxProductId, String sign, long destinationId) throws SQLException {
+        return database.execute(
+            "UPDATE furnitures SET sign=?,id_owner=?,id_destination=? "
+                + "WHERE id_owner=? AND id_product=? ORDER BY id DESC LIMIT 1",
+            sign,
+            ownerId,
+            destinationId,
+            ownerId,
+            boxProductId);
+    }
+
     public int resetDimmerPresetStates(long furnitureId) throws SQLException {
         return database.execute("UPDATE furnitures_dimmerpresets SET id_state=? WHERE id_furni=?", 1L, furnitureId);
     }
