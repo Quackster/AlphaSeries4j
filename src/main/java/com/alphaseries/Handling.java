@@ -7928,10 +7928,10 @@ public final class Handling {
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
             }
-            String friendshipRow = MySQL.Proc_5_2_6D4690("SELECT id_friend FROM friendships WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_friend='"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND has_accept='1' LIMIT 1", 0, 0);
-            if (friendshipRow.isEmpty()) {
+            MessengerDao messenger = messengerDao();
+            if (messenger == null || !messenger.acceptedFriendshipExists(
+                NumberUtils.parseLong(userId),
+                NumberUtils.parseLong(targetUserId))) {
                 return "";
             }
             int targetSocketIndex = handlingSocketFromUserId(targetUserId);
