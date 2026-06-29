@@ -1847,6 +1847,15 @@ public final class PortedModuleSmokeTest {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(
                         9, "Event Room", "Owner", 0, 3, 25, "Event Desc", 1, "", 5, 2, "icon", "tag1", "tag2", "12:00"));
                 }
+                if (sqlText.contains("ORDER BY 27 ASC LIMIT 255")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(
+                        1, 2, 3, "caption", "cap2", "cap3", 7, 8, 9, 10,
+                        11, 12, 13, "description", 15, 16, 17, 18, "icon",
+                        "tag1", "tag2", 22, "model", "files", 250, 5, 6, 7));
+                }
+                if (sqlText.contains("SELECT SUM(get_one) as get_one,get_two")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(5, "tag1"));
+                }
                 if (sqlText.contains("SELECT users.id,users.name FROM rooms_rights")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88, "Target"));
                 }
@@ -2462,6 +2471,25 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         Handling.Proc_6_121_752080(4);
         assertEquals(true, containsSend(handlingSends, "GCQA"));
+        handlingSends.clear();
+        Handling.Proc_6_123_754020(4);
+        assertEquals(true, containsSend(handlingSends, "GB"));
+        assertEquals(true, containsSend(handlingSends, "caption"));
+        handlingSends.clear();
+        Handling.Proc_6_124_754D90(4);
+        assertEquals(true, containsSend(handlingSends, "GD"));
+        assertEquals(true, containsSend(handlingSends, "tag1"));
+        handlingSends.clear();
+        Handling.Proc_6_125_755650(4, "XXtag1");
+        assertEquals(true, containsSend(handlingSends, "GCSAtag1"));
+        assertEquals(true, containsSend(handlingSends, "Event Room"));
+        handlingSends.clear();
+        Handling.Proc_6_126_755B40(4);
+        assertEquals(true, containsSend(handlingSends, "GC\b"));
+        handlingSends.clear();
+        Handling.Proc_6_127_755D30(4, "XXNav");
+        assertEquals(true, containsSend(handlingSends, "GCSANav"));
+        assertEquals(true, containsSend(handlingSends, "Event Room"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));

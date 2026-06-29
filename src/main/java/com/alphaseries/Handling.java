@@ -3346,6 +3346,94 @@ public final class Handling {
         }
     }
 
+    public static void Proc_6_123_754020(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String rowText = MySQL.Proc_5_2_6D4690(officialNavigatorQuery(), 0, 0);
+            Proc_6_244_801E80(socketIndex, "GB" + officialNavigatorRowsPayload(rowText, true), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_124_754D90(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long limitValue = navigatorListLimit();
+            String queryText = "SELECT SUM(get_one) as get_one,get_two FROM (SELECT SUM(rooms.visitors_now) as get_one,"
+                + "rooms.tag_1 as get_two FROM rooms,users WHERE rooms.tag_1 != '' AND rooms.visitors_max > 0 "
+                + "AND users.id=rooms.id_owner GROUP BY 2 UNION ALL SELECT SUM(rooms.visitors_now) as get_one,"
+                + "rooms.tag_2 as get_two FROM rooms,users WHERE rooms.tag_2 != '' AND rooms.visitors_max > 0 "
+                + "AND users.id=rooms.id_owner GROUP BY 2) as a GROUP BY get_two ORDER BY 1 DESC LIMIT " + limitValue;
+            String rowText = MySQL.Proc_5_2_6D4690(queryText, 0, 0);
+            StringBuilder payload = new StringBuilder();
+            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    String[] fields = row.split("\t", -1);
+                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(navigatorField(fields, 0)), null, ""));
+                    payload.append(navigatorField(fields, 1)).append('\2');
+                }
+            }
+            Proc_6_244_801E80(socketIndex, "GD" + payload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_125_755650(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String tagText = Functions.Proc_10_11_80A9C0(navigatorTextFromPacket(args), 0, 0);
+            long limitValue = navigatorListLimit();
+            String eventQueryTail = "rooms_events,users,rooms,rooms_categories WHERE (rooms_events.name_category='" + tagText
+                + "' OR rooms_events.tag_1='" + tagText + "' OR rooms_events.tag_2='" + tagText
+                + "') AND rooms.id=rooms_events.id_room AND rooms_categories.id=rooms.id_category "
+                + "AND users.id=rooms.id_owner GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
+            String roomQueryTail = "users,rooms,rooms_categories WHERE (rooms.tag_1 = '" + tagText + "' OR rooms.tag_2 = '"
+                + tagText + "') AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
+                + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
+            Proc_6_244_801E80(socketIndex, "GCSA" + tagText + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
+                + Proc_6_113_74EE70(eventQueryTail, roomQueryTail, 0), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_126_755B40(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long limitValue = navigatorListLimit();
+            String queryTail = "users,rooms,rooms_categories WHERE rooms.rate > 0 AND users.id=rooms.id_owner "
+                + "AND rooms_categories.id=rooms.id_category GROUP BY rooms.id ORDER BY rooms.rate DESC LIMIT " + limitValue;
+            Proc_6_244_801E80(socketIndex, "GC" + '\b' + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
+                + Proc_6_112_74E0C0(queryTail, 0, 0), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_127_755D30(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String searchText = navigatorSearchTerm(navigatorTextFromPacket(args));
+            String roomPredicate = searchText.length() > 2
+                ? "(users.name LIKE '" + searchText + "%' OR rooms.name LIKE '" + searchText + "%')"
+                : "(users.name = '" + searchText + "' OR rooms.name = '" + searchText + "')";
+            long limitValue = navigatorListLimit();
+            String roomQueryTail = "users,rooms,rooms_categories WHERE " + roomPredicate
+                + " AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
+                + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
+            String eventQueryTail = "rooms_events,users,rooms,rooms_categories WHERE (users.name='" + searchText
+                + "' AND rooms_events.id_user=users.id OR rooms_events.name LIKE '" + searchText
+                + "%' AND users.id=rooms.id_owner) AND rooms.id=rooms_events.id_room "
+                + "AND rooms_categories.id=rooms.id_category GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
+            Proc_6_244_801E80(socketIndex, "GCSA" + searchText + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
+                + Proc_6_113_74EE70(eventQueryTail, roomQueryTail, 0), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }
@@ -4610,6 +4698,20 @@ public final class Handling {
             categoryId = readWireLong(requestPayload, new LongRef(1));
         }
         return categoryId;
+    }
+
+    public static String navigatorTextFromPacket(Object[] args) {
+        String requestPayload = handlingPacketPayload(args);
+        if (requestPayload.length() >= 3) {
+            requestPayload = requestPayload.substring(2);
+        }
+        if (requestPayload.startsWith("@")) {
+            String value = readWireString(requestPayload, new LongRef(1));
+            if (!value.isEmpty()) {
+                return value;
+            }
+        }
+        return requestPayload;
     }
 
     public static String recommendedRoomPayload(long treeIndex) {
