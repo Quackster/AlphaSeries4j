@@ -1805,6 +1805,7 @@ public final class PortedModuleSmokeTest {
         long originalRecommendedRoomCount = Licence.global_00829128;
         String originalHcGiftPayload = Licence.global_00829178;
         String originalHcGiftLookup = Licence.global_0082917C;
+        String originalGiftWrapLookup = Licence.global_0082925C;
         String originalGiftWrapPayload = Licence.global_00829260;
         Object originalCatalogPagePayloads = Licence.global_00829308;
         Object originalRecyclerProductLists = Licence.global_00829140;
@@ -1838,7 +1839,7 @@ public final class PortedModuleSmokeTest {
         DataManager.global_008292BC = stickyProducts;
         Licence.global_008292BC = stickyProducts;
         String[] catalogProducts = new String[82];
-        catalogProducts[81] = productRow(81, "2", "506", "4", "products", "5", "1", "7", "3", "8", "2", "9", "0", "11", "0");
+        catalogProducts[81] = productRow(81, "2", "506", "4", "products", "5", "1", "7", "3", "8", "2", "9", "0", "10", "1", "11", "0");
         Licence.global_008292C0 = catalogProducts;
         String[][] categoryPayloads = new String[21][3];
         categoryPayloads[2][1] = "CATEGORY_PAYLOAD";
@@ -1847,6 +1848,7 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829128 = 1L;
         Licence.global_00829178 = "GIFTS";
         Licence.global_0082917C = "[81\0" + "506\1" + "20]";
+        Licence.global_0082925C = "\r501\r";
         Licence.global_00829260 = "WRAP_PAYLOAD";
         Licence.global_00829308 = new String[]{"", "", "PAGE_PAYLOAD"};
         Licence.global_00829140 = new String[]{"506\2"};
@@ -2969,6 +2971,20 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "AC"));
         assertEquals(true, containsSend(handlingSends, "BLS"));
         handlingSends.clear();
+        handlingSql.clear();
+        String giftPayload = Handling.Proc_6_132_75D4A0(4, "GX" + wireLong(81) + wireLong(506)
+            + wireString("Target") + wireString("gift note") + wireLong(501) + wireLong(2) + wireLong(3));
+        assertEquals(true, giftPayload.contains("AC"));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time,id_ctlgproduct) VALUES('506','77','gift note','77',UNIX_TIMESTAMP(),'81')"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign_extra='gift note',sign='"));
+        assertEquals(true, containsSql(handlingSql, "id_owner='88',id_destination='81',id_secondary='3002' WHERE id='97'"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET credits=credits-10,activitypoints_0=activitypoints_0-2 WHERE id='77'"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET gifts_given=gifts_given+1 WHERE id='77'"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET gifts_received=gifts_received+1 WHERE id='88'"));
+        assertEquals(true, containsSend(handlingSends, "4:DATA"));
+        assertEquals(true, containsSend(handlingSends, "8:DATA"));
+        assertEquals(true, containsSend(handlingSends, "Ab"));
+        handlingSends.clear();
         Handling.Proc_6_134_765B90(4, "oV" + wireLong(81));
         assertEquals(true, containsSend(handlingSends, "In"));
         handlingSends.clear();
@@ -3523,6 +3539,7 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829128 = originalRecommendedRoomCount;
         Licence.global_00829178 = originalHcGiftPayload;
         Licence.global_0082917C = originalHcGiftLookup;
+        Licence.global_0082925C = originalGiftWrapLookup;
         Licence.global_00829260 = originalGiftWrapPayload;
         Licence.global_00829308 = originalCatalogPagePayloads;
         Licence.global_00829140 = originalRecyclerProductLists;
