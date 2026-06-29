@@ -26,6 +26,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.messages.outgoing.AchievementPayloads` for achievement reward, award, and list outgoing payloads.
 - Added `com.alphaseries.messages.outgoing.RecyclerPayloads` for recycler status outgoing payloads.
 - Added `com.alphaseries.messages.outgoing.JukeboxPayloads` for song info, jukebox playlist, disk inventory, and playback outgoing payloads.
+- Added `com.alphaseries.game.help.HelpCenterCache` as a typed adapter around important FAQ, FAQ category, and FAQ description payload caches previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.inventory.InventoryMessagePayloads` for inventory item/list payload building.
 - Added `com.alphaseries.game.catalog.CatalogRegistry` as a typed adapter around product, catalog-product, and deal row caches previously parsed directly from `Licence` globals.
 - Added `com.alphaseries.game.catalog.GiftSettings` as a typed adapter around club-gift and gift-wrap state previously read directly from `Licence` globals.
@@ -57,7 +58,7 @@ Measured on 2026-06-29:
 - Unique `Proc_*` symbols under `src/main/java`: 473
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 1406
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 476
-- `Handling.java`: 12551 lines
+- `Handling.java`: 12553 lines
 - `Functions.java`: 797 lines
 - `MySQL.java`: 301 lines
 - `Vb.java`: 106 lines

@@ -321,7 +321,7 @@ public final class Boot {
         Map<Long, String> rows = new LinkedHashMap<Long, String>();
         rows.put(1L, MySQL.Proc_5_2_6D4690("SELECT id,name FROM faq WHERE is_important='1' ORDER BY id DESC LIMIT 1", 0, 0));
         rows.put(2L, MySQL.Proc_5_2_6D4690("SELECT id,name FROM faq WHERE is_important='2' ORDER BY id DESC LIMIT 1", 0, 0));
-        Licence.global_00829204 = buildImportantFaqPayload(rows);
+        Licence.setImportantFaqPayload(buildImportantFaqPayload(rows));
     }
 
     public static void Proc_1_20_6CF830(Object... args) {
@@ -341,8 +341,7 @@ public final class Boot {
                 categoryFaqs[entry.getKey().intValue()] = entry.getValue();
             }
         }
-        Licence.global_0082920C = categoryFaqs;
-        Licence.global_00829208 = cache.categoryPayload;
+        Licence.setFaqCategoryCache(cache.categoryPayload, categoryFaqs);
     }
 
     public static void Proc_1_21_6D08C0(Object... args) {
@@ -354,7 +353,7 @@ public final class Boot {
                 descriptions[entry.getKey().intValue()] = entry.getValue();
             }
         }
-        Licence.global_00829210 = descriptions;
+        Licence.setFaqDescriptionCache(descriptions);
     }
 
     public static void Proc_1_22_6D0F00(Object... args) {

@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.catalog.GiftSettings;
+import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.wired.WiredPayloads;
@@ -1018,7 +1019,7 @@ public final class Handling {
 
     public static void Proc_6_33_70F4F0(Object... args) {
         try {
-            Proc_6_244_801E80(handlingSocketIndex(args), "HF" + Licence.global_00829204, 0);
+            Proc_6_244_801E80(handlingSocketIndex(args), "HF" + Licence.helpCenterCache().importantFaqPayload(), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1026,7 +1027,7 @@ public final class Handling {
 
     public static void Proc_6_34_70F590(Object... args) {
         try {
-            Proc_6_244_801E80(handlingSocketIndex(args), "HG" + Licence.global_00829208, 0);
+            Proc_6_244_801E80(handlingSocketIndex(args), "HG" + Licence.helpCenterCache().categoryPayload(), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1037,7 +1038,8 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String packetPayload = handlingPacketPayload(args);
             long categoryId = packetPayload.length() >= 3 ? readWireLong(packetPayload.substring(2), new LongRef(1)) : 0L;
-            String categoryPayload = indexedPayload(Licence.global_0082920C, categoryId);
+            HelpCenterCache helpCenterCache = Licence.helpCenterCache();
+            String categoryPayload = helpCenterCache.categoryFaqPayload(categoryId);
             Proc_6_244_801E80(socketIndex,
                 Crypto.Proc_3_0_6D2AF0(categoryId, null, "HJ") + '\2' + categoryPayload, 0);
         } catch (Exception ignored) {
@@ -1087,7 +1089,7 @@ public final class Handling {
                     faqId = readWireLong(requestPayload, new LongRef(1));
                 }
             }
-            Proc_6_244_801E80(socketIndex, "HH" + indexedPayload(Licence.global_00829210, faqId), 0);
+            Proc_6_244_801E80(socketIndex, "HH" + Licence.helpCenterCache().descriptionPayload(faqId), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

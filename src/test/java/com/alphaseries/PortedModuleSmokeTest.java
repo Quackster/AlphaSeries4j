@@ -814,8 +814,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829204.contains("important"));
         Boot.Proc_1_20_6CF830();
         assertEquals(true, Licence.global_00829208.contains("cat"));
+        assertEquals(true, Licence.helpCenterCache().categoryPayload().contains("cat"));
         Boot.Proc_1_21_6D08C0();
         assertEquals(true, ((String[]) Licence.global_00829210)[5].contains("line1\rline2"));
+        assertEquals(true, Licence.helpCenterCache().descriptionPayload(5L).contains("line1\rline2"));
         Boot.Proc_1_22_6D0F00();
         assertEquals("/ad/4\2/cafe\2", ((String[]) Licence.global_008291D4)[4]);
         Boot.Proc_1_23_6D1480("booted", "DEBUG");

@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
+import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.session.SessionRegistry;
@@ -137,6 +138,23 @@ public final class Licence {
     public static void setGiftWrapState(String lookup, String payload) {
         global_0082925C = StringUtils.text(lookup);
         global_00829260 = StringUtils.text(payload);
+    }
+
+    public static HelpCenterCache helpCenterCache() {
+        return HelpCenterCache.fromLegacy(global_00829204, global_00829208, global_0082920C, global_00829210);
+    }
+
+    public static void setImportantFaqPayload(String payload) {
+        global_00829204 = StringUtils.text(payload);
+    }
+
+    public static void setFaqCategoryCache(String categoryPayload, Object categoryFaqs) {
+        global_00829208 = StringUtils.text(categoryPayload);
+        global_0082920C = categoryFaqs == null ? "" : categoryFaqs;
+    }
+
+    public static void setFaqDescriptionCache(Object descriptions) {
+        global_00829210 = descriptions == null ? "" : descriptions;
     }
 
     public static String Proc_9_6_808080(Object... args) {
