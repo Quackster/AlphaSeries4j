@@ -4497,6 +4497,47 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_169_7C0DC0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "DF");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            LongRef offset = new LongRef(1);
+            String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
+            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                targetUserId = String.valueOf((long) Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0)));
+            }
+            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return "";
+            }
+            String friendshipRow = MySQL.Proc_5_2_6D4690("SELECT id_friend FROM friendships WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_friend='"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND has_accept='1' LIMIT 1", 0, 0);
+            if (friendshipRow.isEmpty()) {
+                return "";
+            }
+            int targetSocketIndex = handlingSocketFromUserId(targetUserId);
+            if (targetSocketIndex <= 0) {
+                return "";
+            }
+            long targetRoomId = handlingCurrentRoomId(targetSocketIndex, targetUserId);
+            if (targetRoomId <= 0L) {
+                return "";
+            }
+            long targetRoomUserIndex = representedRoomUserIndex(targetSocketIndex, targetUserId);
+            String payload = Crypto.Proc_3_0_6D2AF0(targetRoomId, null,
+                Crypto.Proc_3_0_6D2AF0(targetRoomUserIndex, null, "D^"));
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }

@@ -1837,6 +1837,9 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("logs_visitedrooms WHERE id_user='88'") && sqlText.contains("id_room")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(9));
                 }
+                if (sqlText.contains("SELECT id FROM logs_visitedrooms WHERE id_user='88'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(61));
+                }
                 if (sqlText.contains("logs_visitedrooms WHERE id_user='77'") && sqlText.contains("id_room")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(9));
                 }
@@ -1898,6 +1901,9 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT users.id_socket FROM friendships,users WHERE friendships.has_accept='1' AND friendships.id_user='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(8));
+                }
+                if (sqlText.contains("SELECT id_friend FROM friendships WHERE id_user='77' AND id_friend='88' AND has_accept='1'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(88));
                 }
                 if (sqlText.contains("SELECT id,id_product,sign,caption,position_wall FROM furnitures WHERE id='70'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(70, 500, "FFFF33", "old", "w=1"));
@@ -2723,6 +2729,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(1L, Handling.Proc_6_170_7C1100(4, "@fCABA"));
         assertEquals(true, containsSql(handlingSql, "id_friend IN (1,2) LIMIT 75"));
         handlingSql.clear();
+        handlingSends.clear();
+        String followPayload = Handling.Proc_6_169_7C0DC0(4, "DF" + wireLong(88));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, Crypto.Proc_3_0_6D2AF0(61, null, "D^")), followPayload);
+        assertEquals(true, containsSend(handlingSends, "D^"));
+        handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
         assertEquals(4, Handling.representedInteractionPartner(8));
