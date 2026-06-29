@@ -32,6 +32,14 @@ public final class UserDao {
             .orElse(0L);
     }
 
+    public long socketByUserId(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_socket FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
     public long rankLevel(long userId) throws SQLException {
         return database.queryOne(
             "SELECT level FROM users WHERE id=? LIMIT 1",
@@ -119,6 +127,22 @@ public final class UserDao {
             resultSet -> resultSet.getString(1),
             userId)
             .orElse("");
+    }
+
+    public String sessionId(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_session FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getString(1),
+            userId)
+            .orElse("");
+    }
+
+    public long socketByName(String name) throws SQLException {
+        return database.queryOne(
+            "SELECT id_socket FROM users WHERE name=? AND id_socket IS NOT NULL LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            name)
+            .orElse(0L);
     }
 
     public String gender(long userId) throws SQLException {

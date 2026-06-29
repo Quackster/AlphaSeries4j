@@ -8421,7 +8421,15 @@ public final class Handling {
                 return userId;
             }
         }
-        return String.valueOf(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE id_socket='" + socketIndex + "' LIMIT 1", 0, 0)));
+        UserDao users = userDao();
+        if (users == null) {
+            return "";
+        }
+        try {
+            return String.valueOf(users.userIdBySocket(socketIndex));
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
     public static int handlingSocketFromUserId(String userId) {
@@ -8431,8 +8439,14 @@ public final class Handling {
         }
         long socketIndex = Licence.Proc_9_8_8086A0(idText, 0, 0);
         if (socketIndex <= 0L) {
-            socketIndex = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(idText, 0, 0) + "' LIMIT 1", 0, 0));
+            UserDao users = userDao();
+            if (users != null) {
+                try {
+                    socketIndex = users.socketByUserId(NumberUtils.parseLong(idText));
+                } catch (Exception ignored) {
+                    socketIndex = 0L;
+                }
+            }
         }
         return (int) socketIndex;
     }
@@ -8442,29 +8456,45 @@ public final class Handling {
         if (roomId > 0L) {
             return roomId;
         }
-        String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
         if (!StringUtils.text(userId).isEmpty() && !"0".equals(StringUtils.text(userId))) {
-            roomId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_room FROM logs_visitedrooms WHERE id_user='"
-                + escapedUserId + "' AND timestamp_left IS NULL ORDER BY timestamp_enter DESC LIMIT 1", 0, 0));
+            RoomDao rooms = roomDao();
+            if (rooms != null) {
+                try {
+                    roomId = rooms.currentRoomIdByUser(NumberUtils.parseLong(userId));
+                } catch (Exception ignored) {
+                    roomId = 0L;
+                }
+            }
         }
         if (roomId <= 0L) {
-            roomId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM rooms WHERE id_slot='" + socketIndex + "' LIMIT 1", 0, 0));
+            RoomDao rooms = roomDao();
+            if (rooms != null) {
+                try {
+                    roomId = rooms.roomIdBySlot(socketIndex);
+                } catch (Exception ignored) {
+                    roomId = 0L;
+                }
+            }
         }
         return roomId;
     }
 
     public static long representedRoomUserIndex(int socketIndex, String userId) {
-        long roomUserIndex = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM logs_visitedrooms WHERE id_user='"
-            + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-            + "' AND timestamp_left IS NULL ORDER BY timestamp_enter DESC LIMIT 1", 0, 0));
+        long roomUserIndex = 0L;
+        RoomDao rooms = roomDao();
+        if (rooms != null) {
+            try {
+                roomUserIndex = rooms.activeVisitIdByUser(NumberUtils.parseLong(userId));
+            } catch (Exception ignored) {
+                roomUserIndex = 0L;
+            }
+        }
         return roomUserIndex > 0L ? roomUserIndex : socketIndex;
     }
 
     public static boolean handlingUserHasPermission(String userId, String permissionName) {
-        long rankIndex = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT level FROM users WHERE id='"
-            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
-        long hcLevel = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT level_hc FROM users WHERE id='"
-            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+        long rankIndex = handlingUserRank(userId);
+        long hcLevel = handlingUserHcLevel(userId);
         return Functions.Proc_10_1_809790(rankIndex, "", permissionName, hcLevel);
     }
 
@@ -8503,9 +8533,10 @@ public final class Handling {
             Proc_6_244_801E80(targetSocketIndex, "@aXjO", 0);
             Proc_6_53_718E00(targetSocketIndex, "@aXjO", 0);
             if (addRoomBan) {
-                MySQL.Proc_5_0_6D3CD0("INSERT IGNORE INTO rooms_bans(id_room,id_user,timestamp_expire) VALUES('"
-                    + callerRoomId + "','" + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0)
-                    + "',UNIX_TIMESTAMP()+900)", 0, 0);
+                RoomDao rooms = roomDao();
+                if (rooms != null) {
+                    rooms.insertRoomBan(callerRoomId, NumberUtils.parseLong(targetUserId));
+                }
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -8513,13 +8544,27 @@ public final class Handling {
     }
 
     public static long handlingUserRank(String userId) {
-        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT level FROM users WHERE id='"
-            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+        UserDao users = userDao();
+        if (users == null) {
+            return 0L;
+        }
+        try {
+            return users.rankLevel(NumberUtils.parseLong(userId));
+        } catch (Exception ignored) {
+            return 0L;
+        }
     }
 
     public static long handlingUserHcLevel(String userId) {
-        long hcLevel = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT level_hc FROM users WHERE id='"
-            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0));
+        long hcLevel = 0L;
+        UserDao users = userDao();
+        if (users != null) {
+            try {
+                hcLevel = users.hcLevel(NumberUtils.parseLong(userId));
+            } catch (Exception ignored) {
+                hcLevel = 0L;
+            }
+        }
         if (hcLevel < 0L) {
             return 0L;
         }
@@ -8530,43 +8575,74 @@ public final class Handling {
         if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))) {
             return "";
         }
-        return MySQL.Proc_5_2_6D4690("SELECT id_session FROM users WHERE id='"
-            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+        UserDao users = userDao();
+        if (users == null) {
+            return "";
+        }
+        try {
+            return users.sessionId(NumberUtils.parseLong(userId));
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
     public static boolean handlingUserOwnsRoom(String userId, long roomId) {
         if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId)) || roomId <= 0L) {
             return false;
         }
-        return !MySQL.Proc_5_2_6D4690("SELECT id FROM rooms WHERE id='" + roomId + "' AND id_owner='"
-            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0).isEmpty();
+        RoomDao rooms = roomDao();
+        if (rooms == null) {
+            return false;
+        }
+        try {
+            return rooms.userOwnsRoom(NumberUtils.parseLong(userId), roomId);
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     public static boolean handlingUserHasRoomRight(String userId, long roomId) {
         if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId)) || roomId <= 0L) {
             return false;
         }
-        if (!MySQL.Proc_5_2_6D4690("SELECT id_owner FROM rooms WHERE id='" + roomId + "' AND id_owner='"
-            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0).isEmpty()) {
-            return true;
+        RoomDao rooms = roomDao();
+        if (rooms == null) {
+            return false;
         }
-        return !MySQL.Proc_5_2_6D4690("SELECT id_user FROM rooms_rights WHERE id_user='"
-            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0).isEmpty();
+        try {
+            return rooms.userHasRoomRight(NumberUtils.parseLong(userId), roomId);
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     public static long roomCategoryForUser(long categoryId, String userId) {
         long rankIndex = handlingUserRank(userId);
         long hcLevel = handlingUserHcLevel(userId);
-        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM rooms_categories WHERE id='" + categoryId
-            + "' AND level_minrequired <= '" + rankIndex + "' AND hclevel_minrequired <= '" + hcLevel + "' LIMIT 1", 0, 0));
+        RoomDao rooms = roomDao();
+        if (rooms == null) {
+            return 0L;
+        }
+        try {
+            return rooms.visibleCategoryId(categoryId, rankIndex, hcLevel);
+        } catch (Exception ignored) {
+            return 0L;
+        }
     }
 
     public static int handlingSocketIndexForUserName(String userName) {
         if (StringUtils.text(userName).isEmpty()) {
             return 0;
         }
-        return (int) NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE name='"
-            + Functions.Proc_10_11_80A9C0(userName, 0, 0) + "' AND id_socket IS NOT NULL LIMIT 1", 0, 0));
+        UserDao users = userDao();
+        if (users == null) {
+            return 0;
+        }
+        try {
+            return (int) users.socketByName(userName);
+        } catch (Exception ignored) {
+            return 0;
+        }
     }
 
     public static String staffModerationPayload(long rankIndex, long hcLevel) {

@@ -49,6 +49,15 @@ public final class RoomDao {
             .orElse(0L);
     }
 
+    public long activeVisitIdByUser(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM logs_visitedrooms WHERE id_user=? AND timestamp_left IS NULL "
+                + "ORDER BY timestamp_enter DESC LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
     public long furnitureIdAtExcluding(long roomId, long excludedFurnitureId, long positionX, long positionY) throws SQLException {
         return database.queryOne(
             "SELECT id FROM furnitures WHERE id_room=? AND position_x=? AND position_y=? AND id<>? "
@@ -121,12 +130,56 @@ public final class RoomDao {
         return database.execute("DELETE FROM rooms_events WHERE id_room=?", roomId);
     }
 
+    public boolean userOwnsRoom(long userId, long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM rooms WHERE id=? AND id_owner=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            roomId,
+            userId)
+            .orElse(0L) > 0L;
+    }
+
+    public boolean userHasRoomRight(long userId, long roomId) throws SQLException {
+        if (database.queryOne(
+            "SELECT id_owner FROM rooms WHERE id=? AND id_owner=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            roomId,
+            userId)
+            .orElse(0L) > 0L) {
+            return true;
+        }
+        return database.queryOne(
+            "SELECT id_user FROM rooms_rights WHERE id_user=? AND id_room=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId,
+            roomId)
+            .orElse(0L) > 0L;
+    }
+
     public long doorStatus(long roomId) throws SQLException {
         return database.queryOne(
             "SELECT status_door FROM rooms WHERE id=? LIMIT 1",
             resultSet -> resultSet.getLong(1),
             roomId)
             .orElse(0L);
+    }
+
+    public long visibleCategoryId(long categoryId, long rankIndex, long hcLevel) throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM rooms_categories WHERE id=? AND level_minrequired <= ? "
+                + "AND hclevel_minrequired <= ? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            categoryId,
+            rankIndex,
+            hcLevel)
+            .orElse(0L);
+    }
+
+    public int insertRoomBan(long roomId, long userId) throws SQLException {
+        return database.execute(
+            "INSERT IGNORE INTO rooms_bans(id_room,id_user,timestamp_expire) VALUES(?,?,UNIX_TIMESTAMP()+900)",
+            roomId,
+            userId);
     }
 
     public int insertRoomEvent(
