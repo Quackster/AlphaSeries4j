@@ -822,9 +822,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(1L, Main.mainRollerDeltaY(4));
         assertEquals("12", Main.mainRollerTargetHeight("12.5", "7"));
         assertEquals("7", Main.mainRollerTargetHeight("", "7.9"));
+        final List<String> mainSql = new ArrayList<>();
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
+                mainSql.add(sqlText);
             }
 
             @Override
@@ -832,11 +834,30 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id FROM rooms WHERE id_slot='4'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(44));
                 }
+                if (sqlText.contains("SELECT id_room,sign FROM furnitures WHERE id='101'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(44, 1));
+                }
+                if (sqlText.contains("SELECT furnitures.id,furnitures.position_x")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(301, 1, 1, "0", 2));
+                }
+                if (sqlText.contains("SELECT id FROM furnitures WHERE id_room='44'")
+                    && sqlText.contains("position_x='1'")
+                    && sqlText.contains("position_y='1'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(302));
+                }
+                if (sqlText.contains("SELECT position_z FROM furnitures WHERE id_room='44'")
+                    && sqlText.contains("position_x='2'")
+                    && sqlText.contains("position_y='1'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList("2.0"));
+                }
                 if (sqlText.contains("SELECT id FROM users WHERE id_socket='8'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88));
                 }
                 if (sqlText.contains("logs_visitedrooms WHERE id_user='88'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(44));
+                }
+                if (sqlText.contains("SELECT users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_room='44'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(8));
                 }
                 if (sqlText.contains("COUNT(*) FROM furnitures")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
@@ -860,6 +881,22 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829310.contains("\1" + "70\t2\t1"));
         Main.Proc_0_29_6B0E10(8, 1, 1, 1, 2);
         assertEquals(true, Licence.global_00829310.contains("\1" + "8\t1\t2"));
+        Licence.global_008291FC = "\1" + "101\2";
+        assertEquals(1L, Main.signerTimer());
+        assertEquals(true, containsSql(mainSql, "UPDATE furnitures SET sign='0' WHERE id='101' LIMIT 1"));
+        Licence.global_008292D4 = "[70]";
+        Licence.global_00829358 = "[70:4\2bot-id\2name\2a\2b\2c\2" + "1\2" + "1\2x\2x\2x\2x\2x\2x\2x\2" + "1]";
+        assertEquals(1L, Main.botsTimer());
+        assertEquals(true, Main.walkingTimer(4) >= 1L);
+        mainSql.clear();
+        Guardian.global_008291A0 = "[8]";
+        Guardian.global_0082919C = 8;
+        assertEquals(1L, Main.pingTimer(0));
+        assertEquals(true, containsSql(mainSql, "UPDATE settings SET value=UNIX_TIMESTAMP() WHERE variable='com.server.socket.check.time'"));
+        assertEquals(true, containsSql(mainSql, "UPDATE settings SET value='1' WHERE variable='com.server.socket.mostactive'"));
+        mainSql.clear();
+        assertEquals(1L, Main.rollersTimer(4));
+        assertEquals(true, containsSql(mainSql, "UPDATE furnitures SET position_x='2',position_y='1',position_z='2' WHERE id='302' AND id_room='44' LIMIT 1"));
         Guardian.setSocketConnected(8, false);
         MySQL.configureDatabaseConnection(null);
         assertEquals(Crypto.Proc_3_0_6D2AF0(3, null,
