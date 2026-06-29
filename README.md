@@ -16,7 +16,13 @@ still need exact behavior mapping.
 ## Build
 
 ```sh
-mvn test
+./gradlew test
+```
+
+Run the app with:
+
+```sh
+./gradlew run
 ```
 
 ## Local Database Setup

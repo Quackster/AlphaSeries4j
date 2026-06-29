@@ -1,2 +1,5 @@
-
-/target
+.gradle/
+build/
+out/
+target/
+.idea/

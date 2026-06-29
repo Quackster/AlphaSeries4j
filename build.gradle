@@ -1,0 +1,41 @@
+plugins {
+    id 'application'
+    id 'java'
+}
+
+group = 'com.alphaseries'
+version = '0.1.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+    implementation 'com.mysql:mysql-connector-j:9.5.0'
+}
+
+application {
+    mainClass = 'com.alphaseries.AlphaSeriesApp'
+}
+
+tasks.register('portedModuleSmokeTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs the ported module smoke test main class.'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.alphaseries.PortedModuleSmokeTest'
+    dependsOn tasks.named('testClasses')
+}
+
+tasks.named('test') {
+    dependsOn tasks.named('portedModuleSmokeTest')
+    failOnNoDiscoveredTests = false
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('portedModuleSmokeTest')
+}
