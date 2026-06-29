@@ -241,6 +241,17 @@ public final class FurnitureDao {
             furnitureId);
     }
 
+    public int moveRoomFurnitureToInventory(long furnitureId, long roomId, long ownerId) throws SQLException {
+        return database.execute(
+            "UPDATE furnitures SET id_room=NULL,position_x=NULL,position_y=NULL,position_z=NULL,"
+                + "position_r='0',position_wall=NULL,id_owner=?,task_owner=?,task_time=UNIX_TIMESTAMP() "
+                + "WHERE id=? AND id_room=? LIMIT 1",
+            ownerId,
+            ownerId,
+            furnitureId,
+            roomId);
+    }
+
     public int deleteFurniture(long furnitureId) throws SQLException {
         return database.execute("DELETE FROM furnitures WHERE id=? LIMIT 1", furnitureId);
     }

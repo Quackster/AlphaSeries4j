@@ -5188,14 +5188,18 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId) || roomId <= 0L) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product,id_owner FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return;
             }
-            String[] fields = rowText.split("\t", -1);
-            long productId = NumberUtils.parseLong(handlingField(fields, 0));
-            String ownerId = String.valueOf((long) NumberUtils.parseLong(handlingField(fields, 1)));
+            FurnitureDao.RoomFurnitureOwnerProduct furnitureProduct = furniture
+                .roomFurnitureOwnerProduct(furnitureId, roomId)
+                .orElse(null);
+            if (furnitureProduct == null) {
+                return;
+            }
+            long productId = furnitureProduct.productId();
+            String ownerId = String.valueOf(furnitureProduct.ownerId());
             if (productId <= 0L) {
                 return;
             }
@@ -5213,10 +5217,7 @@ public final class Handling {
                     + "',UNIX_TIMESTAMP(),'','" + Functions.Proc_10_11_80A9C0(sessionId, 0, 0) + "')", 0, 0);
             }
             Proc_6_146_76D300(socketIndex, furnitureId, productId);
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_room=NULL,position_x=NULL,position_y=NULL,position_z=NULL,"
-                + "position_r='0',position_wall=NULL,id_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "',task_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "',task_time=UNIX_TIMESTAMP() WHERE id='" + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            furniture.moveRoomFurnitureToInventory(furnitureId, roomId, NumberUtils.parseLong(userId));
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ac"), 0);
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2', 0);
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
