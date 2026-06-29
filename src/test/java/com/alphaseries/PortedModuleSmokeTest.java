@@ -519,6 +519,11 @@ public final class PortedModuleSmokeTest {
         Guardian.Proc_11_3_821440(12);
         assertEquals("", Guardian.global_008291A0);
         assertEquals(12L, Guardian.global_0082919C);
+        Guardian.global_008291A0 = "[12]";
+        Licence.global_008291A0 = "[4][12]";
+        Handling.Proc_6_243_7FFEB0(12);
+        assertEquals("", Guardian.global_008291A0);
+        assertEquals("[4]", Licence.global_008291A0);
 
         Licence.global_008292BC = "10\t100\tchair\r11\t200\ttable";
         Licence.global_008292C0 = new String[]{"", "1\talpha\t7"};

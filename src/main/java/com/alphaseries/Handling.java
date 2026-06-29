@@ -7,6 +7,7 @@ import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.SessionRegistry;
+import com.alphaseries.game.session.SocketMarkerSet;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -8289,7 +8290,9 @@ public final class Handling {
         String marker = "[" + socketIndex + "]";
         Guardian.setSocketConnected(socketIndex, false);
         Guardian.global_008291A0 = Vb.cStr(Guardian.global_008291A0).replace(marker, "");
-        Licence.global_008291A0 = Vb.cStr(Licence.global_008291A0).replace(marker, "");
+        SocketMarkerSet socketMarkers = Licence.socketMarkers();
+        socketMarkers.remove(socketIndex);
+        Licence.setSocketMarkers(socketMarkers);
         GameServerSessionState sessionState = Licence.gameServerSessionState();
         sessionState.removeSocket(socketIndex);
         Licence.setGameServerSessionState(sessionState);
