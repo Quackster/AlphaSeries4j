@@ -10,6 +10,11 @@ import java.time.format.DateTimeFormatter;
 
 public final class Updater {
     public static final long PROGRESS_WIDTH_MAX = 11535L;
+    public static final String FORM_CAPTION = "Downloade Updates...";
+    public static final String DOWNLOAD_LABEL_CAPTION = "Downloade...";
+    public static final String CMS_REDOWNLOAD_CAPTION = "CMS muss im Store erneut heruntergeladen werden";
+    public static final String DEFAULT_FREE_FEATURE_CAPTION = "Kostenloses Feature";
+    public static final String DEFAULT_COST_FEATURE_CAPTION = "Kostet 10 Punkte";
     public static final String RETRY_ERROR_MESSAGE = "Es ist ein Fehler aufgetreten. Versuche es erneut!";
     public static final String MYSQL_CONNECTION_ERROR_MESSAGE =
         "Es kann keine Verbindung zur MySQL Datenbank hergestellt werden.";

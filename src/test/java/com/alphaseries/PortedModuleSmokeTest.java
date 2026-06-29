@@ -1166,6 +1166,11 @@ public final class PortedModuleSmokeTest {
         assertEquals("custom", Updater.getUpdaterExecutableName("custom", "app"));
         assertEquals("app", Updater.getUpdaterExecutableName("", "app"));
         assertEquals("INSERT IGNORE INTO a\nINSERT IGNORE INTO b", Updater.normalizedUpdateSql("INSERT INTO a\r\ninsert into b"));
+        assertEquals("Downloade Updates...", Updater.FORM_CAPTION);
+        assertEquals("Downloade...", Updater.DOWNLOAD_LABEL_CAPTION);
+        assertEquals("CMS muss im Store erneut heruntergeladen werden", Updater.CMS_REDOWNLOAD_CAPTION);
+        assertEquals("Kostenloses Feature", Updater.DEFAULT_FREE_FEATURE_CAPTION);
+        assertEquals("Kostet 10 Punkte", Updater.DEFAULT_COST_FEATURE_CAPTION);
         assertEquals("Es ist ein Fehler aufgetreten. Versuche es erneut!", Updater.RETRY_ERROR_MESSAGE);
         assertEquals("Es kann keine Verbindung zur MySQL Datenbank hergestellt werden.",
             Updater.MYSQL_CONNECTION_ERROR_MESSAGE);

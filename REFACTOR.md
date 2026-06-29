@@ -189,6 +189,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Restored decompiled boot server-error prefix literal.
 - Restored decompiled main startup failure dialog literals.
 - Restored decompiled updater error/download dialog literals.
+- Restored decompiled updater design-time caption literals.
 - Restored decompiled `:about`, `:entwicklung`, and `:commands` chat command response literals.
 - Restored decompiled `:whosonline` active-user chat command response.
 - Migrated remaining `Functions` conversions for email validation, identity refresh, club period, occupancy, download, inventory path, movement, and random helpers off `Vb`.
