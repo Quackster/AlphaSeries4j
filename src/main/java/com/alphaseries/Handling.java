@@ -2119,11 +2119,14 @@ public final class Handling {
             if (roomId <= 0L || !handlingUserOwnsRoom(callerUserId, roomId)) {
                 return;
             }
-            String socketRows = MySQL.Proc_5_2_6D4690("SELECT users.id_socket FROM rooms_rights,users WHERE rooms_rights.id_room='"
-                + roomId + "' AND users.id=rooms_rights.id_user AND users.id_socket IS NOT NULL", 0, 0);
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_rights WHERE id_room='" + roomId + "'", 0, 0);
-            for (String row : StringUtils.text(socketRows).split("\r", -1)) {
-                int targetSocketIndex = (int) NumberUtils.parseLong(row);
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return;
+            }
+            List<Long> socketIndexes = rooms.activeRightHolderSocketIndexes(roomId);
+            rooms.deleteRoomRights(roomId);
+            for (Long activeSocketIndex : socketIndexes) {
+                int targetSocketIndex = activeSocketIndex == null ? 0 : activeSocketIndex.intValue();
                 if (targetSocketIndex > 0) {
                     Proc_6_244_801E80(targetSocketIndex, "@k", 0);
                 }
@@ -2153,7 +2156,10 @@ public final class Handling {
                 return;
             }
             Functions.Proc_10_18_80C9E0(roomId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0);
+            RoomDao rooms = roomDao();
+            if (rooms != null) {
+                rooms.deleteRoom(roomId);
+            }
             Proc_6_53_718E00(socketIndex, 0, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -2227,11 +2233,14 @@ public final class Handling {
             if (revokeCount < 1L || revokeCount > 150L) {
                 return;
             }
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return;
+            }
             for (long revokeIndex = 1L; revokeIndex <= revokeCount; revokeIndex++) {
                 String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
                 if (!targetUserId.isEmpty() && !"0".equals(targetUserId)) {
-                    MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_rights WHERE id_user='"
-                        + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_room='" + roomId + "'", 0, 0);
+                    rooms.deleteRoomRight(NumberUtils.parseLong(targetUserId), roomId);
                     int targetSocketIndex = handlingSocketFromUserId(targetUserId);
                     if (targetSocketIndex > 0) {
                         Proc_6_244_801E80(targetSocketIndex, "@k", 0);
@@ -2248,7 +2257,7 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "EB");
             LongRef offset = new LongRef(1);
-            String targetName = Functions.Proc_10_11_80A9C0(readWireString(requestPayload, offset), 0, 0);
+            String targetName = readWireString(requestPayload, offset);
             if (targetName.isEmpty()) {
                 return;
             }
@@ -2260,13 +2269,16 @@ public final class Handling {
             if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
                 return;
             }
-            String targetUserId = String.valueOf(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
-                + targetName + "' LIMIT 1", 0, 0)));
-            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+            UserDao users = userDao();
+            RoomDao rooms = roomDao();
+            if (users == null || rooms == null) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_rights WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_room='" + roomId + "'", 0, 0);
+            long targetUserId = users.userIdByName(targetName);
+            if (targetUserId <= 0L) {
+                return;
+            }
+            rooms.deleteRoomRight(targetUserId, roomId);
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(0, null, "Fc"), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.

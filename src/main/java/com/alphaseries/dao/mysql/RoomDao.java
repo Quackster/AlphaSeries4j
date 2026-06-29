@@ -153,6 +153,14 @@ public final class RoomDao {
             roomId);
     }
 
+    public List<Long> activeRightHolderSocketIndexes(long roomId) throws SQLException {
+        return database.query(
+            "SELECT users.id_socket FROM rooms_rights,users WHERE rooms_rights.id_room=? "
+                + "AND users.id=rooms_rights.id_user AND users.id_socket IS NOT NULL",
+            resultSet -> resultSet.getLong(1),
+            roomId);
+    }
+
     public String settingsRow(long roomId) throws SQLException {
         return database.queryOne(
             "SELECT rooms.id,rooms.name,rooms.description,rooms.status_door,"
@@ -282,6 +290,14 @@ public final class RoomDao {
             "DELETE FROM rooms_rights WHERE id_user=? AND id_room=?",
             userId,
             roomId);
+    }
+
+    public int deleteRoomRights(long roomId) throws SQLException {
+        return database.execute("DELETE FROM rooms_rights WHERE id_room=?", roomId);
+    }
+
+    public int deleteRoom(long roomId) throws SQLException {
+        return database.execute("DELETE FROM rooms WHERE id=? LIMIT 1", roomId);
     }
 
     public int insertRoomRight(long userId, long roomId) throws SQLException {
