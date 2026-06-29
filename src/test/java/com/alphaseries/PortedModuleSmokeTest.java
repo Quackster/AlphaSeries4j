@@ -600,6 +600,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Console.entries().get(0).lineText().contains("ILLEGAL KOMBINATION"));
         assertEquals(true, Console.entries().get(0).lineText().contains("Bitte eigene Software nutzen"));
         assertEquals(49344L, Console.entries().get(0).foreColor());
+        assertEquals("Unable to intialize. File may be corrupted!",
+            Boot.initializationIntegrityFailureMessage(true, "Alpha Series [INITIALISIERE] - [%%]"));
+        assertEquals("", Boot.initializationIntegrityFailureMessage(false, "Alpha Series [INITIALISIERE] - [%%]"));
+        assertEquals("", Boot.initializationIntegrityFailureMessage(true, "Alpha Series [RUNNING] - [%%]"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "a\2b\2c\2d\2",
             Boot.buildCampaignReplacementCache("a\tb\rc\td"));
         Boot.AchievementSettingsCache achievementSettings = Boot.buildAchievementSettingsCache(

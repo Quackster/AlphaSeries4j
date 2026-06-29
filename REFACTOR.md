@@ -182,6 +182,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed represented achievement progress reads through typed `UserDao` accessors, replacing raw user/log SQL and tab-delimited summary parsing in `Handling`.
 - Restored decompiled boot caption states and Figuredata cache validation/error logging.
 - Restored decompiled `ERR.log`/`SLOW.log` boot header text.
+- Restored decompiled boot initialization integrity failure literal.
 - Restored decompiled `:about`, `:entwicklung`, and `:commands` chat command response literals.
 - Restored decompiled `:whosonline` active-user chat command response.
 - Migrated remaining `Functions` conversions for email validation, identity refresh, club period, occupancy, download, inventory path, movement, and random helpers off `Vb`.

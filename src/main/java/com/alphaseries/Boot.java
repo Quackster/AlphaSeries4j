@@ -18,6 +18,8 @@ public final class Boot {
     public static final String DEFAULT_BOOT_NOTICE = "ILLEGAL KOMBINATION: Der Programmierer haftet nicht f\u00fcr das "
         + "Nutzen dieses Servers - Das nutzen mit rechtlich gesch\u00fctzten Bildern ist strafbar - Bitte eigene "
         + "Software nutzen";
+    public static final String INITIALIZATION_INTEGRITY_FAILURE_MESSAGE =
+        "Unable to intialize. File may be corrupted!";
 
     private Boot() {
     }
@@ -443,6 +445,13 @@ public final class Boot {
         }
         Console.Proc_2_1_6D1B60(message, "", "49344");
         Console.Proc_2_2_6D21D0("", "HIDDEN", "262144");
+    }
+
+    public static String initializationIntegrityFailureMessage(boolean integrityFlag, String caption) {
+        if (integrityFlag && StringUtils.text(caption).contains("INITIALISIERE")) {
+            return INITIALIZATION_INTEGRITY_FAILURE_MESSAGE;
+        }
+        return "";
     }
 
     public static String bootErrorLogHeader(String productName, String nowText) {
