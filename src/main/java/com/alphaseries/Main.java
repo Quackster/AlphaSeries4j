@@ -7,6 +7,7 @@ import com.alphaseries.db.Database;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.server.packet.PacketSink;
 import com.alphaseries.game.session.GameServerSessionState;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -746,11 +747,12 @@ public final class Main {
     }
 
     public static String mainRollerMovePayload(long furnitureId, long positionX, long positionY, String positionZ) {
-        String payload = Crypto.Proc_3_0_6D2AF0(furnitureId, null, "AZ");
-        payload = Crypto.Proc_3_0_6D2AF0(positionX, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(positionY, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(positionZ), null, payload);
-        return payload;
+        return PacketBuilder.message("AZ")
+            .appendInt(furnitureId)
+            .appendInt(positionX)
+            .appendInt(positionY)
+            .appendInt(NumberUtils.parseLong(positionZ))
+            .build();
     }
 
     public static void mainRollerMoveOccupants(long roomSlot, long fromX, long fromY, long toX, long toY, long directionValue) {

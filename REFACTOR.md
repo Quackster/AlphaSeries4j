@@ -90,6 +90,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated core `Functions` setting/string/wire-field/inventory-cache helpers off `Vb` conversions and onto shared utility helpers/fluent alert payloads.
 - Migrated `Licence.Proc_9_0` through `Proc_9_5` to `CatalogRegistry`, added named cache setters, and removed `Licence`'s dependency on `Vb`.
 - Migrated `Main` identity/startup/game-server/session-cache helpers off `Vb` conversions and onto shared `StringUtils`/`NumberUtils`.
+- Migrated `Main` roller movement payload construction from chained `Crypto` calls to fluent `PacketBuilder`.
 - Migrated `Boot` cache refresh/build helper conversions off `Vb` and onto shared `StringUtils`/`NumberUtils`.
 - Migrated remaining `Handling` conversions off `Vb` and onto shared `StringUtils`/`NumberUtils`, then removed the unused `com.alphaseries.vb.Vb` compatibility class.
 - Migrated several payload builders from string concatenation to fluent `PacketBuilder`.
@@ -104,14 +105,14 @@ Compared with `main`, the VB helper artifact has been removed:
 
 Measured on 2026-06-29:
 
-- Unique `Proc_*` symbols under `src/main/java`: 469
+- Unique `Proc_*` symbols under `src/main/java`: 468
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 456
 - `Boot.java`: 1130 lines
 - `Handling.java`: 12153 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 316 lines
-- `Main.java`: 920 lines
+- `Main.java`: 922 lines
 
 ## Next Targets
 
