@@ -5749,47 +5749,34 @@ public final class Handling {
             if (searchText.isEmpty()) {
                 return "";
             }
-            String escapedSearch = Functions.Proc_10_11_80A9C0(searchText, 0, 0).toLowerCase();
-            String whereClause = searchText.length() > 3
-                ? "LOWER(name) LIKE '" + escapedSearch + "%'"
-                : "LOWER(name)='" + escapedSearch + "'";
             String dateFormat = Functions.Proc_10_0_809570("com.mysql.format.date", "%d-%m-%Y", 0);
             String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,name,id_socket,figure,motto,nickname,DATE_FORMAT(FROM_UNIXTIME(lastonline_time), '"
-                + Functions.Proc_10_11_80A9C0(dateFormat + " " + timeFormat, 0, 0)
-                + "') FROM users WHERE " + whereClause + " LIMIT 50", 0, 0);
+            MessengerDao messenger = messengerDao();
+            if (messenger == null) {
+                return "";
+            }
             long friendCount = 0L;
             long otherCount = 0L;
             StringBuilder friendPayload = new StringBuilder();
             StringBuilder otherPayload = new StringBuilder();
-            for (String row : rowText.split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    String[] fields = row.split("\t", -1);
-                    if (fields.length >= 7) {
-                        String targetUserId = handlingField(fields, 0);
-                        if (!targetUserId.equals(userId)) {
-                            long isOnline = NumberUtils.parseLong(handlingField(fields, 2)) > 0L ? 1L : 0L;
-                            String resultPayload = messengerSearchResultPayload(
-                                targetUserId,
-                                handlingField(fields, 1),
-                                handlingField(fields, 3),
-                                handlingField(fields, 4),
-                                handlingField(fields, 5),
-                                handlingField(fields, 6),
-                                isOnline);
-                            boolean isFriend = !MySQL.Proc_5_2_6D4690("SELECT id_user FROM friendships WHERE has_accept='1' AND ((id_user='"
-                                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_friend='"
-                                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "') OR (id_user='"
-                                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_friend='"
-                                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "')) LIMIT 1", 0, 0).isEmpty();
-                            if (isFriend) {
-                                friendPayload.append(resultPayload);
-                                friendCount++;
-                            } else {
-                                otherPayload.append(resultPayload);
-                                otherCount++;
-                            }
-                        }
+            long callerUserId = NumberUtils.parseLong(userId);
+            for (MessengerDao.SearchUser searchUser : messenger.searchUsers(searchText, dateFormat + " " + timeFormat)) {
+                if (searchUser.userId() != callerUserId) {
+                    long isOnline = searchUser.socketIndex() > 0L ? 1L : 0L;
+                    String resultPayload = messengerSearchResultPayload(
+                        String.valueOf(searchUser.userId()),
+                        searchUser.userName(),
+                        searchUser.figure(),
+                        searchUser.motto(),
+                        searchUser.nickname(),
+                        searchUser.lastOnline(),
+                        isOnline);
+                    if (messenger.acceptedFriendshipExists(callerUserId, searchUser.userId())) {
+                        friendPayload.append(resultPayload);
+                        friendCount++;
+                    } else {
+                        otherPayload.append(resultPayload);
+                        otherCount++;
                     }
                 }
             }

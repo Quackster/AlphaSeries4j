@@ -123,4 +123,50 @@ public final class MessengerDao {
             targetUserId,
             userId);
     }
+
+    public List<SearchUser> searchUsers(String searchText, String dateTimeFormat) throws SQLException {
+        String normalizedSearch = searchText == null ? "" : searchText.trim().toLowerCase();
+        if (normalizedSearch.isEmpty()) {
+            return List.of();
+        }
+        if (normalizedSearch.length() > 3) {
+            return database.query(
+                "SELECT id,name,id_socket,figure,motto,nickname,DATE_FORMAT(FROM_UNIXTIME(lastonline_time), ?) "
+                    + "FROM users WHERE LOWER(name) LIKE ? LIMIT 50",
+                resultSet -> new SearchUser(
+                    resultSet.getLong(1),
+                    resultSet.getString(2),
+                    resultSet.getLong(3),
+                    resultSet.getString(4),
+                    resultSet.getString(5),
+                    resultSet.getString(6),
+                    resultSet.getString(7)),
+                dateTimeFormat,
+                normalizedSearch + "%");
+        }
+        return database.query(
+            "SELECT id,name,id_socket,figure,motto,nickname,DATE_FORMAT(FROM_UNIXTIME(lastonline_time), ?) "
+                + "FROM users WHERE LOWER(name)=? LIMIT 50",
+            resultSet -> new SearchUser(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getLong(3),
+                resultSet.getString(4),
+                resultSet.getString(5),
+                resultSet.getString(6),
+                resultSet.getString(7)),
+            dateTimeFormat,
+            normalizedSearch);
+    }
+
+    public record SearchUser(
+        long userId,
+        String userName,
+        long socketIndex,
+        String figure,
+        String motto,
+        String nickname,
+        String lastOnline
+    ) {
+    }
 }
