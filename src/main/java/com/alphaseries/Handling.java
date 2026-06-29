@@ -11,6 +11,7 @@ import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.dao.mysql.TradeDao;
 import com.alphaseries.dao.mysql.MessengerDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.pet.PetCommandActionRow;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -11143,13 +11144,18 @@ public final class Handling {
                 }
             }
         }
-        String rowText = MySQL.Proc_5_2_6D4690("SELECT petlevel_required,command_action FROM bots_petcommands WHERE id_command='"
-            + commandId + "' LIMIT 1", 0, 0);
-        if (!rowText.isEmpty()) {
-            String[] fields = rowText.split("\t", -1);
-            result.requiredLevel = NumberUtils.parseLong(handlingField(fields, 0));
-            result.action = handlingField(fields, 1);
-            result.found = true;
+        BotDao bots = botDao();
+        if (bots != null) {
+            try {
+                PetCommandActionRow row = bots.petCommandAction(commandId).orElse(null);
+                if (row != null) {
+                    result.requiredLevel = row.requiredLevel();
+                    result.action = StringUtils.text(row.action());
+                    result.found = true;
+                }
+            } catch (Exception ignored) {
+                // VB6 source suppresses handler failures.
+            }
         }
         return result;
     }

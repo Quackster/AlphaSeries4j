@@ -1,6 +1,7 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.pet.PetCommandActionRow;
 import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.pet.PetRaceRow;
 import com.alphaseries.game.pet.PetStatusRow;
@@ -123,5 +124,14 @@ public final class BotDao {
                 resultSet.getString(11)),
             botId,
             3L);
+    }
+
+    public Optional<PetCommandActionRow> petCommandAction(long commandId) throws SQLException {
+        return database.queryOne(
+            "SELECT petlevel_required,command_action FROM bots_petcommands WHERE id_command=? LIMIT 1",
+            resultSet -> new PetCommandActionRow(
+                resultSet.getLong(1),
+                resultSet.getString(2)),
+            commandId);
     }
 }
