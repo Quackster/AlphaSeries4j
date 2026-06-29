@@ -2499,34 +2499,29 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            String roomRow = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms.id_slot,users.id,models.name,models.id,rooms.id_floor,"
-                + "rooms.id_wallpaper,rooms.id_landscape,rooms.rate,models.map,models.position_x,models.position_y,NULL,"
-                + "rooms.name,rooms.disable_walls,rooms.allow_otherspets,rooms.allow_walkthrough,rooms.allow_feedpets,models.type,"
-                + "rooms.visitors_primaryid,rooms.is_staff_picked,thickness_floor,thickness_wallpaper FROM rooms,models,users "
-                + "WHERE rooms.id='" + roomId + "' AND users.id=rooms.id_owner AND models.id=rooms.id_model LIMIT 1", 0, 0);
-            if (roomRow.isEmpty()) {
-                return;
-            }
-            String[] fields = roomRow.split("\t", -1);
-            long modelId = NumberUtils.parseLong(handlingField(fields, 4));
-            String floorPattern = handlingField(fields, 5);
-            String wallpaperPattern = handlingField(fields, 6);
-            String landscapePattern = handlingField(fields, 7);
-            long roomRate = NumberUtils.parseLong(handlingField(fields, 8));
-            if (roomRate < 0L) {
-                roomRate = 0L;
-            }
-            String modelPayload = normalizeRoomModelMap(handlingField(fields, 9));
-            String ownerUserId = String.valueOf((long) NumberUtils.parseLong(handlingField(fields, 2)));
-            long disableWalls = NumberUtils.parseLong(handlingField(fields, 14));
-            long thicknessFloor = NumberUtils.parseLong(handlingField(fields, 21));
-            long thicknessWallpaper = NumberUtils.parseLong(handlingField(fields, 22));
-            boolean hasControl = handlingUserHasRoomRight(userId, roomId)
-                || handlingUserHasPermission(userId, "fuse_any_room_controller");
             RoomDao rooms = roomDao();
             if (rooms == null) {
                 return;
             }
+            RoomDao.RoomPresentationState roomState = rooms.roomPresentationState(roomId).orElse(null);
+            if (roomState == null) {
+                return;
+            }
+            long modelId = roomState.modelId();
+            String floorPattern = roomState.floorPattern();
+            String wallpaperPattern = roomState.wallpaperPattern();
+            String landscapePattern = roomState.landscapePattern();
+            long roomRate = roomState.roomRate();
+            if (roomRate < 0L) {
+                roomRate = 0L;
+            }
+            String modelPayload = normalizeRoomModelMap(roomState.modelMap());
+            String ownerUserId = String.valueOf(roomState.ownerUserId());
+            long disableWalls = roomState.disableWalls();
+            long thicknessFloor = roomState.thicknessFloor();
+            long thicknessWallpaper = roomState.thicknessWallpaper();
+            boolean hasControl = handlingUserHasRoomRight(userId, roomId)
+                || handlingUserHasPermission(userId, "fuse_any_room_controller");
             boolean hasVoted = rooms.hasRatedRoom(NumberUtils.parseLong(userId), roomId);
             long ratingPayloadValue = hasVoted ? -1L : roomRate;
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "AE") + '\2', 0);
