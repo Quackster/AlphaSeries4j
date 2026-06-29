@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.config.AppSettingsCache;
 import com.alphaseries.config.PermissionMatrix;
+import com.alphaseries.dao.mysql.FurnitureDao;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
@@ -221,17 +222,14 @@ public final class Functions {
             if (furnitureId <= 0L) {
                 return 0L;
             }
-            String rowText = MySQL.Proc_5_2_6D4690(
-                "SELECT id_product,id_owner,sign,id_secondary FROM furnitures WHERE id ='" + furnitureId + "' LIMIT 1",
-                0, 0);
-            String[] fields = rowText.split("\t", -1);
-            if (rowText.isEmpty() || fields.length < 2) {
+            FurnitureDao.InventoryFurniture furniture = furnitureDao().inventoryFurniture(furnitureId).orElse(null);
+            if (furniture == null) {
                 return 0L;
             }
-            long productId = NumberUtils.parseLong(fields[0]);
-            long ownerId = NumberUtils.parseLong(fields[1]);
-            String itemData = fields.length >= 3 ? fields[2] : "";
-            long secondaryValue = fields.length >= 4 ? NumberUtils.parseLong(fields[3]) : 0L;
+            long productId = furniture.productId();
+            long ownerId = furniture.ownerId();
+            String itemData = StringUtils.text(furniture.itemData());
+            long secondaryValue = furniture.secondaryValue();
             if (ownerId <= 0L) {
                 return 0L;
             }
@@ -262,13 +260,11 @@ public final class Functions {
             if (furnitureId <= 0L) {
                 return 0L;
             }
-            String rowText = MySQL.Proc_5_2_6D4690(
-                "SELECT id_product,id_owner,sign FROM furnitures WHERE id ='" + furnitureId + "' LIMIT 1", 0, 0);
-            String[] fields = rowText.split("\t", -1);
-            if (rowText.isEmpty() || fields.length < 2) {
+            FurnitureDao.InventoryFurniture furniture = furnitureDao().inventoryFurniture(furnitureId).orElse(null);
+            if (furniture == null) {
                 return 0L;
             }
-            long ownerId = NumberUtils.parseLong(fields[1]);
+            long ownerId = furniture.ownerId();
             if (ownerId <= 0L) {
                 return 0L;
             }
@@ -493,6 +489,10 @@ public final class Functions {
 
     private static RoomDao roomDao() throws SQLException {
         return new RoomDao(configuredDatabase());
+    }
+
+    private static FurnitureDao furnitureDao() throws SQLException {
+        return new FurnitureDao(configuredDatabase());
     }
 
     private static Database configuredDatabase() throws SQLException {

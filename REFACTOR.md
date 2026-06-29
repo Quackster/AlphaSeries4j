@@ -103,6 +103,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `FurnitureDao` with typed product lookup for credit-furniture redemption and routed the furniture delete through the DAO.
 - Expanded `FurnitureDao` with typed pending-furniture timer state and routed `Main.signerTimer` through prepared DAO methods.
 - Expanded `FurnitureDao` with typed roller furniture rows and prepared room-position updates for `Main.rollersTimer`.
+- Expanded `FurnitureDao` with typed inventory furniture rows and routed `Functions` inventory cache add/remove refreshes through prepared DAO methods.
 - Expanded `RoomDao` with typed `RoomEntryState` loading and room-ban checks for room entry validation.
 - Expanded `UserDao` for respect balance reads and respect-give updates, routing the respect handler through prepared DAO methods.
 - Expanded `com.alphaseries.dao.mysql.UserDao` for socket-user and permission-level lookups, removing remaining inline user lookup SQL from `MySQL` helper paths.
@@ -140,9 +141,9 @@ Compared with `main`, the VB helper artifact has been removed:
 
 Measured on 2026-06-29:
 
-- Unique `Proc_*` symbols under `src/main/java`: 466
+- Unique `Proc_*` symbols under `src/main/java`: 465
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 351
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 349
 - `Boot.java`: 1130 lines
 - `Handling.java`: 12320 lines
 - `Functions.java`: 741 lines
