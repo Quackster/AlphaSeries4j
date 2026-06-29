@@ -1,8 +1,11 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.pet.PetInventoryRow;
+import com.alphaseries.game.pet.PetRaceRow;
 
 import java.sql.SQLException;
+import java.util.List;
 
 public final class BotDao {
     private final Database database;
@@ -38,5 +41,30 @@ public final class BotDao {
             100L,
             100L,
             0L);
+    }
+
+    public List<PetRaceRow> petRaces(String productPet) throws SQLException {
+        return database.query(
+            "SELECT id_pet,breed,min_rank,min_hcrank,name FROM settings_petraces WHERE product_pet=? ORDER BY breed ASC",
+            resultSet -> new PetRaceRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4),
+                resultSet.getString(5)),
+            productPet);
+    }
+
+    public List<PetInventoryRow> inventoryPets(long userId) throws SQLException {
+        return database.query(
+            "SELECT bots.id,bots.name,bots.figure,bots_petdata.scratches FROM bots,bots_petdata WHERE bots.id_user=? "
+                + "AND bots.id_handle=? AND bots.id_room IS NULL AND bots_petdata.id_bot=bots.id",
+            resultSet -> new PetInventoryRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getLong(4)),
+            userId,
+            3L);
     }
 }

@@ -95,6 +95,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `ClubDao` with club-period updates, clearing remaining direct `MySQL.Proc_5_*` usage from `Functions`.
 - Added `com.alphaseries.dao.mysql.PackageDao` and routed package pet preview lookups through typed prepared DAO methods.
 - Added `com.alphaseries.dao.mysql.BotDao` and routed package pet creation bot inserts/pet-data writes through typed prepared DAO methods.
+- Expanded `BotDao` with typed pet race and inventory rows, and routed pet race/inventory payload handlers through typed records instead of tab-delimited database rows.
 - Added `com.alphaseries.dao.mysql.TradeDao` and routed trade ownership updates/log insertion through prepared DAO methods.
 - Expanded `com.alphaseries.dao.mysql.RoomDao` for room settings, rights, icon, door-status, and event create/edit/delete operations, and routed homeroom updates through `UserDao`.
 - Expanded `RoomDao`/`UserDao` for shared `Handling` socket, active-room, permission, room-right, category visibility, and room-ban helper queries.
@@ -173,9 +174,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 463
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 279
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 277
 - `Boot.java`: 1130 lines
-- `Handling.java`: 12360 lines
+- `Handling.java`: 12363 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 920 lines

@@ -4,6 +4,8 @@ import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
+import java.util.List;
+
 public final class PetPayloads {
     private PetPayloads() {
     }
@@ -22,6 +24,24 @@ public final class PetPayloads {
                         racePayload.appendInt(breedId).appendRaw("II");
                         raceCount++;
                     }
+                }
+            }
+        }
+        return PacketBuilder.message("L{")
+            .appendString(productPet)
+            .appendInt(raceCount)
+            .appendRaw(racePayload)
+            .build();
+    }
+
+    public static String raceListFromRows(String productPet, List<PetRaceRow> rows, long rankIndex, long hcLevel) {
+        long raceCount = 0L;
+        PacketBuilder racePayload = PacketBuilder.create();
+        if (rows != null) {
+            for (PetRaceRow row : rows) {
+                if (row != null && rankIndex >= row.minRank() && hcLevel >= row.minHcRank()) {
+                    racePayload.appendInt(row.breed()).appendRaw("II");
+                    raceCount++;
                 }
             }
         }
@@ -51,6 +71,38 @@ public final class PetPayloads {
             .appendInt(petCount)
             .appendRaw(petPayload)
             .build();
+    }
+
+    public static String inventoryListFromRows(List<PetInventoryRow> rows) {
+        long petCount = 0L;
+        PacketBuilder petPayload = PacketBuilder.create();
+        if (rows != null) {
+            for (PetInventoryRow row : rows) {
+                if (row != null) {
+                    String rowPayload = inventoryRow(row);
+                    if (!rowPayload.isEmpty()) {
+                        petPayload.appendRaw(rowPayload);
+                        petCount++;
+                    }
+                }
+            }
+        }
+        return PacketBuilder.message("IX")
+            .appendInt(petCount)
+            .appendRaw(petPayload)
+            .build();
+    }
+
+    public static String inventoryRow(PetInventoryRow row) {
+        if (row == null || row.petId() <= 0L) {
+            return "";
+        }
+        return inventoryRow(new String[]{
+            String.valueOf(row.petId()),
+            row.name(),
+            row.figure(),
+            String.valueOf(row.scratches())
+        });
     }
 
     public static String inventoryRow(String[] fields) {
