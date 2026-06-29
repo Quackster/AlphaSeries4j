@@ -17,8 +17,18 @@ public final class SocketMarkerSet {
         return new SocketMarkerSet(markers);
     }
 
+    public void add(long socketIndex) {
+        if (socketIndex > 0L) {
+            socketIndexes.add(socketIndex);
+        }
+    }
+
     public void remove(long socketIndex) {
         socketIndexes.remove(socketIndex);
+    }
+
+    public boolean contains(long socketIndex) {
+        return socketIndexes.contains(socketIndex);
     }
 
     public String toLegacyMarkers() {

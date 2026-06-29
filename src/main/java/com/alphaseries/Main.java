@@ -404,11 +404,7 @@ public final class Main {
         long activeCount = 0L;
         try {
             MySQL.Proc_5_0_6D3CD0("UPDATE settings SET value=UNIX_TIMESTAMP() WHERE variable='com.server.socket.check.time'", 1, 0);
-            for (long socketIndex = 1L; socketIndex <= Guardian.global_0082919C; socketIndex++) {
-                String socketMarker = "[" + socketIndex + "]";
-                if (!Guardian.global_008291A0.contains(socketMarker)) {
-                    continue;
-                }
+            for (long socketIndex : Guardian.markedSocketIndexes()) {
                 if (Guardian.Proc_11_2_821390(socketIndex, 0, 0) == 1) {
                     activeCount++;
                 } else {

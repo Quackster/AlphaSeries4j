@@ -8287,9 +8287,8 @@ public final class Handling {
             return;
         }
         Proc_6_242_7FF0D0(socketIndex, 0, 0);
-        String marker = "[" + socketIndex + "]";
         Guardian.setSocketConnected(socketIndex, false);
-        Guardian.global_008291A0 = Vb.cStr(Guardian.global_008291A0).replace(marker, "");
+        Guardian.removeSocketMarker(socketIndex);
         SocketMarkerSet socketMarkers = Licence.socketMarkers();
         socketMarkers.remove(socketIndex);
         Licence.setSocketMarkers(socketMarkers);

@@ -1,11 +1,15 @@
 package com.alphaseries;
 
-import com.alphaseries.vb.Vb;
+import com.alphaseries.game.session.SocketMarkerSet;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public final class Guardian {
@@ -31,7 +35,7 @@ public final class Guardian {
             return;
         }
         try {
-            Files.createDirectory(Path.of(Vb.cStr(args[0])));
+            Files.createDirectory(Path.of(StringUtils.text(args[0])));
         } catch (IOException ignored) {
             // VB6 source suppresses MkDir failures.
         }
@@ -41,7 +45,7 @@ public final class Guardian {
         if (args == null || args.length == 0) {
             return;
         }
-        deleteRecursively(Path.of(Vb.cStr(args[0])));
+        deleteRecursively(Path.of(StringUtils.text(args[0])));
     }
 
     public static int Proc_11_2_821390(Object... args) {
@@ -49,7 +53,7 @@ public final class Guardian {
             return 1;
         }
         if (args != null && args.length >= 1) {
-            int socketIndex = (int) Vb.val(args[0]);
+            int socketIndex = NumberUtils.parseInt(args[0]);
             return connectedSockets.contains(socketIndex) ? 1 : 0;
         }
         return 0;
@@ -59,7 +63,7 @@ public final class Guardian {
         if (args == null || args.length == 0) {
             return;
         }
-        long socketIndexLong = Vb.val(args[0]);
+        long socketIndexLong = NumberUtils.parseLong(args[0]);
         SocketMarkerState state = toggleSocketMarkerState(global_008291A0, global_0082919C, socketIndexLong);
         if (!state.accepted) {
             return;
@@ -72,24 +76,42 @@ public final class Guardian {
 
     public static SocketMarkerState toggleSocketMarkerState(String existingMarkers, long highestIndex, long socketIndexLong) {
         SocketMarkerState state = new SocketMarkerState();
-        state.markers = Vb.cStr(existingMarkers);
+        SocketMarkerSet socketMarkers = SocketMarkerSet.fromLegacy(existingMarkers);
         state.highestIndex = highestIndex;
         if (socketIndexLong < 0L || socketIndexLong == 2500L) {
+            state.markers = socketMarkers.toLegacyMarkers();
             return state;
         }
         state.accepted = true;
         int socketIndex = (int) socketIndexLong;
-        String marker = "[" + socketIndex + "]";
-        if (!state.markers.contains(marker)) {
-            state.markers += marker;
+        if (!socketMarkers.contains(socketIndex)) {
+            socketMarkers.add(socketIndex);
             state.added = true;
             if (socketIndex > state.highestIndex) {
                 state.highestIndex = socketIndex;
             }
         } else {
-            state.markers = state.markers.replace(marker, "");
+            socketMarkers.remove(socketIndex);
         }
+        state.markers = socketMarkers.toLegacyMarkers();
         return state;
+    }
+
+    public static List<Long> markedSocketIndexes() {
+        List<Long> socketIndexes = new ArrayList<>();
+        SocketMarkerSet socketMarkers = SocketMarkerSet.fromLegacy(global_008291A0);
+        for (long socketIndex = 1L; socketIndex <= global_0082919C; socketIndex++) {
+            if (socketMarkers.contains(socketIndex)) {
+                socketIndexes.add(socketIndex);
+            }
+        }
+        return socketIndexes;
+    }
+
+    public static void removeSocketMarker(long socketIndex) {
+        SocketMarkerSet socketMarkers = SocketMarkerSet.fromLegacy(global_008291A0);
+        socketMarkers.remove(socketIndex);
+        global_008291A0 = socketMarkers.toLegacyMarkers();
     }
 
     public static void setGameServerConnected(boolean connected) {
