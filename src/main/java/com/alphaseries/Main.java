@@ -83,6 +83,13 @@ public final class Main {
         return shiftIdentityText(args != null && args.length >= 1 ? Vb.cStr(args[0]) : "", 7L);
     }
 
+    public static final class LifecycleResult {
+        public boolean success;
+        public boolean shouldExit;
+        public String caption = "";
+        public String productKey = "";
+    }
+
     public static void Proc_0_24_68EEF0(Object... args) {
         // Empty in the recovered VB6 reference.
     }
@@ -108,6 +115,72 @@ public final class Main {
                 Functions.Proc_10_8_80A580(socketIndex, 0x60, 0);
             }
         }
+    }
+
+    public static LifecycleResult formInitialize(String captionTemplate) {
+        LifecycleResult result = new LifecycleResult();
+        try {
+            Licence.global_0082904C = 0xFFFFFFL;
+            Licence.global_00829038 = "ALPHASERIES_FINAL (PREMIUM)";
+            Licence.global_0082903C = 0x17L;
+            Licence.global_00829034 = false;
+            if (Crypto.Proc_3_3_6D3240("K", -1, 0) != 3L) {
+                result.shouldExit = true;
+                return result;
+            }
+            Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "ROOMS").toString(), 0, 0);
+            Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER").toString(), 0, 0);
+            Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "USERS").toString(), 0, 0);
+            result.caption = Vb.cStr(captionTemplate).replace("%%", Licence.global_00829038);
+            Licence.global_008290AC = 0xFFFFFFL;
+            result.productKey = productKeyFromConfig(Handling.Proc_6_239_7FC170(
+                Path.of(Functions.applicationPath, "config.ini").toString(), 0, 7));
+            result.success = true;
+            return result;
+        } catch (Exception ignored) {
+            result.shouldExit = true;
+            return result;
+        }
+    }
+
+    public static boolean formQueryUnload() {
+        try {
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET id_socket=null,lastonline_time=UNIX_TIMESTAMP() WHERE id_socket IS NOT NULL", 1, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET id_slot=null,visitors_now='0' WHERE id_slot IS NOT NULL OR visitors_now!='0'", 0, 0);
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    public static boolean runServer(String caption, String licenceResponse) {
+        try {
+            if (Vb.cStr(caption).contains("[!]")) {
+                return true;
+            }
+            if (DataManager.Proc_8_7_8051C0(licenceResponse, 0, 0)) {
+                Boot.Proc_1_3_6BEBA0(0);
+                return true;
+            }
+            return false;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    public static String getProcessor() {
+        return Vb.cStr(System.getenv("USERNAME")).isEmpty()
+            ? Vb.cStr(System.getenv("USER"))
+            : Vb.cStr(System.getenv("USERNAME"));
+    }
+
+    public static String productKeyFromConfig(String configText) {
+        String[] configParts = Vb.cStr(configText).split("=", -1);
+        if (configParts.length < 8) {
+            return "";
+        }
+        String[] lines = configParts[7].split("\\r?\\n", -1);
+        return lines.length > 0 ? Vb.cStr(lines[0]) : "";
     }
 
     public static boolean dataProcessTimer(long socketIndex) {

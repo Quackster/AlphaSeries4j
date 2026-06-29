@@ -785,6 +785,7 @@ public final class PortedModuleSmokeTest {
         Main.Proc_0_24_68EEF0();
         assertEquals("AB", Main.newPremiumCheck(2, "d" + Character.toString((char) 163) + Character.toString((char) 164)));
         assertEquals("AZ", Main.getIdentity("e" + Character.toString((char) 164) + Character.toString((char) 190), 3));
+        assertEquals("KEY", Main.productKeyFromConfig("a=b=c=d=e=f=g=KEY\r\nnext"));
         Licence.global_00829354 = "[3][7]";
         assertEquals(true, Main.isGameSessionReady(7));
         assertEquals(false, Main.isGameSessionReady(8));
@@ -897,8 +898,28 @@ public final class PortedModuleSmokeTest {
         mainSql.clear();
         assertEquals(1L, Main.rollersTimer(4));
         assertEquals(true, containsSql(mainSql, "UPDATE furnitures SET position_x='2',position_y='1',position_z='2' WHERE id='302' AND id_room='44' LIMIT 1"));
+        mainSql.clear();
+        assertEquals(true, Main.formQueryUnload());
+        assertEquals(true, containsSql(mainSql, "UPDATE users SET id_socket=null,lastonline_time=UNIX_TIMESTAMP() WHERE id_socket IS NOT NULL"));
+        assertEquals(true, containsSql(mainSql, "UPDATE rooms SET id_slot=null,visitors_now='0' WHERE id_slot IS NOT NULL OR visitors_now!='0'"));
+        assertEquals(true, Main.runServer("[!] Alpha", ""));
         Guardian.setSocketConnected(8, false);
         MySQL.configureDatabaseConnection(null);
+        Path lifecycleRoot = Files.createTempDirectory("alphaseries-main-lifecycle");
+        Files.createDirectories(lifecycleRoot.resolve("CACHE").resolve("ROOMS"));
+        Files.createDirectories(lifecycleRoot.resolve("CACHE").resolve("PATHFINDER"));
+        Files.createDirectories(lifecycleRoot.resolve("CACHE").resolve("USERS"));
+        Files.writeString(lifecycleRoot.resolve("config.ini"), "a=b=c=d=e=f=g=PRODUCT-KEY\r\nrest");
+        String oldApplicationPathForLifecycle = Functions.applicationPath;
+        Functions.applicationPath = lifecycleRoot.toString();
+        Main.LifecycleResult lifecycleResult = Main.formInitialize("%% [!]");
+        assertEquals(true, lifecycleResult.success);
+        assertEquals("ALPHASERIES_FINAL (PREMIUM) [!]", lifecycleResult.caption);
+        assertEquals("PRODUCT-KEY", lifecycleResult.productKey);
+        assertEquals(false, Files.exists(lifecycleRoot.resolve("CACHE").resolve("ROOMS")));
+        assertEquals(0xFFFFFFL, Licence.global_0082904C);
+        assertEquals(0x17L, Licence.global_0082903C);
+        Functions.applicationPath = oldApplicationPathForLifecycle;
         assertEquals(Crypto.Proc_3_0_6D2AF0(3, null,
             Crypto.Proc_3_0_6D2AF0(2, null,
                 Crypto.Proc_3_0_6D2AF0(1, null,
