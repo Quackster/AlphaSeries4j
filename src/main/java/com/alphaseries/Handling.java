@@ -912,11 +912,13 @@ public final class Handling {
             if (userId.isEmpty()) {
                 return;
             }
-            long callForHelpId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM staff_cfh WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "' AND id_closed='0' AND timestamp_sent > UNIX_TIMESTAMP()-600 ORDER BY id DESC LIMIT 1", 0, 0));
+            StaffModerationDao moderationDao = staffModerationDao();
+            if (moderationDao == null) {
+                return;
+            }
+            long callForHelpId = moderationDao.latestOpenCallForHelpId(NumberUtils.parseLong(userId));
             if (callForHelpId > 0L) {
-                MySQL.Proc_5_0_6D3CD0("DELETE FROM staff_cfh WHERE id='" + callForHelpId + "'", 0, 0);
+                moderationDao.deleteCallForHelp(callForHelpId);
                 Proc_6_244_801E80(socketIndex, "E@", 0);
             }
         } catch (Exception ignored) {
@@ -941,11 +943,11 @@ public final class Handling {
                 + staffModerationPayload(rankIndex, hcLevel);
             Proc_6_244_801E80(socketIndex, payload, 0);
 
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT staff_cfh.id,staff_cfh.id_tab,users.id,users.name,"
-                + "staff_cfh.id_partner,staff_cfh.id_room,staff_cfh.id_category,staff_cfh.description,rooms.id,rooms.name,"
-                + "staff_cfh.id_picker FROM staff_cfh,users,rooms WHERE staff_cfh.id_closed!='3' "
-                + "AND staff_cfh.timestamp_sent > UNIX_TIMESTAMP()-43200 AND users.id=staff_cfh.id_user "
-                + "AND users.id_socket IS NOT NULL AND rooms.id=staff_cfh.id_room LIMIT 1000", 0, 0);
+            StaffModerationDao moderationDao = staffModerationDao();
+            if (moderationDao == null) {
+                return;
+            }
+            String rowText = moderationDao.openStaffCallRows();
             for (String row : rowText.split("\r", -1)) {
                 if (!row.isEmpty()) {
                     Proc_6_244_801E80(socketIndex, "HR" + callForHelpRowPayload(row, null), 0);
@@ -965,12 +967,12 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
-            long lastClosedState = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_closed FROM staff_cfh WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "' AND timestamp_sent > UNIX_TIMESTAMP()-600 ORDER BY id DESC LIMIT 1", 0, 0));
-            if (lastClosedState == 0L && !MySQL.Proc_5_2_6D4690("SELECT id_closed FROM staff_cfh WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "' AND timestamp_sent > UNIX_TIMESTAMP()-600 ORDER BY id DESC LIMIT 1", 0, 0).isEmpty()) {
+            StaffModerationDao moderationDao = staffModerationDao();
+            if (moderationDao == null) {
+                return;
+            }
+            java.util.Optional<Long> lastClosedState = moderationDao.recentCallForHelpClosedState(NumberUtils.parseLong(userId));
+            if (lastClosedState.isPresent() && lastClosedState.get() == 0L) {
                 return;
             }
             LongRef offset = new LongRef(1);
@@ -990,10 +992,8 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO staff_cfh(id_user,id_room,id_category,id_partner,description,timestamp_sent) VALUES('"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "','" + categoryId + "','"
-                + partnerUserId + "','" + Functions.Proc_10_11_80A9C0(descriptionText, 0, 0) + "',UNIX_TIMESTAMP())", 0, 0);
-            long callForHelpId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM staff_cfh", 0, 0));
+            moderationDao.insertCallForHelp(NumberUtils.parseLong(userId), roomId, categoryId, partnerUserId, descriptionText);
+            long callForHelpId = moderationDao.newestCallForHelpId();
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(callForHelpId, null, "EA"), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.

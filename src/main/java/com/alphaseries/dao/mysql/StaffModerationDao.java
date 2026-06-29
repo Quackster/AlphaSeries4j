@@ -226,6 +226,64 @@ public final class StaffModerationDao {
             roomId);
     }
 
+    public long latestOpenCallForHelpId(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM staff_cfh WHERE id_user=? AND id_closed='0' "
+                + "AND timestamp_sent > UNIX_TIMESTAMP()-600 ORDER BY id DESC LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId)
+            .orElse(0L);
+    }
+
+    public int deleteCallForHelp(long callForHelpId) throws SQLException {
+        return database.execute("DELETE FROM staff_cfh WHERE id=?", callForHelpId);
+    }
+
+    public String openStaffCallRows() throws SQLException {
+        List<String> rows = database.query(
+            "SELECT staff_cfh.id,staff_cfh.id_tab,users.id,users.name,"
+                + "staff_cfh.id_partner,staff_cfh.id_room,staff_cfh.id_category,staff_cfh.description,rooms.id,rooms.name,"
+                + "staff_cfh.id_picker FROM staff_cfh,users,rooms WHERE staff_cfh.id_closed!='3' "
+                + "AND staff_cfh.timestamp_sent > UNIX_TIMESTAMP()-43200 AND users.id=staff_cfh.id_user "
+                + "AND users.id_socket IS NOT NULL AND rooms.id=staff_cfh.id_room LIMIT 1000",
+            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
+                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5) + "\t" + resultSet.getString(6)
+                + "\t" + resultSet.getString(7) + "\t" + resultSet.getString(8) + "\t" + resultSet.getString(9)
+                + "\t" + resultSet.getString(10) + "\t" + resultSet.getString(11));
+        return String.join("\r", rows);
+    }
+
+    public Optional<Long> recentCallForHelpClosedState(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_closed FROM staff_cfh WHERE id_user=? AND timestamp_sent > UNIX_TIMESTAMP()-600 ORDER BY id DESC LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            userId);
+    }
+
+    public int insertCallForHelp(
+        long userId,
+        long roomId,
+        long categoryId,
+        long partnerUserId,
+        String description
+    ) throws SQLException {
+        return database.execute(
+            "INSERT INTO staff_cfh(id_user,id_room,id_category,id_partner,description,timestamp_sent) "
+                + "VALUES(?,?,?,?,?,UNIX_TIMESTAMP())",
+            userId,
+            roomId,
+            categoryId,
+            partnerUserId,
+            description);
+    }
+
+    public long newestCallForHelpId() throws SQLException {
+        return database.queryOne(
+            "SELECT MAX(id) FROM staff_cfh",
+            resultSet -> resultSet.getLong(1))
+            .orElse(0L);
+    }
+
     private long countCallForHelpByUser(long userId) throws SQLException {
         return database.queryOne(
             "SELECT COUNT(id) FROM staff_cfh WHERE id_user=?",
