@@ -6497,7 +6497,11 @@ public final class Handling {
             if (roomId <= 0L) {
                 return 0L;
             }
-            long roomSlot = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return 0L;
+            }
+            long roomSlot = rooms.roomSlot(roomId);
             if (roomSlot <= 0L) {
                 return 0L;
             }

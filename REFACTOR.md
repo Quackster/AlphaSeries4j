@@ -107,6 +107,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `BotDao` with typed pet placement rows, moving represented-bot placement field assembly out of SQL concatenation.
 - Expanded `BotDao` with typed pet race, level, and command startup cache rows, replacing raw pet startup cache SQL in `Boot`.
 - Expanded `BotDao`/`UserDao` with typed guide-bot entry and tutorial-guide methods, replacing raw guide-bot SQL in `Handling`.
+- Routed guide-bot removal room-slot lookup through `RoomDao`, replacing another raw room SQL lookup in `Handling`.
 - Added `com.alphaseries.dao.mysql.TradeDao` and routed trade ownership updates/log insertion through prepared DAO methods.
 - Expanded `com.alphaseries.dao.mysql.RoomDao` for room settings, rights, icon, door-status, and event create/edit/delete operations, and routed homeroom updates through `UserDao`.
 - Expanded `RoomDao`/`UserDao` for shared `Handling` socket, active-room, permission, room-right, category visibility, and room-ban helper queries.
@@ -185,9 +186,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 463
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 248
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 247
 - `Boot.java`: 1196 lines
-- `Handling.java`: 12407 lines
+- `Handling.java`: 12411 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 920 lines
