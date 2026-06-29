@@ -1,6 +1,8 @@
 package com.alphaseries;
 
-import com.alphaseries.vb.Vb;
+import com.alphaseries.server.update.UpdaterSettings;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -117,7 +119,7 @@ public final class Updater {
                 queueHeightAnimation(1000, 5);
                 return step;
             }
-            String[] entries = Licence.global_00829044.split("\n", -1);
+            String[] entries = Licence.updaterSettings().updateEntries();
             if (currentUpdateIndex > entries.length - 1L) {
                 queueHeightAnimation(1000, 5);
                 timer3Enabled = false;
@@ -159,11 +161,7 @@ public final class Updater {
     }
 
     public DownloadPlan downloadPlan(String appExeName, LocalDateTime timestamp) {
-        String[] updateRows = Licence.global_00829044.split("\n", -1);
-        long updateCount = updateRows.length - 1L;
-        if (updateCount <= 0L) {
-            updateCount = 1L;
-        }
+        long updateCount = Licence.updaterSettings().updateCountOrOne();
         DownloadPlan plan = new DownloadPlan();
         plan.targetWidth = Math.max(1L, PROGRESS_WIDTH_MAX / updateCount);
         plan.executableName = getUpdaterExecutableName(appExeName);
@@ -175,11 +173,12 @@ public final class Updater {
 
     public boolean formLoad(boolean databaseConnected) {
         try {
-            if (!Licence.global_00829048.isEmpty()) {
+            UpdaterSettings settings = Licence.updaterSettings();
+            if (settings.hasUpdateSql()) {
                 if (!databaseConnected) {
                     return false;
                 }
-                String sqlText = normalizedUpdateSql(Licence.global_00829048);
+                String sqlText = settings.normalizedUpdateSql();
                 for (String line : sqlText.split("\n", -1)) {
                     if (line.trim().length() > 5) {
                         MySQL.Proc_5_1_6D4110(line.trim(), 0, 0);
@@ -257,25 +256,26 @@ public final class Updater {
 
     public static long getUpdateFieldNumber(String[] fields, long fieldIndex) {
         if (fields != null && fieldIndex >= 0L && fieldIndex < fields.length) {
-            return Vb.val(fields[(int) fieldIndex]);
+            return NumberUtils.parseLong(fields[(int) fieldIndex]);
         }
         return 0L;
     }
 
     public static String getUpdaterExecutableName(String configuredName, String appExeName) {
-        return !Vb.cStr(configuredName).isEmpty() ? Vb.cStr(configuredName) : Vb.cStr(appExeName);
+        String configuredText = StringUtils.text(configuredName);
+        return !configuredText.isEmpty() ? configuredText : StringUtils.text(appExeName);
     }
 
     public static String getUpdaterExecutableName(String appExeName) {
-        return getUpdaterExecutableName(Licence.global_00829040, appExeName);
+        return Licence.updaterSettings().executableNameOr(appExeName);
     }
 
     public static String normalizedUpdateSql(String updateSql) {
-        return Vb.cStr(updateSql).replace("\r", "").replaceAll("(?i)INSERT INTO", "INSERT IGNORE INTO");
+        return UpdaterSettings.fromLegacy("", "", updateSql).normalizedUpdateSql();
     }
 
     public static String[] visibleBodyLines(String bodyText, int maxLines) {
-        String[] rawLines = Vb.cStr(bodyText).split("\\\\n", -1);
+        String[] rawLines = StringUtils.text(bodyText).split("\\\\n", -1);
         int visible = 0;
         int limit = Math.min(maxLines, rawLines.length);
         for (int index = 0; index < limit; index++) {

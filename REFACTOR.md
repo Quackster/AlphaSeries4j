@@ -65,6 +65,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.wired.WiredPayloads` for wired record formatting, cache replacement, selected-item checks, and state payload aggregation.
 - Added `com.alphaseries.messages.outgoing.MessengerPayloads` for friend, request, search, pending-request, and friend-list outgoing payloads.
 - Added `com.alphaseries.server.lifecycle.LicenceRuntimeState` as a typed adapter around startup product name, colors, version, debug logging, and packet tracing state previously read/written through raw `Licence` globals.
+- Added `com.alphaseries.server.update.UpdaterSettings` as a typed adapter around updater executable name, update rows, and update SQL previously read directly from `Licence` globals, and migrated `Updater` off `Vb` helpers.
 - Added `com.alphaseries.server.packet.PacketSink` and kept the root `PacketSink` as a deprecated compatibility alias.
 - Added `com.alphaseries.util.StringUtils` and `NumberUtils`; migrated new staff/session code away from duplicated local helper methods.
 - Migrated extracted `game.*`, `messages.outgoing`, and `protocol` packages off duplicated local `text`/`number`/`field` helpers and onto shared utilities.
@@ -84,7 +85,7 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 472
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1326
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1320
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 476
 - `Handling.java`: 12151 lines
 - `Functions.java`: 756 lines
