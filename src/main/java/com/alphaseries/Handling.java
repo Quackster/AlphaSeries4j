@@ -57,6 +57,7 @@ import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.NavigatorRoom;
+import com.alphaseries.game.navigator.NavigatorTagPopularity;
 import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
@@ -3946,21 +3947,11 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             long limitValue = navigatorListLimit();
-            String queryText = "SELECT SUM(get_one) as get_one,get_two FROM (SELECT SUM(rooms.visitors_now) as get_one,"
-                + "rooms.tag_1 as get_two FROM rooms,users WHERE rooms.tag_1 != '' AND rooms.visitors_max > 0 "
-                + "AND users.id=rooms.id_owner GROUP BY 2 UNION ALL SELECT SUM(rooms.visitors_now) as get_one,"
-                + "rooms.tag_2 as get_two FROM rooms,users WHERE rooms.tag_2 != '' AND rooms.visitors_max > 0 "
-                + "AND users.id=rooms.id_owner GROUP BY 2) as a GROUP BY get_two ORDER BY 1 DESC LIMIT " + limitValue;
-            String rowText = MySQL.Proc_5_2_6D4690(queryText, 0, 0);
-            StringBuilder payload = new StringBuilder();
-            for (String row : StringUtils.text(rowText).split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    String[] fields = row.split("\t", -1);
-                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 0)), null, ""));
-                    payload.append(navigatorField(fields, 1)).append('\2');
-                }
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return;
             }
-            Proc_6_244_801E80(socketIndex, "GD" + payload, 0);
+            Proc_6_244_801E80(socketIndex, "GD" + navigatorTagPopularityPayload(rooms.navigatorTagPopularities(limitValue)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -9873,6 +9864,14 @@ public final class Handling {
             return listPayload.substring(0, listPayload.length() - singleCountPrefix.length());
         }
         return "";
+    }
+
+    public static String navigatorTagPopularityPayload(List<NavigatorTagPopularity> rows) {
+        PacketBuilder payload = PacketBuilder.create();
+        for (NavigatorTagPopularity row : rows == null ? List.<NavigatorTagPopularity>of() : rows) {
+            payload.appendInt(row.visitorCount()).appendString(row.tag());
+        }
+        return payload.build();
     }
 
     public static String Proc_6_112_74E0C0(Object... args) {

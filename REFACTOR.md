@@ -247,6 +247,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed new-friend room refreshes through typed `RoomDao` room picks and migrated `NewFriendRooms` to collection-backed state with legacy serialization only at the `Licence` bridge.
 - Added typed `RoomPresentationState` loading and routed room presentation payload setup through `RoomDao`, replacing raw room/model SQL and field-index parsing in `Handling`.
 - Added typed navigator room loading and routed the single-room navigator detail payload through `RoomDao` plus fluent `PacketBuilder` construction, replacing raw SQL and row-string parsing for that path.
+- Added typed navigator tag-popularity rows and routed the tag-list navigator payload through `RoomDao` plus fluent `PacketBuilder`, replacing another raw navigator SQL string and tab-row parsing loop.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -260,9 +261,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 58
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 57
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12551 lines
+- `Handling.java`: 12550 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines

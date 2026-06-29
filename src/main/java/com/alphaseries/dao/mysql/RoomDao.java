@@ -2,6 +2,7 @@ package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
 import com.alphaseries.game.navigator.NavigatorRoom;
+import com.alphaseries.game.navigator.NavigatorTagPopularity;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.game.room.RoomOccupantRow;
@@ -94,6 +95,19 @@ public final class RoomDao {
                 resultSet.getLong(15),
                 resultSet.getLong(16)),
             roomId);
+    }
+
+    public List<NavigatorTagPopularity> navigatorTagPopularities(long limit) throws SQLException {
+        return database.query(
+            "SELECT SUM(get_one) as get_one,get_two FROM (SELECT SUM(rooms.visitors_now) as get_one,"
+                + "rooms.tag_1 as get_two FROM rooms,users WHERE rooms.tag_1 != '' AND rooms.visitors_max > 0 "
+                + "AND users.id=rooms.id_owner GROUP BY 2 UNION ALL SELECT SUM(rooms.visitors_now) as get_one,"
+                + "rooms.tag_2 as get_two FROM rooms,users WHERE rooms.tag_2 != '' AND rooms.visitors_max > 0 "
+                + "AND users.id=rooms.id_owner GROUP BY 2) as a GROUP BY get_two ORDER BY 1 DESC LIMIT ?",
+            resultSet -> new NavigatorTagPopularity(
+                resultSet.getLong(1),
+                resultSet.getString(2)),
+            limit);
     }
 
     public long ownedRoomCount(long ownerId) throws SQLException {
