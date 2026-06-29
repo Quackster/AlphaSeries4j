@@ -6090,13 +6090,16 @@ public final class Handling {
             if (botId <= 0L) {
                 return 0L;
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE bots SET id_room=null WHERE id='" + botId + "'", 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE bots_petdata SET id_level=id_level,energy=energy,experience=experience,nutrition=nutrition,scratches=scratches WHERE id_bot='"
-                + botId + "'", 0, 0);
+            BotDao bots = botDao();
+            if (bots == null) {
+                return 0L;
+            }
+            bots.clearBotRoom(botId);
+            bots.touchPetData(botId);
             Proc_6_247_8027E0(socketIndex, "@]" + botEntityId + '\2', 0);
             String petName = representedBotRecordField(botEntityId, 2);
             String petFigure = representedBotRecordField(botEntityId, 10).toLowerCase();
-            long scratches = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT scratches FROM bots_petdata WHERE id_bot='" + botId + "' LIMIT 1", 0, 0));
+            long scratches = bots.petScratches(botId);
             String pickupPayload = petInventoryRowPayload(new String[]{String.valueOf(botId), petName, petFigure, String.valueOf(scratches)});
             if (!pickupPayload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, "I[" + pickupPayload, 0);

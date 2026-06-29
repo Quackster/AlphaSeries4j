@@ -67,4 +67,23 @@ public final class BotDao {
             userId,
             3L);
     }
+
+    public int clearBotRoom(long botId) throws SQLException {
+        return database.execute("UPDATE bots SET id_room=null WHERE id=?", botId);
+    }
+
+    public int touchPetData(long botId) throws SQLException {
+        return database.execute(
+            "UPDATE bots_petdata SET id_level=id_level,energy=energy,experience=experience,nutrition=nutrition,scratches=scratches "
+                + "WHERE id_bot=?",
+            botId);
+    }
+
+    public long petScratches(long botId) throws SQLException {
+        return database.queryOne(
+            "SELECT scratches FROM bots_petdata WHERE id_bot=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            botId)
+            .orElse(0L);
+    }
 }
