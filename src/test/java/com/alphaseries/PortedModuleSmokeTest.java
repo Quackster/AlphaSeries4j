@@ -1785,7 +1785,8 @@ public final class PortedModuleSmokeTest {
             + "[com.mysql.format.time=%H:%i]"
             + "[com.client.catalog.gifts.enabled=1]"
             + "[com.client.catalog.gifts.wrap.enabled=1]"
-            + "[com.client.catalog.gifts.wrap.price=7]";
+            + "[com.client.catalog.gifts.wrap.price=7]"
+            + "[com.client.rooms.bots.pets.enabled=1]";
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_mod\2fuse_alert\2fuse_kick\2fuse_receive_calls_for_help\2fuse_chatlog\2"
             + "fuse_use_wardrobe\2fuse_larger_wardrobe\2fuse_client_staff\2"}};
         MySQL.configureDatabaseConnection(new Database() {
@@ -1895,6 +1896,20 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_room='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(4), Arrays.<Object>asList(8));
+                }
+                if (sqlText.contains("SELECT id_slot FROM rooms WHERE id='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(4));
+                }
+                if (sqlText.contains("SELECT heightmap FROM models,rooms WHERE rooms.id='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList("0"));
+                }
+                if (sqlText.contains("SELECT bots.id,bots.name,bots.motto,bots.speech,bots.responses,'2','3','0','4',bots.figure")
+                    && sqlText.contains("WHERE bots_petdata.id_bot='10'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(
+                        10, "Rex", "pet motto", "speech", "responses", 2, 3, "0", 4, "1 2 ff", "", 3, 0, "", "submit", 1, 6));
+                }
+                if (sqlText.contains("SELECT scratches FROM bots_petdata WHERE id_bot='10'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(5));
                 }
                 if (sqlText.contains("SELECT id FROM rooms WHERE id_slot='4'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(9));
@@ -2907,6 +2922,24 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET scratch_amount=scratch_amount-1,scratch_given=scratch_given+1 WHERE id='77'"));
         assertEquals(true, containsSend(handlingSends, "I^"));
         assertEquals(true, containsSend(handlingSends, "Rex"));
+        handlingSends.clear();
+        handlingSql.clear();
+        Licence.global_008292D4 = "";
+        Licence.global_00829358 = "";
+        long placedPetEntityId = Handling.Proc_6_179_7C7790(4, "nz" + wireLong(10) + wireLong(2) + wireLong(3) + wireLong(4));
+        assertEquals(true, placedPetEntityId > 0L);
+        assertEquals("10", Handling.representedBotRecordField(placedPetEntityId, 1));
+        assertEquals(true, containsSql(handlingSql, "UPDATE bots SET id_room='9',position_x='2',position_y='3',position_z='0',position_r='4' WHERE id='10'"));
+        assertEquals(true, containsSend(handlingSends, "@\\"));
+        assertEquals(true, containsSend(handlingSends, "I\\"));
+        handlingSql.clear();
+        handlingSends.clear();
+        assertEquals(10L, Handling.Proc_6_180_7C96F0(4, placedPetEntityId));
+        assertEquals("", Handling.representedBotRecordText(placedPetEntityId));
+        assertEquals(true, containsSql(handlingSql, "UPDATE bots SET id_room=null WHERE id='10'"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET id_level=id_level,energy=energy,experience=experience,nutrition=nutrition,scratches=scratches WHERE id_bot='10'"));
+        assertEquals(true, containsSend(handlingSends, "@]"));
+        assertEquals(true, containsSend(handlingSends, "I["));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));

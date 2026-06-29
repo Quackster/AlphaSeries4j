@@ -4849,6 +4849,94 @@ public final class Handling {
         }
     }
 
+    public static long Proc_6_179_7C7790(Object... args) {
+        try {
+            if (Vb.val(Functions.Proc_10_0_809570("com.client.rooms.bots.pets.enabled", "0", 0)) == 0L) {
+                return 0L;
+            }
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "nz");
+            LongRef offset = new LongRef(1);
+            long petId = readWireLong(requestPayload, offset);
+            long positionX = readWireLong(requestPayload, offset);
+            long positionY = readWireLong(requestPayload, offset);
+            long positionR = readWireLong(requestPayload, offset);
+            if (socketIndex <= 0 || petId <= 0L) {
+                return 0L;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return 0L;
+            }
+            long roomSlot = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            if (roomSlot <= 0L) {
+                return 0L;
+            }
+            String positionZ = String.valueOf(Vb.val(MySQL.Proc_5_2_6D4690("SELECT heightmap FROM models,rooms WHERE rooms.id='"
+                + roomId + "' AND models.id=rooms.id_model LIMIT 1", 0, 0)));
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT bots.id,bots.name,bots.motto,bots.speech,bots.responses,'"
+                + positionX + "','" + positionY + "','" + Functions.Proc_10_11_80A9C0(positionZ, 0, 0) + "','"
+                + positionR + "',bots.figure,NULL,bots.id_handle,bots.id_handleaction,NULL,bots.speech_submit,bots.allow_walk,bots.max_fields_away "
+                + "FROM bots,bots_petdata WHERE bots_petdata.id_bot='" + petId
+                + "' AND bots.id=bots_petdata.id_bot AND bots.id_user='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "' AND bots.id_room IS NULL LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return 0L;
+            }
+            long botEntityId = Proc_6_187_7CD700(roomSlot, rowText.split("\t", -1), 0);
+            if (botEntityId <= 0L) {
+                return 0L;
+            }
+            storeRepresentedBotPosition(botEntityId, positionX, positionY, positionZ, positionR);
+            MySQL.Proc_5_0_6D3CD0("UPDATE bots SET id_room='" + roomId + "',position_x='" + positionX
+                + "',position_y='" + positionY + "',position_z='" + Functions.Proc_10_11_80A9C0(positionZ, 0, 0)
+                + "',position_r='" + positionR + "' WHERE id='" + petId + "'", 0, 0);
+            String placementPayload = representedBotRoomEntryPayload(botEntityId);
+            if (!placementPayload.isEmpty()) {
+                Proc_6_247_8027E0(socketIndex, placementPayload, 0);
+            }
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(petId, null, "I\\"), 0);
+            return botEntityId;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
+    public static long Proc_6_180_7C96F0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long botEntityId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
+            if (botEntityId <= 0L) {
+                return 0L;
+            }
+            long botId = representedBotRecordLong(botEntityId, 1);
+            if (botId <= 0L) {
+                return 0L;
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE bots SET id_room=null WHERE id='" + botId + "'", 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE bots_petdata SET id_level=id_level,energy=energy,experience=experience,nutrition=nutrition,scratches=scratches WHERE id_bot='"
+                + botId + "'", 0, 0);
+            Proc_6_247_8027E0(socketIndex, "@]" + botEntityId + '\2', 0);
+            String petName = representedBotRecordField(botEntityId, 2);
+            String petFigure = representedBotRecordField(botEntityId, 10).toLowerCase();
+            long scratches = Vb.val(MySQL.Proc_5_2_6D4690("SELECT scratches FROM bots_petdata WHERE id_bot='" + botId + "' LIMIT 1", 0, 0));
+            String pickupPayload = petInventoryRowPayload(new String[]{String.valueOf(botId), petName, petFigure, String.valueOf(scratches)});
+            if (!pickupPayload.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, "I[" + pickupPayload, 0);
+            }
+            removeRepresentedBotRecord(botEntityId);
+            return botId;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
     public static long Proc_6_181_7CA920(Object... args) {
         try {
             if (args == null || args.length == 0) {
@@ -5063,6 +5151,26 @@ public final class Handling {
             Proc_6_247_8027E0(socketIndex, petScratchPayload(botEntityId, Vb.val(userId), scratches,
                 handlingField(fields, 1), handlingField(fields, 2)), 0);
             return scratches;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
+    public static long Proc_6_187_7CD700(Object... args) {
+        try {
+            if (args == null || args.length < 2) {
+                return 0L;
+            }
+            long roomSlot = Vb.val(args[0]);
+            Object fieldSource = args[1];
+            String[] botFields;
+            if (fieldSource instanceof String[]) {
+                botFields = (String[]) fieldSource;
+            } else {
+                botFields = Vb.cStr(fieldSource).split("\t", -1);
+            }
+            return allocateRepresentedBot(roomSlot, botFields);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
