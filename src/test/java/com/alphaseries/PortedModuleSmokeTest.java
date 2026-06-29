@@ -1802,6 +1802,9 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id FROM users WHERE id_socket='8'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88));
                 }
+                if (sqlText.contains("SELECT id FROM users WHERE name='Target'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(88));
+                }
                 if (sqlText.contains("SELECT id,name,motto,figure,level,id_socket,DATE_FORMAT(FROM_UNIXTIME(lastonline_time)")
                     && sqlText.contains("FROM users WHERE id='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(77, "User77", "Ready", "hd-180-1", 1, 4, "today"));
@@ -1928,6 +1931,15 @@ public final class PortedModuleSmokeTest {
                     && sqlText.contains("id_friend='88'")
                     && sqlText.contains("id_user='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(77));
+                }
+                if (sqlText.contains("SELECT id_user FROM friendships WHERE (id_user='77' AND id_friend='88')")) {
+                    return new ArrayList<List<Object>>();
+                }
+                if (sqlText.contains("SELECT accept_friends FROM users WHERE id='88'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
+                }
+                if (sqlText.contains("SELECT users.id,users.name FROM users,friendships WHERE friendships.has_accept='0' AND friendships.id_user='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(88, "Target"));
                 }
                 if (sqlText.contains("SELECT name FROM users WHERE id='88'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("Target"));
@@ -2802,6 +2814,18 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "(Chat To:     Target) -- " + chatText));
         assertEquals(true, containsSend(handlingSends, "BF"));
         handlingSql.clear();
+        handlingSends.clear();
+        String requestPayload = Handling.Proc_6_174_7C3BC0(4, "@g" + wireString("Target"));
+        assertEquals(Handling.messengerRequestAcceptedCallerPayload(88), requestPayload);
+        assertEquals(true, containsSql(handlingSql, "INSERT IGNORE INTO friendships(id_user,id_friend) VALUES('88','77')"));
+        assertEquals(true, containsSend(handlingSends, "BD"));
+        assertEquals(true, containsSend(handlingSends, "DD"));
+        handlingSql.clear();
+        handlingSends.clear();
+        String pendingPayload = Handling.Proc_6_175_7C4800(4);
+        assertEquals(Handling.messengerPendingRequestsPayload("88\tTarget"), pendingPayload);
+        assertEquals(true, containsSend(handlingSends, "Dz"));
+        assertEquals(true, containsSend(handlingSends, "Target"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));

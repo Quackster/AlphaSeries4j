@@ -4673,6 +4673,77 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_174_7C3BC0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "@g");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String targetName = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            if (targetName.isEmpty()) {
+                LongRef offset = new LongRef(1);
+                targetName = readWireString(requestPayload, offset);
+            }
+            targetName = targetName.trim();
+            if (targetName.isEmpty()) {
+                return "";
+            }
+            String targetUserId = String.valueOf((long) Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
+                + Functions.Proc_10_11_80A9C0(targetName, 0, 0) + "' LIMIT 1", 0, 0)));
+            if (targetUserId.isEmpty() || "0".equals(targetUserId) || targetUserId.equals(userId)) {
+                String callerPayload = messengerRequestDeniedPayload();
+                Proc_6_244_801E80(socketIndex, callerPayload, 0);
+                return callerPayload;
+            }
+            String friendshipRow = MySQL.Proc_5_2_6D4690("SELECT id_user FROM friendships WHERE (id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_friend='"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "') OR (id_user='"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_friend='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "') LIMIT 1", 0, 0);
+            long acceptFriends = Vb.val(MySQL.Proc_5_2_6D4690("SELECT accept_friends FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' LIMIT 1", 0, 0));
+            if (!friendshipRow.isEmpty() || acceptFriends != 1L) {
+                String callerPayload = messengerRequestDeniedPayload();
+                Proc_6_244_801E80(socketIndex, callerPayload, 0);
+                return callerPayload;
+            }
+            MySQL.Proc_5_0_6D3CD0("INSERT IGNORE INTO friendships(id_user,id_friend) VALUES('"
+                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "')", 0, 0);
+            String userName = handlingUserName(userId);
+            int targetSocketIndex = handlingSocketFromUserId(targetUserId);
+            if (targetSocketIndex > 0) {
+                Proc_6_244_801E80(targetSocketIndex, messengerRequestNotifyPayload(Vb.val(userId), userName), 0);
+            }
+            String callerPayload = messengerRequestAcceptedCallerPayload(Vb.val(targetUserId));
+            Proc_6_244_801E80(socketIndex, callerPayload, 0);
+            return callerPayload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_175_7C4800(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name FROM users,friendships WHERE friendships.has_accept='0' AND friendships.id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND users.id=friendships.id_friend LIMIT 50", 0, 0);
+            String payload = messengerPendingRequestsPayload(rowText);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
