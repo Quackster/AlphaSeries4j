@@ -2033,6 +2033,9 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id_product,id_owner FROM furnitures WHERE id='80' AND id_room='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(506, 77));
                 }
+                if (sqlText.contains("SELECT id_room FROM furnitures WHERE id='82' LIMIT 1")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(9));
+                }
                 if (sqlText.contains("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='505'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(505, "packages_pets", 12, ""));
                 }
@@ -2575,6 +2578,19 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_room=NULL"));
         assertEquals(true, containsSend(handlingSends, "A^80\2"));
         assertEquals(true, containsSend(handlingSends, "BLS"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Licence.global_008291F8 = "";
+        Licence.global_008291FC = "";
+        Licence.global_00829310 = "";
+        Handling.Proc_6_145_76CA20(4, 9, 81);
+        assertEquals(true, Licence.global_008291F8.contains("\1" + "9\2"));
+        assertEquals(true, Licence.global_008291FC.contains("\1" + "81\2"));
+        Handling.Proc_6_151_78AC20(9, 82, 3);
+        assertEquals(true, Licence.global_00829310.contains("\1" + "9\t82\t3\2"));
+        Handling.Proc_6_146_76D300(4, 82, 506);
+        assertEquals(false, Licence.global_008291FC.contains("\1" + "82\2"));
+        assertEquals(true, Licence.global_00829310.contains("\1" + "9\t82\t3\2"));
         handlingSql.clear();
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));

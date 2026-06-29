@@ -3734,6 +3734,134 @@ public final class Handling {
         }
     }
 
+    public static void Proc_6_145_76CA20(Object... args) {
+        try {
+            int socketIndex = 0;
+            long roomId = 0L;
+            long furnitureId = 0L;
+            if (args != null && args.length >= 3) {
+                socketIndex = (int) Vb.val(args[0]);
+                roomId = Vb.val(args[1]);
+                furnitureId = Vb.val(args[2]);
+            } else if (args != null && args.length >= 2) {
+                roomId = Vb.val(args[0]);
+                furnitureId = Vb.val(args[1]);
+            } else if (args != null && args.length >= 1) {
+                furnitureId = Vb.val(args[0]);
+            }
+            if (roomId <= 0L && socketIndex > 0) {
+                String userId = handlingUserIdFromSocket(socketIndex);
+                if (!userId.isEmpty() && !"0".equals(userId)) {
+                    roomId = handlingCurrentRoomId(socketIndex, userId);
+                }
+            }
+            if (furnitureId <= 0L) {
+                return;
+            }
+            FurnitureCacheState state = trackFurnitureCacheMarker(
+                Licence.global_008291F8,
+                Licence.global_008291FC,
+                Licence.global_00829310,
+                roomId,
+                furnitureId);
+            Licence.global_008291F8 = state.pendingRoomCache;
+            Licence.global_008291FC = state.pendingFurnitureCache;
+            Licence.global_00829310 = state.representedRoomCache;
+            if (roomId > 0L) {
+                Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+                Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_146_76D300(Object... args) {
+        try {
+            int socketIndex = 0;
+            long furnitureId = 0L;
+            long productId = 0L;
+            if (args != null && args.length >= 3) {
+                socketIndex = (int) Vb.val(args[0]);
+                furnitureId = Vb.val(args[1]);
+                productId = Vb.val(args[2]);
+            } else if (args != null && args.length >= 2) {
+                furnitureId = Vb.val(args[0]);
+                productId = Vb.val(args[1]);
+            } else if (args != null && args.length >= 1) {
+                furnitureId = Vb.val(args[0]);
+            }
+            if (furnitureId <= 0L) {
+                return;
+            }
+            if (productId <= 0L) {
+                productId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id='"
+                    + furnitureId + "' LIMIT 1", 0, 0));
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_room FROM furnitures WHERE id='"
+                + furnitureId + "' LIMIT 1", 0, 0);
+            long roomId = 0L;
+            if (!rowText.isEmpty()) {
+                roomId = Vb.val(handlingField(rowText.split("\t", -1), 0));
+            }
+            FurnitureCacheState state = removeFurnitureCacheMarker(
+                Licence.global_008291F8,
+                Licence.global_008291FC,
+                Licence.global_00829310,
+                furnitureId);
+            Licence.global_008291F8 = state.pendingRoomCache;
+            Licence.global_008291FC = state.pendingFurnitureCache;
+            Licence.global_00829310 = state.representedRoomCache;
+            if (roomId <= 0L && socketIndex > 0) {
+                String userId = handlingUserIdFromSocket(socketIndex);
+                if (!userId.isEmpty() && !"0".equals(userId)) {
+                    roomId = handlingCurrentRoomId(socketIndex, userId);
+                }
+            }
+            if (roomId > 0L) {
+                Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+                Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_151_78AC20(Object... args) {
+        try {
+            long roomId = 0L;
+            long furnitureId = 0L;
+            long stateValue = 0L;
+            if (args != null && args.length >= 3) {
+                roomId = Vb.val(args[0]);
+                furnitureId = Vb.val(args[1]);
+                stateValue = Vb.val(args[2]);
+            } else if (args != null && args.length >= 2) {
+                roomId = Vb.val(args[0]);
+                furnitureId = Vb.val(args[1]);
+            } else if (args != null && args.length >= 1) {
+                furnitureId = Vb.val(args[0]);
+            }
+            if (roomId <= 0L || furnitureId <= 0L) {
+                return;
+            }
+            FurnitureStateCache state = representedFurnitureStateCache(
+                Licence.global_008291F8,
+                Licence.global_008291FC,
+                Licence.global_00829310,
+                roomId,
+                furnitureId,
+                stateValue);
+            Licence.global_008291F8 = state.pendingRoomCache;
+            Licence.global_008291FC = state.pendingFurnitureCache;
+            Licence.global_00829310 = state.representedRoomCache;
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }
