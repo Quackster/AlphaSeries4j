@@ -5353,6 +5353,59 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_192_7D1B80(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "B_");
+            long requestedRoomUserIndex = readWireLong(requestPayload, new LongRef(1));
+            if (socketIndex <= 0 || requestedRoomUserIndex <= 0L) {
+                return "";
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
+                return "";
+            }
+            long callerRoomId = handlingCurrentRoomId(socketIndex, callerUserId);
+            if (callerRoomId <= 0L) {
+                return "";
+            }
+            long callerRoomUserIndex = representedRoomUserIndex(socketIndex, callerUserId);
+            String targetRow = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id='"
+                + requestedRoomUserIndex + "' AND logs_visitedrooms.id_room='" + callerRoomId
+                + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1", 0, 0);
+            if (targetRow.isEmpty()) {
+                targetRow = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,logs_visitedrooms.id_user,users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_user='"
+                    + requestedRoomUserIndex + "' AND logs_visitedrooms.id_room='" + callerRoomId
+                    + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1", 0, 0);
+            }
+            if (targetRow.isEmpty()) {
+                return "";
+            }
+            String[] targetFields = targetRow.split("\t", -1);
+            long targetRoomUserIndex = Vb.val(handlingField(targetFields, 0));
+            String targetUserId = String.valueOf((long) Vb.val(handlingField(targetFields, 1)));
+            if (targetRoomUserIndex <= 0L || targetUserId.isEmpty() || "0".equals(targetUserId)) {
+                return "";
+            }
+            String targetBadgePayload = badgeDisplayPayload(Vb.val(targetUserId), Proc_6_195_7D38D0(targetUserId, 0, 0));
+            Proc_6_244_801E80(socketIndex, targetBadgePayload, 0);
+            if (callerRoomUserIndex > 0L && callerRoomUserIndex != targetRoomUserIndex) {
+                String callerStatusPayload = representedRoomUserStatusPayload(callerRoomUserIndex, 0L);
+                String targetStatusPayload = representedRoomUserStatusPayload(targetRoomUserIndex, 0L);
+                if (!callerStatusPayload.isEmpty()) {
+                    Proc_6_247_8027E0(socketIndex, callerStatusPayload, 0);
+                }
+                if (!targetStatusPayload.isEmpty()) {
+                    Proc_6_247_8027E0(socketIndex, targetStatusPayload, 0);
+                }
+            }
+            return targetBadgePayload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_193_7D2BB0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
@@ -9761,6 +9814,14 @@ public final class Handling {
 
     public static String tagDisplayPayload(long userId, String tagPayload) {
         return "E^" + Crypto.Proc_3_0_6D2AF0(userId, null, "") + Vb.cStr(tagPayload);
+    }
+
+    public static String representedRoomUserStatusPayload(long roomUserIndex, long statusCode) {
+        if (roomUserIndex <= 0L) {
+            return "";
+        }
+        return "0" + Crypto.Proc_3_0_6D2AF0(Math.max(0L, statusCode), null,
+            Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Ge"));
     }
 
     public static long pollIdFromWire(String packetPayload, String prefix) {

@@ -1967,6 +1967,9 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id_badge,id_slot,id FROM users_badges WHERE id_slot != '0' AND id_user='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("VIP", 1, 203));
                 }
+                if (sqlText.contains("SELECT id_badge,id_slot,id FROM users_badges WHERE id_slot != '0' AND id_user='88'")) {
+                    return new ArrayList<List<Object>>();
+                }
                 if (sqlText.contains("SELECT REPLACE(id_badge,'ACH_','') FROM users_badges WHERE id_user='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(2));
                 }
@@ -3168,6 +3171,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(Handling.tagDisplayPayload(88, Handling.tagListPayload("target")), tagDisplay);
         assertEquals(true, containsSend(handlingSends, "E^"));
         assertEquals(true, containsSend(handlingSends, "target"));
+        handlingSends.clear();
+        String lookToBadgePayload = Handling.Proc_6_192_7D1B80(4, "B_" + wireLong(61));
+        assertEquals(Handling.badgeDisplayPayload(88, Handling.equippedBadgePayload("")), lookToBadgePayload);
+        assertEquals(true, containsSend(handlingSends, "Cd"));
         handlingSends.clear();
         handlingSql.clear();
         Handling.Proc_6_199_7D54E0(4, "Ck" + wireLong(7));
