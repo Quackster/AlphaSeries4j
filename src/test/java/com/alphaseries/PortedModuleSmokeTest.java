@@ -2427,11 +2427,20 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id_room,id_product,sign FROM furnitures WHERE id='92' LIMIT 1")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(9, 510, -2));
                 }
+                if (sqlText.contains("SELECT id_product,id_owner FROM furnitures WHERE id='93' AND id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(505, 77));
+                }
+                if (sqlText.contains("SELECT id_room FROM furnitures WHERE id='93' LIMIT 1")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(9));
+                }
                 if (sqlText.contains("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='505'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(505, "packages_pets", 12, ""));
                 }
                 if (sqlText.contains("SELECT id_pet,id_race,color FROM packages_pets WHERE id='12'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(1, 2, "3"));
+                }
+                if (sqlText.contains("SELECT id FROM bots WHERE id_user='77' AND id_handle='3' ORDER BY id DESC LIMIT 1")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(30));
                 }
                 if (sqlText.contains("SELECT id_socket FROM users WHERE name='Target'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(8));
@@ -3244,6 +3253,16 @@ public final class PortedModuleSmokeTest {
         String nameCheckPayload = Handling.Proc_6_182_7CAAD0(4, "@c" + wireString("Rex"));
         assertEquals(Handling.petNameValidationPayload("Rex"), nameCheckPayload);
         assertEquals(true, containsSend(handlingSends, "@d"));
+        handlingSends.clear();
+        handlingSql.clear();
+        assertEquals("30", Handling.Proc_6_87_73C120(4, "n~" + wireLong(93) + wireString("Buddy")));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO bots(id_user,figure,name,id_handle) VALUES('77','1 2 3','Buddy','3')"));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO bots_petdata(id_bot,timestamp_buy,id_owner,energy,nutrition,scratches) VALUES('30',UNIX_TIMESTAMP(),'77','100','100','0')"));
+        assertEquals(true, containsSql(handlingSql, "DELETE FROM furnitures WHERE id='93' LIMIT 1"));
+        assertEquals(true, containsSend(handlingSends, "I["));
+        assertEquals(true, containsSend(handlingSends, "Buddy"));
+        assertEquals(true, containsSend(handlingSends, "A^93"));
+        assertEquals(true, containsSend(handlingSends, "Lz"));
         handlingSends.clear();
         String petStatusPayload = Handling.Proc_6_183_7CABF0(4, "ny" + wireLong(10));
         assertEquals(Handling.representedPetStatusPayload(10,

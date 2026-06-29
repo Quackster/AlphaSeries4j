@@ -2591,6 +2591,96 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_87_73C120(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "n~");
+            LongRef offset = new LongRef(1);
+            long furnitureId = readWireLong(requestPayload, offset);
+            if (furnitureId <= 0L) {
+                furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            }
+            String petName = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            if (petName.isEmpty()) {
+                petName = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 0, 0);
+            }
+            long validationCode = Proc_6_181_7CA920(petName, 0, 0);
+            if (validationCode > 0L) {
+                Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(validationCode, null,
+                    Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Lz")) + petName + '\2', 0);
+                return "";
+            }
+            if (socketIndex <= 0 || furnitureId <= 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product,id_owner FROM furnitures WHERE id='"
+                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            String[] fields = rowText.split("\t", -1);
+            long productId = Vb.val(handlingField(fields, 0));
+            String ownerId = String.valueOf((long) Vb.val(handlingField(fields, 1)));
+            if (productId <= 0L || !ownerId.equals(userId)
+                && !handlingUserOwnsRoom(userId, roomId)
+                && !handlingUserHasRoomRight(userId, roomId)) {
+                return "";
+            }
+            String packageRow = MySQL.Proc_5_2_6D4690("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='"
+                + productId + "' LIMIT 1", 0, 0);
+            if (packageRow.isEmpty()) {
+                return "";
+            }
+            String[] packageFields = packageRow.split("\t", -1);
+            String packageType = handlingField(packageFields, 1).toLowerCase();
+            long containedPetId = Vb.val(handlingField(packageFields, 2));
+            if (!"packages_pets".equals(packageType) || containedPetId <= 0L) {
+                return "";
+            }
+            String petRow = MySQL.Proc_5_2_6D4690("SELECT id_pet,id_race,color FROM packages_pets WHERE id='"
+                + containedPetId + "' LIMIT 1", 0, 0);
+            if (petRow.isEmpty()) {
+                return "";
+            }
+            String[] petFields = petRow.split("\t", -1);
+            String petFigure = String.valueOf((long) Vb.val(handlingField(petFields, 0))) + ' '
+                + String.valueOf((long) Vb.val(handlingField(petFields, 1))) + ' '
+                + handlingField(petFields, 2);
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO bots(id_user,figure,name,id_handle) VALUES('" + escapedUserId
+                + "','" + Functions.Proc_10_11_80A9C0(petFigure.toLowerCase(), 0, 0) + "','"
+                + Functions.Proc_10_11_80A9C0(petName, 0, 0) + "','3')", 0, 0);
+            long botId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM bots WHERE id_user='" + escapedUserId
+                + "' AND id_handle='3' ORDER BY id DESC LIMIT 1", 0, 0));
+            if (botId <= 0L) {
+                return "";
+            }
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO bots_petdata(id_bot,timestamp_buy,id_owner,energy,nutrition,scratches) VALUES('"
+                + botId + "',UNIX_TIMESTAMP(),'" + escapedUserId + "','100','100','0')", 0, 0);
+            String inventoryRow = petInventoryRowPayload(new String[]{String.valueOf(botId), petName, petFigure, "0"});
+            if (!inventoryRow.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, "I[" + inventoryRow, 0);
+            }
+            Proc_6_146_76D300(socketIndex, furnitureId, productId);
+            Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM furnitures WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(validationCode, null,
+                Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Lz")) + petName + '\2', 0);
+            return String.valueOf(botId);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static void Proc_6_88_73E4F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
