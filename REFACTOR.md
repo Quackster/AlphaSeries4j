@@ -43,6 +43,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.quest.QuestSettings` as a typed adapter around cached quest rows previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.recycler.RecyclerSettings` as a typed adapter around recycler status payload, reward groups, and ecotron box product state previously walked through `Licence` globals.
 - Added `com.alphaseries.game.session.SessionRegistry` as a typed adapter around the legacy `Licence.global_00829268` session cache.
+- Added `com.alphaseries.game.wired.WiredSettings` as a typed adapter around wired state payload previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.wired.WiredPayloads` for wired record formatting, cache replacement, selected-item checks, and state payload aggregation.
 - Added `com.alphaseries.messages.outgoing.MessengerPayloads` for friend, request, search, pending-request, and friend-list outgoing payloads.
 - Added `com.alphaseries.server.packet.PacketSink` and kept the root `PacketSink` as a deprecated compatibility alias.

@@ -2045,6 +2045,7 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829210 = new String[]{"", "", "FAQDESC"};
         Licence.global_008292D8 = new String[][]{{}, {"STAFFMOD"}};
         Licence.global_00829094 = "WIREDSTATE";
+        assertEquals("WIREDSTATE", Licence.wiredSettings().statePayload());
         Licence.global_0082908C = "12\t1";
         Licence.global_00829090 = java.time.LocalDateTime.now().plusSeconds(90L);
         DataManager.global_008291AC = "\0" + "1\1events\2";

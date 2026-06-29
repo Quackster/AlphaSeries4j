@@ -14,6 +14,7 @@ import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.session.SessionRegistry;
+import com.alphaseries.game.wired.WiredSettings;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -251,6 +252,14 @@ public final class Licence {
 
     public static void setQuestRows(String questRows) {
         global_00829080 = StringUtils.text(questRows);
+    }
+
+    public static WiredSettings wiredSettings() {
+        return WiredSettings.fromLegacy(global_00829094);
+    }
+
+    public static void setWiredStatePayload(String statePayload) {
+        global_00829094 = StringUtils.text(statePayload);
     }
 
     public static String Proc_9_6_808080(Object... args) {

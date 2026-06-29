@@ -2636,7 +2636,7 @@ public final class Handling {
     }
 
     public static String Proc_6_84_733600(Object... args) {
-        String payload = "Di" + Licence.global_00829094;
+        String payload = "Di" + Licence.wiredSettings().statePayload();
         try {
             int socketIndex = args != null && args.length >= 1 ? handlingSocketIndex(args) : 0;
             long roomId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
