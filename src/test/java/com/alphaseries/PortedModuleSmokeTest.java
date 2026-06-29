@@ -1722,6 +1722,8 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829210 = new String[]{"", "", "FAQDESC"};
         Licence.global_008292D8 = new String[][]{{}, {"STAFFMOD"}};
         Licence.global_00829094 = "WIREDSTATE";
+        Licence.global_0082908C = "12\t1";
+        Licence.global_00829090 = java.time.LocalDateTime.now().plusSeconds(90L);
         DataManager.global_008291AC = "\0" + "1\1events\2";
         Path originalApplicationPath = Path.of(Functions.applicationPath);
         Object originalProductCache = DataManager.global_008292BC;
@@ -2304,6 +2306,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, petPreviewPayload.contains("Ly"));
         assertEquals(true, petPreviewPayload.endsWith("3\2"));
         assertEquals(true, containsSend(handlingSends, "Ly"));
+        handlingSends.clear();
+        Handling.Proc_6_88_73E4F0(4);
+        assertEquals(true, containsSend(handlingSends, "L\u007f"));
         MySQL.configureDatabaseConnection(null);
         HandlingMUS.configureMusSink(null);
         Guardian.setSocketConnected(4, false);

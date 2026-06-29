@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -2535,6 +2536,45 @@ public final class Handling {
             return payload;
         } catch (Exception ignored) {
             return "";
+        }
+    }
+
+    public static void Proc_6_88_73E4F0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            LocalDateTime now = LocalDateTime.now();
+            if (Licence.global_0082908C.isEmpty()
+                || Licence.global_00829090 == null
+                || !Licence.global_00829090.isAfter(now)) {
+                Licence.global_0082908C = MySQL.Proc_5_2_6D4690("SELECT rooms.id,models.type FROM rooms_categories,rooms,models "
+                    + "WHERE rooms_categories.is_newfriends='1' AND rooms.id_category=rooms_categories.id "
+                    + "AND models.id=rooms.id_model ORDER BY rooms.visitors_now DESC LIMIT 15", 0, 0);
+                Licence.global_00829090 = now.plusSeconds(90L);
+            }
+            long roomId = 0L;
+            long modelType = 0L;
+            if (!Licence.global_0082908C.isEmpty()) {
+                String[] rows = Licence.global_0082908C.split("\r", -1);
+                int rowIndex = (int) Vb.val(Functions.Proc_10_4_809CA0(0, rows.length - 1L, 0));
+                if (rowIndex < 0) {
+                    rowIndex = 0;
+                }
+                if (rowIndex >= rows.length) {
+                    rowIndex = rows.length - 1;
+                }
+                if (rowIndex >= 0 && !rows[rowIndex].isEmpty()) {
+                    String[] fields = rows[rowIndex].split("\t", -1);
+                    if (fields.length >= 2) {
+                        roomId = Vb.val(fields[0]);
+                        modelType = Vb.val(fields[1]);
+                    }
+                }
+            }
+            String payload = Crypto.Proc_3_0_6D2AF0(roomId, null, "L\u007f");
+            payload = Crypto.Proc_3_0_6D2AF0(modelType, null, payload);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
         }
     }
 
