@@ -1917,6 +1917,15 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id,id_product,position_wall,sign,id_secondary FROM furnitures WHERE id_room='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(74, 503, ":w=1,2 l=3,4", "wall-state", 6));
                 }
+                if (sqlText.contains("SELECT id_product FROM furnitures WHERE id='75' AND id_room='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(505));
+                }
+                if (sqlText.contains("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='505'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(505, "packages_pets", 12, ""));
+                }
+                if (sqlText.contains("SELECT id_pet,id_race,color FROM packages_pets WHERE id='12'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(1, 2, "3"));
+                }
                 if (sqlText.contains("SELECT id_socket FROM users WHERE name='Target'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(8));
                 }
@@ -2290,6 +2299,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, wallPayload.contains(":w=1,2 l=3,4"));
         assertEquals(true, wallPayload.contains("wall-state"));
         assertEquals(true, containsSend(handlingSends, "@m"));
+        handlingSends.clear();
+        String petPreviewPayload = Handling.Proc_6_86_73B0D0(4, "p`" + wireLong(75));
+        assertEquals(true, petPreviewPayload.contains("Ly"));
+        assertEquals(true, petPreviewPayload.endsWith("3\2"));
+        assertEquals(true, containsSend(handlingSends, "Ly"));
         MySQL.configureDatabaseConnection(null);
         HandlingMUS.configureMusSink(null);
         Guardian.setSocketConnected(4, false);

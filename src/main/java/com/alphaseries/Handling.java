@@ -2475,6 +2475,69 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_86_73B0D0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingPacketPayload(args);
+            if (requestPayload.startsWith("p`") || requestPayload.startsWith("rt")) {
+                requestPayload = requestPayload.substring(2);
+            }
+            LongRef offset = new LongRef(1);
+            long furnitureId = readWireLong(requestPayload, offset);
+            if (furnitureId <= 0L) {
+                furnitureId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            }
+            if (socketIndex <= 0 || furnitureId <= 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id='" + furnitureId
+                + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            long productId = Vb.val(handlingField(rowText.split("\t", -1), 0));
+            if (productId <= 0L) {
+                return "";
+            }
+            String packageRow = MySQL.Proc_5_2_6D4690("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='"
+                + productId + "' LIMIT 1", 0, 0);
+            if (packageRow.isEmpty()) {
+                return "";
+            }
+            String[] packageFields = packageRow.split("\t", -1);
+            String packageType = handlingField(packageFields, 1).toLowerCase();
+            long containedPetId = Vb.val(handlingField(packageFields, 2));
+            if (!"packages_pets".equals(packageType) || containedPetId <= 0L) {
+                return "";
+            }
+            String petRow = MySQL.Proc_5_2_6D4690("SELECT id_pet,id_race,color FROM packages_pets WHERE id='"
+                + containedPetId + "' LIMIT 1", 0, 0);
+            if (petRow.isEmpty()) {
+                return "";
+            }
+            String[] petFields = petRow.split("\t", -1);
+            long petType = Vb.val(handlingField(petFields, 0));
+            long petRace = Vb.val(handlingField(petFields, 1));
+            String petColor = handlingField(petFields, 2);
+            String payload = Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ly");
+            payload = Crypto.Proc_3_0_6D2AF0(petType, null, payload);
+            payload = Crypto.Proc_3_0_6D2AF0(petRace, null, payload);
+            payload = Crypto.Proc_3_0_6D2AF0(Vb.val(petColor), null, payload) + petColor + '\2';
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }
