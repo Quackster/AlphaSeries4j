@@ -6,6 +6,7 @@ import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.dao.mysql.ClubDao;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.FurnitureDao;
+import com.alphaseries.dao.mysql.PackageDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -2806,35 +2807,36 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product FROM furnitures WHERE id='" + furnitureId
-                + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            PackageDao packages = packageDao();
+            if (furniture == null || packages == null) {
                 return "";
             }
-            long productId = NumberUtils.parseLong(handlingField(rowText.split("\t", -1), 0));
+            FurnitureDao.RoomFurnitureProduct furnitureProduct = furniture.roomFurnitureProductById(furnitureId, roomId)
+                .orElse(null);
+            if (furnitureProduct == null) {
+                return "";
+            }
+            long productId = furnitureProduct.productId();
             if (productId <= 0L) {
                 return "";
             }
-            String packageRow = MySQL.Proc_5_2_6D4690("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='"
-                + productId + "' LIMIT 1", 0, 0);
-            if (packageRow.isEmpty()) {
+            PackageDao.PackageRow packageRow = packages.packageByProduct(productId).orElse(null);
+            if (packageRow == null) {
                 return "";
             }
-            String[] packageFields = packageRow.split("\t", -1);
-            String packageType = handlingField(packageFields, 1).toLowerCase();
-            long containedPetId = NumberUtils.parseLong(handlingField(packageFields, 2));
+            String packageType = StringUtils.text(packageRow.secondaryType()).toLowerCase();
+            long containedPetId = packageRow.containedId();
             if (!"packages_pets".equals(packageType) || containedPetId <= 0L) {
                 return "";
             }
-            String petRow = MySQL.Proc_5_2_6D4690("SELECT id_pet,id_race,color FROM packages_pets WHERE id='"
-                + containedPetId + "' LIMIT 1", 0, 0);
-            if (petRow.isEmpty()) {
+            PackageDao.PetPackage petPackage = packages.petPackage(containedPetId).orElse(null);
+            if (petPackage == null) {
                 return "";
             }
-            String[] petFields = petRow.split("\t", -1);
-            long petType = NumberUtils.parseLong(handlingField(petFields, 0));
-            long petRace = NumberUtils.parseLong(handlingField(petFields, 1));
-            String petColor = handlingField(petFields, 2);
+            long petType = petPackage.petType();
+            long petRace = petPackage.race();
+            String petColor = StringUtils.text(petPackage.color());
             String payload = Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ly");
             payload = Crypto.Proc_3_0_6D2AF0(petType, null, payload);
             payload = Crypto.Proc_3_0_6D2AF0(petRace, null, payload);
@@ -12137,6 +12139,11 @@ public final class Handling {
     private static FurnitureDao furnitureDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new FurnitureDao(database);
+    }
+
+    private static PackageDao packageDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new PackageDao(database);
     }
 
     private static String[] normalizeRows(Object rowSource) {
