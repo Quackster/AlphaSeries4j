@@ -176,6 +176,14 @@ public final class RoomDao {
             .orElse(0L);
     }
 
+    public long modelIdByRoom(long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_model FROM rooms WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            roomId)
+            .orElse(0L);
+    }
+
     public List<Long> activeSocketIndexesByRoom(long roomId) throws SQLException {
         return database.query(
             "SELECT users.id_socket FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_room=? "

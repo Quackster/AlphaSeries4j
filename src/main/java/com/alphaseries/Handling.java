@@ -2667,7 +2667,10 @@ public final class Handling {
                 if (!userId.isEmpty() && !"0".equals(userId)) {
                     long roomId = handlingCurrentRoomId(socketIndex, userId);
                     if (roomId > 0L) {
-                        modelId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_model FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+                        RoomDao rooms = roomDao();
+                        if (rooms != null) {
+                            modelId = rooms.modelIdByRoom(roomId);
+                        }
                     }
                 }
             }
