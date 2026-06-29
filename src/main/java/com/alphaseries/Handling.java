@@ -5824,10 +5824,15 @@ public final class Handling {
                 return "";
             }
             long currentRoomId = handlingCurrentRoomId(socketIndex, userId);
-            MySQL.Proc_5_1_6D4110("INSERT INTO logs_chat(id_user,id_room,timestamp,description,id_type,id_session) VALUES('"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + currentRoomId + "',UNIX_TIMESTAMP(),'"
-                + Functions.Proc_10_11_80A9C0("(Chat To:     " + handlingUserName(targetUserId) + ") -- " + messageText, 0, 0)
-                + "','3','" + socketIndex + "')", 0, 0);
+            MessengerDao messenger = messengerDao();
+            if (messenger == null) {
+                return "";
+            }
+            messenger.insertPrivateChatLog(
+                NumberUtils.parseLong(userId),
+                currentRoomId,
+                "(Chat To:     " + handlingUserName(targetUserId) + ") -- " + messageText,
+                socketIndex);
             String filteredText = Proc_6_22_6E9300(messageText, 0, 0);
             String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(userId), null, "BF") + filteredText + '\2';
             Proc_6_244_801E80(targetSocketIndex, payload, 0);

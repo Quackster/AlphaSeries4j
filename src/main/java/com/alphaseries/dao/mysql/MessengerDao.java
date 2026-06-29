@@ -124,6 +124,17 @@ public final class MessengerDao {
             userId);
     }
 
+    public int insertPrivateChatLog(long userId, long roomId, String description, long sessionId) throws SQLException {
+        return database.execute(
+            "INSERT INTO logs_chat(id_user,id_room,timestamp,description,id_type,id_session) "
+                + "VALUES(?,?,UNIX_TIMESTAMP(),?,?,?)",
+            userId,
+            roomId,
+            description,
+            3L,
+            sessionId);
+    }
+
     public List<SearchUser> searchUsers(String searchText, String dateTimeFormat) throws SQLException {
         String normalizedSearch = searchText == null ? "" : searchText.trim().toLowerCase();
         if (normalizedSearch.isEmpty()) {
