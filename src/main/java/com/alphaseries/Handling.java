@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.HelpDao;
+import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -364,8 +365,8 @@ public final class Handling {
                 return;
             }
             long maxSlots = handlingUserHasPermission(userId, "fuse_larger_wardrobe") ? 10L : 5L;
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_slot,figure,gender FROM users_wardrobe WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' ORDER BY id_slot", 0, 0);
+            UserDao users = userDao();
+            String rowText = users == null ? "" : users.wardrobeRows(NumberUtils.parseLong(userId));
             long slotCount = 0L;
             StringBuilder wardrobePayload = new StringBuilder();
             for (String row : rowText.split("\r", -1)) {
@@ -410,12 +411,12 @@ public final class Handling {
             if (!isValidWardrobeFigure(figureText, genderText, figureData)) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM users_wardrobe WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_slot='" + slotId + "' LIMIT 1", 0, 0);
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO users_wardrobe(id_user,id_slot,figure,gender) VALUES('"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + slotId + "','"
-                + Functions.Proc_10_11_80A9C0(figureText, 0, 0) + "','"
-                + Functions.Proc_10_11_80A9C0(genderText, 0, 0) + "')", 0, 0);
+            UserDao users = userDao();
+            if (users != null) {
+                long numericUserId = NumberUtils.parseLong(userId);
+                users.deleteWardrobeSlot(numericUserId, slotId);
+                users.insertWardrobeSlot(numericUserId, slotId, figureText, genderText);
+            }
             Proc_6_15_6E1900(socketIndex, "Ew", "Ew");
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -437,12 +438,13 @@ public final class Handling {
             if (!isValidWardrobeFigure(figureText, genderText, figureData)) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET tutorial_clothes='1',gender='"
-                + Functions.Proc_10_11_80A9C0(genderText, 0, 0) + "',figure='"
-                + Functions.Proc_10_11_80A9C0(figureText, 0, 0) + "' WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
-            String mottoText = MySQL.Proc_5_2_6D4690("SELECT motto FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            UserDao users = userDao();
+            long numericUserId = NumberUtils.parseLong(userId);
+            String mottoText = "";
+            if (users != null) {
+                users.updateTutorialClothes(numericUserId, genderText, figureText);
+                mottoText = users.motto(numericUserId);
+            }
             String payload = userIdentityPayload(NumberUtils.parseLong(userId), mottoText, genderText, figureText);
             Proc_6_244_801E80(socketIndex, payload, 0);
             Proc_6_247_8027E0(socketIndex, payload, 0);
@@ -11986,6 +11988,11 @@ public final class Handling {
     private static HelpDao helpDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new HelpDao(database);
+    }
+
+    private static UserDao userDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new UserDao(database);
     }
 
     private static String[] normalizeRows(Object rowSource) {

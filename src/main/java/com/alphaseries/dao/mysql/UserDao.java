@@ -76,6 +76,43 @@ public final class UserDao {
             userId);
     }
 
+    public String wardrobeRows(long userId) throws SQLException {
+        return String.join("\r", database.query(
+            "SELECT id_slot,figure,gender FROM users_wardrobe WHERE id_user=? ORDER BY id_slot",
+            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3),
+            userId));
+    }
+
+    public int deleteWardrobeSlot(long userId, long slotId) throws SQLException {
+        return database.execute("DELETE FROM users_wardrobe WHERE id_user=? AND id_slot=? LIMIT 1", userId, slotId);
+    }
+
+    public int insertWardrobeSlot(long userId, long slotId, String figure, String gender) throws SQLException {
+        return database.execute(
+            "INSERT INTO users_wardrobe(id_user,id_slot,figure,gender) VALUES(?,?,?,?)",
+            userId,
+            slotId,
+            figure,
+            gender);
+    }
+
+    public int updateTutorialClothes(long userId, String gender, String figure) throws SQLException {
+        return database.execute(
+            "UPDATE users SET tutorial_clothes=?,gender=?,figure=? WHERE id=?",
+            1L,
+            gender,
+            figure,
+            userId);
+    }
+
+    public String motto(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT motto FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getString(1),
+            userId)
+            .orElse("");
+    }
+
     public record UserIdentity(long userId, long socketIndex, String motto, String figure, String gender) {
     }
 }
