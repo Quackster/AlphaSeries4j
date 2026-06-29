@@ -13,6 +13,8 @@ import com.alphaseries.dao.mysql.MessengerDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetCommandActionRow;
 import com.alphaseries.game.pet.PetCommandTargetRow;
+import com.alphaseries.game.pet.PetExperienceStateRow;
+import com.alphaseries.game.pet.PetLevelExperienceRow;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -6317,50 +6319,39 @@ public final class Handling {
             if (botId <= 0L) {
                 return 0L;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT bots.name,bots.figure,bots_petdata.id_level,bots_petdata.experience,"
-                + "bots_petdata.energy,bots_petdata.nutrition,bots_petdata.scratches,bots.id_room FROM bots,bots_petdata WHERE bots.id='"
-                + botId + "' AND bots_petdata.id_bot=bots.id LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            BotDao bots = botDao();
+            if (bots == null) {
                 return 0L;
             }
-            String[] fields = rowText.split("\t", -1);
-            if (fields.length < 8) {
+            PetExperienceStateRow petState = bots.petExperienceState(botId).orElse(null);
+            if (petState == null) {
                 return 0L;
             }
-            String petName = handlingField(fields, 0);
-            String petFigure = handlingField(fields, 1);
-            long petLevel = NumberUtils.parseLong(handlingField(fields, 2));
-            long petExperience = NumberUtils.parseLong(handlingField(fields, 3));
-            long petEnergy = NumberUtils.parseLong(handlingField(fields, 4));
-            long petNutrition = NumberUtils.parseLong(handlingField(fields, 5));
-            long petScratches = NumberUtils.parseLong(handlingField(fields, 6));
-            long roomId = NumberUtils.parseLong(handlingField(fields, 7));
             if (botEntityId <= 0L) {
                 botEntityId = botId;
             }
-            String levelRows = MySQL.Proc_5_2_6D4690("SELECT id_level,max_exp FROM bots_petlevels ORDER BY id_level ASC", 0, 0);
+            List<PetLevelExperienceRow> levelRows = bots.petLevelExperienceRows();
             PetExperienceUpdate update = petExperienceUpdate(
                 botEntityId,
-                petName,
-                petFigure,
-                petLevel,
-                petExperience,
-                petEnergy,
-                petNutrition,
-                petScratches,
+                petState.name(),
+                petState.figure(),
+                petState.level(),
+                petState.experience(),
+                petState.energy(),
+                petState.nutrition(),
+                petState.scratches(),
                 experienceDelta,
                 levelRows);
-            if (update.leveledUp && roomId > 0L) {
+            if (update.leveledUp && petState.roomId() > 0L) {
                 String levelSpeech = Functions.Proc_10_0_809570("com.client.bot.pet.level_up.speech", "gst sml", 0);
                 if (!levelSpeech.isEmpty()) {
-                    Proc_6_248_802B80(roomId, "@X" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "") + levelSpeech + '\2' + "H", 0);
+                    Proc_6_248_802B80(petState.roomId(), "@X" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "") + levelSpeech + '\2' + "H", 0);
                 }
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE bots_petdata SET id_level='" + update.petLevel + "',experience='"
-                + update.petExperience + "' WHERE id_bot='" + botId + "'", 0, 0);
-            if (roomId > 0L) {
-                Proc_6_248_802B80(roomId, update.statusPayload, 0);
-                Proc_6_248_802B80(roomId, update.experiencePayload, 0);
+            bots.updatePetExperience(botId, update.petLevel, update.petExperience);
+            if (petState.roomId() > 0L) {
+                Proc_6_248_802B80(petState.roomId(), update.statusPayload, 0);
+                Proc_6_248_802B80(petState.roomId(), update.experiencePayload, 0);
             }
             return update.petLevel;
         } catch (Exception ignored) {
@@ -11190,6 +11181,37 @@ public final class Handling {
         return result;
     }
 
+    public static PetExperienceUpdate petExperienceUpdate(
+        long botEntityId,
+        String petName,
+        String petFigure,
+        long petLevel,
+        long petExperience,
+        long petEnergy,
+        long petNutrition,
+        long petScratches,
+        long experienceDelta,
+        List<PetLevelExperienceRow> levelRows
+    ) {
+        PetExperienceUpdate result = new PetExperienceUpdate();
+        long nextExperience = petExperience + experienceDelta;
+        if (nextExperience < 0L) {
+            nextExperience = 0L;
+        }
+        long nextLevel = petLevel;
+        long maxExperience = petLevelMaxExperience(petLevel, levelRows);
+        if (maxExperience > 0L && nextExperience >= maxExperience && petLevelMaxExperience(petLevel + 1L, levelRows) > 0L) {
+            nextLevel = petLevel + 1L;
+            nextExperience = 0L;
+            result.leveledUp = true;
+        }
+        result.petLevel = nextLevel;
+        result.petExperience = nextExperience;
+        result.statusPayload = petExperienceStatusPayload(botEntityId, petName, petFigure, nextLevel, nextExperience, petEnergy, petNutrition, petScratches);
+        result.experiencePayload = PetPayloads.experience(botEntityId, experienceDelta, nextExperience);
+        return result;
+    }
+
     public static long petLevelMaxExperience(long petLevel, Object levelRows) {
         for (String row : normalizeRows(levelRows)) {
             if (!row.isEmpty()) {
@@ -11199,7 +11221,26 @@ public final class Handling {
                 }
             }
         }
-        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT max_exp FROM bots_petlevels WHERE id_level='" + petLevel + "' LIMIT 1", 0, 0));
+        BotDao bots = botDao();
+        if (bots != null) {
+            try {
+                return bots.petLevelMaxExperience(petLevel);
+            } catch (Exception ignored) {
+                // VB6 source suppresses handler failures.
+            }
+        }
+        return 0L;
+    }
+
+    public static long petLevelMaxExperience(long petLevel, List<PetLevelExperienceRow> levelRows) {
+        if (levelRows != null) {
+            for (PetLevelExperienceRow row : levelRows) {
+                if (row != null && row.level() == petLevel) {
+                    return row.maxExperience();
+                }
+            }
+        }
+        return 0L;
     }
 
     public static String petExperienceStatusPayload(

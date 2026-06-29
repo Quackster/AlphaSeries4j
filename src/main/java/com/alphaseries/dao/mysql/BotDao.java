@@ -3,7 +3,9 @@ package com.alphaseries.dao.mysql;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetCommandActionRow;
 import com.alphaseries.game.pet.PetCommandTargetRow;
+import com.alphaseries.game.pet.PetExperienceStateRow;
 import com.alphaseries.game.pet.PetInventoryRow;
+import com.alphaseries.game.pet.PetLevelExperienceRow;
 import com.alphaseries.game.pet.PetRaceRow;
 import com.alphaseries.game.pet.PetStatusRow;
 
@@ -150,5 +152,46 @@ public final class BotDao {
             botId,
             3L,
             roomId);
+    }
+
+    public Optional<PetExperienceStateRow> petExperienceState(long botId) throws SQLException {
+        return database.queryOne(
+            "SELECT bots.name,bots.figure,bots_petdata.id_level,bots_petdata.experience,"
+                + "bots_petdata.energy,bots_petdata.nutrition,bots_petdata.scratches,bots.id_room "
+                + "FROM bots,bots_petdata WHERE bots.id=? AND bots_petdata.id_bot=bots.id LIMIT 1",
+            resultSet -> new PetExperienceStateRow(
+                resultSet.getString(1),
+                resultSet.getString(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getLong(7),
+                resultSet.getLong(8)),
+            botId);
+    }
+
+    public List<PetLevelExperienceRow> petLevelExperienceRows() throws SQLException {
+        return database.query(
+            "SELECT id_level,max_exp FROM bots_petlevels ORDER BY id_level ASC",
+            resultSet -> new PetLevelExperienceRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2)));
+    }
+
+    public long petLevelMaxExperience(long petLevel) throws SQLException {
+        return database.queryOne(
+            "SELECT max_exp FROM bots_petlevels WHERE id_level=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            petLevel)
+            .orElse(0L);
+    }
+
+    public int updatePetExperience(long botId, long level, long experience) throws SQLException {
+        return database.execute(
+            "UPDATE bots_petdata SET id_level=?,experience=? WHERE id_bot=?",
+            level,
+            experience,
+            botId);
     }
 }
