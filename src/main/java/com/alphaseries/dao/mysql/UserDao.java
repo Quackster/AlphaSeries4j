@@ -221,6 +221,14 @@ public final class UserDao {
             userId);
     }
 
+    public int incrementGiftsGiven(long userId) throws SQLException {
+        return database.execute("UPDATE users SET gifts_given=gifts_given+1 WHERE id=?", userId);
+    }
+
+    public int incrementGiftsReceived(long userId) throws SQLException {
+        return database.execute("UPDATE users SET gifts_received=gifts_received+1 WHERE id=?", userId);
+    }
+
     public Optional<UserIdentity> findIdentity(long userId) throws SQLException {
         return database.queryOne(
             "SELECT id,id_socket,motto,figure,gender FROM users WHERE id=? LIMIT 1",

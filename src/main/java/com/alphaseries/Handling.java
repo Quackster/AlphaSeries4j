@@ -4473,30 +4473,27 @@ public final class Handling {
                 }
                 creditPrice += wrapPrice;
             }
-            String escapedSenderId = Functions.Proc_10_11_80A9C0(senderUserId, 0, 0);
-            String userRow = MySQL.Proc_5_2_6D4690("SELECT credits,activitypoints_" + activityType
-                + ",level_hc FROM users WHERE id='" + escapedSenderId + "' LIMIT 1", 0, 0);
-            if (userRow.isEmpty()) {
+            long senderUserIdValue = NumberUtils.parseLong(senderUserId);
+            UserDao users = userDao();
+            UserDao.CatalogPurchaseBalance balance = users == null
+                ? null
+                : users.catalogPurchaseBalance(senderUserIdValue, activityType).orElse(null);
+            if (balance == null) {
                 return "";
             }
-            String[] userFields = userRow.split("\t", -1);
-            long userCredits = NumberUtils.parseLong(handlingField(userFields, 0));
-            long userActivityPoints = NumberUtils.parseLong(handlingField(userFields, 1));
-            long userClubLevel = NumberUtils.parseLong(handlingField(userFields, 2));
-            if (minClubLevel > 0L && userClubLevel < minClubLevel) {
+            if (minClubLevel > 0L && balance.clubLevel() < minClubLevel) {
                 Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(3, null, ""), 0);
                 return "";
             }
-            if (userCredits < creditPrice) {
+            if (balance.credits() < creditPrice) {
                 Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(1, null, ""), 0);
                 return "";
             }
-            if (userActivityPoints < activityPrice) {
+            if (balance.activityPoints() < activityPrice) {
                 Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(2, null, ""), 0);
                 return "";
             }
-            String recipientUserId = String.valueOf(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM users WHERE name='"
-                + Functions.Proc_10_11_80A9C0(recipientName, 0, 0) + "' LIMIT 1", 0, 0)));
+            String recipientUserId = String.valueOf(users.userIdByName(recipientName));
             if (recipientUserId.isEmpty() || "0".equals(recipientUserId)) {
                 recipientUserId = senderUserId;
             }
@@ -4516,9 +4513,7 @@ public final class Handling {
                 + "',id_owner='" + escapedRecipientId + "',id_destination='" + catalogProductId + "',id_secondary='"
                 + giftSecondary + "' WHERE id='" + grantedFurnitureId + "'", 0, 0);
             if (creditPrice > 0L || activityPrice > 0L) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE users SET credits=credits-" + creditPrice + ",activitypoints_"
-                    + activityType + "=activitypoints_" + activityType + "-" + activityPrice + " WHERE id='"
-                    + escapedSenderId + "'", 0, 0);
+                users.spendCatalogPurchaseBalance(senderUserIdValue, creditPrice, activityType, activityPrice);
                 if (creditPrice > 0L) {
                     Functions.Proc_10_16_80C480(senderUserId, 0, 0);
                 }
@@ -4526,9 +4521,9 @@ public final class Handling {
                     Functions.Proc_10_17_80C6B0(senderUserId, activityType, 0);
                 }
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE users SET gifts_given=gifts_given+1 WHERE id='" + escapedSenderId + "'", 0, 0);
+            users.incrementGiftsGiven(senderUserIdValue);
             if (!recipientUserId.equals(senderUserId)) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE users SET gifts_received=gifts_received+1 WHERE id='" + escapedRecipientId + "'", 0, 0);
+                users.incrementGiftsReceived(NumberUtils.parseLong(recipientUserId));
                 Proc_6_205_7D9780(socketIndex, 6);
             }
             String purchasePayload = Crypto.Proc_3_0_6D2AF0(catalogProductId, null, "AC")
