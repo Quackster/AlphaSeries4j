@@ -657,7 +657,10 @@ public final class PortedModuleSmokeTest {
         Functions.global_0082928C = "[com.system.format.date=d.m.Y][com.system.format.time=h:i:s]"
             + "[com.client.catalog.gifts.wrap.count.accessories=2][com.client.catalog.gifts.wrap.count.colors=3]"
             + "[com.client.navigator.categories.default.private.id=1][com.client.navigator.categories.default.public.id=2]"
-            + "[com.server.socket.game.advertisement.visitrooms.path=/ad/]";
+            + "[com.server.socket.game.advertisement.visitrooms.path=/ad/]"
+            + "[com.client.messenger.maxfriends.hclevel0=50]"
+            + "[com.client.messenger.maxfriends.hclevel1=75]"
+            + "[com.client.messenger.maxfriends.hclevel2=100]";
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -670,6 +673,15 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("settings_recycler WHERE chance='80'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(10), Arrays.<Object>asList(11));
+                }
+                if (sqlText.contains("settings_achievements")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(7, "ACH_ONE", 10, 2, 3, 4, 1));
+                }
+                if (sqlText.contains("settings_gesture")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(":-)", 5));
+                }
+                if (sqlText.contains("settings_filter")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList("badword"));
                 }
                 if (sqlText.contains("settings_petraces")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("pet_dog", 1, 2, 3, 4, "Dog"));
@@ -696,7 +708,10 @@ public final class PortedModuleSmokeTest {
                     return Arrays.<List<Object>>asList(
                         Arrays.<Object>asList("com.system.format.date", "d.m.Y"),
                         Arrays.<Object>asList("com.system.format.time", "h:i:s"),
-                        Arrays.<Object>asList("com.server.socket.game.advertisement.visitrooms.path", "/ad/"));
+                        Arrays.<Object>asList("com.server.socket.game.advertisement.visitrooms.path", "/ad/"),
+                        Arrays.<Object>asList("com.client.messenger.maxfriends.hclevel0", 50),
+                        Arrays.<Object>asList("com.client.messenger.maxfriends.hclevel1", 75),
+                        Arrays.<Object>asList("com.client.messenger.maxfriends.hclevel2", 100));
                 }
                 if (sqlText.contains("level_privileges")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("fuse_mod"), Arrays.<Object>asList("fuse_chatlog"));
@@ -765,6 +780,12 @@ public final class PortedModuleSmokeTest {
         Boot.Proc_1_22_6D0F00();
         assertEquals("/ad/4\2/cafe\2", ((String[]) Licence.global_008291D4)[4]);
         Boot.Proc_1_23_6D1480("booted", "DEBUG");
+        Boot.Proc_1_5_6C4F80();
+        assertEquals("7\2", Licence.global_008291E4);
+        assertEquals("ACH_ONE", ((String[][]) Licence.global_008291E8)[0][1]);
+        assertEquals(":-)\t5", Licence.global_00829294);
+        assertEquals("badword", Licence.global_00829290);
+        assertEquals(75, ((int[]) Licence.global_0082927C)[2]);
         MySQL.configureDatabaseConnection(null);
 
         Licence.global_00829350 = "";

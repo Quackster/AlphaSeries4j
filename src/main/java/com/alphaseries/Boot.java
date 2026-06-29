@@ -115,6 +115,11 @@ public final class Boot {
     }
 
     public static void Proc_1_5_6C4F80(Object... args) {
+        AchievementSettingsCache achievementCache = buildAchievementSettingsCache(MySQL.Proc_5_2_6D4690(
+            "SELECT id_quest,id_badge,progress,reward_increase,level_total,score_increase,type_reward "
+                + "FROM settings_achievements WHERE is_enabled='1' LIMIT 100", 0, 0));
+        Licence.global_008291E4 = achievementCache.questIdPayload;
+        Licence.global_008291E8 = achievementRowsByIndex(achievementCache);
         Proc_1_9_6C6DF0(0, 0, 0);
         Proc_1_7_6C5E10(0, 0, 0);
         Proc_1_18_6CE9C0(0, 0, 0);
@@ -126,6 +131,11 @@ public final class Boot {
         Proc_1_21_6D08C0(0, 0, 0);
         Proc_1_13_6C9820(0, 0, 0);
         Proc_1_22_6D0F00(0, 0, 0);
+        buildChatSettingsCache();
+        Licence.global_0082927C = buildMessengerFriendLimitCache(
+            Vb.val(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel0", 0, 0)),
+            Vb.val(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel1", 0, 0)),
+            Vb.val(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel2", 0, 0)));
     }
 
     public static void Proc_1_6_6C5830(Object... args) {
@@ -695,6 +705,22 @@ public final class Boot {
         limits[2] = (int) hcLevel1;
         limits[4] = (int) hcLevel2;
         return limits;
+    }
+
+    public static void buildChatSettingsCache() {
+        Licence.global_00829294 = MySQL.Proc_5_2_6D4690("SELECT smiley,gesture FROM settings_gesture LIMIT 100", 0, 0);
+        Licence.global_00829290 = MySQL.Proc_5_2_6D4690("SELECT word FROM settings_filter LIMIT 100", 0, 0);
+    }
+
+    private static String[][] achievementRowsByIndex(AchievementSettingsCache cache) {
+        String[][] rows = new String[cache.rowsByIndex.size()][];
+        for (Map.Entry<Long, String[]> entry : cache.rowsByIndex.entrySet()) {
+            int index = entry.getKey().intValue();
+            if (index >= 0 && index < rows.length) {
+                rows[index] = entry.getValue();
+            }
+        }
+        return rows;
     }
 
     public static String buildRoomCategoryPayload(String categoryRows, long rankIndex, long hcLevel) {
