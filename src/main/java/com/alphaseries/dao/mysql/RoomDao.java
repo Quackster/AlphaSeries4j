@@ -4,6 +4,7 @@ import com.alphaseries.db.Database;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 public final class RoomDao {
     private final Database database;
@@ -56,6 +57,60 @@ public final class RoomDao {
             resultSet -> resultSet.getLong(1),
             userId)
             .orElse(0L);
+    }
+
+    public int insertVisit(long userId, long roomId, String sessionId) throws SQLException {
+        return database.execute(
+            "INSERT INTO logs_visitedrooms(id_user,id_room,timestamp_enter,id_session) VALUES(?,?,UNIX_TIMESTAMP(),?)",
+            userId,
+            roomId,
+            sessionId);
+    }
+
+    public int markRoomEntered(long roomId, long slotId) throws SQLException {
+        return database.execute(
+            "UPDATE rooms SET id_slot=?,visitors_now=visitors_now+1 WHERE id=?",
+            slotId,
+            roomId);
+    }
+
+    public Optional<ActiveRoomVisit> activeVisitWithRoomSlot(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT logs_visitedrooms.id,logs_visitedrooms.id_room,rooms.id_slot "
+                + "FROM logs_visitedrooms,rooms WHERE logs_visitedrooms.id_user=? "
+                + "AND logs_visitedrooms.timestamp_left IS NULL AND rooms.id=logs_visitedrooms.id_room "
+                + "ORDER BY logs_visitedrooms.timestamp_enter DESC LIMIT 1",
+            resultSet -> new ActiveRoomVisit(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3)),
+            userId);
+    }
+
+    public int closeVisitById(long visitId) throws SQLException {
+        return database.execute(
+            "UPDATE logs_visitedrooms SET timestamp_left=UNIX_TIMESTAMP() WHERE id=? AND timestamp_left IS NULL",
+            visitId);
+    }
+
+    public int closeVisitsByUserRoom(long userId, long roomId) throws SQLException {
+        return database.execute(
+            "UPDATE logs_visitedrooms SET timestamp_left=UNIX_TIMESTAMP() WHERE id_user=? AND id_room=? AND timestamp_left IS NULL",
+            userId,
+            roomId);
+    }
+
+    public int decrementVisitors(long roomId) throws SQLException {
+        return database.execute(
+            "UPDATE rooms SET visitors_now=IF(visitors_now>0,visitors_now-1,0) WHERE id=?",
+            roomId);
+    }
+
+    public int clearRoomSlot(long roomId, long slotId) throws SQLException {
+        return database.execute(
+            "UPDATE rooms SET id_slot=null WHERE id=? AND id_slot=?",
+            roomId,
+            slotId);
     }
 
     public long furnitureIdAtExcluding(long roomId, long excludedFurnitureId, long positionX, long positionY) throws SQLException {
@@ -273,6 +328,9 @@ public final class RoomDao {
             timeFormat,
             roomId)
             .orElse("");
+    }
+
+    public record ActiveRoomVisit(long visitId, long roomId, long slotId) {
     }
 
     private static String nullableText(String value) {

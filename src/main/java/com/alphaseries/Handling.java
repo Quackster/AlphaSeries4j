@@ -1577,13 +1577,16 @@ public final class Handling {
                 return 0L;
             }
             loadRepresentedRoomBots(reservedSlot, roomId);
-            String sessionId = MySQL.Proc_5_2_6D4690("SELECT login_session FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
-            MySQL.Proc_5_1_6D4110("INSERT INTO logs_visitedrooms(id_user,id_room,timestamp_enter,id_session) VALUES('"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "',UNIX_TIMESTAMP(),'"
-                + Functions.Proc_10_11_80A9C0(sessionId, 0, 0) + "')", 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET id_slot='" + reservedSlot
-                + "',visitors_now=visitors_now+1 WHERE id='" + roomId + "'", 0, 0);
+            UserDao users = userDao();
+            RoomDao rooms = roomDao();
+            if (users == null || rooms == null) {
+                releaseRepresentedRoomSlot(reservedSlot);
+                return 0L;
+            }
+            long userIdValue = NumberUtils.parseLong(userId);
+            String sessionId = users.loginSession(userIdValue);
+            rooms.insertVisit(userIdValue, roomId, sessionId);
+            rooms.markRoomEntered(roomId, reservedSlot);
             Proc_6_56_71E730(socketIndex, 0, 0);
             Proc_6_53_718E00(socketIndex, 0, 0);
             return reservedSlot;
@@ -1605,19 +1608,20 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
-            String roomRow = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,logs_visitedrooms.id_room,rooms.id_slot "
-                + "FROM logs_visitedrooms,rooms WHERE logs_visitedrooms.id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "' AND logs_visitedrooms.timestamp_left IS NULL AND rooms.id=logs_visitedrooms.id_room "
-                + "ORDER BY logs_visitedrooms.timestamp_enter DESC LIMIT 1", 0, 0);
-            if (roomRow.isEmpty()) {
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
                 Proc_6_244_801E80(socketIndex, "J|H", 0);
                 return 0L;
             }
-            String[] fields = roomRow.split("\t", -1);
-            long visitId = NumberUtils.parseLong(handlingField(fields, 0));
-            long roomId = NumberUtils.parseLong(handlingField(fields, 1));
-            long slotId = NumberUtils.parseLong(handlingField(fields, 2));
+            long userIdValue = NumberUtils.parseLong(userId);
+            RoomDao.ActiveRoomVisit visit = rooms.activeVisitWithRoomSlot(userIdValue).orElse(null);
+            if (visit == null) {
+                Proc_6_244_801E80(socketIndex, "J|H", 0);
+                return 0L;
+            }
+            long visitId = visit.visitId();
+            long roomId = visit.roomId();
+            long slotId = visit.slotId();
             if (roomId <= 0L) {
                 return 0L;
             }
@@ -1626,17 +1630,14 @@ public final class Handling {
                 Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "@\\"), 0);
             }
             if (visitId > 0L) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE logs_visitedrooms SET timestamp_left=UNIX_TIMESTAMP() WHERE id='"
-                    + visitId + "' AND timestamp_left IS NULL", 0, 0);
+                rooms.closeVisitById(visitId);
             } else {
-                MySQL.Proc_5_0_6D3CD0("UPDATE logs_visitedrooms SET timestamp_left=UNIX_TIMESTAMP() WHERE id_user='"
-                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room='" + roomId
-                    + "' AND timestamp_left IS NULL", 0, 0);
+                rooms.closeVisitsByUserRoom(userIdValue, roomId);
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET visitors_now=IF(visitors_now>0,visitors_now-1,0) WHERE id='" + roomId + "'", 0, 0);
+            rooms.decrementVisitors(roomId);
             if (slotId > 0L) {
                 releaseRepresentedRoomSlot(slotId);
-                MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET id_slot=null WHERE id='" + roomId + "' AND id_slot='" + slotId + "'", 0, 0);
+                rooms.clearRoomSlot(roomId, slotId);
             }
             Proc_6_244_801E80(socketIndex, "J|H", 0);
             return roomId;

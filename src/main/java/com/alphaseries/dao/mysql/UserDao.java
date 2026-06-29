@@ -137,6 +137,14 @@ public final class UserDao {
             .orElse("");
     }
 
+    public String loginSession(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT login_session FROM users WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getString(1),
+            userId)
+            .orElse("");
+    }
+
     public long socketByName(String name) throws SQLException {
         return database.queryOne(
             "SELECT id_socket FROM users WHERE name=? AND id_socket IS NOT NULL LIMIT 1",
