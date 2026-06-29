@@ -183,6 +183,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Restored decompiled boot caption states and Figuredata cache validation/error logging.
 - Restored decompiled `ERR.log`/`SLOW.log` boot header text.
 - Restored decompiled boot initialization integrity failure literal.
+- Restored decompiled boot startup credit/version literals.
 - Restored decompiled `:about`, `:entwicklung`, and `:commands` chat command response literals.
 - Restored decompiled `:whosonline` active-user chat command response.
 - Migrated remaining `Functions` conversions for email validation, identity refresh, club period, occupancy, download, inventory path, movement, and random helpers off `Vb`.
@@ -215,9 +216,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 367
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 184
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 179
 - `Boot.java`: 1242 lines
-- `Handling.java`: 12504 lines
+- `Handling.java`: 12511 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 940 lines

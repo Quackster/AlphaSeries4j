@@ -20,6 +20,11 @@ public final class Boot {
         + "Software nutzen";
     public static final String INITIALIZATION_INTEGRITY_FAILURE_MESSAGE =
         "Unable to intialize. File may be corrupted!";
+    private static final String[] STARTUP_CREDIT_LINES = new String[] {
+        "                                                           2 . 0 - \"Meilenstein 2\"",
+        "         Server Autor: Privilege, Deutsche \u00dcbersetzung: Medaillon",
+        "         Shoutouts: Tweeney, Pure, MoBaT, Donkjam, Arths, Jairo, Moogly and Bloopser"
+    };
 
     private Boot() {
     }
@@ -445,6 +450,16 @@ public final class Boot {
         }
         Console.Proc_2_1_6D1B60(message, "", "49344");
         Console.Proc_2_2_6D21D0("", "HIDDEN", "262144");
+    }
+
+    public static String[] startupCreditLines() {
+        return STARTUP_CREDIT_LINES.clone();
+    }
+
+    public static void printStartupCredits() {
+        for (String line : STARTUP_CREDIT_LINES) {
+            Console.Proc_2_1_6D1B60(line, "", "49344");
+        }
     }
 
     public static String initializationIntegrityFailureMessage(boolean integrityFlag, String caption) {

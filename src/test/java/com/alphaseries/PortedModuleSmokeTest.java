@@ -604,6 +604,15 @@ public final class PortedModuleSmokeTest {
             Boot.initializationIntegrityFailureMessage(true, "Alpha Series [INITIALISIERE] - [%%]"));
         assertEquals("", Boot.initializationIntegrityFailureMessage(false, "Alpha Series [INITIALISIERE] - [%%]"));
         assertEquals("", Boot.initializationIntegrityFailureMessage(true, "Alpha Series [RUNNING] - [%%]"));
+        String[] startupCreditLines = Boot.startupCreditLines();
+        assertEquals(true, startupCreditLines[0].contains("2 . 0 - \"Meilenstein 2\""));
+        assertEquals(true, startupCreditLines[1].contains("Server Autor: Privilege"));
+        assertEquals(true, startupCreditLines[1].contains("Deutsche \u00dcbersetzung: Medaillon"));
+        assertEquals(true, startupCreditLines[2].contains("Shoutouts: Tweeney, Pure, MoBaT"));
+        Console.clear();
+        Boot.printStartupCredits();
+        assertEquals(3, Console.entries().size());
+        assertEquals(49344L, Console.entries().get(0).foreColor());
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "a\2b\2c\2d\2",
             Boot.buildCampaignReplacementCache("a\tb\rc\td"));
         Boot.AchievementSettingsCache achievementSettings = Boot.buildAchievementSettingsCache(
