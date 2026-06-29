@@ -4419,6 +4419,20 @@ public final class Handling {
         }
     }
 
+    public static void Proc_6_162_7B3310(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String dateFormat = Functions.Proc_10_0_809570("com.system.format.date", "DAQBHHIIKHJHPAHQA", 0);
+            if (dateFormat.isEmpty()) {
+                dateFormat = "DAQBHHIIKHJHPAHQA";
+            }
+            Proc_6_244_801E80(socketIndex,
+                "0" + dateFormat + '\2' + "SAHPB" + "http://www.alpha-series.com/" + '\2' + "QBH", 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }

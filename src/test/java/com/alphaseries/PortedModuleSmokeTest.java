@@ -2699,6 +2699,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "AX92\2" + "0\2"));
         handlingSql.clear();
         handlingSends.clear();
+        Handling.Proc_6_162_7B3310(4);
+        assertEquals(true, containsSend(handlingSends, "DAQBHHIIKHJHPAHQA"));
+        assertEquals(true, containsSend(handlingSends, "http://www.alpha-series.com/"));
+        handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
         assertEquals(4, Handling.representedInteractionPartner(8));
