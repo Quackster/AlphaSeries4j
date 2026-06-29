@@ -1115,6 +1115,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(2L, movementPosition.positionX);
         assertEquals(3L, movementPosition.positionY);
         assertEquals(false, Handling.representedMovementPosition(movementCache, 4, 10).found);
+        Handling.MovementPosition argumentPosition = Handling.representedUserPosition(new Object[]{4, "AM", "payload", 8, 9});
+        assertEquals(true, argumentPosition.found);
+        assertEquals(8L, argumentPosition.positionX);
+        assertEquals(9L, argumentPosition.positionY);
+        assertEquals(false, Handling.representedUserPosition(new Object[]{4, "AM", "payload"}).found);
         movementCache = Handling.representedRoomOccupantMove(movementCache, 4, 9, 5, 6, 2, 0);
         assertEquals("\1" + "4\t\t\t0\t\1" + "9\t5\t6\t2\t0\2\2", movementCache);
         Path tempFile = Files.createTempFile("alphaseries4j", ".cache");

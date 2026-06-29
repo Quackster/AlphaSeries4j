@@ -9100,6 +9100,16 @@ public final class Handling {
         return result;
     }
 
+    public static MovementPosition representedUserPosition(Object[] args) {
+        MovementPosition result = new MovementPosition();
+        if (args != null && args.length >= 5) {
+            result.positionX = Vb.val(args[3]);
+            result.positionY = Vb.val(args[4]);
+            result.found = true;
+        }
+        return result;
+    }
+
     public static String representedRoomOccupantMove(
         String roomCacheText,
         long roomSlot,
@@ -9385,8 +9395,11 @@ public final class Handling {
                 return "";
             }
             long roomSlot = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
-            MovementPosition userPosition = representedMovementPosition(
-                Licence.global_00829310, roomSlot, representedRoomUserIndex(socketIndex, userId));
+            MovementPosition userPosition = representedUserPosition(args);
+            if (!userPosition.found) {
+                userPosition = representedMovementPosition(
+                    Licence.global_00829310, roomSlot, representedRoomUserIndex(socketIndex, userId));
+            }
             if (userPosition.found
                 && (Math.abs(userPosition.positionX - furnitureX) > 2L || Math.abs(userPosition.positionY - furnitureY) > 2L)) {
                 return "";
