@@ -1728,6 +1728,8 @@ public final class PortedModuleSmokeTest {
         Path originalApplicationPath = Path.of(Functions.applicationPath);
         Object originalProductCache = DataManager.global_008292BC;
         Object originalLicenceProductCache = Licence.global_008292BC;
+        Object originalRoomCategoryPayloads = Licence.global_00829244;
+        String originalSettingsCache = Functions.global_0082928C;
         Path figureCachePath = Files.createTempDirectory("alphaseries-figuredata");
         Functions.applicationPath = figureCachePath.toString();
         Files.write(figureCachePath.resolve("figuredata.cache"),
@@ -1746,6 +1748,14 @@ public final class PortedModuleSmokeTest {
         stickyProducts[506] = productRow(506, "1", "1", "14", "Trade Chair", "15", "Trade Desc", "18", "trade_sprite");
         DataManager.global_008292BC = stickyProducts;
         Licence.global_008292BC = stickyProducts;
+        String[][] categoryPayloads = new String[21][3];
+        categoryPayloads[2][1] = "CATEGORY_PAYLOAD";
+        Licence.global_00829244 = categoryPayloads;
+        Functions.global_0082928C = "[com.server.socket.game.rooms.own.max=5]"
+            + "[com.client.navigator.staff_picked.category.id.default=2]"
+            + "[com.client.navigator.staff_picked.style.default=3]"
+            + "[com.client.navigator.staff_picked.category.icon.default=4]"
+            + "[com.server.socket.game.rooms.favourites.max=3]";
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_mod\2fuse_alert\2fuse_kick\2fuse_receive_calls_for_help\2fuse_chatlog\2"
             + "fuse_use_wardrobe\2fuse_larger_wardrobe\2fuse_client_staff\2"}};
         MySQL.configureDatabaseConnection(new Database() {
@@ -1810,6 +1820,15 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT rate FROM rooms WHERE id='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(5));
+                }
+                if (sqlText.contains("SELECT COUNT(id) FROM rooms WHERE id_owner='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
+                }
+                if (sqlText.contains("SELECT id,visitors_max FROM models WHERE create_min_level_hc")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(20, 25));
+                }
+                if (sqlText.equals("SELECT MAX(id) FROM rooms")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(90));
                 }
                 if (sqlText.contains("SELECT visitors_now,visitors_max,status_door,password,id_slot,id_owner FROM rooms WHERE rooms.id='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(0, 25, 0, "", 4, 77));
@@ -1887,6 +1906,12 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id_slot,id_owner FROM rooms WHERE id='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(4, 88));
+                }
+                if (sqlText.contains("SELECT id_owner FROM rooms WHERE id='9' LIMIT 1")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(77));
+                }
+                if (sqlText.contains("SELECT is_staff_picked FROM rooms WHERE id='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
                 }
                 if (sqlText.contains("staff_cfh.id='50'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(50, 88, "Target", 0, 9, 8, "Need help", 9, "Room"));
@@ -1981,6 +2006,9 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT users.id,users.name FROM users WHERE users.id='88'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88, "Target"));
+                }
+                if (sqlText.contains("SELECT id_room FROM rooms_favourites WHERE id_user='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(9), Arrays.<Object>asList(10));
                 }
                 if (sqlText.contains("logs_visitedrooms.id_user='88'") && sqlText.contains("models.type")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(1, 9, "Room", 12, 30));
@@ -2366,6 +2394,38 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "Ge"));
         handlingSql.clear();
         handlingSends.clear();
+        Handling.Proc_6_104_74AB60(4);
+        assertEquals(true, containsSend(handlingSends, "H@"));
+        handlingSends.clear();
+        Handling.Proc_6_105_74AD50(4, "@]" + wireString("Created Room") + wireString("model_a"));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms(id_owner,name,visitors_max,id_model,timestamp_created)"));
+        assertEquals(true, containsSend(handlingSends, "@{"));
+        assertEquals(true, containsSend(handlingSends, "Created Room"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Handling.Proc_6_107_74B7E0(4);
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms_official"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET is_staff_picked='1'"));
+        assertEquals(true, containsSend(handlingSends, "NavRoom"));
+        assertEquals(true, containsSend(handlingSends, "GH"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Handling.Proc_6_108_74D800(4);
+        assertEquals(true, containsSend(handlingSends, "GJ"));
+        handlingSends.clear();
+        Handling.Proc_6_110_74DDA0(4, "@S" + wireLong(9));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms_favourites"));
+        assertEquals(true, containsSend(handlingSends, "GK"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Handling.Proc_6_109_74DBD0(4, "@T" + wireLong(9));
+        assertEquals(true, containsSql(handlingSql, "DELETE FROM rooms_favourites WHERE id_room='9'"));
+        assertEquals(true, containsSend(handlingSends, "GK"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Handling.Proc_6_111_74DF70(4, "", "", 2, 1);
+        assertEquals(true, containsSend(handlingSends, "C]CATEGORY_PAYLOAD"));
+        handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));
         assertEquals(4, Handling.representedInteractionPartner(8));
@@ -2397,6 +2457,8 @@ public final class PortedModuleSmokeTest {
         Guardian.setSocketConnected(8, false);
         DataManager.global_008292BC = originalProductCache;
         Licence.global_008292BC = originalLicenceProductCache;
+        Licence.global_00829244 = originalRoomCategoryPayloads;
+        Functions.global_0082928C = originalSettingsCache;
         Functions.applicationPath = originalApplicationPath.toString();
     }
 

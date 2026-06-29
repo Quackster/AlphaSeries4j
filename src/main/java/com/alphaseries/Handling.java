@@ -2976,6 +2976,210 @@ public final class Handling {
         return expiredCount;
     }
 
+    public static void Proc_6_104_74AB60(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long maxOwnedRooms = Vb.val(Functions.Proc_10_0_809570("com.server.socket.game.rooms.own.max", 0, 0));
+            long ownedRoomCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM rooms WHERE id_owner='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0));
+            String payload = Crypto.Proc_3_0_6D2AF0(maxOwnedRooms, null, "H@");
+            payload = Crypto.Proc_3_0_6D2AF0(ownedRoomCount, null, payload);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_105_74AD50(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "@]");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long maxOwnedRooms = Vb.val(Functions.Proc_10_0_809570("com.server.socket.game.rooms.own.max", 0, 0));
+            long ownedRoomCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM rooms WHERE id_owner='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0));
+            if (maxOwnedRooms > 0L && ownedRoomCount >= maxOwnedRooms) {
+                return;
+            }
+            LongRef offset = new LongRef(1);
+            String roomName = left(Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0), 25);
+            String modelName = left(Functions.Proc_10_11_80A9C0(readWireString(requestPayload, offset), 0, 0), 10);
+            if (roomName.isEmpty() || modelName.isEmpty()) {
+                return;
+            }
+            String modelRow = MySQL.Proc_5_2_6D4690("SELECT id,visitors_max FROM models WHERE create_min_level_hc <= '"
+                + handlingUserHcLevel(userId) + "' AND type='0' AND name='" + modelName + "' LIMIT 1", 0, 0);
+            String[] modelFields = modelRow.split("\t", -1);
+            long modelId = Vb.val(handlingField(modelFields, 0));
+            long visitorsMax = Vb.val(handlingField(modelFields, 1));
+            if (modelId <= 0L) {
+                return;
+            }
+            if (visitorsMax <= 0L) {
+                visitorsMax = 25L;
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms(id_owner,name,visitors_max,id_model,timestamp_created) VALUES('"
+                + escapedUserId + "','" + Functions.Proc_10_11_80A9C0(roomName, 0, 0) + "','" + visitorsMax
+                + "','" + modelId + "',UNIX_TIMESTAMP())", 0, 0);
+            long roomId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM rooms", 0, 0));
+            if (roomId <= 0L) {
+                return;
+            }
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "@{") + roomName + '\2', 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_106_74B750(Object... args) {
+        try {
+            if (args != null && args.length >= 1) {
+                Files.deleteIfExists(Path.of(Vb.cStr(args[0])));
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses file delete failures.
+        }
+    }
+
+    public static void Proc_6_107_74B7E0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId) || !handlingUserHasPermission(userId, "fuse_client_staff")) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return;
+            }
+            String ownerUserId = MySQL.Proc_5_2_6D4690("SELECT id_owner FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0);
+            if (ownerUserId.isEmpty()) {
+                return;
+            }
+            long currentPicked = Vb.val(MySQL.Proc_5_2_6D4690(
+                "SELECT is_staff_picked FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            long newPicked = currentPicked == 0L ? 1L : 0L;
+            long categoryId = Vb.val(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.category.id.default", 0, 0));
+            if (categoryId <= 0L) {
+                categoryId = 1L;
+            }
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_official WHERE id_parent='" + categoryId
+                + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
+            if (newPicked != 0L) {
+                long styleId = Vb.val(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.style.default", 0, 0));
+                long iconId = Vb.val(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.category.icon.default", 0, 0));
+                MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms_official(id_parent,id_room,id_style,id_type,icon) VALUES('"
+                    + categoryId + "','" + roomId + "','" + styleId + "','2','" + iconId + "')", 0, 0);
+                MySQL.Proc_5_0_6D3CD0("UPDATE users SET amount_staffpicked=amount_staffpicked+1 WHERE id='"
+                    + Functions.Proc_10_11_80A9C0(ownerUserId, 0, 0) + "'", 0, 0);
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE rooms SET is_staff_picked='" + newPicked + "' WHERE id='" + roomId + "'", 0, 0);
+            String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
+                + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
+            Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
+            Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GH"), 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_108_74D800(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long maxFavorites = Vb.val(Functions.Proc_10_0_809570("com.server.socket.game.rooms.favourites.max", 30, 0));
+            if (maxFavorites <= 0L) {
+                maxFavorites = 30L;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_room FROM rooms_favourites WHERE id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT " + maxFavorites, 0, 0);
+            StringBuilder roomIds = new StringBuilder();
+            long roomCount = 0L;
+            for (String row : Vb.cStr(rowText).split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    roomIds.append(Crypto.Proc_3_0_6D2AF0(Vb.val(row), null, ""));
+                    roomCount++;
+                }
+            }
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomCount, null,
+                Crypto.Proc_3_0_6D2AF0(maxFavorites, null, "GJ")) + roomIds, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_109_74DBD0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "@T");
+            long roomId = readWireLong(requestPayload, new LongRef(1));
+            if (roomId <= 0L) {
+                roomId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_favourites WHERE id_room='" + roomId + "' AND id_user='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GK") + "H", 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_110_74DDA0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "@S");
+            long roomId = readWireLong(requestPayload, new LongRef(1));
+            if (roomId <= 0L) {
+                roomId = Vb.val(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms_favourites(id_user,id_room,timestamp) VALUES('"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "',UNIX_TIMESTAMP())", 0, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GK") + " ", 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void Proc_6_111_74DF70(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long rankIndex = args != null && args.length >= 4 ? Vb.val(args[3]) : 0L;
+            long hcLevel = args != null && args.length >= 5 ? Vb.val(args[4]) : 0L;
+            if (rankIndex < 0L) {
+                rankIndex = 0L;
+            }
+            if (rankIndex > 20L) {
+                rankIndex = 20L;
+            }
+            if (hcLevel < 0L) {
+                hcLevel = 0L;
+            }
+            if (hcLevel > 2L) {
+                hcLevel = 2L;
+            }
+            String responsePayload = "";
+            if (Licence.global_00829244 instanceof String[][]) {
+                String[][] payloads = (String[][]) Licence.global_00829244;
+                if (rankIndex < payloads.length && payloads[(int) rankIndex] != null
+                    && hcLevel < payloads[(int) rankIndex].length) {
+                    responsePayload = Vb.cStr(payloads[(int) rankIndex][(int) hcLevel]);
+                }
+            }
+            Proc_6_244_801E80(socketIndex, "C]" + responsePayload, 0);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }
