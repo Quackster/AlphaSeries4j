@@ -139,6 +139,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `MessengerDao` with typed messenger search result records and routed search friendship checks through prepared DAO methods instead of raw handler SQL.
 - Expanded `MessengerDao` for private-message chat log insertion, replacing raw messenger chat-log SQL in `Handling`.
 - Routed messenger follow-room friendship checks through `MessengerDao`, replacing raw accepted-friend SQL in `Handling`.
+- Routed messenger invite friendship checks and invite chat logging through `MessengerDao`, replacing raw friendship/log SQL in `Handling`.
 - Added `com.alphaseries.dao.mysql.FurnitureDao` with typed row records for sticky-note, gift-box, and wall-state furniture handlers, avoiding tab-delimited DAO row strings.
 - Expanded `FurnitureDao` with typed wall-furniture room rows for room wall-item payloads.
 - Expanded `FurnitureDao` with typed product lookup for credit-furniture redemption and routed the furniture delete through the DAO.
@@ -242,9 +243,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 367
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 87
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 85
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12493 lines
+- `Handling.java`: 12495 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines

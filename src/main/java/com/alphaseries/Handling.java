@@ -7775,17 +7775,16 @@ public final class Handling {
                 return "";
             }
             targetCount = Math.min(targetCount, 150L);
+            long userIdValue = NumberUtils.parseLong(userId);
+            MessengerDao messenger = messengerDao();
             StringBuilder targetList = new StringBuilder();
             for (long targetIndex = 1L; targetIndex <= targetCount; targetIndex++) {
                 String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
                 if (!targetUserId.isEmpty() && !"0".equals(targetUserId)
                     && !("," + targetList + ",").contains("," + targetUserId + ",")) {
-                    String friendshipRow = MySQL.Proc_5_2_6D4690("SELECT id_user FROM friendships WHERE has_accept='1' AND ((id_user='"
-                        + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_friend='"
-                        + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "') OR (id_user='"
-                        + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_friend='"
-                        + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "')) LIMIT 1", 0, 0);
-                    if (!friendshipRow.isEmpty() && handlingSocketFromUserId(targetUserId) > 0) {
+                    if (messenger != null
+                        && messenger.acceptedFriendshipExists(userIdValue, NumberUtils.parseLong(targetUserId))
+                        && handlingSocketFromUserId(targetUserId) > 0) {
                         if (targetList.length() > 0) {
                             targetList.append(',');
                         }
@@ -7810,10 +7809,13 @@ public final class Handling {
                     int targetSocketIndex = handlingSocketFromUserId(targetUserId);
                     if (targetSocketIndex > 0) {
                         Proc_6_244_801E80(targetSocketIndex, payload, 0);
-                        MySQL.Proc_5_1_6D4110("INSERT INTO logs_chat(id_user,id_room,timestamp,description,id_type,id_session) VALUES('"
-                            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "',UNIX_TIMESTAMP(),'"
-                            + Functions.Proc_10_11_80A9C0("(Invite To: " + handlingUserName(targetUserId) + ") -- " + inviteText, 0, 0)
-                            + "','4','" + socketIndex + "')", 0, 0);
+                        if (messenger != null) {
+                            messenger.insertInviteChatLog(
+                                userIdValue,
+                                roomId,
+                                "(Invite To: " + handlingUserName(targetUserId) + ") -- " + inviteText,
+                                socketIndex);
+                        }
                     }
                 }
             }
