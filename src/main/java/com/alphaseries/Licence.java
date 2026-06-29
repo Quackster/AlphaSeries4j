@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.game.catalog.CatalogRegistry;
+import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.session.SessionRegistry;
@@ -122,6 +123,20 @@ public final class Licence {
             return "";
         }
         return catalogRegistry().dealRow(NumberUtils.parseLong(args[0]));
+    }
+
+    public static GiftSettings giftSettings() {
+        return GiftSettings.fromLegacy(global_00829178, global_0082917C, global_0082925C, global_00829260);
+    }
+
+    public static void setClubGiftState(String payload, String lookup) {
+        global_00829178 = StringUtils.text(payload);
+        global_0082917C = StringUtils.text(lookup);
+    }
+
+    public static void setGiftWrapState(String lookup, String payload) {
+        global_0082925C = StringUtils.text(lookup);
+        global_00829260 = StringUtils.text(payload);
     }
 
     public static String Proc_9_6_808080(Object... args) {

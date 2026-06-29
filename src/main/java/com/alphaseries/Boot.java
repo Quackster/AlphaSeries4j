@@ -230,11 +230,10 @@ public final class Boot {
 
     public static void Proc_1_13_6C9820(Object... args) {
         String wrapRows = MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE sprite LIKE 'present_wrap*%'", "\r", 0);
-        Licence.global_0082925C = "\r" + wrapRows + "\r";
         long wrapCount = countNonZeroRows(wrapRows);
         long accessoryCount = Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.count.accessories", wrapCount, 0));
         long colorCount = Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.count.colors", 0, 0));
-        Licence.global_00829260 = buildGiftWrapPayload(wrapRows, accessoryCount, colorCount);
+        Licence.setGiftWrapState("\r" + wrapRows + "\r", buildGiftWrapPayload(wrapRows, accessoryCount, colorCount));
     }
 
     public static void Proc_1_15_6CA000(Object... args) {
@@ -315,8 +314,7 @@ public final class Boot {
                 }
             }
         }
-        Licence.global_00829178 = Crypto.Proc_3_0_6D2AF0(count, null, "") + payload;
-        Licence.global_0082917C = lookup.toString();
+        Licence.setClubGiftState(Crypto.Proc_3_0_6D2AF0(count, null, "") + payload, lookup.toString());
     }
 
     public static void Proc_1_19_6CF190(Object... args) {

@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
+import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.wired.WiredPayloads;
@@ -4294,18 +4295,9 @@ public final class Handling {
             if (catalogProductId <= 0L) {
                 return "";
             }
-            long productId = 0L;
-            long requiredDays = 0L;
-            for (String row : Vb.cStr(Licence.global_0082917C).replace("[", "").split("]", -1)) {
-                if (!row.isEmpty()) {
-                    String[] parts = row.replace('\1', '\0').split("\0", -1);
-                    if (parts.length >= 3 && Vb.val(parts[0]) == catalogProductId) {
-                        productId = Vb.val(parts[1]);
-                        requiredDays = Vb.val(parts[2]);
-                        break;
-                    }
-                }
-            }
+            GiftSettings.ClubGift gift = Licence.giftSettings().clubGiftByCatalogProductId(catalogProductId);
+            long productId = gift.productId();
+            long requiredDays = gift.requiredDays();
             if (productId <= 0L) {
                 return "";
             }
@@ -4372,25 +4364,18 @@ public final class Handling {
             }
             long statusCount = 0L;
             StringBuilder statusPayload = new StringBuilder();
-            for (String row : Vb.cStr(Licence.global_0082917C).replace("[", "").split("]", -1)) {
-                if (!row.isEmpty()) {
-                    String[] giftParts = row.replace('\1', '\0').split("\0", -1);
-                    if (giftParts.length >= 3) {
-                        long catalogProductId = Vb.val(handlingField(giftParts, 0));
-                        long productId = Vb.val(handlingField(giftParts, 1));
-                        long requiredDays = Vb.val(handlingField(giftParts, 2));
-                        long canClaim = presentsAvailable > 0L && activeDays >= requiredDays ? 1L : 0L;
-                        statusPayload.append(Crypto.Proc_3_0_6D2AF0(catalogProductId, null, ""));
-                        statusPayload.append(Crypto.Proc_3_0_6D2AF0(productId, null, ""));
-                        statusPayload.append(Crypto.Proc_3_0_6D2AF0(requiredDays, null, ""));
-                        statusPayload.append(Crypto.Proc_3_0_6D2AF0(canClaim, null, ""));
-                        statusPayload.append('H');
-                        statusCount++;
-                    }
-                }
+            GiftSettings giftSettings = Licence.giftSettings();
+            for (GiftSettings.ClubGift gift : giftSettings.clubGifts()) {
+                long canClaim = presentsAvailable > 0L && activeDays >= gift.requiredDays() ? 1L : 0L;
+                statusPayload.append(Crypto.Proc_3_0_6D2AF0(gift.catalogProductId(), null, ""));
+                statusPayload.append(Crypto.Proc_3_0_6D2AF0(gift.productId(), null, ""));
+                statusPayload.append(Crypto.Proc_3_0_6D2AF0(gift.requiredDays(), null, ""));
+                statusPayload.append(Crypto.Proc_3_0_6D2AF0(canClaim, null, ""));
+                statusPayload.append('H');
+                statusCount++;
             }
             String payload = Crypto.Proc_3_0_6D2AF0(presentsAvailable, null, "IoM")
-                + Licence.global_00829178
+                + giftSettings.clubGiftPayload()
                 + Crypto.Proc_3_0_6D2AF0(statusCount, null, "") + statusPayload;
             Proc_6_244_801E80(socketIndex, payload, 0);
         } catch (Exception ignored) {
@@ -4449,7 +4434,7 @@ public final class Handling {
                     wrapProductId = Vb.val(MySQL.Proc_5_2_6D4690(
                         "SELECT id FROM products WHERE sprite LIKE 'present_wrap%' ORDER BY id ASC LIMIT 1", 0, 0));
                 }
-                if (wrapProductId > 0L && !Licence.global_0082925C.contains("\r" + wrapProductId + "\r")) {
+                if (wrapProductId > 0L && !Licence.giftSettings().containsGiftWrapProduct(wrapProductId)) {
                     return "";
                 }
                 creditPrice += wrapPrice;
@@ -4557,7 +4542,7 @@ public final class Handling {
                 Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.enabled", 0, 0)), null, "Il");
             long giftWrapPrice = Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.price", defaultPayload, 0));
             Proc_6_244_801E80(socketIndex,
-                Crypto.Proc_3_0_6D2AF0(giftWrapPrice, null, "") + Licence.global_00829260, 0);
+                Crypto.Proc_3_0_6D2AF0(giftWrapPrice, null, "") + Licence.giftSettings().giftWrapPayload(), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

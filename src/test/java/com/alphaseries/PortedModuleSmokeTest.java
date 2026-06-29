@@ -807,6 +807,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, ((String[][]) Licence.global_00829244)[0][0].contains("public"));
         Boot.Proc_1_13_6C9820();
         assertEquals(true, Licence.global_00829260.length() > 0);
+        assertEquals(true, Licence.giftSettings().containsGiftWrapProduct(10L));
         Boot.Proc_1_16_6CCA60();
         assertEquals(true, ((String[][]) Functions.global_008292A8)[1][0].contains("fuse_mod"));
         Boot.Proc_1_19_6CF190();
