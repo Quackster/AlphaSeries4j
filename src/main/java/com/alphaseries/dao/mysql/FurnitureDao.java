@@ -137,6 +137,46 @@ public final class FurnitureDao {
             furnitureId);
     }
 
+    public Optional<LocatedFurnitureState> locatedFurnitureState(long furnitureId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_room,id_product,sign FROM furnitures WHERE id=? LIMIT 1",
+            resultSet -> new LocatedFurnitureState(
+                furnitureId,
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3)),
+            furnitureId);
+    }
+
+    public Optional<LocatedFurnitureState> newestLocatedFurnitureStateByProduct(long productId) throws SQLException {
+        return database.queryOne(
+            "SELECT id,id_room,id_product,sign FROM furnitures WHERE id_product=? ORDER BY id DESC LIMIT 1",
+            resultSet -> new LocatedFurnitureState(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getString(4)),
+            productId);
+    }
+
+    public long newestFurnitureIdByRoomAndProduct(long roomId, long productId) throws SQLException {
+        return database.queryOne(
+            "SELECT id FROM furnitures WHERE id_room=? AND id_product=? ORDER BY id DESC LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            roomId,
+            productId)
+            .orElse(0L);
+    }
+
+    public boolean existsInRoom(long furnitureId, long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT COUNT(*) FROM furnitures WHERE id=? AND id_room=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            furnitureId,
+            roomId)
+            .orElse(0L) > 0L;
+    }
+
     public Optional<InventoryFurniture> inventoryFurniture(long furnitureId) throws SQLException {
         return database.queryOne(
             "SELECT id_product,id_owner,sign,id_secondary FROM furnitures WHERE id =? LIMIT 1",
@@ -374,6 +414,9 @@ public final class FurnitureDao {
     }
 
     public record RoomFurnitureState(long roomId, long productId, String sign) {
+    }
+
+    public record LocatedFurnitureState(long furnitureId, long roomId, long productId, String sign) {
     }
 
     public record InventoryFurniture(long productId, long ownerId, String itemData, long secondaryValue) {

@@ -5421,44 +5421,43 @@ public final class Handling {
             long secondId = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
             long furnitureId = 0L;
             long productId = 0L;
-            String rowText = "";
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
+                return "";
+            }
+            FurnitureDao.LocatedFurnitureState furnitureState = null;
             if (secondId > 0L) {
-                rowText = MySQL.Proc_5_2_6D4690("SELECT id_room,id_product,sign FROM furnitures WHERE id='"
-                    + secondId + "' LIMIT 1", 0, 0);
-                if (!rowText.isEmpty()) {
+                furnitureState = furniture.locatedFurnitureState(secondId).orElse(null);
+                if (furnitureState != null) {
                     furnitureId = secondId;
                     productId = firstId;
                 }
             }
-            if (rowText.isEmpty() && firstId > 0L) {
-                rowText = MySQL.Proc_5_2_6D4690("SELECT id_room,id_product,sign FROM furnitures WHERE id='"
-                    + firstId + "' LIMIT 1", 0, 0);
-                if (!rowText.isEmpty()) {
+            if (furnitureState == null && firstId > 0L) {
+                furnitureState = furniture.locatedFurnitureState(firstId).orElse(null);
+                if (furnitureState != null) {
                     furnitureId = firstId;
                 }
             }
-            if (rowText.isEmpty() && secondId > 0L) {
-                rowText = MySQL.Proc_5_2_6D4690("SELECT id_room,id_product,sign FROM furnitures WHERE id_product='"
-                    + secondId + "' ORDER BY id DESC LIMIT 1", 0, 0);
-                if (!rowText.isEmpty()) {
+            if (furnitureState == null && secondId > 0L) {
+                furnitureState = furniture.newestLocatedFurnitureStateByProduct(secondId).orElse(null);
+                if (furnitureState != null) {
                     productId = secondId;
                 }
             }
-            if (rowText.isEmpty()) {
+            if (furnitureState == null) {
                 return "";
             }
-            String[] fields = rowText.split("\t", -1);
-            long roomId = NumberUtils.parseLong(handlingField(fields, 0));
+            long roomId = furnitureState.roomId();
             if (productId <= 0L) {
-                productId = NumberUtils.parseLong(handlingField(fields, 1));
+                productId = furnitureState.productId();
             }
-            String signText = handlingField(fields, 2);
+            String signText = StringUtils.text(furnitureState.sign());
             if (roomId <= 0L || productId <= 0L) {
                 return "";
             }
             if (furnitureId <= 0L) {
-                furnitureId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_room='"
-                    + roomId + "' AND id_product='" + productId + "' ORDER BY id DESC LIMIT 1", 0, 0));
+                furnitureId = furniture.newestFurnitureIdByRoomAndProduct(roomId, productId);
             }
             if (furnitureId <= 0L) {
                 return "";
@@ -5480,8 +5479,7 @@ public final class Handling {
                     stateValue = maxState;
                 }
                 if (!String.valueOf(stateValue).equals(signText)) {
-                    MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + stateValue + "' WHERE id='"
-                        + furnitureId + "' LIMIT 1", 0, 0);
+                    furniture.updateSignLimited(furnitureId, stateValue);
                 }
             }
             return Proc_6_154_78F040(furnitureId, productId);
@@ -11672,15 +11670,23 @@ public final class Handling {
         if (effectiveSelectedIds.isEmpty()) {
             return 0L;
         }
+        FurnitureDao furniture = furnitureDao();
+        if (furniture == null) {
+            return 0L;
+        }
         long stateValue = NumberUtils.parseLong((StringUtils.text(parameterText) + ";").split(";", -1)[0]);
         long appliedCount = 0L;
         for (String idPart : effectiveSelectedIds.replace(',', ';').split(";", -1)) {
             long furnitureId = NumberUtils.parseLong(idPart);
             if (furnitureId > 0L && handlingFurnitureExistsInRoom(roomId, furnitureId)) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + stateValue + "' WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
-                Proc_6_151_78AC20(roomId, furnitureId, stateValue);
-                Proc_6_246_8024C0(roomId, furnitureStatePayload(furnitureId, stateValue), 0);
-                appliedCount++;
+                try {
+                    furniture.updateSignLimited(furnitureId, stateValue);
+                    Proc_6_151_78AC20(roomId, furnitureId, stateValue);
+                    Proc_6_246_8024C0(roomId, furnitureStatePayload(furnitureId, stateValue), 0);
+                    appliedCount++;
+                } catch (Exception ignored) {
+                    // VB6 source suppresses helper failures.
+                }
             }
         }
         return appliedCount;
@@ -11721,8 +11727,13 @@ public final class Handling {
         if (roomId <= 0L || furnitureId <= 0L) {
             return false;
         }
-        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures WHERE id='" + furnitureId
-            + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0)) > 0L;
+        try {
+            FurnitureDao furniture = furnitureDao();
+            return furniture != null && furniture.existsInRoom(furnitureId, roomId);
+        } catch (Exception ignored) {
+            // VB6 source suppresses helper failures.
+            return false;
+        }
     }
 
     public static String wiredEditRecordFromWire(String packetPayload, String packetCode, long wiredCode, boolean includeExtraValue) {
