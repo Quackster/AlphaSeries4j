@@ -422,6 +422,59 @@ public final class FurnitureDao {
             boxProductId);
     }
 
+    public long recyclableInventoryCount(long ownerId, String selectedFurnitureIds) throws SQLException {
+        String whereClause = recyclableInventoryWhereClause(ownerId, selectedFurnitureIds);
+        if (whereClause.isEmpty()) {
+            return 0L;
+        }
+        return database.queryOne(
+            "SELECT COUNT(*) FROM furnitures,products WHERE " + whereClause,
+            resultSet -> resultSet.getLong(1))
+            .orElse(0L);
+    }
+
+    public int clearRecyclerItems(long ownerId, String selectedFurnitureIds) throws SQLException {
+        if (!isNumericIdList(selectedFurnitureIds)) {
+            return 0;
+        }
+        return database.execute(
+            "UPDATE furnitures SET id_owner=NULL WHERE id_owner=? AND id_room IS NULL AND id IN ("
+                + selectedFurnitureIds + ")",
+            ownerId);
+    }
+
+    public int insertRecyclerLog(long userId, String selectedFurnitureIds, long rewardProductId) throws SQLException {
+        if (!isNumericIdList(selectedFurnitureIds)) {
+            return 0;
+        }
+        return database.execute(
+            "INSERT INTO logs_recycler(id_user,timestamp,items,id_reward,id_session) VALUES(?,UNIX_TIMESTAMP(),?,?,?)",
+            userId,
+            selectedFurnitureIds,
+            rewardProductId,
+            0L);
+    }
+
+    private static String recyclableInventoryWhereClause(long ownerId, String selectedFurnitureIds) {
+        if (!isNumericIdList(selectedFurnitureIds)) {
+            return "";
+        }
+        StringBuilder whereClause = new StringBuilder();
+        for (String selectedFurnitureId : selectedFurnitureIds.split(",", -1)) {
+            if (whereClause.length() > 0) {
+                whereClause.append(" OR ");
+            }
+            whereClause.append("furnitures.id_owner='").append(ownerId).append("' AND furnitures.id_room IS NULL")
+                .append(" AND furnitures.id='").append(selectedFurnitureId).append("' AND products.id=furnitures.id_product")
+                .append(" AND products.is_recycleable='1'");
+        }
+        return whereClause.toString();
+    }
+
+    private static boolean isNumericIdList(String selectedFurnitureIds) {
+        return selectedFurnitureIds != null && selectedFurnitureIds.matches("\\d+(,\\d+)*");
+    }
+
     public int resetDimmerPresetStates(long furnitureId) throws SQLException {
         return database.execute("UPDATE furnitures_dimmerpresets SET id_state=? WHERE id_furni=?", 1L, furnitureId);
     }

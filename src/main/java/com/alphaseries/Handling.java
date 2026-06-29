@@ -6938,13 +6938,12 @@ public final class Handling {
             if (!selection.valid) {
                 return "";
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            String itemWhere = recyclerSelectionWhereClause(selection.selectedItems, escapedUserId);
-            if (itemWhere.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return "";
             }
-            long validCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM furnitures,products WHERE "
-                + itemWhere, 0, 0));
+            long userIdValue = NumberUtils.parseLong(userId);
+            long validCount = furniture.recyclableInventoryCount(userIdValue, selection.selectedItems);
             if (validCount != selection.requestedCount) {
                 return "";
             }
@@ -6958,17 +6957,13 @@ public final class Handling {
                 rewardDestinationId = rewardProductId;
             }
             String rewardSign = recyclerRewardSign();
-            furnitureDao().updateRecyclerRewardBox(
-                NumberUtils.parseLong(userId),
+            furniture.updateRecyclerRewardBox(
+                userIdValue,
                 Licence.recyclerSettings().boxProductId(),
                 rewardSign,
                 rewardDestinationId);
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner=NULL WHERE id_owner='" + escapedUserId
-                + "' AND id_room IS NULL AND id IN (" + selection.selectedItems + ")", 0, 0);
-            MySQL.Proc_5_1_6D4110("INSERT INTO logs_recycler(id_user,timestamp,items,id_reward,id_session) VALUES('"
-                + escapedUserId + "',UNIX_TIMESTAMP(),'"
-                + Functions.Proc_10_11_80A9C0(selection.selectedItems, 0, 0) + "','"
-                + rewardProductId + "','0')", 0, 0);
+            furniture.clearRecyclerItems(userIdValue, selection.selectedItems);
+            furniture.insertRecyclerLog(userIdValue, selection.selectedItems, rewardProductId);
             for (String furnitureId : selection.selectedItems.split(",", -1)) {
                 long selectedFurnitureId = NumberUtils.parseLong(furnitureId);
                 if (selectedFurnitureId > 0L) {
