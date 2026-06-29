@@ -12,7 +12,12 @@ import com.alphaseries.dao.mysql.TradeDao;
 import com.alphaseries.dao.mysql.MessengerDao;
 import com.alphaseries.dao.mysql.VoucherDao;
 import com.alphaseries.dao.mysql.PollDao;
+import com.alphaseries.dao.mysql.JukeboxDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.jukebox.JukeboxPlaybackRow;
+import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
+import com.alphaseries.game.jukebox.JukeboxRow;
+import com.alphaseries.game.jukebox.SongDiskRow;
 import com.alphaseries.game.pet.BotRoomEntryRow;
 import com.alphaseries.game.pet.PetCommandActionRow;
 import com.alphaseries.game.pet.PetCommandTargetRow;
@@ -7311,11 +7316,11 @@ public final class Handling {
                 }
             }
             if (jukeboxId <= 0L && roomId > 0L) {
-                jukeboxId = NumberUtils.parseLong(handlingField(jukeboxRow(roomId), 0));
+                jukeboxId = jukeboxRowForRoom(roomId).map(JukeboxRow::id).orElse(0L);
             }
             if (jukeboxId > 0L) {
-                long activeDestinationId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_destination FROM soundmachine_jb_playlist WHERE id_jukebox='"
-                    + jukeboxId + "' AND id_order='0' LIMIT 1", 0, 0));
+                JukeboxDao jukebox = jukeboxDao();
+                long activeDestinationId = jukebox == null ? 0L : jukebox.activeDestinationId(jukeboxId);
                 FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
                 cacheState.pendingFurnitureCache = removeSoundMachineMarkers(cacheState.pendingFurnitureCache, jukeboxId, activeDestinationId);
                 Licence.setFurnitureRoomCache(cacheState);
@@ -7342,16 +7347,15 @@ public final class Handling {
                 return "";
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            String[] jukeboxFields = jukeboxRow(roomId);
-            long jukeboxId = NumberUtils.parseLong(handlingField(jukeboxFields, 0));
-            long jukeboxProductId = NumberUtils.parseLong(handlingField(jukeboxFields, 1));
-            if (jukeboxId <= 0L) {
+            JukeboxDao jukebox = jukeboxDao();
+            JukeboxRow jukeboxRow = jukeboxRowForRoom(roomId).orElse(null);
+            if (jukebox == null || jukeboxRow == null || jukeboxRow.id() <= 0L) {
                 return "";
             }
-            String maxOrderText = MySQL.Proc_5_2_6D4690("SELECT MAX(id_order) FROM soundmachine_jb_playlist WHERE id_jukebox='"
-                + jukeboxId + "'", 0, 0);
-            long playlistCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM soundmachine_jb_playlist WHERE id_jukebox='"
-                + jukeboxId + "'", 0, 0));
+            long jukeboxId = jukeboxRow.id();
+            long jukeboxProductId = jukeboxRow.productId();
+            String maxOrderText = jukebox.maxPlaylistOrderText(jukeboxId);
+            long playlistCount = jukebox.playlistCount(jukeboxId);
             long playlistLimit = NumberUtils.parseLong(Functions.Proc_10_0_809570(
                 "com.server.socket.game.jukebox." + jukeboxProductId + ".soundsets.max", 0, 0));
             if (!jukeboxCanAddDisk(request.playlistOrder, maxOrderText, playlistCount, playlistLimit)) {
@@ -7361,17 +7365,13 @@ public final class Handling {
             if (songDiskProductId <= 0L) {
                 return "";
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            long destinationId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_destination FROM furnitures WHERE id_owner='"
-                + escapedUserId + "' AND id='" + request.diskFurnitureId + "' AND id_product='"
-                + songDiskProductId + "' LIMIT 1", 0, 0));
+            long userIdValue = NumberUtils.parseLong(userId);
+            long destinationId = jukebox.diskDestinationForOwner(userIdValue, request.diskFurnitureId, songDiskProductId);
             if (destinationId <= 0L) {
                 return "";
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner=NULL WHERE id_owner='" + escapedUserId
-                + "' AND id='" + request.diskFurnitureId + "' AND id_product='" + songDiskProductId + "' LIMIT 1", 0, 0);
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO soundmachine_jb_playlist(id_jukebox,id_cd,id_order,id_destination) VALUES('"
-                + jukeboxId + "','" + request.diskFurnitureId + "','" + request.playlistOrder + "','" + destinationId + "')", 0, 0);
+            jukebox.removeDiskFromOwner(userIdValue, request.diskFurnitureId, songDiskProductId);
+            jukebox.addPlaylistEntry(jukeboxId, request.diskFurnitureId, request.playlistOrder, destinationId);
             String payload = Crypto.Proc_3_0_6D2AF0(request.diskFurnitureId, null, "Ac");
             Proc_6_244_801E80(socketIndex, payload, 0);
             Proc_6_227_7F2400(socketIndex);
@@ -7395,29 +7395,22 @@ public final class Handling {
             }
             long playlistOrder = jukeboxRemoveOrderFromWire(handlingPacketPayload(args));
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            String[] jukeboxFields = jukeboxRow(roomId);
-            long jukeboxId = NumberUtils.parseLong(handlingField(jukeboxFields, 0));
+            long jukeboxId = jukeboxRowForRoom(roomId).map(JukeboxRow::id).orElse(0L);
             if (jukeboxId <= 0L) {
                 return "";
             }
-            long cdFurnitureId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_cd FROM soundmachine_jb_playlist WHERE id_jukebox='"
-                + jukeboxId + "' AND id_order='" + playlistOrder + "' LIMIT 1", 0, 0));
+            JukeboxDao jukebox = jukeboxDao();
+            if (jukebox == null) {
+                return "";
+            }
+            long cdFurnitureId = jukebox.diskFurnitureIdAtOrder(jukeboxId, playlistOrder);
             if (cdFurnitureId <= 0L) {
                 return "";
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
             long songDiskProductId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.default.songdisk", 0, 0));
-            if (songDiskProductId > 0L) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner='" + escapedUserId + "' WHERE id='"
-                    + cdFurnitureId + "' AND id_product='" + songDiskProductId + "' LIMIT 1", 0, 0);
-            } else {
-                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner='" + escapedUserId + "' WHERE id='"
-                    + cdFurnitureId + "' LIMIT 1", 0, 0);
-            }
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM soundmachine_jb_playlist WHERE id_jukebox='" + jukeboxId
-                + "' AND id_cd='" + cdFurnitureId + "' LIMIT 1", 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE soundmachine_jb_playlist SET id_order=id_order-1 WHERE id_jukebox='"
-                + jukeboxId + "' AND id_order>'" + playlistOrder + "'", 0, 0);
+            jukebox.returnDiskToOwner(NumberUtils.parseLong(userId), cdFurnitureId, songDiskProductId);
+            jukebox.deletePlaylistEntry(jukeboxId, cdFurnitureId);
+            jukebox.decrementOrdersAfter(jukeboxId, playlistOrder);
             Proc_6_227_7F2400(socketIndex);
             Proc_6_228_7F2AF0(socketIndex);
             return "";
@@ -7441,23 +7434,21 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            String[] jukeboxFields = jukeboxRow(roomId);
-            long jukeboxId = NumberUtils.parseLong(handlingField(jukeboxFields, 0));
-            long jukeboxProductId = NumberUtils.parseLong(handlingField(jukeboxFields, 1));
-            if (jukeboxId <= 0L) {
+            JukeboxDao jukebox = jukeboxDao();
+            JukeboxRow jukeboxRow = jukeboxRowForRoom(roomId).orElse(null);
+            if (jukebox == null || jukeboxRow == null || jukeboxRow.id() <= 0L) {
                 return "";
             }
+            long jukeboxId = jukeboxRow.id();
+            long jukeboxProductId = jukeboxRow.productId();
             long playlistLimit = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.jukebox." + jukeboxProductId + ".soundsets.max", 0, 0));
             if (playlistLimit <= 0L) {
-                playlistLimit = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id_order)+1 FROM soundmachine_jb_playlist WHERE id_jukebox='"
-                    + jukeboxId + "'", 0, 0));
+                playlistLimit = jukebox.playlistLimitFromEntries(jukeboxId);
             }
             if (playlistLimit <= 0L) {
                 playlistLimit = 100L;
             }
-            String rows = MySQL.Proc_5_2_6D4690("SELECT id_cd,id_destination FROM soundmachine_jb_playlist WHERE id_jukebox='"
-                + jukeboxId + "' ORDER BY id_order ASC LIMIT " + playlistLimit, 0, 0);
-            String payload = jukeboxPlaylistPayload(playlistLimit, rows);
+            String payload = jukeboxPlaylistPayload(playlistLimit, jukebox.playlistEntries(jukeboxId, playlistLimit));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -7477,9 +7468,11 @@ public final class Handling {
             if (songDiskProductId <= 0L) {
                 return "";
             }
-            String rows = MySQL.Proc_5_2_6D4690("SELECT id,id_destination FROM furnitures WHERE id_owner='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_product='" + songDiskProductId + "' LIMIT 250", 0, 0);
-            String payload = songDiskInventoryPayload(rows);
+            JukeboxDao jukebox = jukeboxDao();
+            if (jukebox == null) {
+                return "";
+            }
+            String payload = songDiskInventoryPayload(jukebox.songDisks(NumberUtils.parseLong(userId), songDiskProductId));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -7501,23 +7494,20 @@ public final class Handling {
                 roomId = handlingCurrentRoomId(socketIndex, userId);
             }
             if (jukeboxId <= 0L && roomId > 0L) {
-                jukeboxId = NumberUtils.parseLong(handlingField(jukeboxRow(roomId), 0));
+                jukeboxId = jukeboxRowForRoom(roomId).map(JukeboxRow::id).orElse(0L);
             }
             if (jukeboxId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT soundmachine_jb_playlist.id_destination,soundmachine_jb_playlist.id_cd,soundmachine_cds.sequence "
-                + "FROM soundmachine_jb_playlist,soundmachine_cds WHERE soundmachine_jb_playlist.id_jukebox='"
-                + jukeboxId + "' AND soundmachine_jb_playlist.id_order='0' AND soundmachine_cds.id=soundmachine_jb_playlist.id_destination "
-                + "GROUP BY soundmachine_cds.id LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            JukeboxDao jukebox = jukeboxDao();
+            JukeboxPlaybackRow row = jukebox == null ? null : jukebox.playbackRow(jukeboxId).orElse(null);
+            if (row == null) {
                 return "";
             }
-            String[] fields = rowText.split("\t", -1);
-            long destinationId = NumberUtils.parseLong(handlingField(fields, 0));
-            long diskFurnitureId = NumberUtils.parseLong(handlingField(fields, 1));
-            long sequenceId = NumberUtils.parseLong(handlingField(fields, 2));
-            String payload = jukeboxPlaybackPayload(System.currentTimeMillis() / 1000L, sequenceId, destinationId, diskFurnitureId);
+            String payload = jukeboxPlaybackPayload(System.currentTimeMillis() / 1000L,
+                row.sequenceId(),
+                row.destinationId(),
+                row.diskFurnitureId());
             if (payload.isEmpty()) {
                 return "";
             }
@@ -12021,17 +12011,24 @@ public final class Handling {
     }
 
     public static String[] jukeboxRow(long roomId) {
+        return jukeboxRowForRoom(roomId)
+            .map(row -> new String[]{String.valueOf(row.id()), String.valueOf(row.productId())})
+            .orElse(new String[0]);
+    }
+
+    public static java.util.Optional<JukeboxRow> jukeboxRowForRoom(long roomId) {
         if (roomId <= 0L) {
-            return new String[0];
+            return java.util.Optional.empty();
         }
-        String rowText = MySQL.Proc_5_2_6D4690("SELECT furnitures.id,furnitures.id_product FROM furnitures,soundmachine_jb_playlist WHERE furnitures.id_room='"
-            + roomId + "' AND soundmachine_jb_playlist.id_jukebox=furnitures.id GROUP BY furnitures.id ORDER BY furnitures.id DESC LIMIT 1", 0, 0);
-        if (rowText.isEmpty()) {
-            rowText = MySQL.Proc_5_2_6D4690("SELECT furnitures.id,furnitures.id_product FROM furnitures,products WHERE furnitures.id_room='"
-                + roomId + "' AND furnitures.id_product=products.id AND (products.action LIKE '%soundmachine%' OR products.action LIKE '%jukebox%' "
-                + "OR products.name LIKE '%jukebox%' OR products.sprite LIKE '%jukebox%') ORDER BY furnitures.id DESC LIMIT 1", 0, 0);
+        JukeboxDao jukebox = jukeboxDao();
+        if (jukebox == null) {
+            return java.util.Optional.empty();
         }
-        return rowText.isEmpty() ? new String[0] : rowText.split("\t", -1);
+        try {
+            return jukebox.jukeboxInRoom(roomId);
+        } catch (Exception ignored) {
+            return java.util.Optional.empty();
+        }
     }
 
     public static boolean jukeboxCanAddDisk(long playlistOrder, String maxOrderText, long playlistCount, long playlistLimit) {
@@ -12061,7 +12058,15 @@ public final class Handling {
         return JukeboxPayloads.playlist(playlistLimit, playlistRows);
     }
 
+    public static String jukeboxPlaylistPayload(long playlistLimit, List<JukeboxPlaylistEntry> playlistRows) {
+        return JukeboxPayloads.playlist(playlistLimit, playlistRows);
+    }
+
     public static String songDiskInventoryPayload(String diskRows) {
+        return JukeboxPayloads.diskInventory(diskRows);
+    }
+
+    public static String songDiskInventoryPayload(List<SongDiskRow> diskRows) {
         return JukeboxPayloads.diskInventory(diskRows);
     }
 
@@ -12309,6 +12314,11 @@ public final class Handling {
     private static PollDao pollDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new PollDao(database);
+    }
+
+    private static JukeboxDao jukeboxDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new JukeboxDao(database);
     }
 
     private static BotDao botDao() {

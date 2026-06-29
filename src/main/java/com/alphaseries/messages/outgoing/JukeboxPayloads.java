@@ -1,8 +1,13 @@
 package com.alphaseries.messages.outgoing;
 
+import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
+import com.alphaseries.game.jukebox.SongDiskRow;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class JukeboxPayloads {
     private JukeboxPayloads() {
@@ -34,9 +39,7 @@ public final class JukeboxPayloads {
     }
 
     public static String playlist(long playlistLimit, String playlistRows) {
-        long effectiveLimit = playlistLimit <= 0L ? 100L : playlistLimit;
-        long playlistCount = 0L;
-        PacketBuilder playlistPayload = PacketBuilder.create();
+        List<JukeboxPlaylistEntry> entries = new ArrayList<>();
         for (String row : StringUtils.text(playlistRows).split("\r", -1)) {
             String rowValue = row.trim();
             if (!rowValue.isEmpty()) {
@@ -44,9 +47,21 @@ public final class JukeboxPayloads {
                 long cdId = NumberUtils.parseLong(StringUtils.field(fields, 0));
                 long destinationId = NumberUtils.parseLong(StringUtils.field(fields, 1));
                 if (cdId > 0L) {
-                    playlistPayload.appendInt(cdId).appendInt(destinationId);
-                    playlistCount++;
+                    entries.add(new JukeboxPlaylistEntry(cdId, destinationId));
                 }
+            }
+        }
+        return playlist(playlistLimit, entries);
+    }
+
+    public static String playlist(long playlistLimit, List<JukeboxPlaylistEntry> entries) {
+        long effectiveLimit = playlistLimit <= 0L ? 100L : playlistLimit;
+        long playlistCount = 0L;
+        PacketBuilder playlistPayload = PacketBuilder.create();
+        for (JukeboxPlaylistEntry entry : entries == null ? List.<JukeboxPlaylistEntry>of() : entries) {
+            if (entry != null && entry.diskFurnitureId() > 0L) {
+                playlistPayload.appendInt(entry.diskFurnitureId()).appendInt(entry.destinationId());
+                playlistCount++;
             }
         }
         return PacketBuilder.message("EN")
@@ -57,8 +72,7 @@ public final class JukeboxPayloads {
     }
 
     public static String diskInventory(String diskRows) {
-        long diskCount = 0L;
-        PacketBuilder diskPayload = PacketBuilder.create();
+        List<SongDiskRow> disks = new ArrayList<>();
         for (String row : StringUtils.text(diskRows).split("\r", -1)) {
             String rowValue = row.trim();
             if (!rowValue.isEmpty()) {
@@ -66,9 +80,20 @@ public final class JukeboxPayloads {
                 long diskId = NumberUtils.parseLong(StringUtils.field(fields, 0));
                 long destinationId = NumberUtils.parseLong(StringUtils.field(fields, 1));
                 if (diskId > 0L) {
-                    diskPayload.appendInt(diskId).appendInt(destinationId);
-                    diskCount++;
+                    disks.add(new SongDiskRow(diskId, destinationId));
                 }
+            }
+        }
+        return diskInventory(disks);
+    }
+
+    public static String diskInventory(List<SongDiskRow> disks) {
+        long diskCount = 0L;
+        PacketBuilder diskPayload = PacketBuilder.create();
+        for (SongDiskRow disk : disks == null ? List.<SongDiskRow>of() : disks) {
+            if (disk != null && disk.furnitureId() > 0L) {
+                diskPayload.appendInt(disk.furnitureId()).appendInt(disk.destinationId());
+                diskCount++;
             }
         }
         return PacketBuilder.message("EM")
