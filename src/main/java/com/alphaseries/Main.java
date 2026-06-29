@@ -87,6 +87,7 @@ public final class Main {
         public boolean success;
         public boolean shouldExit;
         public String caption = "";
+        public String consoleTitle = "";
         public String productKey = "";
     }
 
@@ -139,7 +140,8 @@ public final class Main {
             Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "ROOMS").toString(), 0, 0);
             Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER").toString(), 0, 0);
             Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "USERS").toString(), 0, 0);
-            result.caption = Vb.cStr(captionTemplate).replace("%%", Licence.global_00829038);
+            result.consoleTitle = Vb.cStr(captionTemplate).replace("%%", Licence.global_00829038);
+            result.caption = javaCaptionFromConsoleTitle(result.consoleTitle);
             Licence.global_008290AC = 0xFFFFFFL;
             result.productKey = productKeyFromConfig(Handling.Proc_6_239_7FC170(
                 Path.of(Functions.applicationPath, "config.ini").toString(), 0, 7));
@@ -163,10 +165,23 @@ public final class Main {
 
     public static boolean runServer(String caption, String licenceResponse) {
         try {
-            if (Vb.cStr(caption).contains("[!]")) {
+            if (DataManager.Proc_8_7_8051C0(licenceResponse, 0, 0)) {
+                Boot.Proc_1_3_6BEBA0(0);
                 return true;
             }
-            if (DataManager.Proc_8_7_8051C0(licenceResponse, 0, 0)) {
+            return false;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    public static boolean runServer(LifecycleResult lifecycle) {
+        if (lifecycle == null) {
+            return false;
+        }
+        try {
+            if (DataManager.Proc_8_7_8051C0(
+                new DataManager.LicenceCheckContext(lifecycle.productKey, Licence.global_00829038), 0, 0)) {
                 Boot.Proc_1_3_6BEBA0(0);
                 return true;
             }
@@ -189,6 +204,10 @@ public final class Main {
         }
         String[] lines = configParts[7].split("\\r?\\n", -1);
         return lines.length > 0 ? Vb.cStr(lines[0]) : "";
+    }
+
+    public static String javaCaptionFromConsoleTitle(String consoleTitle) {
+        return Vb.cStr(consoleTitle).replace("[!]", "").trim().replaceAll(" {2,}", " ");
     }
 
     public static String gameServerUnknownEventAccept() {

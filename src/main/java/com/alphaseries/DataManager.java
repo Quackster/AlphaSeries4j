@@ -6,16 +6,44 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public final class DataManager {
+    public static final String LICENCE_TIME_FORMAT = "yyyy-mm-dd_h-mm-ss";
     public static String global_008291AC = "";
     public static String global_00829050 = "";
     public static int global_00829054 = 0;
     public static final int[] global_00829068 = new int[5001];
     public static Object global_008292BC = "";
     public static String lastLicenceFailureMessage = "";
+    private static LicenceHttpFetcher licenceHttpFetcher = (url, action) -> Proc_8_0_804330(url, action);
 
     private DataManager() {
+    }
+
+    public interface LicenceHttpFetcher {
+        String read(String requestUrl, int action);
+    }
+
+    public static final class LicenceCheckContext {
+        public final String productKey;
+        public final String version;
+        public final LocalDateTime localTime;
+
+        public LicenceCheckContext(String productKey, String version) {
+            this(productKey, version, LocalDateTime.now());
+        }
+
+        public LicenceCheckContext(String productKey, String version, LocalDateTime localTime) {
+            this.productKey = Vb.cStr(productKey);
+            this.version = Vb.cStr(version);
+            this.localTime = localTime == null ? LocalDateTime.now() : localTime;
+        }
+    }
+
+    public static void configureLicenceHttpFetcher(LicenceHttpFetcher fetcher) {
+        licenceHttpFetcher = fetcher == null ? (url, action) -> Proc_8_0_804330(url, action) : fetcher;
     }
 
     public static long Proc_8_1_804400(Object... args) {
@@ -110,7 +138,40 @@ public final class DataManager {
             Proc_8_4_804970();
             return false;
         }
-        return applyLicenceResponse(Vb.cStr(args[0]), "yyyy-mm-dd_h-mm-ss", 0L);
+        if (args[0] instanceof LicenceCheckContext) {
+            return checkLicence((LicenceCheckContext) args[0]);
+        }
+        return applyLicenceResponse(Vb.cStr(args[0]), LICENCE_TIME_FORMAT, 0L);
+    }
+
+    public static boolean checkLicence(LicenceCheckContext context) {
+        try {
+            long checksumSalt = licenceChecksumSalt();
+            String requestUrl = buildLicenceRequestUrl(context);
+            String responseText = licenceHttpFetcher.read(requestUrl, 1);
+            return applyLicenceResponse(responseText, LICENCE_TIME_FORMAT, checksumSalt);
+        } catch (Exception ex) {
+            Proc_8_4_804970();
+            return false;
+        }
+    }
+
+    public static long licenceChecksumSalt() {
+        return Proc_8_2_804490(7, 0x5A) + Proc_8_1_804400(0) + Proc_8_2_804490(1, 10);
+    }
+
+    public static String buildLicenceRequestUrl(LicenceCheckContext context) {
+        String timeFormatText = context.localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd_H-mm-ss"));
+        String timePrefix = Functions.Proc_10_3_809B90(0x9C4, 0x3E8)
+            + Functions.Proc_10_3_809B90(0x9C4, 0x3E8);
+        String tokenSeed = Functions.Proc_10_3_809B90(0x9C4, 0x3E8)
+            + "/" + Functions.Proc_10_3_809B90(0x9C4, 0x3E8)
+            + "/" + Functions.Proc_10_3_809B90(0x9C4, 0x3E8) + "/L:";
+        return "http://www.alpha-series.com/check_product_sep11?local_time="
+            + timePrefix + timeFormatText + ":"
+            + "&version=" + context.version
+            + "&productKey=" + context.productKey
+            + "&token=" + Proc_8_3_804530(tokenSeed);
     }
 
     public static String licenceBlockFromResponse(String responseText, String timeFormat) {

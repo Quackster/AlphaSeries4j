@@ -14,11 +14,12 @@ public final class AlphaSeriesApp {
             System.exit(1);
         }
         Main.LifecycleResult lifecycle = Main.formInitialize("AlphaSeries %% [!]");
+        System.setProperty("alphaseries.consoleTitle", lifecycle.consoleTitle);
         if (!lifecycle.success) {
             System.err.println("AlphaSeries startup failed");
             System.exit(1);
         }
-        if (!Main.runServer(lifecycle.caption, "")) {
+        if (!Main.runServer(lifecycle)) {
             System.err.println("AlphaSeries server startup failed");
             System.exit(1);
         }

@@ -76,6 +76,19 @@ public final class PortedModuleSmokeTest {
         assertEquals("Das Lizenzsystem ist zurzeit nicht erreichbar. Versuch es sp\u00e4ter wieder!",
             DataManager.lastLicenceFailureMessage);
         assertEquals(false, DataManager.applyLicenceResponse("{BLOCKED no%20licence}", "FMT", 0));
+        final List<String> licenceUrls = new ArrayList<>();
+        DataManager.configureLicenceHttpFetcher((requestUrl, action) -> {
+            licenceUrls.add(action + ":" + requestUrl);
+            return "rank=4\r7:4=1";
+        });
+        assertEquals(true, DataManager.checkLicence(new DataManager.LicenceCheckContext(
+            "PRODUCT-KEY", "ALPHASERIES_FINAL (PREMIUM)", LocalDateTime.of(2026, 6, 29, 14, 50, 0))));
+        assertEquals(true, licenceUrls.get(0).startsWith("1:http://www.alpha-series.com/check_product_sep11?local_time="));
+        assertEquals(true, licenceUrls.get(0).contains("2026-06-29_14-50-00:"));
+        assertEquals(true, licenceUrls.get(0).contains("&version=ALPHASERIES_FINAL (PREMIUM)&productKey=PRODUCT-KEY&token="));
+        assertEquals(4, DataManager.global_00829054);
+        assertEquals(1, DataManager.global_00829068[7]);
+        DataManager.configureLicenceHttpFetcher(null);
 
         assertEquals("SELECT * FROM users", MySQL.buildSqlFromArgs("SELECT ", 0, "*", -1, " FROM users"));
         assertEquals(42, MySQL.mySqlSocketIndex("42"));
@@ -928,7 +941,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Main.formQueryUnload());
         assertEquals(true, containsSql(mainSql, "UPDATE users SET id_socket=null,lastonline_time=UNIX_TIMESTAMP() WHERE id_socket IS NOT NULL"));
         assertEquals(true, containsSql(mainSql, "UPDATE rooms SET id_slot=null,visitors_now='0' WHERE id_slot IS NOT NULL OR visitors_now!='0'"));
-        assertEquals(true, Main.runServer("[!] Alpha", ""));
+        assertEquals(false, Main.runServer("[!] Alpha", ""));
+        assertEquals(true, Main.runServer("Alpha", "rank=2\r7:2=1"));
         assertEquals("ACCEPT 16387", Main.gameServerUnknownEventAccept());
         assertEquals(1, Guardian.Proc_11_2_821390());
         assertEquals("LISTEN", Main.gameServerUnknownEventListen());
@@ -950,7 +964,8 @@ public final class PortedModuleSmokeTest {
         Functions.applicationPath = lifecycleRoot.toString();
         Main.LifecycleResult lifecycleResult = Main.formInitialize("%% [!]");
         assertEquals(true, lifecycleResult.success);
-        assertEquals("ALPHASERIES_FINAL (PREMIUM) [!]", lifecycleResult.caption);
+        assertEquals("ALPHASERIES_FINAL (PREMIUM)", lifecycleResult.caption);
+        assertEquals("ALPHASERIES_FINAL (PREMIUM) [!]", lifecycleResult.consoleTitle);
         assertEquals("PRODUCT-KEY", lifecycleResult.productKey);
         assertEquals(false, Files.exists(lifecycleRoot.resolve("CACHE").resolve("ROOMS")));
         assertEquals(0xFFFFFFL, Licence.global_0082904C);
