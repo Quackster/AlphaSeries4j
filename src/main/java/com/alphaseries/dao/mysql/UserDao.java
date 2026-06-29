@@ -301,6 +301,14 @@ public final class UserDao {
             .orElse(0L);
     }
 
+    public List<UserSocket> activeUserSockets() throws SQLException {
+        return database.query(
+            "SELECT id,id_socket FROM users WHERE id_socket IS NOT NULL",
+            resultSet -> new UserSocket(
+                resultSet.getLong(1),
+                resultSet.getLong(2)));
+    }
+
     public Optional<ActiveUserLocation> activeLocationByName(String name) throws SQLException {
         return database.queryOne(
             "SELECT users.id,users.id_socket,logs_visitedrooms.id_room "
@@ -418,6 +426,9 @@ public final class UserDao {
     }
 
     public record ActiveUserLocation(long userId, long socketIndex, long roomId) {
+    }
+
+    public record UserSocket(long userId, long socketIndex) {
     }
 
     public record ActivityPointBalance(long pointTypeOne, long pointTypeTwo, long pointTypeThree, long pointTypeFour) {

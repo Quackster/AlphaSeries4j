@@ -8787,17 +8787,23 @@ public final class Handling {
                 sentCount++;
             }
         }
-        String rowText = MySQL.Proc_5_2_6D4690("SELECT id,id_socket FROM users WHERE id_socket IS NOT NULL", 0, 0);
-        for (String row : rowText.split("\r", -1)) {
-            String[] fields = row.split("\t", -1);
-            String candidateUserId = String.valueOf(NumberUtils.parseLong(handlingField(fields, 0)));
-            int candidateSocket = (int) NumberUtils.parseLong(handlingField(fields, 1));
-            String marker = "[" + candidateSocket + "]";
-            if (candidateSocket > 0 && !sentMarkers.contains(marker) && handlingUserHasPermission(candidateUserId, "fuse_mod")) {
-                Proc_6_244_801E80(candidateSocket, payload, 0);
-                sentMarkers += marker;
-                sentCount++;
+        try {
+            UserDao users = userDao();
+            if (users != null) {
+                for (UserDao.UserSocket userSocket : users.activeUserSockets()) {
+                    String candidateUserId = String.valueOf(userSocket.userId());
+                    int candidateSocket = (int) userSocket.socketIndex();
+                    String marker = "[" + candidateSocket + "]";
+                    if (candidateSocket > 0 && !sentMarkers.contains(marker)
+                        && handlingUserHasPermission(candidateUserId, "fuse_mod")) {
+                        Proc_6_244_801E80(candidateSocket, payload, 0);
+                        sentMarkers += marker;
+                        sentCount++;
+                    }
+                }
             }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
         }
         return sentCount;
     }
