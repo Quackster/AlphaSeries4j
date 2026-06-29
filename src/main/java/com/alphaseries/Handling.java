@@ -8312,8 +8312,10 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (!userId.isEmpty() && !"0".equals(userId)) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE users SET id_socket=null WHERE id = '"
-                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
+                UserDao users = userDao();
+                if (users != null) {
+                    users.clearSocket(NumberUtils.parseLong(userId));
+                }
             }
             return "";
         } catch (Exception ignored) {

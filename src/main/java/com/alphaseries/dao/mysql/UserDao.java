@@ -208,6 +208,10 @@ public final class UserDao {
         return database.execute("UPDATE users SET settings_sound=? WHERE id=? LIMIT 1", soundSetting, userId);
     }
 
+    public int clearSocket(long userId) throws SQLException {
+        return database.execute("UPDATE users SET id_socket=null WHERE id = ?", userId);
+    }
+
     public String wardrobeRows(long userId) throws SQLException {
         return String.join("\r", database.query(
             "SELECT id_slot,figure,gender FROM users_wardrobe WHERE id_user=? ORDER BY id_slot",
