@@ -17,6 +17,7 @@ import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.recycler.RecyclerSettings;
+import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.room.RoomPortalSettings;
@@ -256,6 +257,22 @@ public final class Licence {
 
     public static void setRepresentedRooms(RepresentedRoomCache representedRooms) {
         global_00829310 = representedRooms == null ? "" : representedRooms.cacheText();
+    }
+
+    public static FurnitureRoomCache.State furnitureRoomCache() {
+        return FurnitureRoomCache.State.from(global_008291F8, global_008291FC, global_00829310);
+    }
+
+    public static void setFurnitureRoomCache(FurnitureRoomCache.State state) {
+        if (state == null) {
+            global_008291F8 = "";
+            global_008291FC = "";
+            global_00829310 = "";
+            return;
+        }
+        global_008291F8 = StringUtils.text(state.pendingRoomCache);
+        global_008291FC = StringUtils.text(state.pendingFurnitureCache);
+        global_00829310 = StringUtils.text(state.representedRoomCache);
     }
 
     public static RoomPortalSettings roomPortalSettings() {

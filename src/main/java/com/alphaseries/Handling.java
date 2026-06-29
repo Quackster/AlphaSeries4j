@@ -4749,15 +4749,14 @@ public final class Handling {
             if (furnitureId <= 0L) {
                 return;
             }
+            FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
             FurnitureCacheState state = trackFurnitureCacheMarker(
-                Licence.global_008291F8,
-                Licence.global_008291FC,
-                Licence.global_00829310,
+                cacheState.pendingRoomCache,
+                cacheState.pendingFurnitureCache,
+                cacheState.representedRoomCache,
                 roomId,
                 furnitureId);
-            Licence.global_008291F8 = state.pendingRoomCache;
-            Licence.global_008291FC = state.pendingFurnitureCache;
-            Licence.global_00829310 = state.representedRoomCache;
+            Licence.setFurnitureRoomCache(furnitureRoomCacheState(state));
             if (roomId > 0L) {
                 Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
                 Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
@@ -4795,14 +4794,13 @@ public final class Handling {
             if (!rowText.isEmpty()) {
                 roomId = Vb.val(handlingField(rowText.split("\t", -1), 0));
             }
+            FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
             FurnitureCacheState state = removeFurnitureCacheMarker(
-                Licence.global_008291F8,
-                Licence.global_008291FC,
-                Licence.global_00829310,
+                cacheState.pendingRoomCache,
+                cacheState.pendingFurnitureCache,
+                cacheState.representedRoomCache,
                 furnitureId);
-            Licence.global_008291F8 = state.pendingRoomCache;
-            Licence.global_008291FC = state.pendingFurnitureCache;
-            Licence.global_00829310 = state.representedRoomCache;
+            Licence.setFurnitureRoomCache(furnitureRoomCacheState(state));
             if (roomId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId)) {
@@ -5039,16 +5037,15 @@ public final class Handling {
             if (roomId <= 0L || furnitureId <= 0L) {
                 return;
             }
+            FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
             FurnitureStateCache state = representedFurnitureStateCache(
-                Licence.global_008291F8,
-                Licence.global_008291FC,
-                Licence.global_00829310,
+                cacheState.pendingRoomCache,
+                cacheState.pendingFurnitureCache,
+                cacheState.representedRoomCache,
                 roomId,
                 furnitureId,
                 stateValue);
-            Licence.global_008291F8 = state.pendingRoomCache;
-            Licence.global_008291FC = state.pendingFurnitureCache;
-            Licence.global_00829310 = state.representedRoomCache;
+            Licence.setFurnitureRoomCache(furnitureRoomCacheState(state));
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
         } catch (Exception ignored) {
@@ -10130,16 +10127,15 @@ public final class Handling {
                 roomId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_room FROM furnitures WHERE id='"
                     + furnitureId + "' LIMIT 1", 0, 0));
             }
+            FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
             FurnitureStateCache state = representedFurnitureStateWrite(
-                Licence.global_008291F8,
-                Licence.global_008291FC,
-                Licence.global_00829310,
+                cacheState.pendingRoomCache,
+                cacheState.pendingFurnitureCache,
+                cacheState.representedRoomCache,
                 roomId,
                 furnitureId,
                 stateText);
-            Licence.global_008291F8 = state.pendingRoomCache;
-            Licence.global_008291FC = state.pendingFurnitureCache;
-            Licence.global_00829310 = state.representedRoomCache;
+            Licence.setFurnitureRoomCache(furnitureRoomCacheState(state));
             if (roomId > 0L) {
                 Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
                 Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
@@ -10163,6 +10159,14 @@ public final class Handling {
         state.pendingFurnitureCache = source.pendingFurnitureCache;
         state.representedRoomCache = source.representedRoomCache;
         return state;
+    }
+
+    private static FurnitureRoomCache.State furnitureRoomCacheState(FurnitureCacheState source) {
+        return FurnitureRoomCache.State.from(source.pendingRoomCache, source.pendingFurnitureCache, source.representedRoomCache);
+    }
+
+    private static FurnitureRoomCache.State furnitureRoomCacheState(FurnitureStateCache source) {
+        return FurnitureRoomCache.State.from(source.pendingRoomCache, source.pendingFurnitureCache, source.representedRoomCache);
     }
 
     public static String Proc_6_156_7972B0(Object... args) {

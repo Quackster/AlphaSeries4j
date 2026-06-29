@@ -309,7 +309,8 @@ public final class Main {
     public static long signerTimer() {
         long processed = 0L;
         try {
-            String furnitureMarkers = mainRepresentedEntityIds(Licence.global_008291FC);
+            FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
+            String furnitureMarkers = mainRepresentedEntityIds(cacheState.pendingFurnitureCache);
             String[] markerParts = furnitureMarkers.split("\\]", -1);
             for (int markerIndex = 0; markerIndex < markerParts.length; markerIndex++) {
                 long furnitureId = mainRepresentedEntityIdAt(furnitureMarkers, markerIndex);
@@ -319,7 +320,8 @@ public final class Main {
                 String rowText = MySQL.Proc_5_2_6D4690("SELECT id_room,sign FROM furnitures WHERE id='"
                     + furnitureId + "' LIMIT 1", 0, 0);
                 if (rowText.isEmpty()) {
-                    Licence.global_008291FC = FurnitureRoomCache.removePendingFurniture(Licence.global_008291FC, furnitureId);
+                    cacheState.pendingFurnitureCache = FurnitureRoomCache.removePendingFurniture(cacheState.pendingFurnitureCache, furnitureId);
+                    Licence.setFurnitureRoomCache(cacheState);
                     continue;
                 }
                 String[] fields = rowText.split("\t", -1);
@@ -333,13 +335,16 @@ public final class Main {
                     Handling.Proc_6_246_8024C0(roomId, "AX" + furnitureId + '\2' + nextSignValue + '\2', 0);
                     processed++;
                     if (nextSignValue <= 0L) {
-                        Licence.global_008291FC = FurnitureRoomCache.removePendingFurniture(Licence.global_008291FC, furnitureId);
-                        Licence.global_008291F8 = FurnitureRoomCache.removePendingRoom(Licence.global_008291F8, roomId);
+                        cacheState.pendingFurnitureCache = FurnitureRoomCache.removePendingFurniture(cacheState.pendingFurnitureCache, furnitureId);
+                        cacheState.pendingRoomCache = FurnitureRoomCache.removePendingRoom(cacheState.pendingRoomCache, roomId);
+                        Licence.setFurnitureRoomCache(cacheState);
                     }
                 } else {
-                    Licence.global_008291FC = FurnitureRoomCache.removePendingFurniture(Licence.global_008291FC, furnitureId);
+                    cacheState.pendingFurnitureCache = FurnitureRoomCache.removePendingFurniture(cacheState.pendingFurnitureCache, furnitureId);
+                    Licence.setFurnitureRoomCache(cacheState);
                 }
             }
+            Licence.setFurnitureRoomCache(cacheState);
         } catch (Exception ignored) {
             // VB6 source suppresses timer failures.
         }
