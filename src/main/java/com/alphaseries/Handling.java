@@ -5516,53 +5516,39 @@ public final class Handling {
                 }
                 return "";
             }
-            String escapedTicket = Functions.Proc_10_11_80A9C0(loginTicket, 0, 0);
-            String userRow = MySQL.Proc_5_2_6D4690("SELECT id,name,level,figure,motto,gender,activitypoints_0,credits,level_hc,"
-                + "hc_days,hc2_days,hc_presents,id_socket,nickname,homeroom,respect_amount,scratch_amount,language,hc_periods,"
-                + "hc2_periods,respect_received,respect_given,ROUND(online_time/60,0),ROUND((UNIX_TIMESTAMP()-create_time)/60/60/24,0),"
-                + "gifts_given,gifts_received,ROUND((UNIX_TIMESTAMP()-update_time)/60/60/24,0),hc_startperiod,"
-                + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0),merge_name,tutorial_name,tutorial_clothes,tutorial_guide,"
-                + "login_session,achievement_score,activitypoints_1,id_favgroup,privileges_extra,accept_friends,activitypoints_2,"
-                + "amount_staffpicked,email_validated,email,settings_sound,online_time,activitypoints_3,activitypoints_4,ip_last "
-                + "FROM users WHERE login_ticket = '" + escapedTicket + "' LIMIT 1", 0, 0);
-            if (userRow.isEmpty()) {
-                if (socketIndex > 0) {
-                    Proc_6_243_7FFEB0(socketIndex, 0, 0);
-                }
-                return "";
-            }
-            String[] fields = userRow.split("\t", -1);
-            String userId = String.valueOf((long) NumberUtils.parseLong(handlingField(fields, 0)));
-            if (userId.isEmpty() || "0".equals(userId)) {
-                if (socketIndex > 0) {
-                    Proc_6_243_7FFEB0(socketIndex, 0, 0);
-                }
-                return "";
-            }
-            int oldSocketIndex = (int) NumberUtils.parseLong(handlingField(fields, 12));
-            if (oldSocketIndex > 0 && oldSocketIndex != socketIndex) {
-                Proc_6_243_7FFEB0(oldSocketIndex, 0, 0);
-            }
-            String userName = handlingField(fields, 1);
-            long rankIndex = NumberUtils.parseLong(handlingField(fields, 2));
-            long creditsValue = NumberUtils.parseLong(handlingField(fields, 7));
-            long homeRoomId = NumberUtils.parseLong(handlingField(fields, 14));
-            long updateAgeDays = NumberUtils.parseLong(handlingField(fields, 26));
-            long emailValidated = NumberUtils.parseLong(handlingField(fields, 41));
-            long[] pointValues = new long[]{
-                NumberUtils.parseLong(handlingField(fields, 6)),
-                NumberUtils.parseLong(handlingField(fields, 35)),
-                NumberUtils.parseLong(handlingField(fields, 39)),
-                NumberUtils.parseLong(handlingField(fields, 45)),
-                NumberUtils.parseLong(handlingField(fields, 46))
-            };
             UserDao users = userDao();
             if (users == null) {
                 return "";
             }
-            users.assignLoginSocket(NumberUtils.parseLong(userId), socketIndex);
+            UserDao.LoginUser loginUser = users.loginUser(loginTicket).orElse(null);
+            if (loginUser == null) {
+                if (socketIndex > 0) {
+                    Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                }
+                return "";
+            }
+            long userIdValue = loginUser.userId();
+            String userId = String.valueOf(userIdValue);
+            if (userIdValue == 0L) {
+                if (socketIndex > 0) {
+                    Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                }
+                return "";
+            }
+            int oldSocketIndex = (int) loginUser.oldSocketIndex();
+            if (oldSocketIndex > 0 && oldSocketIndex != socketIndex) {
+                Proc_6_243_7FFEB0(oldSocketIndex, 0, 0);
+            }
+            String userName = loginUser.userName();
+            long rankIndex = loginUser.rankIndex();
+            long creditsValue = loginUser.credits();
+            long homeRoomId = loginUser.homeRoomId();
+            long updateAgeDays = loginUser.updateAgeDays();
+            long emailValidated = loginUser.emailValidated();
+            long[] pointValues = loginUser.activityPointValues();
+            users.assignLoginSocket(userIdValue, socketIndex);
             if (updateAgeDays > 0L) {
-                users.resetDailyInteractionCounters(NumberUtils.parseLong(userId));
+                users.resetDailyInteractionCounters(userIdValue);
             }
             handlingStoreSocketSession(socketIndex, userId + '\2' + socketIndex + '\2' + userName + '\2'
                 + rankIndex + '\2' + loginTicket + '\2');
@@ -5590,9 +5576,9 @@ public final class Handling {
                 + Proc_6_195_7D38D0(userId, 0, 0), 0);
             Proc_6_244_801E80(socketIndex, "E^" + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(userId), null, "")
                 + Proc_6_196_7D3ED0(userId, 0, 0), 0);
-            long favouriteGroupId = NumberUtils.parseLong(handlingField(fields, 36));
+            long favouriteGroupId = loginUser.favouriteGroupId();
             if (favouriteGroupId > 0L) {
-                UserGroupRow groupRow = users == null ? null : users.userGroup(favouriteGroupId).orElse(null);
+                UserGroupRow groupRow = users.userGroup(favouriteGroupId).orElse(null);
                 if (groupRow != null) {
                     String groupPayload = loginGroupPayload(favouriteGroupId, groupRow);
                     Proc_6_244_801E80(socketIndex, groupPayload, 0);

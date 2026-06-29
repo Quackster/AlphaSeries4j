@@ -407,6 +407,34 @@ public final class UserDao {
         return database.execute("UPDATE users SET id_socket=null WHERE id = ?", userId);
     }
 
+    public Optional<LoginUser> loginUser(String loginTicket) throws SQLException {
+        return database.queryOne(
+            "SELECT id,name,level,figure,motto,gender,activitypoints_0,credits,level_hc,"
+                + "hc_days,hc2_days,hc_presents,id_socket,nickname,homeroom,respect_amount,scratch_amount,language,hc_periods,"
+                + "hc2_periods,respect_received,respect_given,ROUND(online_time/60,0),ROUND((UNIX_TIMESTAMP()-create_time)/60/60/24,0),"
+                + "gifts_given,gifts_received,ROUND((UNIX_TIMESTAMP()-update_time)/60/60/24,0),hc_startperiod,"
+                + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0),merge_name,tutorial_name,tutorial_clothes,tutorial_guide,"
+                + "login_session,achievement_score,activitypoints_1,id_favgroup,privileges_extra,accept_friends,activitypoints_2,"
+                + "amount_staffpicked,email_validated,email,settings_sound,online_time,activitypoints_3,activitypoints_4,ip_last "
+                + "FROM users WHERE login_ticket = ? LIMIT 1",
+            resultSet -> new LoginUser(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getLong(3),
+                resultSet.getLong(7),
+                resultSet.getLong(8),
+                resultSet.getLong(13),
+                resultSet.getLong(15),
+                resultSet.getLong(27),
+                resultSet.getLong(36),
+                resultSet.getLong(37),
+                resultSet.getLong(40),
+                resultSet.getLong(42),
+                resultSet.getLong(46),
+                resultSet.getLong(47)),
+            loginTicket);
+    }
+
     public String wardrobeRows(long userId) throws SQLException {
         return String.join("\r", database.query(
             "SELECT id_slot,figure,gender FROM users_wardrobe WHERE id_user=? ORDER BY id_slot",
@@ -633,6 +661,27 @@ public final class UserDao {
     }
 
     public record CatalogPurchaseBalance(long credits, long activityPoints, long clubLevel) {
+    }
+
+    public record LoginUser(
+        long userId,
+        String userName,
+        long rankIndex,
+        long activityPoints0,
+        long credits,
+        long oldSocketIndex,
+        long homeRoomId,
+        long updateAgeDays,
+        long activityPoints1,
+        long favouriteGroupId,
+        long activityPoints2,
+        long emailValidated,
+        long activityPoints3,
+        long activityPoints4
+    ) {
+        public long[] activityPointValues() {
+            return new long[]{activityPoints0, activityPoints1, activityPoints2, activityPoints3, activityPoints4};
+        }
     }
 
     public record AchievementProgressSummary(
