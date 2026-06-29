@@ -129,6 +129,25 @@ public final class StaffModerationDao {
             sessionId);
     }
 
+    public int insertDirectModerationLog(
+        long moderationType,
+        long moderatorUserId,
+        long targetUserId,
+        long roomId,
+        String message,
+        long sessionId
+    ) throws SQLException {
+        return database.execute(
+            "INSERT INTO logs_moderation(id_type,id_user,id_target,id_target_2,timestamp,message,id_session) "
+                + "VALUES(?,?,?,?,UNIX_TIMESTAMP(),?,?)",
+            moderationType,
+            moderatorUserId,
+            targetUserId,
+            roomId,
+            message,
+            sessionId);
+    }
+
     public int insertUserBan(
         long targetUserId,
         long moderatorUserId,

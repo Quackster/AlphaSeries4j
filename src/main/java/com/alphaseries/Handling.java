@@ -8855,25 +8855,31 @@ public final class Handling {
                 || containsUnsafeStaffAlert(messageText)) {
                 return;
             }
+            long callerUserIdValue = NumberUtils.parseLong(callerUserId);
+            StaffModerationDao moderationDao = staffModerationDao();
+            if (moderationDao == null) {
+                return;
+            }
             int targetSocketIndex = handlingSocketFromUserId(String.valueOf(targetUserId));
             if (requireOnlineTarget && targetSocketIndex <= 0) {
                 return;
             }
             long currentRoomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            MySQL.Proc_5_1_6D4110("INSERT INTO logs_moderation(id_type,id_user,id_target,id_target_2,timestamp,message,id_session) VALUES('"
-                + logType + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0) + "','"
-                + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','" + currentRoomId
-                + "',UNIX_TIMESTAMP(),'" + Functions.Proc_10_11_80A9C0(messageText, 0, 0) + "','" + socketIndex + "')", 0, 0);
+            moderationDao.insertDirectModerationLog(
+                NumberUtils.parseLong(logType),
+                callerUserIdValue,
+                targetUserId,
+                currentRoomId,
+                messageText,
+                socketIndex);
             if (targetSocketIndex > 0) {
-                Proc_6_244_801E80(targetSocketIndex, "Ba" + messageText + '\2', 0);
+                Proc_6_244_801E80(targetSocketIndex, PacketBuilder.message("Ba").appendString(messageText).build(), 0);
                 if (kickAfterSend) {
                     Proc_6_53_718E00(targetSocketIndex, 0, 0);
                 }
             }
             if ("4".equals(logType)) {
-                MySQL.Proc_5_0_6D3CD0("INSERT INTO users_cautions(id_user,id_partner,message,timestamp_submit) VALUES('"
-                    + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0)
-                    + "','" + Functions.Proc_10_11_80A9C0(messageText, 0, 0) + "',UNIX_TIMESTAMP())", 0, 0);
+                moderationDao.insertUserCaution(targetUserId, callerUserIdValue, messageText);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
