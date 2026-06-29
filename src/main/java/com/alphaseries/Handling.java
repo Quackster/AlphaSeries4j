@@ -2346,17 +2346,16 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms_official.id,models.required_files,rooms_official.caption "
-                + "FROM rooms_official,rooms,models WHERE rooms.id='" + roomId
-                + "' AND rooms_official.id_room=rooms.id AND models.id=rooms.id_model AND models.type='1' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
                 return;
             }
-            String[] fields = rowText.split("\t", -1);
-            String requiredFiles = handlingField(fields, 2);
-            String roomCaption = handlingField(fields, 3);
-            String payload = Crypto.Proc_3_0_6D2AF0(roomId, null, "GE") + requiredFiles + '\2';
-            payload = Crypto.Proc_3_0_6D2AF0(roomId, null, payload) + roomCaption + '\2';
+            RoomDao.OfficialRoomModel officialRoom = rooms.officialRoomModel(roomId).orElse(null);
+            if (officialRoom == null) {
+                return;
+            }
+            String payload = Crypto.Proc_3_0_6D2AF0(roomId, null, "GE") + StringUtils.text(officialRoom.requiredFiles()) + '\2';
+            payload = Crypto.Proc_3_0_6D2AF0(roomId, null, payload) + StringUtils.text(officialRoom.caption()) + '\2';
             Proc_6_244_801E80(socketIndex, payload, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.

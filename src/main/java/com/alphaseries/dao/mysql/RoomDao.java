@@ -356,6 +356,19 @@ public final class RoomDao {
             userId);
     }
 
+    public Optional<OfficialRoomModel> officialRoomModel(long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT rooms.id,rooms_official.id,models.required_files,rooms_official.caption "
+                + "FROM rooms_official,rooms,models WHERE rooms.id=? "
+                + "AND rooms_official.id_room=rooms.id AND models.id=rooms.id_model AND models.type='1' LIMIT 1",
+            resultSet -> new OfficialRoomModel(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getString(4)),
+            roomId);
+    }
+
     public int insertRoomEvent(
         long roomId,
         long userId,
@@ -422,6 +435,9 @@ public final class RoomDao {
         long roomSlot,
         long ownerUserId
     ) {
+    }
+
+    public record OfficialRoomModel(long roomId, long officialId, String requiredFiles, String caption) {
     }
 
     private static String nullableText(String value) {
