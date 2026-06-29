@@ -4172,6 +4172,84 @@ public final class Handling {
         }
     }
 
+    public static void Proc_6_157_7974B0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return;
+            }
+            String wallPayload = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
+            if (wallPayload.startsWith("rv")) {
+                wallPayload = wallPayload.substring(2);
+            }
+            String[] itemFields = new String[0];
+            if (args != null && args.length >= 3) {
+                Object itemArg = args[2];
+                if (itemArg instanceof String[]) {
+                    itemFields = (String[]) itemArg;
+                } else if (itemArg instanceof Object[]) {
+                    Object[] values = (Object[]) itemArg;
+                    itemFields = new String[values.length];
+                    for (int index = 0; index < values.length; index++) {
+                        itemFields[index] = Vb.cStr(values[index]);
+                    }
+                } else {
+                    itemFields = Vb.cStr(itemArg).split("\t", -1);
+                }
+            }
+            long furnitureId = Vb.val(handlingField(itemFields, 1));
+            long productId = Vb.val(handlingField(itemFields, 0));
+            if (furnitureId <= 0L) {
+                furnitureId = Vb.val(Functions.Proc_10_6_809F10(wallPayload, 0, 0));
+            }
+            if (furnitureId <= 0L) {
+                return;
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L || (!handlingUserHasRoomRight(userId, roomId)
+                && !handlingUserHasPermission(userId, "fuse_pick_up_any_furni"))) {
+                return;
+            }
+            if (productId <= 0L) {
+                String itemRow = MySQL.Proc_5_2_6D4690("SELECT id_product,id,sign,id_secondary,id_destination FROM furnitures WHERE id='"
+                    + furnitureId + "' AND id_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                    + "' AND id_room IS NULL LIMIT 1", 0, 0);
+                if (!itemRow.isEmpty()) {
+                    itemFields = itemRow.split("\t", -1);
+                }
+                productId = Vb.val(handlingField(itemFields, 0));
+            }
+            if (productId <= 0L || Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0)) != 9L) {
+                return;
+            }
+            WallPlacement placement = new WallPlacement();
+            if (!wallPlacementFromPayload(wallPayload, placement)) {
+                return;
+            }
+            String wallPosition = Functions.Proc_10_11_80A9C0((":w=" + placement.wallX + "," + placement.wallY
+                + " l=" + placement.localX + "," + placement.localY).toLowerCase(), 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET position_wall='" + wallPosition + "',id_room='" + roomId
+                + "',id_owner=NULL,task_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + "',task_time=UNIX_TIMESTAMP() WHERE id='" + furnitureId + "' AND id_owner='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room IS NULL LIMIT 1", 0, 0);
+            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ac"), 0);
+            String payload = Proc_6_156_7972B0(furnitureId, productId, wallPosition,
+                handlingField(itemFields, 2), Vb.val(handlingField(itemFields, 3)));
+            if (!payload.isEmpty()) {
+                Proc_6_247_8027E0(socketIndex, "AS" + payload, 0);
+            }
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            Proc_6_140_769400(socketIndex, "FT", "");
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
     }

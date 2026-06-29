@@ -1751,6 +1751,7 @@ public final class PortedModuleSmokeTest {
         Files.write(figureCachePath.resolve("cache").resolve("wired_trigger").resolve("9.cache"), "trigger-cache".getBytes());
         Files.write(figureCachePath.resolve("cache").resolve("rooms").resolve("9.cache"), "room-cache".getBytes());
         String[] stickyProducts = new String[510];
+        stickyProducts[9] = productRow(9, "18", "wall_sprite");
         stickyProducts[500] = productRow(500, "18", "post.it.vd");
         stickyProducts[501] = productRow(501, "17", "present_wrap_basic");
         stickyProducts[502] = productRow(502, "0", "2", "24", "Opened Sofa");
@@ -2061,6 +2062,9 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id_product FROM furnitures WHERE id='86' AND id_room='9' AND position_wall IS NULL")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(506));
+                }
+                if (sqlText.contains("SELECT id_product,id,sign,id_secondary,id_destination FROM furnitures WHERE id='90' AND id_owner='77' AND id_room IS NULL")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(9, 90, "wall-state", 6, 0));
                 }
                 if (sqlText.contains("SELECT id_product,type_secondary,id_contain,type_check FROM packages WHERE id_product='505'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(505, "packages_pets", 12, ""));
@@ -2659,6 +2663,14 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829310.contains("\1" + "9\t88\t4\2"));
         assertEquals(true, containsSend(handlingSends, "AX88\2" + "4\2"));
         assertEquals(false, containsSend(handlingSends, "AX89\2" + "7\2"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Handling.Proc_6_157_7974B0(4, "rv:w=1,2 l=3,4", "9\t90\twall-state\t6\t0");
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET position_wall=':w=1,2 l=3,4'"));
+        assertEquals(true, containsSql(handlingSql, "WHERE id='90' AND id_owner='77' AND id_room IS NULL LIMIT 1"));
+        assertEquals(true, containsSend(handlingSends, "Ac"));
+        assertEquals(true, containsSend(handlingSends, "AS0"));
+        assertEquals(true, containsSend(handlingSends, "BLS"));
         handlingSql.clear();
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
