@@ -193,6 +193,31 @@ public final class StaffModerationDao {
             message);
     }
 
+    public String openCallForHelpReviewRow(long callForHelpId) throws SQLException {
+        return database.queryOne(
+            "SELECT staff_cfh.id,users.id,users.name,staff_cfh.id_partner,staff_cfh.id_room,"
+                + "staff_cfh.id_category,staff_cfh.description,rooms.id,rooms.name FROM staff_cfh,users,rooms "
+                + "WHERE staff_cfh.id=? AND staff_cfh.id_closed='0' AND users.id=staff_cfh.id_user "
+                + "AND rooms.id=staff_cfh.id_room LIMIT 1",
+            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
+                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5) + "\t" + resultSet.getString(6)
+                + "\t" + resultSet.getString(7) + "\t" + resultSet.getString(8) + "\t" + resultSet.getString(9),
+            callForHelpId)
+            .orElse("");
+    }
+
+    public long callForHelpReporterUserId(long callForHelpId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_user FROM staff_cfh WHERE id=? LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            callForHelpId)
+            .orElse(0L);
+    }
+
+    public int closeCallForHelp(long callForHelpId, long closeState) throws SQLException {
+        return database.execute("UPDATE staff_cfh SET id_closed=?,id_tab=? WHERE id=?", closeState, 0L, callForHelpId);
+    }
+
     private long countCallForHelpByUser(long userId) throws SQLException {
         return database.queryOne(
             "SELECT COUNT(id) FROM staff_cfh WHERE id_user=?",

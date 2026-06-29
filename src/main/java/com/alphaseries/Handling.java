@@ -201,9 +201,11 @@ public final class Handling {
             if (callForHelpId <= 0L) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT staff_cfh.id,users.id,users.name,staff_cfh.id_partner,staff_cfh.id_room,"
-                + "staff_cfh.id_category,staff_cfh.description,rooms.id,rooms.name FROM staff_cfh,users,rooms WHERE staff_cfh.id='"
-                + callForHelpId + "' AND staff_cfh.id_closed='0' AND users.id=staff_cfh.id_user AND rooms.id=staff_cfh.id_room LIMIT 1", 0, 0);
+            StaffModerationDao moderationDao = staffModerationDao();
+            if (moderationDao == null) {
+                return;
+            }
+            String rowText = moderationDao.openCallForHelpReviewRow(callForHelpId);
             if (rowText.isEmpty()) {
                 return;
             }
@@ -248,13 +250,16 @@ public final class Handling {
             if (callForHelpId <= 0L) {
                 return;
             }
-            String reporterUserId = String.valueOf(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_user FROM staff_cfh WHERE id='"
-                + callForHelpId + "' LIMIT 1", 0, 0)));
+            StaffModerationDao moderationDao = staffModerationDao();
+            if (moderationDao == null) {
+                return;
+            }
+            String reporterUserId = String.valueOf(moderationDao.callForHelpReporterUserId(callForHelpId));
             int reporterSocketIndex = handlingSocketFromUserId(reporterUserId);
             if (reporterSocketIndex > 0) {
                 Proc_6_244_801E80(reporterSocketIndex, Crypto.Proc_3_0_6D2AF0(closeState, null, "H\\"), 0);
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE staff_cfh SET id_closed='" + closeState + "',id_tab='0' WHERE id='" + callForHelpId + "'", 0, 0);
+            moderationDao.closeCallForHelp(callForHelpId, closeState);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
