@@ -4,7 +4,9 @@ import com.alphaseries.db.Database;
 import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.game.room.RoomOccupantRow;
 import com.alphaseries.game.room.RoomUserEntryRow;
+import com.alphaseries.game.room.RoomUserProfileRow;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
@@ -369,12 +371,41 @@ public final class RoomDao {
             roomId);
     }
 
+    public Optional<RoomUserProfileRow> activeRoomUserProfileByVisitId(long roomId, long visitId) throws SQLException {
+        return database.queryOne(
+            "SELECT logs_visitedrooms.id,users.name,users.motto,users.achievement_score,users.figure "
+                + "FROM logs_visitedrooms,users WHERE logs_visitedrooms.id=? AND logs_visitedrooms.id_room=? "
+                + "AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1",
+            RoomDao::roomUserProfileRow,
+            visitId,
+            roomId);
+    }
+
+    public Optional<RoomUserProfileRow> activeRoomUserProfileByUserId(long roomId, long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT logs_visitedrooms.id,users.name,users.motto,users.achievement_score,users.figure "
+                + "FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_user=? AND logs_visitedrooms.id_room=? "
+                + "AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1",
+            RoomDao::roomUserProfileRow,
+            userId,
+            roomId);
+    }
+
     public List<Long> activeRightHolderSocketIndexes(long roomId) throws SQLException {
         return database.query(
             "SELECT users.id_socket FROM rooms_rights,users WHERE rooms_rights.id_room=? "
                 + "AND users.id=rooms_rights.id_user AND users.id_socket IS NOT NULL",
             resultSet -> resultSet.getLong(1),
             roomId);
+    }
+
+    private static RoomUserProfileRow roomUserProfileRow(ResultSet resultSet) throws SQLException {
+        return new RoomUserProfileRow(
+            resultSet.getLong(1),
+            resultSet.getString(2),
+            resultSet.getString(3),
+            resultSet.getLong(4),
+            resultSet.getString(5));
     }
 
     public List<ActiveRoomEffect> activeRoomEffects(long roomId) throws SQLException {

@@ -38,6 +38,7 @@ import com.alphaseries.game.room.RoomOccupantRow;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.room.RoomUserEntryRow;
+import com.alphaseries.game.room.RoomUserProfileRow;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.session.SocketMarkerSet;
@@ -6559,29 +6560,15 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,users.name,users.motto,users.achievement_score,users.figure "
-                + "FROM logs_visitedrooms,users WHERE logs_visitedrooms.id='" + requestedRoomUserIndex
-                + "' AND logs_visitedrooms.id_room='" + roomId
-                + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
-                rowText = MySQL.Proc_5_2_6D4690("SELECT logs_visitedrooms.id,users.name,users.motto,users.achievement_score,users.figure "
-                    + "FROM logs_visitedrooms,users WHERE logs_visitedrooms.id_user='" + requestedRoomUserIndex
-                    + "' AND logs_visitedrooms.id_room='" + roomId
-                    + "' AND logs_visitedrooms.timestamp_left IS NULL AND users.id=logs_visitedrooms.id_user LIMIT 1", 0, 0);
+            RoomDao rooms = roomDao();
+            java.util.Optional<RoomUserProfileRow> row = rooms.activeRoomUserProfileByVisitId(roomId, requestedRoomUserIndex);
+            if (row.isEmpty()) {
+                row = rooms.activeRoomUserProfileByUserId(roomId, requestedRoomUserIndex);
             }
-            if (rowText.isEmpty()) {
+            if (row.isEmpty()) {
                 return "";
             }
-            String[] fields = rowText.split("\t", -1);
-            if (fields.length < 5) {
-                return "";
-            }
-            String payload = representedRoomUserProfilePayload(
-                NumberUtils.parseLong(handlingField(fields, 0)),
-                handlingField(fields, 1),
-                handlingField(fields, 2),
-                NumberUtils.parseLong(handlingField(fields, 3)),
-                handlingField(fields, 4));
+            String payload = representedRoomUserProfilePayload(row.get());
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -11434,6 +11421,18 @@ public final class Handling {
         String figureText
     ) {
         return SocialPayloads.roomUserProfile(roomUserIndex, userName, mottoText, achievementScore, figureText);
+    }
+
+    public static String representedRoomUserProfilePayload(RoomUserProfileRow row) {
+        if (row == null) {
+            return "";
+        }
+        return representedRoomUserProfilePayload(
+            row.roomUserIndex(),
+            row.userName(),
+            row.motto(),
+            row.achievementScore(),
+            row.figure());
     }
 
     public static String badgeInventoryPayload(String inventoryRows, String equippedPayload) {
