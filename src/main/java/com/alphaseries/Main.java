@@ -137,7 +137,7 @@ public final class Main {
                 preSessionPacketSink.send((int) socketIndex, packetData);
             }
         } catch (Exception ex) {
-            if (Licence.global_00829034) {
+            if (Licence.runtimeState().debugLoggingEnabled()) {
                 Console.Proc_2_0_6D1510("[" + socketIndex + "] " + ex.getMessage() + " -> " + packetData,
                     "ERROR", "255");
                 DataManager.Proc_8_9_806810(Functions.applicationPath + "/ERR.log",
@@ -150,10 +150,7 @@ public final class Main {
     public static LifecycleResult formInitialize(String captionTemplate) {
         LifecycleResult result = new LifecycleResult();
         try {
-            Licence.global_0082904C = 0xFFFFFFL;
-            Licence.global_00829038 = "ALPHASERIES_FINAL (PREMIUM)";
-            Licence.global_0082903C = 0x17L;
-            Licence.global_00829034 = false;
+            Licence.resetRuntimeDefaults();
             if (Crypto.Proc_3_3_6D3240("K", -1, 0) != 3L) {
                 result.shouldExit = true;
                 return result;
@@ -161,9 +158,8 @@ public final class Main {
             Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "ROOMS").toString(), 0, 0);
             Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER").toString(), 0, 0);
             Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "USERS").toString(), 0, 0);
-            result.consoleTitle = Vb.cStr(captionTemplate).replace("%%", Licence.global_00829038);
+            result.consoleTitle = Vb.cStr(captionTemplate).replace("%%", Licence.runtimeState().productName());
             result.caption = javaCaptionFromConsoleTitle(result.consoleTitle);
-            Licence.global_008290AC = 0xFFFFFFL;
             result.productKey = productKeyFromConfig(Handling.Proc_6_239_7FC170(
                 Path.of(Functions.applicationPath, "config.ini").toString(), 0, 7));
             result.success = true;
@@ -206,7 +202,7 @@ public final class Main {
         }
         try {
             if (DataManager.Proc_8_7_8051C0(
-                new DataManager.LicenceCheckContext(lifecycle.productKey, Licence.global_00829038), 0, 0)) {
+                new DataManager.LicenceCheckContext(lifecycle.productKey, Licence.runtimeState().productName()), 0, 0)) {
                 Boot.Proc_1_3_6BEBA0(0);
                 return StartupResult.success();
             }

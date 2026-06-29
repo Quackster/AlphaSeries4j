@@ -22,6 +22,7 @@ import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.RepresentedSocketCache;
 import com.alphaseries.game.session.SessionRegistry;
+import com.alphaseries.server.lifecycle.LicenceRuntimeState;
 import com.alphaseries.game.wired.WiredSettings;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -273,6 +274,33 @@ public final class Licence {
 
     public static RepresentedSocketCache representedSockets() {
         return RepresentedSocketCache.fromLegacy(global_0082934C);
+    }
+
+    public static LicenceRuntimeState runtimeState() {
+        return LicenceRuntimeState.fromLegacy(global_0082904C, global_00829038, global_0082903C,
+            global_00829034, global_008290AC, global_00829190);
+    }
+
+    public static void setRuntimeState(LicenceRuntimeState runtimeState) {
+        if (runtimeState == null) {
+            global_0082904C = 0L;
+            global_00829038 = "";
+            global_0082903C = 0L;
+            global_00829034 = false;
+            global_008290AC = 0L;
+            global_00829190 = false;
+            return;
+        }
+        global_0082904C = runtimeState.primaryColor();
+        global_00829038 = runtimeState.productName();
+        global_0082903C = runtimeState.version();
+        global_00829034 = runtimeState.debugLoggingEnabled();
+        global_008290AC = runtimeState.secondaryColor();
+        global_00829190 = runtimeState.packetTraceEnabled();
+    }
+
+    public static void resetRuntimeDefaults() {
+        setRuntimeState(LicenceRuntimeState.defaults(global_00829190));
     }
 
     public static CatalogPages catalogPages() {

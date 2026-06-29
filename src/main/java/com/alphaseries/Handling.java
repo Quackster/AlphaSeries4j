@@ -7999,7 +7999,7 @@ public final class Handling {
                 }
                 String packetPayload = Vb.mid(packetBuffer, 3, (int) packetLength);
                 String packetCode = Vb.left(packetPayload, 2);
-                if (Licence.global_00829190 && !Licence.global_00829034) {
+                if (Licence.runtimeState().shouldTracePackets()) {
                     Console.Proc_2_0_6D1510("[" + socketIndex + "] " + packetPayload, "GAME", "16711680");
                 }
                 dispatchPreReadyPacket((int) socketIndex, packetCode, packetPayload);
@@ -8211,7 +8211,7 @@ public final class Handling {
                     break;
                 case "oL": Proc_7F44D0(socketIndex, "oL", packetPayload); break;
                 default:
-                    if (Licence.global_00829034) {
+                    if (Licence.runtimeState().debugLoggingEnabled()) {
                         Console.Proc_2_0_6D1510(packetPayload, "UNHANDLED -- index: " + socketIndex, "255");
                     }
                     break;

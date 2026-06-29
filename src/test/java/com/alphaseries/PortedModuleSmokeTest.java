@@ -1017,6 +1017,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(false, Files.exists(lifecycleRoot.resolve("CACHE").resolve("ROOMS")));
         assertEquals(0xFFFFFFL, Licence.global_0082904C);
         assertEquals(0x17L, Licence.global_0082903C);
+        assertEquals("ALPHASERIES_FINAL (PREMIUM)", Licence.runtimeState().productName());
         Functions.applicationPath = oldApplicationPathForLifecycle;
         assertEquals(Crypto.Proc_3_0_6D2AF0(3, null,
             Crypto.Proc_3_0_6D2AF0(2, null,
