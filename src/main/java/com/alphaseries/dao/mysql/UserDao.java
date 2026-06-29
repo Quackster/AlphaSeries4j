@@ -104,6 +104,17 @@ public final class UserDao {
             .orElse(0L);
     }
 
+    public Optional<ActivityPointBalance> activityPointBalance(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT activitypoints_1,activitypoints_2,activitypoints_3,activitypoints_4 FROM users WHERE id=? LIMIT 1",
+            resultSet -> new ActivityPointBalance(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4)),
+            userId);
+    }
+
     public Optional<UserIdentity> findIdentity(long userId) throws SQLException {
         return database.queryOne(
             "SELECT id,id_socket,motto,figure,gender FROM users WHERE id=? LIMIT 1",
@@ -246,5 +257,23 @@ public final class UserDao {
     }
 
     public record ActiveUserLocation(long userId, long socketIndex, long roomId) {
+    }
+
+    public record ActivityPointBalance(long pointTypeOne, long pointTypeTwo, long pointTypeThree, long pointTypeFour) {
+        public long valueFor(long pointType) {
+            if (pointType == 1L) {
+                return pointTypeOne;
+            }
+            if (pointType == 2L) {
+                return pointTypeTwo;
+            }
+            if (pointType == 3L) {
+                return pointTypeThree;
+            }
+            if (pointType == 4L) {
+                return pointTypeFour;
+            }
+            return 0L;
+        }
     }
 }

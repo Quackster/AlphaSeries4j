@@ -4733,15 +4733,15 @@ public final class Handling {
             if (userId.isEmpty()) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690(
-                "SELECT activitypoints_1,activitypoints_2,activitypoints_3,activitypoints_4 FROM users WHERE id='"
-                    + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1",
-                0,
-                0);
-            if (rowText.isEmpty()) {
+            UserDao users = userDao();
+            if (users == null) {
                 return;
             }
-            Proc_6_244_801E80(socketIndex, activityPointBalancePayload(rowText), 0);
+            UserDao.ActivityPointBalance balance = users.activityPointBalance(NumberUtils.parseLong(userId)).orElse(null);
+            if (balance == null) {
+                return;
+            }
+            Proc_6_244_801E80(socketIndex, activityPointBalancePayload(balance), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -10169,15 +10169,22 @@ public final class Handling {
 
     public static String activityPointBalancePayload(String rowText) {
         String[] fields = StringUtils.text(rowText).split("\t", -1);
-        long itemCount = 0L;
-        StringBuilder itemPayload = new StringBuilder();
-        for (long pointType = 1L; pointType <= 4L; pointType++) {
-            long pointValue = NumberUtils.parseLong(navigatorField(fields, pointType - 1L));
-            itemPayload.append(Crypto.Proc_3_0_6D2AF0(pointType, null, ""));
-            itemPayload.append(Crypto.Proc_3_0_6D2AF0(pointValue, null, ""));
-            itemCount++;
+        return UserPayloads.activityPointBalance(
+            NumberUtils.parseLong(navigatorField(fields, 0)),
+            NumberUtils.parseLong(navigatorField(fields, 1)),
+            NumberUtils.parseLong(navigatorField(fields, 2)),
+            NumberUtils.parseLong(navigatorField(fields, 3)));
+    }
+
+    public static String activityPointBalancePayload(UserDao.ActivityPointBalance balance) {
+        if (balance == null) {
+            return "";
         }
-        return Crypto.Proc_3_0_6D2AF0(itemCount, null, "M@") + itemPayload;
+        return UserPayloads.activityPointBalance(
+            balance.pointTypeOne(),
+            balance.pointTypeTwo(),
+            balance.pointTypeThree(),
+            balance.pointTypeFour());
     }
 
     public static long pickupFurnitureIdFromPayload(String packetPayload) {

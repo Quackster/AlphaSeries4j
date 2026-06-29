@@ -30,6 +30,20 @@ public final class UserPayloads {
         return payload.build();
     }
 
+    public static String activityPointBalance(long pointTypeOne, long pointTypeTwo, long pointTypeThree, long pointTypeFour) {
+        long[] pointValues = {pointTypeOne, pointTypeTwo, pointTypeThree, pointTypeFour};
+        PacketBuilder itemPayload = PacketBuilder.create();
+        for (long pointType = 1L; pointType <= 4L; pointType++) {
+            itemPayload
+                .appendInt(pointType)
+                .appendInt(pointValues[(int) pointType - 1]);
+        }
+        return PacketBuilder.message("M@")
+            .appendInt(pointValues.length)
+            .appendRaw(itemPayload)
+            .build();
+    }
+
     public static String roomAlert(String alertType, String alertText) {
         return PacketBuilder.message("Ba")
             .appendString(alertType)
