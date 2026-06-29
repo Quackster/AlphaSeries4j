@@ -4529,7 +4529,7 @@ public final class Handling {
             if (pageId <= 0L) {
                 pageId = readWireLong(requestPayload, new LongRef(1));
             }
-            String pagePayload = indexedPayload(Licence.global_00829308, pageId);
+            String pagePayload = Licence.catalogPages().pagePayload(pageId);
             if (!pagePayload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, "A\u007f" + Crypto.Proc_3_0_6D2AF0(pageId, null, "") + pagePayload, 0);
             }
@@ -8264,14 +8264,7 @@ public final class Handling {
 
     private static void dispatchPreReadyCatalogIndex(int socketIndex) {
         try {
-            String pageTree = "";
-            Object cache = Licence.global_008292F4;
-            if (cache instanceof String[][]) {
-                String[][] trees = (String[][]) cache;
-                if (trees.length > 0 && trees[0].length > 0) {
-                    pageTree = Vb.cStr(trees[0][0]);
-                }
-            }
+            String pageTree = Licence.catalogPages().defaultPageTree();
             Proc_6_244_801E80(socketIndex, "A~IHHM" + '\2' + pageTree, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses dispatcher helper failures.

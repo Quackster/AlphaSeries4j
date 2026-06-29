@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.game.advertising.VisitRoomAds;
 import com.alphaseries.game.achievement.AchievementSettings;
+import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -212,6 +213,18 @@ public final class Licence {
     public static void setPetCommandRows(Object commandRows, long commandCount) {
         global_008292CC = commandRows == null ? "" : commandRows;
         global_008292C8 = commandCount;
+    }
+
+    public static CatalogPages catalogPages() {
+        return CatalogPages.fromLegacy(global_00829308, global_008292F4);
+    }
+
+    public static void setCatalogPagePayloads(Object pagePayloads) {
+        global_00829308 = pagePayloads == null ? "" : pagePayloads;
+    }
+
+    public static void setCatalogPageTrees(Object pageTrees) {
+        global_008292F4 = pageTrees == null ? "" : pageTrees;
     }
 
     public static String Proc_9_6_808080(Object... args) {

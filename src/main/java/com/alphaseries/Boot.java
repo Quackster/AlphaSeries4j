@@ -251,7 +251,7 @@ public final class Boot {
                 }
             }
         }
-        Licence.global_00829308 = pages;
+        Licence.setCatalogPagePayloads(pages);
     }
 
     public static void Proc_1_16_6CCA60(Object... args) {
@@ -284,7 +284,7 @@ public final class Boot {
                 trees[rank][hc] = buildCatalogPageTreePayload(rootRows, childCounts, children, rank, hc);
             }
         }
-        Licence.global_008292F4 = trees;
+        Licence.setCatalogPageTrees(trees);
     }
 
     public static void Proc_1_18_6CE9C0(Object... args) {

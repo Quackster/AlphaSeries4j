@@ -3603,6 +3603,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET settings_sound='50' WHERE id='77' LIMIT 1"));
         Licence.global_008292F4 = new String[][]{{"CATALOG_TREE"}};
         Handling.dispatchPreReadyPacket(4, "Ae", "Ae");
+        assertEquals("CATALOG_TREE", Licence.catalogPages().defaultPageTree());
         assertEquals(true, containsSend(handlingSends, "A~IHHM\2CATALOG_TREE"));
         handlingSends.clear();
         Handling.dispatchPreReadyPacket(4, "D}", "D}");
