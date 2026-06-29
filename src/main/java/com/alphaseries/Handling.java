@@ -3652,13 +3652,15 @@ public final class Handling {
             if (maxFavorites <= 0L) {
                 maxFavorites = 30L;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_room FROM rooms_favourites WHERE id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT " + maxFavorites, 0, 0);
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return;
+            }
             StringBuilder roomIds = new StringBuilder();
             long roomCount = 0L;
-            for (String row : StringUtils.text(rowText).split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    roomIds.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(row), null, ""));
+            for (long roomId : rooms.favouriteRoomIds(NumberUtils.parseLong(userId), maxFavorites)) {
+                if (roomId > 0L) {
+                    roomIds.append(Crypto.Proc_3_0_6D2AF0(roomId, null, ""));
                     roomCount++;
                 }
             }
@@ -3678,8 +3680,10 @@ public final class Handling {
                 roomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             String userId = handlingUserIdFromSocket(socketIndex);
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_favourites WHERE id_room='" + roomId + "' AND id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0);
+            RoomDao rooms = roomDao();
+            if (rooms != null) {
+                rooms.deleteFavouriteRoom(NumberUtils.parseLong(userId), roomId);
+            }
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GK") + "H", 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -3695,8 +3699,10 @@ public final class Handling {
                 roomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
             }
             String userId = handlingUserIdFromSocket(socketIndex);
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms_favourites(id_user,id_room,timestamp) VALUES('"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "',UNIX_TIMESTAMP())", 0, 0);
+            RoomDao rooms = roomDao();
+            if (rooms != null) {
+                rooms.insertFavouriteRoom(NumberUtils.parseLong(userId), roomId);
+            }
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GK") + " ", 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.

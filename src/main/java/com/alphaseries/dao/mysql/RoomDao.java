@@ -478,6 +478,28 @@ public final class RoomDao {
             .orElse(0L);
     }
 
+    public List<Long> favouriteRoomIds(long userId, long limit) throws SQLException {
+        long rowLimit = Math.max(1L, limit);
+        return database.query(
+            "SELECT id_room FROM rooms_favourites WHERE id_user=? LIMIT " + rowLimit,
+            resultSet -> resultSet.getLong(1),
+            userId);
+    }
+
+    public int deleteFavouriteRoom(long userId, long roomId) throws SQLException {
+        return database.execute(
+            "DELETE FROM rooms_favourites WHERE id_room=? AND id_user=?",
+            roomId,
+            userId);
+    }
+
+    public int insertFavouriteRoom(long userId, long roomId) throws SQLException {
+        return database.execute(
+            "INSERT INTO rooms_favourites(id_user,id_room,timestamp) VALUES(?,?,UNIX_TIMESTAMP())",
+            userId,
+            roomId);
+    }
+
     public int insertRoomBan(long roomId, long userId) throws SQLException {
         return database.execute(
             "INSERT IGNORE INTO rooms_bans(id_room,id_user,timestamp_expire) VALUES(?,?,UNIX_TIMESTAMP()+900)",
