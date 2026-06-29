@@ -46,7 +46,7 @@ public final class Boot {
             + "FROM products ORDER BY id ASC";
         cacheRowsById(products, MySQL.Proc_5_2_6D4690(productQuery, 0, 0));
         Licence.setProductRows(products);
-        DataManager.global_008292BC = products;
+        DataManager.setProductRows(products);
 
         long maxCatalogId = Math.max(0L, Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM catalog_products", 0, 0)));
         String[] catalogProducts = new String[(int) maxCatalogId + 1];
@@ -164,9 +164,9 @@ public final class Boot {
     }
 
     public static void Proc_1_8_6C6850(Object... args) {
-        DataManager.global_008291AC = buildRoomEventLocaleCache(MySQL.Proc_5_2_6D4690(
+        DataManager.setRoomEventLocaleCache(buildRoomEventLocaleCache(MySQL.Proc_5_2_6D4690(
             "SELECT variable,value FROM locales WHERE category='2' AND variable LIKE 'roomevent_type_%'", 0, 0),
-            DataManager.global_008291AC);
+            DataManager.roomEventLocales().cacheText()));
     }
 
     public static void Proc_1_9_6C6DF0(Object... args) {

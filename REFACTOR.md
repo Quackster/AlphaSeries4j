@@ -35,6 +35,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.catalog.CatalogPages` as a typed adapter around catalog page payload and page-tree caches previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.catalog.CatalogProductSettings` as a typed adapter around catalog package, pet package, club product, counter product, teleport, and moodlight state previously written through raw `Licence` globals.
 - Added `com.alphaseries.game.catalog.CatalogRegistry` as a typed adapter around product, catalog-product, and deal row caches previously parsed directly from `Licence` globals.
+- Added `com.alphaseries.game.catalog.ProductCache` as a typed adapter around DataManager product rows previously read from raw global cache storage.
 - Added `com.alphaseries.game.catalog.GiftSettings` as a typed adapter around club-gift and gift-wrap state previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.moderation.StaffPayloads` for call-for-help rows, staff user summaries, room visits, room chat history, and unsafe staff-alert checks.
 - Added `com.alphaseries.game.moderation.StaffSettings` as a typed adapter around staff moderation payloads previously read directly from `Licence` globals.
@@ -55,6 +56,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.room.RepresentedRoomCache` for represented room record lookup, replacement, and occupant movement state previously implemented inline in `Handling` and `Main`.
 - Added `com.alphaseries.game.room.RepresentedRoomSlots` as a typed adapter around represented room slot allocation markers previously manipulated as a raw `Licence` string.
 - Migrated `RepresentedRoomSlots` internals from raw marker-string mutation to collection-backed available slot storage, keeping legacy serialization only at the compatibility boundary.
+- Added `com.alphaseries.game.room.RoomEventLocales` as a typed adapter around DataManager room-event locale cache lookups, and routed `Boot` cache refreshes through named DataManager setters.
 - Added `com.alphaseries.game.session.GameServerSessionState` as a typed adapter around queued game-server packet data and ready-session markers previously manipulated as raw `Licence` strings.
 - Migrated `GameServerSessionState` internals from raw string mutation to collection-backed queued packets and ready socket marker storage, keeping legacy serialization only at the compatibility boundary.
 - Added `com.alphaseries.game.session.RepresentedSocketCache` as a typed adapter around represented socket records, room slots, and busy checks previously parsed directly from a raw `Licence` global.
@@ -86,7 +88,7 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 472
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1314
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1313
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 476
 - `Handling.java`: 12150 lines
 - `Functions.java`: 756 lines

@@ -1,5 +1,7 @@
 package com.alphaseries;
 
+import com.alphaseries.game.catalog.ProductCache;
+import com.alphaseries.game.room.RoomEventLocales;
 import com.alphaseries.vb.Vb;
 
 import java.io.IOException;
@@ -44,6 +46,22 @@ public final class DataManager {
 
     public static void configureLicenceHttpFetcher(LicenceHttpFetcher fetcher) {
         licenceHttpFetcher = fetcher == null ? (url, action) -> Proc_8_0_804330(url, action) : fetcher;
+    }
+
+    public static RoomEventLocales roomEventLocales() {
+        return RoomEventLocales.fromLegacy(global_008291AC);
+    }
+
+    public static void setRoomEventLocaleCache(String cacheText) {
+        global_008291AC = cacheText == null ? "" : cacheText;
+    }
+
+    public static ProductCache productCache() {
+        return ProductCache.fromLegacy(global_008292BC);
+    }
+
+    public static void setProductRows(Object productRows) {
+        global_008292BC = productRows == null ? "" : productRows;
     }
 
     public static long Proc_8_1_804400(Object... args) {
@@ -277,7 +295,7 @@ public final class DataManager {
         if (args == null || args.length == 0) {
             return "";
         }
-        return getNullDelimitedCacheField(global_008291AC, Vb.cStr(args[0]), optionalColumnIndex(args, 1, 0));
+        return roomEventLocales().field(Vb.cStr(args[0]), optionalColumnIndex(args, 1, 0));
     }
 
     public static String Proc_8_12_806C30(Object... args) {
@@ -336,21 +354,7 @@ public final class DataManager {
     }
 
     public static String getProductCacheCell(long productId, long columnIndex) {
-        String rowValue = "";
-        if (global_008292BC instanceof String[]) {
-            String[] rows = (String[]) global_008292BC;
-            if (productId >= 0 && productId < rows.length) {
-                rowValue = rows[(int) productId];
-            }
-        } else {
-            rowValue = getDelimitedProductRow(Vb.cStr(global_008292BC), productId);
-        }
-
-        String[] columns = rowValue.split("\t", -1);
-        if (columnIndex < 0 || columnIndex >= columns.length) {
-            return "";
-        }
-        return columns[(int) columnIndex];
+        return productCache().cell(productId, columnIndex);
     }
 
     public static String getDelimitedProductRow(String tableText, long productId) {
