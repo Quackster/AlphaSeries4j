@@ -3,7 +3,8 @@ package com.alphaseries;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.server.packet.PacketSink;
 import com.alphaseries.game.session.GameServerSessionState;
-import com.alphaseries.vb.Vb;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -20,7 +21,7 @@ public final class Main {
     }
 
     public static String shiftIdentityText(String sourceText, long shiftAmount) {
-        String source = Vb.cStr(sourceText);
+        String source = StringUtils.text(sourceText);
         StringBuilder output = new StringBuilder(source.length());
         for (int index = 0; index < source.length(); index++) {
             output.append((char) ((source.charAt(index) + shiftAmount) & 0xFF));
@@ -29,24 +30,24 @@ public final class Main {
     }
 
     public static String easyGetIdentity(Object value) {
-        return shiftIdentityText(Vb.cStr(value), -25L);
+        return shiftIdentityText(StringUtils.text(value), -25L);
     }
 
     public static String createSuperEasyIdentity(Object value) {
-        return shiftIdentityText(Vb.cStr(value), 2L);
+        return shiftIdentityText(StringUtils.text(value), 2L);
     }
 
     public static String superEasyGetIdentity(Object value) {
-        return shiftIdentityText(Vb.cStr(value), -2L);
+        return shiftIdentityText(StringUtils.text(value), -2L);
     }
 
     public static String newPremiumCheck(Object valueOffset, Object encodedValue) {
-        String encodedText = Vb.cStr(encodedValue);
+        String encodedText = StringUtils.text(encodedValue);
         if (encodedText.isEmpty()) {
             return "";
         }
         long seedValue = encodedText.charAt(0);
-        long offset = Vb.val(valueOffset);
+        long offset = NumberUtils.parseLong(valueOffset);
         StringBuilder output = new StringBuilder(encodedText.length() - 1);
         for (int index = 1; index < encodedText.length(); index++) {
             output.append((char) (((encodedText.charAt(index) - seedValue) + offset) & 0xFF));
@@ -55,11 +56,11 @@ public final class Main {
     }
 
     public static String getIdentity(Object encodedValue, Object seedOffset) {
-        String encodedText = Vb.cStr(encodedValue);
+        String encodedText = StringUtils.text(encodedValue);
         if (encodedText.isEmpty()) {
             return "";
         }
-        long seedValue = encodedText.charAt(0) - Vb.val(seedOffset);
+        long seedValue = encodedText.charAt(0) - NumberUtils.parseLong(seedOffset);
         StringBuilder output = new StringBuilder(encodedText.length() - 1);
         for (int index = 1; index < encodedText.length(); index++) {
             output.append((char) (((encodedText.charAt(index) - index) - seedValue) & 0xFF));
@@ -69,8 +70,8 @@ public final class Main {
 
     public static String Proc_0_22_68C1A0(Object... args) {
         try {
-            String sourceText = args != null && args.length >= 1 ? Vb.cStr(args[0]) : "";
-            long seedValue = Vb.val(Functions.Proc_10_3_809B90(0x41, 0x5A));
+            String sourceText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
+            long seedValue = NumberUtils.parseLong(Functions.Proc_10_3_809B90(0x41, 0x5A));
             StringBuilder output = new StringBuilder(sourceText.length() + 1);
             output.append((char) (seedValue & 0xFF));
             for (int index = 0; index < sourceText.length(); index++) {
@@ -83,7 +84,7 @@ public final class Main {
     }
 
     public static String Proc_0_23_68C430(Object... args) {
-        return shiftIdentityText(args != null && args.length >= 1 ? Vb.cStr(args[0]) : "", 7L);
+        return shiftIdentityText(args != null && args.length >= 1 ? StringUtils.text(args[0]) : "", 7L);
     }
 
     public static final class LifecycleResult {
@@ -115,8 +116,8 @@ public final class Main {
 
         public static StartupResult failure(String stage, String message) {
             StartupResult result = new StartupResult();
-            result.stage = Vb.cStr(stage);
-            result.message = Vb.cStr(message);
+            result.stage = StringUtils.text(stage);
+            result.message = StringUtils.text(message);
             return result;
         }
     }
@@ -126,8 +127,8 @@ public final class Main {
     }
 
     public static void Proc_0_25_68FBC0(Object... args) {
-        long socketIndex = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
-        String packetData = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
+        long socketIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
+        String packetData = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
         try {
             if (Guardian.Proc_11_2_821390(socketIndex, 1, 0) != 1) {
                 return;
@@ -159,7 +160,7 @@ public final class Main {
             Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "ROOMS").toString(), 0, 0);
             Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER").toString(), 0, 0);
             Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "USERS").toString(), 0, 0);
-            result.consoleTitle = Vb.cStr(captionTemplate).replace("%%", Licence.runtimeState().productName());
+            result.consoleTitle = StringUtils.text(captionTemplate).replace("%%", Licence.runtimeState().productName());
             result.caption = javaCaptionFromConsoleTitle(result.consoleTitle);
             result.productKey = productKeyFromConfig(Handling.Proc_6_239_7FC170(
                 Path.of(Functions.applicationPath, "config.ini").toString(), 0, 7));
@@ -218,22 +219,22 @@ public final class Main {
     }
 
     public static String getProcessor() {
-        return Vb.cStr(System.getenv("USERNAME")).isEmpty()
-            ? Vb.cStr(System.getenv("USER"))
-            : Vb.cStr(System.getenv("USERNAME"));
+        return StringUtils.text(System.getenv("USERNAME")).isEmpty()
+            ? StringUtils.text(System.getenv("USER"))
+            : StringUtils.text(System.getenv("USERNAME"));
     }
 
     public static String productKeyFromConfig(String configText) {
-        String[] configParts = Vb.cStr(configText).split("=", -1);
+        String[] configParts = StringUtils.text(configText).split("=", -1);
         if (configParts.length < 8) {
             return "";
         }
         String[] lines = configParts[7].split("\\r?\\n", -1);
-        return lines.length > 0 ? Vb.cStr(lines[0]) : "";
+        return lines.length > 0 ? StringUtils.text(lines[0]) : "";
     }
 
     public static String javaCaptionFromConsoleTitle(String consoleTitle) {
-        return Vb.cStr(consoleTitle).replace("[!]", "").trim().replaceAll(" {2,}", " ");
+        return StringUtils.text(consoleTitle).replace("[!]", "").trim().replaceAll(" {2,}", " ");
     }
 
     public static String gameServerUnknownEventAccept() {
@@ -274,30 +275,30 @@ public final class Main {
 
     public static void processGameServerData(String incomingData) {
         try {
-            for (String packet : Vb.cStr(incomingData).split("\1", -1)) {
+            for (String packet : StringUtils.text(incomingData).split("\1", -1)) {
                 if (packet.isEmpty()) {
                     continue;
                 }
                 String[] fields = packet.split("\2", -1);
-                String commandName = fields.length > 0 ? Vb.cStr(fields[0]).toUpperCase(Locale.ROOT) : "";
+                String commandName = fields.length > 0 ? StringUtils.text(fields[0]).toUpperCase(Locale.ROOT) : "";
                 long socketIndex;
                 if ("SHUTDOWN".equals(commandName)) {
                     if (fields.length >= 2) {
-                        socketIndex = Vb.val(fields[1]);
+                        socketIndex = NumberUtils.parseLong(fields[1]);
                         Handling.Proc_6_243_7FFEB0(socketIndex, 0, 0);
                     }
                 } else if ("LISTEN".equals(commandName)) {
                     if (fields.length >= 2) {
-                        socketIndex = Vb.val(fields[1]);
+                        socketIndex = NumberUtils.parseLong(fields[1]);
                         Guardian.Proc_11_3_821440(socketIndex, 0, 0);
                     }
                 } else if ("DATA".equals(commandName)) {
                     if (fields.length >= 3) {
-                        socketIndex = Vb.val(fields[1]);
+                        socketIndex = NumberUtils.parseLong(fields[1]);
                         appendGameServerPacketData(socketIndex, fields);
                     }
                 } else if (fields.length >= 1) {
-                    socketIndex = Vb.val(fields[0]);
+                    socketIndex = NumberUtils.parseLong(fields[0]);
                     Handling.Proc_6_243_7FFEB0(socketIndex, 0, 0);
                 }
             }
@@ -325,8 +326,8 @@ public final class Main {
                     continue;
                 }
                 String[] fields = rowText.split("\t", -1);
-                long roomId = Vb.val(mainArrayField(fields, 0));
-                long signValue = Vb.val(mainArrayField(fields, 1));
+                long roomId = NumberUtils.parseLong(mainArrayField(fields, 0));
+                long signValue = NumberUtils.parseLong(mainArrayField(fields, 1));
                 if (roomId > 0L && signValue > 0L) {
                     long nextSignValue = signValue - 1L;
                     MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='" + nextSignValue + "' WHERE id='"
@@ -355,11 +356,11 @@ public final class Main {
         long moved = 0L;
         try {
             for (long entityId : Licence.representedBots().allocatedEntityIds()) {
-                if (entityId <= 0L || Vb.val(mainRepresentedBotRecordField(entityId, 15)) == 0L) {
+                if (entityId <= 0L || NumberUtils.parseLong(mainRepresentedBotRecordField(entityId, 15)) == 0L) {
                     continue;
                 }
-                long currentX = Vb.val(mainRepresentedBotRecordField(entityId, 6));
-                long currentY = Vb.val(mainRepresentedBotRecordField(entityId, 7));
+                long currentX = NumberUtils.parseLong(mainRepresentedBotRecordField(entityId, 6));
+                long currentY = NumberUtils.parseLong(mainRepresentedBotRecordField(entityId, 7));
                 long targetX = currentX + Functions.Proc_10_4_809CA0(-1, 1, 0);
                 long targetY = currentY + Functions.Proc_10_4_809CA0(-1, 1, 0);
                 Proc_0_28_6AD850(entityId, currentX, currentY, targetX, targetY);
@@ -442,11 +443,11 @@ public final class Main {
                     continue;
                 }
                 String[] fields = rollerRow.split("\t", -1);
-                long rollerId = Vb.val(mainArrayField(fields, 0));
-                long rollerX = Vb.val(mainArrayField(fields, 1));
-                long rollerY = Vb.val(mainArrayField(fields, 2));
+                long rollerId = NumberUtils.parseLong(mainArrayField(fields, 0));
+                long rollerX = NumberUtils.parseLong(mainArrayField(fields, 1));
+                long rollerY = NumberUtils.parseLong(mainArrayField(fields, 2));
                 String rollerZ = mainArrayField(fields, 3);
-                long rollerR = Vb.val(mainArrayField(fields, 4));
+                long rollerR = NumberUtils.parseLong(mainArrayField(fields, 4));
                 long targetX = rollerX + mainRollerDeltaX(rollerR);
                 long targetY = rollerY + mainRollerDeltaY(rollerR);
                 if (rollerId <= 0L || (targetX == rollerX && targetY == rollerY)
@@ -495,7 +496,7 @@ public final class Main {
 
     public static void Proc_0_26_6ACF30(Object... args) {
         try {
-            long socketIndex = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
+            long socketIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
             if (socketIndex <= 0L || Guardian.Proc_11_2_821390(socketIndex, 0, 0) != 1) {
                 return;
             }
@@ -510,7 +511,7 @@ public final class Main {
 
     public static void Proc_0_27_6AD400(Object... args) {
         try {
-            long entityIndex = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
+            long entityIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
             if (entityIndex <= 0L) {
                 return;
             }
@@ -525,7 +526,7 @@ public final class Main {
 
     public static void Proc_0_28_6AD850(Object... args) {
         try {
-            long entityIndex = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
+            long entityIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
             if (entityIndex <= 0L) {
                 return;
             }
@@ -534,10 +535,10 @@ public final class Main {
                 return;
             }
             long roomId = mainCurrentRoomIdForSlot(roomSlot);
-            long currentX = args != null && args.length >= 5 ? Vb.val(args[1]) : 0L;
-            long currentY = args != null && args.length >= 5 ? Vb.val(args[2]) : 0L;
-            long targetX = args != null && args.length >= 5 ? Vb.val(args[3]) : 0L;
-            long targetY = args != null && args.length >= 5 ? Vb.val(args[4]) : 0L;
+            long currentX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[1]) : 0L;
+            long currentY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[2]) : 0L;
+            long targetX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[3]) : 0L;
+            long targetY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
             String movementText = Functions.Proc_10_26_81E4E0(entityIndex, currentX, currentY, targetX, targetY);
             long nextX = mainMovementField(movementText, 0);
             long nextY = mainMovementField(movementText, 1);
@@ -553,7 +554,7 @@ public final class Main {
 
     public static void Proc_0_29_6B0E10(Object... args) {
         try {
-            long socketIndex = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
+            long socketIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
             if (socketIndex <= 0L || Guardian.Proc_11_2_821390(socketIndex, 0, 0) != 1) {
                 return;
             }
@@ -562,10 +563,10 @@ public final class Main {
                 roomSlot = socketIndex;
             }
             long roomId = mainCurrentRoomIdForSocket(socketIndex);
-            long currentX = args != null && args.length >= 5 ? Vb.val(args[1]) : 0L;
-            long currentY = args != null && args.length >= 5 ? Vb.val(args[2]) : 0L;
-            long targetX = args != null && args.length >= 5 ? Vb.val(args[3]) : 0L;
-            long targetY = args != null && args.length >= 5 ? Vb.val(args[4]) : 0L;
+            long currentX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[1]) : 0L;
+            long currentY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[2]) : 0L;
+            long targetX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[3]) : 0L;
+            long targetY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
             String movementText = Functions.Proc_10_24_80E790(socketIndex, currentX, currentY, targetX, targetY);
             long nextX = mainMovementField(movementText, 0);
             long nextY = mainMovementField(movementText, 1);
@@ -588,7 +589,7 @@ public final class Main {
     }
 
     public static long mainRepresentedBotRoomSlot(long entityIndex) {
-        return Vb.val(mainRepresentedBotRecordField(entityIndex, 0));
+        return NumberUtils.parseLong(mainRepresentedBotRecordField(entityIndex, 0));
     }
 
     public static String mainRepresentedBotRecordText(long entityIndex) {
@@ -611,9 +612,9 @@ public final class Main {
             roomRecord = roomSlot + "\t\t\t0";
         }
         String[] fields = ensureFieldCount(roomRecord.split("\t", -1), countIndex);
-        if (!Vb.cStr(fields[fieldIndex]).contains(markerText)) {
-            fields[fieldIndex] = Vb.cStr(fields[fieldIndex]) + markerText;
-            fields[countIndex] = String.valueOf(Vb.val(fields[countIndex]) + 1L);
+        if (!StringUtils.text(fields[fieldIndex]).contains(markerText)) {
+            fields[fieldIndex] = StringUtils.text(fields[fieldIndex]) + markerText;
+            fields[countIndex] = String.valueOf(NumberUtils.parseLong(fields[countIndex]) + 1L);
         }
         mainRepresentedRoomRecordSet(roomSlot, joinTab(fields));
     }
@@ -637,18 +638,18 @@ public final class Main {
         }
         String[] fields = ensureFieldCount(roomRecord.split("\t", -1), fieldIndex);
         String movementRecord = entityIndex + "\t" + positionX + "\t" + positionY + "\t" + directionValue + "\t" + movingValue;
-        fields[fieldIndex] = mainRepresentedCacheRemove(Vb.cStr(fields[fieldIndex]), "\1" + entityIndex + '\t');
-        fields[fieldIndex] = Vb.cStr(fields[fieldIndex]) + '\1' + movementRecord + '\2';
+        fields[fieldIndex] = mainRepresentedCacheRemove(StringUtils.text(fields[fieldIndex]), "\1" + entityIndex + '\t');
+        fields[fieldIndex] = StringUtils.text(fields[fieldIndex]) + '\1' + movementRecord + '\2';
         mainRepresentedRoomRecordSet(roomSlot, joinTab(fields));
     }
 
     public static long mainMovementField(String movementText, long fieldIndex) {
-        String[] fields = Vb.cStr(movementText).split("\0", -1);
-        return fieldIndex >= 0 && fieldIndex < fields.length ? Vb.val(fields[(int) fieldIndex]) : 0L;
+        String[] fields = StringUtils.text(movementText).split("\0", -1);
+        return fieldIndex >= 0 && fieldIndex < fields.length ? NumberUtils.parseLong(fields[(int) fieldIndex]) : 0L;
     }
 
     public static String mainArrayField(String[] fields, long fieldIndex) {
-        return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
+        return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? StringUtils.text(fields[(int) fieldIndex]) : "";
     }
 
     public static long mainRollerDeltaX(long rotationValue) {
@@ -672,11 +673,13 @@ public final class Main {
     }
 
     public static String mainRollerTargetHeight(String heightText, String fallbackHeight) {
-        return !Vb.cStr(heightText).isEmpty() ? String.valueOf(Vb.val(heightText)) : String.valueOf(Vb.val(fallbackHeight));
+        return !StringUtils.text(heightText).isEmpty()
+            ? String.valueOf(NumberUtils.parseLong(heightText))
+            : String.valueOf(NumberUtils.parseLong(fallbackHeight));
     }
 
     public static long mainRollerFurnitureOnTile(long roomId, long rollerId, long positionX, long positionY) {
-        return Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_room='" + roomId
+        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_room='" + roomId
             + "' AND position_x='" + positionX + "' AND position_y='" + positionY + "' AND id<>'"
             + rollerId + "' ORDER BY position_z DESC,id DESC LIMIT 1", 0, 0));
     }
@@ -692,14 +695,14 @@ public final class Main {
         if (roomSlot <= 0L) {
             return 0L;
         }
-        return Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM rooms WHERE id_slot='" + roomSlot + "' LIMIT 1", 0, 0));
+        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM rooms WHERE id_slot='" + roomSlot + "' LIMIT 1", 0, 0));
     }
 
     public static long mainCurrentRoomIdForSocket(long socketIndex) {
         if (socketIndex <= 0L) {
             return 0L;
         }
-        long roomId = Vb.val(Licence.Proc_9_10_808F30(String.valueOf(socketIndex), 1, 0));
+        long roomId = NumberUtils.parseLong(Licence.Proc_9_10_808F30(String.valueOf(socketIndex), 1, 0));
         if (roomId > 0L) {
             return roomId;
         }
@@ -707,7 +710,7 @@ public final class Main {
         if (userId.isEmpty() || "0".equals(userId)) {
             return 0L;
         }
-        return Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_room FROM logs_visitedrooms WHERE id_user='"
+        return NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_room FROM logs_visitedrooms WHERE id_user='"
             + Functions.Proc_10_11_80A9C0(userId, 0, 0)
             + "' AND timestamp_left IS NULL ORDER BY timestamp_enter DESC LIMIT 1", 0, 0));
     }
@@ -724,7 +727,7 @@ public final class Main {
         String payload = Crypto.Proc_3_0_6D2AF0(furnitureId, null, "AZ");
         payload = Crypto.Proc_3_0_6D2AF0(positionX, null, payload);
         payload = Crypto.Proc_3_0_6D2AF0(positionY, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(Vb.val(positionZ), null, payload);
+        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(positionZ), null, payload);
         return payload;
     }
 
@@ -750,8 +753,10 @@ public final class Main {
         for (String record : movementText.split("\1", -1)) {
             if (!record.isEmpty()) {
                 String[] fields = record.replace("\2", "").split("\t", -1);
-                long entityIndex = Vb.val(mainArrayField(fields, 0));
-                if (entityIndex > 0L && Vb.val(mainArrayField(fields, 1)) == fromX && Vb.val(mainArrayField(fields, 2)) == fromY) {
+                long entityIndex = NumberUtils.parseLong(mainArrayField(fields, 0));
+                if (entityIndex > 0L
+                    && NumberUtils.parseLong(mainArrayField(fields, 1)) == fromX
+                    && NumberUtils.parseLong(mainArrayField(fields, 2)) == fromY) {
                     mainRepresentedRoomOccupantMove(roomSlot, entityIndex, occupantType, toX, toY, directionValue, 0);
                 }
             }
@@ -759,7 +764,7 @@ public final class Main {
     }
 
     public static String mainRepresentedRecordByBracket(String cacheText, long recordId) {
-        if (recordId <= 0L || Vb.cStr(cacheText).isEmpty()) {
+        if (recordId <= 0L || StringUtils.text(cacheText).isEmpty()) {
             return "";
         }
         String markerText = "[" + recordId + "]";
@@ -776,7 +781,7 @@ public final class Main {
     }
 
     public static String mainRepresentedRecordByKey(String cacheText, long recordId) {
-        if (recordId <= 0L || Vb.cStr(cacheText).isEmpty()) {
+        if (recordId <= 0L || StringUtils.text(cacheText).isEmpty()) {
             return "";
         }
         String markerText = "\1" + recordId + '\t';
@@ -813,8 +818,8 @@ public final class Main {
     }
 
     public static String mainRepresentedCacheRemove(String cacheText, String markerText) {
-        String cache = Vb.cStr(cacheText);
-        String marker = Vb.cStr(markerText);
+        String cache = StringUtils.text(cacheText);
+        String marker = StringUtils.text(markerText);
         if (cache.isEmpty() || marker.isEmpty()) {
             return cache;
         }
@@ -833,8 +838,8 @@ public final class Main {
 
     public static String mainRepresentedEntityIds(String markerText) {
         StringBuilder outputText = new StringBuilder();
-        for (String part : Vb.cStr(markerText).split("\1", -1)) {
-            long entityId = Vb.val(part);
+        for (String part : StringUtils.text(markerText).split("\1", -1)) {
+            long entityId = NumberUtils.parseLong(part);
             if (entityId > 0L) {
                 String marker = "[" + entityId + "]";
                 if (outputText.indexOf(marker) < 0) {
@@ -846,9 +851,9 @@ public final class Main {
     }
 
     public static long mainRepresentedEntityIdAt(String entityMarkers, long entityIndex) {
-        String[] markerParts = Vb.cStr(entityMarkers).split("\\]", -1);
+        String[] markerParts = StringUtils.text(entityMarkers).split("\\]", -1);
         if (entityIndex >= 0 && entityIndex < markerParts.length) {
-            return Vb.val(markerParts[(int) entityIndex].replace("[", ""));
+            return NumberUtils.parseLong(markerParts[(int) entityIndex].replace("[", ""));
         }
         return 0L;
     }
@@ -866,7 +871,7 @@ public final class Main {
             if (index > 0) {
                 joined.append('\t');
             }
-            joined.append(Vb.cStr(fields[index]));
+            joined.append(StringUtils.text(fields[index]));
         }
         return joined.toString();
     }
