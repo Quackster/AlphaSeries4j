@@ -12,6 +12,7 @@ import com.alphaseries.dao.mysql.TradeDao;
 import com.alphaseries.dao.mysql.MessengerDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetPayloads;
+import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.room.RepresentedRoomCache;
@@ -6166,22 +6167,18 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT bots.id,bots.name,bots.figure,bots_petdata.id_level,bots_petdata.experience,"
-                + "bots_petdata.energy,bots_petdata.nutrition,bots_petdata.scratches,"
-                + "ROUND((UNIX_TIMESTAMP()-bots_petdata.timestamp_buy)/60/60/24,0),bots_petdata.id_owner,users.name "
-                + "FROM bots,bots_petdata,users WHERE bots.id='" + botId
-                + "' AND bots.id_handle='3' AND bots_petdata.id_bot=bots.id AND users.id=bots_petdata.id_owner LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            BotDao bots = botDao();
+            if (bots == null) {
                 return "";
             }
-            String[] fields = rowText.split("\t", -1);
-            if (fields.length < 11) {
+            PetStatusRow petStatus = bots.petStatus(botId).orElse(null);
+            if (petStatus == null) {
                 return "";
             }
             if (botEntityId <= 0L) {
                 botEntityId = botId;
             }
-            String payload = representedPetStatusPayload(botEntityId, fields);
+            String payload = PetPayloads.status(botEntityId, petStatus);
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }

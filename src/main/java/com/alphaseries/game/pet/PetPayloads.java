@@ -201,6 +201,24 @@ public final class PetPayloads {
             StringUtils.field(petFields, 10));
     }
 
+    public static String status(long botEntityId, PetStatusRow petStatus) {
+        if (botEntityId <= 0L || petStatus == null) {
+            return "";
+        }
+        return fullStatus(
+            botEntityId,
+            petStatus.name(),
+            petStatus.figure(),
+            petStatus.level(),
+            petStatus.experience(),
+            petStatus.energy(),
+            petStatus.nutrition(),
+            petStatus.scratches(),
+            petStatus.ageDays(),
+            petStatus.ownerId(),
+            petStatus.ownerName());
+    }
+
     public static String fullStatus(
         long botEntityId,
         String petName,

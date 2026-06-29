@@ -3,9 +3,11 @@ package com.alphaseries.dao.mysql;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.pet.PetRaceRow;
+import com.alphaseries.game.pet.PetStatusRow;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 public final class BotDao {
     private final Database database;
@@ -98,5 +100,28 @@ public final class BotDao {
             resultSet -> resultSet.getLong(1),
             botId)
             .orElse(0L);
+    }
+
+    public Optional<PetStatusRow> petStatus(long botId) throws SQLException {
+        return database.queryOne(
+            "SELECT bots.id,bots.name,bots.figure,bots_petdata.id_level,bots_petdata.experience,"
+                + "bots_petdata.energy,bots_petdata.nutrition,bots_petdata.scratches,"
+                + "ROUND((UNIX_TIMESTAMP()-bots_petdata.timestamp_buy)/60/60/24,0),bots_petdata.id_owner,users.name "
+                + "FROM bots,bots_petdata,users WHERE bots.id=? AND bots.id_handle=? "
+                + "AND bots_petdata.id_bot=bots.id AND users.id=bots_petdata.id_owner LIMIT 1",
+            resultSet -> new PetStatusRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getLong(7),
+                resultSet.getLong(8),
+                resultSet.getLong(9),
+                resultSet.getLong(10),
+                resultSet.getString(11)),
+            botId,
+            3L);
     }
 }
