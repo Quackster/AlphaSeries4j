@@ -5692,6 +5692,10 @@ public final class Handling {
             if (removeCount <= 0L) {
                 return "";
             }
+            MessengerDao messenger = messengerDao();
+            if (messenger == null) {
+                return "";
+            }
             removeCount = Math.min(removeCount, 75L);
             StringBuilder targetList = new StringBuilder();
             StringBuilder removedIdsPayload = new StringBuilder();
@@ -5701,12 +5705,7 @@ public final class Handling {
                 String targetId = String.valueOf(targetUserId);
                 if (targetUserId > 0L && !targetId.equals(userId)
                     && !("," + targetList + ",").contains("," + targetId + ",")) {
-                    String friendshipRow = MySQL.Proc_5_2_6D4690("SELECT id_user FROM friendships WHERE has_accept='1' AND ((id_friend='"
-                        + Functions.Proc_10_11_80A9C0(targetId, 0, 0) + "' AND id_user='"
-                        + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "') OR (id_user='"
-                        + Functions.Proc_10_11_80A9C0(targetId, 0, 0) + "' AND id_friend='"
-                        + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "')) LIMIT 1", 0, 0);
-                    if (!friendshipRow.isEmpty()) {
+                    if (messenger.acceptedFriendshipExists(NumberUtils.parseLong(userId), targetUserId)) {
                         if (targetList.length() > 0) {
                             targetList.append(',');
                         }
@@ -5723,10 +5722,7 @@ public final class Handling {
             if (targetList.length() == 0) {
                 return "";
             }
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM friendships WHERE has_accept='1' AND ((id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_friend IN (" + targetList
-                + ")) OR (id_friend='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "' AND id_user IN (" + targetList + "))) LIMIT 150", 0, 0);
+            messenger.deleteAcceptedFriendships(NumberUtils.parseLong(userId), targetList.toString());
             String callerPayload = messengerRemoveFriendsPayload(removedIdsPayload.toString(), removedCount);
             Proc_6_244_801E80(socketIndex, callerPayload, 0);
             return callerPayload;

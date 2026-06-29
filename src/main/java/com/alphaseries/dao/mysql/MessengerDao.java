@@ -38,4 +38,29 @@ public final class MessengerDao {
             userId,
             0L);
     }
+
+    public boolean acceptedFriendshipExists(long userId, long targetUserId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_user FROM friendships WHERE has_accept=? AND ((id_friend=? AND id_user=?) "
+                + "OR (id_user=? AND id_friend=?)) LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            1L,
+            targetUserId,
+            userId,
+            targetUserId,
+            userId)
+            .orElse(0L) > 0L;
+    }
+
+    public int deleteAcceptedFriendships(long userId, String targetIdList) throws SQLException {
+        if (targetIdList == null || targetIdList.isEmpty() || !targetIdList.matches("\\d+(,\\d+)*")) {
+            return 0;
+        }
+        return database.execute(
+            "DELETE FROM friendships WHERE has_accept=? AND ((id_user=? AND id_friend IN (" + targetIdList
+                + ")) OR (id_friend=? AND id_user IN (" + targetIdList + "))) LIMIT 150",
+            1L,
+            userId,
+            userId);
+    }
 }
