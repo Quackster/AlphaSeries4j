@@ -54,6 +54,41 @@ public final class RoomDao {
             .orElse(0L);
     }
 
+    public long ownedRoomCount(long ownerId) throws SQLException {
+        return database.queryOne(
+            "SELECT COUNT(id) FROM rooms WHERE id_owner=?",
+            resultSet -> resultSet.getLong(1),
+            ownerId)
+            .orElse(0L);
+    }
+
+    public Optional<CreatableRoomModel> creatableRoomModel(long hcLevel, String modelName) throws SQLException {
+        return database.queryOne(
+            "SELECT id,visitors_max FROM models WHERE create_min_level_hc <= ? AND type=? AND name=? LIMIT 1",
+            resultSet -> new CreatableRoomModel(
+                resultSet.getLong(1),
+                resultSet.getLong(2)),
+            hcLevel,
+            0L,
+            modelName);
+    }
+
+    public int insertRoom(long ownerId, String roomName, long visitorsMax, long modelId) throws SQLException {
+        return database.execute(
+            "INSERT INTO rooms(id_owner,name,visitors_max,id_model,timestamp_created) VALUES(?,?,?,?,UNIX_TIMESTAMP())",
+            ownerId,
+            roomName,
+            visitorsMax,
+            modelId);
+    }
+
+    public long newestRoomId() throws SQLException {
+        return database.queryOne(
+            "SELECT MAX(id) FROM rooms",
+            resultSet -> resultSet.getLong(1))
+            .orElse(0L);
+    }
+
     public long roomSlot(long roomId) throws SQLException {
         return database.queryOne(
             "SELECT id_slot FROM rooms WHERE id=? LIMIT 1",
@@ -602,6 +637,9 @@ public final class RoomDao {
     }
 
     public record ActiveRoomEffect(long roomUserIndex, long effectId) {
+    }
+
+    public record CreatableRoomModel(long modelId, long visitorsMax) {
     }
 
     public record RoomEntryState(

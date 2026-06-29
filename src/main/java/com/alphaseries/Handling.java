@@ -3513,8 +3513,8 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             long maxOwnedRooms = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.rooms.own.max", 0, 0));
-            long ownedRoomCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM rooms WHERE id_owner='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0));
+            RoomDao rooms = roomDao();
+            long ownedRoomCount = rooms == null ? 0L : rooms.ownedRoomCount(NumberUtils.parseLong(userId));
             String payload = Crypto.Proc_3_0_6D2AF0(maxOwnedRooms, null, "H@");
             payload = Crypto.Proc_3_0_6D2AF0(ownedRoomCount, null, payload);
             Proc_6_244_801E80(socketIndex, payload, 0);
@@ -3531,9 +3531,13 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return;
+            }
             long maxOwnedRooms = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.rooms.own.max", 0, 0));
-            long ownedRoomCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id) FROM rooms WHERE id_owner='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "'", 0, 0));
+            long userIdValue = NumberUtils.parseLong(userId);
+            long ownedRoomCount = rooms.ownedRoomCount(userIdValue);
             if (maxOwnedRooms > 0L && ownedRoomCount >= maxOwnedRooms) {
                 return;
             }
@@ -3543,22 +3547,20 @@ public final class Handling {
             if (roomName.isEmpty() || modelName.isEmpty()) {
                 return;
             }
-            String modelRow = MySQL.Proc_5_2_6D4690("SELECT id,visitors_max FROM models WHERE create_min_level_hc <= '"
-                + handlingUserHcLevel(userId) + "' AND type='0' AND name='" + modelName + "' LIMIT 1", 0, 0);
-            String[] modelFields = modelRow.split("\t", -1);
-            long modelId = NumberUtils.parseLong(handlingField(modelFields, 0));
-            long visitorsMax = NumberUtils.parseLong(handlingField(modelFields, 1));
+            RoomDao.CreatableRoomModel model = rooms.creatableRoomModel(handlingUserHcLevel(userId), modelName).orElse(null);
+            if (model == null) {
+                return;
+            }
+            long modelId = model.modelId();
+            long visitorsMax = model.visitorsMax();
             if (modelId <= 0L) {
                 return;
             }
             if (visitorsMax <= 0L) {
                 visitorsMax = 25L;
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
-            MySQL.Proc_5_0_6D3CD0("INSERT INTO rooms(id_owner,name,visitors_max,id_model,timestamp_created) VALUES('"
-                + escapedUserId + "','" + Functions.Proc_10_11_80A9C0(roomName, 0, 0) + "','" + visitorsMax
-                + "','" + modelId + "',UNIX_TIMESTAMP())", 0, 0);
-            long roomId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM rooms", 0, 0));
+            rooms.insertRoom(userIdValue, roomName, visitorsMax, modelId);
+            long roomId = rooms.newestRoomId();
             if (roomId <= 0L) {
                 return;
             }
