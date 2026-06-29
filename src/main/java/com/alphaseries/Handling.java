@@ -9344,7 +9344,11 @@ public final class Handling {
             if (productId <= 0L || NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) != 0L) {
                 return "";
             }
-            long roomSlot = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_slot FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0));
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
+                return "";
+            }
+            long roomSlot = rooms.roomSlot(roomId);
             MovementPosition userPosition = representedUserPosition(args);
             if (!userPosition.found) {
                 userPosition = movementPosition(
