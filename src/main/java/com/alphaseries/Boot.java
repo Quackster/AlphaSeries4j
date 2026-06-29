@@ -1,6 +1,7 @@
 package com.alphaseries;
 
-import com.alphaseries.vb.Vb;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -13,8 +14,8 @@ public final class Boot {
         Map<Long, String> productsByChance = new LinkedHashMap<Long, String>();
         String chanceRows = MySQL.Proc_5_2_6D4690(
             "SELECT chance FROM settings_recycler GROUP BY settings_recycler.chance ORDER BY settings_recycler.chance DESC LIMIT 50", 0, 0);
-        for (String row : Vb.cStr(chanceRows).split("\r", -1)) {
-            long chance = Vb.val(row);
+        for (String row : StringUtils.text(chanceRows).split("\r", -1)) {
+            long chance = NumberUtils.parseLong(row);
             if (chance != 0L) {
                 productsByChance.put(chance, MySQL.Proc_5_2_6D4690(
                     "SELECT id_product FROM settings_recycler WHERE chance='" + chance + "' LIMIT 100", 0, 0));
@@ -36,7 +37,7 @@ public final class Boot {
     }
 
     public static void Proc_1_1_6BB340(Object... args) {
-        long maxProductId = Math.max(0L, Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM products", 0, 0)));
+        long maxProductId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM products", 0, 0)));
         String[] products = new String[(int) maxProductId + 1];
         String productQuery = "SELECT id,id_type,action,NULL,NULL,default_sign,status_max,handitems,distance_allowed,"
             + "is_tradeable,is_recycleable,is_signable,default_sign,min_roomrights,name,description,NULL,NULL,sprite,"
@@ -48,7 +49,7 @@ public final class Boot {
         Licence.setProductRows(products);
         DataManager.setProductRows(products);
 
-        long maxCatalogId = Math.max(0L, Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM catalog_products", 0, 0)));
+        long maxCatalogId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM catalog_products", 0, 0)));
         String[] catalogProducts = new String[(int) maxCatalogId + 1];
         String catalogQuery = "SELECT id,sprite,id_product,ctlg_pageid,type_secondary,amount,receive_badge,price_credits,"
             + "price_activitypoints,type_activitypoints,allow_gifts,min_hc_level_required,replace_defaultsign "
@@ -56,10 +57,10 @@ public final class Boot {
         cacheRowsById(catalogProducts, MySQL.Proc_5_2_6D4690(catalogQuery, 0, 0));
         Licence.setCatalogProductRows(catalogProducts);
         Licence.setDealRows("\r" + MySQL.Proc_5_2_6D4690("SELECT id,items FROM products_deals ORDER BY id ASC", "\r", 0) + "\r");
-        Licence.setRecyclerBoxProductId(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE sprite='ecotron_box' LIMIT 1", 0, 0)));
+        Licence.setRecyclerBoxProductId(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE sprite='ecotron_box' LIMIT 1", 0, 0)));
         Licence.setCounterProductIds(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_counter IS NOT NULL", 0, 0).replace('\r', '\t'));
-        Licence.setTeleportProductId(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='11' LIMIT 1", 0, 0)));
-        Licence.setMoodlightProductId(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='19' LIMIT 1", 0, 0)));
+        Licence.setTeleportProductId(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='11' LIMIT 1", 0, 0)));
+        Licence.setMoodlightProductId(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='19' LIMIT 1", 0, 0)));
         Licence.setPackageRows(MySQL.Proc_5_2_6D4690("SELECT id_product,type_secondary,id_contain,type_check FROM packages", 0, 0));
         Licence.setPetPackageRows(MySQL.Proc_5_2_6D4690("SELECT id,id_pet,id_race,color FROM packages_pets", 0, 0));
         Licence.setClubProductRows("\r" + MySQL.Proc_5_2_6D4690("SELECT id_product,months,level FROM products_containshc", "\r", 0) + "\r");
@@ -74,7 +75,7 @@ public final class Boot {
         String[] recommended = new String[100];
         long count = 0L;
         for (String row : MySQL.Proc_5_2_6D4690("SELECT id_tree FROM rooms_recommented GROUP BY id_tree", 0, 0).split("\r", -1)) {
-            long treeId = Vb.val(row);
+            long treeId = NumberUtils.parseLong(row);
             if (treeId != 0L && count < recommended.length) {
                 String roomRows = MySQL.Proc_5_2_6D4690(buildRecommendedRoomsQuery(treeId), 0, 0);
                 recommended[(int) count] = Crypto.Proc_3_0_6D2AF0(treeId, null, "") + buildRecommendedRoomsPayload(roomRows);
@@ -129,9 +130,9 @@ public final class Boot {
         Proc_1_22_6D0F00(0, 0, 0);
         buildChatSettingsCache();
         Licence.setMessengerFriendLimits(buildMessengerFriendLimitCache(
-            Vb.val(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel0", 0, 0)),
-            Vb.val(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel1", 0, 0)),
-            Vb.val(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel2", 0, 0))));
+            NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel0", 0, 0)),
+            NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel1", 0, 0)),
+            NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel2", 0, 0))));
     }
 
     public static void Proc_1_6_6C5830(Object... args) {
@@ -140,7 +141,7 @@ public final class Boot {
     }
 
     public static void Proc_1_7_6C5E10(Object... args) {
-        long maxLevelId = Math.max(0L, Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id_level) FROM bots_petlevels", 0, 0)));
+        long maxLevelId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id_level) FROM bots_petlevels", 0, 0)));
         String[] levels = new String[(int) maxLevelId + 1];
         for (Map.Entry<Long, String> entry : buildPetLevelCache(MySQL.Proc_5_2_6D4690(
                 "SELECT id_level,max_energy,max_exp,max_nutrition FROM bots_petlevels ORDER BY id_level ASC", 0, 0)).entrySet()) {
@@ -149,9 +150,9 @@ public final class Boot {
             }
         }
         Licence.setPetLevelRows(levels);
-        long commandCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(id_command) FROM bots_petcommands", 0, 0));
+        long commandCount = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT COUNT(id_command) FROM bots_petcommands", 0, 0));
         long maxCommandId = Math.max(commandCount,
-            Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id_command) FROM bots_petcommands", 0, 0)));
+            NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id_command) FROM bots_petcommands", 0, 0)));
         String[] commands = new String[(int) Math.max(0L, maxCommandId) + 1];
         PetCommandCache cache = buildPetCommandCache(MySQL.Proc_5_2_6D4690(
             "SELECT id_command,petlevel_required,command,command_action FROM bots_petcommands", 0, 0));
@@ -207,8 +208,8 @@ public final class Boot {
     }
 
     public static void Proc_1_11_6C8D10(Object... args) {
-        long privateCategoryId = Vb.val(Functions.Proc_10_0_809570("com.client.navigator.categories.default.private.id", 0, 0));
-        long publicCategoryId = Vb.val(Functions.Proc_10_0_809570("com.client.navigator.categories.default.public.id", 0, 0));
+        long privateCategoryId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.categories.default.private.id", 0, 0));
+        long publicCategoryId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.categories.default.public.id", 0, 0));
         String[] defaults = new String[3];
         defaults[0] = String.valueOf(privateCategoryId);
         defaults[2] = String.valueOf(publicCategoryId);
@@ -231,13 +232,13 @@ public final class Boot {
     public static void Proc_1_13_6C9820(Object... args) {
         String wrapRows = MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE sprite LIKE 'present_wrap*%'", "\r", 0);
         long wrapCount = countNonZeroRows(wrapRows);
-        long accessoryCount = Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.count.accessories", wrapCount, 0));
-        long colorCount = Vb.val(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.count.colors", 0, 0));
+        long accessoryCount = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.count.accessories", wrapCount, 0));
+        long colorCount = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.count.colors", 0, 0));
         Licence.setGiftWrapState("\r" + wrapRows + "\r", buildGiftWrapPayload(wrapRows, accessoryCount, colorCount));
     }
 
     public static void Proc_1_15_6CA000(Object... args) {
-        long maxPageId = Math.max(0L, Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM catalog_pages", 0, 0)));
+        long maxPageId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM catalog_pages", 0, 0)));
         String[] pages = new String[(int) maxPageId + 1];
         String pageQuery = "SELECT id,name,level_minrequired,hclevel_minrequired,is_clickable,ctlg_template,"
             + "ctlg_header_img,ctlg_special_img,ctlg_special_template,ctlg_txt1,ctlg_txt2,ctlg_txt3,ctlg_txt4,"
@@ -246,7 +247,7 @@ public final class Boot {
         for (String row : MySQL.Proc_5_2_6D4690(pageQuery, 0, 0).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                long pageId = Vb.val(fields.length > 0 ? fields[0] : "");
+                long pageId = NumberUtils.parseLong(fields.length > 0 ? fields[0] : "");
                 if (fields.length >= 21 && pageId >= 0L && pageId < pages.length) {
                     pages[(int) pageId] = buildCatalogPagePayload(fields, MySQL.Proc_5_2_6D4690(buildCatalogProductQuery(pageId), 0, 0));
                 }
@@ -277,8 +278,8 @@ public final class Boot {
                 for (String row : rootRows.split("\r", -1)) {
                     if (!row.isEmpty()) {
                         String[] fields = row.split("\t", -1);
-                        long pageId = Vb.val(fields.length > 0 ? fields[0] : "");
-                        childCounts.put(pageId, Vb.val(MySQL.Proc_5_2_6D4690(buildCatalogPageChildCountQuery(pageId, rank, hc), 0, 0)));
+                        long pageId = NumberUtils.parseLong(fields.length > 0 ? fields[0] : "");
+                        childCounts.put(pageId, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690(buildCatalogPageChildCountQuery(pageId, rank, hc), 0, 0)));
                         children.put(pageId, MySQL.Proc_5_2_6D4690(buildCatalogPageTreeQuery(pageId, rank, hc), 0, 0));
                     }
                 }
@@ -296,7 +297,7 @@ public final class Boot {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 3) {
-                    long catalogProductId = Vb.val(fields[0]);
+                    long catalogProductId = NumberUtils.parseLong(fields[0]);
                     long productId = Licence.Proc_9_2_8075F0(catalogProductId, 2, 0);
                     if (productId == 0L) {
                         productId = catalogProductId;
@@ -307,9 +308,9 @@ public final class Boot {
                     payload.append(DataManager.Proc_8_12_806C30(productId, 14, 0)).append('\2');
                     payload.append(DataManager.Proc_8_12_806C30(productId, 15, 0)).append('\2');
                     payload.append("IHHI").append(giftClass).append('\2');
-                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(fields[1]), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(fields[2]), null, ""));
-                    lookup.append('[').append(catalogProductId).append('\0').append(productId).append('\1').append(Vb.val(fields[2])).append(']');
+                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[1]), null, ""));
+                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[2]), null, ""));
+                    lookup.append('[').append(catalogProductId).append('\0').append(productId).append('\1').append(NumberUtils.parseLong(fields[2])).append(']');
                     count++;
                 }
             }
@@ -325,12 +326,12 @@ public final class Boot {
     }
 
     public static void Proc_1_20_6CF830(Object... args) {
-        long maxCategoryId = Math.max(0L, Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM faq_categories", 0, 0)));
+        long maxCategoryId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM faq_categories", 0, 0)));
         String[] categoryFaqs = new String[(int) maxCategoryId + 1];
         String categoryRows = MySQL.Proc_5_2_6D4690("SELECT id,name FROM faq_categories", 0, 0);
         Map<Long, String> faqRows = new LinkedHashMap<Long, String>();
         for (String row : categoryRows.split("\r", -1)) {
-            long categoryId = Vb.val(row);
+            long categoryId = NumberUtils.parseLong(row);
             if (categoryId >= 0L && categoryId < categoryFaqs.length) {
                 faqRows.put(categoryId, MySQL.Proc_5_2_6D4690("SELECT id,name FROM faq WHERE id_category='" + categoryId + "'", 0, 0));
             }
@@ -345,7 +346,7 @@ public final class Boot {
     }
 
     public static void Proc_1_21_6D08C0(Object... args) {
-        long maxFaqId = Math.max(0L, Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM faq", 0, 0)));
+        long maxFaqId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM faq", 0, 0)));
         String[] descriptions = new String[(int) maxFaqId + 1];
         Map<Long, String> cache = buildFaqDescriptionCache(MySQL.Proc_5_2_6D4690("SELECT id,description FROM faq", 0, 0));
         for (Map.Entry<Long, String> entry : cache.entrySet()) {
@@ -357,7 +358,7 @@ public final class Boot {
     }
 
     public static void Proc_1_22_6D0F00(Object... args) {
-        long maxId = Math.max(0L, Vb.val(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM advertisement_visitrooms", 0, 0)));
+        long maxId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM advertisement_visitrooms", 0, 0)));
         String[] visitRooms = new String[(int) maxId + 1];
         VisitRoomCache cache = buildAdvertisementVisitRoomCache(
             MySQL.Proc_5_2_6D4690("SELECT id,address FROM advertisement_visitrooms", 0, 0),
@@ -371,8 +372,8 @@ public final class Boot {
     }
 
     public static void Proc_1_23_6D1480(Object... args) {
-        String messageText = args != null && args.length >= 1 ? Vb.cStr(args[0]) : "";
-        String logChannel = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
+        String messageText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
+        String logChannel = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
         Console.Proc_2_0_6D1510(messageText, logChannel, "65280");
     }
 
@@ -380,11 +381,11 @@ public final class Boot {
         if (targetCache == null) {
             return;
         }
-        String[] rows = Vb.cStr(rowText).split("\r", -1);
+        String[] rows = StringUtils.text(rowText).split("\r", -1);
         for (String row : rows) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                long cacheIndex = Vb.val(fields[0]);
+                long cacheIndex = NumberUtils.parseLong(fields[0]);
                 if (cacheIndex >= 0 && cacheIndex < targetCache.length) {
                     targetCache[(int) cacheIndex] = row;
                 }
@@ -395,7 +396,7 @@ public final class Boot {
     public static String buildCampaignReplacementCache(String rowText) {
         long replacementCount = 0L;
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+        for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 2) {
@@ -409,7 +410,7 @@ public final class Boot {
 
     public static String buildStaffMessageList(String rowText) {
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+        for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 payload.append(row).append('\2');
             }
@@ -419,19 +420,19 @@ public final class Boot {
 
     public static String buildStaffCategoryPayload(String rootRows, Map<Long, String> childRowsByParentId) {
         StringBuilder payload = new StringBuilder();
-        for (String rootRow : Vb.cStr(rootRows).split("\r", -1)) {
+        for (String rootRow : StringUtils.text(rootRows).split("\r", -1)) {
             if (!rootRow.isEmpty()) {
                 String[] rootFields = rootRow.split("\t", -1);
                 if (rootFields.length >= 2) {
-                    long rootId = Vb.val(rootFields[0]);
+                    long rootId = NumberUtils.parseLong(rootFields[0]);
                     String childRows = childRowsByParentId == null ? "" : childRowsByParentId.get(rootId);
                     StringBuilder childPayload = new StringBuilder();
                     long childCount = 0L;
-                    for (String childRow : Vb.cStr(childRows).split("\r", -1)) {
+                    for (String childRow : StringUtils.text(childRows).split("\r", -1)) {
                         if (!childRow.isEmpty()) {
                             String[] childFields = childRow.split("\t", -1);
                             if (childFields.length >= 2) {
-                                childPayload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(childFields[0]), null, ""));
+                                childPayload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(childFields[0]), null, ""));
                                 childPayload.append(childFields[1]).append('\2');
                                 childCount++;
                             }
@@ -482,12 +483,12 @@ public final class Boot {
     public static RecyclerCache buildRecyclerCache(String chanceRows, Map<Long, String> productRowsByChance) {
         RecyclerCache cache = new RecyclerCache();
         StringBuilder payload = new StringBuilder();
-        for (String chanceRow : Vb.cStr(chanceRows).split("\r", -1)) {
+        for (String chanceRow : StringUtils.text(chanceRows).split("\r", -1)) {
             if (cache.groupCount > 49L) {
                 break;
             }
             if (!chanceRow.isEmpty()) {
-                long chanceValue = Vb.val(chanceRow);
+                long chanceValue = NumberUtils.parseLong(chanceRow);
                 long groupIndex = cache.groupCount;
                 cache.chanceByGroupIndex.put(groupIndex, chanceValue);
 
@@ -495,9 +496,9 @@ public final class Boot {
                 StringBuilder productList = new StringBuilder();
                 StringBuilder groupPayload = new StringBuilder();
                 String productRows = productRowsByChance == null ? "" : productRowsByChance.get(chanceValue);
-                for (String productRow : Vb.cStr(productRows).split("\r", -1)) {
+                for (String productRow : StringUtils.text(productRows).split("\r", -1)) {
                     if (!productRow.isEmpty()) {
-                        long productId = Vb.val(productRow);
+                        long productId = NumberUtils.parseLong(productRow);
                         if (productId > 0L) {
                             productList.append(productId).append('\2');
                             groupPayload.append(Crypto.Proc_3_0_6D2AF0(productId, null, ""));
@@ -519,15 +520,15 @@ public final class Boot {
 
     public static String buildPetRaceCache(String raceRows) {
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(raceRows).split("\r", -1)) {
+        for (String row : StringUtils.text(raceRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 6) {
                     payload.append('[').append(fields[0]).append('\t');
-                    payload.append(Vb.val(fields[1])).append('\t');
-                    payload.append(Vb.val(fields[2])).append('\t');
-                    payload.append(Vb.val(fields[3])).append('\t');
-                    payload.append(Vb.val(fields[4])).append('\t');
+                    payload.append(NumberUtils.parseLong(fields[1])).append('\t');
+                    payload.append(NumberUtils.parseLong(fields[2])).append('\t');
+                    payload.append(NumberUtils.parseLong(fields[3])).append('\t');
+                    payload.append(NumberUtils.parseLong(fields[4])).append('\t');
                     payload.append(fields[5]).append(']');
                 }
             }
@@ -537,12 +538,12 @@ public final class Boot {
 
     public static Map<Long, String> buildPetLevelCache(String levelRows) {
         Map<Long, String> cache = new LinkedHashMap<Long, String>();
-        for (String row : Vb.cStr(levelRows).split("\r", -1)) {
+        for (String row : StringUtils.text(levelRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 4) {
-                    long levelId = Vb.val(fields[0]);
-                    cache.put(levelId, Vb.val(fields[1]) + "\t" + Vb.val(fields[2]) + "\t" + Vb.val(fields[3]));
+                    long levelId = NumberUtils.parseLong(fields[0]);
+                    cache.put(levelId, NumberUtils.parseLong(fields[1]) + "\t" + NumberUtils.parseLong(fields[2]) + "\t" + NumberUtils.parseLong(fields[3]));
                 }
             }
         }
@@ -551,12 +552,12 @@ public final class Boot {
 
     public static PetCommandCache buildPetCommandCache(String commandRows) {
         PetCommandCache cache = new PetCommandCache();
-        for (String row : Vb.cStr(commandRows).split("\r", -1)) {
+        for (String row : StringUtils.text(commandRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 4) {
-                    long commandId = Vb.val(fields[0]);
-                    cache.commandById.put(commandId, commandId + "\t" + Vb.val(fields[1]) + "\t" + fields[2] + "\t" + fields[3]);
+                    long commandId = NumberUtils.parseLong(fields[0]);
+                    cache.commandById.put(commandId, commandId + "\t" + NumberUtils.parseLong(fields[1]) + "\t" + fields[2] + "\t" + fields[3]);
                     cache.commandCount++;
                 }
             }
@@ -565,14 +566,14 @@ public final class Boot {
     }
 
     public static String buildRoomEventLocaleCache(String localeRows, String existingCache) {
-        StringBuilder payload = new StringBuilder(Vb.cStr(existingCache));
-        for (String row : Vb.cStr(localeRows).split("\r", -1)) {
+        StringBuilder payload = new StringBuilder(StringUtils.text(existingCache));
+        for (String row : StringUtils.text(localeRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 2) {
                     String cacheKey = fields[0].replaceFirst("roomevent_type_", "");
                     if (!cacheKey.isEmpty()) {
-                        payload.append('\0').append(Vb.val(cacheKey)).append('\1').append(fields[1]).append('\2');
+                        payload.append('\0').append(NumberUtils.parseLong(cacheKey)).append('\1').append(fields[1]).append('\2');
                     }
                 }
             }
@@ -582,7 +583,7 @@ public final class Boot {
 
     public static String buildSettingsCache(String settingsRows, String systemDateFormat, String systemTimeFormat) {
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(settingsRows).split("\r", -1)) {
+        for (String row : StringUtils.text(settingsRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 payload.append('[').append(row.replace('\t', '=')).append(']');
             }
@@ -597,8 +598,8 @@ public final class Boot {
     public static String buildGiftWrapPayload(String wrapRows, long accessoryCount, long colorCount) {
         long wrapCount = 0L;
         StringBuilder wrapPayload = new StringBuilder();
-        for (String row : Vb.cStr(wrapRows).split("\r", -1)) {
-            long wrapId = Vb.val(row);
+        for (String row : StringUtils.text(wrapRows).split("\r", -1)) {
+            long wrapId = NumberUtils.parseLong(row);
             if (wrapId != 0L) {
                 wrapCount++;
                 wrapPayload.append(Crypto.Proc_3_0_6D2AF0(wrapId, null, ""));
@@ -630,17 +631,17 @@ public final class Boot {
         long giftCount = 0L;
         StringBuilder giftPayload = new StringBuilder();
         StringBuilder giftLookup = new StringBuilder();
-        for (String row : Vb.cStr(giftRows).split("\r", -1)) {
+        for (String row : StringUtils.text(giftRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 3) {
-                    long catalogProductId = Vb.val(fields[0]);
+                    long catalogProductId = NumberUtils.parseLong(fields[0]);
                     long productId = mapLong(productIdByCatalogProductId, catalogProductId);
                     if (productId == 0L) {
                         productId = catalogProductId;
                     }
-                    long isVip = Vb.val(fields[1]);
-                    long requiredDays = Vb.val(fields[2]);
+                    long isVip = NumberUtils.parseLong(fields[1]);
+                    long requiredDays = NumberUtils.parseLong(fields[2]);
                     String giftClass = mapLong(productTypeByProductId, productId) == 9L ? "i" : "s";
                     String giftName = mapString(nameByProductId, productId);
                     String giftDescription = mapString(descriptionByProductId, productId);
@@ -667,22 +668,22 @@ public final class Boot {
         AchievementSettingsCache cache = new AchievementSettingsCache();
         long achievementIndex = 0L;
         StringBuilder questIds = new StringBuilder();
-        for (String row : Vb.cStr(achievementRows).split("\r", -1)) {
+        for (String row : StringUtils.text(achievementRows).split("\r", -1)) {
             if (achievementIndex > 100L) {
                 break;
             }
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 7) {
-                    questIds.append(Vb.val(fields[0])).append('\2');
+                    questIds.append(NumberUtils.parseLong(fields[0])).append('\2');
                     cache.rowsByIndex.put(achievementIndex, new String[] {
-                        String.valueOf(Vb.val(fields[0])),
+                        String.valueOf(NumberUtils.parseLong(fields[0])),
                         fields[1],
-                        String.valueOf(Vb.val(fields[2])),
-                        String.valueOf(Vb.val(fields[3])),
-                        String.valueOf(Vb.val(fields[4])),
-                        String.valueOf(Vb.val(fields[5])),
-                        String.valueOf(Vb.val(fields[6]))
+                        String.valueOf(NumberUtils.parseLong(fields[2])),
+                        String.valueOf(NumberUtils.parseLong(fields[3])),
+                        String.valueOf(NumberUtils.parseLong(fields[4])),
+                        String.valueOf(NumberUtils.parseLong(fields[5])),
+                        String.valueOf(NumberUtils.parseLong(fields[6]))
                     });
                     achievementIndex++;
                 }
@@ -720,14 +721,14 @@ public final class Boot {
     public static String buildRoomCategoryPayload(String categoryRows, long rankIndex, long hcLevel) {
         long categoryCount = 0L;
         StringBuilder categoryPayload = new StringBuilder();
-        for (String row : Vb.cStr(categoryRows).split("\r", -1)) {
+        for (String row : StringUtils.text(categoryRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 5) {
-                    long categoryId = Vb.val(fields[0]);
-                    long hasTrading = Vb.val(fields[2]);
-                    long minRank = Vb.val(fields[3]);
-                    long minHcLevel = Vb.val(fields[4]);
+                    long categoryId = NumberUtils.parseLong(fields[0]);
+                    long hasTrading = NumberUtils.parseLong(fields[2]);
+                    long minRank = NumberUtils.parseLong(fields[3]);
+                    long minHcLevel = NumberUtils.parseLong(fields[4]);
                     if (rankIndex >= minRank && hcLevel >= minHcLevel) {
                         categoryPayload.append(Crypto.Proc_3_0_6D2AF0(categoryId, null, ""));
                         categoryPayload.append(fields[1]).append('\2');
@@ -755,11 +756,11 @@ public final class Boot {
         FaqCategoryCache cache = new FaqCategoryCache();
         long categoryCount = 0L;
         StringBuilder categoryPayload = new StringBuilder();
-        for (String categoryRow : Vb.cStr(categoryRows).split("\r", -1)) {
+        for (String categoryRow : StringUtils.text(categoryRows).split("\r", -1)) {
             if (!categoryRow.isEmpty()) {
                 String[] categoryFields = categoryRow.split("\t", -1);
                 if (categoryFields.length >= 2) {
-                    long categoryId = Vb.val(categoryFields[0]);
+                    long categoryId = NumberUtils.parseLong(categoryFields[0]);
                     String faqRows = faqRowsByCategoryId == null ? "" : faqRowsByCategoryId.get(categoryId);
                     String faqPayload = buildFaqNamePayload(faqRows);
                     long faqCount = countRowsWithFields(faqRows, 2);
@@ -776,11 +777,11 @@ public final class Boot {
 
     public static Map<Long, String> buildFaqDescriptionCache(String faqRows) {
         Map<Long, String> cache = new LinkedHashMap<Long, String>();
-        for (String row : Vb.cStr(faqRows).split("\r", -1)) {
+        for (String row : StringUtils.text(faqRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 2) {
-                    long faqId = Vb.val(fields[0]);
+                    long faqId = NumberUtils.parseLong(fields[0]);
                     String descriptionText = fields[1].replace('\n', '\r');
                     cache.put(faqId, Crypto.Proc_3_0_6D2AF0(faqId, null, "") + descriptionText + '\2');
                 }
@@ -791,12 +792,12 @@ public final class Boot {
 
     public static VisitRoomCache buildAdvertisementVisitRoomCache(String visitRoomRows, String assetPath) {
         VisitRoomCache cache = new VisitRoomCache();
-        for (String row : Vb.cStr(visitRoomRows).split("\r", -1)) {
+        for (String row : StringUtils.text(visitRoomRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 2) {
-                    long visitRoomId = Vb.val(fields[0]);
-                    cache.payloadByVisitRoomId.put(visitRoomId, Vb.cStr(assetPath) + visitRoomId + '\2' + fields[1] + '\2');
+                    long visitRoomId = NumberUtils.parseLong(fields[0]);
+                    cache.payloadByVisitRoomId.put(visitRoomId, StringUtils.text(assetPath) + visitRoomId + '\2' + fields[1] + '\2');
                     cache.count++;
                 }
             }
@@ -847,19 +848,19 @@ public final class Boot {
     public static String buildRecommendedRoomsPayload(String roomRows) {
         long roomCount = 0L;
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(roomRows).split("\r", -1)) {
+        for (String row : StringUtils.text(roomRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 27) {
                     roomCount++;
-                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(fields[0]), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(fields[1]), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(fields[2]), null, ""));
+                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[0]), null, ""));
+                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[1]), null, ""));
+                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[2]), null, ""));
                     for (int fieldIndex = 3; fieldIndex <= 24; fieldIndex++) {
                         payload.append(fields[fieldIndex]).append('\2');
                     }
-                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(fields[25]), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(fields[26]), null, ""));
+                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[25]), null, ""));
+                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[26]), null, ""));
                 }
             }
         }
@@ -867,12 +868,12 @@ public final class Boot {
     }
 
     public static String Proc_1_14_6C9DD0(Object... args) {
-        long pageId = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
-        long parentId = args != null && args.length >= 2 ? Vb.val(args[1]) : 0L;
-        String caption = args != null && args.length >= 3 ? Vb.cStr(args[2]) : "";
-        long visibleState = args != null && args.length >= 4 ? Vb.val(args[3]) : 0L;
-        long iconId = args != null && args.length >= 5 ? Vb.val(args[4]) : 0L;
-        long childCount = args != null && args.length >= 6 ? Vb.val(args[5]) : 0L;
+        long pageId = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
+        long parentId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
+        String caption = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
+        long visibleState = args != null && args.length >= 4 ? NumberUtils.parseLong(args[3]) : 0L;
+        long iconId = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
+        long childCount = args != null && args.length >= 6 ? NumberUtils.parseLong(args[5]) : 0L;
 
         return "0"
             + Crypto.Proc_3_0_6D2AF0(pageId, null, "")
@@ -887,10 +888,10 @@ public final class Boot {
         if (fields == null || fields.length < 21) {
             return "";
         }
-        long pageId = Vb.val(fields[0]);
+        long pageId = NumberUtils.parseLong(fields[0]);
         StringBuilder payload = new StringBuilder();
         payload.append(fields[1]).append('\2');
-        payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(fields[4]), null, ""));
+        payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[4]), null, ""));
         payload.append(fields[5]).append('\2');
         payload.append(fields[6]).append('\2');
         payload.append(fields[7]).append('\2');
@@ -917,7 +918,7 @@ public final class Boot {
     public static String buildCatalogProductPayload(long pageId, String productRows) {
         long productCount = 0L;
         StringBuilder productPayload = new StringBuilder();
-        for (String row : Vb.cStr(productRows).split("\r", -1)) {
+        for (String row : StringUtils.text(productRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 10) {
@@ -933,11 +934,11 @@ public final class Boot {
         if (fields == null || fields.length < 10) {
             return "";
         }
-        long catalogProductId = Vb.val(fields[0]);
-        long productId = Vb.val(fields[1]);
+        long catalogProductId = NumberUtils.parseLong(fields[0]);
+        long productId = NumberUtils.parseLong(fields[1]);
         long productType = Licence.Proc_9_0_806F70(productId, 1, 0);
         String productClass = catalogProductClass(productType);
-        long amountValue = Vb.val(fields[6]);
+        long amountValue = NumberUtils.parseLong(fields[6]);
         if (amountValue <= 0L) {
             amountValue = 1L;
         }
@@ -946,13 +947,13 @@ public final class Boot {
             + fields[4] + '\2'
             + Crypto.Proc_3_0_6D2AF0(productId, null, "")
             + productClass + '\2'
-            + Crypto.Proc_3_0_6D2AF0(Vb.val(fields[2]), null, "")
-            + Crypto.Proc_3_0_6D2AF0(Vb.val(fields[3]), null, "")
-            + Crypto.Proc_3_0_6D2AF0(Vb.val(fields[5]), null, "")
+            + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[2]), null, "")
+            + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[3]), null, "")
+            + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[5]), null, "")
             + Crypto.Proc_3_0_6D2AF0(amountValue, null, "")
             + fields[7] + '\2'
-            + Crypto.Proc_3_0_6D2AF0(Vb.val(fields[8]), null, "")
-            + Crypto.Proc_3_0_6D2AF0(Vb.val(fields[9]), null, "");
+            + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[8]), null, "")
+            + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[9]), null, "");
     }
 
     public static String buildCatalogProductQuery(long pageId) {
@@ -974,11 +975,11 @@ public final class Boot {
             Map<Long, String> childRowsByParentId, long rankIndex, long hcLevel) {
         long rootCount = 0L;
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(rootRows).split("\r", -1)) {
+        for (String row : StringUtils.text(rootRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 6 && catalogPageVisible(fields, rankIndex, hcLevel)) {
-                    long pageId = Vb.val(fields[0]);
+                    long pageId = NumberUtils.parseLong(fields[0]);
                     long childCount = mapLong(childCountByPageId, pageId);
                     payload.append(buildCatalogPageTreeEntry(fields, childCount));
                     payload.append(buildCatalogPageChildPayload(childRowsByParentId == null ? "" : childRowsByParentId.get(pageId),
@@ -992,7 +993,7 @@ public final class Boot {
 
     public static String buildCatalogPageChildPayload(String childRows, long rankIndex, long hcLevel) {
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(childRows).split("\r", -1)) {
+        for (String row : StringUtils.text(childRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 6 && catalogPageVisible(fields, rankIndex, hcLevel)) {
@@ -1007,11 +1008,11 @@ public final class Boot {
         if (fields == null || fields.length < 6) {
             return "";
         }
-        long pageId = Vb.val(fields[0]);
+        long pageId = NumberUtils.parseLong(fields[0]);
         String pageName = fields[1];
-        long colorId = Vb.val(fields[2]);
-        long iconId = Vb.val(fields[3]);
-        long visibleState = Vb.val(fields[5]);
+        long colorId = NumberUtils.parseLong(fields[2]);
+        long iconId = NumberUtils.parseLong(fields[3]);
+        long visibleState = NumberUtils.parseLong(fields[5]);
         return Proc_1_14_6C9DD0(pageId, colorId, pageName, visibleState, iconId, childCount);
     }
 
@@ -1033,8 +1034,8 @@ public final class Boot {
         if (fields == null || fields.length < 6) {
             return false;
         }
-        boolean visible = Vb.val(fields[5]) != 0L;
-        if (Vb.val(fields[4]) != 0L) {
+        boolean visible = NumberUtils.parseLong(fields[5]) != 0L;
+        if (NumberUtils.parseLong(fields[4]) != 0L) {
             visible = Functions.Proc_10_1_809790(rankIndex, "", "fuse_developer", hcLevel);
         }
         return visible;
@@ -1042,18 +1043,18 @@ public final class Boot {
 
     public static String appendPermissionPayload(long rankIndex, long hcLevel, String permissionName, String payload) {
         if (Functions.Proc_10_1_809790(rankIndex, "", permissionName, hcLevel)) {
-            return permissionName + '\2' + Vb.cStr(payload);
+            return permissionName + '\2' + StringUtils.text(payload);
         }
         return "";
     }
 
     private static String buildFaqNamePayload(String faqRows) {
         StringBuilder payload = new StringBuilder();
-        for (String row : Vb.cStr(faqRows).split("\r", -1)) {
+        for (String row : StringUtils.text(faqRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 2) {
-                    payload.append(Crypto.Proc_3_0_6D2AF0(Vb.val(fields[0]), null, ""));
+                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[0]), null, ""));
                     payload.append(fields[1]).append('\2');
                 }
             }
@@ -1063,7 +1064,7 @@ public final class Boot {
 
     private static long countRowsWithFields(String rowText, int minimumFieldCount) {
         long count = 0L;
-        for (String row : Vb.cStr(rowText).split("\r", -1)) {
+        for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty() && row.split("\t", -1).length >= minimumFieldCount) {
                 count++;
             }
@@ -1073,8 +1074,8 @@ public final class Boot {
 
     private static long countNonZeroRows(String rowText) {
         long count = 0L;
-        for (String row : Vb.cStr(rowText).split("\r", -1)) {
-            if (Vb.val(row) != 0L) {
+        for (String row : StringUtils.text(rowText).split("\r", -1)) {
+            if (NumberUtils.parseLong(row) != 0L) {
                 count++;
             }
         }
@@ -1082,19 +1083,19 @@ public final class Boot {
     }
 
     private static String clientDateFormat(String formatText) {
-        return Vb.cStr(formatText).replace("d", "dd").replace("Y", "yyyy").replace("m", "mm");
+        return StringUtils.text(formatText).replace("d", "dd").replace("Y", "yyyy").replace("m", "mm");
     }
 
     private static String clientTimeFormat(String formatText) {
-        return Vb.cStr(formatText).replace("i", "nn").replace("h", "hh").replace("s", "ss");
+        return StringUtils.text(formatText).replace("i", "nn").replace("h", "hh").replace("s", "ss");
     }
 
     private static String mysqlDateFormat(String formatText) {
-        return Vb.cStr(formatText).replace("d", "%d").replace("Y", "%Y").replace("m", "%m");
+        return StringUtils.text(formatText).replace("d", "%d").replace("Y", "%Y").replace("m", "%m");
     }
 
     private static String mysqlTimeFormat(String formatText) {
-        return Vb.cStr(formatText).replace("i", "%i").replace("h", "%H").replace("s", "%s");
+        return StringUtils.text(formatText).replace("i", "%i").replace("h", "%H").replace("s", "%s");
     }
 
     private static long mapLong(Map<Long, Long> valuesById, long id) {
