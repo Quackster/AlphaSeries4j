@@ -11524,16 +11524,21 @@ public final class Handling {
 
     public static Map<String, Long> achievementCurrentLevels(String userId, String achievementRows) {
         Map<String, Long> result = new HashMap<>();
-        String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+        UserDao users = userDao();
+        long userIdValue = NumberUtils.parseLong(userId);
         for (String row : StringUtils.text(achievementRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 String badgePrefix = handlingField(fields, 1);
                 if (!badgePrefix.isEmpty() && !result.containsKey(badgePrefix)) {
-                    String escapedBadgePrefix = Functions.Proc_10_11_80A9C0(badgePrefix, 0, 0);
-                    long currentLevel = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT REPLACE(id_badge,'"
-                        + escapedBadgePrefix + "','') FROM users_badges WHERE id_user='" + escapedUserId
-                        + "' AND id_badge LIKE '" + escapedBadgePrefix + "%' ORDER BY id DESC LIMIT 1", 0, 0));
+                    long currentLevel = 0L;
+                    if (users != null && userIdValue > 0L) {
+                        try {
+                            currentLevel = users.badgeLevelByPrefix(userIdValue, badgePrefix);
+                        } catch (Exception ignored) {
+                            currentLevel = 0L;
+                        }
+                    }
                     result.put(badgePrefix, Math.max(0L, currentLevel));
                 }
             }

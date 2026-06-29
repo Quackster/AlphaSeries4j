@@ -241,6 +241,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `RecyclerDao` and routed fallback recycler reward-product loading through typed prepared reads instead of raw row strings in `Handling`.
 - Routed represented dimmer furniture lookup through `FurnitureDao`, replacing another raw furniture/product SQL helper in `Handling`.
 - Routed messenger friend summary lookup through typed `MessengerDao.MessengerFriend` records, replacing raw user SQL and tab-delimited summary parsing in `Handling`.
+- Routed achievement badge current-level lookups through `UserDao`, replacing raw `users_badges` SQL in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -254,9 +255,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 64
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 63
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12529 lines
+- `Handling.java`: 12534 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines

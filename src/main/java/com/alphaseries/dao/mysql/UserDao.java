@@ -324,6 +324,17 @@ public final class UserDao {
             .orElse("");
     }
 
+    public long badgeLevelByPrefix(long userId, String badgePrefix) throws SQLException {
+        return database.queryOne(
+            "SELECT REPLACE(id_badge,?,'') FROM users_badges WHERE id_user=? AND id_badge LIKE ? "
+                + "ORDER BY id DESC LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            badgePrefix,
+            userId,
+            badgePrefix + "%")
+            .orElse(0L);
+    }
+
     public long activityPoints(long userId, long pointType) throws SQLException {
         return database.queryOne(
             "SELECT activitypoints_" + pointType + " FROM users WHERE id=? LIMIT 1",
