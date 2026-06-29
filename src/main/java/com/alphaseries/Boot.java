@@ -170,9 +170,10 @@ public final class Boot {
     }
 
     public static void Proc_1_9_6C6DF0(Object... args) {
-        Licence.global_00829098 = "0" + MySQL.Proc_5_2_6D4690(
-            "SELECT id_room,position_x,position_y,id_warp_room,warp_x,warp_y,is_special FROM rooms_warpspaces", "\r", 0) + "\r";
-        Licence.global_0082909C = MySQL.Proc_5_2_6D4690("SELECT  id_room,is_open FROM  rooms_specialgates", "\r", 0) + "\r";
+        Licence.setRoomPortalSettings(
+            "0" + MySQL.Proc_5_2_6D4690(
+                "SELECT id_room,position_x,position_y,id_warp_room,warp_x,warp_y,is_special FROM rooms_warpspaces", "\r", 0) + "\r",
+            MySQL.Proc_5_2_6D4690("SELECT  id_room,is_open FROM  rooms_specialgates", "\r", 0) + "\r");
         Proc_1_16_6CCA60(0, 0, 0);
         String systemDate = Functions.Proc_10_0_809570("com.system.format.date", "", 0);
         String systemTime = Functions.Proc_10_0_809570("com.system.format.time", "", 0);

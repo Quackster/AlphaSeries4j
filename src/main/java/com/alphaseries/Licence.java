@@ -18,6 +18,7 @@ import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.room.RepresentedRoomSlots;
+import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.wired.WiredSettings;
@@ -244,6 +245,15 @@ public final class Licence {
 
     public static void setRepresentedRoomSlots(RepresentedRoomSlots representedRoomSlots) {
         global_0082930C = representedRoomSlots == null ? "" : representedRoomSlots.availableSlotMarkers();
+    }
+
+    public static RoomPortalSettings roomPortalSettings() {
+        return RoomPortalSettings.fromLegacy(global_00829098, global_0082909C);
+    }
+
+    public static void setRoomPortalSettings(String warpSpaceRows, String specialGateRows) {
+        global_00829098 = StringUtils.text(warpSpaceRows);
+        global_0082909C = StringUtils.text(specialGateRows);
     }
 
     public static GameServerSessionState gameServerSessionState() {

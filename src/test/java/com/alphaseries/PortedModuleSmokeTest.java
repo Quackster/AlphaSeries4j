@@ -804,6 +804,8 @@ public final class PortedModuleSmokeTest {
         Boot.Proc_1_8_6C6850();
         assertEquals(true, DataManager.global_008291AC.contains("party"));
         Boot.Proc_1_9_6C6DF0();
+        assertEquals(Licence.global_00829098, Licence.roomPortalSettings().warpSpaceRows());
+        assertEquals(Licence.global_0082909C, Licence.roomPortalSettings().specialGateRows());
         assertEquals(true, Functions.global_0082928C.contains("com.mysql.format.time=%H:%i:%s"));
         Boot.Proc_1_11_6C8D10();
         Boot.Proc_1_12_6C8EF0();

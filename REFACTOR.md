@@ -47,6 +47,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.pet.RepresentedBotRegistry` as a typed adapter around represented bot allocation markers and bot record caches previously manipulated as raw `Licence` strings.
 - Added `com.alphaseries.game.quest.QuestSettings` as a typed adapter around cached quest rows previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.recycler.RecyclerSettings` as a typed adapter around recycler status payload, reward groups, and ecotron box product state previously walked through `Licence` globals.
+- Added `com.alphaseries.game.room.RoomPortalSettings` as a typed adapter around room warp-space and special-gate caches previously written directly through raw `Licence` globals.
 - Added `com.alphaseries.game.room.RepresentedRoomSlots` as a typed adapter around represented room slot allocation markers previously manipulated as a raw `Licence` string.
 - Added `com.alphaseries.game.session.GameServerSessionState` as a typed adapter around queued game-server packet data and ready-session markers previously manipulated as raw `Licence` strings.
 - Added `com.alphaseries.game.session.SessionRegistry` as a typed adapter around the legacy `Licence.global_00829268` session cache.
