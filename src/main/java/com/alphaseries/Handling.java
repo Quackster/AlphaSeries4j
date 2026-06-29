@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.UserDao;
+import com.alphaseries.dao.mysql.ClubDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -462,7 +463,11 @@ public final class Handling {
             }
             long offerCount = 0L;
             StringBuilder offerPayload = new StringBuilder();
-            String offerRows = MySQL.Proc_5_2_6D4690("SELECT id,sprite_name,months,level,price_credits FROM products_club ORDER BY id ASC", 0, 0);
+            ClubDao clubDao = clubDao();
+            if (clubDao == null) {
+                return;
+            }
+            String offerRows = clubDao.clubProductRows();
             for (String row : offerRows.split("\r", -1)) {
                 if (!row.isEmpty()) {
                     String[] fields = row.split("\t", -1);
@@ -479,9 +484,7 @@ public final class Handling {
                     }
                 }
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT level_hc,hc_days,hc2_days,hc_periods,hc2_periods,hc_presents,"
-                + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0) FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            String rowText = clubDao.userClubStatusRow(NumberUtils.parseLong(userId));
             String[] userFields = rowText.split("\t", -1);
             long hcLevel = NumberUtils.parseLong(handlingField(userFields, 0));
             long hcDays = NumberUtils.parseLong(handlingField(userFields, 1));
@@ -11992,6 +11995,11 @@ public final class Handling {
     private static UserDao userDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new UserDao(database);
+    }
+
+    private static ClubDao clubDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new ClubDao(database);
     }
 
     private static String[] normalizeRows(Object rowSource) {
