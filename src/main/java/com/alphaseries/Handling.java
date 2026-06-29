@@ -24,6 +24,7 @@ import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
+import com.alphaseries.game.room.RoomUserEntryRow;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.session.SocketMarkerSet;
@@ -2513,28 +2514,26 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT users.id,users.name,users.figure,users.motto,users.gender,"
-                + "models.position_x,models.position_y,rooms.id_slot FROM users,rooms,models WHERE users.id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND rooms.id='" + roomId
-                + "' AND models.id=rooms.id_model LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
                 return;
             }
-            String[] fields = rowText.split("\t", -1);
+            RoomUserEntryRow entry = rooms.roomUserEntry(NumberUtils.parseLong(userId), roomId).orElse(null);
+            if (entry == null) {
+                return;
+            }
             long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
-            long positionX = NumberUtils.parseLong(handlingField(fields, 5));
-            long positionY = NumberUtils.parseLong(handlingField(fields, 6));
             String positionZ = "0.0";
             long directionValue = 0L;
             String entryPayload = Proc_6_41_712730(
-                NumberUtils.parseLong(handlingField(fields, 0)),
-                handlingField(fields, 1),
-                handlingField(fields, 2),
-                handlingField(fields, 3),
-                handlingField(fields, 4),
+                entry.userId(),
+                entry.name(),
+                entry.figure(),
+                entry.motto(),
+                entry.gender(),
                 roomUserIndex,
-                positionX,
-                positionY,
+                entry.positionX(),
+                entry.positionY(),
                 positionZ,
                 directionValue,
                 0);

@@ -1,6 +1,7 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.room.RoomUserEntryRow;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -143,6 +144,24 @@ public final class RoomDao {
                 resultSet.getLong(2),
                 resultSet.getLong(3)),
             userId);
+    }
+
+    public Optional<RoomUserEntryRow> roomUserEntry(long userId, long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT users.id,users.name,users.figure,users.motto,users.gender,"
+                + "models.position_x,models.position_y,rooms.id_slot FROM users,rooms,models "
+                + "WHERE users.id=? AND rooms.id=? AND models.id=rooms.id_model LIMIT 1",
+            resultSet -> new RoomUserEntryRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getString(4),
+                resultSet.getString(5),
+                resultSet.getLong(6),
+                resultSet.getLong(7),
+                resultSet.getLong(8)),
+            userId,
+            roomId);
     }
 
     public int closeVisitById(long visitId) throws SQLException {

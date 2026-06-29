@@ -112,6 +112,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added typed badge rows and routed badge inventory, equipped badge, and tag list reads through `UserDao` with typed `SocialPayloads` overloads.
 - Routed badge equip slot clearing and updates through `UserDao`, replacing raw badge update SQL in `Handling`.
 - Routed simple floor item room-slot lookup through `RoomDao`, replacing another raw room SQL lookup in `Handling`.
+- Added typed room-user entry rows and routed self-entry payload setup through `RoomDao`, replacing tab-delimited room/user/model parsing in `Handling`.
 - Added `com.alphaseries.dao.mysql.TradeDao` and routed trade ownership updates/log insertion through prepared DAO methods.
 - Expanded `com.alphaseries.dao.mysql.RoomDao` for room settings, rights, icon, door-status, and event create/edit/delete operations, and routed homeroom updates through `UserDao`.
 - Expanded `RoomDao`/`UserDao` for shared `Handling` socket, active-room, permission, room-right, category visibility, and room-ban helper queries.
@@ -190,9 +191,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 463
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 240
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 239
 - `Boot.java`: 1196 lines
-- `Handling.java`: 12443 lines
+- `Handling.java`: 12442 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 920 lines
