@@ -2377,17 +2377,16 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            String roomRow = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms.id_slot,NULL,models.name,models.id,rooms.id_floor,"
-                + "rooms.id_wallpaper,rooms.id_landscape,rooms.rate,models.map,models.position_x,models.position_y,NULL,"
-                + "rooms.name,rooms.disable_walls,rooms.allow_otherspets,rooms.allow_walkthrough,rooms.allow_feedpets,models.type,"
-                + "rooms.visitors_primaryid FROM rooms,models WHERE rooms.id='" + roomId
-                + "' AND models.id=rooms.id_model LIMIT 1", 0, 0);
-            if (roomRow.isEmpty()) {
+            RoomDao rooms = roomDao();
+            if (rooms == null) {
                 return;
             }
-            String[] fields = roomRow.split("\t", -1);
-            long modelId = NumberUtils.parseLong(handlingField(fields, 4));
-            String modelPayload = normalizeRoomModelMap(handlingField(fields, 9));
+            RoomDao.RoomModelEntry roomEntry = rooms.roomModelEntry(roomId).orElse(null);
+            if (roomEntry == null) {
+                return;
+            }
+            long modelId = roomEntry.modelId();
+            String modelPayload = normalizeRoomModelMap(roomEntry.modelMap());
             Proc_6_244_801E80(socketIndex, "Bf" + "/client.php" + '\2', 0);
             Proc_6_244_801E80(socketIndex, "AE" + roomId + '\2' + "H", 0);
             if (!modelPayload.isEmpty()) {
