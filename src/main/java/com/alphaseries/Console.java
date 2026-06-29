@@ -1,6 +1,7 @@
 package com.alphaseries;
 
-import com.alphaseries.vb.Vb;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,22 +14,22 @@ public final class Console {
     }
 
     public static void Proc_2_0_6D1510(Object... args) {
-        String messageText = args != null && args.length >= 1 ? Vb.cStr(args[0]) : "";
-        String sourceName = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
-        long foreColor = args != null && args.length >= 3 ? Vb.val(args[2]) : 0xFFFFFFL;
+        String messageText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
+        String sourceName = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
+        long foreColor = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0xFFFFFFL;
         appendConsoleLine(formatConsoleLine(messageText, sourceName, true), foreColor);
     }
 
     public static void Proc_2_1_6D1B60(Object... args) {
-        String messageText = args != null && args.length >= 1 ? Vb.cStr(args[0]) : "";
-        long foreColor = args != null && args.length >= 3 ? Vb.val(args[2]) : 0xFFFFFFL;
+        String messageText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
+        long foreColor = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0xFFFFFFL;
         appendConsoleLine(formatConsoleLine(messageText, "", false), foreColor);
     }
 
     public static void Proc_2_2_6D21D0(Object... args) {
-        String messageText = args != null && args.length >= 1 ? Vb.cStr(args[0]) : "";
-        String sourceName = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
-        long foreColor = args != null && args.length >= 3 ? Vb.val(args[2]) : 0xFFFFFFL;
+        String messageText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
+        String sourceName = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
+        long foreColor = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0xFFFFFFL;
         appendConsoleLine(formatConsoleLine(messageText, sourceName, false), foreColor);
     }
 
@@ -48,7 +49,7 @@ public final class Console {
     }
 
     public static String Proc_2_4_6D28B0(Object... args) {
-        long value = args != null && args.length >= 1 ? Vb.val(args[0]) : 0L;
+        long value = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
         if (value < 0L) {
             value = 0L;
         }
@@ -65,7 +66,7 @@ public final class Console {
     }
 
     public static long delayMilliseconds(Object secondsValue) {
-        String text = Vb.cStr(secondsValue).trim().replace(',', '.');
+        String text = StringUtils.text(secondsValue).trim().replace(',', '.');
         if (text.isEmpty()) {
             return 0L;
         }
@@ -85,8 +86,8 @@ public final class Console {
     }
 
     public static String formatConsoleLine(String messageText, String sourceName, boolean alwaysPrefix) {
-        String message = Vb.cStr(messageText);
-        String source = Vb.cStr(sourceName);
+        String message = StringUtils.text(messageText);
+        String source = StringUtils.text(sourceName);
         if (alwaysPrefix || (!source.isEmpty() && !"HIDDEN".equalsIgnoreCase(source))) {
             return "[" + source + "] " + message;
         }

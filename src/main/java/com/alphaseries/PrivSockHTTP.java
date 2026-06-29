@@ -1,6 +1,7 @@
 package com.alphaseries;
 
-import com.alphaseries.vb.Vb;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -38,15 +39,19 @@ public final class PrivSockHTTP {
     }
 
     public static String buildGetRequest(String requestPath, String requestHost, String requestPort) {
-        if (Vb.cStr(requestPath).isEmpty() || Vb.cStr(requestHost).isEmpty()) {
+        String path = StringUtils.text(requestPath);
+        String host = StringUtils.text(requestHost);
+        String portText = StringUtils.text(requestPort);
+        if (path.isEmpty() || host.isEmpty()) {
             return "";
         }
         String hostPort = "";
-        if (!Vb.cStr(requestPort).isEmpty() && Vb.val(requestPort) != 80L) {
-            hostPort = ":" + Vb.val(requestPort);
+        long port = NumberUtils.parseLong(portText);
+        if (!portText.isEmpty() && port != 80L) {
+            hostPort = ":" + port;
         }
-        return "GET " + requestPath + " HTTP/1.1\r\n"
-            + "Host:   " + requestHost + hostPort + "\r\n"
+        return "GET " + path + " HTTP/1.1\r\n"
+            + "Host:   " + host + hostPort + "\r\n"
             + "Connection:   keep-alive\r\n"
             + "Accept:   application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5\r\n"
             + "User-Agent:   FireFox/1.0\r\n"
@@ -55,7 +60,7 @@ public final class PrivSockHTTP {
     }
 
     public static String readHTTP(Object url, Object action) {
-        String urlText = Vb.cStr(url);
+        String urlText = StringUtils.text(url);
         if (urlText.isEmpty()) {
             return "";
         }
