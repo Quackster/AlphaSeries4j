@@ -4760,14 +4760,18 @@ public final class Handling {
             if (furnitureId <= 0L) {
                 return;
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_product,id_owner FROM furnitures WHERE id='"
-                + furnitureId + "' AND id_room='" + roomId + "' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return;
             }
-            String[] fields = rowText.split("\t", -1);
-            long productId = NumberUtils.parseLong(handlingField(fields, 0));
-            String ownerId = String.valueOf((long) NumberUtils.parseLong(handlingField(fields, 1)));
+            FurnitureDao.RoomFurnitureOwnerProduct furnitureProduct = furniture
+                .roomFurnitureOwnerProduct(furnitureId, roomId)
+                .orElse(null);
+            if (furnitureProduct == null) {
+                return;
+            }
+            long productId = furnitureProduct.productId();
+            String ownerId = String.valueOf(furnitureProduct.ownerId());
             if (productId <= 0L || ownerId.isEmpty() || "0".equals(ownerId)) {
                 return;
             }
@@ -4778,10 +4782,7 @@ public final class Handling {
             if (!handlingUserHasRoomRight(userId, roomId) && !ownerId.equals(userId) && !canPickUpAny) {
                 return;
             }
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_room=NULL,position_x=NULL,position_y=NULL,position_z=NULL,"
-                + "position_r='0',position_wall=NULL,id_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "',task_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "',task_time=UNIX_TIMESTAMP() WHERE id='" + furnitureId + "' LIMIT 1", 0, 0);
+            furniture.moveRoomFurnitureToInventory(furnitureId, NumberUtils.parseLong(userId));
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2', 0);
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
