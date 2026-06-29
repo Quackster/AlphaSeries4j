@@ -10,7 +10,6 @@ import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
-import com.alphaseries.vb.Vb;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -532,14 +531,14 @@ public final class Functions {
             return 0L;
         }
         try {
-            long userId = Vb.val(args[0]);
-            long hcRank = Vb.val(args[1]);
-            long currentPeriods = Vb.val(args[2]);
-            long paidDays = args.length >= 4 ? Vb.val(args[3]) : 0L;
+            long userId = NumberUtils.parseLong(args[0]);
+            long hcRank = NumberUtils.parseLong(args[1]);
+            long currentPeriods = NumberUtils.parseLong(args[2]);
+            long paidDays = args.length >= 4 ? NumberUtils.parseLong(args[3]) : 0L;
             if (userId <= 0L) {
                 return 0L;
             }
-            long giftIncrementDefault = Vb.val(Proc_10_0_809570(
+            long giftIncrementDefault = NumberUtils.parseLong(Proc_10_0_809570(
                 "com.server.socket.game.club.gifts.hcrank" + hcRank + ".amount", 0, 0));
             MySQL.Proc_5_0_6D3CD0(clubPeriodUpdateQuery(userId, hcRank, currentPeriods, paidDays, giftIncrementDefault), 0, 0);
             return 1L;
@@ -557,9 +556,9 @@ public final class Functions {
             return 0L;
         }
         try {
-            long roomId = Vb.val(args[0]);
-            long positionX = Vb.val(args[1]);
-            long positionY = Vb.val(args[2]);
+            long roomId = NumberUtils.parseLong(args[0]);
+            long positionX = NumberUtils.parseLong(args[1]);
+            long positionY = NumberUtils.parseLong(args[2]);
             if (roomId <= 0L) {
                 return 1L;
             }
@@ -586,9 +585,9 @@ public final class Functions {
             return 0L;
         }
         try {
-            long botEntityId = Vb.val(args[0]);
-            long positionX = Vb.val(args[1]);
-            long positionY = Vb.val(args[2]);
+            long botEntityId = NumberUtils.parseLong(args[0]);
+            long positionX = NumberUtils.parseLong(args[1]);
+            long positionY = NumberUtils.parseLong(args[2]);
             if (botEntityId <= 0L) {
                 return 0L;
             }
@@ -619,8 +618,8 @@ public final class Functions {
         if (args == null || args.length < 2) {
             return false;
         }
-        try (InputStream input = new URL(Vb.cStr(args[0])).openStream()) {
-            Files.copy(input, Paths.get(Vb.cStr(args[1])), StandardCopyOption.REPLACE_EXISTING);
+        try (InputStream input = new URL(StringUtils.text(args[0])).openStream()) {
+            Files.copy(input, Paths.get(StringUtils.text(args[1])), StandardCopyOption.REPLACE_EXISTING);
             return true;
         } catch (Exception ex) {
             return false;
@@ -683,7 +682,7 @@ public final class Functions {
     }
 
     public static String userInventoryCachePath(long ownerId) {
-        Path basePath = Paths.get(Vb.cStr(applicationPath));
+        Path basePath = Paths.get(StringUtils.text(applicationPath));
         return basePath.resolve("cache").resolve("users").resolve(ownerId + ".cache").toString();
     }
 
@@ -696,13 +695,13 @@ public final class Functions {
         long targetX;
         long targetY;
         if (args.length >= 5) {
-            currentX = Vb.val(args[1]);
-            currentY = Vb.val(args[2]);
-            targetX = Vb.val(args[3]);
-            targetY = Vb.val(args[4]);
+            currentX = NumberUtils.parseLong(args[1]);
+            currentY = NumberUtils.parseLong(args[2]);
+            targetX = NumberUtils.parseLong(args[3]);
+            targetY = NumberUtils.parseLong(args[4]);
         } else if (args.length >= 3) {
-            targetX = Vb.val(args[1]);
-            targetY = Vb.val(args[2]);
+            targetX = NumberUtils.parseLong(args[1]);
+            targetY = NumberUtils.parseLong(args[2]);
         } else {
             return zeroMovement();
         }
@@ -724,7 +723,7 @@ public final class Functions {
         if (args == null || args.length < 2) {
             return 0L;
         }
-        return randomInclusive(Vb.val(args[0]), Vb.val(args[1]));
+        return randomInclusive(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]));
     }
 
     private static int clamp(int value, int min, int max) {
