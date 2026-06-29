@@ -57,12 +57,12 @@ public final class Boot {
         Licence.setCatalogProductRows(catalogProducts);
         Licence.setDealRows("\r" + MySQL.Proc_5_2_6D4690("SELECT id,items FROM products_deals ORDER BY id ASC", "\r", 0) + "\r");
         Licence.setRecyclerBoxProductId(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE sprite='ecotron_box' LIMIT 1", 0, 0)));
-        Licence.global_008290A0 = MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_counter IS NOT NULL", 0, 0).replace('\r', '\t');
-        Licence.global_008290A4 = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='11' LIMIT 1", 0, 0));
-        Licence.global_008290A8 = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='19' LIMIT 1", 0, 0));
-        Licence.global_00829078 = MySQL.Proc_5_2_6D4690("SELECT id_product,type_secondary,id_contain,type_check FROM packages", 0, 0);
-        Licence.global_0082907C = MySQL.Proc_5_2_6D4690("SELECT id,id_pet,id_race,color FROM packages_pets", 0, 0);
-        Licence.global_00829084 = "\r" + MySQL.Proc_5_2_6D4690("SELECT id_product,months,level FROM products_containshc", "\r", 0) + "\r";
+        Licence.setCounterProductIds(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_counter IS NOT NULL", 0, 0).replace('\r', '\t'));
+        Licence.setTeleportProductId(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='11' LIMIT 1", 0, 0)));
+        Licence.setMoodlightProductId(Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='19' LIMIT 1", 0, 0)));
+        Licence.setPackageRows(MySQL.Proc_5_2_6D4690("SELECT id_product,type_secondary,id_contain,type_check FROM packages", 0, 0));
+        Licence.setPetPackageRows(MySQL.Proc_5_2_6D4690("SELECT id,id_pet,id_race,color FROM packages_pets", 0, 0));
+        Licence.setClubProductRows("\r" + MySQL.Proc_5_2_6D4690("SELECT id_product,months,level FROM products_containshc", "\r", 0) + "\r");
         Proc_1_17_6CCDC0(0, 0, 0);
         Proc_1_15_6CA000(0, 0, 0);
         Proc_1_18_6CE9C0(0, 0, 0);

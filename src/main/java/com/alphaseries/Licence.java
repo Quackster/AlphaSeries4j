@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.game.advertising.VisitRoomAds;
 import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.catalog.CatalogPages;
+import com.alphaseries.game.catalog.CatalogProductSettings;
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -363,6 +364,35 @@ public final class Licence {
 
     public static void setDealRows(String dealRows) {
         global_00829258 = StringUtils.text(dealRows);
+    }
+
+    public static CatalogProductSettings catalogProductSettings() {
+        return CatalogProductSettings.fromLegacy(global_008290A0, global_008290A4, global_008290A8,
+            global_00829078, global_0082907C, global_00829084);
+    }
+
+    public static void setCounterProductIds(String counterProductIds) {
+        global_008290A0 = StringUtils.text(counterProductIds);
+    }
+
+    public static void setTeleportProductId(long productId) {
+        global_008290A4 = Math.max(0L, productId);
+    }
+
+    public static void setMoodlightProductId(long productId) {
+        global_008290A8 = Math.max(0L, productId);
+    }
+
+    public static void setPackageRows(String packageRows) {
+        global_00829078 = StringUtils.text(packageRows);
+    }
+
+    public static void setPetPackageRows(String petPackageRows) {
+        global_0082907C = StringUtils.text(petPackageRows);
+    }
+
+    public static void setClubProductRows(String clubProductRows) {
+        global_00829084 = StringUtils.text(clubProductRows);
     }
 
     public static void setRecyclerRewards(Object productLists, Object chances, long groupCount) {

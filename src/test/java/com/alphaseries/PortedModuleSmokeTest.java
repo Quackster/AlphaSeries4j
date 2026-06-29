@@ -793,6 +793,7 @@ public final class PortedModuleSmokeTest {
         Boot.Proc_1_0_6BA9D0();
         assertEquals(1L, Licence.global_00829168);
         assertEquals("10\2" + "11\2", ((String[]) Licence.global_00829140)[0]);
+        assertEquals(Licence.global_00829078, Licence.catalogProductSettings().packageRows());
         Boot.Proc_1_6_6C5830();
         assertEquals(true, Licence.global_008291EC.contains("pet_dog"));
         assertEquals(true, Licence.petSettings().raceRows().contains("pet_dog"));
