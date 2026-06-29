@@ -5756,6 +5756,106 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_225_7EFBD0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            JukeboxAddRequest request = jukeboxAddRequestFromWire(handlingPacketPayload(args));
+            if (request.diskFurnitureId <= 0L) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            String[] jukeboxFields = jukeboxRow(roomId);
+            long jukeboxId = Vb.val(handlingField(jukeboxFields, 0));
+            long jukeboxProductId = Vb.val(handlingField(jukeboxFields, 1));
+            if (jukeboxId <= 0L) {
+                return "";
+            }
+            String maxOrderText = MySQL.Proc_5_2_6D4690("SELECT MAX(id_order) FROM soundmachine_jb_playlist WHERE id_jukebox='"
+                + jukeboxId + "'", 0, 0);
+            long playlistCount = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(*) FROM soundmachine_jb_playlist WHERE id_jukebox='"
+                + jukeboxId + "'", 0, 0));
+            long playlistLimit = Vb.val(Functions.Proc_10_0_809570(
+                "com.server.socket.game.jukebox." + jukeboxProductId + ".soundsets.max", 0, 0));
+            if (!jukeboxCanAddDisk(request.playlistOrder, maxOrderText, playlistCount, playlistLimit)) {
+                return "";
+            }
+            long songDiskProductId = Vb.val(Functions.Proc_10_0_809570("com.server.socket.game.default.songdisk", 0, 0));
+            if (songDiskProductId <= 0L) {
+                return "";
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            long destinationId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_destination FROM furnitures WHERE id_owner='"
+                + escapedUserId + "' AND id='" + request.diskFurnitureId + "' AND id_product='"
+                + songDiskProductId + "' LIMIT 1", 0, 0));
+            if (destinationId <= 0L) {
+                return "";
+            }
+            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner=NULL WHERE id_owner='" + escapedUserId
+                + "' AND id='" + request.diskFurnitureId + "' AND id_product='" + songDiskProductId + "' LIMIT 1", 0, 0);
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO soundmachine_jb_playlist(id_jukebox,id_cd,id_order,id_destination) VALUES('"
+                + jukeboxId + "','" + request.diskFurnitureId + "','" + request.playlistOrder + "','" + destinationId + "')", 0, 0);
+            String payload = Crypto.Proc_3_0_6D2AF0(request.diskFurnitureId, null, "Ac");
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            Proc_6_227_7F2400(socketIndex);
+            Proc_6_228_7F2AF0(socketIndex);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_226_7F0B20(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long playlistOrder = jukeboxRemoveOrderFromWire(handlingPacketPayload(args));
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            String[] jukeboxFields = jukeboxRow(roomId);
+            long jukeboxId = Vb.val(handlingField(jukeboxFields, 0));
+            if (jukeboxId <= 0L) {
+                return "";
+            }
+            long cdFurnitureId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id_cd FROM soundmachine_jb_playlist WHERE id_jukebox='"
+                + jukeboxId + "' AND id_order='" + playlistOrder + "' LIMIT 1", 0, 0));
+            if (cdFurnitureId <= 0L) {
+                return "";
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            long songDiskProductId = Vb.val(Functions.Proc_10_0_809570("com.server.socket.game.default.songdisk", 0, 0));
+            if (songDiskProductId > 0L) {
+                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner='" + escapedUserId + "' WHERE id='"
+                    + cdFurnitureId + "' AND id_product='" + songDiskProductId + "' LIMIT 1", 0, 0);
+            } else {
+                MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET id_owner='" + escapedUserId + "' WHERE id='"
+                    + cdFurnitureId + "' LIMIT 1", 0, 0);
+            }
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM soundmachine_jb_playlist WHERE id_jukebox='" + jukeboxId
+                + "' AND id_cd='" + cdFurnitureId + "' LIMIT 1", 0, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE soundmachine_jb_playlist SET id_order=id_order-1 WHERE id_jukebox='"
+                + jukeboxId + "' AND id_order>'" + playlistOrder + "'", 0, 0);
+            Proc_6_227_7F2400(socketIndex);
+            Proc_6_228_7F2AF0(socketIndex);
+            return "";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_227_7F2400(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);

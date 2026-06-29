@@ -1938,6 +1938,18 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id_destination FROM soundmachine_jb_playlist WHERE id_jukebox='300' AND id_order='0'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(40));
                 }
+                if (sqlText.contains("SELECT MAX(id_order) FROM soundmachine_jb_playlist WHERE id_jukebox='300'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
+                }
+                if (sqlText.contains("SELECT COUNT(*) FROM soundmachine_jb_playlist WHERE id_jukebox='300'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(2));
+                }
+                if (sqlText.contains("SELECT id_destination FROM furnitures WHERE id_owner='77' AND id='4' AND id_product='700'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(50));
+                }
+                if (sqlText.contains("SELECT id_cd FROM soundmachine_jb_playlist WHERE id_jukebox='300' AND id_order='0'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(4));
+                }
                 if (sqlText.contains("SELECT id_cd,id_destination FROM soundmachine_jb_playlist WHERE id_jukebox='300'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(2, 40), Arrays.<Object>asList(3, 41));
                 }
@@ -3142,6 +3154,24 @@ public final class PortedModuleSmokeTest {
         Licence.global_008291FC = "\1" + "300\2\1" + "40\2\1" + "999\2";
         Handling.Proc_6_224_7EF5A0(4);
         assertEquals("\1" + "999\2", Licence.global_008291FC);
+        handlingSql.clear();
+        handlingSends.clear();
+        String addDiskPayload = Handling.Proc_6_225_7EFBD0(4, "C" + '\177' + wireLong(4) + wireLong(1));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(4, null, "Ac"), addDiskPayload);
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner=NULL WHERE id_owner='77' AND id='4' AND id_product='700' LIMIT 1"));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO soundmachine_jb_playlist(id_jukebox,id_cd,id_order,id_destination) VALUES('300','4','1','50')"));
+        assertEquals(true, containsSend(handlingSends, "Ac"));
+        assertEquals(true, containsSend(handlingSends, "EN"));
+        assertEquals(true, containsSend(handlingSends, "EM"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Handling.Proc_6_226_7F0B20(4, "D@" + wireLong(0));
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner='77' WHERE id='4' AND id_product='700' LIMIT 1"));
+        assertEquals(true, containsSql(handlingSql, "DELETE FROM soundmachine_jb_playlist WHERE id_jukebox='300' AND id_cd='4' LIMIT 1"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE soundmachine_jb_playlist SET id_order=id_order-1 WHERE id_jukebox='300' AND id_order>'0'"));
+        assertEquals(true, containsSend(handlingSends, "EN"));
+        assertEquals(true, containsSend(handlingSends, "EM"));
+        handlingSends.clear();
         String playlistPayload = Handling.Proc_6_227_7F2400(4);
         assertEquals(Handling.jukeboxPlaylistPayload(5, "2\t40\r3\t41"), playlistPayload);
         assertEquals(true, containsSend(handlingSends, "EN"));
