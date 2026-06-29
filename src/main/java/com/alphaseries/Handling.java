@@ -5275,11 +5275,21 @@ public final class Handling {
                 return;
             }
             if (productId <= 0L) {
-                String itemRow = MySQL.Proc_5_2_6D4690("SELECT id_product,id,sign,id_secondary,id_destination FROM furnitures WHERE id='"
-                    + furnitureId + "' AND id_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                    + "' AND id_room IS NULL LIMIT 1", 0, 0);
-                if (!itemRow.isEmpty()) {
-                    itemFields = itemRow.split("\t", -1);
+                FurnitureDao furniture = furnitureDao();
+                if (furniture == null) {
+                    return;
+                }
+                FurnitureDao.InventoryPlacementFurniture placementFurniture = furniture
+                    .inventoryPlacementFurniture(furnitureId, NumberUtils.parseLong(userId))
+                    .orElse(null);
+                if (placementFurniture != null) {
+                    itemFields = new String[]{
+                        String.valueOf(placementFurniture.productId()),
+                        String.valueOf(placementFurniture.furnitureId()),
+                        StringUtils.text(placementFurniture.sign()),
+                        String.valueOf(placementFurniture.secondaryValue()),
+                        String.valueOf(placementFurniture.destinationId())
+                    };
                 }
                 productId = NumberUtils.parseLong(handlingField(itemFields, 0));
             }
@@ -5292,10 +5302,11 @@ public final class Handling {
             }
             String wallPosition = Functions.Proc_10_11_80A9C0((":w=" + placement.wallX + "," + placement.wallY
                 + " l=" + placement.localX + "," + placement.localY).toLowerCase(), 0, 0);
-            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET position_wall='" + wallPosition + "',id_room='" + roomId
-                + "',id_owner=NULL,task_owner='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                + "',task_time=UNIX_TIMESTAMP() WHERE id='" + furnitureId + "' AND id_owner='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_room IS NULL LIMIT 1", 0, 0);
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
+                return;
+            }
+            furniture.placeWallFurniture(furnitureId, NumberUtils.parseLong(userId), roomId, wallPosition);
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ac"), 0);
             String payload = Proc_6_156_7972B0(furnitureId, productId, wallPosition,
                 handlingField(itemFields, 2), NumberUtils.parseLong(handlingField(itemFields, 3)));

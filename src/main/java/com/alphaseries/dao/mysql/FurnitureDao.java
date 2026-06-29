@@ -121,6 +121,20 @@ public final class FurnitureDao {
             furnitureId);
     }
 
+    public Optional<InventoryPlacementFurniture> inventoryPlacementFurniture(long furnitureId, long ownerId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_product,id,sign,id_secondary,id_destination FROM furnitures WHERE id=? AND id_owner=? "
+                + "AND id_room IS NULL LIMIT 1",
+            resultSet -> new InventoryPlacementFurniture(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5)),
+            furnitureId,
+            ownerId);
+    }
+
     public List<InventoryItemRow> inventoryFurnitureForOwner(long ownerId) throws SQLException {
         return database.query(
             "SELECT id,id_product,sign,id_secondary FROM furnitures WHERE id_owner=? AND id_room IS NULL LIMIT 1000",
@@ -262,6 +276,17 @@ public final class FurnitureDao {
             roomId);
     }
 
+    public int placeWallFurniture(long furnitureId, long ownerId, long roomId, String wallPosition) throws SQLException {
+        return database.execute(
+            "UPDATE furnitures SET position_wall=?,id_room=?,id_owner=NULL,task_owner=?,task_time=UNIX_TIMESTAMP() "
+                + "WHERE id=? AND id_owner=? AND id_room IS NULL LIMIT 1",
+            wallPosition,
+            roomId,
+            ownerId,
+            furnitureId,
+            ownerId);
+    }
+
     public int deleteFurniture(long furnitureId) throws SQLException {
         return database.execute("DELETE FROM furnitures WHERE id=? LIMIT 1", furnitureId);
     }
@@ -300,6 +325,15 @@ public final class FurnitureDao {
     }
 
     public record InventoryFurniture(long productId, long ownerId, String itemData, long secondaryValue) {
+    }
+
+    public record InventoryPlacementFurniture(
+        long productId,
+        long furnitureId,
+        String sign,
+        long secondaryValue,
+        long destinationId
+    ) {
     }
 
     public record TradeFurniture(long furnitureId, long productId, String sign, long secondaryValue) {
