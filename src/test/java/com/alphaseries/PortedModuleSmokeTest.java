@@ -1788,7 +1788,9 @@ public final class PortedModuleSmokeTest {
             + "[com.client.catalog.gifts.wrap.price=7]"
             + "[com.client.rooms.bots.pets.enabled=1]"
             + "[com.client.rooms.bots.guide.enabled=1]"
-            + "[com.client.bot.guide.id=20]";
+            + "[com.client.bot.guide.id=20]"
+            + "[com.client.catalog.recycler.enabled=1]";
+        Licence.global_008291E8 = new String[][]{{"2", "ACH_", "10", "5", "3", "7", "2"}};
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_mod\2fuse_alert\2fuse_kick\2fuse_receive_calls_for_help\2fuse_chatlog\2"
             + "fuse_use_wardrobe\2fuse_larger_wardrobe\2fuse_client_staff\2"}};
         MySQL.configureDatabaseConnection(new Database() {
@@ -1889,6 +1891,15 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id_badge,id_slot,id FROM users_badges WHERE id_slot != '0' AND id_user='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("VIP", 1, 203));
+                }
+                if (sqlText.contains("SELECT REPLACE(id_badge,'ACH_','') FROM users_badges WHERE id_user='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(2));
+                }
+                if (sqlText.contains("SELECT id FROM users_badges WHERE id_user='77' AND id_badge='ACH_3'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(204));
+                }
+                if (sqlText.contains("SELECT respect_received FROM users WHERE id='77'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(30));
                 }
                 if (sqlText.contains("SELECT name FROM users_tags WHERE id_user='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList("alpha"), Arrays.<Object>asList("beta"));
@@ -3031,6 +3042,29 @@ public final class PortedModuleSmokeTest {
         assertEquals(Handling.pollPayloadFromRows("7\tTitle\tThanks", "8\tQuestion?\t2", livePollAnswers), livePollPayload);
         assertEquals(true, containsSend(handlingSends, "D}"));
         assertEquals(true, containsSend(handlingSends, "Question?"));
+        handlingSends.clear();
+        handlingSql.clear();
+        String recyclerStatus = Handling.Proc_6_203_7D7F80(4);
+        assertEquals(Handling.recyclerStatusPayload(1, 0), recyclerStatus);
+        assertEquals(true, containsSend(handlingSends, "G{"));
+        handlingSends.clear();
+        String achievementReward = Handling.Proc_6_204_7D82E0(4, 0, 3);
+        assertEquals(Handling.achievementRewardPayload(0, "2\tACH_\t10\t5\t3\t7\t2", 3, 204), achievementReward);
+        assertEquals(true, containsSql(handlingSql, "DELETE FROM users_badges WHERE id_user='77' AND id_badge LIKE 'ACH_%' LIMIT 1"));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO users_badges(id_user,id_badge) VALUES('77','ACH_3')"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_2=activitypoints_2+5,achievement_score=achievement_score+7 WHERE id='77'"));
+        assertEquals(true, containsSend(handlingSends, "Fu"));
+        assertEquals(true, containsSend(handlingSends, "Fv"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Handling.Proc_6_205_7D9780(4, 2);
+        assertEquals(true, containsSend(handlingSends, "Fu"));
+        handlingSends.clear();
+        String achievementListPayload = Handling.Proc_6_206_7DA450(4);
+        Map<String, Long> liveAchievementLevels = new HashMap<>();
+        liveAchievementLevels.put("ACH_", 2L);
+        assertEquals(Handling.achievementListPayload("2\tACH_\t10\t5\t3\t7\t2", liveAchievementLevels), achievementListPayload);
+        assertEquals(true, containsSend(handlingSends, "Ft"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));

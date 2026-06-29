@@ -5562,6 +5562,125 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_203_7D7F80(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long enabledValue = Vb.val(Functions.Proc_10_0_809570("com.client.catalog.recycler.enabled", 0, 0));
+            String payload = recyclerStatusPayload(enabledValue, 0L);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_204_7D82E0(Object... args) {
+        try {
+            if (args == null || args.length < 2) {
+                return "";
+            }
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long achievementIndex = Vb.val(args[1]);
+            long badgeLevel = args.length >= 3 ? Vb.val(args[2]) : 1L;
+            if (badgeLevel <= 0L) {
+                badgeLevel = 1L;
+            }
+            String achievementRow = achievementRowByIndex(achievementIndex);
+            String[] fields = achievementRow.split("\t", -1);
+            if (userId.isEmpty() || achievementRow.isEmpty() || fields.length < 7) {
+                return "";
+            }
+            String badgePrefix = handlingField(fields, 1);
+            String badgeId = badgePrefix + badgeLevel;
+            if (Vb.val(handlingField(fields, 0)) == 0L || badgePrefix.isEmpty()) {
+                return "";
+            }
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            String escapedBadgePrefix = Functions.Proc_10_11_80A9C0(badgePrefix, 0, 0);
+            String escapedBadgeId = Functions.Proc_10_11_80A9C0(badgeId, 0, 0);
+            MySQL.Proc_5_0_6D3CD0("DELETE FROM users_badges WHERE id_user='" + escapedUserId
+                + "' AND id_badge LIKE '" + escapedBadgePrefix + "%' LIMIT 1", 0, 0);
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO users_badges(id_user,id_badge) VALUES('"
+                + escapedUserId + "','" + escapedBadgeId + "')", 0, 0);
+            long badgeRowId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM users_badges WHERE id_user='"
+                + escapedUserId + "' AND id_badge='" + escapedBadgeId + "' ORDER BY id DESC LIMIT 1", 0, 0));
+            String payload = achievementRewardPayload(achievementIndex, achievementRow, badgeLevel, badgeRowId);
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            String awardPayload = achievementAwardPayload(achievementRow);
+            if (!awardPayload.isEmpty()) {
+                long rewardIncrease = Vb.val(handlingField(fields, 3));
+                long scoreIncrease = Vb.val(handlingField(fields, 5));
+                long rewardType = Vb.val(handlingField(fields, 6));
+                MySQL.Proc_5_0_6D3CD0("UPDATE users SET activitypoints_" + rewardType + "=activitypoints_"
+                    + rewardType + "+" + rewardIncrease + ",achievement_score=achievement_score+" + scoreIncrease
+                    + " WHERE id='" + escapedUserId + "'", 0, 0);
+                Proc_6_244_801E80(socketIndex, awardPayload, 0);
+            }
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_205_7D9780(Object... args) {
+        try {
+            if (args == null || args.length < 2) {
+                return "";
+            }
+            int socketIndex = handlingSocketIndex(args);
+            if (socketIndex <= 0 && args.length >= 2) {
+                socketIndex = (int) Vb.val(args[1]);
+            }
+            long achievementQuestId = Vb.val(args[args.length - 1]);
+            if (socketIndex <= 0 || achievementQuestId <= 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String achievementRows = achievementRowsFromGlobal();
+            if (achievementRows.isEmpty()) {
+                return "";
+            }
+            AchievementProgressDecision decision = achievementProgressDecision(
+                achievementRows,
+                achievementQuestId,
+                achievementCurrentLevels(userId, achievementRows),
+                representedAchievementProgress(userId, achievementQuestId));
+            if (decision.shouldReward) {
+                Proc_6_204_7D82E0(socketIndex, decision.achievementIndex, decision.nextLevel);
+            }
+            return "";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_206_7DA450(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String achievementRows = achievementRowsFromGlobal();
+            if (achievementRows.isEmpty()) {
+                return "";
+            }
+            String payload = achievementListPayload(achievementRows, achievementCurrentLevels(userId, achievementRows));
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
@@ -8987,6 +9106,98 @@ public final class Handling {
         }
         String payload = Crypto.Proc_3_0_6D2AF0(pollId, null, "D}") + pollFields[1] + '\2' + pollFields[2] + '\2';
         return Crypto.Proc_3_0_6D2AF0(questionCount, null, payload) + questionPayload;
+    }
+
+    public static String achievementRowsFromGlobal() {
+        Object source = Licence.global_008291E8;
+        if (source instanceof String[][]) {
+            String[][] rows = (String[][]) source;
+            StringBuilder result = new StringBuilder();
+            for (String[] row : rows) {
+                if (row != null && row.length > 0) {
+                    if (result.length() > 0) {
+                        result.append('\r');
+                    }
+                    result.append(String.join("\t", row));
+                }
+            }
+            return result.toString();
+        }
+        if (source instanceof String[]) {
+            return String.join("\r", (String[]) source);
+        }
+        return Vb.cStr(source);
+    }
+
+    public static String achievementRowByIndex(long achievementIndex) {
+        if (achievementIndex < 0L) {
+            return "";
+        }
+        Object source = Licence.global_008291E8;
+        if (source instanceof String[][]) {
+            String[][] rows = (String[][]) source;
+            return achievementIndex < rows.length && rows[(int) achievementIndex] != null
+                ? String.join("\t", rows[(int) achievementIndex]) : "";
+        }
+        String[] rows = achievementRowsFromGlobal().split("\r", -1);
+        return achievementIndex < rows.length ? rows[(int) achievementIndex] : "";
+    }
+
+    public static Map<String, Long> achievementCurrentLevels(String userId, String achievementRows) {
+        Map<String, Long> result = new HashMap<>();
+        String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+        for (String row : Vb.cStr(achievementRows).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                String badgePrefix = handlingField(fields, 1);
+                if (!badgePrefix.isEmpty() && !result.containsKey(badgePrefix)) {
+                    String escapedBadgePrefix = Functions.Proc_10_11_80A9C0(badgePrefix, 0, 0);
+                    long currentLevel = Vb.val(MySQL.Proc_5_2_6D4690("SELECT REPLACE(id_badge,'"
+                        + escapedBadgePrefix + "','') FROM users_badges WHERE id_user='" + escapedUserId
+                        + "' AND id_badge LIKE '" + escapedBadgePrefix + "%' ORDER BY id DESC LIMIT 1", 0, 0));
+                    result.put(badgePrefix, Math.max(0L, currentLevel));
+                }
+            }
+        }
+        return result;
+    }
+
+    public static long representedAchievementProgress(String userId, long achievementQuestId) {
+        String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+        long progress;
+        if (achievementQuestId == 1L) {
+            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT COUNT(DISTINCT id_room) FROM logs_visitedrooms WHERE id_user='"
+                + escapedUserId + "'", 0, 0));
+        } else if (achievementQuestId == 2L) {
+            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT respect_received FROM users WHERE id='"
+                + escapedUserId + "' LIMIT 1", 0, 0));
+        } else if (achievementQuestId == 3L) {
+            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT respect_given FROM users WHERE id='"
+                + escapedUserId + "' LIMIT 1", 0, 0));
+        } else if (achievementQuestId == 4L) {
+            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT online_time FROM users WHERE id='"
+                + escapedUserId + "' LIMIT 1", 0, 0)) / 60L;
+        } else if (achievementQuestId == 6L) {
+            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT gifts_given FROM users WHERE id='"
+                + escapedUserId + "' LIMIT 1", 0, 0));
+        } else if (achievementQuestId == 7L) {
+            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT gifts_received FROM users WHERE id='"
+                + escapedUserId + "' LIMIT 1", 0, 0));
+        } else if (achievementQuestId == 8L) {
+            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT hc_periods FROM users WHERE id='"
+                + escapedUserId + "' LIMIT 1", 0, 0));
+        } else if (achievementQuestId == 9L) {
+            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT hc2_periods FROM users WHERE id='"
+                + escapedUserId + "' LIMIT 1", 0, 0));
+        } else if (achievementQuestId == 11L) {
+            progress = Vb.val(MySQL.Proc_5_2_6D4690("SELECT amount_staffpicked FROM users WHERE id='"
+                + escapedUserId + "' LIMIT 1", 0, 0));
+        } else {
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT respect_received,respect_given,gifts_given,gifts_received FROM users WHERE id='"
+                + escapedUserId + "' LIMIT 1", 0, 0);
+            progress = Vb.val(handlingField(rowText.split("\t", -1), 0));
+        }
+        return Math.max(0L, progress);
     }
 
     public static String achievementRewardPayload(long achievementIndex, String achievementRow, long badgeLevel, long badgeRowId) {
