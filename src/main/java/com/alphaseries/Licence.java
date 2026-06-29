@@ -11,6 +11,7 @@ import com.alphaseries.game.messenger.MessengerSettings;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.pet.PetSettings;
+import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.util.NumberUtils;
@@ -242,6 +243,14 @@ public final class Licence {
 
     public static void setRoomCategoryPayloads(Object payloads) {
         global_00829244 = payloads == null ? "" : payloads;
+    }
+
+    public static QuestSettings questSettings() {
+        return QuestSettings.fromLegacy(global_00829080);
+    }
+
+    public static void setQuestRows(String questRows) {
+        global_00829080 = StringUtils.text(questRows);
     }
 
     public static String Proc_9_6_808080(Object... args) {

@@ -12360,9 +12360,8 @@ public final class Handling {
     }
 
     private static String questRowsFromSource() {
-        String cachedRows = Vb.cStr(Licence.global_00829080);
-        if (!cachedRows.isEmpty()) {
-            return cachedRows;
+        if (Licence.questSettings().hasRows()) {
+            return Licence.questSettings().rows();
         }
         return MySQL.Proc_5_2_6D4690(
             "SELECT id,level,name,NULL,reward,reward_type,require_action,id_additional,id_campaign,amount_activities,waitamount "

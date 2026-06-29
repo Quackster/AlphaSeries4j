@@ -178,8 +178,8 @@ public final class Boot {
         String systemTime = Functions.Proc_10_0_809570("com.system.format.time", "", 0);
         Functions.global_0082928C = buildSettingsCache(MySQL.Proc_5_2_6D4690("SELECT variable,value FROM settings", 0, 0),
             systemDate, systemTime);
-        Licence.global_00829080 = MySQL.Proc_5_2_6D4690(
-            "SELECT id,level,name,NULL,reward,reward_type,require_action,id_additional,id_campaign,amount_activities,waitamount FROM quests ORDER BY id_campaign DESC,level ASC", 0, 0);
+        Licence.setQuestRows(MySQL.Proc_5_2_6D4690(
+            "SELECT id,level,name,NULL,reward,reward_type,require_action,id_additional,id_campaign,amount_activities,waitamount FROM quests ORDER BY id_campaign DESC,level ASC", 0, 0));
     }
 
     public static void Proc_1_10_6C7690(Object... args) {

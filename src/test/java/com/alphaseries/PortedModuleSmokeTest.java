@@ -3812,6 +3812,7 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         String liveQuestRows = "10\t1\tFirst\t\t5\t2\tvisit\t0\t7\t3\t30\r11\t2\tSecond\t\t6\t2\tvisit\t0\t7\t4\t0";
         Licence.global_00829080 = liveQuestRows;
+        assertEquals(liveQuestRows, Licence.questSettings().rows());
         String questListPayload = Handling.Proc_6_236_7F8540(4);
         assertEquals(Handling.questListPayload(liveQuestRows, "10\t0\t0\t1\t0\t1\t0"), questListPayload);
         assertEquals(true, containsSend(handlingSends, "L`"));
