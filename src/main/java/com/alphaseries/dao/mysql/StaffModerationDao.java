@@ -237,6 +237,33 @@ public final class StaffModerationDao {
         return database.execute("UPDATE staff_cfh SET id_closed=?,id_tab=? WHERE id=?", closeState, 0L, callForHelpId);
     }
 
+    public int moveCallForHelpToTab(List<Long> callForHelpIds, long tabId, long pickerUserId) throws SQLException {
+        if (callForHelpIds == null || callForHelpIds.isEmpty()) {
+            return 0;
+        }
+        String placeholders = String.join(",", java.util.Collections.nCopies(callForHelpIds.size(), "?"));
+        if (tabId == 2L) {
+            Object[] parameters = new Object[2 + callForHelpIds.size()];
+            parameters[0] = tabId;
+            parameters[1] = pickerUserId;
+            for (int index = 0; index < callForHelpIds.size(); index++) {
+                parameters[index + 2] = callForHelpIds.get(index);
+            }
+            return database.execute(
+                "UPDATE staff_cfh SET id_tab=?,id_picker=?,timestamp_picked=UNIX_TIMESTAMP() WHERE id IN ("
+                    + placeholders + ")",
+                parameters);
+        }
+        Object[] parameters = new Object[1 + callForHelpIds.size()];
+        parameters[0] = tabId;
+        for (int index = 0; index < callForHelpIds.size(); index++) {
+            parameters[index + 1] = callForHelpIds.get(index);
+        }
+        return database.execute(
+            "UPDATE staff_cfh SET id_tab=?,id_picker=0,timestamp_picked=NULL WHERE id IN (" + placeholders + ")",
+            parameters);
+    }
+
     public int lockRoomForModeration(long roomId) throws SQLException {
         return database.execute(
             "UPDATE rooms SET status_door=?, name=? WHERE id=?",

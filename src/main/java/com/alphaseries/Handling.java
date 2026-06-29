@@ -8896,18 +8896,15 @@ public final class Handling {
                 || !handlingUserHasPermission(callerUserId, "fuse_receive_calls_for_help")) {
                 return;
             }
-            String whereClause = staffCallForHelpWhereClause(requestPayload);
-            if (whereClause.isEmpty()) {
+            List<Long> callForHelpIds = StaffPayloads.callForHelpIds(requestPayload);
+            if (callForHelpIds.isEmpty()) {
                 return;
             }
-            if ("2".equals(tabId)) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE staff_cfh SET id_tab='2',id_picker='"
-                    + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0)
-                    + "',timestamp_picked=UNIX_TIMESTAMP() WHERE " + whereClause, 0, 0);
-            } else {
-                MySQL.Proc_5_0_6D3CD0("UPDATE staff_cfh SET id_tab='1',id_picker=0,timestamp_picked=NULL WHERE "
-                    + whereClause, 0, 0);
+            StaffModerationDao moderationDao = staffModerationDao();
+            if (moderationDao == null) {
+                return;
             }
+            moderationDao.moveCallForHelpToTab(callForHelpIds, NumberUtils.parseLong(tabId), NumberUtils.parseLong(callerUserId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

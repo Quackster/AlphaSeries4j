@@ -232,6 +232,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated several payload builders from string concatenation to fluent `PacketBuilder`.
 - Routed messenger friend-request acceptance through typed `MessengerDao` records and prepared methods, replacing raw accept-flow SQL and tab-delimited handler parsing in `Handling`.
 - Routed staff direct-message moderation logging and caution inserts through `StaffModerationDao`, replacing raw handler SQL and moving the direct alert payload to fluent `PacketBuilder` construction.
+- Routed call-for-help tab updates through typed call ID parsing and `StaffModerationDao` prepared updates, keeping the legacy where-clause helper only as a compatibility wrapper.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -245,9 +246,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 79
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 77
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12489 lines
+- `Handling.java`: 12486 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines

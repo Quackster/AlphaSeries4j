@@ -5,6 +5,8 @@ import com.alphaseries.protocol.PacketReader;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public final class StaffPayloads {
@@ -69,23 +71,35 @@ public final class StaffPayloads {
     }
 
     public static String callForHelpWhereClause(String packetPayload) {
-        PacketReader reader = PacketReader.of(packetPayload);
-        long requestedCount = reader.readInt();
-        if (requestedCount < 1L || requestedCount > 150L) {
+        List<Long> callForHelpIds = callForHelpIds(packetPayload);
+        if (callForHelpIds.isEmpty()) {
             return "";
         }
         StringBuilder whereClause = new StringBuilder();
-        for (long requestIndex = 0L; requestIndex < requestedCount; requestIndex++) {
-            long callForHelpId = reader.readInt();
-            if (callForHelpId <= 0L) {
-                return "";
-            }
+        for (long callForHelpId : callForHelpIds) {
             if (whereClause.length() > 0) {
                 whereClause.append(" OR ");
             }
             whereClause.append("id='").append(callForHelpId).append('\'');
         }
         return whereClause.toString();
+    }
+
+    public static List<Long> callForHelpIds(String packetPayload) {
+        PacketReader reader = PacketReader.of(packetPayload);
+        long requestedCount = reader.readInt();
+        if (requestedCount < 1L || requestedCount > 150L) {
+            return List.of();
+        }
+        List<Long> callForHelpIds = new ArrayList<>();
+        for (long requestIndex = 0L; requestIndex < requestedCount; requestIndex++) {
+            long callForHelpId = reader.readInt();
+            if (callForHelpId <= 0L) {
+                return List.of();
+            }
+            callForHelpIds.add(callForHelpId);
+        }
+        return callForHelpIds;
     }
 
     public static String userSummary(
