@@ -118,6 +118,15 @@ public final class FurnitureRoomCache {
         return state;
     }
 
+    public static String removePendingFurniture(String pendingFurnitureCache, long furnitureId) {
+        String furnitureMarker = marker(furnitureId);
+        return RepresentedRoomCache.removeRecord(StringUtils.text(pendingFurnitureCache).replace(furnitureMarker, ""), recordMarker(furnitureId));
+    }
+
+    public static String removePendingRoom(String pendingRoomCache, long roomId) {
+        return StringUtils.text(pendingRoomCache).replace(marker(roomId), "");
+    }
+
     private static String marker(long id) {
         return "\1" + id + '\2';
     }

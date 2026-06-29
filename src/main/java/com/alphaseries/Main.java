@@ -1,5 +1,6 @@
 package com.alphaseries;
 
+import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.server.packet.PacketSink;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.vb.Vb;
@@ -318,7 +319,7 @@ public final class Main {
                 String rowText = MySQL.Proc_5_2_6D4690("SELECT id_room,sign FROM furnitures WHERE id='"
                     + furnitureId + "' LIMIT 1", 0, 0);
                 if (rowText.isEmpty()) {
-                    Licence.global_008291FC = Licence.global_008291FC.replace("\1" + furnitureId + '\2', "");
+                    Licence.global_008291FC = FurnitureRoomCache.removePendingFurniture(Licence.global_008291FC, furnitureId);
                     continue;
                 }
                 String[] fields = rowText.split("\t", -1);
@@ -332,12 +333,11 @@ public final class Main {
                     Handling.Proc_6_246_8024C0(roomId, "AX" + furnitureId + '\2' + nextSignValue + '\2', 0);
                     processed++;
                     if (nextSignValue <= 0L) {
-                        Licence.global_008291FC = Licence.global_008291FC.replace("\1" + furnitureId + '\2', "");
-                        Licence.global_008291FC = mainRepresentedCacheRemove(Licence.global_008291FC, "\1" + furnitureId + '\t');
-                        Licence.global_008291F8 = Licence.global_008291F8.replace("\1" + roomId + '\2', "");
+                        Licence.global_008291FC = FurnitureRoomCache.removePendingFurniture(Licence.global_008291FC, furnitureId);
+                        Licence.global_008291F8 = FurnitureRoomCache.removePendingRoom(Licence.global_008291F8, roomId);
                     }
                 } else {
-                    Licence.global_008291FC = Licence.global_008291FC.replace("\1" + furnitureId + '\2', "");
+                    Licence.global_008291FC = FurnitureRoomCache.removePendingFurniture(Licence.global_008291FC, furnitureId);
                 }
             }
         } catch (Exception ignored) {
