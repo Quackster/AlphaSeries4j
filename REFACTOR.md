@@ -176,6 +176,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `UserDao` with prepared login socket assignment and daily counter reset, replacing raw login SQL in `Handling`.
 - Routed `Handling` user-name lookups through `UserDao.name`, replacing another raw user SQL helper.
 - Restored decompiled boot caption states and Figuredata cache validation/error logging.
+- Restored decompiled `:about`, `:entwicklung`, and `:commands` chat command response literals.
 - Migrated remaining `Functions` conversions for email validation, identity refresh, club period, occupancy, download, inventory path, movement, and random helpers off `Vb`.
 - Migrated remaining `MySQL` helper conversions and staff moderation payload builders off `Vb` helpers and onto shared `StringUtils`/`NumberUtils`.
 - Added `com.alphaseries.util.StringUtils` and `NumberUtils`; migrated new staff/session code away from duplicated local helper methods.

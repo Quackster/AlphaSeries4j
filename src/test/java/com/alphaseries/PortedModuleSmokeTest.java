@@ -1215,6 +1215,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(Crypto.Proc_3_0_6D2AF0(7, null,
             Crypto.Proc_3_0_6D2AF0(3, null, "@Y") + "hi\2"),
             Handling.representedChatPayload(3, "hi", 7, 1));
+        assertEquals(true, Handling.legacyChatCommandPayload(":about").contains(
+            "This is a copy of the unique Alpha Series written in Visual Basic 2006."));
+        assertEquals(true, Handling.legacyChatCommandPayload(":entwicklung").contains("UNIQUE ID: --"));
+        assertEquals(true, Handling.legacyChatCommandPayload(":commands").contains("You've following commands avaible:"));
+        assertEquals(true, Handling.legacyChatCommandPayload(":commands").contains(
+            "Please note that some commands require additional syntax"));
+        assertEquals("", Handling.legacyChatCommandPayload(":unknown"));
         assertEquals("www.example.com;http://alpha;https://beta;",
             Handling.extractUrlList("see www.example.com and http://alpha or https://beta"));
         assertEquals("", Handling.extractUrlList("www bad example.com"));
@@ -2846,6 +2853,13 @@ public final class PortedModuleSmokeTest {
 
         Handling.Proc_6_244_801E80(4, "PING");
         assertEquals("4:DATA\6" + "4\6PING\1\7", handlingSends.get(0));
+        handlingSends.clear();
+        int sqlBeforeCommand = handlingSql.size();
+        String aboutCommandPayload = Handling.Proc_6_25_6EEAC0(4, ":about");
+        assertEquals(true, aboutCommandPayload.startsWith("BKAlpha Series"));
+        assertEquals(true, handlingSends.get(0).contains(
+            "This is a copy of the unique Alpha Series written in Visual Basic 2006."));
+        assertEquals(sqlBeforeCommand, handlingSql.size());
         handlingSends.clear();
         assertEquals(2L, Handling.broadcastToRoomUsers(9, "ROOM"));
         assertEquals(Arrays.asList("4:DATA\6" + "4\6ROOM\1\7", "8:DATA\6" + "8\6ROOM\1\7"), handlingSends);

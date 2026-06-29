@@ -61,6 +61,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -581,6 +582,40 @@ public final class Handling {
 
     public static String Proc_6_25_6EEAC0(Object... args) {
         return handlingRepresentedChatRoute(args, 0L);
+    }
+
+    public static String legacyChatCommandPayload(String messageText) {
+        String command = StringUtils.text(messageText).trim().toLowerCase(Locale.ROOT);
+        if (":entwicklung".equals(command)) {
+            return "BK" + "UNIQUE ID: --" + '\n'
+                + "BUILD: " + legacyCommandBuildText() + '\2';
+        }
+        if (":about".equals(command)) {
+            return "BK" + "Alpha Series" + '\n' + '\n'
+                + "This is a copy of the unique Alpha Series written in Visual Basic 2006."
+                + '\n' + '\n' + "UNIQUE ID:   --" + '\n'
+                + "BUILD:   " + legacyCommandBuildText() + '\2';
+        }
+        if (":commands".equals(command)) {
+            return "BK" + "You've following commands avaible:" + '\r' + '\r'
+                + ":about" + '\r'
+                + ":commands" + '\r'
+                + ":entwicklung" + '\r'
+                + ":statistics" + '\r'
+                + ":drink" + '\r'
+                + ":follow" + '\r'
+                + ":transfer" + '\r'
+                + ":tiplock" + '\r'
+                + ":whosonline" + '\r' + '\r'
+                + "\u2022 Please note that some commands require additional syntax, which hasn't been listed up here!"
+                + '\2';
+        }
+        return "";
+    }
+
+    public static String legacyCommandBuildText() {
+        String buildText = Licence.runtimeState().productName();
+        return buildText.isEmpty() ? "ALPHASERIES_FINAL (PREMIUM)" : buildText;
     }
 
     public static String Proc_6_26_7034C0(Object... args) {
@@ -8803,6 +8838,13 @@ public final class Handling {
             messageText = left(Functions.Proc_10_10_80A7F0(messageText, 0, 0).trim(), 122);
             if (messageText.isEmpty()) {
                 return "";
+            }
+            if (chatType == 0L && messageText.startsWith(":")) {
+                String commandPayload = legacyChatCommandPayload(messageText);
+                if (!commandPayload.isEmpty()) {
+                    Proc_6_244_801E80(socketIndex, commandPayload, 0);
+                    return commandPayload;
+                }
             }
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
