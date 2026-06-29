@@ -12,6 +12,7 @@ import com.alphaseries.dao.mysql.TradeDao;
 import com.alphaseries.dao.mysql.MessengerDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetCommandActionRow;
+import com.alphaseries.game.pet.PetCommandTargetRow;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -6263,22 +6264,16 @@ public final class Handling {
             if (roomId <= 0L) {
                 return 0L;
             }
-            String petRow = MySQL.Proc_5_2_6D4690("SELECT bots.id,bots.id_room,bots_petdata.id_level,bots_petdata.energy,"
-                + "bots_petdata.nutrition FROM bots,bots_petdata WHERE bots.id='" + botId
-                + "' AND bots.id_handle='3' AND bots.id_room='" + roomId
-                + "' AND bots_petdata.id_bot=bots.id LIMIT 1", 0, 0);
-            if (petRow.isEmpty()) {
+            BotDao bots = botDao();
+            if (bots == null) {
                 return 0L;
             }
-            String[] petFields = petRow.split("\t", -1);
-            if (petFields.length < 5) {
+            PetCommandTargetRow pet = bots.petCommandTarget(botId, roomId).orElse(null);
+            if (pet == null) {
                 return 0L;
             }
-            long petLevel = NumberUtils.parseLong(handlingField(petFields, 2));
-            long petEnergy = NumberUtils.parseLong(handlingField(petFields, 3));
-            long petNutrition = NumberUtils.parseLong(handlingField(petFields, 4));
             PetCommandAction commandAction = petCommandAction(commandId, Licence.petSettings().commandRows());
-            if (!commandAction.found || commandAction.requiredLevel > petLevel) {
+            if (!commandAction.found || commandAction.requiredLevel > pet.level()) {
                 return 0L;
             }
             if (!commandAction.action.isEmpty()) {
@@ -6286,7 +6281,7 @@ public final class Handling {
                     + commandAction.action + '\2' + Crypto.Proc_3_0_6D2AF0(commandId, null, "");
                 Proc_6_248_802B80(roomId, payload, 0);
             }
-            if (petEnergy < 250L || petNutrition < 250L) {
+            if (pet.energy() < 250L || pet.nutrition() < 250L) {
                 String commandSpeech = Functions.Proc_10_4_809CA0(0, 2, -1) == 0L
                     ? Functions.Proc_10_0_809570("com.client.bot.pet.sad.speech", "gst thr", 0)
                     : Functions.Proc_10_0_809570("com.client.bot.pet.angry.speech", "gst grr", 0);
