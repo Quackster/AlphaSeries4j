@@ -10,6 +10,7 @@ import com.alphaseries.dao.mysql.PackageDao;
 import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.dao.mysql.TradeDao;
 import com.alphaseries.dao.mysql.MessengerDao;
+import com.alphaseries.dao.mysql.VoucherDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.BotRoomEntryRow;
 import com.alphaseries.game.pet.PetCommandActionRow;
@@ -4609,10 +4610,9 @@ public final class Handling {
                 Proc_6_244_801E80(socketIndex, "CU" + voucherCode + '\2', 0);
                 return;
             }
-            String voucherRows = MySQL.Proc_5_2_6D4690("SELECT contain_product,contain_credits,contain_shells FROM vouchers WHERE name='"
-                + Functions.Proc_10_11_80A9C0(voucherCode, 0, 0) + "' LIMIT 1", 0, 0);
-            String[] fields = voucherRows.split("\t", -1);
-            if (voucherRows.isEmpty() || fields.length < 3) {
+            VoucherDao vouchers = voucherDao();
+            VoucherDao.VoucherReward voucherReward = vouchers == null ? null : vouchers.reward(voucherCode).orElse(null);
+            if (voucherReward == null) {
                 Proc_6_244_801E80(socketIndex, "CU" + voucherCode + '\2', 0);
                 return;
             }
@@ -4621,30 +4621,32 @@ public final class Handling {
                 Proc_6_244_801E80(socketIndex, "CU" + voucherCode + '\2', 0);
                 return;
             }
-            String productSprite = handlingField(fields, 0);
-            long creditsValue = NumberUtils.parseLong(handlingField(fields, 1));
-            long shellsValue = NumberUtils.parseLong(handlingField(fields, 2));
+            String productSprite = StringUtils.text(voucherReward.productSprite());
+            long creditsValue = voucherReward.credits();
+            long shellsValue = voucherReward.shells();
             String rewardPayload = "";
             if (productSprite.length() > 2) {
-                long productId = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_product FROM catalog_products WHERE sprite='"
-                    + Functions.Proc_10_11_80A9C0(productSprite, 0, 0) + "' LIMIT 1", 0, 0));
+                long productId = vouchers.catalogProductProductIdBySprite(productSprite);
                 if (productId != 0L) {
                     rewardPayload = DataManager.Proc_8_12_806C30(productId, 13, 0) + '\2'
                         + DataManager.Proc_8_12_806C30(productId, 14, 0) + '\2';
                 }
             }
-            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            UserDao users = userDao();
+            if (users == null) {
+                Proc_6_244_801E80(socketIndex, "CU" + voucherCode + '\2', 0);
+                return;
+            }
+            long userIdValue = NumberUtils.parseLong(userId);
             if (creditsValue != 0L) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE users SET credits=credits+" + creditsValue + " WHERE id='" + escapedUserId + "'", 0, 0);
+                users.addCredits(userIdValue, creditsValue);
                 Functions.Proc_10_16_80C480(userId, 0, 0);
             }
             if (shellsValue != 0L) {
-                MySQL.Proc_5_0_6D3CD0("UPDATE users SET activitypoints_0=activitypoints_0+" + shellsValue
-                    + " WHERE id='" + escapedUserId + "'", 0, 0);
+                users.addActivityPoints(userIdValue, 0L, shellsValue);
                 Functions.Proc_10_17_80C6B0(userId, 0, 0);
             }
-            MySQL.Proc_5_0_6D3CD0("DELETE FROM vouchers WHERE name='"
-                + Functions.Proc_10_11_80A9C0(voucherCode, 0, 0) + "' LIMIT 1", 0, 0);
+            vouchers.deleteVoucher(voucherCode);
             Proc_6_244_801E80(socketIndex, "CT" + rewardPayload, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -12303,6 +12305,11 @@ public final class Handling {
     private static PackageDao packageDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new PackageDao(database);
+    }
+
+    private static VoucherDao voucherDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new VoucherDao(database);
     }
 
     private static BotDao botDao() {

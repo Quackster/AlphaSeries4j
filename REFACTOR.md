@@ -180,6 +180,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed catalog purchase balance checks and debits through typed `UserDao.CatalogPurchaseBalance`, replacing raw user balance SQL and tab-delimited parsing in `Handling`.
 - Routed gift purchase balance checks, recipient lookup, debit, and gift counters through `UserDao`, replacing raw user SQL and tab-delimited parsing in `Handling`.
 - Routed represented achievement progress reads through typed `UserDao` accessors, replacing raw user/log SQL and tab-delimited summary parsing in `Handling`.
+- Added `VoucherDao` and routed voucher reward lookup, catalog product lookup, user reward updates, and voucher deletion through typed DAO methods.
 - Restored decompiled boot caption states and Figuredata cache validation/error logging.
 - Restored decompiled `ERR.log`/`SLOW.log` boot header text.
 - Restored decompiled boot initialization integrity failure literal.
