@@ -157,6 +157,42 @@ public final class StaffModerationDao {
         return database.execute("UPDATE users SET login_session=NULL WHERE id=?", userId);
     }
 
+    public Optional<RoomModerationTarget> roomModerationTarget(long roomId) throws SQLException {
+        return database.queryOne(
+            "SELECT id_slot,id_owner FROM rooms WHERE id=? LIMIT 1",
+            resultSet -> new RoomModerationTarget(resultSet.getLong(1), resultSet.getLong(2)),
+            roomId);
+    }
+
+    public int insertRoomModerationLog(
+        long moderationType,
+        long moderatorUserId,
+        long roomId,
+        String message,
+        long sessionId
+    ) throws SQLException {
+        return database.execute(
+            "INSERT INTO logs_moderation(id_type,id_user,id_target,timestamp,message,id_session) "
+                + "VALUES(?,?,?,UNIX_TIMESTAMP(),?,?)",
+            moderationType,
+            moderatorUserId,
+            roomId,
+            message,
+            sessionId);
+    }
+
+    public int deleteRoomEvent(long roomId) throws SQLException {
+        return database.execute("DELETE FROM rooms_events WHERE id_room=? LIMIT 1", roomId);
+    }
+
+    public int insertUserCaution(long userId, long moderatorUserId, String message) throws SQLException {
+        return database.execute(
+            "INSERT INTO users_cautions(id_user,id_partner,message,timestamp_submit) VALUES(?,?,?,UNIX_TIMESTAMP())",
+            userId,
+            moderatorUserId,
+            message);
+    }
+
     private long countCallForHelpByUser(long userId) throws SQLException {
         return database.queryOne(
             "SELECT COUNT(id) FROM staff_cfh WHERE id_user=?",
@@ -233,5 +269,8 @@ public final class StaffModerationDao {
 
     public record UserModerationSummary(String userRow, long callForHelpCount, long pickedCallForHelpCount,
                                         long cautionCount, long banCount) {
+    }
+
+    public record RoomModerationTarget(long roomSlot, long ownerUserId) {
     }
 }

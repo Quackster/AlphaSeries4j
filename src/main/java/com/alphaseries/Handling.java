@@ -167,26 +167,26 @@ public final class Handling {
             if (roomId <= 0L || actionType <= 0L || messageText.isEmpty() || containsUnsafeStaffAlert(messageText)) {
                 return 0L;
             }
-            String roomText = MySQL.Proc_5_2_6D4690("SELECT id_slot,id_owner FROM rooms WHERE id='" + roomId + "' LIMIT 1", 0, 0);
-            String[] roomFields = roomText.split("\t", -1);
-            String roomOwnerId = String.valueOf(NumberUtils.parseLong(handlingField(roomFields, 1)));
-            if (roomOwnerId.isEmpty() || "0".equals(roomOwnerId)) {
+            StaffModerationDao moderationDao = staffModerationDao();
+            if (moderationDao == null) {
+                return 0L;
+            }
+            StaffModerationDao.RoomModerationTarget moderationTarget = moderationDao.roomModerationTarget(roomId).orElse(null);
+            if (moderationTarget == null || moderationTarget.ownerUserId() <= 0L) {
                 return 0L;
             }
             long logType = actionType == 1L ? 1L : 2L;
-            MySQL.Proc_5_1_6D4110("INSERT INTO logs_moderation(id_type,id_user,id_target,timestamp,message,id_session) VALUES('"
-                + logType + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0) + "','" + roomId
-                + "',UNIX_TIMESTAMP(),'" + Functions.Proc_10_11_80A9C0(messageText, 0, 0) + "','" + socketIndex + "')", 0, 0);
+            moderationDao.insertRoomModerationLog(logType, NumberUtils.parseLong(callerUserId), roomId, messageText, socketIndex);
             broadcastToRoomUsers(roomId, "Ba" + messageText + '\2');
             if (actionType == 1L || actionType == 4L) {
-                MySQL.Proc_5_0_6D3CD0("DELETE FROM rooms_events WHERE id_room='" + roomId + "' LIMIT 1", 0, 0);
+                moderationDao.deleteRoomEvent(roomId);
                 Functions.Proc_10_18_80C9E0(roomId, 0, 0);
             }
             if (actionType == 1L) {
-                MySQL.Proc_5_0_6D3CD0("INSERT INTO users_cautions(id_user,id_partner,message,timestamp_submit) VALUES('"
-                    + Functions.Proc_10_11_80A9C0(roomOwnerId, 0, 0) + "','" + Functions.Proc_10_11_80A9C0(callerUserId, 0, 0)
-                    + "','" + Functions.Proc_10_11_80A9C0(messageText + " (Room caution of room id: " + roomId + ")", 0, 0)
-                    + "',UNIX_TIMESTAMP())", 0, 0);
+                moderationDao.insertUserCaution(
+                    moderationTarget.ownerUserId(),
+                    NumberUtils.parseLong(callerUserId),
+                    messageText + " (Room caution of room id: " + roomId + ")");
             }
             return actionType;
         } catch (Exception ignored) {
