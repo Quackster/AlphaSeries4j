@@ -43,6 +43,7 @@ import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.session.SocketMarkerSet;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.user.ExpiredUserEffectRow;
+import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.game.user.UserEffectActivationRow;
 import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.game.user.UserGroupRow;
@@ -7751,9 +7752,9 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id,name,motto,gender,respect_amount,scratch_amount FROM users WHERE id='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
-            String payload = ownProfilePayload(rowText);
+            String payload = userDao().ownProfile(NumberUtils.parseLong(userId))
+                .map(Handling::ownProfilePayload)
+                .orElse("");
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -10548,19 +10549,17 @@ public final class Handling {
         if (userId <= 0L) {
             return "";
         }
-        String userName = handlingField(fields, 1);
-        String mottoText = handlingField(fields, 2);
-        String genderText = handlingField(fields, 3).toUpperCase();
-        genderText = genderText.isEmpty() ? "M" : genderText.substring(0, 1);
-        if (!"M".equals(genderText) && !"F".equals(genderText)) {
-            genderText = "M";
-        }
-        long respectAmount = NumberUtils.parseLong(handlingField(fields, 4));
-        long scratchAmount = NumberUtils.parseLong(handlingField(fields, 5));
-        String payload = "@E" + userId + '\2' + userName + '\2' + mottoText + '\2';
-        payload += genderText + "\2\2\2H\2HIH";
-        payload = Crypto.Proc_3_0_6D2AF0(respectAmount, null, payload);
-        return Crypto.Proc_3_0_6D2AF0(scratchAmount, null, payload);
+        return ownProfilePayload(new OwnProfileRow(
+            userId,
+            handlingField(fields, 1),
+            handlingField(fields, 2),
+            handlingField(fields, 3),
+            NumberUtils.parseLong(handlingField(fields, 4)),
+            NumberUtils.parseLong(handlingField(fields, 5))));
+    }
+
+    public static String ownProfilePayload(OwnProfileRow row) {
+        return UserPayloads.ownProfile(row);
     }
 
     public static long soundSettingFromWire(String packetPayload) {

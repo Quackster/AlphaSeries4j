@@ -1,6 +1,8 @@
 package com.alphaseries.messages.outgoing;
 
+import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.protocol.PacketBuilder;
+import com.alphaseries.util.StringUtils;
 
 public final class UserPayloads {
     private UserPayloads() {
@@ -85,5 +87,29 @@ public final class UserPayloads {
             .appendString(filteredText)
             .appendInt(gestureId)
             .build();
+    }
+
+    public static String ownProfile(OwnProfileRow row) {
+        if (row == null || row.userId() <= 0L) {
+            return "";
+        }
+        return PacketBuilder.message("@E")
+            .appendString(row.userId())
+            .appendString(row.name())
+            .appendString(row.motto())
+            .appendString(normalizedGender(row.gender()))
+            .appendString("")
+            .appendString("")
+            .appendString("H")
+            .appendRaw("HIH")
+            .appendInt(row.respectAmount())
+            .appendInt(row.scratchAmount())
+            .build();
+    }
+
+    private static String normalizedGender(String genderText) {
+        String normalized = StringUtils.text(genderText).toUpperCase();
+        normalized = normalized.isEmpty() ? "M" : normalized.substring(0, 1);
+        return "F".equals(normalized) ? "F" : "M";
     }
 }

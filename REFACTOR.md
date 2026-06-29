@@ -187,6 +187,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed gift purchase balance checks, recipient lookup, debit, and gift counters through `UserDao`, replacing raw user SQL and tab-delimited parsing in `Handling`.
 - Routed represented achievement progress reads through typed `UserDao` accessors, replacing raw user/log SQL and tab-delimited summary parsing in `Handling`.
 - Routed activity-point tick balance reads and awards through `UserDao`, replacing raw activity-point SQL in `Handling`.
+- Added typed `OwnProfileRow` loading and routed own-profile payloads through `UserDao` plus fluent `UserPayloads` construction instead of tab-delimited handler parsing.
 - Added `VoucherDao` and routed voucher reward lookup, catalog product lookup, user reward updates, and voucher deletion through typed DAO methods.
 - Restored decompiled boot caption states and Figuredata cache validation/error logging.
 - Restored decompiled `ERR.log`/`SLOW.log` boot header text.
@@ -230,9 +231,9 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 367
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 115
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 114
 - `Boot.java`: 1316 lines
-- `Handling.java`: 12507 lines
+- `Handling.java`: 12506 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 316 lines
 - `Main.java`: 957 lines

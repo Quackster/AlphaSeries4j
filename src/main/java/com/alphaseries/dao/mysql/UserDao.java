@@ -3,6 +3,7 @@ package com.alphaseries.dao.mysql;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.user.ExpiredUserEffectRow;
+import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.game.user.UserEffectActivationRow;
 import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.game.user.UserGroupRow;
@@ -113,6 +114,19 @@ public final class UserDao {
             resultSet -> resultSet.getLong(1),
             userId)
             .orElse(0L);
+    }
+
+    public Optional<OwnProfileRow> ownProfile(long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT id,name,motto,gender,respect_amount,scratch_amount FROM users WHERE id=? LIMIT 1",
+            resultSet -> new OwnProfileRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getString(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6)),
+            userId);
     }
 
     public long respectReceived(long userId) throws SQLException {
