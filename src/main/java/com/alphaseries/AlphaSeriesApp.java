@@ -19,8 +19,9 @@ public final class AlphaSeriesApp {
             System.err.println("AlphaSeries startup failed");
             System.exit(1);
         }
-        if (!Main.runServer(lifecycle)) {
-            System.err.println("AlphaSeries server startup failed");
+        Main.StartupResult startup = Main.startServer(lifecycle);
+        if (!startup.success) {
+            System.err.println("AlphaSeries server startup failed at " + startup.stage + ": " + startup.message);
             System.exit(1);
         }
         System.out.println(lifecycle.caption);

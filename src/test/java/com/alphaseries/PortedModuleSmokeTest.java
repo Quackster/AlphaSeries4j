@@ -944,6 +944,18 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(mainSql, "UPDATE rooms SET id_slot=null,visitors_now='0' WHERE id_slot IS NOT NULL OR visitors_now!='0'"));
         assertEquals(false, Main.runServer("[!] Alpha", ""));
         assertEquals(true, Main.runServer("Alpha", "rank=2\r7:2=1"));
+        Main.StartupResult missingLifecycleStartup = Main.startServer(null);
+        assertEquals(false, missingLifecycleStartup.success);
+        assertEquals("lifecycle", missingLifecycleStartup.stage);
+        Main.LifecycleResult failedLicenceLifecycle = new Main.LifecycleResult();
+        failedLicenceLifecycle.productKey = "BAD-KEY";
+        DataManager.lastLicenceFailureMessage = "licence unavailable";
+        DataManager.configureLicenceHttpFetcher((requestUrl, action) -> "");
+        Main.StartupResult failedLicenceStartup = Main.startServer(failedLicenceLifecycle);
+        assertEquals(false, failedLicenceStartup.success);
+        assertEquals("licence", failedLicenceStartup.stage);
+        assertEquals("Das Lizenzsystem ist zurzeit nicht erreichbar. Versuch es sp\u00e4ter wieder!", failedLicenceStartup.message);
+        DataManager.configureLicenceHttpFetcher(null);
         assertEquals("ACCEPT 16387", Main.gameServerUnknownEventAccept());
         assertEquals(1, Guardian.Proc_11_2_821390());
         assertEquals("LISTEN", Main.gameServerUnknownEventListen());

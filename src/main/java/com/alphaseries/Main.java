@@ -99,6 +99,25 @@ public final class Main {
         public long frameWidth;
     }
 
+    public static final class StartupResult {
+        public boolean success;
+        public String stage = "";
+        public String message = "";
+
+        public static StartupResult success() {
+            StartupResult result = new StartupResult();
+            result.success = true;
+            return result;
+        }
+
+        public static StartupResult failure(String stage, String message) {
+            StartupResult result = new StartupResult();
+            result.stage = Vb.cStr(stage);
+            result.message = Vb.cStr(message);
+            return result;
+        }
+    }
+
     public static void Proc_0_24_68EEF0(Object... args) {
         // Empty in the recovered VB6 reference.
     }
@@ -176,18 +195,26 @@ public final class Main {
     }
 
     public static boolean runServer(LifecycleResult lifecycle) {
+        return startServer(lifecycle).success;
+    }
+
+    public static StartupResult startServer(LifecycleResult lifecycle) {
         if (lifecycle == null) {
-            return false;
+            return StartupResult.failure("lifecycle", "Lifecycle initialization did not return a result.");
         }
         try {
             if (DataManager.Proc_8_7_8051C0(
                 new DataManager.LicenceCheckContext(lifecycle.productKey, Licence.global_00829038), 0, 0)) {
                 Boot.Proc_1_3_6BEBA0(0);
-                return true;
+                return StartupResult.success();
             }
-            return false;
-        } catch (Exception ignored) {
-            return false;
+            String message = DataManager.lastLicenceFailureMessage;
+            if (message.isEmpty()) {
+                message = "Licence check failed for product key '" + lifecycle.productKey + "'.";
+            }
+            return StartupResult.failure("licence", message);
+        } catch (Exception ex) {
+            return StartupResult.failure("server", ex.getMessage());
         }
     }
 
