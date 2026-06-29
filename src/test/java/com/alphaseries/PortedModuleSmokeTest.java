@@ -2445,6 +2445,9 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT level_hc,hc_days,hc2_days,hc_periods,hc2_periods,hc_presents")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(2, 10, 70, 1, 3, 4, 8));
                 }
+                if (sqlText.contains("SELECT level_hc,hc_days,hc2_days,hc_presents")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(2, 10, 70, 4, 8));
+                }
                 if (sqlText.contains("SELECT users.id_socket FROM logs_visitedrooms")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(4), Arrays.<Object>asList(8));
                 }
@@ -2459,6 +2462,12 @@ public final class PortedModuleSmokeTest {
                 }
                 if (sqlText.contains("SELECT id_product FROM catalog_products WHERE sprite='trade_sprite'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(506));
+                }
+                if (sqlText.contains("SELECT id FROM catalog_products WHERE sprite='trade_sprite'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(81));
+                }
+                if (sqlText.contains("SELECT id FROM furnitures WHERE id_owner='77' AND id_product='506' ORDER BY id DESC LIMIT 1")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(96));
                 }
                 if (sqlText.contains("logs_visitedrooms.id_user='88'") && sqlText.contains("models.type")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(1, 9, "Room", 12, 30));
@@ -2936,6 +2945,14 @@ public final class PortedModuleSmokeTest {
         Handling.Proc_6_131_75C700(4);
         assertEquals(true, containsSend(handlingSends, "IoM"));
         assertEquals(true, containsSend(handlingSends, "GIFTS"));
+        handlingSends.clear();
+        handlingSql.clear();
+        String hcGiftPayload = Handling.Proc_6_130_75B770(4, "G[" + wireString("trade_sprite"));
+        assertEquals(true, hcGiftPayload.contains("AC"));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO furnitures(id_product,id_ctlgproduct,id_owner,task_owner,task_time,position_r,sign) VALUES('506','81','77','77',UNIX_TIMESTAMP(),'0','')"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET hc_presents=hc_presents-1 WHERE id='77'"));
+        assertEquals(true, containsSend(handlingSends, "AC"));
+        assertEquals(true, containsSend(handlingSends, "BLS"));
         handlingSends.clear();
         Handling.Proc_6_134_765B90(4, "oV" + wireLong(81));
         assertEquals(true, containsSend(handlingSends, "In"));

@@ -3673,6 +3673,85 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_130_75B770(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "G[");
+            String requestedSprite = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            if (requestedSprite.isEmpty()) {
+                requestedSprite = Functions.Proc_10_6_809F10(requestPayload, 0, 0);
+            }
+            if (requestedSprite.isEmpty()) {
+                requestedSprite = requestPayload.replace("\2", "").replace("\0", "").trim();
+            }
+            if (requestedSprite.isEmpty()) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long catalogProductId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM catalog_products WHERE sprite='"
+                + Functions.Proc_10_11_80A9C0(requestedSprite, 0, 0) + "' LIMIT 1", 0, 0));
+            if (catalogProductId <= 0L) {
+                return "";
+            }
+            long productId = 0L;
+            long requiredDays = 0L;
+            for (String row : Vb.cStr(Licence.global_0082917C).replace("[", "").split("]", -1)) {
+                if (!row.isEmpty()) {
+                    String[] parts = row.replace('\1', '\0').split("\0", -1);
+                    if (parts.length >= 3 && Vb.val(parts[0]) == catalogProductId) {
+                        productId = Vb.val(parts[1]);
+                        requiredDays = Vb.val(parts[2]);
+                        break;
+                    }
+                }
+            }
+            if (productId <= 0L) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT level_hc,hc_days,hc2_days,hc_presents,"
+                + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0) FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            String[] userFields = rowText.split("\t", -1);
+            long hcLevel = Vb.val(handlingField(userFields, 0));
+            long hcDays = Vb.val(handlingField(userFields, 1));
+            long vipDays = Vb.val(handlingField(userFields, 2));
+            long presentsAvailable = Vb.val(handlingField(userFields, 3));
+            long daysSinceStart = Vb.val(handlingField(userFields, 4));
+            long activeDays = (hcLevel > 1L ? vipDays : hcDays) - daysSinceStart;
+            if (activeDays < 0L) {
+                activeDays = 0L;
+            }
+            if (presentsAvailable <= 0L || activeDays < requiredDays) {
+                return "";
+            }
+            String itemData = DataManager.Proc_8_12_806C30(productId, 24, 0);
+            String escapedUserId = Functions.Proc_10_11_80A9C0(userId, 0, 0);
+            MySQL.Proc_5_0_6D3CD0("INSERT INTO furnitures(id_product,id_ctlgproduct,id_owner,task_owner,task_time,position_r,sign) VALUES('"
+                + productId + "','" + catalogProductId + "','" + escapedUserId + "','" + escapedUserId
+                + "',UNIX_TIMESTAMP(),'0','" + Functions.Proc_10_11_80A9C0(itemData, 0, 0) + "')", 0, 0);
+            long insertedFurnitureId = Vb.val(MySQL.Proc_5_2_6D4690("SELECT id FROM furnitures WHERE id_owner='"
+                + escapedUserId + "' AND id_product='" + productId + "' ORDER BY id DESC LIMIT 1", 0, 0));
+            String itemClass = Vb.val(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 9L ? "I" : "i";
+            String responsePayload = Crypto.Proc_3_0_6D2AF0(productId, null, "AC")
+                + DataManager.Proc_8_12_806C30(productId, 24, 0) + '\2'
+                + "HHHI" + itemClass + '\2';
+            responsePayload = Crypto.Proc_3_0_6D2AF0(insertedFurnitureId, null, responsePayload) + '\2' + "IH";
+            Proc_6_244_801E80(socketIndex, responsePayload, 0);
+            MySQL.Proc_5_0_6D3CD0("UPDATE users SET hc_presents=hc_presents-1 WHERE id='" + escapedUserId + "'", 0, 0);
+            Proc_6_140_769400(socketIndex, "FT", "");
+            return responsePayload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static void Proc_6_131_75C700(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
