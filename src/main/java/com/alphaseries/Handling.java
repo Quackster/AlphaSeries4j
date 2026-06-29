@@ -8527,22 +8527,7 @@ public final class Handling {
     }
 
     public static String staffModerationPayload(long rankIndex, long hcLevel) {
-        Object cache = Licence.global_008292D8;
-        int rank = (int) Math.max(0L, Math.min(rankIndex, 20L));
-        int hc = (int) Math.max(0L, Math.min(hcLevel, 2L));
-        if (cache instanceof String[][]) {
-            String[][] values = (String[][]) cache;
-            if (rank < values.length && values[rank] != null && hc < values[rank].length) {
-                return Vb.cStr(values[rank][hc]);
-            }
-        }
-        if (cache instanceof Object[][]) {
-            Object[][] values = (Object[][]) cache;
-            if (rank < values.length && values[rank] != null && hc < values[rank].length) {
-                return Vb.cStr(values[rank][hc]);
-            }
-        }
-        return "";
+        return Licence.staffSettings().moderationPayload(rankIndex, hcLevel);
     }
 
     public static String indexedPayload(Object cache, long index) {

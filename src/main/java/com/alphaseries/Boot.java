@@ -202,7 +202,7 @@ public final class Boot {
                     + appendPermissionPayload(rank, hc, "fuse_edit_localizations", moderatorMessages);
             }
         }
-        Licence.global_008292D8 = values;
+        Licence.setStaffModerationPayloads(values);
     }
 
     public static void Proc_1_11_6C8D10(Object... args) {

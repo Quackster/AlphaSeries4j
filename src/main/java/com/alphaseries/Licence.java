@@ -8,6 +8,7 @@ import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.messenger.MessengerSettings;
+import com.alphaseries.game.moderation.StaffSettings;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.navigator.RoomCategoryCache;
@@ -270,6 +271,14 @@ public final class Licence {
     public static void setNewFriendRooms(String rows, LocalDateTime expiresAt) {
         global_0082908C = StringUtils.text(rows);
         global_00829090 = expiresAt;
+    }
+
+    public static StaffSettings staffSettings() {
+        return StaffSettings.fromLegacy(global_008292D8);
+    }
+
+    public static void setStaffModerationPayloads(Object moderationPayloads) {
+        global_008292D8 = moderationPayloads == null ? "" : moderationPayloads;
     }
 
     public static String Proc_9_6_808080(Object... args) {

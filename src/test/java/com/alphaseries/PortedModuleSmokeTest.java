@@ -2044,6 +2044,7 @@ public final class PortedModuleSmokeTest {
         Licence.global_0082920C = new String[]{"", "CATFAQ"};
         Licence.global_00829210 = new String[]{"", "", "FAQDESC"};
         Licence.global_008292D8 = new String[][]{{}, {"STAFFMOD"}};
+        assertEquals("STAFFMOD", Licence.staffSettings().moderationPayload(1L, 0L));
         Licence.global_00829094 = "WIREDSTATE";
         assertEquals("WIREDSTATE", Licence.wiredSettings().statePayload());
         Licence.global_0082908C = "12\t1";
