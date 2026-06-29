@@ -1,7 +1,8 @@
 package com.alphaseries;
 
 import com.alphaseries.server.packet.PacketSink;
-import com.alphaseries.vb.Vb;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 public final class HandlingMUS {
     private static PacketSink musSink = (socketIndex, payload) -> { };
@@ -20,13 +21,13 @@ public final class HandlingMUS {
 
     public static void Proc_12_1_821AA0(Object... args) {
         int socketIndex = musSocketIndex(args);
-        String messageText = args != null && args.length >= 2 ? Vb.cStr(args[1]) : "";
+        String messageText = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
         sendMusPayload(socketIndex, "DATA" + '\6' + socketIndex + '\6' + messageText + '\7');
     }
 
     public static int musSocketIndex(Object... args) {
         if (args != null && args.length >= 1) {
-            return (int) Vb.val(args[0]);
+            return NumberUtils.parseInt(args[0]);
         }
         return 0;
     }
