@@ -7927,6 +7927,108 @@ public final class Handling {
         }
     }
 
+    public static void Proc_6_241_7FC380(Object... args) {
+        try {
+            if (args == null || args.length < 2) {
+                return;
+            }
+            long socketIndex = Vb.val(args[0]);
+            String packetBuffer = Functions.Proc_10_9_80A680(Vb.cStr(args[1]), 0, 0);
+            if (socketIndex <= 0L || Guardian.Proc_11_2_821390(socketIndex, 0, 0) != 1) {
+                return;
+            }
+            long packetCount = 0L;
+            while (packetBuffer.length() > 2 && packetCount < 10L) {
+                packetBuffer = packetBuffer.substring(1);
+                long packetLength = Crypto.Proc_3_4_6D3620(Vb.left(packetBuffer, 2));
+                if (packetLength <= 0L || packetBuffer.length() < packetLength + 2L) {
+                    break;
+                }
+                String packetPayload = Vb.mid(packetBuffer, 3, (int) packetLength);
+                String packetCode = Vb.left(packetPayload, 2);
+                if (Licence.global_00829190 && !Licence.global_00829034) {
+                    Console.Proc_2_0_6D1510("[" + socketIndex + "] " + packetPayload, "GAME", "16711680");
+                }
+                dispatchPreReadyPacket((int) socketIndex, packetCode, packetPayload);
+                packetCount++;
+                packetBuffer = Vb.mid(packetBuffer, (int) packetLength + 3);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    public static void dispatchPreReadyPacket(int socketIndex, String packetCode, String packetPayload) {
+        try {
+            switch (Vb.cStr(packetCode)) {
+                case "@B": Proc_6_78_7279A0(socketIndex, "@B", packetPayload); break;
+                case "@{": Proc_6_79_72A430(socketIndex, "@{", packetPayload); break;
+                case "Ad": Proc_6_128_756190(socketIndex, "Ad", packetPayload); break;
+                case "GX": Proc_6_132_75D4A0(socketIndex, "GX", packetPayload); break;
+                case "GZ": Proc_6_131_75C700(socketIndex, "GZ", packetPayload); break;
+                case "G[": Proc_6_130_75B770(socketIndex, "G[", packetPayload); break;
+                case "oC": Proc_6_135_765D80(socketIndex, "oC", packetPayload); break;
+                case "oV": Proc_6_134_765B90(socketIndex, "oV", packetPayload); break;
+                case "Af": Proc_6_136_765F10(socketIndex, "Af", packetPayload); break;
+                case "FT": Proc_6_140_769400(socketIndex, "FT", packetPayload); break;
+                case "AB": Proc_6_139_768100(socketIndex, "AB", packetPayload); break;
+                case "BA": Proc_6_137_766470(socketIndex, "BA", packetPayload); break;
+                case "n~": Proc_6_87_73C120(socketIndex, "n~", packetPayload); break;
+                case "p`":
+                case "rt": Proc_6_86_73B0D0(socketIndex, packetCode, packetPayload); break;
+                case "ny": Proc_6_183_7CABF0(socketIndex, "ny", packetPayload); break;
+                case "nx": Proc_6_178_7C6E60(socketIndex, "nx", packetPayload); break;
+                case "nz": Proc_6_179_7C7790(socketIndex, "nz", packetPayload); break;
+                case "n\u007f": Proc_6_177_7C6580(socketIndex, "n\u007f", packetPayload); break;
+                case "@t": Proc_6_26_7034C0(socketIndex, "@t", packetPayload); break;
+                case "@w": Proc_6_27_706920(socketIndex, "@w", packetPayload); break;
+                case "@x": Proc_6_28_709DA0(socketIndex, "@x", packetPayload); break;
+                case "GF": Proc_6_0_6D7FF0(socketIndex, "GF", packetPayload); break;
+                case "GM": Proc_6_1_6D8B70(socketIndex, "GM", packetPayload); break;
+                case "GO": Proc_6_2_6D9880(socketIndex, "GO", packetPayload); break;
+                case "GP": Proc_6_3_6DA490(socketIndex, "GP", packetPayload); break;
+                case "CH": Proc_6_4_6DAFB0(socketIndex, "CH", packetPayload); break;
+                case "GB": Proc_6_6_6DC9D0(socketIndex, "GB", packetPayload); break;
+                case "GC": Proc_6_8_6DD790(socketIndex, "GC", packetPayload); break;
+                case "GD": Proc_6_7_6DD0E0(socketIndex, "GD", packetPayload); break;
+                case "GL": Proc_6_9_6DDD70(socketIndex, "GL", packetPayload); break;
+                case "GG": Proc_6_10_6DE1D0(socketIndex, "GG", packetPayload); break;
+                case "GJ": Proc_6_11_6DF4A0(socketIndex, "GJ", packetPayload); break;
+                case "GN": Proc_6_12_6DFE90(socketIndex, "GN", packetPayload); break;
+                case "A^": Proc_6_13_6E0A80(socketIndex, "A^", packetPayload); break;
+                case "A]": Proc_6_14_6E10C0(socketIndex, "A]", packetPayload); break;
+                case "Ew": Proc_6_15_6E1900(socketIndex, "Ew", packetPayload); break;
+                case "Ex": Proc_6_16_6E2320(socketIndex, "Ex", packetPayload); break;
+                case "@l": Proc_6_17_6E48D0(socketIndex, "@l", packetPayload); break;
+                case "oW": Proc_6_18_6E7480(socketIndex, "GY", packetPayload); break;
+                case "@Z": Proc_6_19_6E8040(socketIndex, Licence.global_0082912C, "Gz"); break;
+                case "F@": Proc_6_47_714F60(socketIndex, "F@", packetPayload); break;
+                case "FB": Proc_6_44_7145E0(socketIndex, "FB", packetPayload); break;
+                case "EZ": Proc_6_48_7151E0(socketIndex, "EZ", packetPayload); break;
+                case "E\\": Proc_6_49_715D30(socketIndex, "E\\", packetPayload); break;
+                case "Ab": Proc_6_50_7166B0(socketIndex, "Ab", packetPayload); break;
+                case "FQ": Proc_6_52_7172B0(socketIndex, "FQ", packetPayload); break;
+                case "@f": Proc_6_170_7C1100(socketIndex, "@f", packetPayload); break;
+                case "@g": Proc_6_174_7C3BC0(socketIndex, "@g", packetPayload); break;
+                case "@h": Proc_6_171_7C1520(socketIndex, "@h", packetPayload); break;
+                case "@i": Proc_6_172_7C25B0(socketIndex, "@i", packetPayload); break;
+                case "@a": Proc_6_173_7C3430(socketIndex, "@a", packetPayload); break;
+                case "@b": Proc_6_168_7C05F0(socketIndex, "@b", packetPayload); break;
+                case "@e": Proc_6_167_7BECA0(socketIndex, "@e", packetPayload); break;
+                case "Ci": Proc_6_175_7C4800(socketIndex, "Ci", packetPayload); break;
+                case "@L": Proc_6_176_7C4EE0(socketIndex, "@L", packetPayload); break;
+                case "pa": Proc_6_244_801E80(socketIndex, "J|H", 0); break;
+                default:
+                    if (Licence.global_00829034) {
+                        Console.Proc_2_0_6D1510(packetPayload, "UNHANDLED -- index: " + socketIndex, "255");
+                    }
+                    break;
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
     public static String Proc_6_242_7FF0D0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);

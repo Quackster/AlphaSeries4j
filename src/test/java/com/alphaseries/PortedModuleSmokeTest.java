@@ -2862,6 +2862,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "@o"));
         assertEquals(true, containsSend(handlingSends, "GX"));
         handlingSends.clear();
+        Handling.Proc_6_241_7FC380(4, "x@Bpa");
+        assertEquals(true, containsSend(handlingSends, "J|H"));
+        handlingSends.clear();
         Handling.Proc_6_82_731070(4, 9);
         assertEquals(true, containsSend(handlingSends, "Ge"));
         handlingSends.clear();
