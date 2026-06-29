@@ -139,6 +139,16 @@ public final class BotDao {
             commandId);
     }
 
+    public long petLevelForOwner(long botId, long userId) throws SQLException {
+        return database.queryOne(
+            "SELECT bots_petdata.id_level FROM bots,bots_petdata WHERE bots.id=? AND bots.id_user=? "
+                + "AND bots_petdata.id_bot=bots.id LIMIT 1",
+            resultSet -> resultSet.getLong(1),
+            botId,
+            userId)
+            .orElse(0L);
+    }
+
     public Optional<PetCommandTargetRow> petCommandTarget(long botId, long roomId) throws SQLException {
         return database.queryOne(
             "SELECT bots.id,bots.id_room,bots_petdata.id_level,bots_petdata.energy,bots_petdata.nutrition "

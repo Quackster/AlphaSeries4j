@@ -6226,9 +6226,10 @@ public final class Handling {
             long petLevel = 0L;
             String userId = handlingUserIdFromSocket(socketIndex);
             if (!userId.isEmpty() && !"0".equals(userId) && botId > 0L) {
-                petLevel = NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT bots_petdata.id_level FROM bots,bots_petdata WHERE bots.id='"
-                    + botId + "' AND bots.id_user='" + Functions.Proc_10_11_80A9C0(userId, 0, 0)
-                    + "' AND bots_petdata.id_bot=bots.id LIMIT 1", 0, 0));
+                BotDao bots = botDao();
+                if (bots != null) {
+                    petLevel = bots.petLevelForOwner(botId, NumberUtils.parseLong(userId));
+                }
             }
             return Proc_6_184_7CBDA0(socketIndex, petLevel, 0);
         } catch (Exception ignored) {
