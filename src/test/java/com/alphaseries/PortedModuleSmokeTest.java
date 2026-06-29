@@ -2244,6 +2244,14 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT furnitures.id FROM furnitures,products WHERE furnitures.id_room='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(78));
                 }
+                if (sqlText.contains("SELECT id_light,id_preset,id_background,colour,id_state FROM furnitures_dimmerpresets WHERE id_furni='78'")) {
+                    return Arrays.<List<Object>>asList(
+                        Arrays.<Object>asList(150, 1, 1, "#0053F7", 1),
+                        Arrays.<Object>asList(100, 2, 1, "#82F349", 2));
+                }
+                if (sqlText.contains("SELECT furnitures_dimmerpresets.id_light,furnitures_dimmerpresets.id_preset")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(100, 2, 1, "#82F349", 503, ":w=5", "2,2,1,#82F349,100"));
+                }
                 if (sqlText.contains("SELECT id_product,position_wall FROM furnitures WHERE id='78'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(503, ":w=5"));
                 }
@@ -2800,6 +2808,17 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         Handling.Proc_6_88_73E4F0(4);
         assertEquals(true, containsSend(handlingSends, "L\u007f"));
+        handlingSends.clear();
+        handlingSql.clear();
+        assertEquals(2L, Handling.Proc_6_98_747D80(4));
+        assertEquals(true, containsSend(handlingSends, "Em"));
+        assertEquals(true, containsSend(handlingSends, "#82F349"));
+        handlingSends.clear();
+        handlingSql.clear();
+        assertEquals(1L, Handling.Proc_6_99_748460(4));
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='1,2,1,#82F349,100' WHERE id='78'"));
+        assertEquals(true, containsSend(handlingSends, "AU78\2"));
+        assertEquals(true, containsSend(handlingSends, "1,2,1,#82F349,100"));
         handlingSends.clear();
         handlingSql.clear();
         long dimmerId = Handling.Proc_6_100_748C80(4, "EV" + wireLong(2) + wireLong(1) + wireString("#82f349") + wireLong(100));

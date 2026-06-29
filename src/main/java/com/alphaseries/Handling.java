@@ -2908,6 +2908,109 @@ public final class Handling {
         }
     }
 
+    public static long Proc_6_98_747D80(Object... args) {
+        long currentPresetId = 0L;
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L || (!handlingUserOwnsRoom(userId, roomId) && !handlingUserHasRoomRight(userId, roomId))) {
+                return 0L;
+            }
+            long dimmerFurnitureId = representedDimmerFurnitureId(roomId);
+            if (dimmerFurnitureId <= 0L) {
+                return 0L;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_light,id_preset,id_background,colour,id_state "
+                + "FROM furnitures_dimmerpresets WHERE id_furni='" + dimmerFurnitureId + "' LIMIT 3", 0, 0);
+            StringBuilder presetPayload = new StringBuilder();
+            for (String row : rowText.split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    String[] fields = row.split("\t", -1);
+                    if (fields.length >= 5) {
+                        long lightLevel = Vb.val(handlingField(fields, 0));
+                        long presetId = Vb.val(handlingField(fields, 1));
+                        long backgroundId = Vb.val(handlingField(fields, 2));
+                        String colourText = handlingField(fields, 3);
+                        long stateId = Vb.val(handlingField(fields, 4));
+                        if (stateId == 2L || currentPresetId == 0L) {
+                            currentPresetId = presetId;
+                        }
+                        presetPayload.append(Crypto.Proc_3_0_6D2AF0(presetId, null, ""));
+                        presetPayload.append(Crypto.Proc_3_0_6D2AF0(backgroundId, null, ""));
+                        presetPayload.append(Crypto.Proc_3_0_6D2AF0(lightLevel, null, ""));
+                        presetPayload.append(colourText).append('\2');
+                    }
+                }
+            }
+            String payload = Crypto.Proc_3_0_6D2AF0(currentPresetId, null,
+                Crypto.Proc_3_0_6D2AF0(0, null, "Em")) + presetPayload;
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return currentPresetId;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return currentPresetId;
+        }
+    }
+
+    public static long Proc_6_99_748460(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return 0L;
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L || (!handlingUserOwnsRoom(userId, roomId) && !handlingUserHasRoomRight(userId, roomId))) {
+                return 0L;
+            }
+            long dimmerFurnitureId = representedDimmerFurnitureId(roomId);
+            if (dimmerFurnitureId <= 0L) {
+                return 0L;
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT furnitures_dimmerpresets.id_light,"
+                + "furnitures_dimmerpresets.id_preset,furnitures_dimmerpresets.id_background,"
+                + "furnitures_dimmerpresets.colour,furnitures.id_product,furnitures.position_wall,furnitures.sign "
+                + "FROM furnitures_dimmerpresets,furnitures WHERE furnitures_dimmerpresets.id_furni='"
+                + dimmerFurnitureId + "' AND furnitures_dimmerpresets.id_state='2' "
+                + "AND furnitures.id=furnitures_dimmerpresets.id_furni LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return 0L;
+            }
+            String[] fields = rowText.split("\t", -1);
+            if (fields.length < 7) {
+                return 0L;
+            }
+            long lightLevel = Vb.val(handlingField(fields, 0));
+            long presetId = Vb.val(handlingField(fields, 1));
+            long backgroundId = Vb.val(handlingField(fields, 2));
+            String colourText = handlingField(fields, 3);
+            long productId = Vb.val(handlingField(fields, 4));
+            String wallPosition = handlingField(fields, 5);
+            String currentSign = handlingField(fields, 6);
+            long currentState = currentSign.isEmpty() ? 0L : Vb.val(currentSign.substring(0, 1));
+            if (currentState <= 0L) {
+                currentState = 2L;
+            }
+            long nextState = currentState - 1L;
+            if (nextState < 1L) {
+                nextState = 2L;
+            }
+            String signText = nextState + "," + presetId + "," + backgroundId + "," + colourText + "," + lightLevel;
+            MySQL.Proc_5_0_6D3CD0("UPDATE furnitures SET sign='"
+                + Functions.Proc_10_11_80A9C0(signText, 0, 0) + "' WHERE id='" + dimmerFurnitureId + "'", 0, 0);
+            Proc_6_247_8027E0(socketIndex, "AU" + dimmerFurnitureId + '\2'
+                + Crypto.Proc_3_0_6D2AF0(productId, null, "") + wallPosition + '\2' + signText + '\2', 0);
+            return nextState;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 0L;
+        }
+    }
+
     public static long Proc_6_100_748C80(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
@@ -2929,9 +3032,7 @@ public final class Handling {
             if (roomId <= 0L || (!handlingUserOwnsRoom(userId, roomId) && !handlingUserHasRoomRight(userId, roomId))) {
                 return 0L;
             }
-            long dimmerFurnitureId = Vb.val(MySQL.Proc_5_2_6D4690(
-                "SELECT furnitures.id FROM furnitures,products WHERE furnitures.id_room='" + roomId
-                    + "' AND products.id_type='9' AND furnitures.id_product=products.id LIMIT 1", 0, 0));
+            long dimmerFurnitureId = representedDimmerFurnitureId(roomId);
             if (dimmerFurnitureId <= 0L) {
                 return 0L;
             }
@@ -7877,6 +7978,15 @@ public final class Handling {
 
     public static boolean isPostItProduct(long productId) {
         return DataManager.Proc_8_12_806C30(productId, 18, 0).toLowerCase().startsWith("post.it");
+    }
+
+    public static long representedDimmerFurnitureId(long roomId) {
+        if (roomId <= 0L) {
+            return 0L;
+        }
+        return Vb.val(MySQL.Proc_5_2_6D4690(
+            "SELECT furnitures.id FROM furnitures,products WHERE furnitures.id_room='" + roomId
+                + "' AND products.id_type='9' AND furnitures.id_product=products.id LIMIT 1", 0, 0));
     }
 
     public static boolean isDimmerColour(String colourText) {
