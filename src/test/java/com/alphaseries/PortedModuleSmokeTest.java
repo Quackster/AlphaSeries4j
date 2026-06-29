@@ -1905,6 +1905,12 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id_friend FROM friendships WHERE id_user='77' AND id_friend='88' AND has_accept='1'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(88));
                 }
+                if (sqlText.contains("SELECT id_user FROM friendships WHERE has_accept='1'") && sqlText.contains("id_friend='88'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(77));
+                }
+                if (sqlText.contains("SELECT name FROM users WHERE id='88'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList("Target"));
+                }
                 if (sqlText.contains("SELECT id,id_product,sign,caption,position_wall FROM furnitures WHERE id='70'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(70, 500, "FFFF33", "old", "w=1"));
                 }
@@ -2733,6 +2739,15 @@ public final class PortedModuleSmokeTest {
         String followPayload = Handling.Proc_6_169_7C0DC0(4, "DF" + wireLong(88));
         assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, Crypto.Proc_3_0_6D2AF0(61, null, "D^")), followPayload);
         assertEquals(true, containsSend(handlingSends, "D^"));
+        handlingSends.clear();
+        handlingSql.clear();
+        String inviteWire = wireLong(1) + wireLong(88) + wireString("Join me");
+        String inviteText = Functions.Proc_10_7_80A190(inviteWire, 0, 0);
+        String invitePayload = Handling.Proc_6_168_7C05F0(4, "@b" + inviteWire);
+        assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BG") + inviteText + "\2", invitePayload);
+        assertEquals(true, containsSend(handlingSends, "BG"));
+        assertEquals(true, containsSql(handlingSql, "(Invite To: Target) -- " + inviteText));
+        handlingSql.clear();
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));

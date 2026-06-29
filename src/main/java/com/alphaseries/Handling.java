@@ -4497,6 +4497,73 @@ public final class Handling {
         }
     }
 
+    public static String Proc_6_168_7C05F0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "@b");
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
+                return "";
+            }
+            LongRef offset = new LongRef(1);
+            long targetCount = readWireLong(requestPayload, offset);
+            if (targetCount <= 0L) {
+                return "";
+            }
+            targetCount = Math.min(targetCount, 150L);
+            StringBuilder targetList = new StringBuilder();
+            for (long targetIndex = 1L; targetIndex <= targetCount; targetIndex++) {
+                String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
+                if (!targetUserId.isEmpty() && !"0".equals(targetUserId)
+                    && !("," + targetList + ",").contains("," + targetUserId + ",")) {
+                    String friendshipRow = MySQL.Proc_5_2_6D4690("SELECT id_user FROM friendships WHERE has_accept='1' AND ((id_user='"
+                        + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' AND id_friend='"
+                        + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "') OR (id_user='"
+                        + Functions.Proc_10_11_80A9C0(targetUserId, 0, 0) + "' AND id_friend='"
+                        + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "')) LIMIT 1", 0, 0);
+                    if (!friendshipRow.isEmpty() && handlingSocketFromUserId(targetUserId) > 0) {
+                        if (targetList.length() > 0) {
+                            targetList.append(',');
+                        }
+                        targetList.append(targetUserId);
+                    }
+                }
+            }
+            String inviteText = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            if (inviteText.length() > 122) {
+                inviteText = inviteText.substring(0, 122);
+            }
+            if (inviteText.isEmpty()) {
+                inviteText = readWireString(requestPayload, offset);
+                if (inviteText.length() > 122) {
+                    inviteText = inviteText.substring(0, 122);
+                }
+            }
+            String filteredText = Proc_6_22_6E9300(inviteText, 0, 0);
+            String payload = Crypto.Proc_3_0_6D2AF0(Vb.val(userId), null, "BG") + filteredText + '\2';
+            if (targetList.length() > 0) {
+                for (String targetUserId : targetList.toString().split(",", -1)) {
+                    int targetSocketIndex = handlingSocketFromUserId(targetUserId);
+                    if (targetSocketIndex > 0) {
+                        Proc_6_244_801E80(targetSocketIndex, payload, 0);
+                        MySQL.Proc_5_1_6D4110("INSERT INTO logs_chat(id_user,id_room,timestamp,description,id_type,id_session) VALUES('"
+                            + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "','" + roomId + "',UNIX_TIMESTAMP(),'"
+                            + Functions.Proc_10_11_80A9C0("(Invite To: " + handlingUserName(targetUserId) + ") -- " + inviteText, 0, 0)
+                            + "','4','" + socketIndex + "')", 0, 0);
+                    }
+                }
+            }
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_169_7C0DC0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
@@ -4540,6 +4607,18 @@ public final class Handling {
 
     public static String handlingField(String[] fields, long fieldIndex) {
         return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? Vb.cStr(fields[(int) fieldIndex]) : "";
+    }
+
+    public static String handlingUserName(String userId) {
+        try {
+            if (Vb.cStr(userId).isEmpty() || "0".equals(Vb.cStr(userId))) {
+                return "";
+            }
+            return MySQL.Proc_5_2_6D4690("SELECT name FROM users WHERE id='"
+                + Functions.Proc_10_11_80A9C0(userId, 0, 0) + "' LIMIT 1", 0, 0);
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
     public static void Proc_6_243_7FFEB0(Object... args) {
