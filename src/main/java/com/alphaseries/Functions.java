@@ -1,5 +1,7 @@
 package com.alphaseries;
 
+import com.alphaseries.config.AppSettingsCache;
+import com.alphaseries.config.PermissionMatrix;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
@@ -29,33 +31,16 @@ public final class Functions {
         if (args == null || args.length == 0) {
             return "";
         }
-        String defaultValue = args.length >= 2 ? Vb.cStr(args[1]) : "";
-        String settingValue = readSettingsValue(global_0082928C, Vb.cStr(args[0]));
-        return settingValue.isEmpty() ? defaultValue : settingValue;
+        Object defaultValue = args.length >= 2 ? args[1] : "";
+        return settingsCache().valueOrDefault(Vb.cStr(args[0]), defaultValue);
     }
 
     public static boolean Proc_10_1_809790(Object... args) {
         if (args == null || args.length < 3) {
             return false;
         }
-        int rankIndex = clamp((int) Vb.val(args[0]), 0, 20);
-        int hcLevel = args.length >= 4 ? clamp((int) Vb.val(args[3]), 0, 2) : 0;
-        String permissionName = Vb.cStr(args[2]);
-        String permissionList = "\2" + Vb.cStr(args[1]) + "\2";
-
-        if (global_008292A8 instanceof String[][]) {
-            String[][] permissions = (String[][]) global_008292A8;
-            if (rankIndex < permissions.length && permissions[rankIndex] != null && hcLevel < permissions[rankIndex].length) {
-                permissionList += Vb.cStr(permissions[rankIndex][hcLevel]);
-            }
-        } else if (global_008292A8 instanceof String[]) {
-            String[] permissions = (String[]) global_008292A8;
-            if (rankIndex < permissions.length) {
-                permissionList += Vb.cStr(permissions[rankIndex]);
-            }
-        }
-
-        return permissionList.contains("\2" + permissionName + "\2");
+        Object hcLevel = args.length >= 4 ? args[3] : 0;
+        return permissionMatrix().allows(args[0], args[1], args[2], hcLevel);
     }
 
     public static String Proc_10_2_8099D0(Object... args) {
@@ -692,35 +677,23 @@ public final class Functions {
     }
 
     public static String readSettingsValue(String settingsText, String keyName) {
-        String settings = Vb.cStr(settingsText);
-        String key = Vb.cStr(keyName);
-        if (settings.isEmpty() || key.isEmpty()) {
-            return "";
-        }
+        return AppSettingsCache.fromLegacy(settingsText).value(keyName);
+    }
 
-        String marker = "[" + key + "=";
-        int valueStart = settings.toLowerCase().indexOf(marker.toLowerCase());
-        if (valueStart >= 0) {
-            valueStart += marker.length();
-            int valueEnd = settings.indexOf(']', valueStart);
-            if (valueEnd < 0) {
-                valueEnd = settings.length();
-            }
-            return settings.substring(valueStart, valueEnd);
-        }
+    public static AppSettingsCache settingsCache() {
+        return AppSettingsCache.fromLegacy(global_0082928C);
+    }
 
-        String normalizedText = settings.replace("\r\n", "\n").replace('\r', '\n').replace(']', '\n');
-        for (String settingLine : normalizedText.split("\n", -1)) {
-            String currentLine = settingLine.trim();
-            if (currentLine.startsWith("[")) {
-                currentLine = currentLine.substring(1);
-            }
-            int equalsAt = currentLine.indexOf('=');
-            if (equalsAt > 0 && currentLine.substring(0, equalsAt).trim().equalsIgnoreCase(key)) {
-                return currentLine.substring(equalsAt + 1);
-            }
-        }
-        return "";
+    public static void setSettingsCache(String settingsCache) {
+        global_0082928C = settingsCache == null ? "" : settingsCache;
+    }
+
+    public static PermissionMatrix permissionMatrix() {
+        return PermissionMatrix.fromLegacy(global_008292A8);
+    }
+
+    public static void setPermissions(Object permissions) {
+        global_008292A8 = permissions == null ? "" : permissions;
     }
 
     public static String userInventoryCachePath(long ownerId) {

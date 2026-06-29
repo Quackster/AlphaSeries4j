@@ -10,6 +10,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 ## Completed Slices
 
 - Added `com.alphaseries.config` and moved database config into `AppDatabaseConfig`.
+- Added `com.alphaseries.config.AppSettingsCache` and `PermissionMatrix` as typed adapters around settings and rank/HC permission caches previously parsed inline in `Functions`.
 - Added `com.alphaseries.db` with `Database`, `JdbcDatabase`, and `RowMapper`.
 - Switched `JdbcDatabase` to `PreparedStatement` for query and execute paths.
 - Added typed prepared-query defaults for legacy `Database` test doubles while preserving JDBC prepared statements.
@@ -70,10 +71,10 @@ Removal is blocked until all `Vb.` call sites are replaced with domain-specific 
 Measured on 2026-06-29:
 
 - Unique `Proc_*` symbols under `src/main/java`: 472
-- `Vb.` call sites under `src/main/java/com/alphaseries`: 1372
+- `Vb.` call sites under `src/main/java/com/alphaseries`: 1363
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 476
 - `Handling.java`: 12340 lines
-- `Functions.java`: 783 lines
+- `Functions.java`: 756 lines
 - `MySQL.java`: 301 lines
 - `Vb.java`: 106 lines
 

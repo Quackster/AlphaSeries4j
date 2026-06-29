@@ -176,8 +176,8 @@ public final class Boot {
         Proc_1_16_6CCA60(0, 0, 0);
         String systemDate = Functions.Proc_10_0_809570("com.system.format.date", "", 0);
         String systemTime = Functions.Proc_10_0_809570("com.system.format.time", "", 0);
-        Functions.global_0082928C = buildSettingsCache(MySQL.Proc_5_2_6D4690("SELECT variable,value FROM settings", 0, 0),
-            systemDate, systemTime);
+        Functions.setSettingsCache(buildSettingsCache(MySQL.Proc_5_2_6D4690("SELECT variable,value FROM settings", 0, 0),
+            systemDate, systemTime));
         Licence.setQuestRows(MySQL.Proc_5_2_6D4690(
             "SELECT id,level,name,NULL,reward,reward_type,require_action,id_additional,id_campaign,amount_activities,waitamount FROM quests ORDER BY id_campaign DESC,level ASC", 0, 0));
     }
@@ -263,7 +263,7 @@ public final class Boot {
                 permissions[rank][hc] = rows.isEmpty() ? "\2" : "\2" + rows.replace('\r', '\2') + "\2";
             }
         }
-        Functions.global_008292A8 = permissions;
+        Functions.setPermissions(permissions);
     }
 
     public static void Proc_1_17_6CCDC0(Object... args) {
