@@ -5138,17 +5138,19 @@ public final class Handling {
             if (furnitureId <= 0L) {
                 return "";
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT id_room,id_product,sign FROM furnitures WHERE id='"
-                + furnitureId + "' LIMIT 1", 0, 0);
-            if (rowText.isEmpty()) {
+            FurnitureDao furniture = furnitureDao();
+            if (furniture == null) {
                 return "";
             }
-            String[] fields = rowText.split("\t", -1);
-            long roomId = NumberUtils.parseLong(handlingField(fields, 0));
-            if (productId <= 0L) {
-                productId = NumberUtils.parseLong(handlingField(fields, 1));
+            FurnitureDao.RoomFurnitureState furnitureState = furniture.roomFurnitureState(furnitureId).orElse(null);
+            if (furnitureState == null) {
+                return "";
             }
-            String signText = handlingField(fields, 2);
+            long roomId = furnitureState.roomId();
+            if (productId <= 0L) {
+                productId = furnitureState.productId();
+            }
+            String signText = StringUtils.text(furnitureState.sign());
             if (roomId <= 0L || productId <= 0L) {
                 return "";
             }
