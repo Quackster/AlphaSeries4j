@@ -1845,6 +1845,10 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT bots.id,bots.name,bots.figure,bots_petdata.scratches FROM bots,bots_petdata WHERE bots.id_user='77'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, "Rex", "1 2 FF00AA", 4));
                 }
+                if (sqlText.contains("SELECT bots.id,bots.name,bots.figure,bots_petdata.id_level,bots_petdata.experience")
+                    && sqlText.contains("WHERE bots.id='10'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(10, "Rex", "1 2 ff", 2, 7, 100, 90, 4, 12, 5, "Owner"));
+                }
                 if (sqlText.contains("SELECT id_slot,figure,gender FROM users_wardrobe")) {
                     return Arrays.<List<Object>>asList(
                         Arrays.<Object>asList(1, "hd-180-1", "M"),
@@ -2854,6 +2858,22 @@ public final class PortedModuleSmokeTest {
         assertEquals(Handling.petInventoryListPayload("10\tRex\t1 2 FF00AA\t4"), petInventoryPayload);
         assertEquals(true, containsSend(handlingSends, "IX"));
         assertEquals(true, containsSend(handlingSends, "Rex"));
+        handlingSends.clear();
+        assertEquals(2L, Handling.Proc_6_181_7CA920("Rex1"));
+        String nameCheckPayload = Handling.Proc_6_182_7CAAD0(4, "@c" + wireString("Rex"));
+        assertEquals(Handling.petNameValidationPayload("Rex"), nameCheckPayload);
+        assertEquals(true, containsSend(handlingSends, "@d"));
+        handlingSends.clear();
+        String petStatusPayload = Handling.Proc_6_183_7CABF0(4, "ny" + wireLong(10));
+        assertEquals(Handling.representedPetStatusPayload(10,
+            new String[]{"10", "Rex", "1 2 ff", "2", "7", "100", "90", "4", "12", "5", "Owner"}), petStatusPayload);
+        assertEquals(true, containsSend(handlingSends, "IY"));
+        assertEquals(true, containsSend(handlingSends, "Owner"));
+        handlingSends.clear();
+        Licence.global_008292CC = new String[]{"", "1\t0\tgst sit", "2\t3\tgst jump"};
+        String petCommandPayload = Handling.Proc_6_184_7CBDA0(4, 2);
+        assertEquals(Handling.petCommandListPayload(2, Licence.global_008292CC), petCommandPayload);
+        assertEquals(true, containsSend(handlingSends, "I]"));
         handlingSends.clear();
         Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
         assertEquals(8, Handling.representedInteractionPartner(4));

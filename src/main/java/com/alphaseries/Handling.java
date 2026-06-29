@@ -4849,6 +4849,104 @@ public final class Handling {
         }
     }
 
+    public static long Proc_6_181_7CA920(Object... args) {
+        try {
+            if (args == null || args.length == 0) {
+                return 2L;
+            }
+            return petNameValidationCode(Vb.cStr(args[0]));
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return 2L;
+        }
+    }
+
+    public static String Proc_6_182_7CAAD0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "@c");
+            String requestedName = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            if (requestedName.isEmpty()) {
+                requestedName = readWireString(requestPayload, new LongRef(1));
+            }
+            requestedName = Functions.Proc_10_11_80A9C0(Functions.Proc_10_10_80A7F0(requestedName), 0, 0);
+            String payload = Crypto.Proc_3_0_6D2AF0(Proc_6_181_7CA920(requestedName, 0, 0), null, "@d");
+            Proc_6_244_801E80(socketIndex, payload, 0);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_183_7CABF0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            String requestPayload = handlingRequestPayload(args, "ny");
+            LongRef offset = new LongRef(1);
+            long requestedId = readWireLong(requestPayload, offset);
+            if (socketIndex <= 0 || requestedId <= 0L) {
+                return "";
+            }
+            long botEntityId = requestedId;
+            long botId = representedBotRecordLong(botEntityId, 1);
+            if (botId <= 0L) {
+                botId = requestedId;
+                botEntityId = representedBotEntityFromBotId(botId);
+            }
+            if (botId <= 0L) {
+                return "";
+            }
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            String rowText = MySQL.Proc_5_2_6D4690("SELECT bots.id,bots.name,bots.figure,bots_petdata.id_level,bots_petdata.experience,"
+                + "bots_petdata.energy,bots_petdata.nutrition,bots_petdata.scratches,"
+                + "ROUND((UNIX_TIMESTAMP()-bots_petdata.timestamp_buy)/60/60/24,0),bots_petdata.id_owner,users.name "
+                + "FROM bots,bots_petdata,users WHERE bots.id='" + botId
+                + "' AND bots.id_handle='3' AND bots_petdata.id_bot=bots.id AND users.id=bots_petdata.id_owner LIMIT 1", 0, 0);
+            if (rowText.isEmpty()) {
+                return "";
+            }
+            String[] fields = rowText.split("\t", -1);
+            if (fields.length < 11) {
+                return "";
+            }
+            if (botEntityId <= 0L) {
+                botEntityId = botId;
+            }
+            String payload = representedPetStatusPayload(botEntityId, fields);
+            if (!payload.isEmpty()) {
+                Proc_6_244_801E80(socketIndex, payload, 0);
+            }
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    public static String Proc_6_184_7CBDA0(Object... args) {
+        try {
+            int socketIndex = handlingSocketIndex(args);
+            long petLevel = 0L;
+            if (args != null && args.length >= 2) {
+                petLevel = Vb.val(args[1]);
+            } else if (args != null && args.length >= 1) {
+                petLevel = Vb.val(args[0]);
+            }
+            String payload = petCommandListPayload(petLevel, Licence.global_008292CC);
+            if (socketIndex > 0) {
+                Proc_6_244_801E80(socketIndex, payload, 0);
+            }
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
     public static String Proc_6_168_7C05F0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
