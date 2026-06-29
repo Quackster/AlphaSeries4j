@@ -14,6 +14,7 @@ import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.pet.PetSettings;
+import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.session.SessionRegistry;
@@ -219,6 +220,20 @@ public final class Licence {
     public static void setPetCommandRows(Object commandRows, long commandCount) {
         global_008292CC = commandRows == null ? "" : commandRows;
         global_008292C8 = commandCount;
+    }
+
+    public static RepresentedBotRegistry representedBots() {
+        return RepresentedBotRegistry.fromLegacy(global_008292D4, global_00829358);
+    }
+
+    public static void setRepresentedBots(RepresentedBotRegistry representedBots) {
+        if (representedBots == null) {
+            global_008292D4 = "";
+            global_00829358 = "";
+            return;
+        }
+        global_008292D4 = representedBots.allocatedEntityMarkers();
+        global_00829358 = representedBots.recordCache();
     }
 
     public static CatalogPages catalogPages() {

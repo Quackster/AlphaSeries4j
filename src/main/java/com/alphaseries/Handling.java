@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.game.pet.PetPayloads;
+import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -11250,14 +11251,10 @@ public final class Handling {
     }
 
     public static long reserveRepresentedBotSlot() {
-        for (long slotIndex = 1L; slotIndex <= 5000L; slotIndex++) {
-            String marker = "[" + slotIndex + "]";
-            if (!Licence.global_008292D4.contains(marker)) {
-                Licence.global_008292D4 += marker;
-                return slotIndex;
-            }
-        }
-        return 0L;
+        RepresentedBotRegistry representedBots = Licence.representedBots();
+        long botEntityId = representedBots.reserveSlot();
+        Licence.setRepresentedBots(representedBots);
+        return botEntityId;
     }
 
     public static String representedBotField(String[] botFields, long fieldIndex) {
@@ -11306,101 +11303,35 @@ public final class Handling {
     }
 
     public static void storeRepresentedBotRecord(long botEntityId, String recordText) {
-        if (botEntityId <= 0L) {
-            return;
-        }
-        String startMarker = "[" + botEntityId + ":";
-        int startAt = Licence.global_00829358.indexOf(startMarker);
-        if (startAt >= 0) {
-            int endAt = Licence.global_00829358.indexOf(']', startAt + startMarker.length());
-            if (endAt >= 0) {
-                Licence.global_00829358 = Licence.global_00829358.substring(0, startAt)
-                    + Licence.global_00829358.substring(endAt + 1);
-            }
-        }
-        Licence.global_00829358 += startMarker + Vb.cStr(recordText) + "]";
+        RepresentedBotRegistry representedBots = Licence.representedBots();
+        representedBots.storeRecord(botEntityId, recordText);
+        Licence.setRepresentedBots(representedBots);
     }
 
     public static void removeRepresentedBotRecord(long botEntityId) {
-        if (botEntityId <= 0L) {
-            return;
-        }
-        String startMarker = "[" + botEntityId + ":";
-        int startAt = Licence.global_00829358.indexOf(startMarker);
-        if (startAt >= 0) {
-            int endAt = Licence.global_00829358.indexOf(']', startAt + startMarker.length());
-            if (endAt >= 0) {
-                Licence.global_00829358 = Licence.global_00829358.substring(0, startAt)
-                    + Licence.global_00829358.substring(endAt + 1);
-            }
-        }
-        Licence.global_008292D4 = Licence.global_008292D4.replace("[" + botEntityId + "]", "");
+        RepresentedBotRegistry representedBots = Licence.representedBots();
+        representedBots.removeRecord(botEntityId);
+        Licence.setRepresentedBots(representedBots);
     }
 
     public static String representedBotRecordText(long botEntityId) {
-        if (botEntityId <= 0L || Licence.global_00829358.isEmpty()) {
-            return "";
-        }
-        String startMarker = "[" + botEntityId + ":";
-        int startAt = Licence.global_00829358.indexOf(startMarker);
-        if (startAt < 0) {
-            return "";
-        }
-        startAt += startMarker.length();
-        int endAt = Licence.global_00829358.indexOf(']', startAt);
-        if (endAt <= startAt) {
-            return "";
-        }
-        return Licence.global_00829358.substring(startAt, endAt);
+        return Licence.representedBots().recordText(botEntityId);
     }
 
     public static String representedBotRecordField(long botEntityId, long fieldIndex) {
-        String[] fields = representedBotRecordText(botEntityId).split("\2", -1);
-        return fieldIndex >= 0 && fieldIndex < fields.length ? fields[(int) fieldIndex] : "";
+        return Licence.representedBots().recordField(botEntityId, fieldIndex);
     }
 
     public static long representedBotRecordLong(long botEntityId, long fieldIndex) {
-        return Vb.val(representedBotRecordField(botEntityId, fieldIndex));
+        return Licence.representedBots().recordLong(botEntityId, fieldIndex);
     }
 
     public static long representedBotEntityFromBotId(long botId) {
-        if (botId <= 0L || Licence.global_00829358.isEmpty()) {
-            return 0L;
-        }
-        for (String record : Licence.global_00829358.split("\\[", -1)) {
-            int payloadAt = record.indexOf(':');
-            int endAt = record.indexOf(']');
-            if (payloadAt > 0 && endAt > payloadAt) {
-                long entityId = Vb.val(record.substring(0, payloadAt));
-                String[] fields = record.substring(payloadAt + 1, endAt).split("\2", -1);
-                if (fields.length >= 2 && Vb.val(fields[1]) == botId) {
-                    return entityId;
-                }
-            }
-        }
-        return 0L;
+        return Licence.representedBots().entityFromBotId(botId);
     }
 
     public static String representedBotEntitiesForRoom(long roomSlot, long onlyBotId) {
-        if (roomSlot <= 0L || Licence.global_00829358.isEmpty()) {
-            return "";
-        }
-        StringBuilder result = new StringBuilder();
-        for (String record : Licence.global_00829358.split("\\[", -1)) {
-            int payloadAt = record.indexOf(':');
-            int endAt = record.indexOf(']');
-            if (payloadAt > 0 && endAt > payloadAt) {
-                long entityId = Vb.val(record.substring(0, payloadAt));
-                String[] fields = record.substring(payloadAt + 1, endAt).split("\2", -1);
-                if (fields.length >= 2 && Vb.val(fields[0]) == roomSlot && (onlyBotId <= 0L || Vb.val(fields[1]) == onlyBotId)) {
-                    if (result.length() > 0) {
-                        result.append('\r');
-                    }
-                    result.append(entityId);
-                }
-            }
-        }
-        return result.toString();
+        return Licence.representedBots().entitiesForRoom(roomSlot, onlyBotId);
     }
 
     public static boolean isRepresentedBotAllocated(long roomSlot, long botId) {
@@ -11408,15 +11339,9 @@ public final class Handling {
     }
 
     public static void storeRepresentedBotPosition(long botEntityId, long positionX, long positionY, String positionZ, long positionR) {
-        String[] fields = representedBotRecordText(botEntityId).split("\2", -1);
-        if (fields.length < 10) {
-            return;
-        }
-        fields[6] = String.valueOf(positionX);
-        fields[7] = String.valueOf(positionY);
-        fields[8] = Vb.cStr(positionZ);
-        fields[9] = String.valueOf(positionR);
-        storeRepresentedBotRecord(botEntityId, String.join("\2", fields));
+        RepresentedBotRegistry representedBots = Licence.representedBots();
+        representedBots.storePosition(botEntityId, positionX, positionY, positionZ, positionR);
+        Licence.setRepresentedBots(representedBots);
     }
 
     public static String representedBotRoomEntryPayload(long botEntityId) {

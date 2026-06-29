@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.vb.Vb;
@@ -621,8 +622,8 @@ public final class Functions {
                 return 0L;
             }
 
-            long roomSlot = Vb.val(representedBotRecordField(Licence.global_00829358, botEntityId, 0));
-            long botId = Vb.val(representedBotRecordField(Licence.global_00829358, botEntityId, 1));
+            long roomSlot = Licence.representedBots().recordLong(botEntityId, 0);
+            long botId = Licence.representedBots().recordLong(botEntityId, 1);
             long roomId = 0L;
             RoomDao roomDao = roomDao();
             if (roomSlot > 0L) {
@@ -677,22 +678,7 @@ public final class Functions {
     }
 
     public static String representedBotRecordField(String botCacheText, long botEntityId, long fieldIndex) {
-        String cache = Vb.cStr(botCacheText);
-        if (botEntityId <= 0L || cache.isEmpty()) {
-            return "";
-        }
-        String startMarker = "[" + botEntityId + ":";
-        int startAt = cache.indexOf(startMarker);
-        if (startAt < 0) {
-            return "";
-        }
-        int recordStart = startAt + startMarker.length();
-        int recordEnd = cache.indexOf(']', recordStart);
-        if (recordEnd <= recordStart) {
-            return "";
-        }
-        String[] fields = cache.substring(recordStart, recordEnd).split("\2", -1);
-        return fieldIndex >= 0L && fieldIndex < fields.length ? fields[(int) fieldIndex] : "";
+        return RepresentedBotRegistry.fromLegacy("", botCacheText).recordField(botEntityId, fieldIndex);
     }
 
     public static long representedPositionAvailable(long roomId, long furnitureCount, long botCount) {

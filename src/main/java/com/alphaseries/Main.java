@@ -352,10 +352,7 @@ public final class Main {
     public static long botsTimer() {
         long moved = 0L;
         try {
-            String botMarkers = Vb.cStr(Licence.global_008292D4);
-            String[] markerParts = botMarkers.split("\\]", -1);
-            for (int markerIndex = 0; markerIndex < markerParts.length; markerIndex++) {
-                long entityId = mainRepresentedEntityIdAt(botMarkers, markerIndex);
+            for (long entityId : Licence.representedBots().allocatedEntityIds()) {
                 if (entityId <= 0L || Vb.val(mainRepresentedBotRecordField(entityId, 15)) == 0L) {
                     continue;
                 }
@@ -618,25 +615,11 @@ public final class Main {
     }
 
     public static String mainRepresentedBotRecordText(long entityIndex) {
-        if (entityIndex <= 0L || Licence.global_00829358.isEmpty()) {
-            return "";
-        }
-        String marker = "[" + entityIndex + ":";
-        int startAt = Licence.global_00829358.indexOf(marker);
-        if (startAt < 0) {
-            return "";
-        }
-        startAt += marker.length();
-        int endAt = Licence.global_00829358.indexOf(']', startAt);
-        if (endAt <= startAt) {
-            return "";
-        }
-        return Licence.global_00829358.substring(startAt, endAt);
+        return Licence.representedBots().recordText(entityIndex);
     }
 
     public static String mainRepresentedBotRecordField(long entityIndex, long fieldIndex) {
-        String[] fields = mainRepresentedBotRecordText(entityIndex).split("\2", -1);
-        return fieldIndex >= 0 && fieldIndex < fields.length ? fields[(int) fieldIndex] : "";
+        return Licence.representedBots().recordField(entityIndex, fieldIndex);
     }
 
     public static void mainRepresentedRoomOccupantAdd(long roomSlot, long entityIndex, long occupantType) {
