@@ -6596,8 +6596,11 @@ public final class Handling {
             if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
                 return "";
             }
-            int targetSocketIndex = (int) NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id_socket FROM users WHERE id='"
-                + requestedUserId + "' LIMIT 1", 0, 0));
+            UserDao users = userDao();
+            if (users == null) {
+                return "";
+            }
+            int targetSocketIndex = (int) users.socketByUserId(requestedUserId);
             if (targetSocketIndex <= 0 && handlingCurrentRoomId(socketIndex, callerUserId) <= 0L) {
                 return "";
             }
