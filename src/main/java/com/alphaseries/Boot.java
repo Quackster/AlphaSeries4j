@@ -632,7 +632,7 @@ public final class Boot {
     public static void Proc_1_23_6D1480(Object... args) {
         String messageText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
         String logChannel = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
-        Console.Proc_2_0_6D1510(messageText, logChannel, "65280");
+        Console.logSourceLine(messageText, logChannel, 65280L);
     }
 
     public static void initializeBootLogFiles() {
@@ -652,8 +652,8 @@ public final class Boot {
         if (message.length() <= 10) {
             return;
         }
-        Console.Proc_2_1_6D1B60(message, "", "49344");
-        Console.Proc_2_2_6D21D0("", "HIDDEN", "262144");
+        Console.appendPlainLine(message, 49344L);
+        Console.appendOptionalSourceLine("", "HIDDEN", 262144L);
     }
 
     public static String[] startupCreditLines() {
@@ -662,7 +662,7 @@ public final class Boot {
 
     public static void printStartupCredits() {
         for (String line : STARTUP_CREDIT_LINES) {
-            Console.Proc_2_1_6D1B60(line, "", "49344");
+            Console.appendPlainLine(line, 49344L);
         }
     }
 
@@ -728,7 +728,7 @@ public final class Boot {
         String cachePath = java.nio.file.Path.of(Functions.applicationPath, "figuredata.cache").toString();
         Handling.writeFile(cachePath, figureData);
         if (Handling.readFile(cachePath).trim().isEmpty()) {
-            Console.Proc_2_0_6D1510("\"Figuredata\" Datei konnte nicht gefunden werden!", "ERROR", 255);
+            Console.logSourceLine("\"Figuredata\" Datei konnte nicht gefunden werden!", "ERROR", 255L);
             return false;
         }
         return true;

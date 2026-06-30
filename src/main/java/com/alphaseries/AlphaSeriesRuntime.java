@@ -39,7 +39,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
         runtime.startGameServer(configuredPort("com.server.socket.game.port"));
         markSocketStartupTimes();
         runtime.startTimers();
-        Console.Proc_2_0_6D1510("Server wurde erfolgreich gestartet.", "INITIALIZE", "16776960");
+        Console.logSourceLine("Server wurde erfolgreich gestartet.", "INITIALIZE", 16776960L);
         return runtime;
     }
 
@@ -144,7 +144,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
             while ((read = input.read(buffer)) != -1) {
                 String packetBuffer = new String(buffer, 0, read, StandardCharsets.ISO_8859_1);
                 if (NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.mus.log", 0)) != 0L) {
-                    Console.Proc_2_0_6D1510(packetBuffer, "MUS", "16711680");
+                    Console.logSourceLine(packetBuffer, "MUS", 16711680L);
                 }
                 Main.processGameServerData(packetBuffer);
             }

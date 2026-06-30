@@ -65,7 +65,7 @@ public final class Filesystems {
 
         for (ReadyPacketBuffer.Frame packet : ReadyPacketBuffer.frames(packetBuffer)) {
             if (global_00829190) {
-                Console.Proc_2_0_6D1510("[" + socketIndex + "] " + packet.payload(), "GAME", "16711680");
+                Console.logSourceLine("[" + socketIndex + "] " + packet.payload(), "GAME", 16711680L);
             }
             dispatchReadyPacket(socketIndex, packet.code(), packet.payload());
         }

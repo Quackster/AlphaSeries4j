@@ -13,31 +13,79 @@ public final class Console {
     private Console() {
     }
 
+    /**
+     * Original function: Proc_2_0_6D1510.
+     */
     public static void Proc_2_0_6D1510(Object... args) {
         String messageText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
         String sourceName = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
         long foreColor = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0xFFFFFFL;
-        appendConsoleLine(formatConsoleLine(messageText, sourceName, true), foreColor);
+        logSourceLine(messageText, sourceName, foreColor);
     }
 
+    /**
+     * Original function: Proc_2_1_6D1B60.
+     */
     public static void Proc_2_1_6D1B60(Object... args) {
         String messageText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
         long foreColor = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0xFFFFFFL;
-        appendConsoleLine(formatConsoleLine(messageText, "", false), foreColor);
+        appendPlainLine(messageText, foreColor);
     }
 
+    /**
+     * Original function: Proc_2_2_6D21D0.
+     */
     public static void Proc_2_2_6D21D0(Object... args) {
         String messageText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
         String sourceName = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
         long foreColor = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0xFFFFFFL;
-        appendConsoleLine(formatConsoleLine(messageText, sourceName, false), foreColor);
+        appendOptionalSourceLine(messageText, sourceName, foreColor);
     }
 
+    /**
+     * Original function: Proc_2_3_6D27D0.
+     */
     public static void Proc_2_3_6D27D0(Object... args) {
         if (args == null || args.length == 0) {
             return;
         }
-        long delayMillis = delayMilliseconds(args[0]);
+        sleepSeconds(args[0]);
+    }
+
+    /**
+     * Original function: Proc_2_4_6D28B0.
+     */
+    public static String Proc_2_4_6D28B0(Object... args) {
+        long value = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
+        return encodeBase64Length(value);
+    }
+
+    /**
+     * Original function: Proc_2_0_6D1510.
+     */
+    public static void logSourceLine(String messageText, String sourceName, long foreColor) {
+        appendConsoleLine(formatConsoleLine(messageText, sourceName, true), foreColor);
+    }
+
+    /**
+     * Original function: Proc_2_1_6D1B60.
+     */
+    public static void appendPlainLine(String messageText, long foreColor) {
+        appendConsoleLine(formatConsoleLine(messageText, "", false), foreColor);
+    }
+
+    /**
+     * Original function: Proc_2_2_6D21D0.
+     */
+    public static void appendOptionalSourceLine(String messageText, String sourceName, long foreColor) {
+        appendConsoleLine(formatConsoleLine(messageText, sourceName, false), foreColor);
+    }
+
+    /**
+     * Original function: Proc_2_3_6D27D0.
+     */
+    public static void sleepSeconds(Object secondsValue) {
+        long delayMillis = delayMilliseconds(secondsValue);
         if (delayMillis <= 0L) {
             return;
         }
@@ -48,8 +96,10 @@ public final class Console {
         }
     }
 
-    public static String Proc_2_4_6D28B0(Object... args) {
-        long value = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
+    /**
+     * Original function: Proc_2_4_6D28B0.
+     */
+    public static String encodeBase64Length(long value) {
         if (value < 0L) {
             value = 0L;
         }

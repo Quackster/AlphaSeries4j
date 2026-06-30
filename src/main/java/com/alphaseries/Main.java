@@ -173,8 +173,8 @@ public final class Main {
             }
         } catch (Exception ex) {
             if (Licence.runtimeState().debugLoggingEnabled()) {
-                Console.Proc_2_0_6D1510("[" + socketIndex + "] " + ex.getMessage() + " -> " + packetData,
-                    "ERROR", "255");
+                Console.logSourceLine("[" + socketIndex + "] " + ex.getMessage() + " -> " + packetData,
+                    "ERROR", 255L);
                 DataManager.appendTextFile(Functions.applicationPath + "/ERR.log",
                     "ERROR] " + packetData + " (" + ex.getMessage() + ")\r\n0\r\n\r\n\r\n");
             }

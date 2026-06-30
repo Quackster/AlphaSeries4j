@@ -5419,7 +5419,7 @@ public final class Handling {
             if (NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.motd.message.enabled", 0)) != 0L) {
                 String motdMessage = Functions.settingsCache().valueOrDefault("com.client.motd.message", "").replace("\\n", "\n");
                 if (!motdMessage.isEmpty()) {
-                    Proc_6_244_801E80(socketIndex, Console.Proc_2_4_6D28B0(motdMessage.length(), 0, 0)
+                    Proc_6_244_801E80(socketIndex, Console.encodeBase64Length(motdMessage.length())
                         + " " + motdMessage + '\2', 0);
                 }
             }
@@ -7774,7 +7774,7 @@ public final class Handling {
                 String packetPayload = StringUtils.mid(packetBuffer, 3, (int) packetLength);
                 String packetCode = StringUtils.left(packetPayload, 2);
                 if (Licence.runtimeState().shouldTracePackets()) {
-                    Console.Proc_2_0_6D1510("[" + socketIndex + "] " + packetPayload, "GAME", "16711680");
+                    Console.logSourceLine("[" + socketIndex + "] " + packetPayload, "GAME", 16711680L);
                 }
                 dispatchPreReadyPacket((int) socketIndex, packetCode, packetPayload);
                 packetCount++;
@@ -7986,7 +7986,7 @@ public final class Handling {
                 case "oL": Proc_7F44D0(socketIndex, "oL", packetPayload); break;
                 default:
                     if (Licence.runtimeState().debugLoggingEnabled()) {
-                        Console.Proc_2_0_6D1510(packetPayload, "UNHANDLED -- index: " + socketIndex, "255");
+                        Console.logSourceLine(packetPayload, "UNHANDLED -- index: " + socketIndex, 255L);
                     }
                     break;
             }
