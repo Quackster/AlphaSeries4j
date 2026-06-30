@@ -11474,10 +11474,6 @@ public final class Handling {
         return submission;
     }
 
-    public static String pollPayloadFromRows(String pollRow, String questionRows, Map<Long, String> answerRowsByQuestionId) {
-        return PollPayloads.poll(pollRow, questionRows, answerRowsByQuestionId);
-    }
-
     public static String pollPayload(PollDefinition poll) {
         return PollPayloads.poll(poll);
     }

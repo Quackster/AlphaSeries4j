@@ -307,6 +307,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved room user/object entry payload argument normalization into typed `RoomUserEntryPayloadArgs` and `RoomObjectEntryPayloadArgs`, removing the remaining tab-delimited entry normalizers from `Handling`.
 - Moved represented-room occupant add/move/field mutations from `Main` into `RepresentedRoomCache`, keeping `Main` as a compatibility caller over the typed cache manager.
 - Moved represented-room movement scanning from `Main` into `RepresentedRoomCache.moveOccupantsAt`, clearing the remaining tab-delimited movement parser from `Main`.
+- Removed the legacy poll payload row-string wrapper; poll payload construction now accepts typed `PollDefinition` data only.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -322,7 +323,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12431 lines
+- `Handling.java`: 12427 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
 - `Main.java`: 894 lines

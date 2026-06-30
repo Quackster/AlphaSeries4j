@@ -2,6 +2,10 @@ package com.alphaseries;
 
 import com.alphaseries.config.AppDatabaseConfig;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.poll.PollAnswerRow;
+import com.alphaseries.game.poll.PollDefinition;
+import com.alphaseries.game.poll.PollHeader;
+import com.alphaseries.game.poll.PollQuestionRow;
 import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
 import com.alphaseries.protocol.PacketBuilder;
@@ -1919,8 +1923,15 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(8, null, "")
             + Crypto.Proc_3_0_6D2AF0(4, null, ""), "Cl");
         assertEquals("4", numericPollAnswer.answerText);
-        Map<Long, String> pollAnswers = new HashMap<>();
-        pollAnswers.put(8L, "1\t8\tYes\r2\t8\tNo");
+        PollDefinition testPoll = new PollDefinition(
+            new PollHeader(7L, "Title", "Thanks"),
+            List.of(new PollQuestionRow(
+                8L,
+                "Question?",
+                2L,
+                List.of(
+                    new PollAnswerRow(1L, 8L, "Yes"),
+                    new PollAnswerRow(2L, 8L, "No")))));
         String expectedQuestionPayload = Crypto.Proc_3_0_6D2AF0(8, null, "");
         expectedQuestionPayload = Crypto.Proc_3_0_6D2AF0(1, null, expectedQuestionPayload);
         expectedQuestionPayload = Crypto.Proc_3_0_6D2AF0(2, null, expectedQuestionPayload);
@@ -1930,7 +1941,7 @@ public final class PortedModuleSmokeTest {
         expectedQuestionPayload = Crypto.Proc_3_0_6D2AF0(2, null, expectedQuestionPayload) + "Yes\2No\2";
         String expectedPollPayload = Crypto.Proc_3_0_6D2AF0(7, null, "D}") + "Title\2Thanks\2";
         expectedPollPayload = Crypto.Proc_3_0_6D2AF0(1, null, expectedPollPayload) + expectedQuestionPayload;
-        assertEquals(expectedPollPayload, Handling.pollPayloadFromRows("7\tTitle\tThanks", "8\tQuestion?\t2", pollAnswers));
+        assertEquals(expectedPollPayload, Handling.pollPayload(testPoll));
         String recyclerWire = "F^" + Crypto.Proc_3_0_6D2AF0(5, null, "")
             + Crypto.Proc_3_0_6D2AF0(10, null, "")
             + Crypto.Proc_3_0_6D2AF0(11, null, "")
@@ -3855,10 +3866,17 @@ public final class PortedModuleSmokeTest {
         Handling.Proc_6_200_7D5770(4, "Cl" + wireLong(7) + wireLong(8) + wireLong(4) + wireString("yes"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO poll_results(id_poll,id_question,message_answer,id_user,timestamp) VALUES('7','8','yes','77',UNIX_TIMESTAMP())"));
         handlingSends.clear();
-        Map<Long, String> livePollAnswers = new HashMap<>();
-        livePollAnswers.put(8L, "1\t8\tYes\r2\t8\tNo");
+        PollDefinition livePoll = new PollDefinition(
+            new PollHeader(7L, "Title", "Thanks"),
+            List.of(new PollQuestionRow(
+                8L,
+                "Question?",
+                2L,
+                List.of(
+                    new PollAnswerRow(1L, 8L, "Yes"),
+                    new PollAnswerRow(2L, 8L, "No")))));
         String livePollPayload = Handling.Proc_6_201_7D5AC0(4, "Cj" + wireLong(7));
-        assertEquals(Handling.pollPayloadFromRows("7\tTitle\tThanks", "8\tQuestion?\t2", livePollAnswers), livePollPayload);
+        assertEquals(Handling.pollPayload(livePoll), livePollPayload);
         assertEquals(true, containsSend(handlingSends, "D}"));
         assertEquals(true, containsSend(handlingSends, "Question?"));
         handlingSends.clear();
