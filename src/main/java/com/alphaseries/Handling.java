@@ -1180,7 +1180,7 @@ public final class Handling {
             users.gender(numericUserId);
             long existingCount = users.countByName(candidateName);
             long validationCode = avatarNameValidationCode(candidateName, oldName, existingCount);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(validationCode, null, "H{") + candidateName + '\2', 0);
+            Proc_6_244_801E80(socketIndex, UserPayloads.avatarNameValidation(validationCode, candidateName), 0);
             if (checkOnly || validationCode != 0L) {
                 return validationCode;
             }
@@ -1190,8 +1190,7 @@ public final class Handling {
             if (roomId > 0L) {
                 long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
                 Proc_6_247_8027E0(socketIndex,
-                    Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(userId), null, "H|"))
-                        + candidateName + '\2', 0);
+                    UserPayloads.roomUserNameChanged(NumberUtils.parseLong(userId), roomUserIndex, candidateName), 0);
                 String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                     + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
                 Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
@@ -5418,10 +5417,10 @@ public final class Handling {
                 Proc_6_244_801E80(socketIndex, handlingLoginActivityPointPayload(pointIndex, pointValues[pointIndex]), 0);
             }
             if (homeRoomId > 0L) {
-                Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(homeRoomId, null, "GG"), 0);
+                Proc_6_244_801E80(socketIndex, RoomPayloads.homeRoom(homeRoomId), 0);
             }
             if (emailValidated > 0L) {
-                Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(emailValidated, null, "DX"), 0);
+                Proc_6_244_801E80(socketIndex, UserPayloads.emailStatus(emailValidated), 0);
             }
             Proc_6_244_801E80(socketIndex, "@a" + "com.server.socket.location" + '\2' + "invalid.location" + '\2', 0);
             if (NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.motd.message.enabled", 0, 0)) != 0L) {

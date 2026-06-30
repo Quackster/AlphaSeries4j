@@ -84,12 +84,33 @@ public final class UserPayloads {
             .build();
     }
 
+    public static String emailStatus(long emailState) {
+        return PacketBuilder.message("DX")
+            .appendInt(emailState)
+            .build();
+    }
+
     public static String identityRefresh(long userId, String mottoText, String figureText, String genderText) {
         return PacketBuilder.message("DJ")
             .appendInt(userId)
             .appendString(mottoText)
             .appendString(genderText)
             .appendString(figureText)
+            .build();
+    }
+
+    public static String avatarNameValidation(long validationCode, String candidateName) {
+        return PacketBuilder.message("H{")
+            .appendInt(validationCode)
+            .appendString(candidateName)
+            .build();
+    }
+
+    public static String roomUserNameChanged(long userId, long roomUserIndex, String candidateName) {
+        return PacketBuilder.message("H|")
+            .appendInt(userId)
+            .appendInt(roomUserIndex)
+            .appendString(candidateName)
             .build();
     }
 

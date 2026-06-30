@@ -88,6 +88,12 @@ public final class PortedModuleSmokeTest {
             PacketBuilder.message("DK").appendInt(2).appendString("figure").build());
         assertEquals("Dk" + Crypto.Proc_3_0_6D2AF0(1, null, "")
             + Crypto.Proc_3_0_6D2AF0(96, null, ""), UserPayloads.errorCode(1, 96));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "H{") + "NewName\2",
+            UserPayloads.avatarNameValidation(2, "NewName"));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(4, null,
+            Crypto.Proc_3_0_6D2AF0(77, null, "H|")) + "NewName\2",
+            UserPayloads.roomUserNameChanged(77, 4, "NewName"));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "DX"), UserPayloads.emailStatus(1));
         assertEquals(UserPayloads.errorCode(1, 96), Functions.Proc_10_8_80A580(1, 96));
         PacketReader reader = PacketReader.of(Crypto.encodeVl64(7) + "@Dtesttail");
         assertEquals(7L, reader.readInt());
