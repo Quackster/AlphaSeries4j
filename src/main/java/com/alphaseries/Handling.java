@@ -106,8 +106,8 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public final class Handling {
-    private static String representedInteractionPairs = "";
-    private static String representedTradeOffers = "";
+    private static List<RepresentedInteractionPair> representedInteractionPairs = new ArrayList<>();
+    private static List<RepresentedTradeOffer> representedTradeOffers = new ArrayList<>();
     private static String representedActivityPointTicks = "";
 
     private Handling() {
@@ -9937,8 +9937,8 @@ public final class Handling {
         return InventoryMessagePayloads.item(itemId, productId, itemData, extraValue);
     }
 
-    public static String representedTradeOfferStore(
-        String tradeOffersText,
+    public static List<RepresentedTradeOffer> representedTradeOfferStore(
+        List<RepresentedTradeOffer> tradeOffers,
         long socketIndex,
         long furnitureId,
         long productId,
@@ -9946,7 +9946,7 @@ public final class Handling {
         long secondaryValue
     ) {
         if (socketIndex <= 0L || furnitureId <= 0L || productId <= 0L) {
-            return StringUtils.text(tradeOffersText);
+            return tradeOffers == null ? List.of() : new ArrayList<>(tradeOffers);
         }
         RepresentedTradeOffer newOffer = RepresentedTradeOffer.stored(
             socketIndex,
@@ -9954,46 +9954,46 @@ public final class Handling {
             productId,
             signText,
             secondaryValue);
-        StringBuilder rebuiltText = new StringBuilder();
+        List<RepresentedTradeOffer> rebuilt = new ArrayList<>();
         boolean replacedExisting = false;
-        for (RepresentedTradeOffer offer : representedTradeOffers(tradeOffersText)) {
-            if (offer.fieldCount() >= 2) {
-                if (offer.socketIndex() == socketIndex && offer.furnitureId() == furnitureId) {
-                    appendRow(rebuiltText, newOffer.cacheRow());
-                    replacedExisting = true;
-                } else {
-                    appendRow(rebuiltText, offer.cacheRow());
-                }
+        for (RepresentedTradeOffer offer : tradeOffers == null ? List.<RepresentedTradeOffer>of() : tradeOffers) {
+            if (offer.socketIndex() == socketIndex && offer.furnitureId() == furnitureId) {
+                rebuilt.add(newOffer);
+                replacedExisting = true;
+            } else {
+                rebuilt.add(offer);
             }
         }
         if (!replacedExisting) {
-            appendRow(rebuiltText, newOffer.cacheRow());
+            rebuilt.add(newOffer);
         }
-        return rebuiltText.toString();
+        return rebuilt;
     }
 
-    public static String representedTradeOfferRemove(String tradeOffersText, long socketIndex, long furnitureId) {
-        if (socketIndex <= 0L || StringUtils.text(tradeOffersText).isEmpty()) {
-            return StringUtils.text(tradeOffersText);
+    public static List<RepresentedTradeOffer> representedTradeOfferRemove(
+        List<RepresentedTradeOffer> tradeOffers,
+        long socketIndex,
+        long furnitureId
+    ) {
+        if (socketIndex <= 0L || tradeOffers == null || tradeOffers.isEmpty()) {
+            return tradeOffers == null ? List.of() : new ArrayList<>(tradeOffers);
         }
-        StringBuilder rebuiltText = new StringBuilder();
-        for (RepresentedTradeOffer offer : representedTradeOffers(tradeOffersText)) {
-            if (offer.fieldCount() >= 2) {
-                if (offer.socketIndex() != socketIndex || (furnitureId > 0L && offer.furnitureId() != furnitureId)) {
-                    appendRow(rebuiltText, offer.cacheRow());
-                }
+        List<RepresentedTradeOffer> rebuilt = new ArrayList<>();
+        for (RepresentedTradeOffer offer : tradeOffers) {
+            if (offer.socketIndex() != socketIndex || (furnitureId > 0L && offer.furnitureId() != furnitureId)) {
+                rebuilt.add(offer);
             }
         }
-        return rebuiltText.toString();
+        return rebuilt;
     }
 
-    public static String representedTradeOfferSqlIds(String tradeOffersText, long socketIndex) {
-        if (socketIndex <= 0L || StringUtils.text(tradeOffersText).isEmpty()) {
+    public static String representedTradeOfferSqlIds(List<RepresentedTradeOffer> tradeOffers, long socketIndex) {
+        if (socketIndex <= 0L || tradeOffers == null || tradeOffers.isEmpty()) {
             return "";
         }
         StringBuilder sqlIds = new StringBuilder();
-        for (RepresentedTradeOffer offer : representedTradeOffers(tradeOffersText)) {
-            if (offer.fieldCount() >= 2 && offer.socketIndex() == socketIndex) {
+        for (RepresentedTradeOffer offer : tradeOffers) {
+            if (offer.socketIndex() == socketIndex) {
                 if (offer.furnitureId() > 0L) {
                     if (sqlIds.length() > 0) {
                         sqlIds.append(',');
@@ -10005,13 +10005,13 @@ public final class Handling {
         return sqlIds.toString();
     }
 
-    public static String representedTradeOfferLogItems(String tradeOffersText, long socketIndex) {
-        if (socketIndex <= 0L || StringUtils.text(tradeOffersText).isEmpty()) {
+    public static String representedTradeOfferLogItems(List<RepresentedTradeOffer> tradeOffers, long socketIndex) {
+        if (socketIndex <= 0L || tradeOffers == null || tradeOffers.isEmpty()) {
             return "";
         }
         StringBuilder logItems = new StringBuilder();
-        for (RepresentedTradeOffer offer : representedTradeOffers(tradeOffersText)) {
-            if (offer.fieldCount() >= 3 && offer.socketIndex() == socketIndex) {
+        for (RepresentedTradeOffer offer : tradeOffers) {
+            if (offer.socketIndex() == socketIndex) {
                 if (offer.furnitureId() > 0L) {
                     if (logItems.length() > 0) {
                         logItems.append('\1');
@@ -10023,14 +10023,14 @@ public final class Handling {
         return logItems.toString();
     }
 
-    public static TradeOfferItemPayload representedTradeOfferItemPayload(String tradeOffersText, long socketIndex) {
+    public static TradeOfferItemPayload representedTradeOfferItemPayload(List<RepresentedTradeOffer> tradeOffers, long socketIndex) {
         TradeOfferItemPayload result = new TradeOfferItemPayload();
-        if (socketIndex <= 0L || StringUtils.text(tradeOffersText).isEmpty()) {
+        if (socketIndex <= 0L || tradeOffers == null || tradeOffers.isEmpty()) {
             return result;
         }
         StringBuilder payload = new StringBuilder();
-        for (RepresentedTradeOffer offer : representedTradeOffers(tradeOffersText)) {
-            if (offer.fieldCount() >= 5 && offer.socketIndex() == socketIndex) {
+        for (RepresentedTradeOffer offer : tradeOffers) {
+            if (offer.socketIndex() == socketIndex) {
                 payload.append(inventoryItemPayload(
                     offer.furnitureId(),
                     offer.productId(),
@@ -10043,25 +10043,8 @@ public final class Handling {
         return result;
     }
 
-    public static List<RepresentedTradeOffer> representedTradeOffers(String tradeOffersText) {
-        List<RepresentedTradeOffer> offers = new ArrayList<>();
-        for (String row : StringUtils.text(tradeOffersText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                RepresentedTradeOffer offer = representedTradeOffer(row);
-                if (offer != null) {
-                    offers.add(offer);
-                }
-            }
-        }
-        return offers;
-    }
-
-    public static RepresentedTradeOffer representedTradeOffer(String rowText) {
-        return RepresentedTradeOffer.fromLegacy(rowText);
-    }
-
     public static String representedTradeOfferPayload(
-        String tradeOffersText,
+        List<RepresentedTradeOffer> tradeOffers,
         long sourceSocketIndex,
         long targetSocketIndex,
         String sourceUserId,
@@ -10070,8 +10053,8 @@ public final class Handling {
         if (sourceSocketIndex <= 0L || targetSocketIndex <= 0L) {
             return "";
         }
-        TradeOfferItemPayload sourceItems = representedTradeOfferItemPayload(tradeOffersText, sourceSocketIndex);
-        TradeOfferItemPayload targetItems = representedTradeOfferItemPayload(tradeOffersText, targetSocketIndex);
+        TradeOfferItemPayload sourceItems = representedTradeOfferItemPayload(tradeOffers, sourceSocketIndex);
+        TradeOfferItemPayload targetItems = representedTradeOfferItemPayload(tradeOffers, targetSocketIndex);
         String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(sourceUserId), null, "Al");
         payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(targetUserId), null, payload);
         payload = Crypto.Proc_3_0_6D2AF0(sourceItems.itemCount, null, payload) + sourceItems.payload;
@@ -10502,30 +10485,21 @@ public final class Handling {
         }
         removeRepresentedInteractionPair(sourceSocketIndex);
         removeRepresentedInteractionPair(targetSocketIndex);
-        String sourceRow = RepresentedInteractionPair.stored(
-            sourceSocketIndex,
-            targetSocketIndex,
-            interactionState).cacheRow();
-        String targetRow = RepresentedInteractionPair.stored(
-            targetSocketIndex,
-            sourceSocketIndex,
-            interactionState).cacheRow();
-        representedInteractionPairs = representedInteractionPairs.isEmpty()
-            ? sourceRow + "\r" + targetRow
-            : representedInteractionPairs + "\r" + sourceRow + "\r" + targetRow;
+        representedInteractionPairs.add(RepresentedInteractionPair.stored(sourceSocketIndex, targetSocketIndex, interactionState));
+        representedInteractionPairs.add(RepresentedInteractionPair.stored(targetSocketIndex, sourceSocketIndex, interactionState));
     }
 
     public static void removeRepresentedInteractionPair(long socketIndex) {
         if (socketIndex <= 0L || representedInteractionPairs.isEmpty()) {
             return;
         }
-        StringBuilder rebuilt = new StringBuilder();
-        for (RepresentedInteractionPair pair : representedInteractionPairs(representedInteractionPairs)) {
-            if (pair.fieldCount() >= 1 && pair.socketIndex() != socketIndex) {
-                appendRow(rebuilt, pair.cacheRow());
+        List<RepresentedInteractionPair> rebuilt = new ArrayList<>();
+        for (RepresentedInteractionPair pair : representedInteractionPairs) {
+            if (pair.socketIndex() != socketIndex) {
+                rebuilt.add(pair);
             }
         }
-        representedInteractionPairs = rebuilt.toString();
+        representedInteractionPairs = rebuilt;
         removeRepresentedTradeOffer(socketIndex, 0L);
     }
 
@@ -10533,8 +10507,8 @@ public final class Handling {
         if (socketIndex <= 0L || representedInteractionPairs.isEmpty()) {
             return 0;
         }
-        for (RepresentedInteractionPair pair : representedInteractionPairs(representedInteractionPairs)) {
-            if (pair.fieldCount() >= 2 && pair.socketIndex() == socketIndex) {
+        for (RepresentedInteractionPair pair : representedInteractionPairs) {
+            if (pair.socketIndex() == socketIndex) {
                 return (int) pair.partnerSocketIndex();
             }
         }
@@ -10545,29 +10519,12 @@ public final class Handling {
         if (socketIndex <= 0L || representedInteractionPairs.isEmpty()) {
             return 0L;
         }
-        for (RepresentedInteractionPair pair : representedInteractionPairs(representedInteractionPairs)) {
-            if (pair.fieldCount() >= 3 && pair.socketIndex() == socketIndex) {
+        for (RepresentedInteractionPair pair : representedInteractionPairs) {
+            if (pair.socketIndex() == socketIndex) {
                 return pair.interactionState();
             }
         }
         return 0L;
-    }
-
-    public static List<RepresentedInteractionPair> representedInteractionPairs(String interactionPairsText) {
-        List<RepresentedInteractionPair> pairs = new ArrayList<>();
-        for (String row : StringUtils.text(interactionPairsText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                RepresentedInteractionPair pair = representedInteractionPair(row);
-                if (pair != null) {
-                    pairs.add(pair);
-                }
-            }
-        }
-        return pairs;
-    }
-
-    public static RepresentedInteractionPair representedInteractionPair(String rowText) {
-        return RepresentedInteractionPair.fromLegacy(rowText);
     }
 
     public static void storeRepresentedTradeOffer(long socketIndex, long furnitureId, long productId, String signText, long secondaryValue) {
