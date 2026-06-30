@@ -1724,21 +1724,33 @@ public final class Boot {
         return PacketBuilder.create().appendInt(roomCount).appendRaw(payload.build()).build();
     }
 
+    /**
+     * Original function: Proc_1_14_6C9DD0.
+     */
     public static String Proc_1_14_6C9DD0(Object... args) {
         long pageId = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
-        long parentId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
+        long colorId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
         String caption = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
         long visibleState = args != null && args.length >= 4 ? NumberUtils.parseLong(args[3]) : 0L;
         long iconId = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
         long childCount = args != null && args.length >= 6 ? NumberUtils.parseLong(args[5]) : 0L;
+        return buildCatalogPageTreeEntryPayload(pageId, colorId, caption, visibleState, iconId, childCount);
+    }
 
-        return "0"
-            + Crypto.encodeVl64(pageId)
-            + Crypto.encodeVl64(parentId)
-            + Crypto.encodeVl64(iconId)
-            + Crypto.encodeVl64(visibleState)
-            + caption + '\2'
-            + Crypto.encodeVl64(childCount);
+    /**
+     * Original function: Proc_1_14_6C9DD0.
+     */
+    public static String buildCatalogPageTreeEntryPayload(long pageId, long colorId, String caption,
+            long visibleState, long iconId, long childCount) {
+        return PacketBuilder.create()
+            .appendRaw("0")
+            .appendInt(pageId)
+            .appendInt(colorId)
+            .appendInt(iconId)
+            .appendInt(visibleState)
+            .appendString(caption)
+            .appendInt(childCount)
+            .build();
     }
 
     public static String buildCatalogPagePayload(String[] fields, String productRows) {
@@ -1988,7 +2000,7 @@ public final class Boot {
         long colorId = NumberUtils.parseLong(fields[2]);
         long iconId = NumberUtils.parseLong(fields[3]);
         long visibleState = NumberUtils.parseLong(fields[5]);
-        return Proc_1_14_6C9DD0(pageId, colorId, pageName, visibleState, iconId, childCount);
+        return buildCatalogPageTreeEntryPayload(pageId, colorId, pageName, visibleState, iconId, childCount);
     }
 
     public static String buildCatalogPageTreeEntry(CatalogDao.CatalogPageTreeRow row, long childCount) {
