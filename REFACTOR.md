@@ -10,6 +10,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 ## Refactor Rules
 
 - Preserve current source compatibility and runtime behavior for every slice; compatibility shims may stay temporarily, but each slice must move the implementation toward typed Java boundaries.
+- Do not add or keep methods that simply wrap another method and add no behavior. Delete these no-op wrappers once call sites can move to the real API; only temporary source-compatibility bridges may remain, and they must be documented as compatibility boundaries scheduled for removal.
 - Keep tests working throughout the refactor. Run `./gradlew test --no-daemon` before committing behavior-affecting slices, and do not mark a milestone complete unless the suite passes or the failure is explicitly documented.
 - Use prepared DAO methods for database access. Handlers and services should not concatenate SQL strings or call raw `MySQL.Proc_5_*` helpers once a DAO boundary exists.
 - Load database rows into typed classes or records with named fields. Do not map result sets into tab-delimited strings such as `getString(1) + "\t" + getString(2)` except at a deliberate legacy compatibility boundary that is documented and scheduled for removal.
@@ -372,6 +373,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed call-for-help notification, close, delete, and created envelopes through `StaffPayloads`, replacing inline `HR`, `H\`, `E@`, and `EA` packet assembly in moderation handlers.
 - Moved roller movement `AZ` payload construction into `RoomPayloads.rollerMove`, leaving `Main.mainRollerMovePayload` as a compatibility wrapper over the room payload builder.
 - Moved furniture state-change `AX` payloads and simple floor-use `AZ` payloads into `FurniturePayloads`, leaving the old `Handling.furnitureStatePayload` as a compatibility wrapper.
+- Moved furniture charge-prompt `Iu` payload construction into `FurniturePayloads.chargePrompt`, replacing chained legacy `Crypto` packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -387,7 +389,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 12003 lines
+- `Handling.java`: 12004 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines

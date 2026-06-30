@@ -4840,12 +4840,13 @@ public final class Handling {
             Path chargePath = Path.of(Functions.applicationPath, "cache", "items_charges", furnitureId + ".cache");
             long currentCharges = NumberUtils.parseLong(Proc_6_239_7FC170(chargePath.toString(), 0, 0));
             if (currentCharges < 1L) {
-                String payload = Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Iu")
-                    + Crypto.Proc_3_0_6D2AF0(currentCharges, null, "")
-                    + Crypto.Proc_3_0_6D2AF0(chargeSize, null, "")
-                    + Crypto.Proc_3_0_6D2AF0(chargePriceCredits, null, "")
-                    + Crypto.Proc_3_0_6D2AF0(chargePricePoints, null, "")
-                    + Crypto.Proc_3_0_6D2AF0(chargePointType, null, "");
+                String payload = FurniturePayloads.chargePrompt(
+                    furnitureId,
+                    currentCharges,
+                    chargeSize,
+                    chargePriceCredits,
+                    chargePricePoints,
+                    chargePointType);
                 Proc_6_244_801E80(socketIndex, payload, 0);
             } else {
                 DataManager.Proc_8_10_8068E0(chargePath.toString(), String.valueOf(currentCharges - 1L), 0);

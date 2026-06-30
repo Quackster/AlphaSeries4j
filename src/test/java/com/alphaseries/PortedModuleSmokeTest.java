@@ -1822,6 +1822,14 @@ public final class PortedModuleSmokeTest {
         assertEquals(FurniturePayloads.stateChanged(77, 3), Handling.furnitureStatePayload(77, 3));
         assertEquals("0" + Crypto.Proc_3_0_6D2AF0(3, null,
             Crypto.Proc_3_0_6D2AF0(77, null, "AZ")), FurniturePayloads.simpleFloorUse(77, 3));
+        assertEquals(
+            Crypto.Proc_3_0_6D2AF0(77, null, "Iu")
+                + Crypto.Proc_3_0_6D2AF0(0, null, "")
+                + Crypto.Proc_3_0_6D2AF0(3, null, "")
+                + Crypto.Proc_3_0_6D2AF0(10, null, "")
+                + Crypto.Proc_3_0_6D2AF0(2, null, "")
+                + Crypto.Proc_3_0_6D2AF0(1, null, ""),
+            FurniturePayloads.chargePrompt(77, 0, 3, 10, 2, 1));
         Handling.FurnitureStateCache stateCache = Handling.representedFurnitureStateCache(
             "\1" + "5\2\1" + "9\told\2",
             "\1" + "77\2",

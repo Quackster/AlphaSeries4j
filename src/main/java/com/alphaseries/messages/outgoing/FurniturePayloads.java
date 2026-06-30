@@ -44,6 +44,24 @@ public final class FurniturePayloads {
             .build();
     }
 
+    public static String chargePrompt(
+        long furnitureId,
+        long currentCharges,
+        long chargeSize,
+        long chargePriceCredits,
+        long chargePricePoints,
+        long chargePointType
+    ) {
+        return PacketBuilder.message("Iu")
+            .appendInt(furnitureId)
+            .appendInt(currentCharges)
+            .appendInt(chargeSize)
+            .appendInt(chargePriceCredits)
+            .appendInt(chargePricePoints)
+            .appendInt(chargePointType)
+            .build();
+    }
+
     public record DimmerPresetPayload(long currentPresetId, String payload) {
     }
 }
