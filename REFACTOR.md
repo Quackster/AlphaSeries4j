@@ -260,6 +260,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed recycler reward chance and product startup cache reads through typed `RecyclerDao` methods, keeping legacy recycler payload/list serialization explicit in `Boot`.
 - Routed product, catalog-product, and product-deal startup cache reads through typed `CatalogDao` cache rows, keeping legacy array/string cache serialization explicit in `Boot`.
 - Routed gift-wrap and club-gift startup cache reads through typed `CatalogDao`/`ClubDao` methods, keeping legacy gift cache serialization explicit in `Boot`.
+- Added `AchievementDao` and routed achievement settings startup cache reads through typed records, keeping legacy achievement row arrays explicit at the `Licence` cache bridge.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -273,8 +274,8 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 22
-- `Boot.java`: 1621 lines
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 21
+- `Boot.java`: 1661 lines
 - `Handling.java`: 12596 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines

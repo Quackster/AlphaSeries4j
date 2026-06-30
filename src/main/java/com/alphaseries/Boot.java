@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.dao.mysql.AdvertisingDao;
+import com.alphaseries.dao.mysql.AchievementDao;
 import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.dao.mysql.ChatDao;
@@ -218,9 +219,15 @@ public final class Boot {
     }
 
     public static void Proc_1_5_6C4F80(Object... args) {
-        AchievementSettingsCache achievementCache = buildAchievementSettingsCache(MySQL.Proc_5_2_6D4690(
-            "SELECT id_quest,id_badge,progress,reward_increase,level_total,score_increase,type_reward "
-                + "FROM settings_achievements WHERE is_enabled='1' LIMIT 100", 0, 0));
+        AchievementSettingsCache achievementCache = new AchievementSettingsCache();
+        AchievementDao achievements = achievementDao();
+        if (achievements != null) {
+            try {
+                achievementCache = buildAchievementSettingsCache(achievements.enabledSettingsRows());
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         Licence.setAchievementSettings(achievementCache.questIdPayload, achievementRowsByIndex(achievementCache));
         Proc_1_9_6C6DF0(0, 0, 0);
         Proc_1_7_6C5E10(0, 0, 0);
@@ -1021,6 +1028,34 @@ public final class Boot {
         return cache;
     }
 
+    public static AchievementSettingsCache buildAchievementSettingsCache(List<AchievementDao.AchievementSettingsRow> achievementRows) {
+        AchievementSettingsCache cache = new AchievementSettingsCache();
+        long achievementIndex = 0L;
+        StringBuilder questIds = new StringBuilder();
+        if (achievementRows != null) {
+            for (AchievementDao.AchievementSettingsRow row : achievementRows) {
+                if (achievementIndex > 100L) {
+                    break;
+                }
+                if (row != null) {
+                    questIds.append(row.questId()).append('\2');
+                    cache.rowsByIndex.put(achievementIndex, new String[] {
+                        String.valueOf(row.questId()),
+                        StringUtils.text(row.badgeId()),
+                        String.valueOf(row.progress()),
+                        String.valueOf(row.rewardIncrease()),
+                        String.valueOf(row.levelTotal()),
+                        String.valueOf(row.scoreIncrease()),
+                        String.valueOf(row.rewardType())
+                    });
+                    achievementIndex++;
+                }
+            }
+        }
+        cache.questIdPayload = questIds.toString();
+        return cache;
+    }
+
     public static int[] buildMessengerFriendLimitCache(long hcLevel0, long hcLevel1, long hcLevel2) {
         int[] limits = new int[5];
         limits[0] = (int) hcLevel0;
@@ -1592,6 +1627,11 @@ public final class Boot {
     private static AdvertisingDao advertisingDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new AdvertisingDao(database);
+    }
+
+    private static AchievementDao achievementDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new AchievementDao(database);
     }
 
     private static ChatDao chatDao() {
