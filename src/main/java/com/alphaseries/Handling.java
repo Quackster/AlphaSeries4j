@@ -5580,7 +5580,7 @@ public final class Handling {
             }
             removeCount = Math.min(removeCount, 75L);
             List<Long> targetIds = new ArrayList<>();
-            StringBuilder removedIdsPayload = new StringBuilder();
+            PacketBuilder removedIdsPayload = PacketBuilder.create();
             long removedCount = 0L;
             for (long removeIndex = 1L; removeIndex <= removeCount; removeIndex++) {
                 long targetUserId = readWireLong(requestPayload, offset);
@@ -5588,7 +5588,7 @@ public final class Handling {
                 if (targetUserId > 0L && !targetId.equals(userId) && !targetIds.contains(targetUserId)) {
                     if (messenger.acceptedFriendshipExists(NumberUtils.parseLong(userId), targetUserId)) {
                         targetIds.add(targetUserId);
-                        removedIdsPayload.append(MessengerPayloads.removedId(targetUserId));
+                        removedIdsPayload.appendRaw(MessengerPayloads.removedId(targetUserId));
                         removedCount++;
                         int targetSocketIndex = handlingSocketFromUserId(targetId);
                         if (targetSocketIndex > 0) {
@@ -5602,7 +5602,7 @@ public final class Handling {
                 return "";
             }
             messenger.deleteAcceptedFriendships(NumberUtils.parseLong(userId), targetIds);
-            String callerPayload = MessengerPayloads.removeFriends(removedIdsPayload.toString(), removedCount);
+            String callerPayload = MessengerPayloads.removeFriends(removedIdsPayload.build(), removedCount);
             Proc_6_244_801E80(socketIndex, callerPayload, 0);
             return callerPayload;
         } catch (Exception ignored) {

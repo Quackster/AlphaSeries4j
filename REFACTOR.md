@@ -175,6 +175,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `MessengerDao` for friend-request target lookup, existing friendship checks, accept-friends reads, and request inserts, replacing raw friend-request creation SQL in `Handling`.
 - Routed pending-request and accepted-friend delete targets through typed `List<Long>` parser results and prepared `MessengerDao` `IN` placeholders, leaving comma-delimited target text only as a compatibility view.
 - Routed accepted friend-request handling through typed target id lists and `PacketBuilder` row aggregation instead of comma-delimited target strings and raw `StringBuilder` payload rows.
+- Built accepted-friend removal id payloads with `PacketBuilder` over typed target ids instead of raw `StringBuilder` accumulation.
 - Routed room-invite target handling through typed target id lists instead of comma-delimited string accumulation and split loops.
 - Expanded `MessengerDao` with typed messenger search result records and routed search friendship checks through prepared DAO methods instead of raw handler SQL.
 - Expanded `MessengerDao` for private-message chat log insertion, replacing raw messenger chat-log SQL in `Handling`.
