@@ -95,7 +95,7 @@ public final class RepresentedBotRegistry {
             return 0L;
         }
         for (Record record : records()) {
-            if (record.fields.length >= 2 && NumberUtils.parseLong(record.fields[1]) == botId) {
+            if (record.bot.botId() == botId) {
                 return record.entityId;
             }
         }
@@ -108,9 +108,8 @@ public final class RepresentedBotRegistry {
         }
         StringBuilder result = new StringBuilder();
         for (Record record : records()) {
-            if (record.fields.length >= 2
-                && NumberUtils.parseLong(record.fields[0]) == roomSlot
-                && (onlyBotId <= 0L || NumberUtils.parseLong(record.fields[1]) == onlyBotId)) {
+            if (record.bot.roomSlot() == roomSlot
+                && (onlyBotId <= 0L || record.bot.botId() == onlyBotId)) {
                 if (result.length() > 0) {
                     result.append('\r');
                 }
@@ -168,7 +167,7 @@ public final class RepresentedBotRegistry {
             if (payloadAt > 0 && endAt > payloadAt) {
                 long entityId = NumberUtils.parseLong(recordText.substring(0, payloadAt));
                 String[] fields = recordText.substring(payloadAt + 1, endAt).split("\2", -1);
-                result.add(new Record(entityId, fields));
+                result.add(new Record(entityId, RepresentedBotRecord.fromFields(fields)));
             }
         }
         return result;
@@ -180,11 +179,11 @@ public final class RepresentedBotRegistry {
 
     private static final class Record {
         private final long entityId;
-        private final String[] fields;
+        private final RepresentedBotRecord bot;
 
-        private Record(long entityId, String[] fields) {
+        private Record(long entityId, RepresentedBotRecord bot) {
             this.entityId = entityId;
-            this.fields = fields;
+            this.bot = bot;
         }
     }
 

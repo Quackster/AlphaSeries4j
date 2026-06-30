@@ -532,6 +532,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `RepresentedSocketCache` internals from raw cache-string storage to collection-backed socket records with named room-slot and busy-state accessors, keeping legacy string parsing only at the compatibility constructor.
 - Migrated `RepresentedSocketCache.RepresentedSocketRecord` away from retained split field arrays to named room-slot and busy fields while preserving legacy payload serialization.
 - Migrated `SessionRegistry` internals away from retained raw cache strings and split field arrays, using typed record/linked-section storage while preserving legacy cache serialization and lookup behavior.
+- Migrated `RepresentedBotRegistry` entity lookup internals away from retained split field arrays to typed `RepresentedBotRecord` values for bot-id and room-slot checks.
 - Migrated `MessengerSettings` internals from raw friend-limit object storage to defensive typed `long[]` settings, leaving legacy `String[]` parsing only at the module boundary.
 - Migrated `StaffSettings` internals from raw moderation payload object storage to defensive typed `String[][]` settings, leaving legacy matrix parsing only at the module boundary.
 - Migrated `HelpCenterCache` internals from raw indexed payload objects to typed payload maps for category FAQ and description lookups, leaving legacy array/map parsing only at the module boundary.
