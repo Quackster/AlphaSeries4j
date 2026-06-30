@@ -5967,10 +5967,7 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "n|");
             long requestedId = readWireLong(requestPayload, new LongRef(1));
-            long botId = representedBotRecordLong(requestedId, 1);
-            if (botId <= 0L) {
-                botId = requestedId;
-            }
+            long botId = Licence.representedBots().identityFromEntityOrBotId(requestedId).botId();
             long petLevel = 0L;
             String userId = handlingUserIdFromSocket(socketIndex);
             if (!userId.isEmpty() && !"0".equals(userId) && botId > 0L) {
@@ -6056,11 +6053,9 @@ public final class Handling {
             if (botEntityId <= 0L) {
                 return 0L;
             }
-            long botId = representedBotRecordLong(botEntityId, 1);
-            if (botId <= 0L) {
-                botId = botEntityId;
-                botEntityId = representedBotEntityFromBotId(botId);
-            }
+            RepresentedBotRegistry.RepresentedBotIdentity identity = Licence.representedBots().identityFromEntityOrBotId(botEntityId);
+            botEntityId = identity.entityId();
+            long botId = identity.botId();
             if (botId <= 0L) {
                 return 0L;
             }
@@ -6114,12 +6109,9 @@ public final class Handling {
             if (socketIndex <= 0 || requestedId <= 0L) {
                 return 0L;
             }
-            long botEntityId = requestedId;
-            long botId = representedBotRecordLong(botEntityId, 1);
-            if (botId <= 0L) {
-                botId = requestedId;
-                botEntityId = representedBotEntityFromBotId(botId);
-            }
+            RepresentedBotRegistry.RepresentedBotIdentity identity = Licence.representedBots().identityFromEntityOrBotId(requestedId);
+            long botEntityId = identity.entityId();
+            long botId = identity.botId();
             if (botId <= 0L) {
                 return 0L;
             }
