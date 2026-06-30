@@ -976,18 +976,24 @@ public final class RoomDao {
             roomId);
     }
 
-    public String eventRow(long roomId, String timeFormat) throws SQLException {
+    public Optional<RoomEventInfo> eventInfo(long roomId, String timeFormat) throws SQLException {
         return database.queryOne(
             "SELECT users.id,users.name,rooms_events.id_room,rooms_events.id_category,"
                 + "rooms_events.name,rooms_events.description,DATE_FORMAT(FROM_UNIXTIME(rooms_events.timestamp), ?),"
                 + "rooms_events.tag_1,rooms_events.tag_2 FROM rooms_events,users WHERE rooms_events.id_room=? "
                 + "AND users.id=rooms_events.id_user LIMIT 1",
-            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
-                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5) + "\t" + resultSet.getString(6)
-                + "\t" + resultSet.getString(7) + "\t" + resultSet.getString(8) + "\t" + resultSet.getString(9),
+            resultSet -> new RoomEventInfo(
+                resultSet.getLong(1),
+                String.valueOf(resultSet.getString(2)),
+                resultSet.getLong(3),
+                resultSet.getLong(4),
+                String.valueOf(resultSet.getString(5)),
+                String.valueOf(resultSet.getString(6)),
+                String.valueOf(resultSet.getString(7)),
+                String.valueOf(resultSet.getString(8)),
+                String.valueOf(resultSet.getString(9))),
             timeFormat,
-            roomId)
-            .orElse("");
+            roomId);
     }
 
     public record ActiveRoomVisit(long visitId, long roomId, long slotId) {
@@ -1134,6 +1140,19 @@ public final class RoomDao {
         String tagOne,
         String tagTwo,
         String formattedTime
+    ) {
+    }
+
+    public record RoomEventInfo(
+        long userId,
+        String userName,
+        long roomId,
+        long categoryId,
+        String eventName,
+        String description,
+        String formattedTime,
+        String tagOne,
+        String tagTwo
     ) {
     }
 

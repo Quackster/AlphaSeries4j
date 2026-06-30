@@ -15,7 +15,7 @@ public final class HelpDao {
     public List<FaqNameRow> searchFaqs(String searchText) throws SQLException {
         return database.query(
             "SELECT id,name FROM faq WHERE name LIKE ? LIMIT 25",
-            resultSet -> new FaqNameRow(resultSet.getLong(1), resultSet.getString(2)),
+            resultSet -> new FaqNameRow(resultSet.getLong(1), String.valueOf(resultSet.getString(2))),
             "%" + searchText + "%");
     }
 

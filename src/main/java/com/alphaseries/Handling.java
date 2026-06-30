@@ -88,6 +88,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public final class Handling {
@@ -1592,21 +1593,23 @@ public final class Handling {
             }
             String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
             RoomDao rooms = roomDao();
-            String rowText = rooms == null ? "" : rooms.eventRow(roomId, timeFormat);
-            if (rowText.isEmpty()) {
+            Optional<RoomDao.RoomEventInfo> eventInfo = rooms == null
+                ? Optional.empty()
+                : rooms.eventInfo(roomId, timeFormat);
+            if (eventInfo.isEmpty()) {
                 return "-1" + '\2';
             }
-            String[] fields = rowText.split("\t", -1);
-            if (fields.length < 9) {
-                return "-1" + '\2';
-            }
-            StringBuilder payload = new StringBuilder();
-            for (int fieldIndex = 4; fieldIndex <= 8; fieldIndex++) {
-                payload.append(handlingField(fields, fieldIndex)).append('\2');
-            }
-            String result = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 0)), null, payload.toString());
-            result = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 2)), null, result);
-            return Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 3)), null, result);
+            RoomDao.RoomEventInfo event = eventInfo.get();
+            return PacketBuilder.create()
+                .appendString(event.eventName())
+                .appendString(event.description())
+                .appendString(event.formattedTime())
+                .appendString(event.tagOne())
+                .appendString(event.tagTwo())
+                .appendInt(event.userId())
+                .appendInt(event.roomId())
+                .appendInt(event.categoryId())
+                .build();
         } catch (Exception ignored) {
             return "-1" + '\2';
         }
