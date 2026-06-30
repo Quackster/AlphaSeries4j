@@ -1743,6 +1743,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, expectedEventFragment + expectedRoomFragment),
             Handling.navigatorCombinedLegacyRoomListPayload(List.of(legacyNavigatorEvent), List.of(legacyNavigatorRoom)));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.navigatorLegacyRoomListPayload(List.of()));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), NavigatorPayloads.roomList(List.of()));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.navigatorEventListPayload(List.of()));
         String[] officialFields = new String[]{
             "1", "2", "3", "caption", "cap2", "cap3", "7", "8", "9", "10",
@@ -2304,6 +2305,7 @@ public final class PortedModuleSmokeTest {
             Handling.equippedBadgePayload(List.of(
                 new BadgeRow("ACH1", 1L, 10L),
                 new BadgeRow("VIP", 3L, 11L))));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), SocialPayloads.equippedBadges(List.of()));
         String expectedBadgeInventory = Crypto.Proc_3_0_6D2AF0(2, null, "Ce")
             + "0" + Crypto.Proc_3_0_6D2AF0(20, null, "") + "ACH2\2"
             + "0" + Crypto.Proc_3_0_6D2AF0(21, null, "") + "MOD\2"
@@ -2315,6 +2317,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("Cd" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges,
             SocialPayloads.badgeDisplay(5, Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2", Handling.tagListPayload("one\rtwo"));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), SocialPayloads.tags(List.of()));
         assertEquals("E^" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2",
             SocialPayloads.tagDisplay(5, Handling.tagListPayload("one\rtwo")));
         String badgeWire = "A@CONEA@CTWO";

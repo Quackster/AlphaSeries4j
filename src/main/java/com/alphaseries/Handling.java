@@ -3649,7 +3649,7 @@ public final class Handling {
             }
             String queryTail = StringUtils.text(args[0]);
             if (queryTail.isEmpty()) {
-                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+                return navigatorEventListPayload(List.of());
             }
             String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
             RoomDao rooms = roomDao();
@@ -6443,17 +6443,17 @@ public final class Handling {
                 }
             }
             if (userId.isEmpty() || "0".equals(userId)) {
-                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+                return equippedBadgePayload(List.of());
             }
             UserDao users = userDao();
             if (users == null) {
-                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+                return equippedBadgePayload(List.of());
             }
             List<BadgeRow> rows = users.equippedBadges(NumberUtils.parseLong(userId));
             return equippedBadgePayload(rows);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
-            return Crypto.Proc_3_0_6D2AF0(0, null, "");
+            return equippedBadgePayload(List.of());
         }
     }
 
@@ -6470,17 +6470,17 @@ public final class Handling {
                 }
             }
             if (userId.isEmpty() || "0".equals(userId)) {
-                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+                return tagListPayload(List.of());
             }
             UserDao users = userDao();
             if (users == null) {
-                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+                return tagListPayload(List.of());
             }
             List<String> rows = users.tagNames(NumberUtils.parseLong(userId));
             return tagListPayload(rows);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
-            return Crypto.Proc_3_0_6D2AF0(0, null, "");
+            return tagListPayload(List.of());
         }
     }
 
@@ -9504,16 +9504,16 @@ public final class Handling {
     public static String Proc_6_112_74E0C0(Object... args) {
         try {
             if (args == null || args.length == 0) {
-                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+                return navigatorRoomListPayload(List.of());
             }
             String queryTail = StringUtils.text(args[0]);
             if (queryTail.isEmpty()) {
-                return Crypto.Proc_3_0_6D2AF0(0, null, "");
+                return navigatorRoomListPayload(List.of());
             }
             RoomDao rooms = roomDao();
             return navigatorRoomListPayload(rooms == null ? List.of() : rooms.navigatorRoomsByTail(queryTail, true));
         } catch (Exception ignored) {
-            return Crypto.Proc_3_0_6D2AF0(0, null, "");
+            return navigatorRoomListPayload(List.of());
         }
     }
 

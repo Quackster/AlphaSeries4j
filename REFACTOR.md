@@ -413,6 +413,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved room-user status `Ge` payload construction into `SocialPayloads`, leaving `Handling.representedRoomUserStatusPayload` as a compatibility adapter.
 - Moved represented-bot room-entry `@\\` payload construction into `PetPayloads`, leaving `Handling.representedBotRoomEntryPayload` as a compatibility lookup adapter.
 - Moved room icon payload construction into `RoomPayloads` with typed `RoomIconItem` records, leaving `Handling.roomIconPayloadFromWire` as a wire parser only.
+- Replaced raw zero-count `Crypto` fallback payloads for navigator room/event lists, equipped badges, and tag lists with the existing typed payload builders.
 
 ## VB Compatibility Class Removal Checklist
 
