@@ -67,6 +67,7 @@ import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
+import com.alphaseries.game.help.HelpCenterState;
 import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.game.messenger.MessengerSearchResult;
 import com.alphaseries.game.messenger.PendingFriendRequest;
@@ -1077,7 +1078,7 @@ public final class Handling {
     public static void Proc_6_33_70F4F0(Object... args) {
         try {
             Proc_6_244_801E80(handlingSocketIndex(args),
-                HelpPayloads.importantFaqs(Licence.helpCenterCache().importantFaqPayload()), 0);
+                HelpPayloads.importantFaqs(helpCenterCache().importantFaqPayload()), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1086,7 +1087,7 @@ public final class Handling {
     public static void Proc_6_34_70F590(Object... args) {
         try {
             Proc_6_244_801E80(handlingSocketIndex(args),
-                HelpPayloads.categories(Licence.helpCenterCache().categoryPayload()), 0);
+                HelpPayloads.categories(helpCenterCache().categoryPayload()), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1097,7 +1098,7 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String packetPayload = handlingPacketPayload(args);
             long categoryId = packetPayload.length() >= 3 ? readWireLong(packetPayload.substring(2), new LongRef(1)) : 0L;
-            HelpCenterCache helpCenterCache = Licence.helpCenterCache();
+            HelpCenterCache helpCenterCache = helpCenterCache();
             String categoryPayload = helpCenterCache.categoryFaqPayload(categoryId);
             Proc_6_244_801E80(socketIndex, HelpPayloads.categoryFaqs(categoryId, categoryPayload), 0);
         } catch (Exception ignored) {
@@ -1140,7 +1141,7 @@ public final class Handling {
                 }
             }
             Proc_6_244_801E80(socketIndex,
-                HelpPayloads.description(Licence.helpCenterCache().descriptionPayload(faqId)), 0);
+                HelpPayloads.description(helpCenterCache().descriptionPayload(faqId)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -9355,6 +9356,11 @@ public final class Handling {
     private static VisitRoomAds visitRoomAds() {
         Licence.visitRoomAds();
         return AdvertisingState.instance().visitRoomAds();
+    }
+
+    private static HelpCenterCache helpCenterCache() {
+        Licence.helpCenterCache();
+        return HelpCenterState.instance().cache();
     }
 
     public static String officialNavigatorQuery() {

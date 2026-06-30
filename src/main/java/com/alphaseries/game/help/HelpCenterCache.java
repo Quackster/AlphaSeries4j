@@ -19,6 +19,10 @@ public final class HelpCenterCache {
         return new HelpCenterCache(importantFaqPayload, categoryPayload, categoryFaqs, descriptions);
     }
 
+    public static HelpCenterCache empty() {
+        return new HelpCenterCache("", "", "", "");
+    }
+
     public String importantFaqPayload() {
         return importantFaqPayload;
     }

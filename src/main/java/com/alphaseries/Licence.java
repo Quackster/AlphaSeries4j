@@ -9,6 +9,7 @@ import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
+import com.alphaseries.game.help.HelpCenterState;
 import com.alphaseries.game.messenger.MessengerSettings;
 import com.alphaseries.game.moderation.StaffSettings;
 import com.alphaseries.game.navigator.NewFriendRooms;
@@ -219,20 +220,24 @@ public final class Licence {
     }
 
     public static HelpCenterCache helpCenterCache() {
-        return HelpCenterCache.fromLegacy(global_00829204, global_00829208, global_0082920C, global_00829210);
+        HelpCenterState.instance().setCacheFromLegacy(global_00829204, global_00829208, global_0082920C, global_00829210);
+        return HelpCenterState.instance().cache();
     }
 
     public static void setImportantFaqPayload(String payload) {
         global_00829204 = StringUtils.text(payload);
+        HelpCenterState.instance().setCacheFromLegacy(global_00829204, global_00829208, global_0082920C, global_00829210);
     }
 
     public static void setFaqCategoryCache(String categoryPayload, Object categoryFaqs) {
         global_00829208 = StringUtils.text(categoryPayload);
         global_0082920C = categoryFaqs == null ? "" : categoryFaqs;
+        HelpCenterState.instance().setCacheFromLegacy(global_00829204, global_00829208, global_0082920C, global_00829210);
     }
 
     public static void setFaqDescriptionCache(Object descriptions) {
         global_00829210 = descriptions == null ? "" : descriptions;
+        HelpCenterState.instance().setCacheFromLegacy(global_00829204, global_00829208, global_0082920C, global_00829210);
     }
 
     public static ChatSettings chatSettings() {
