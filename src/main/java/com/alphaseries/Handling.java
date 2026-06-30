@@ -406,7 +406,7 @@ public final class Handling {
                 return 0L;
             }
             long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
-            Proc_6_247_8027E0(socketIndex, SocialPayloads.roomUserWave(roomUserIndex), 0);
+            broadcastToCurrentRoom(socketIndex, SocialPayloads.roomUserWave(roomUserIndex));
             return roomUserIndex;
         } catch (Exception ignored) {
             return 0L;
@@ -437,7 +437,7 @@ public final class Handling {
             }
             long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
             String payload = SocialPayloads.roomUserDance(roomUserIndex, danceId);
-            Proc_6_247_8027E0(socketIndex, payload, 0);
+            broadcastToCurrentRoom(socketIndex, payload);
             return danceId;
         } catch (Exception ignored) {
             return 0L;
@@ -517,8 +517,8 @@ public final class Handling {
                 mottoText = users.motto(numericUserId);
             }
             String payload = UserPayloads.identityRefresh(NumberUtils.parseLong(userId), mottoText, figureText, genderText);
-            Proc_6_244_801E80(socketIndex, payload, 0);
-            Proc_6_247_8027E0(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
+            broadcastToCurrentRoom(socketIndex, payload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -8196,14 +8196,23 @@ public final class Handling {
         return broadcastToRoomUsers(NumberUtils.parseLong(args[0]), StringUtils.text(args[1]));
     }
 
+    /**
+     * Original function: Proc_6_247_8027E0.
+     */
     public static long Proc_6_247_8027E0(Object... args) {
         if (args == null || args.length < 2) {
             return 0L;
         }
-        int socketIndex = handlingSocketIndex(args);
+        return broadcastToCurrentRoom(handlingSocketIndex(args), StringUtils.text(args[1]));
+    }
+
+    /**
+     * Original function: Proc_6_247_8027E0.
+     */
+    public static long broadcastToCurrentRoom(int socketIndex, String payload) {
         String userId = handlingUserIdFromSocket(socketIndex);
         long roomId = handlingCurrentRoomId(socketIndex, userId);
-        return broadcastToRoomUsers(roomId, StringUtils.text(args[1]));
+        return broadcastToRoomUsers(roomId, payload);
     }
 
     public static long Proc_6_248_802B80(Object... args) {
