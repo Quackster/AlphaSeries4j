@@ -7322,7 +7322,7 @@ public final class Handling {
             if (roomId > 0L) {
                 Proc_6_246_8024C0(roomId, payload, 0);
             } else {
-                Proc_6_247_8027E0(socketIndex, payload, 0);
+                broadcastToCurrentRoom(socketIndex, payload);
             }
             return payload;
         } catch (Exception ignored) {
@@ -8108,7 +8108,7 @@ public final class Handling {
             if (roomUserIndex <= 0L) {
                 return;
             }
-            Proc_6_247_8027E0(socketIndex, SocialPayloads.roomUserPreReadyState(roomUserIndex), 0);
+            broadcastToCurrentRoom(socketIndex, SocialPayloads.roomUserPreReadyState(roomUserIndex));
         } catch (Exception ignored) {
             // VB6 source suppresses dispatcher helper failures.
         }
@@ -9129,7 +9129,7 @@ public final class Handling {
                 return "";
             }
             String payload = FurniturePayloads.simpleFloorUse(furnitureId, stateValue);
-            Proc_6_247_8027E0(socketIndex, payload, 0);
+            broadcastToCurrentRoom(socketIndex, payload);
             if (storeState) {
                 Proc_6_151_78AC20(roomId, furnitureId, stateValue);
             } else {
@@ -9210,7 +9210,7 @@ public final class Handling {
                 NumberUtils.parseLong(positionZ), "", itemData, secondaryValue, productId);
             String payload = (fromInventory ? "A]" : "A_") + placementPayload;
             if (!placementPayload.isEmpty()) {
-                Proc_6_247_8027E0(socketIndex, payload, 0);
+                broadcastToCurrentRoom(socketIndex, payload);
             }
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
