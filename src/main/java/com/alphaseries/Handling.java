@@ -9713,10 +9713,6 @@ public final class Handling {
         return nextState > resolvedMaxState ? 0L : nextState;
     }
 
-    public static String furnitureStatePayload(long furnitureId, long stateValue) {
-        return FurniturePayloads.stateChanged(furnitureId, stateValue);
-    }
-
     public static FurnitureStateCache representedFurnitureStateCache(
         String pendingRoomCache,
         String pendingFurnitureCache,
@@ -9811,24 +9807,14 @@ public final class Handling {
         String secondValue = args.length >= 3 ? StringUtils.text(args[2]) : "";
         String thirdValue = args.length >= 4 ? StringUtils.text(args[3]) : "";
         long fourthValue = args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
-        return wallInventoryPlacementPayload(baseValue, firstValue, secondValue, thirdValue, fourthValue);
-    }
-
-    public static String wallInventoryPlacementPayload(
-        long furnitureId,
-        long productId,
-        String wallPosition,
-        String itemData,
-        long secondaryValue
-    ) {
-        return FurniturePayloads.wallInventoryPlacement(furnitureId, productId, wallPosition, itemData, secondaryValue);
+        return FurniturePayloads.wallInventoryPlacement(baseValue, firstValue, secondValue, thirdValue, fourthValue);
     }
 
     public static String Proc_6_161_7B2EE0(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        return floorItemPlacementPayload(
+        return FurniturePayloads.floorPlacement(
             NumberUtils.parseLong(args[0]),
             args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L,
             args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L,
@@ -9838,29 +9824,6 @@ public final class Handling {
             args.length >= 7 ? StringUtils.text(args[6]) : "",
             args.length >= 8 ? NumberUtils.parseLong(args[7]) : 0L,
             args.length >= 9 ? NumberUtils.parseLong(args[8]) : 0L);
-    }
-
-    public static String floorItemPlacementPayload(
-        long furnitureId,
-        long positionX,
-        long positionY,
-        long rotation,
-        long positionZ,
-        String stateText,
-        String itemData,
-        long secondaryValue,
-        long productId
-    ) {
-        return FurniturePayloads.floorPlacement(
-            furnitureId,
-            positionX,
-            positionY,
-            rotation,
-            positionZ,
-            stateText,
-            itemData,
-            secondaryValue,
-            productId);
     }
 
     public static String systemHandshakePayload(String configuredDateFormat) {

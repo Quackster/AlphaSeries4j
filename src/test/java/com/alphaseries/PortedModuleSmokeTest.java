@@ -1889,7 +1889,6 @@ public final class PortedModuleSmokeTest {
         long diceState = Handling.nextFurnitureState("dice_red", 0, 0);
         assertEquals(true, diceState >= 1L && diceState <= 6L);
         assertEquals("AX77\2" + "3\2", FurniturePayloads.stateChanged(77, 3));
-        assertEquals(FurniturePayloads.stateChanged(77, 3), Handling.furnitureStatePayload(77, 3));
         assertEquals("0" + Crypto.Proc_3_0_6D2AF0(3, null,
             Crypto.Proc_3_0_6D2AF0(77, null, "AZ")), FurniturePayloads.simpleFloorUse(77, 3));
         assertEquals(
@@ -1928,7 +1927,6 @@ public final class PortedModuleSmokeTest {
             Crypto.Proc_3_0_6D2AF0(20, null, "77\2") + ":w=1,2 l=3,4\2data\2");
         assertEquals(expectedWallInventory,
             FurniturePayloads.wallInventoryPlacement(77, 20, ":w=1,2 l=3,4", "data", 9));
-        assertEquals(expectedWallInventory, Handling.wallInventoryPlacementPayload(77, 20, ":w=1,2 l=3,4", "data", 9));
         assertEquals(expectedWallInventory, Handling.Proc_6_156_7972B0(77, 20, ":w=1,2 l=3,4", "data", 9));
         String expectedFloorPlacement = Crypto.Proc_3_0_6D2AF0(99, null, "0");
         expectedFloorPlacement = Crypto.Proc_3_0_6D2AF0(1, null, expectedFloorPlacement);
@@ -1939,7 +1937,6 @@ public final class PortedModuleSmokeTest {
         expectedFloorPlacement = Crypto.Proc_3_0_6D2AF0(20, null, expectedFloorPlacement);
         assertEquals(expectedFloorPlacement,
             FurniturePayloads.floorPlacement(99, 1, 2, 4, 3, "state", "a\bb{{9}}c", 7, 20));
-        assertEquals(expectedFloorPlacement, Handling.floorItemPlacementPayload(99, 1, 2, 4, 3, "state", "a\bb{{9}}c", 7, 20));
         assertEquals(expectedFloorPlacement, Handling.Proc_6_161_7B2EE0(99, 1, 2, 4, 3, "state", "a\bb{{9}}c", 7, 20));
         assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BAi\2") + "data\2",
             FurniturePayloads.presentOpened(77, "i", "data"));
@@ -2433,10 +2430,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(false, Handling.wiredSelectedItemsExist("100;101", "99,100"));
         Handling.WiredApplyResult wiredApply = Handling.wiredApplySelected("100;101,102", "5;ignored", 0, "100;102");
         assertEquals(2L, wiredApply.appliedCount);
-        assertEquals(Handling.furnitureStatePayload(100, 5) + Handling.furnitureStatePayload(102, 5), wiredApply.statePayloads);
+        assertEquals(FurniturePayloads.stateChanged(100, 5) + FurniturePayloads.stateChanged(102, 5), wiredApply.statePayloads);
         Handling.WiredApplyResult wiredOverride = Handling.wiredApplySelected("100", "7", 101, "100;101");
         assertEquals(1L, wiredOverride.appliedCount);
-        assertEquals(Handling.furnitureStatePayload(101, 7), wiredOverride.statePayloads);
+        assertEquals(FurniturePayloads.stateChanged(101, 7), wiredOverride.statePayloads);
         Path previousApplicationPathForWired = Path.of(Functions.applicationPath);
         Object previousProductCacheForWired = DataManager.global_008292BC;
         Path wiredRoot = Files.createTempDirectory("alphaseries-wired");
