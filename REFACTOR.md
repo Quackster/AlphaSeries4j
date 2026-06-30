@@ -302,6 +302,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed legacy navigator room/event row wrappers through typed `LegacyNavigatorRoomRow` and `NavigatorEventRow` lists, moving tab-delimited room/event row parsing out of navigator payload assembly in `Handling`.
 - Routed official navigator row wrappers through typed `OfficialNavigatorItem` lists with explicit optional required-level handling, moving another tab-delimited navigator parser out of `Handling`.
 - Routed activity-point balance row wrappers through typed `UserDao.ActivityPointBalance` factories, removing another tab-delimited payload parser from `Handling`.
+- Routed achievement current-level, progress-decision, and list payload paths through typed `AchievementSettings.Achievement` iteration, centralizing legacy achievement row parsing outside `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -317,7 +318,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12492 lines
+- `Handling.java`: 12482 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
 - `Main.java`: 957 lines

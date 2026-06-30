@@ -3,6 +3,9 @@ package com.alphaseries.game.achievement;
 import com.alphaseries.util.StringUtils;
 import com.alphaseries.util.NumberUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class AchievementSettings {
     private final String questIdPayload;
     private final Object rows;
@@ -55,6 +58,38 @@ public final class AchievementSettings {
         return achievement(rowByIndex(achievementIndex));
     }
 
+    public List<Achievement> achievements() {
+        return achievements(rowsAsText());
+    }
+
+    public static List<Achievement> achievements(String rowsText) {
+        List<Achievement> achievements = new ArrayList<>();
+        for (String row : StringUtils.text(rowsText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                Achievement achievement = achievement(row);
+                if (achievement != null) {
+                    achievements.add(achievement);
+                }
+            }
+        }
+        return achievements;
+    }
+
+    public static List<IndexedAchievement> indexedAchievements(String rowsText) {
+        List<IndexedAchievement> achievements = new ArrayList<>();
+        long achievementIndex = 0L;
+        for (String row : StringUtils.text(rowsText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                Achievement achievement = achievement(row);
+                if (achievement != null) {
+                    achievements.add(new IndexedAchievement(achievementIndex, achievement));
+                }
+                achievementIndex++;
+            }
+        }
+        return achievements;
+    }
+
     public static Achievement achievement(String row) {
         String[] fields = StringUtils.text(row).split("\t", -1);
         if (fields.length < 7) {
@@ -79,5 +114,8 @@ public final class AchievementSettings {
         long scoreIncrease,
         long rewardType
     ) {
+    }
+
+    public record IndexedAchievement(long achievementIndex, Achievement achievement) {
     }
 }

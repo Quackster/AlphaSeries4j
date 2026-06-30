@@ -11502,21 +11502,18 @@ public final class Handling {
         Map<String, Long> result = new HashMap<>();
         UserDao users = userDao();
         long userIdValue = NumberUtils.parseLong(userId);
-        for (String row : StringUtils.text(achievementRows).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                AchievementSettings.Achievement achievement = AchievementSettings.achievement(row);
-                String badgePrefix = achievement == null ? "" : achievement.badgePrefix();
-                if (!badgePrefix.isEmpty() && !result.containsKey(badgePrefix)) {
-                    long currentLevel = 0L;
-                    if (users != null && userIdValue > 0L) {
-                        try {
-                            currentLevel = users.badgeLevelByPrefix(userIdValue, badgePrefix);
-                        } catch (Exception ignored) {
-                            currentLevel = 0L;
-                        }
+        for (AchievementSettings.Achievement achievement : AchievementSettings.achievements(achievementRows)) {
+            String badgePrefix = achievement.badgePrefix();
+            if (!badgePrefix.isEmpty() && !result.containsKey(badgePrefix)) {
+                long currentLevel = 0L;
+                if (users != null && userIdValue > 0L) {
+                    try {
+                        currentLevel = users.badgeLevelByPrefix(userIdValue, badgePrefix);
+                    } catch (Exception ignored) {
+                        currentLevel = 0L;
                     }
-                    result.put(badgePrefix, Math.max(0L, currentLevel));
                 }
+                result.put(badgePrefix, Math.max(0L, currentLevel));
             }
         }
         return result;
@@ -11587,31 +11584,24 @@ public final class Handling {
         long currentProgress
     ) {
         AchievementProgressDecision decision = new AchievementProgressDecision();
-        long achievementIndex = 0L;
-        for (String row : StringUtils.text(achievementRows).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 7) {
-                    long achievementId = NumberUtils.parseLong(fields[0]);
-                    if (achievementId == achievementQuestId) {
-                        String badgePrefix = fields[1];
-                        long progressStep = NumberUtils.parseLong(fields[2]);
-                        long levelTotal = NumberUtils.parseLong(fields[4]);
-                        if (levelTotal <= 0L) {
-                            levelTotal = 1L;
-                        }
-                        long currentLevel = currentLevelsByBadgePrefix != null && currentLevelsByBadgePrefix.containsKey(badgePrefix)
-                            ? currentLevelsByBadgePrefix.get(badgePrefix) : 0L;
-                        if (!badgePrefix.isEmpty() && progressStep > 0L && currentLevel >= 0L && currentLevel < levelTotal) {
-                            decision.achievementIndex = achievementIndex;
-                            decision.nextLevel = currentLevel + 1L;
-                            decision.requiredProgress = progressStep * decision.nextLevel;
-                            decision.shouldReward = currentProgress >= decision.requiredProgress;
-                        }
-                        return decision;
-                    }
+        for (AchievementSettings.IndexedAchievement indexedAchievement : AchievementSettings.indexedAchievements(achievementRows)) {
+            AchievementSettings.Achievement achievement = indexedAchievement.achievement();
+            if (achievement.achievementId() == achievementQuestId) {
+                long levelTotal = achievement.levelTotal();
+                if (levelTotal <= 0L) {
+                    levelTotal = 1L;
                 }
-                achievementIndex++;
+                long currentLevel = currentLevelsByBadgePrefix != null
+                    && currentLevelsByBadgePrefix.containsKey(achievement.badgePrefix())
+                    ? currentLevelsByBadgePrefix.get(achievement.badgePrefix()) : 0L;
+                if (!achievement.badgePrefix().isEmpty() && achievement.progressRequired() > 0L
+                    && currentLevel >= 0L && currentLevel < levelTotal) {
+                    decision.achievementIndex = indexedAchievement.achievementIndex();
+                    decision.nextLevel = currentLevel + 1L;
+                    decision.requiredProgress = achievement.progressRequired() * decision.nextLevel;
+                    decision.shouldReward = currentProgress >= decision.requiredProgress;
+                }
+                return decision;
             }
         }
         return decision;

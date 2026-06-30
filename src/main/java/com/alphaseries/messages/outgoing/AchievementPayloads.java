@@ -2,8 +2,6 @@ package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.util.NumberUtils;
-import com.alphaseries.util.StringUtils;
 
 import java.util.Map;
 
@@ -60,48 +58,46 @@ public final class AchievementPayloads {
     }
 
     public static String list(String achievementRows, Map<String, Long> currentLevelsByBadgePrefix) {
+        return list(AchievementSettings.achievements(achievementRows), currentLevelsByBadgePrefix);
+    }
+
+    public static String list(
+        Iterable<AchievementSettings.Achievement> achievements,
+        Map<String, Long> currentLevelsByBadgePrefix
+    ) {
         PacketBuilder payload = PacketBuilder.create();
         long achievementCount = 0L;
-        for (String row : StringUtils.text(achievementRows).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 7) {
-                    long achievementId = NumberUtils.parseLong(fields[0]);
-                    String badgePrefix = fields[1];
-                    if (achievementId > 0L && !badgePrefix.isEmpty()) {
-                        long progressRequired = NumberUtils.parseLong(fields[2]);
-                        long rewardIncrease = NumberUtils.parseLong(fields[3]);
-                        long levelTotal = NumberUtils.parseLong(fields[4]);
-                        long scoreIncrease = NumberUtils.parseLong(fields[5]);
-                        long rewardType = NumberUtils.parseLong(fields[6]);
-                        if (levelTotal <= 0L) {
-                            levelTotal = 1L;
-                        }
-                        long currentLevel = currentLevelsByBadgePrefix != null && currentLevelsByBadgePrefix.containsKey(badgePrefix)
-                            ? currentLevelsByBadgePrefix.get(badgePrefix) : 0L;
-                        if (currentLevel < 0L) {
-                            currentLevel = 0L;
-                        }
-                        if (currentLevel > levelTotal) {
-                            currentLevel = levelTotal;
-                        }
-                        long currentProgress = currentLevel > 0L ? progressRequired * currentLevel : 0L;
-                        if (currentProgress < 0L) {
-                            currentProgress = 0L;
-                        }
-                        payload.appendInt(achievementId)
-                            .appendInt(currentLevel)
-                            .appendInt(currentProgress)
-                            .appendInt(progressRequired)
-                            .appendInt(rewardIncrease)
-                            .appendInt(scoreIncrease)
-                            .appendInt(rewardType)
-                            .appendInt(levelTotal)
-                            .appendString(badgePrefix)
-                            .appendString(currentLevel);
-                        achievementCount++;
-                    }
+        for (AchievementSettings.Achievement achievement : achievements == null
+            ? java.util.List.<AchievementSettings.Achievement>of() : achievements) {
+            if (achievement != null && achievement.achievementId() > 0L && !achievement.badgePrefix().isEmpty()) {
+                long levelTotal = achievement.levelTotal();
+                if (levelTotal <= 0L) {
+                    levelTotal = 1L;
                 }
+                long currentLevel = currentLevelsByBadgePrefix != null
+                    && currentLevelsByBadgePrefix.containsKey(achievement.badgePrefix())
+                    ? currentLevelsByBadgePrefix.get(achievement.badgePrefix()) : 0L;
+                if (currentLevel < 0L) {
+                    currentLevel = 0L;
+                }
+                if (currentLevel > levelTotal) {
+                    currentLevel = levelTotal;
+                }
+                long currentProgress = currentLevel > 0L ? achievement.progressRequired() * currentLevel : 0L;
+                if (currentProgress < 0L) {
+                    currentProgress = 0L;
+                }
+                payload.appendInt(achievement.achievementId())
+                    .appendInt(currentLevel)
+                    .appendInt(currentProgress)
+                    .appendInt(achievement.progressRequired())
+                    .appendInt(achievement.rewardIncrease())
+                    .appendInt(achievement.scoreIncrease())
+                    .appendInt(achievement.rewardType())
+                    .appendInt(levelTotal)
+                    .appendString(achievement.badgePrefix())
+                    .appendString(currentLevel);
+                achievementCount++;
             }
         }
         return PacketBuilder.message("Ft")
