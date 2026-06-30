@@ -26,6 +26,7 @@ import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
 import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.pet.PetPayloads;
+import com.alphaseries.game.pet.PetRaceRow;
 import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotEntry;
@@ -2133,7 +2134,10 @@ public final class PortedModuleSmokeTest {
         String expectedRacePayload = Crypto.Proc_3_0_6D2AF0(2, null, "L{dog\2")
             + Crypto.Proc_3_0_6D2AF0(1, null, "") + "II"
             + Crypto.Proc_3_0_6D2AF0(3, null, "") + "II";
-        assertEquals(expectedRacePayload, Handling.petRaceListPayload("dog", "1\t1\t0\t0\tA\r2\t2\t5\t0\tB\r3\t3\t2\t1\tC", 3, 1));
+        assertEquals(expectedRacePayload, PetPayloads.raceList("dog", List.of(
+            new PetRaceRow(1L, 1L, 0L, 0L, "A"),
+            new PetRaceRow(2L, 2L, 5L, 0L, "B"),
+            new PetRaceRow(3L, 3L, 2L, 1L, "C")), 3, 1));
         String expectedPetRow = "0" + Crypto.Proc_3_0_6D2AF0(10, null, "") + "Rex\2"
             + Crypto.Proc_3_0_6D2AF0(1, null, "")
             + Crypto.Proc_3_0_6D2AF0(2, null, "")
@@ -4220,7 +4224,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "@L"));
         handlingSends.clear();
         String raceListPayload = Handling.Proc_6_177_7C6580(4, "n\u007f" + wireString("dog"));
-        assertEquals(Handling.petRaceListPayload("dog", "1\t1\t0\t0\tA\r2\t2\t2\t0\tB", 1, 0), raceListPayload);
+        assertEquals(PetPayloads.raceList("dog", List.of(
+            new PetRaceRow(1L, 1L, 0L, 0L, "A"),
+            new PetRaceRow(2L, 2L, 2L, 0L, "B")), 1, 0), raceListPayload);
         assertEquals(true, containsSend(handlingSends, "L{dog\2"));
         handlingSends.clear();
         String petInventoryPayload = Handling.Proc_6_178_7C6E60(4);

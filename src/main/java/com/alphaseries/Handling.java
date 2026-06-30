@@ -10533,10 +10533,6 @@ public final class Handling {
         return result;
     }
 
-    public static String petRaceListPayload(String productPet, String rowText, long rankIndex, long hcLevel) {
-        return PetPayloads.raceList(productPet, rowText, rankIndex, hcLevel);
-    }
-
     public static String petInventoryListPayload(List<PetInventoryRow> rows) {
         return PetPayloads.inventoryList(rows);
     }

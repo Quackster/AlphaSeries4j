@@ -10,30 +10,6 @@ public final class PetPayloads {
     private PetPayloads() {
     }
 
-    public static String raceList(String productPet, String rowText, long rankIndex, long hcLevel) {
-        long raceCount = 0L;
-        PacketBuilder racePayload = PacketBuilder.create();
-        for (String row : StringUtils.text(rowText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 4) {
-                    long breedId = NumberUtils.parseLong(fields[1]);
-                    long minRank = NumberUtils.parseLong(fields[2]);
-                    long minHcRank = NumberUtils.parseLong(fields[3]);
-                    if (rankIndex >= minRank && hcLevel >= minHcRank) {
-                        racePayload.appendInt(breedId).appendRaw("II");
-                        raceCount++;
-                    }
-                }
-            }
-        }
-        return PacketBuilder.message("L{")
-            .appendString(productPet)
-            .appendInt(raceCount)
-            .appendRaw(racePayload)
-            .build();
-    }
-
     public static String raceList(String productPet, List<PetRaceRow> rows, long rankIndex, long hcLevel) {
         long raceCount = 0L;
         PacketBuilder racePayload = PacketBuilder.create();
