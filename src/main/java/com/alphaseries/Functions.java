@@ -583,30 +583,6 @@ public final class Functions {
         return MySQL.configuredDatabase();
     }
 
-    public static String clubPeriodUpdateQuery(long userId, long hcRank, long currentPeriods, long paidDays, long giftIncrementDefault) {
-        if (userId <= 0L) {
-            return "";
-        }
-        long periodIncrement;
-        long giftIncrement;
-        if (currentPeriods > 0L || paidDays > 0L) {
-            long effectivePaidDays = paidDays <= 0L ? currentPeriods : paidDays;
-            periodIncrement = effectivePaidDays / 31L;
-            if (periodIncrement < 1L) {
-                periodIncrement = 1L;
-            }
-            giftIncrement = 0L;
-        } else {
-            periodIncrement = 1L;
-            giftIncrement = giftIncrementDefault;
-        }
-        String periodColumn = hcRank > 1L ? "hc2" : "hc";
-        return "UPDATE users SET hc_startperiod=UNIX_TIMESTAMP(),"
-            + periodColumn + "_periods=" + periodColumn + "_periods+" + periodIncrement
-            + ",hc_presents=hc_presents+" + giftIncrement
-            + " WHERE id='" + userId + "'";
-    }
-
     public static long Proc_10_23_80E110(Object... args) {
         if (args == null || args.length < 3) {
             return 0L;

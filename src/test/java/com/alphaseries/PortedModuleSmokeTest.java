@@ -507,10 +507,6 @@ public final class PortedModuleSmokeTest {
             Functions.emailValidatedPayload(0));
         assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "DJ") + "motto\2M\2figure\2",
             Functions.userIdentityRefreshPayload(7, "motto", "figure", "M"));
-        assertEquals("UPDATE users SET hc_startperiod=UNIX_TIMESTAMP(),hc2_periods=hc2_periods+2,hc_presents=hc_presents+0 WHERE id='7'",
-            Functions.clubPeriodUpdateQuery(7, 2, 0, 62, 5));
-        assertEquals("UPDATE users SET hc_startperiod=UNIX_TIMESTAMP(),hc_periods=hc_periods+1,hc_presents=hc_presents+3 WHERE id='7'",
-            Functions.clubPeriodUpdateQuery(7, 1, 0, 0, 3));
         final List<String> userStateExecutions = new ArrayList<>();
         final List<String> userStatePayloads = new ArrayList<>();
         Licence.global_00829268 = "\2" + "91]14\0\2" + "92]15\0";
