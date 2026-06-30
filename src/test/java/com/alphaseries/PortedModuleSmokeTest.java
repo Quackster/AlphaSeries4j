@@ -31,6 +31,7 @@ import com.alphaseries.game.poll.PollHeader;
 import com.alphaseries.game.poll.PollQuestionRow;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.moderation.StaffCallForHelpRow;
+import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
 import com.alphaseries.game.moderation.StaffRoomVisitRow;
@@ -2421,6 +2422,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(expectedCallForHelp, Handling.callForHelpRowPayload(
             new StaffCallForHelpRow(50L, 2L, 5L, "Caller", 6L, 7L, 8L, "Need help", 7L, "Room", 9L),
             staffNames));
+        assertEquals("HR" + expectedCallForHelp, StaffPayloads.callForHelpNotification(expectedCallForHelp));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "H\\"), StaffPayloads.callForHelpClosed(2L));
+        assertEquals("E@", StaffPayloads.callForHelpDeleted());
+        assertEquals(Crypto.Proc_3_0_6D2AF0(50, null, "EA"), StaffPayloads.callForHelpCreated(50L));
         String staffWhereWire = Crypto.Proc_3_0_6D2AF0(2, null, "")
             + Crypto.Proc_3_0_6D2AF0(50, null, "")
             + Crypto.Proc_3_0_6D2AF0(51, null, "");

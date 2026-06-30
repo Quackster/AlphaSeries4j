@@ -281,7 +281,7 @@ public final class Handling {
             if (reviewRow == null) {
                 return;
             }
-            String payload = "HR" + callForHelpRowPayload(reviewRow.toPayloadRow(), null);
+            String payload = StaffPayloads.callForHelpNotification(callForHelpRowPayload(reviewRow.toPayloadRow(), null));
             if (socketIndex > 0) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             } else {
@@ -325,7 +325,7 @@ public final class Handling {
             String reporterUserId = String.valueOf(moderationDao.callForHelpReporterUserId(callForHelpId));
             int reporterSocketIndex = handlingSocketFromUserId(reporterUserId);
             if (reporterSocketIndex > 0) {
-                Proc_6_244_801E80(reporterSocketIndex, Crypto.Proc_3_0_6D2AF0(closeState, null, "H\\"), 0);
+                Proc_6_244_801E80(reporterSocketIndex, StaffPayloads.callForHelpClosed(closeState), 0);
             }
             moderationDao.closeCallForHelp(callForHelpId, closeState);
         } catch (Exception ignored) {
@@ -975,7 +975,7 @@ public final class Handling {
             long callForHelpId = moderationDao.latestOpenCallForHelpId(NumberUtils.parseLong(userId));
             if (callForHelpId > 0L) {
                 moderationDao.deleteCallForHelp(callForHelpId);
-                Proc_6_244_801E80(socketIndex, "E@", 0);
+                Proc_6_244_801E80(socketIndex, StaffPayloads.callForHelpDeleted(), 0);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1004,7 +1004,8 @@ public final class Handling {
                 return;
             }
             for (StaffCallForHelpRow row : moderationDao.openStaffCallRows()) {
-                Proc_6_244_801E80(socketIndex, "HR" + callForHelpRowPayload(row, null), 0);
+                Proc_6_244_801E80(socketIndex,
+                    StaffPayloads.callForHelpNotification(callForHelpRowPayload(row, null)), 0);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1047,7 +1048,7 @@ public final class Handling {
             }
             moderationDao.insertCallForHelp(NumberUtils.parseLong(userId), roomId, categoryId, partnerUserId, descriptionText);
             long callForHelpId = moderationDao.newestCallForHelpId();
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(callForHelpId, null, "EA"), 0);
+            Proc_6_244_801E80(socketIndex, StaffPayloads.callForHelpCreated(callForHelpId), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

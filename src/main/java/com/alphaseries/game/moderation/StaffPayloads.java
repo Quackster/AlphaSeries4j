@@ -17,6 +17,28 @@ public final class StaffPayloads {
         public String payload = "";
     }
 
+    public static String callForHelpNotification(String rowPayload) {
+        return PacketBuilder.message("HR")
+            .appendRaw(rowPayload)
+            .build();
+    }
+
+    public static String callForHelpClosed(long closeState) {
+        return PacketBuilder.message("H\\")
+            .appendInt(closeState)
+            .build();
+    }
+
+    public static String callForHelpDeleted() {
+        return "E@";
+    }
+
+    public static String callForHelpCreated(long callForHelpId) {
+        return PacketBuilder.message("EA")
+            .appendInt(callForHelpId)
+            .build();
+    }
+
     public static String callForHelpRow(StaffCallForHelpRow row, Map<Long, String> userNamesById) {
         long callForHelpId = row.callForHelpId();
         long callerId = row.callerUserId();
