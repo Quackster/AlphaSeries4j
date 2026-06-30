@@ -596,8 +596,8 @@ public final class Functions {
                 return 0L;
             }
 
-            long roomSlot = Licence.representedBots().recordLong(botEntityId, 0);
-            long botId = Licence.representedBots().recordLong(botEntityId, 1);
+            long roomSlot = Licence.representedBots().record(botEntityId).roomSlot();
+            long botId = Licence.representedBots().identityFromEntityOrBotId(botEntityId).botId();
             long roomId = 0L;
             RoomDao roomDao = roomDao();
             if (roomSlot > 0L) {

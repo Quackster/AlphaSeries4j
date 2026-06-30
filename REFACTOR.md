@@ -457,6 +457,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed represented-pet pickup inventory payload construction through `RepresentedBotRecord` named accessors instead of numeric cache field indexes.
 - Added `RepresentedBotIdentity` resolution for request ids that may be represented entity ids or bot ids, replacing duplicated represented-bot field-index probes in pet status, command-list, command, experience, and scratch handlers.
 - Added `RepresentedBotRegistry.isEntityInRoom(...)` and cleared live `Handling` represented-bot call sites that passed literal cache field indexes; only compatibility accessors remain.
+- Routed `Functions` represented-bot position availability through `RepresentedBotRecord`/`RepresentedBotIdentity`, clearing direct represented-bot cache field reads from `Functions`.
 
 ## VB Compatibility Class Removal Checklist
 
