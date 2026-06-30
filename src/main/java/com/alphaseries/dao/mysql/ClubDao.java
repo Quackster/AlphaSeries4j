@@ -134,9 +134,6 @@ public final class ClubDao {
     }
 
     public record ContainedClubProductRow(long productId, long months, long level) {
-        public String legacyRow() {
-            return productId + "\t" + months + "\t" + level;
-        }
     }
 
     public record ClubGiftRow(long catalogProductId, long vipOnly, long requiredDays) {

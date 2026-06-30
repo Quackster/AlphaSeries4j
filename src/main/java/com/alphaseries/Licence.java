@@ -60,7 +60,7 @@ public final class Licence {
     public static String global_008291FC = "";
     public static Object global_00829078 = "";
     public static Object global_0082907C = "";
-    public static String global_00829084 = "";
+    public static Object global_00829084 = "";
     public static String global_00829094 = "";
     public static String global_008290A0 = "";
     public static long global_008290A4 = 0L;
@@ -624,6 +624,10 @@ public final class Licence {
 
     public static void setClubProductRows(String clubProductRows) {
         global_00829084 = StringUtils.text(clubProductRows);
+    }
+
+    public static void setClubProductRows(Object clubProductRows) {
+        global_00829084 = clubProductRows == null ? "" : clubProductRows;
     }
 
     public static void setRecyclerRewards(Object productLists, Object chances, long groupCount) {

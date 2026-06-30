@@ -12,7 +12,7 @@ public final class CatalogProductSettings {
     private final long moodlightProductId;
     private final Object packageRows;
     private final Object petPackageRows;
-    private final String clubProductRows;
+    private final Object clubProductRows;
 
     private CatalogProductSettings(
         String counterProductIds,
@@ -20,14 +20,14 @@ public final class CatalogProductSettings {
         long moodlightProductId,
         Object packageRows,
         Object petPackageRows,
-        String clubProductRows
+        Object clubProductRows
     ) {
         this.counterProductIds = StringUtils.text(counterProductIds);
         this.teleportProductId = Math.max(0L, teleportProductId);
         this.moodlightProductId = Math.max(0L, moodlightProductId);
         this.packageRows = packageRows == null ? "" : packageRows;
         this.petPackageRows = petPackageRows == null ? "" : petPackageRows;
-        this.clubProductRows = StringUtils.text(clubProductRows);
+        this.clubProductRows = clubProductRows == null ? "" : clubProductRows;
     }
 
     public static CatalogProductSettings fromLegacy(
@@ -36,7 +36,7 @@ public final class CatalogProductSettings {
         long moodlightProductId,
         Object packageRows,
         Object petPackageRows,
-        String clubProductRows
+        Object clubProductRows
     ) {
         return new CatalogProductSettings(counterProductIds, teleportProductId, moodlightProductId,
             packageRows, petPackageRows, clubProductRows);
@@ -83,11 +83,35 @@ public final class CatalogProductSettings {
     }
 
     public String clubProductRows() {
-        return clubProductRows;
+        if (clubProductRows instanceof List<?> rows) {
+            StringBuilder joined = new StringBuilder("\r");
+            for (Object value : rows) {
+                if (value instanceof com.alphaseries.dao.mysql.ClubDao.ContainedClubProductRow row) {
+                    joined.append(row.productId()).append('\t').append(row.months()).append('\t').append(row.level()).append('\r');
+                }
+            }
+            if (joined.length() == 1) {
+                joined.append('\r');
+            }
+            return joined.toString();
+        }
+        return StringUtils.text(clubProductRows);
     }
 
     public boolean containsClubProduct(long productId) {
-        return productId > 0L && clubProductRows.contains("\r" + productId + "\r");
+        if (productId <= 0L) {
+            return false;
+        }
+        if (clubProductRows instanceof List<?> rows) {
+            for (Object value : rows) {
+                if (value instanceof com.alphaseries.dao.mysql.ClubDao.ContainedClubProductRow row
+                    && row.productId() == productId) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return StringUtils.text(clubProductRows).contains("\r" + productId + "\r");
     }
 
     public boolean containsCounterProduct(long productId) {

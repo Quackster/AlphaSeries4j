@@ -134,7 +134,7 @@ public final class Boot {
         }
         if (clubs != null) {
             try {
-                Licence.setClubProductRows("\r" + joinContainedClubProductRows(clubs.containedClubProductRows()) + "\r");
+                Licence.setClubProductRows(clubs.containedClubProductRows());
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
@@ -1873,14 +1873,6 @@ public final class Boot {
 
     private static String joinLongRows(List<Long> values) {
         return joinLongs(values, "\r");
-    }
-
-    private static String joinContainedClubProductRows(List<ClubDao.ContainedClubProductRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (ClubDao.ContainedClubProductRow row : rows == null ? List.<ClubDao.ContainedClubProductRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
     }
 
     private static String joinPrivilegeRows(List<String> rows) {

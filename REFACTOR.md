@@ -20,7 +20,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Each domain module should expose a single module-level manager/registry for its live instances and cached state instead of relying on `Licence.java` globals or scattered static ownership. `Licence` accessors are only temporary compatibility bridges while callers migrate to those managers.
 - Treat `fromLegacy(...)` and tab-delimited parsing as temporary compatibility boundaries only. The final refactor state should remove those bridges and pass typed records/collections directly.
 - Keep the refactor branch current with required runtime fixes from `dev`; commit `099dd4d17cd83efeecdb088ac1d94c8ff8404621` (`Fix AlphaSeries boot runtime`) is intentionally merged into this branch.
-- The missing decompiled string literals tracked in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` are part of the refactor scope and must be inserted into the source from that report. Treat that file as the source of truth: restore each literal in the matching Java class and method named by the entry, preserving source text unless a deliberate compatibility boundary documents otherwise; the current report lists 1391 unique non-empty literals still absent from Java and must be reduced as literals are restored.
+- The missing decompiled string literals tracked in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` are mandatory refactor work and must be inserted into the source from that report. Treat that file as the source of truth: restore each literal in the matching Java class and method named by the entry, preserving source text unless a deliberate compatibility boundary documents otherwise; the current report lists 1391 unique non-empty literals still absent from Java and must be reduced as literals are restored.
 - Commit only verified milestones with `REFACTOR.md` metrics updated when the legacy surface changes.
 
 ## Completed Slices
@@ -338,6 +338,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved room-category startup cache rows into typed `RoomDao.RoomCategoryRow` lists, routing navigator category payload matrix building through typed rows and removing the DAO legacy row formatter.
 - Moved product and catalog-product startup caches into typed `CatalogDao` row lists, removing their boot join helpers and DAO legacy row formatters while keeping compatibility row lookup in catalog cache adapters.
 - Moved product-deal startup cache rows into typed `CatalogDao.ProductDealRow` lists, removing the product-deal boot join helper and DAO legacy row formatter while preserving deal row lookups in `CatalogRegistry`.
+- Moved contained club-product startup cache rows into typed `ClubDao.ContainedClubProductRow` lists, removing the boot join helper and DAO legacy row formatter while preserving catalog club-product checks.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -352,7 +353,7 @@ Measured on 2026-06-30:
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
-- `Boot.java`: 1994 lines
+- `Boot.java`: 1986 lines
 - `Handling.java`: 12286 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
@@ -368,7 +369,7 @@ Measured on 2026-06-30:
 - Replace remaining `Crypto.Proc_3_*` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
 - Continue replacing duplicated local string/number helpers in root compatibility classes with `StringUtils` and `NumberUtils`.
 - Move remaining raw `Licence.global_*` caches into typed state holders under the appropriate `game.*` package.
-- Insert every missing string from `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into source in the matching Java classes and methods from the report before treating the refactor as complete. Update or remove entries from `MISSING_STRINGS.md` as literals are restored so the remaining count reflects unresolved work; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
+- Insert every missing string from `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into source in the matching Java classes and methods from the report before treating the refactor as complete. Do not leave placeholder text, invented replacements, or omitted literals where the report provides the original decompiled source text. Update or remove entries from `MISSING_STRINGS.md` as literals are restored so the remaining count reflects unresolved work; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
 - Delete remaining deprecated compatibility aliases only after their call sites reach zero and tests pass.
 
 ## Verification

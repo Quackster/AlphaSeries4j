@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.config.AppDatabaseConfig;
 import com.alphaseries.dao.mysql.AdvertisingDao;
 import com.alphaseries.dao.mysql.CatalogDao;
+import com.alphaseries.dao.mysql.ClubDao;
 import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.PackageDao;
 import com.alphaseries.dao.mysql.QuestDao;
@@ -947,6 +948,10 @@ public final class PortedModuleSmokeTest {
         assertEquals("10\ti\t20\t", Licence.catalogProductSettings().packageRows());
         Licence.setPetPackageRows(List.of(new PackageDao.PetPackageRow(7L, 8L, 9L, "ffeeaa")));
         assertEquals("7\t8\t9\tffeeaa", Licence.catalogProductSettings().petPackageRows());
+        Licence.setClubProductRows(List.of(new ClubDao.ContainedClubProductRow(33L, 2L, 1L)));
+        assertEquals(true, Licence.global_00829084 instanceof List);
+        assertEquals(true, Licence.catalogProductSettings().containsClubProduct(33L));
+        assertEquals("\r33\t2\t1\r", Licence.catalogProductSettings().clubProductRows());
         Boot.Proc_1_6_6C5830();
         assertEquals(true, Licence.global_008291EC.contains("pet_dog"));
         assertEquals(true, Licence.petSettings().raceRows().contains("pet_dog"));
