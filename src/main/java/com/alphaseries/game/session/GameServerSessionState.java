@@ -4,6 +4,7 @@ import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,10 +27,37 @@ public final class GameServerSessionState {
         return new GameServerSessionState("", "");
     }
 
+    public static GameServerSessionState fromState(List<QueuedPacket> queuedPackets, Set<Long> readySocketIndexes) {
+        GameServerSessionState state = empty();
+        if (queuedPackets != null) {
+            for (QueuedPacket packet : queuedPackets) {
+                if (packet != null && packet.socketIndex() > 0L && !packet.payload().isEmpty()) {
+                    state.queuedPackets.add(packet);
+                }
+            }
+        }
+        if (readySocketIndexes != null) {
+            for (Long socketIndex : readySocketIndexes) {
+                if (socketIndex != null && socketIndex > 0L) {
+                    state.readySocketIndexes.add(socketIndex);
+                }
+            }
+        }
+        return state;
+    }
+
+    public List<QueuedPacket> queuedPackets() {
+        return Collections.unmodifiableList(new ArrayList<>(queuedPackets));
+    }
+
+    public Set<Long> readySocketIndexes() {
+        return Collections.unmodifiableSet(new LinkedHashSet<>(readySocketIndexes));
+    }
+
     public String queuedPacketData() {
         StringBuilder data = new StringBuilder();
         for (QueuedPacket packet : queuedPackets) {
-            data.append('[').append(packet.socketIndex).append(':').append(packet.payload).append(']');
+            data.append('[').append(packet.socketIndex()).append(':').append(packet.payload()).append(']');
         }
         return data.toString();
     }
@@ -53,9 +81,9 @@ public final class GameServerSessionState {
     public String popPacketData(long socketIndex) {
         for (Iterator<QueuedPacket> iterator = queuedPackets.iterator(); iterator.hasNext();) {
             QueuedPacket packet = iterator.next();
-            if (packet.socketIndex == socketIndex) {
+            if (packet.socketIndex() == socketIndex) {
                 iterator.remove();
-                return packet.payload;
+                return packet.payload();
             }
         }
         return "";
@@ -66,7 +94,7 @@ public final class GameServerSessionState {
     }
 
     public void removeSocket(long socketIndex) {
-        queuedPackets.removeIf(packet -> packet.socketIndex == socketIndex);
+        queuedPackets.removeIf(packet -> packet.socketIndex() == socketIndex);
         readySocketIndexes.remove(socketIndex);
     }
 
@@ -95,13 +123,9 @@ public final class GameServerSessionState {
         }
     }
 
-    private static final class QueuedPacket {
-        private final long socketIndex;
-        private final String payload;
-
-        private QueuedPacket(long socketIndex, String payload) {
-            this.socketIndex = socketIndex;
-            this.payload = StringUtils.text(payload);
+    public record QueuedPacket(long socketIndex, String payload) {
+        public QueuedPacket {
+            payload = StringUtils.text(payload);
         }
     }
 }

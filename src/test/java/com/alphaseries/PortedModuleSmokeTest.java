@@ -68,6 +68,7 @@ import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.room.RoomRollers;
 import com.alphaseries.game.room.RoomUserPosition;
 import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
+import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.RepresentedSocketCache;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.social.BadgeRow;
@@ -109,6 +110,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class PortedModuleSmokeTest {
     private PortedModuleSmokeTest() {
@@ -1268,6 +1270,15 @@ public final class PortedModuleSmokeTest {
         Main.appendGameServerPacketPayload(7, "A\2B\2C");
         assertEquals("A\2B\2C", Main.popGameServerPacketData(7));
         assertEquals("", Licence.global_00829350);
+        GameServerSessionState typedGameSession = GameServerSessionState.fromState(
+            List.of(new GameServerSessionState.QueuedPacket(12L, "typed-packet")),
+            Set.of(12L)
+        );
+        assertEquals(List.of(new GameServerSessionState.QueuedPacket(12L, "typed-packet")),
+            typedGameSession.queuedPackets());
+        assertEquals(Set.of(12L), typedGameSession.readySocketIndexes());
+        assertEquals("[12:typed-packet]", typedGameSession.queuedPacketData());
+        assertEquals("[12]", typedGameSession.readySessionMarkers());
         Guardian.global_008291A0 = "";
         Guardian.global_0082919C = 0;
         Main.processGameServerData("DATA\2" + "7\2queued\2packet\1LISTEN\2" + "9");

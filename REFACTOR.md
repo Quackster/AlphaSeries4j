@@ -83,6 +83,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.room.RoomEventLocales` as a typed adapter around DataManager room-event locale cache lookups, and routed `Boot` cache refreshes through named DataManager setters.
 - Added `com.alphaseries.game.session.GameServerSessionState` as a typed adapter around queued game-server packet data and ready-session markers previously manipulated as raw `Licence` strings.
 - Migrated `GameServerSessionState` internals from raw string mutation to collection-backed queued packets and ready socket marker storage, keeping legacy serialization only at the compatibility boundary.
+- Added typed `GameServerSessionState.fromState(...)`, queued-packet records, and defensive queued/ready accessors so session callers can construct and read game-server session state without marker-string parsing.
 - Added `com.alphaseries.game.session.RepresentedSocketCache` as a typed adapter around represented socket records, room slots, and busy checks previously parsed directly from a raw `Licence` global.
 - Added `com.alphaseries.game.session.SessionRegistry` as a typed adapter around the legacy `Licence.global_00829268` session cache.
 - Added typed `SessionRegistry.SocketSession` iteration and migrated staff broadcast away from direct session-cache string parsing.
