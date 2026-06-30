@@ -37,6 +37,7 @@ import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollPrompt;
 import com.alphaseries.game.quest.QuestSettings;
+import com.alphaseries.game.quest.QuestState;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.game.room.RoomModelFurnitureRow;
@@ -9402,6 +9403,11 @@ public final class Handling {
         return AchievementState.instance().settings();
     }
 
+    private static QuestSettings questSettings() {
+        Licence.questSettings();
+        return QuestState.instance().settings();
+    }
+
     public static String officialNavigatorQuery() {
         String separator = " UNION ALL ";
         StringBuilder queryText = new StringBuilder();
@@ -11350,7 +11356,7 @@ public final class Handling {
     }
 
     private static QuestSettings questSettingsFromSource() {
-        QuestSettings settings = Licence.questSettings();
+        QuestSettings settings = questSettings();
         if (settings.hasRows()) {
             return settings;
         }

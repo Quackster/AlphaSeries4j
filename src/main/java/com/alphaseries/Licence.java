@@ -23,6 +23,7 @@ import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.quest.QuestSettings;
+import com.alphaseries.game.quest.QuestState;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.recycler.RecyclerState;
 import com.alphaseries.game.room.FurnitureRoomCache;
@@ -539,15 +540,24 @@ public final class Licence {
     }
 
     public static QuestSettings questSettings() {
-        return QuestSettings.fromLegacy(global_00829080);
+        if (global_00829080 instanceof QuestSettings questSettings) {
+            QuestState.instance().setSettings(questSettings);
+        } else {
+            QuestState.instance().setSettingsFromLegacy(global_00829080);
+        }
+        return QuestState.instance().settings();
     }
 
     public static void setQuestRows(String questRows) {
-        global_00829080 = QuestSettings.fromLegacy(questRows);
+        QuestSettings settings = QuestSettings.fromLegacy(questRows);
+        QuestState.instance().setSettings(settings);
+        global_00829080 = settings;
     }
 
     public static void setQuestDefinitions(List<QuestSettings.QuestDefinitionRow> questDefinitions) {
-        global_00829080 = QuestSettings.fromDefinitions(questDefinitions);
+        QuestSettings settings = QuestSettings.fromDefinitions(questDefinitions);
+        QuestState.instance().setSettings(settings);
+        global_00829080 = settings;
     }
 
     public static WiredSettings wiredSettings() {
