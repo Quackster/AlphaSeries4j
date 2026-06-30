@@ -97,7 +97,7 @@ public final class Main {
     public static String Proc_0_22_68C1A0(Object... args) {
         try {
             String sourceText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
-            long seedValue = NumberUtils.parseLong(Functions.Proc_10_3_809B90(0x41, 0x5A));
+            long seedValue = Functions.randomLongInclusive(0x41, 0x5A);
             StringBuilder output = new StringBuilder(sourceText.length() + 1);
             output.append((char) (seedValue & 0xFF));
             for (int index = 0; index < sourceText.length(); index++) {
@@ -170,7 +170,6 @@ public final class Main {
                     "ERROR", "255");
                 DataManager.appendTextFile(Functions.applicationPath + "/ERR.log",
                     "ERROR] " + packetData + " (" + ex.getMessage() + ")\r\n0\r\n\r\n\r\n");
-                Functions.Proc_10_8_80A580(socketIndex, 0x60, 0);
             }
         }
     }
@@ -407,8 +406,8 @@ public final class Main {
                 }
                 long currentX = bot.positionX();
                 long currentY = bot.positionY();
-                long targetX = currentX + Functions.Proc_10_4_809CA0(-1, 1, 0);
-                long targetY = currentY + Functions.Proc_10_4_809CA0(-1, 1, 0);
+                long targetX = currentX + Functions.randomLongInclusive(-1, 1);
+                long targetY = currentY + Functions.randomLongInclusive(-1, 1);
                 Proc_0_28_6AD850(entityId, currentX, currentY, targetX, targetY);
                 moved++;
             }

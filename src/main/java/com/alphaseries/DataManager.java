@@ -72,7 +72,7 @@ public final class DataManager {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return NumberUtils.parseLong(args[0]) * Functions.Proc_10_4_809CA0(1, 4);
+        return NumberUtils.parseLong(args[0]) * Functions.randomLongInclusive(1, 4);
     }
 
     public static String Proc_8_0_804330(Object... args) {
@@ -86,18 +86,18 @@ public final class DataManager {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return NumberUtils.parseLong(args[0]) * Functions.Proc_10_4_809CA0(60, 90);
+        return NumberUtils.parseLong(args[0]) * Functions.randomLongInclusive(60, 90);
     }
 
     public static String Proc_8_3_804530(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        long saltValue = Functions.Proc_10_4_809CA0(1, 100);
+        long saltValue = Functions.randomLongInclusive(1, 100);
         if (saltValue == 0L) {
             saltValue = 1L;
         }
-        long markerValue = NumberUtils.parseLong(Functions.Proc_10_3_809B90(0x5A, 0x41));
+        long markerValue = Functions.randomLongInclusive(0x5A, 0x41);
         return buildLicenceToken(StringUtils.text(args[0]), saltValue, markerValue, null);
     }
 
@@ -193,11 +193,11 @@ public final class DataManager {
 
     public static String buildLicenceRequestUrl(LicenceCheckContext context, String endpoint) {
         String timeFormatText = context.localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd_H-mm-ss"));
-        String timePrefix = Functions.Proc_10_3_809B90(0x9C4, 0x3E8)
-            + Functions.Proc_10_3_809B90(0x9C4, 0x3E8);
-        String tokenSeed = Functions.Proc_10_3_809B90(0x9C4, 0x3E8)
-            + "/" + Functions.Proc_10_3_809B90(0x9C4, 0x3E8)
-            + "/" + Functions.Proc_10_3_809B90(0x9C4, 0x3E8) + "/L:";
+        String timePrefix = String.valueOf(Functions.randomLongInclusive(0x9C4, 0x3E8))
+            + Functions.randomLongInclusive(0x9C4, 0x3E8);
+        String tokenSeed = Functions.randomLongInclusive(0x9C4, 0x3E8)
+            + "/" + Functions.randomLongInclusive(0x9C4, 0x3E8)
+            + "/" + Functions.randomLongInclusive(0x9C4, 0x3E8) + "/L:";
         return StringUtils.text(endpoint) + "?local_time="
             + urlEncode(timePrefix + timeFormatText + ":")
             + "&version=" + urlEncode(context.version)
