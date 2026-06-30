@@ -496,8 +496,16 @@ public final class Licence {
     }
 
     public static RepresentedSocketCache representedSockets() {
-        SessionState.instance().setRepresentedSocketsFromLegacy(global_0082934C);
+        refreshRepresentedSockets();
         return SessionState.instance().representedSockets();
+    }
+
+    private static void refreshRepresentedSockets() {
+        if (global_0082934C instanceof RepresentedSocketCache representedSockets) {
+            SessionState.instance().setRepresentedSockets(representedSockets);
+            return;
+        }
+        SessionState.instance().setRepresentedSocketsFromLegacy(global_0082934C);
     }
 
     public static SocketMarkerSet socketMarkers() {
