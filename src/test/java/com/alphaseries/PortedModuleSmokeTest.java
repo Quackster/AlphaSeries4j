@@ -1501,7 +1501,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(false, Handling.isValidWardrobeFigure("hd-180-1", "F", figureData));
         assertEquals(true, Handling.figureSetAllowsGender("<set id=\"1\" gender=\"U\"/>", "<set id=\"1\"", "F"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(44, null, "DJ") + "hello\2M\2hd-180-1\2",
-            Handling.userIdentityPayload(44, "hello", "M", "hd-180-1"));
+            UserPayloads.identityRefresh(44, "hello", "hd-180-1", "M"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(7, null,
             Crypto.Proc_3_0_6D2AF0(3, null, "@Y") + "hi\2"),
             UserPayloads.representedChat(3, "hi", 7, 1));
@@ -4493,7 +4493,7 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         String mottoPayload = Handling.Proc_6_230_7F3D20(4, "Gd" + wireString("New motto"));
-        assertEquals(Handling.userIdentityPayload(77, "New motto", "M", "hd-180-1"), mottoPayload);
+        assertEquals(UserPayloads.identityRefresh(77, "New motto", "hd-180-1", "M"), mottoPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET motto='New motto' WHERE id='77'"));
         assertEquals(true, containsSend(handlingSends, "DJ"));
         assertEquals(true, containsSend(handlingSends, "New motto"));

@@ -443,6 +443,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the no-op room settings payload wrapper from `Handling`; room settings handlers and tests now call `RoomPayloads.settingsRead` directly.
 - Removed the no-op room-user profile string payload wrapper from `Handling`; tests use `SocialPayloads` directly while the typed `RoomUserProfileRow` adapter remains.
 - Moved queued game-server packet assembly out of `GameServerSessionState`; the session manager now accepts a named payload string, leaving `Main` as the temporary legacy `String[]` adapter.
+- Removed the no-op user identity payload wrapper from `Handling`; identity refresh handlers and tests now call `UserPayloads.identityRefresh` directly.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -459,7 +460,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11503 lines
+- `Handling.java`: 11499 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 903 lines

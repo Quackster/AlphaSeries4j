@@ -493,7 +493,7 @@ public final class Handling {
                 users.updateTutorialClothes(numericUserId, genderText, figureText);
                 mottoText = users.motto(numericUserId);
             }
-            String payload = userIdentityPayload(NumberUtils.parseLong(userId), mottoText, genderText, figureText);
+            String payload = UserPayloads.identityRefresh(NumberUtils.parseLong(userId), mottoText, figureText, genderText);
             Proc_6_244_801E80(socketIndex, payload, 0);
             Proc_6_247_8027E0(socketIndex, payload, 0);
         } catch (Exception ignored) {
@@ -871,10 +871,6 @@ public final class Handling {
         String genderValue = setXml.substring(genderStart + 8, genderStart + 9).toUpperCase();
         String gender = StringUtils.text(genderText).toUpperCase();
         return "U".equals(genderValue) || genderValue.equals(gender);
-    }
-
-    public static String userIdentityPayload(long userId, String mottoText, String genderText, String figureText) {
-        return UserPayloads.identityRefresh(userId, mottoText, figureText, genderText);
     }
 
     public static String Proc_6_21_6E8BA0(Object... args) {
@@ -7217,7 +7213,7 @@ public final class Handling {
             if (!"M".equals(genderText) && !"F".equals(genderText)) {
                 genderText = "M";
             }
-            String payload = userIdentityPayload(numericUserId, mottoText, genderText, figureText);
+            String payload = UserPayloads.identityRefresh(numericUserId, mottoText, figureText, genderText);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
