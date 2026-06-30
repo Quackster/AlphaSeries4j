@@ -1712,22 +1712,23 @@ public final class Boot {
             Map<Long, Long> childCountByPageId, Map<Long, List<CatalogDao.CatalogPageTreeRow>> childRowsByParentId,
             long rankIndex, long hcLevel) {
         long rootCount = 0L;
-        StringBuilder payload = new StringBuilder();
+        PacketBuilder payload = PacketBuilder.create();
         if (rootRows != null) {
             for (CatalogDao.CatalogPageTreeRow row : rootRows) {
                 if (row != null && catalogPageVisible(row, rankIndex, hcLevel)) {
                     long pageId = row.pageId();
                     long childCount = mapLong(childCountByPageId, pageId);
-                    payload.append(buildCatalogPageTreeEntry(row, childCount));
-                    payload.append(buildCatalogPageChildPayload(
-                        childRowsByParentId == null ? null : childRowsByParentId.get(pageId),
-                        rankIndex,
-                        hcLevel));
+                    payload
+                        .appendRaw(buildCatalogPageTreeEntry(row, childCount))
+                        .appendRaw(buildCatalogPageChildPayload(
+                            childRowsByParentId == null ? null : childRowsByParentId.get(pageId),
+                            rankIndex,
+                            hcLevel));
                     rootCount++;
                 }
             }
         }
-        return Crypto.encodeVl64(rootCount) + payload;
+        return PacketBuilder.create().appendInt(rootCount).appendRaw(payload.build()).build();
     }
 
     public static String buildCatalogPageChildPayload(String childRows, long rankIndex, long hcLevel) {
@@ -1744,15 +1745,15 @@ public final class Boot {
     }
 
     public static String buildCatalogPageChildPayload(List<CatalogDao.CatalogPageTreeRow> childRows, long rankIndex, long hcLevel) {
-        StringBuilder payload = new StringBuilder();
+        PacketBuilder payload = PacketBuilder.create();
         if (childRows != null) {
             for (CatalogDao.CatalogPageTreeRow row : childRows) {
                 if (row != null && catalogPageVisible(row, rankIndex, hcLevel)) {
-                    payload.append(buildCatalogPageTreeEntry(row, 0));
+                    payload.appendRaw(buildCatalogPageTreeEntry(row, 0));
                 }
             }
         }
-        return payload.toString();
+        return payload.build();
     }
 
     public static String buildCatalogPageTreeEntry(String[] fields, long childCount) {

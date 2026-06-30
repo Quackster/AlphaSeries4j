@@ -967,6 +967,15 @@ public final class PortedModuleSmokeTest {
             + Boot.buildCatalogPageTreeEntry(new String[]{"11", "Child A", "1", "2", "0", "1"}, 0);
         assertEquals(expectedCatalogTree, Boot.buildCatalogPageTreePayload(
             "10\tRoot\t5\t6\t0\t1\r20\tHidden\t1\t2\t0\t0", catalogChildCounts, catalogChildren, 1, 0));
+        Map<Long, List<CatalogDao.CatalogPageTreeRow>> typedCatalogChildren = new HashMap<>();
+        typedCatalogChildren.put(10L, List.of(
+            new CatalogDao.CatalogPageTreeRow(11L, "Child A", 1L, 2L, 0L, 1L),
+            new CatalogDao.CatalogPageTreeRow(12L, "Child B", 1L, 3L, 0L, 0L)));
+        assertEquals(expectedCatalogTree, Boot.buildCatalogPageTreePayload(
+            List.of(
+                new CatalogDao.CatalogPageTreeRow(10L, "Root", 5L, 6L, 0L, 1L),
+                new CatalogDao.CatalogPageTreeRow(20L, "Hidden", 1L, 2L, 0L, 0L)),
+            catalogChildCounts, typedCatalogChildren, 1, 0));
         assertEquals("fuse_developer\2payload", Boot.appendPermissionPayload(1, 0, "fuse_developer", "payload"));
         Functions.global_0082928C = "[com.system.format.date=d.m.Y][com.system.format.time=h:i:s]"
             + "[com.client.catalog.gifts.wrap.count.accessories=2][com.client.catalog.gifts.wrap.count.colors=3]"
