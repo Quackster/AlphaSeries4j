@@ -104,13 +104,6 @@ public final class BotDao {
             .orElse(0L);
     }
 
-    public long maxPetCommandId() throws SQLException {
-        return database.queryOne(
-            "SELECT MAX(id_command) FROM bots_petcommands",
-            resultSet -> resultSet.getLong(1))
-            .orElse(0L);
-    }
-
     public List<PetCommandCacheRow> petCommandCacheRows() throws SQLException {
         return database.query(
             "SELECT id_command,petlevel_required,command,command_action FROM bots_petcommands",

@@ -271,15 +271,7 @@ public final class Boot {
             }
             Licence.setPetLevelRows(buildPetLevelRows(bots.petLevelCacheRows()));
             long commandCount = bots.petCommandCount();
-            long maxCommandId = Math.max(commandCount, bots.maxPetCommandId());
-            PetSettings.PetCommandRow[] commands = new PetSettings.PetCommandRow[(int) Math.max(0L, maxCommandId) + 1];
-            PetCommandCache cache = buildPetCommandCache(bots.petCommandCacheRows());
-            for (Map.Entry<Long, PetSettings.PetCommandRow> entry : cache.commandById.entrySet()) {
-                if (entry.getKey() >= 0L && entry.getKey() < commands.length) {
-                    commands[entry.getKey().intValue()] = entry.getValue();
-                }
-            }
-            Licence.setPetCommandRows(commands, commandCount);
+            Licence.setPetCommandRows(buildPetCommandRows(bots.petCommandCacheRows()), commandCount);
         } catch (Exception ignored) {
             // VB6 source suppresses boot cache failures.
         }
@@ -1021,20 +1013,28 @@ public final class Boot {
 
     public static PetCommandCache buildPetCommandCache(List<PetCommandCacheRow> commandRows) {
         PetCommandCache cache = new PetCommandCache();
+        for (PetSettings.PetCommandRow row : buildPetCommandRows(commandRows)) {
+            cache.commandById.put(row.commandId(), row);
+            cache.commandCount++;
+        }
+        return cache;
+    }
+
+    public static List<PetSettings.PetCommandRow> buildPetCommandRows(List<PetCommandCacheRow> commandRows) {
+        List<PetSettings.PetCommandRow> rows = new ArrayList<>();
         if (commandRows != null) {
             for (PetCommandCacheRow row : commandRows) {
                 if (row != null) {
-                    cache.commandById.put(row.commandId(), new PetSettings.PetCommandRow(
+                    rows.add(new PetSettings.PetCommandRow(
                         row.commandId(),
                         row.requiredLevel(),
                         StringUtils.text(row.command()),
                         StringUtils.text(row.action()),
                         4));
-                    cache.commandCount++;
                 }
             }
         }
-        return cache;
+        return rows;
     }
 
     public static String buildRoomEventLocaleCache(String localeRows, String existingCache) {
