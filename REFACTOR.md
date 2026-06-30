@@ -353,6 +353,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.messages.outgoing.QuestPayloads` and routed quest completion payload construction through fluent `PacketBuilder`.
 - Routed typed quest-list payload construction through `QuestPayloads.list(...)`, moving campaign/user quest row aggregation out of `Handling` while keeping the legacy string wrapper as the compatibility boundary.
 - Routed live messenger friend-list payload construction through `MessengerPayloads.friendList(...)` with explicit online friend ids, preserving Guardian connectivity checks while removing inline friend-list packet assembly from `Handling`.
+- Added typed messenger search-result rows and routed friend-search result grouping through `MessengerPayloads.searchResults(...)`, replacing inline friend/other counters and payload concatenation in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -368,7 +369,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 12160 lines
+- `Handling.java`: 12152 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 894 lines

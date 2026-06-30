@@ -19,6 +19,7 @@ import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.jukebox.SongDiskRow;
 import com.alphaseries.game.jukebox.SongInfoRow;
 import com.alphaseries.game.messenger.MessengerFriend;
+import com.alphaseries.game.messenger.MessengerSearchResult;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
@@ -1932,6 +1933,11 @@ public final class PortedModuleSmokeTest {
         String expectedSearch = Crypto.Proc_3_0_6D2AF0(8, null, "") + "Carol\2hi\2";
         expectedSearch = "1" + Crypto.Proc_3_0_6D2AF0(1, null, expectedSearch) + "H\2nick\2fig\2now\2";
         assertEquals(expectedSearch, Handling.messengerSearchResultPayload("8", "Carol", "fig", "hi", "nick", "now", 1));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "Fs") + expectedSearch
+            + Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedSearch,
+            MessengerPayloads.searchResults(List.of(
+                new MessengerSearchResult(8L, "Carol", "fig", "hi", "nick", "now", true, true),
+                new MessengerSearchResult(8L, "Carol", "fig", "hi", "nick", "now", true, false))));
         Licence.global_0082927C = new String[]{"10", "x", "20", "x", "30"};
         assertEquals(20L, Licence.messengerSettings().maxFriends(2));
         assertEquals(20L, Handling.messengerMaxFriends(2));

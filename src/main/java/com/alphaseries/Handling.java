@@ -64,6 +64,7 @@ import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.messenger.MessengerFriend;
+import com.alphaseries.game.messenger.MessengerSearchResult;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.navigator.NewFriendRooms;
@@ -5608,33 +5609,22 @@ public final class Handling {
             if (messenger == null) {
                 return "";
             }
-            long friendCount = 0L;
-            long otherCount = 0L;
-            StringBuilder friendPayload = new StringBuilder();
-            StringBuilder otherPayload = new StringBuilder();
             long callerUserId = NumberUtils.parseLong(userId);
+            List<MessengerSearchResult> results = new ArrayList<>();
             for (MessengerDao.SearchUser searchUser : messenger.searchUsers(searchText, dateFormat + " " + timeFormat)) {
                 if (searchUser.userId() != callerUserId) {
-                    long isOnline = searchUser.socketIndex() > 0L ? 1L : 0L;
-                    String resultPayload = messengerSearchResultPayload(
-                        String.valueOf(searchUser.userId()),
+                    results.add(new MessengerSearchResult(
+                        searchUser.userId(),
                         searchUser.userName(),
                         searchUser.figure(),
                         searchUser.motto(),
                         searchUser.nickname(),
                         searchUser.lastOnline(),
-                        isOnline);
-                    if (messenger.acceptedFriendshipExists(callerUserId, searchUser.userId())) {
-                        friendPayload.append(resultPayload);
-                        friendCount++;
-                    } else {
-                        otherPayload.append(resultPayload);
-                        otherCount++;
-                    }
+                        searchUser.socketIndex() > 0L,
+                        messenger.acceptedFriendshipExists(callerUserId, searchUser.userId())));
                 }
             }
-            String resultPayload = Crypto.Proc_3_0_6D2AF0(friendCount, null, "Fs") + friendPayload
-                + Crypto.Proc_3_0_6D2AF0(otherCount, null, "") + otherPayload;
+            String resultPayload = MessengerPayloads.searchResults(results);
             Proc_6_244_801E80(socketIndex, resultPayload, 0);
             return resultPayload;
         } catch (Exception ignored) {

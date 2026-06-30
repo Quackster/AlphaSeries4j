@@ -2,6 +2,7 @@ package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.messenger.MessengerFriend;
+import com.alphaseries.game.messenger.MessengerSearchResult;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 
@@ -87,6 +88,38 @@ public final class MessengerPayloads {
             .appendString(nicknameText)
             .appendString(figureText)
             .appendString(lastOnlineText)
+            .build();
+    }
+
+    public static String searchResults(List<MessengerSearchResult> results) {
+        long friendCount = 0L;
+        long otherCount = 0L;
+        PacketBuilder friendPayload = PacketBuilder.create();
+        PacketBuilder otherPayload = PacketBuilder.create();
+        for (MessengerSearchResult result : results == null ? List.<MessengerSearchResult>of() : results) {
+            if (result != null && result.userId() > 0L) {
+                String resultPayload = searchResult(
+                    String.valueOf(result.userId()),
+                    result.userName(),
+                    result.figure(),
+                    result.motto(),
+                    result.nickname(),
+                    result.lastOnline(),
+                    result.online() ? 1L : 0L);
+                if (result.acceptedFriend()) {
+                    friendPayload.appendRaw(resultPayload);
+                    friendCount++;
+                } else {
+                    otherPayload.appendRaw(resultPayload);
+                    otherCount++;
+                }
+            }
+        }
+        return PacketBuilder.message("Fs")
+            .appendInt(friendCount)
+            .appendRaw(friendPayload)
+            .appendInt(otherCount)
+            .appendRaw(otherPayload)
             .build();
     }
 
