@@ -17,7 +17,14 @@ public final class RoomCategoryCache {
     }
 
     public static RoomCategoryCache fromLegacy(Object defaultCategoryIds, Object categoryRows, Object payloads) {
+        if (defaultCategoryIds instanceof RoomCategoryCache roomCategoryCache) {
+            return roomCategoryCache;
+        }
         return new RoomCategoryCache(defaultCategoryIds, categoryRows, payloads);
+    }
+
+    public static RoomCategoryCache empty() {
+        return new RoomCategoryCache("", "", "");
     }
 
     public Object defaultCategoryIds() {

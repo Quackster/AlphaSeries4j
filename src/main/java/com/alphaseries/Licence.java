@@ -478,23 +478,32 @@ public final class Licence {
     }
 
     public static RoomCategoryCache roomCategoryCache() {
-        return RoomCategoryCache.fromLegacy(global_00829224, global_00829230, global_00829244);
+        if (global_00829224 instanceof RoomCategoryCache roomCategoryCache) {
+            NavigatorState.instance().setRoomCategoryCache(roomCategoryCache);
+        } else {
+            NavigatorState.instance().setRoomCategoryCacheFromLegacy(global_00829224, global_00829230, global_00829244);
+        }
+        return NavigatorState.instance().roomCategoryCache();
     }
 
     public static void setRoomCategoryDefaults(Object defaultCategoryIds) {
         global_00829224 = defaultCategoryIds == null ? "" : defaultCategoryIds;
+        NavigatorState.instance().setRoomCategoryCacheFromLegacy(global_00829224, global_00829230, global_00829244);
     }
 
     public static void setRoomCategoryRows(String categoryRows) {
         global_00829230 = StringUtils.text(categoryRows);
+        NavigatorState.instance().setRoomCategoryCacheFromLegacy(global_00829224, global_00829230, global_00829244);
     }
 
     public static void setRoomCategoryRows(Object categoryRows) {
         global_00829230 = categoryRows == null ? "" : categoryRows;
+        NavigatorState.instance().setRoomCategoryCacheFromLegacy(global_00829224, global_00829230, global_00829244);
     }
 
     public static void setRoomCategoryPayloads(Object payloads) {
         global_00829244 = payloads == null ? "" : payloads;
+        NavigatorState.instance().setRoomCategoryCacheFromLegacy(global_00829224, global_00829230, global_00829244);
     }
 
     public static QuestSettings questSettings() {

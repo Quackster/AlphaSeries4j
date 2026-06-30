@@ -17,6 +17,8 @@ import com.alphaseries.dao.mysql.SettingsDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
+import com.alphaseries.game.navigator.NavigatorState;
+import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.pet.PetCommandCacheRow;
 import com.alphaseries.game.pet.PetLevelCacheRow;
 import com.alphaseries.game.pet.PetRaceCacheRow;
@@ -391,15 +393,21 @@ public final class Boot {
 
     public static void Proc_1_12_6C8EF0(Object... args) {
         String[][] values = new String[21][3];
-        List<RoomDao.RoomCategoryRow> categoryRows = Licence.roomCategoryCache().categoryRowList();
+        RoomCategoryCache roomCategoryCache = roomCategoryCache();
+        List<RoomDao.RoomCategoryRow> categoryRows = roomCategoryCache.categoryRowList();
         for (int rank = 0; rank <= 20; rank++) {
             for (int hc = 0; hc <= 2; hc++) {
                 values[rank][hc] = categoryRows.isEmpty()
-                    ? buildRoomCategoryPayload(Licence.roomCategoryCache().categoryRows(), rank, hc)
+                    ? buildRoomCategoryPayload(roomCategoryCache.categoryRows(), rank, hc)
                     : buildRoomCategoryPayload(categoryRows, rank, hc);
             }
         }
         Licence.setRoomCategoryPayloads(values);
+    }
+
+    private static RoomCategoryCache roomCategoryCache() {
+        Licence.roomCategoryCache();
+        return NavigatorState.instance().roomCategoryCache();
     }
 
     public static void Proc_1_13_6C9820(Object... args) {

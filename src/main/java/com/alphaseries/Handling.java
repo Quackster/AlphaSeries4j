@@ -72,6 +72,7 @@ import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.NavigatorState;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.navigator.NavigatorRoom;
+import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.moderation.StaffCallForHelpRow;
 import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffModerationPacketHandlers;
@@ -3631,7 +3632,7 @@ public final class Handling {
             if (hcLevel > 2L) {
                 hcLevel = 2L;
             }
-            String responsePayload = Licence.roomCategoryCache().payload(rankIndex, hcLevel);
+            String responsePayload = roomCategoryCache().payload(rankIndex, hcLevel);
             Proc_6_244_801E80(socketIndex, "C]" + responsePayload, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -9341,6 +9342,11 @@ public final class Handling {
     private static RecommendedRooms recommendedRooms() {
         Licence.recommendedRooms();
         return NavigatorState.instance().recommendedRooms();
+    }
+
+    private static RoomCategoryCache roomCategoryCache() {
+        Licence.roomCategoryCache();
+        return NavigatorState.instance().roomCategoryCache();
     }
 
     public static String officialNavigatorQuery() {

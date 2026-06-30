@@ -8,6 +8,7 @@ public final class NavigatorState {
 
     private NewFriendRooms newFriendRooms = NewFriendRooms.empty(null);
     private RecommendedRooms recommendedRooms = RecommendedRooms.empty();
+    private RoomCategoryCache roomCategoryCache = RoomCategoryCache.empty();
 
     private NavigatorState() {
     }
@@ -42,5 +43,17 @@ public final class NavigatorState {
 
     public synchronized void setRecommendedRoomsFromLegacy(Object payloads, long count) {
         recommendedRooms = RecommendedRooms.fromLegacy(payloads, count);
+    }
+
+    public synchronized RoomCategoryCache roomCategoryCache() {
+        return roomCategoryCache;
+    }
+
+    public synchronized void setRoomCategoryCache(RoomCategoryCache cache) {
+        roomCategoryCache = cache == null ? RoomCategoryCache.empty() : cache;
+    }
+
+    public synchronized void setRoomCategoryCacheFromLegacy(Object defaultCategoryIds, Object categoryRows, Object payloads) {
+        roomCategoryCache = RoomCategoryCache.fromLegacy(defaultCategoryIds, categoryRows, payloads);
     }
 }
