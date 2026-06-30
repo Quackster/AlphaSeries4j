@@ -7623,18 +7623,14 @@ public final class Handling {
             targetCount = Math.min(targetCount, 150L);
             long userIdValue = NumberUtils.parseLong(userId);
             MessengerDao messenger = messengerDao();
-            StringBuilder targetList = new StringBuilder();
+            List<Long> targetIds = new ArrayList<>();
             for (long targetIndex = 1L; targetIndex <= targetCount; targetIndex++) {
-                String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
-                if (!targetUserId.isEmpty() && !"0".equals(targetUserId)
-                    && !("," + targetList + ",").contains("," + targetUserId + ",")) {
+                long targetUserId = readWireLong(requestPayload, offset);
+                if (targetUserId > 0L && !targetIds.contains(targetUserId)) {
                     if (messenger != null
-                        && messenger.acceptedFriendshipExists(userIdValue, NumberUtils.parseLong(targetUserId))
-                        && handlingSocketFromUserId(targetUserId) > 0) {
-                        if (targetList.length() > 0) {
-                            targetList.append(',');
-                        }
-                        targetList.append(targetUserId);
+                        && messenger.acceptedFriendshipExists(userIdValue, targetUserId)
+                        && handlingSocketFromUserId(String.valueOf(targetUserId)) > 0) {
+                        targetIds.add(targetUserId);
                     }
                 }
             }
@@ -7650,16 +7646,17 @@ public final class Handling {
             }
             String filteredText = Proc_6_22_6E9300(inviteText, 0, 0);
             String payload = MessengerPayloads.roomInviteMessage(NumberUtils.parseLong(userId), filteredText);
-            if (targetList.length() > 0) {
-                for (String targetUserId : targetList.toString().split(",", -1)) {
-                    int targetSocketIndex = handlingSocketFromUserId(targetUserId);
+            if (!targetIds.isEmpty()) {
+                for (long targetUserId : targetIds) {
+                    String targetUserIdText = String.valueOf(targetUserId);
+                    int targetSocketIndex = handlingSocketFromUserId(targetUserIdText);
                     if (targetSocketIndex > 0) {
                         Proc_6_244_801E80(targetSocketIndex, payload, 0);
                         if (messenger != null) {
                             messenger.insertInviteChatLog(
                                 userIdValue,
                                 roomId,
-                                "(Invite To: " + handlingUserName(targetUserId) + ") -- " + inviteText,
+                                "(Invite To: " + handlingUserName(targetUserIdText) + ") -- " + inviteText,
                                 socketIndex);
                         }
                     }
