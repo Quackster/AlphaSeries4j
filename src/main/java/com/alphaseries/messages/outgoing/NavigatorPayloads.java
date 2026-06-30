@@ -4,6 +4,7 @@ import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.navigator.NavigatorRoom;
 import com.alphaseries.game.navigator.NavigatorTagPopularity;
+import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
 import com.alphaseries.protocol.PacketBuilder;
 
@@ -31,6 +32,16 @@ public final class NavigatorPayloads {
     }
 
     public record FavouriteRoomsPayload(long roomCount, String payload) {
+    }
+
+    public static String newFriendRoom(NewFriendRooms.RoomPick roomPick) {
+        if (roomPick == null) {
+            return "";
+        }
+        return PacketBuilder.message("L\u007f")
+            .appendInt(roomPick.roomId())
+            .appendInt(roomPick.modelType())
+            .build();
     }
 
     public static String roomFragment(LegacyNavigatorRoomRow room) {

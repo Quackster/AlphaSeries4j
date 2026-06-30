@@ -10,7 +10,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 ## Refactor Rules
 
 - Preserve current source compatibility and runtime behavior for every slice; compatibility shims may stay temporarily, but each slice must move the implementation toward typed Java boundaries.
-- Do not add or keep methods that simply wrap another method and add no behavior. A method that only forwards the same arguments, bounces control straight back to another method, or returns another method's result without validation, translation, state management, or protocol compatibility work is dead weight. Delete these no-op wrappers once call sites can move to the real API; only temporary source-compatibility bridges may remain, and they must be documented as compatibility boundaries scheduled for removal.
+- Do not add or keep methods that simply wrap another method and add no behavior. A method that only forwards the same arguments, bounces control straight back to another method, or returns another method's result without validation, translation, state management, or protocol compatibility work is dead weight. Do not move these wrappers back into legacy root classes or replace them with equivalent pass-through methods elsewhere. Delete no-op wrappers once call sites can move to the real API; only temporary source-compatibility bridges may remain, and they must be documented as compatibility boundaries scheduled for removal.
 - Keep tests working throughout the refactor. Run `./gradlew test --no-daemon` before committing behavior-affecting slices, and do not mark a milestone complete unless the suite passes or the failure is explicitly documented.
 - Use prepared DAO methods for database access. Handlers and services should not concatenate SQL strings or call raw `MySQL.Proc_5_*` helpers once a DAO boundary exists.
 - Load database rows into typed classes or records with named fields. Do not map result sets into tab-delimited strings such as `getString(1) + "\t" + getString(2)` except at a deliberate legacy compatibility boundary that is documented and scheduled for removal.
@@ -391,6 +391,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved room-user pre-ready `Ei` payload construction into `SocialPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved quest request `p^` payload construction into `QuestPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved room-right removal `Fc` payload construction into `RoomPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
+- Moved new-friend room `L\u007f` payload construction into `NavigatorPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -406,7 +407,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11971 lines
+- `Handling.java`: 11969 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines

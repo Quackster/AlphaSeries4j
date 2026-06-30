@@ -1726,6 +1726,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedOfficialRow,
             Handling.officialNavigatorPayload(List.of(officialItem), true));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.officialNavigatorPayload(List.of(), true));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, Crypto.Proc_3_0_6D2AF0(12, null, "L\u007f")),
+            NavigatorPayloads.newFriendRoom(new com.alphaseries.game.navigator.NewFriendRooms.RoomPick(12L, 1L)));
         Licence.global_008292BC = "20\t1\t2\t3\t4\t5\t6\t7\t8\t9\t10\t11\t12\t13\tchair\tseat\t16\t17\tchair_sprite\r"
             + "21\t9\t2\t3\t4\t5\t6\t7\t8\t9\t10\t11\t12\t13\tposter\twall\t16\t17\tposter_sprite";
         String expectedInventoryItem = Crypto.Proc_3_0_6D2AF0(100, null, "0") + "S\2"

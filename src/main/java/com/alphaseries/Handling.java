@@ -2950,9 +2950,7 @@ public final class Handling {
                 Licence.setNewFriendRooms(rooms.newFriendRoomPicks(), now.plusSeconds(90L));
             }
             NewFriendRooms.RoomPick roomPick = Licence.newFriendRooms().randomRoom();
-            String payload = Crypto.Proc_3_0_6D2AF0(roomPick.roomId(), null, "L\u007f");
-            payload = Crypto.Proc_3_0_6D2AF0(roomPick.modelType(), null, payload);
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            Proc_6_244_801E80(socketIndex, NavigatorPayloads.newFriendRoom(roomPick), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
