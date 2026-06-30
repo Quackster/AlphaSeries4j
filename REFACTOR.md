@@ -667,6 +667,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `RoomCategoryCache` internals from raw row, default-category, and payload objects to typed default arrays, `RoomCategoryRow` lists, and defensive payload matrices, leaving legacy row text and matrix parsing only at the navigator state boundary.
 - Exposed defensive typed `RoomCategoryCache` payload matrix access so navigator callers can move away from single-slot payload lookups.
 - Migrated `RoomCategoryCache` legacy category row text into typed `RoomCategoryRow` records at construction, removing retained raw row-string storage while preserving compatibility serialization for valid rows.
+- Routed `Licence` room-category refreshes through the typed `RoomCategoryCache` state path when the mirrored default-category global already contains a `RoomCategoryCache` instance, leaving default/list/payload parsing as a compatibility fallback.
 - Migrated `RoomCategoryCache` default-category storage from raw arrays to defensive default-id lists, keeping the legacy array view only as a compatibility accessor.
 - Migrated `CatalogProductSettings` internals from raw package/product objects to typed package, pet-package, and contained-club row lists, keeping legacy row text only for compatibility inputs.
 - Migrated `CatalogProductSettings` legacy package, pet-package, and contained-club row text into typed records at construction, removing retained raw row-string storage while preserving compatibility serialization.
