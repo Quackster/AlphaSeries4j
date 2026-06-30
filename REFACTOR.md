@@ -295,6 +295,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.trade` represented trade-offer and interaction-pair row records, moving those live cache row shapes out of `Handling` while keeping legacy serialization at the compatibility boundary.
 - Routed MySQL room chat-log payload rows through typed `StaffRoomChatRow` records and the existing `StaffPayloads.roomChatRows(List<StaffRoomChatRow>)` builder, leaving string rows as a compatibility parser only.
 - Routed badge inventory/equipped-badge payload string wrappers through typed `BadgeRow` lists, leaving tab-delimited badge rows as a compatibility parser only.
+- Routed jukebox song-info, playlist, and disk-inventory payload string wrappers through typed `SongInfoRow`, `JukeboxPlaylistEntry`, and `SongDiskRow` lists, leaving tab-delimited jukebox rows as compatibility parsers only.
 
 ## VB Compatibility Class Removal Checklist
 

@@ -4,10 +4,7 @@ import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
 import com.alphaseries.game.jukebox.SongDiskRow;
 import com.alphaseries.game.jukebox.SongInfoRow;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.util.NumberUtils;
-import com.alphaseries.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public final class JukeboxPayloads {
@@ -15,22 +12,7 @@ public final class JukeboxPayloads {
     }
 
     public static String songInfo(String cdRows) {
-        List<SongInfoRow> songs = new ArrayList<>();
-        for (String row : StringUtils.text(cdRows).split("\r", -1)) {
-            String rowValue = row.trim();
-            if (!rowValue.isEmpty()) {
-                String[] fields = rowValue.split("\t", -1);
-                if (fields.length >= 5) {
-                    songs.add(new SongInfoRow(
-                        StringUtils.field(fields, 0),
-                        NumberUtils.parseLong(StringUtils.field(fields, 1)),
-                        StringUtils.field(fields, 2),
-                        StringUtils.field(fields, 3),
-                        NumberUtils.parseLong(StringUtils.field(fields, 4))));
-                }
-            }
-        }
-        return songInfo(songs);
+        return songInfo(SongInfoRow.listFromLegacy(cdRows));
     }
 
     public static String songInfo(List<SongInfoRow> songs) {
@@ -53,19 +35,7 @@ public final class JukeboxPayloads {
     }
 
     public static String playlist(long playlistLimit, String playlistRows) {
-        List<JukeboxPlaylistEntry> entries = new ArrayList<>();
-        for (String row : StringUtils.text(playlistRows).split("\r", -1)) {
-            String rowValue = row.trim();
-            if (!rowValue.isEmpty()) {
-                String[] fields = rowValue.split("\t", -1);
-                long cdId = NumberUtils.parseLong(StringUtils.field(fields, 0));
-                long destinationId = NumberUtils.parseLong(StringUtils.field(fields, 1));
-                if (cdId > 0L) {
-                    entries.add(new JukeboxPlaylistEntry(cdId, destinationId));
-                }
-            }
-        }
-        return playlist(playlistLimit, entries);
+        return playlist(playlistLimit, JukeboxPlaylistEntry.listFromLegacy(playlistRows));
     }
 
     public static String playlist(long playlistLimit, List<JukeboxPlaylistEntry> entries) {
@@ -86,19 +56,7 @@ public final class JukeboxPayloads {
     }
 
     public static String diskInventory(String diskRows) {
-        List<SongDiskRow> disks = new ArrayList<>();
-        for (String row : StringUtils.text(diskRows).split("\r", -1)) {
-            String rowValue = row.trim();
-            if (!rowValue.isEmpty()) {
-                String[] fields = rowValue.split("\t", -1);
-                long diskId = NumberUtils.parseLong(StringUtils.field(fields, 0));
-                long destinationId = NumberUtils.parseLong(StringUtils.field(fields, 1));
-                if (diskId > 0L) {
-                    disks.add(new SongDiskRow(diskId, destinationId));
-                }
-            }
-        }
-        return diskInventory(disks);
+        return diskInventory(SongDiskRow.listFromLegacy(diskRows));
     }
 
     public static String diskInventory(List<SongDiskRow> disks) {
