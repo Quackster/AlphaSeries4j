@@ -296,6 +296,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed MySQL room chat-log payload rows through typed `StaffRoomChatRow` records and the existing `StaffPayloads.roomChatRows(List<StaffRoomChatRow>)` builder, leaving string rows as a compatibility parser only.
 - Routed badge inventory/equipped-badge payload string wrappers through typed `BadgeRow` lists, leaving tab-delimited badge rows as a compatibility parser only.
 - Routed jukebox song-info, playlist, and disk-inventory payload string wrappers through typed `SongInfoRow`, `JukeboxPlaylistEntry`, and `SongDiskRow` lists, leaving tab-delimited jukebox rows as compatibility parsers only.
+- Routed messenger pending-request payload string wrappers through typed `PendingFriendRequest` lists, leaving tab-delimited pending-request rows as a compatibility parser only.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -326,7 +327,7 @@ Measured on 2026-06-30:
 - Replace remaining `Crypto.Proc_3_*` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
 - Continue replacing duplicated local string/number helpers in root compatibility classes with `StringUtils` and `NumberUtils`.
 - Move remaining raw `Licence.global_*` caches into typed state holders under the appropriate `game.*` package.
-- Insert the missing strings from `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into the matching Java classes and methods from the report, then update or remove those entries as literals are restored; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
+- Insert every missing string from `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into the matching Java classes and methods from the report, then update or remove those entries as literals are restored; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
 - Delete remaining deprecated compatibility aliases only after their call sites reach zero and tests pass.
 
 ## Verification
