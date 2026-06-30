@@ -953,6 +953,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("s", Boot.catalogProductClass(0));
         assertEquals(false, Boot.catalogTextFieldPresent("NULL"));
         assertCatalogProductEntryBuilder();
+        assertCatalogPagePayloadBuilder();
         assertCatalogPagePayloadMapBridge();
         assertEquals(true, Boot.catalogPageVisible(new String[]{"1", "name", "1", "2", "0", "1"}, 0, 0));
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_developer\2"}};
@@ -4996,6 +4997,24 @@ public final class PortedModuleSmokeTest {
         assertEquals(Boot.buildCatalogProductEntry(legacyFields), Boot.buildCatalogProductEntry(row));
         String legacyRows = String.join("\t", legacyFields);
         assertEquals(Boot.buildCatalogProductPayload(1L, legacyRows), Boot.buildCatalogProductPayload(1L, List.of(row)));
+        Licence.global_008292BC = previousProducts;
+    }
+
+    private static void assertCatalogPagePayloadBuilder() {
+        Object previousProducts = Licence.global_008292BC;
+        Licence.global_008292BC = "77\t9";
+        String[] pageFields = new String[]{
+            "3", "Page", "0", "0", "1", "template", "header", "special", "specialTemplate",
+            "text1", "", "text3", "", "", "", "", "", "", "", "", "link"
+        };
+        CatalogDao.CatalogPageRow page = new CatalogDao.CatalogPageRow(
+            3L, "Page", 0L, 0L, 1L, "template", "header", "special", "specialTemplate",
+            "text1", "", "text3", "", "", "", "", "", "", "", "", "link", 0L);
+        String productRows = "51\t77\t12\t3\tsprite\t4\t0\tsecondary\t1\t2";
+        CatalogDao.CatalogPageProductRow productRow = new CatalogDao.CatalogPageProductRow(
+            51L, 77L, 12L, 3L, "sprite", 4L, 0L, "secondary", 1L, 2L);
+        assertEquals(Boot.buildCatalogPagePayload(pageFields, productRows),
+            Boot.buildCatalogPagePayload(page, List.of(productRow)));
         Licence.global_008292BC = previousProducts;
     }
 

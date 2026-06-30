@@ -1553,13 +1553,13 @@ public final class Boot {
         if (page == null) {
             return "";
         }
-        StringBuilder payload = new StringBuilder();
-        payload.append(StringUtils.text(page.name())).append('\2');
-        payload.append(Crypto.encodeVl64(page.clickable()));
-        payload.append(StringUtils.text(page.template())).append('\2');
-        payload.append(StringUtils.text(page.headerImage())).append('\2');
-        payload.append(StringUtils.text(page.specialImage())).append('\2');
-        payload.append(StringUtils.text(page.specialTemplate())).append('\2');
+        PacketBuilder payload = PacketBuilder.create()
+            .appendString(page.name())
+            .appendInt(page.clickable())
+            .appendString(page.template())
+            .appendString(page.headerImage())
+            .appendString(page.specialImage())
+            .appendString(page.specialTemplate());
 
         String[] textFields = new String[] {
             page.textOne(),
@@ -1575,21 +1575,21 @@ public final class Boot {
             page.textEleven()
         };
         long textCount = 0L;
-        StringBuilder textPayload = new StringBuilder();
+        PacketBuilder textPayload = PacketBuilder.create();
         for (String textField : textFields) {
             if (catalogTextFieldPresent(textField)) {
                 textCount++;
-                textPayload.append(textField).append('\2');
+                textPayload.appendString(textField);
             }
         }
-        payload.append(Crypto.encodeVl64(textCount)).append(textPayload);
+        payload.appendInt(textCount).appendRaw(textPayload.build());
 
         if (catalogTextFieldPresent(page.link())) {
-            payload.append(Crypto.encodeVl64(1)).append(page.link()).append('\2');
+            payload.appendInt(1).appendString(page.link());
         } else {
-            payload.append(Crypto.encodeVl64(0));
+            payload.appendInt(0);
         }
-        return payload.append(buildCatalogProductPayload(page.pageId(), productRows)).toString();
+        return payload.appendRaw(buildCatalogProductPayload(page.pageId(), productRows)).build();
     }
 
     public static String buildCatalogProductPayload(long pageId, String productRows) {
