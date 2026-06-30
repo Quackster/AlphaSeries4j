@@ -383,8 +383,8 @@ public final class Main {
                 if (roomId > 0L && signValue > 0L) {
                     long nextSignValue = signValue - 1L;
                     furniture.updateSignLimited(furnitureId, nextSignValue);
-                    Handling.Proc_6_151_78AC20(roomId, furnitureId, nextSignValue);
-                    Handling.Proc_6_246_8024C0(roomId, "AX" + furnitureId + '\2' + nextSignValue + '\2', 0);
+                    Handling.refreshRepresentedFurnitureState(roomId, furnitureId, nextSignValue);
+                    Handling.broadcastToRoomUsers(roomId, "AX" + furnitureId + '\2' + nextSignValue + '\2');
                     processed++;
                     if (nextSignValue <= 0L) {
                         cacheState.pendingFurnitureCache = FurnitureRoomCache.removePendingFurniture(cacheState.pendingFurnitureCache, furnitureId);
@@ -472,7 +472,7 @@ public final class Main {
             if (activeCount > previousMostActiveCount) {
                 maintenanceDao.updateMostActiveSockets(activeCount);
             }
-            Handling.Proc_6_103_74A510(0, 0, 0);
+            Handling.expireUserEffects();
         } catch (Exception ignored) {
             // VB6 source suppresses timer failures.
         }
@@ -507,10 +507,10 @@ public final class Main {
                 if (movedId > 0L) {
                     String movedZ = mainRollerTargetHeight(roomId, targetX, targetY, rollerZ);
                     furniture.updateRoomPosition(movedId, roomId, targetX, targetY, movedZ);
-                    Handling.Proc_6_151_78AC20(roomId, movedId, 0);
+                    Handling.refreshRepresentedFurnitureState(roomId, movedId, 0);
                     String payload = RoomRollers.movePayload(movedId, targetX, targetY, movedZ);
                     if (!payload.isEmpty()) {
-                        Handling.Proc_6_246_8024C0(roomId, payload, 0);
+                        Handling.broadcastToRoomUsers(roomId, payload);
                     }
                     moved++;
                 }

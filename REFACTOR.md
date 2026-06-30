@@ -602,6 +602,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Boot.logBootLine(...)` with the original `Proc_1_23_6D1480` noted in Javadocs, then migrated live app, runtime, and boot timed logging paths away from the Proc-named boot logging path.
 - Added original Proc-name Javadocs to `Filesystems` broadcast compatibility methods and named `Functions.sendRoomAlert(...)`, then migrated the room-alert helper implementation away from `Filesystems.Proc_7_0_8034A0(...)`.
 - Added named `Boot.initializeStartupCaches(...)` with the original `Proc_1_3_6BEBA0` noted in Javadocs, then migrated main startup licence success paths away from the Proc-named boot cache initializer.
+- Added named `Handling.expireUserEffects(...)` and `refreshRepresentedFurnitureState(...)` with original Proc names in Javadocs, documented the room broadcast API source history, and migrated `Main` timers away from direct `Handling.Proc_6_103_74A510(...)`, `Proc_6_151_78AC20(...)`, and `Proc_6_246_8024C0(...)` calls.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -631,6 +632,7 @@ Measured on 2026-06-30:
 - Production `Boot.Proc_1_23_6D1480` call sites outside `Boot.java`: 0
 - Production `Filesystems.Proc_7_*` call sites outside `Filesystems.java`: 0
 - Production `Boot.Proc_1_3_6BEBA0` call sites outside `Boot.java`: 0
+- Production `Main` direct calls to `Handling.Proc_6_103_74A510`, `Proc_6_151_78AC20`, and `Proc_6_246_8024C0`: 0
 
 ## Next Targets
 

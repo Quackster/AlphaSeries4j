@@ -3433,7 +3433,17 @@ public final class Handling {
         }
     }
 
+    /**
+     * Original function: Proc_6_103_74A510.
+     */
     public static long Proc_6_103_74A510(Object... args) {
+        return expireUserEffects();
+    }
+
+    /**
+     * Original function: Proc_6_103_74A510.
+     */
+    public static long expireUserEffects() {
         long expiredCount = 0L;
         try {
             UserDao users = userDao();
@@ -4937,21 +4947,31 @@ public final class Handling {
         }
     }
 
+    /**
+     * Original function: Proc_6_151_78AC20.
+     */
     public static void Proc_6_151_78AC20(Object... args) {
+        long roomId = 0L;
+        long furnitureId = 0L;
+        long stateValue = 0L;
+        if (args != null && args.length >= 3) {
+            roomId = NumberUtils.parseLong(args[0]);
+            furnitureId = NumberUtils.parseLong(args[1]);
+            stateValue = NumberUtils.parseLong(args[2]);
+        } else if (args != null && args.length >= 2) {
+            roomId = NumberUtils.parseLong(args[0]);
+            furnitureId = NumberUtils.parseLong(args[1]);
+        } else if (args != null && args.length >= 1) {
+            furnitureId = NumberUtils.parseLong(args[0]);
+        }
+        refreshRepresentedFurnitureState(roomId, furnitureId, stateValue);
+    }
+
+    /**
+     * Original function: Proc_6_151_78AC20.
+     */
+    public static void refreshRepresentedFurnitureState(long roomId, long furnitureId, long stateValue) {
         try {
-            long roomId = 0L;
-            long furnitureId = 0L;
-            long stateValue = 0L;
-            if (args != null && args.length >= 3) {
-                roomId = NumberUtils.parseLong(args[0]);
-                furnitureId = NumberUtils.parseLong(args[1]);
-                stateValue = NumberUtils.parseLong(args[2]);
-            } else if (args != null && args.length >= 2) {
-                roomId = NumberUtils.parseLong(args[0]);
-                furnitureId = NumberUtils.parseLong(args[1]);
-            } else if (args != null && args.length >= 1) {
-                furnitureId = NumberUtils.parseLong(args[0]);
-            }
             if (roomId <= 0L || furnitureId <= 0L) {
                 return;
             }
@@ -8102,6 +8122,9 @@ public final class Handling {
         return broadcastToRoomUsers(roomId, StringUtils.text(args[1]));
     }
 
+    /**
+     * Original function: Proc_6_246_8024C0.
+     */
     public static long Proc_6_246_8024C0(Object... args) {
         if (args == null || args.length < 2) {
             return 0L;
@@ -8434,6 +8457,9 @@ public final class Handling {
         }
     }
 
+    /**
+     * Original function: Proc_6_246_8024C0.
+     */
     public static long broadcastToRoomUsers(long roomId, String payload) {
         if (roomId <= 0L || StringUtils.text(payload).isEmpty()) {
             return 0L;
