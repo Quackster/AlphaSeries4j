@@ -60,10 +60,10 @@ public final class Functions {
 
         StringBuilder outputValue = new StringBuilder();
         for (long index = 1L; index <= requestedLength; index++) {
-            if (Proc_10_4_809CA0(0, 1) == 1L) {
-                outputValue.append((char) Proc_10_4_809CA0(48, 57));
+            if (randomLongInclusive(0, 1) == 1L) {
+                outputValue.append((char) randomLongInclusive(48, 57));
             } else {
-                outputValue.append((char) Proc_10_4_809CA0(97, 122));
+                outputValue.append((char) randomLongInclusive(97, 122));
             }
         }
         return outputValue.toString();
@@ -75,6 +75,18 @@ public final class Functions {
 
     public static long Proc_10_4_809CA0(Object... args) {
         return randomLongFromArgs(args);
+    }
+
+    /**
+     * Original function: Proc_10_4_809CA0.
+     */
+    public static long randomLongInclusive(long lower, long upper) {
+        long min = Math.min(lower, upper);
+        long max = Math.max(lower, upper);
+        if (min == max) {
+            return min;
+        }
+        return ThreadLocalRandom.current().nextLong(min, max + 1L);
     }
 
     public static String Proc_10_5_809D80(Object... args) {
@@ -719,19 +731,11 @@ public final class Functions {
         if (args == null || args.length < 2) {
             return 0L;
         }
-        return randomInclusive(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]));
+        return randomLongInclusive(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]));
     }
 
     private static int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
     }
 
-    private static long randomInclusive(long lower, long upper) {
-        long min = Math.min(lower, upper);
-        long max = Math.max(lower, upper);
-        if (min == max) {
-            return min;
-        }
-        return ThreadLocalRandom.current().nextLong(min, max + 1L);
-    }
 }

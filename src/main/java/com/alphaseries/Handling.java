@@ -3684,7 +3684,7 @@ public final class Handling {
             String queryTail = "rooms_events,users,rooms,rooms_categories WHERE" + categoryFilter
                 + " rooms.id=rooms_events.id_room AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
                 + "GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
-            long randomTree = Functions.Proc_10_4_809CA0(1, Licence.recommendedRooms().count(), 0);
+            long randomTree = Functions.randomLongInclusive(1, Licence.recommendedRooms().count());
             Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCPC", categoryId, limitValue,
                 Proc_6_112_74E0C0(queryTail, 0, 0) + recommendedRoomPayload(randomTree)), 0);
         } catch (Exception ignored) {
@@ -3701,7 +3701,7 @@ public final class Handling {
             String queryTail = "users,rooms,rooms_categories WHERE" + categoryFilter
                 + " rooms.visitors_now > 0 AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
                 + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            long randomTree = Functions.Proc_10_4_809CA0(1, Licence.recommendedRooms().count(), 0);
+            long randomTree = Functions.randomLongInclusive(1, Licence.recommendedRooms().count());
             Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GC ", categoryId, limitValue,
                 Proc_6_112_74E0C0(queryTail, 0, 0) + recommendedRoomPayload(randomTree)), 0);
         } catch (Exception ignored) {
@@ -6026,7 +6026,7 @@ public final class Handling {
                 Proc_6_248_802B80(roomId, payload, 0);
             }
             if (pet.energy() < 250L || pet.nutrition() < 250L) {
-                String commandSpeech = Functions.Proc_10_4_809CA0(0, 2, -1) == 0L
+                String commandSpeech = Functions.randomLongInclusive(0, 2) == 0L
                     ? Functions.settingsCache().valueOrDefault("com.client.bot.pet.sad.speech", "gst thr")
                     : Functions.settingsCache().valueOrDefault("com.client.bot.pet.angry.speech", "gst grr");
                 if (!commandSpeech.isEmpty()) {
@@ -9615,7 +9615,7 @@ public final class Handling {
     public static long nextFurnitureState(String productSprite, long currentState, long maxState) {
         String sprite = StringUtils.text(productSprite).toLowerCase();
         if (sprite.contains("dice")) {
-            return Functions.Proc_10_4_809CA0(1, 6);
+            return Functions.randomLongInclusive(1, 6);
         }
         if (sprite.startsWith("bb_score_") || sprite.startsWith("es_score_") || sprite.contains("score")) {
             long resolvedMaxState = maxState <= 0L ? 99L : maxState;
@@ -11074,7 +11074,7 @@ public final class Handling {
             if (recyclerSettings.hasRewardGroups()) {
                 for (RecyclerSettings.RewardGroup rewardGroup : recyclerSettings.rewardGroups()) {
                     long chance = rewardGroup.chance();
-                    if (chance > 0L && Functions.Proc_10_4_809CA0(1, chance, 0) == 1L) {
+                    if (chance > 0L && Functions.randomLongInclusive(1, chance) == 1L) {
                         long productId = representedRandomProductFromList(rewardGroup.productIds());
                         if (productId > 0L) {
                             return productId;
@@ -11091,7 +11091,7 @@ public final class Handling {
             RecyclerDao recycler = recyclerDao();
             List<Long> rewardProductIds = recycler == null ? List.of() : recycler.fallbackRewardProductIds();
             if (!rewardProductIds.isEmpty()) {
-                int rowIndex = (int) NumberUtils.parseLong(Functions.Proc_10_4_809CA0(0, rewardProductIds.size() - 1L, 0));
+                int rowIndex = (int) Functions.randomLongInclusive(0, rewardProductIds.size() - 1L);
                 rowIndex = Math.max(0, Math.min(rowIndex, rewardProductIds.size() - 1));
                 Long productId = rewardProductIds.get(rowIndex);
                 return productId == null ? 0L : productId;
@@ -11112,7 +11112,7 @@ public final class Handling {
             if (productIds == null || productIds.isEmpty()) {
                 return 0L;
             }
-            int selectedIndex = (int) NumberUtils.parseLong(Functions.Proc_10_4_809CA0(0, productIds.size() - 1L, 0));
+            int selectedIndex = (int) Functions.randomLongInclusive(0, productIds.size() - 1L);
             selectedIndex = Math.max(0, Math.min(selectedIndex, productIds.size() - 1));
             return productIds.get(selectedIndex);
         } catch (Exception ignored) {
