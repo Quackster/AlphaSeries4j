@@ -99,7 +99,7 @@ public final class Licence {
     public static Object global_008291D4 = "";
     public static long global_008291D8 = 0L;
     public static long global_0082919C = 0L;
-    public static String global_008291A0 = "";
+    public static Object global_008291A0 = "";
     public static boolean global_00829190 = false;
     public static long global_0082904C = 0L;
     public static String global_00829038 = "";
@@ -458,7 +458,7 @@ public final class Licence {
 
     public static void setSocketMarkers(SocketMarkerSet socketMarkers) {
         SessionState.instance().setSocketMarkers(socketMarkers);
-        global_008291A0 = socketMarkers == null ? "" : socketMarkers.toLegacyMarkers();
+        global_008291A0 = socketMarkers == null ? "" : socketMarkers;
     }
 
     public static LicenceRuntimeState runtimeState() {

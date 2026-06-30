@@ -11,7 +11,7 @@ import java.util.Set;
 public final class SocketMarkerSet {
     private final Set<Long> socketIndexes = new LinkedHashSet<>();
 
-    private SocketMarkerSet(String markers) {
+    private SocketMarkerSet(Object markers) {
         parse(StringUtils.text(markers));
     }
 
@@ -25,7 +25,17 @@ public final class SocketMarkerSet {
         }
     }
 
-    public static SocketMarkerSet fromLegacy(String markers) {
+    public static SocketMarkerSet fromLegacy(Object markers) {
+        if (markers instanceof SocketMarkerSet socketMarkers) {
+            return socketMarkers;
+        }
+        if (markers instanceof Iterable<?> socketIndexes) {
+            Set<Long> parsedSocketIndexes = new LinkedHashSet<>();
+            for (Object socketIndex : socketIndexes) {
+                parsedSocketIndexes.add(NumberUtils.parseLong(socketIndex));
+            }
+            return fromSocketIndexes(parsedSocketIndexes);
+        }
         return new SocketMarkerSet(markers);
     }
 

@@ -100,6 +100,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.session.SessionRegistry` as a typed adapter around the legacy `Licence.global_00829268` session cache.
 - Added typed `SessionRegistry.SocketSession` iteration and migrated staff broadcast away from direct session-cache string parsing.
 - Added `com.alphaseries.game.session.SocketMarkerSet` as a set-backed adapter for `Licence` socket marker state previously updated through raw string replacement.
+- Routed `Licence` socket marker updates into typed `SocketMarkerSet` live storage, leaving bracket-marker parsing only as a compatibility input.
 - Routed Guardian socket marker toggling, removal, and ping iteration through `SocketMarkerSet`/named Guardian methods instead of raw bracket-string edits in callers, and migrated `Guardian` off `Vb` helpers.
 - Added typed `SocketMarkerSet.fromSocketIndexes(...)` construction and defensive socket-index access so session marker state can move through collections instead of bracket-marker strings.
 - Routed accepted game-client socket marker registration through named `Guardian.addSocketMarker(...)`, removing the remaining live runtime bracket-string append for Guardian marker state.

@@ -707,7 +707,8 @@ public final class PortedModuleSmokeTest {
         Licence.global_008291A0 = "[4][12]";
         Handling.Proc_6_243_7FFEB0(12);
         assertEquals("", Guardian.global_008291A0);
-        assertEquals("[4]", Licence.global_008291A0);
+        assertEquals(true, Licence.global_008291A0 instanceof SocketMarkerSet);
+        assertEquals("[4]", Licence.socketMarkers().toLegacyMarkers());
 
         Licence.global_008292BC = "10\t100\tchair\r11\t200\ttable";
         Licence.global_008292C0 = new String[]{"", "1\talpha\t7"};
@@ -5237,6 +5238,11 @@ public final class PortedModuleSmokeTest {
         SocketMarkerSet typedSocketMarkers = SocketMarkerSet.fromSocketIndexes(List.of(1L, 12L, 0L));
         assertEquals(Set.of(1L, 12L), typedSocketMarkers.socketIndexes());
         assertEquals("[1][12]", typedSocketMarkers.toLegacyMarkers());
+        Object previousLicenceMarkers = Licence.global_008291A0;
+        Licence.setSocketMarkers(typedSocketMarkers);
+        assertEquals(true, Licence.global_008291A0 instanceof SocketMarkerSet);
+        assertEquals(Set.of(1L, 12L), Licence.socketMarkers().socketIndexes());
+        Licence.global_008291A0 = previousLicenceMarkers;
         Guardian.SocketMarkerState addedMarkerState = Guardian.toggleSocketMarkerState("[1]", 1, 12);
         assertEquals("[1][12]", addedMarkerState.markers);
         assertEquals(12L, addedMarkerState.highestIndex);

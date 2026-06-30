@@ -39,7 +39,7 @@ public final class SessionState {
         this.socketMarkers = socketMarkers == null ? SocketMarkerSet.empty() : socketMarkers;
     }
 
-    public synchronized void setSocketMarkersFromLegacy(String markers) {
+    public synchronized void setSocketMarkersFromLegacy(Object markers) {
         socketMarkers = SocketMarkerSet.fromLegacy(markers);
     }
 
