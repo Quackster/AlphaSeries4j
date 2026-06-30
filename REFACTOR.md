@@ -441,6 +441,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the unused `String[]` jukebox row exporter from `Handling`; live jukebox paths use typed `JukeboxRow` lookups through `jukeboxRowForRoom`.
 - Removed the no-op unsafe staff-alert wrapper from `Handling`; callers and tests now use `StaffPayloads.containsUnsafeAlert` directly.
 - Removed the no-op room settings payload wrapper from `Handling`; room settings handlers and tests now call `RoomPayloads.settingsRead` directly.
+- Removed the no-op room-user profile string payload wrapper from `Handling`; tests use `SocialPayloads` directly while the typed `RoomUserProfileRow` adapter remains.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -457,7 +458,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11513 lines
+- `Handling.java`: 11503 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 889 lines

@@ -2264,7 +2264,7 @@ public final class PortedModuleSmokeTest {
             + "Alice\2motto\2"
             + Crypto.Proc_3_0_6D2AF0(123, null, "")
             + "fig\2";
-        assertEquals(expectedProfile, Handling.representedRoomUserProfilePayload(9, "Alice", "motto", 123, "fig"));
+        assertEquals(expectedProfile, SocialPayloads.roomUserProfile(9, "Alice", "motto", 123, "fig"));
         assertEquals("Ge" + Crypto.Proc_3_0_6D2AF0(9, null, "") + Crypto.Proc_3_0_6D2AF0(12, null, ""),
             SocialPayloads.roomUserEffect(9L, 12L));
         assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "Ge") + "H", SocialPayloads.roomUserEffectCleared(9L));
@@ -4331,7 +4331,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "@]"));
         handlingSends.clear();
         String profilePayload = Handling.Proc_6_190_7D11D0(4, "Cg" + wireLong(61));
-        assertEquals(Handling.representedRoomUserProfilePayload(61, "Target", "Motto", 123, "fig"), profilePayload);
+        assertEquals(SocialPayloads.roomUserProfile(61, "Target", "Motto", 123, "fig"), profilePayload);
         assertEquals(true, containsSend(handlingSends, "Jf"));
         assertEquals(true, containsSend(handlingSends, "Target"));
         handlingSends.clear();

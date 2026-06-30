@@ -10559,21 +10559,11 @@ public final class Handling {
         return PetPayloads.representedBotRoomEntry(botEntityId, botName, positionX, positionY, positionZ, positionR, botFigure);
     }
 
-    public static String representedRoomUserProfilePayload(
-        long roomUserIndex,
-        String userName,
-        String mottoText,
-        long achievementScore,
-        String figureText
-    ) {
-        return SocialPayloads.roomUserProfile(roomUserIndex, userName, mottoText, achievementScore, figureText);
-    }
-
     public static String representedRoomUserProfilePayload(RoomUserProfileRow row) {
         if (row == null) {
             return "";
         }
-        return representedRoomUserProfilePayload(
+        return SocialPayloads.roomUserProfile(
             row.roomUserIndex(),
             row.userName(),
             row.motto(),
