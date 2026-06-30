@@ -211,6 +211,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(7L, typedProductCache.type(12));
         assertEquals("typed", typedProductCache.defaultSign(12));
         assertEquals("fallbackTyped", typedProductCache.fallbackDefaultSign(12));
+        assertProductCacheRows(typedProductCache);
         Path dataManagerWritePath = Files.createTempFile("alphaseries-datamanager-write", ".txt");
         DataManager.writeTextFile(dataManagerWritePath.toString(), "replace");
         assertEquals("replace" + System.lineSeparator(), new String(Files.readAllBytes(dataManagerWritePath), "UTF-8"));
@@ -4910,6 +4911,13 @@ public final class PortedModuleSmokeTest {
             List.of(4L, 5L), 0L, 0L, List.of(), List.of(), List.of());
         assertEquals("4\t5", typedCounterProducts.counterProductIds());
         assertEquals(List.of(4L, 5L), typedCounterProducts.counterProducts());
+    }
+
+    private static void assertProductCacheRows(ProductCache productCache) {
+        assertEquals(1, productCache.rows().size());
+        ProductCache.ProductRow row = productCache.rows().get(0);
+        assertEquals(12L, row.productId());
+        assertEquals(List.of("7", "", "", "", "typed", "fallbackTyped"), row.fields());
     }
 
     private static String productRow(long productId, String... columnPairs) {

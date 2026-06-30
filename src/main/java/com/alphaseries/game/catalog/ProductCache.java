@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class ProductCache {
-    private final Map<Long, List<String>> rows;
+    private final Map<Long, ProductRow> rows;
 
     private ProductCache(Object legacyRows) {
         this.rows = rowsById(legacyRows == null ? "" : legacyRows);
@@ -25,11 +25,15 @@ public final class ProductCache {
     }
 
     public String cell(long productId, long columnIndex) {
-        List<String> fields = rows.get(productId);
-        if (fields == null) {
+        ProductRow row = rows.get(productId);
+        if (row == null) {
             return "";
         }
-        return field(fields, (int) columnIndex);
+        return row.field((int) columnIndex);
+    }
+
+    public List<ProductRow> rows() {
+        return List.copyOf(rows.values());
     }
 
     /**
@@ -151,12 +155,13 @@ public final class ProductCache {
         return NumberUtils.parseLong(cell(productId, 34)) != 0L;
     }
 
-    private static Map<Long, List<String>> rowsById(Object cache) {
-        Map<Long, List<String>> rows = new LinkedHashMap<>();
+    private static Map<Long, ProductRow> rowsById(Object cache) {
+        Map<Long, ProductRow> rows = new LinkedHashMap<>();
         if (cache instanceof Iterable<?> values) {
             for (Object value : values) {
                 if (value instanceof CatalogDao.ProductCacheRow row) {
-                    rows.put(NumberUtils.parseLong(field(row.values(), 0)), productFields(row.values()));
+                    ProductRow productRow = ProductRow.fromDaoRow(row);
+                    rows.put(productRow.productId(), productRow);
                 }
             }
             return rows;
@@ -165,7 +170,7 @@ public final class ProductCache {
             for (int index = 0; index < rowArray.length; index++) {
                 String row = StringUtils.text(rowArray[index]);
                 if (!row.isEmpty()) {
-                    rows.put((long) index, Arrays.asList(row.split("\t", -1)));
+                    rows.put((long) index, new ProductRow(index, Arrays.asList(row.split("\t", -1))));
                 }
             }
             return rows;
@@ -173,14 +178,29 @@ public final class ProductCache {
         for (String row : StringUtils.text(cache).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] columns = row.split("\t", -1);
-                rows.put(NumberUtils.parseLong(StringUtils.field(columns, 0)), Arrays.asList(columns));
+                ProductRow productRow = ProductRow.fromLegacyColumns(List.of(columns));
+                rows.put(productRow.productId(), productRow);
             }
         }
         return rows;
     }
 
-    private static String field(List<String> fields, int index) {
-        return fields != null && index >= 0 && index < fields.size() ? StringUtils.text(fields.get(index)) : "";
+    public record ProductRow(long productId, List<String> fields) {
+        public ProductRow {
+            fields = fields == null ? List.of() : List.copyOf(fields);
+        }
+
+        private static ProductRow fromDaoRow(CatalogDao.ProductCacheRow row) {
+            return new ProductRow(NumberUtils.parseLong(ProductCache.field(row.values(), 0)), productFields(row.values()));
+        }
+
+        private static ProductRow fromLegacyColumns(List<String> columns) {
+            return new ProductRow(NumberUtils.parseLong(ProductCache.field(columns, 0)), columns == null ? List.of() : columns);
+        }
+
+        private String field(int index) {
+            return ProductCache.field(fields, index);
+        }
     }
 
     private static List<String> productFields(List<String> rowValues) {
@@ -188,5 +208,9 @@ public final class ProductCache {
             return List.of();
         }
         return List.copyOf(rowValues.subList(1, rowValues.size()));
+    }
+
+    private static String field(List<String> fields, int index) {
+        return fields != null && index >= 0 && index < fields.size() ? StringUtils.text(fields.get(index)) : "";
     }
 }
