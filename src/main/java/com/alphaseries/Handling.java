@@ -2221,8 +2221,8 @@ public final class Handling {
             Proc_6_244_801E80(socketIndex, "@F" + updatedCredits + ".0" + '\2', 0);
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
             furniture.deleteFurniture(furnitureId);
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3510,8 +3510,8 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
             Proc_6_244_801E80(socketIndex, RoomPayloads.createdRoom(roomId, roomName), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -3521,7 +3521,20 @@ public final class Handling {
     public static void Proc_6_106_74B750(Object... args) {
         try {
             if (args != null && args.length >= 1) {
-                Files.deleteIfExists(Path.of(StringUtils.text(args[0])));
+                deleteFile(StringUtils.text(args[0]));
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses file delete failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_106_74B750.
+     */
+    public static void deleteFile(String filePath) {
+        try {
+            if (!StringUtils.text(filePath).isEmpty()) {
+                Files.deleteIfExists(Path.of(StringUtils.text(filePath)));
             }
         } catch (Exception ignored) {
             // VB6 source suppresses file delete failures.
@@ -4622,8 +4635,8 @@ public final class Handling {
             }
             furniture.moveRoomFurnitureToInventory(furnitureId, NumberUtils.parseLong(userId));
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2', 0);
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
             Proc_6_140_769400(socketIndex, "FT", "");
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -4663,8 +4676,8 @@ public final class Handling {
                 furnitureId);
             Licence.setFurnitureRoomCache(furnitureRoomCacheState(state));
             if (roomId > 0L) {
-                Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
-                Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+                deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+                deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -4715,8 +4728,8 @@ public final class Handling {
                 }
             }
             if (roomId > 0L) {
-                Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
-                Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+                deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+                deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -4951,8 +4964,8 @@ public final class Handling {
                 furnitureId,
                 stateValue);
             Licence.setFurnitureRoomCache(furnitureRoomCacheState(state));
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -5062,8 +5075,8 @@ public final class Handling {
             furniture.moveRoomFurnitureToInventory(furnitureId, roomId, NumberUtils.parseLong(userId));
             Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(furnitureId), 0);
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2', 0);
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
             Proc_6_140_769400(socketIndex, "FT", "");
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -5148,8 +5161,8 @@ public final class Handling {
             if (!payload.isEmpty()) {
                 Proc_6_247_8027E0(socketIndex, "AS" + payload, 0);
             }
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
             Proc_6_140_769400(socketIndex, "FT", "");
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6565,7 +6578,7 @@ public final class Handling {
             long directionValue = handlingDirectionCode(Long.compare(lookX, currentX), Long.compare(lookY, currentY));
             Licence.setRepresentedRooms(
                 Licence.representedRooms().moveOccupant(roomSlot, socketIndex, currentX, currentY, directionValue, 0L));
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             return "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6612,7 +6625,7 @@ public final class Handling {
             }
             Licence.setRepresentedRooms(
                 Licence.representedRooms().moveOccupant(roomSlot, socketIndex, nextX, nextY, directionValue, movingValue));
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             return "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -9093,8 +9106,8 @@ public final class Handling {
             if (!placementPayload.isEmpty()) {
                 Proc_6_247_8027E0(socketIndex, payload, 0);
             }
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
-            Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
             if (fromInventory) {
                 Proc_6_140_769400(socketIndex, "FT", "");
             }
@@ -9795,8 +9808,8 @@ public final class Handling {
                 stateText);
             Licence.setFurnitureRoomCache(furnitureRoomCacheState(state));
             if (roomId > 0L) {
-                Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
-                Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+                deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+                deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.

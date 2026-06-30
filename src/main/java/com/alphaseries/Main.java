@@ -516,8 +516,8 @@ public final class Main {
                 }
                 mainRollerMoveOccupants(roomSlot, rollerX, rollerY, targetX, targetY, rollerR);
             }
-            Handling.Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
-            Handling.Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
+            Handling.deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+            Handling.deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
         } catch (Exception ignored) {
             // VB6 source suppresses timer failures.
         }

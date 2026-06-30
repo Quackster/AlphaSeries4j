@@ -596,6 +596,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Filesystems.processReadyPacketBuffer(...)` with the original `Proc_7_2_803D60` noted in Javadocs, then migrated live ready-packet dispatch away from the Proc-named filesystem path.
 - Added named `Main.processClientPacket(...)` with the original `Proc_0_25_68FBC0` noted in Javadocs, then migrated runtime socket reads and queued game-server packet replay away from the Proc-named packet intake path.
 - Added original Proc-name Javadocs to `Handling.readFile(...)`/`writeFile(...)`, then migrated live app startup, boot figuredata cache, inventory cache, charge, and wired-cache callers away from `Handling.Proc_6_239_7FC170(...)`/`Proc_6_240_7FC2B0(...)`.
+- Added named `Handling.deleteFile(...)` with the original `Proc_6_106_74B750` noted in Javadocs, then migrated live room and pathfinder cache invalidation callers away from the Proc-named file delete path.
 
 ## VB Compatibility Class Removal Checklist
 
