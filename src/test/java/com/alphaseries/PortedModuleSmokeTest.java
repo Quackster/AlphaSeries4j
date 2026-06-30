@@ -2459,7 +2459,8 @@ public final class PortedModuleSmokeTest {
             Handling.representedBotRecord(3, representedBotEntry));
         long botEntityId = Handling.allocateRepresentedBot(3, representedBotEntry);
         assertEquals(1L, botEntityId);
-        assertEquals("[1]", Licence.global_008292D4);
+        assertEquals(true, Licence.global_008292D4 instanceof RepresentedBotRegistry);
+        assertEquals("[1]", Licence.representedBots().allocatedEntityMarkers());
         assertEquals(501L, Licence.representedBots().record(botEntityId).botId());
         assertEquals(1L, Licence.representedBots().entityFromBotId(501));
         assertEquals("1", Licence.representedBots().entitiesForRoom(3, 501));
@@ -2474,7 +2475,7 @@ public final class PortedModuleSmokeTest {
             botEntityId, "Guide", 5L, 6L, "1.0", 7L, "1 2 ff"));
         Handling.removeRepresentedBotRecord(botEntityId);
         assertEquals("", Licence.representedBots().recordText(botEntityId));
-        assertEquals("", Licence.global_008292D4);
+        assertEquals("", Licence.representedBots().allocatedEntityMarkers());
         String expectedProfile = Crypto.Proc_3_0_6D2AF0(9, null, "Jf")
             + "Alice\2motto\2"
             + Crypto.Proc_3_0_6D2AF0(123, null, "")
@@ -4029,7 +4030,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "Caller"));
         assertEquals(true, containsSend(handlingSends, "hd-180-1"));
         handlingSends.clear();
-        String originalBotRecordCacheForRoomList = Licence.global_00829358;
+        Object originalBotRecordCacheForRoomList = Licence.global_00829358;
         Licence.global_00829358 = "[200:4\2" + "501\2RoomBot\2hello\2speech\2responses\2" + "5\2" + "6\2" + "0.5\2" + "3\2" + "1 2 ff\2]";
         Handling.Proc_6_81_730010(4, 9);
         assertEquals(true, containsSend(handlingSends, "@\\"));
@@ -4526,7 +4527,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(PetPayloads.commandList(3, Licence.global_008292CC), routedCommandPayload);
         assertEquals(true, containsSend(handlingSends, "I]"));
         handlingSends.clear();
-        String originalBotRecordCacheForCommand = Licence.global_00829358;
+        Object originalBotRecordCacheForCommand = Licence.global_00829358;
         Licence.global_00829358 = "[300:4\2" + "10\2Rex\2hello\2speech\2responses\2" + "2\2" + "3\2" + "0.0\2" + "0\2" + "1 2 ff\2]";
         handlingSql.clear();
         assertEquals(1L, Handling.Proc_7CA730(4, "n{" + wireLong(300) + wireLong(1)));

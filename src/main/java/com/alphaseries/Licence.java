@@ -57,7 +57,7 @@ public final class Licence {
     public static long global_008292C8 = 0L;
     public static Object global_008292CC = "";
     public static Object global_008292D0 = "";
-    public static String global_008292D4 = "";
+    public static Object global_008292D4 = "";
     public static Object global_008292D8 = "";
     public static String global_008291E4 = "";
     public static Object global_008291E8 = "";
@@ -119,7 +119,7 @@ public final class Licence {
     public static Object global_0082930C = "";
     public static String global_00829350 = "";
     public static Object global_00829354 = "";
-    public static String global_00829358 = "";
+    public static Object global_00829358 = "";
 
     private Licence() {
     }
@@ -369,8 +369,8 @@ public final class Licence {
             global_00829358 = "";
             return;
         }
-        global_008292D4 = representedBots.allocatedEntityMarkers();
-        global_00829358 = representedBots.recordCache();
+        global_008292D4 = representedBots;
+        global_00829358 = representedBots;
     }
 
     public static RepresentedRoomSlots representedRoomSlots() {

@@ -20,7 +20,10 @@ public final class RepresentedBotRegistry {
         this.records = new LinkedHashMap<>(records);
     }
 
-    public static RepresentedBotRegistry fromLegacy(String allocatedEntityMarkers, String recordCache) {
+    public static RepresentedBotRegistry fromLegacy(Object allocatedEntityMarkers, Object recordCache) {
+        if (allocatedEntityMarkers instanceof RepresentedBotRegistry registry && recordCache instanceof RepresentedBotRegistry) {
+            return registry;
+        }
         return new RepresentedBotRegistry(allocatedEntityIds(allocatedEntityMarkers), records(recordCache));
     }
 
@@ -152,7 +155,10 @@ public final class RepresentedBotRegistry {
         return result;
     }
 
-    private static Set<Long> allocatedEntityIds(String allocatedEntityMarkers) {
+    private static Set<Long> allocatedEntityIds(Object allocatedEntityMarkers) {
+        if (allocatedEntityMarkers instanceof RepresentedBotRegistry registry) {
+            return new LinkedHashSet<>(registry.allocatedEntityIds);
+        }
         Set<Long> result = new LinkedHashSet<>();
         for (String part : StringUtils.text(allocatedEntityMarkers).split("\\]", -1)) {
             long entityId = NumberUtils.parseLong(part.replace("[", ""));
@@ -163,7 +169,10 @@ public final class RepresentedBotRegistry {
         return result;
     }
 
-    private static Map<Long, RepresentedBotRecord> records(String recordCache) {
+    private static Map<Long, RepresentedBotRecord> records(Object recordCache) {
+        if (recordCache instanceof RepresentedBotRegistry registry) {
+            return new LinkedHashMap<>(registry.records);
+        }
         Map<Long, RepresentedBotRecord> result = new LinkedHashMap<>();
         for (String recordText : StringUtils.text(recordCache).split("\\[", -1)) {
             int payloadAt = recordText.indexOf(':');

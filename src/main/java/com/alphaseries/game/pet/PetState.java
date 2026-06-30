@@ -25,7 +25,7 @@ public final class PetState {
         this.representedBots = representedBots == null ? RepresentedBotRegistry.empty() : representedBots;
     }
 
-    public synchronized void setRepresentedBotsFromLegacy(String allocatedEntityMarkers, String recordCache) {
+    public synchronized void setRepresentedBotsFromLegacy(Object allocatedEntityMarkers, Object recordCache) {
         representedBots = RepresentedBotRegistry.fromLegacy(allocatedEntityMarkers, recordCache);
     }
 
