@@ -18,10 +18,7 @@ import com.alphaseries.dao.mysql.QuestDao;
 import com.alphaseries.dao.mysql.RecyclerDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.jukebox.JukeboxPlaybackRow;
-import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
 import com.alphaseries.game.jukebox.JukeboxRow;
-import com.alphaseries.game.jukebox.SongDiskRow;
-import com.alphaseries.game.jukebox.SongInfoRow;
 import com.alphaseries.game.pet.BotRoomEntryRow;
 import com.alphaseries.game.pet.PetCommandActionRow;
 import com.alphaseries.game.pet.PetCommandTargetRow;
@@ -6719,7 +6716,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             long enabledValue = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.recycler.enabled", 0, 0));
-            String payload = recyclerStatusPayload(enabledValue, 0L);
+            String payload = RecyclerPayloads.status(enabledValue, 0L);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -6966,8 +6963,8 @@ public final class Handling {
             SongInfoRequest request = songInfoRequestFromWire(handlingPacketPayload(args));
             JukeboxDao jukebox = jukeboxDao();
             String payload = jukebox == null
-                ? songInfoPayload(List.of())
-                : songInfoPayload(jukebox.songInfoRows(request.requestedIds, request.requestedCount));
+                ? JukeboxPayloads.songInfo(List.of())
+                : JukeboxPayloads.songInfo(jukebox.songInfoRows(request.requestedIds, request.requestedCount));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -7120,7 +7117,7 @@ public final class Handling {
             if (playlistLimit <= 0L) {
                 playlistLimit = 100L;
             }
-            String payload = jukeboxPlaylistPayload(playlistLimit, jukebox.playlistEntries(jukeboxId, playlistLimit));
+            String payload = JukeboxPayloads.playlist(playlistLimit, jukebox.playlistEntries(jukeboxId, playlistLimit));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -7144,7 +7141,7 @@ public final class Handling {
             if (jukebox == null) {
                 return "";
             }
-            String payload = songDiskInventoryPayload(jukebox.songDisks(NumberUtils.parseLong(userId), songDiskProductId));
+            String payload = JukeboxPayloads.diskInventory(jukebox.songDisks(NumberUtils.parseLong(userId), songDiskProductId));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -7176,7 +7173,7 @@ public final class Handling {
             if (row == null) {
                 return "";
             }
-            String payload = jukeboxPlaybackPayload(System.currentTimeMillis() / 1000L,
+            String payload = JukeboxPayloads.playback(System.currentTimeMillis() / 1000L,
                 row.sequenceId(),
                 row.destinationId(),
                 row.diskFurnitureId());
@@ -11176,10 +11173,6 @@ public final class Handling {
         return request;
     }
 
-    public static String songInfoPayload(List<SongInfoRow> cdRows) {
-        return JukeboxPayloads.songInfo(cdRows);
-    }
-
     public static String removeSoundMachineMarkers(String representedRoomCache, long jukeboxId, long activeDestinationId) {
         String cache = StringUtils.text(representedRoomCache);
         if (activeDestinationId > 0L) {
@@ -11250,18 +11243,6 @@ public final class Handling {
         return Math.max(0L, playlistOrder);
     }
 
-    public static String jukeboxPlaylistPayload(long playlistLimit, List<JukeboxPlaylistEntry> playlistRows) {
-        return JukeboxPayloads.playlist(playlistLimit, playlistRows);
-    }
-
-    public static String songDiskInventoryPayload(List<SongDiskRow> diskRows) {
-        return JukeboxPayloads.diskInventory(diskRows);
-    }
-
-    public static String jukeboxPlaybackPayload(long startedAt, long sequenceId, long destinationId, long diskFurnitureId) {
-        return JukeboxPayloads.playback(startedAt, sequenceId, destinationId, diskFurnitureId);
-    }
-
     public static String[] badgeUpdateSelectionsFromWire(String packetPayload) {
         String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("B^")) {
@@ -11291,10 +11272,6 @@ public final class Handling {
             value = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
         }
         return value;
-    }
-
-    public static String recyclerStatusPayload(long enabledValue, long remainingBlockTime) {
-        return RecyclerPayloads.status(enabledValue, remainingBlockTime);
     }
 
     public static RecyclerSelection recyclerSelectionFromWire(String packetPayload) {

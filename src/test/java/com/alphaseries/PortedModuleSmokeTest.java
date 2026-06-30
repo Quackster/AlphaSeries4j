@@ -60,6 +60,7 @@ import com.alphaseries.messages.outgoing.CatalogPayloads;
 import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
 import com.alphaseries.messages.outgoing.HelpPayloads;
+import com.alphaseries.messages.outgoing.JukeboxPayloads;
 import com.alphaseries.messages.outgoing.MessengerPayloads;
 import com.alphaseries.messages.outgoing.NavigatorPayloads;
 import com.alphaseries.messages.outgoing.PollPayloads;
@@ -2318,7 +2319,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("", badgeSlots[4]);
         assertEquals(1L, Handling.idRequestFromWire("CkA", "Ck"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(1, null, "G{")),
-            Handling.recyclerStatusPayload(42, 0));
+            RecyclerPayloads.status(42, 0));
         assertEquals(Crypto.Proc_3_0_6D2AF0(506, null, "G|"), RecyclerPayloads.reward(506));
         assertEquals(7L, Handling.pollIdFromWire("Ck" + Crypto.Proc_3_0_6D2AF0(7, null, ""), "Ck"));
         Handling.PollAnswerSubmission pollAnswer = Handling.pollAnswerFromWire("Cl"
@@ -2516,7 +2517,7 @@ public final class PortedModuleSmokeTest {
         expectedCdPayload += Crypto.Proc_3_0_6D2AF0(4, null, Crypto.Proc_3_0_6D2AF0(51, null, ""))
             + "Song B\2Author B\2sound-b\2";
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "Dl") + expectedCdPayload,
-            Handling.songInfoPayload(List.of(
+            JukeboxPayloads.songInfo(List.of(
                 new SongInfoRow("Song A", 3L, "Author A", "sound-a", 50L),
                 new SongInfoRow("Song B", 4L, "Author B", "sound-b", 51L))));
         assertEquals("\1" + "200\2" + "keep\1" + "300\2",
@@ -2535,11 +2536,11 @@ public final class PortedModuleSmokeTest {
         expectedPlaylist += Crypto.Proc_3_0_6D2AF0(3, null, "");
         expectedPlaylist += Crypto.Proc_3_0_6D2AF0(41, null, "");
         assertEquals(Crypto.Proc_3_0_6D2AF0(5, null, Crypto.Proc_3_0_6D2AF0(2, null, "EN")) + expectedPlaylist,
-            Handling.jukeboxPlaylistPayload(5, List.of(
+            JukeboxPayloads.playlist(5, List.of(
                 new JukeboxPlaylistEntry(2L, 40L),
                 new JukeboxPlaylistEntry(3L, 41L))));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "EM") + expectedPlaylist,
-            Handling.songDiskInventoryPayload(List.of(
+            JukeboxPayloads.diskInventory(List.of(
                 new SongDiskRow(2L, 40L),
                 new SongDiskRow(3L, 41L))));
         String expectedPlayback = Crypto.Proc_3_0_6D2AF0(10, null, "EG");
@@ -2547,7 +2548,7 @@ public final class PortedModuleSmokeTest {
         expectedPlayback = Crypto.Proc_3_0_6D2AF0(40, null, expectedPlayback);
         expectedPlayback = Crypto.Proc_3_0_6D2AF0(2, null, expectedPlayback);
         expectedPlayback = Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(0, null, expectedPlayback));
-        assertEquals(expectedPlayback, Handling.jukeboxPlaybackPayload(10, 3, 40, 2));
+        assertEquals(expectedPlayback, JukeboxPayloads.playback(10, 3, 40, 2));
         RoomDao.RoomSettingsRead settingsReadRow = new RoomDao.RoomSettingsRead(
             7L, "Room", "Desc", 2L, 4L, 25L, 30L, "tag1", "tag2", 1L, 0L, 1L, 0L);
         List<RoomDao.RoomRight> roomRights = List.of(
@@ -4404,7 +4405,7 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         String recyclerStatus = Handling.Proc_6_203_7D7F80(4);
-        assertEquals(Handling.recyclerStatusPayload(1, 0), recyclerStatus);
+        assertEquals(RecyclerPayloads.status(1, 0), recyclerStatus);
         assertEquals(true, containsSend(handlingSends, "G{"));
         handlingSends.clear();
         handlingSql.clear();
@@ -4450,7 +4451,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("5;1;7;1;5;0;", Handling.Proc_6_218_7EA200(1507));
         String liveSongInfoWire = "C]" + wireLong(2) + wireLong(50) + wireLong(51);
         String liveSongInfoPayload = Handling.Proc_6_223_7EEDD0(4, liveSongInfoWire);
-        assertEquals(Handling.songInfoPayload(List.of(
+        assertEquals(JukeboxPayloads.songInfo(List.of(
                 new SongInfoRow("Song A", 3L, "Author A", "sound-a", 50L),
                 new SongInfoRow("Song B", 4L, "Author B", "sound-b", 51L))),
             liveSongInfoPayload);
@@ -4479,13 +4480,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "EM"));
         handlingSends.clear();
         String playlistPayload = Handling.Proc_6_227_7F2400(4);
-        assertEquals(Handling.jukeboxPlaylistPayload(5, List.of(
+        assertEquals(JukeboxPayloads.playlist(5, List.of(
             new JukeboxPlaylistEntry(2L, 40L),
             new JukeboxPlaylistEntry(3L, 41L))), playlistPayload);
         assertEquals(true, containsSend(handlingSends, "EN"));
         handlingSends.clear();
         String diskInventoryPayload = Handling.Proc_6_228_7F2AF0(4);
-        assertEquals(Handling.songDiskInventoryPayload(List.of(
+        assertEquals(JukeboxPayloads.diskInventory(List.of(
             new SongDiskRow(4L, 50L),
             new SongDiskRow(5L, 51L))), diskInventoryPayload);
         assertEquals(true, containsSend(handlingSends, "EM"));
