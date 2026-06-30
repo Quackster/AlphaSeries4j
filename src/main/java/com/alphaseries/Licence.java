@@ -75,7 +75,7 @@ public final class Licence {
     public static Object global_00829290 = "";
     public static Object global_00829294 = "";
     public static Object global_00829224 = "";
-    public static String global_00829230 = "";
+    public static Object global_00829230 = "";
     public static Object global_00829244 = "";
     public static Object global_008292F4 = "";
     public static Object global_00829308 = "";
@@ -445,6 +445,10 @@ public final class Licence {
 
     public static void setRoomCategoryRows(String categoryRows) {
         global_00829230 = StringUtils.text(categoryRows);
+    }
+
+    public static void setRoomCategoryRows(Object categoryRows) {
+        global_00829230 = categoryRows == null ? "" : categoryRows;
     }
 
     public static void setRoomCategoryPayloads(Object payloads) {

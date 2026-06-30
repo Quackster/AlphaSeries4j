@@ -1086,9 +1086,6 @@ public final class RoomDao {
     }
 
     public record RoomCategoryRow(long categoryId, String name, long trading, long minimumRank, long minimumHcRank) {
-        public String legacyRow() {
-            return categoryId + "\t" + (name == null ? "" : name) + "\t" + trading + "\t" + minimumRank + "\t" + minimumHcRank;
-        }
     }
 
     public record RecommendedRoomRow(

@@ -959,6 +959,9 @@ public final class PortedModuleSmokeTest {
         assertEquals("12\t1\r", typedRoomPortalSettings.specialGateRows());
         assertEquals(true, Functions.global_0082928C.contains("com.mysql.format.time=%H:%i:%s"));
         Boot.Proc_1_11_6C8D10();
+        assertEquals(true, Licence.global_00829230 instanceof List);
+        assertEquals(Boot.buildRoomCategoryPayload("1\tpublic\t0\t0\t0", 0L, 0L),
+            Boot.buildRoomCategoryPayload(List.of(new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L)), 0L, 0L));
         Boot.Proc_1_12_6C8EF0();
         assertEquals(true, ((String[][]) Licence.global_00829244)[0][0].contains("public"));
         assertEquals(true, Licence.roomCategoryCache().payload(0L, 0L).contains("public"));

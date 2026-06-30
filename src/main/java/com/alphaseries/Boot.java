@@ -390,11 +390,11 @@ public final class Boot {
         defaults[2] = String.valueOf(publicCategoryId);
         Licence.setRoomCategoryDefaults(defaults);
         long parentCategoryId = privateCategoryId == 0L ? 1L : privateCategoryId;
-        String categoryRows = "";
+        List<RoomDao.RoomCategoryRow> categoryRows = List.of();
         RoomDao rooms = roomDao();
         if (rooms != null) {
             try {
-                categoryRows = joinRoomCategoryRows(rooms.roomCategoryRows(parentCategoryId));
+                categoryRows = rooms.roomCategoryRows(parentCategoryId);
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
@@ -404,9 +404,12 @@ public final class Boot {
 
     public static void Proc_1_12_6C8EF0(Object... args) {
         String[][] values = new String[21][3];
+        List<RoomDao.RoomCategoryRow> categoryRows = Licence.roomCategoryCache().categoryRowList();
         for (int rank = 0; rank <= 20; rank++) {
             for (int hc = 0; hc <= 2; hc++) {
-                values[rank][hc] = buildRoomCategoryPayload(Licence.roomCategoryCache().categoryRows(), rank, hc);
+                values[rank][hc] = categoryRows.isEmpty()
+                    ? buildRoomCategoryPayload(Licence.roomCategoryCache().categoryRows(), rank, hc)
+                    : buildRoomCategoryPayload(categoryRows, rank, hc);
             }
         }
         Licence.setRoomCategoryPayloads(values);
@@ -1243,6 +1246,22 @@ public final class Boot {
         return Crypto.Proc_3_0_6D2AF0(categoryCount, null, "") + categoryPayload;
     }
 
+    public static String buildRoomCategoryPayload(List<RoomDao.RoomCategoryRow> categoryRows, long rankIndex, long hcLevel) {
+        long categoryCount = 0L;
+        StringBuilder categoryPayload = new StringBuilder();
+        if (categoryRows != null) {
+            for (RoomDao.RoomCategoryRow row : categoryRows) {
+                if (row != null && rankIndex >= row.minimumRank() && hcLevel >= row.minimumHcRank()) {
+                    categoryPayload.append(Crypto.Proc_3_0_6D2AF0(row.categoryId(), null, ""));
+                    categoryPayload.append(StringUtils.text(row.name())).append('\2');
+                    categoryPayload.append(Crypto.Proc_3_0_6D2AF0(row.trading(), null, ""));
+                    categoryCount++;
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(categoryCount, null, "") + categoryPayload;
+    }
+
     public static String buildImportantFaqPayload(Map<Long, String> faqRowsByImportance) {
         StringBuilder payload = new StringBuilder();
         for (long importanceLevel = 1L; importanceLevel <= 2L; importanceLevel++) {
@@ -1908,14 +1927,6 @@ public final class Boot {
         StringBuilder joined = new StringBuilder();
         for (String row : rows == null ? List.<String>of() : rows) {
             appendLegacyRow(joined, row);
-        }
-        return joined.toString();
-    }
-
-    private static String joinRoomCategoryRows(List<RoomDao.RoomCategoryRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (RoomDao.RoomCategoryRow row : rows == null ? List.<RoomDao.RoomCategoryRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
         }
         return joined.toString();
     }
