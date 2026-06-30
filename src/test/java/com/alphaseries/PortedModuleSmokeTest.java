@@ -4888,6 +4888,9 @@ public final class PortedModuleSmokeTest {
         assertEquals("alpha", parsedSettings.value("name"));
         AppSettingsCache typedSettings = AppSettingsCache.fromSettings(Map.of("Server.Port", "4321"));
         assertEquals("4321", typedSettings.value("server.port"));
+        UpdaterSettings.UpdateEntry entry = UpdaterSettings.UpdateEntry.fromLegacyRow("x\t42\tbody\t3\t7");
+        UpdaterSettings updaterSettings = UpdaterSettings.fromEntries("typed-updater", List.of(entry), "");
+        assertEquals(List.of(entry), updaterSettings.entryList());
     }
 
     private static void assertPermissionMatrix() {

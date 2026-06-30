@@ -49,6 +49,10 @@ public final class UpdaterSettings {
         return entries.toArray(UpdateEntry[]::new);
     }
 
+    public List<UpdateEntry> entryList() {
+        return List.copyOf(entries);
+    }
+
     public long updateCountOrOne() {
         long updateCount = entries.size() - 1L;
         return updateCount <= 0L ? 1L : updateCount;

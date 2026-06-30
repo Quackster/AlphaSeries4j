@@ -128,17 +128,17 @@ public final class Updater {
                 queueHeightAnimation(1000, 5);
                 return step;
             }
-            UpdaterSettings.UpdateEntry[] entries = Licence.updaterSettings().entries();
-            if (currentUpdateIndex > entries.length - 1L) {
+            java.util.List<UpdaterSettings.UpdateEntry> entries = Licence.updaterSettings().entryList();
+            if (currentUpdateIndex > entries.size() - 1L) {
                 queueHeightAnimation(1000, 5);
                 timer3Enabled = false;
                 step.complete = true;
                 return step;
             }
-            UpdaterSettings.UpdateEntry entry = entries[(int) currentUpdateIndex];
+            UpdaterSettings.UpdateEntry entry = entries.get((int) currentUpdateIndex);
             currentUpdateEntry = entry.rawText();
             if (!entry.valid()) {
-                advanceUpdateProgress(entries.length);
+                advanceUpdateProgress(entries.size());
                 return step;
             }
             step.title = entry.title();
@@ -147,7 +147,7 @@ public final class Updater {
             long visibleLineCount = step.bodyLines.length == 0 ? 1L : step.bodyLines.length;
             step.featureTop = visibleLineCount * 240L + 720L;
             queueHeightAnimation(step.featureTop + 920L, 10);
-            advanceUpdateProgress(entries.length);
+            advanceUpdateProgress(entries.size());
             step.rendered = true;
             return step;
         } catch (Exception ignored) {
