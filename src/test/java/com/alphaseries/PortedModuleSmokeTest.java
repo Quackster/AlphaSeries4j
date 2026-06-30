@@ -1947,15 +1947,7 @@ public final class PortedModuleSmokeTest {
             1L, 2L, 3L, "caption", "cap2", "cap3", "7", "8", "9", "10",
             "11", "12", "13", "description", "15", "16", "17", "18", "icon",
             "tag1", "tag2", "22", "model", "files", "250", 5L, 6L, 7L, true);
-        String expectedOfficialRow = Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(3, null, "");
-        for (String textField : officialItem.textFields()) {
-            expectedOfficialRow += textField + '\2';
-        }
-        expectedOfficialRow += Crypto.Proc_3_0_6D2AF0(5, null, "")
-            + Crypto.Proc_3_0_6D2AF0(6, null, "")
-            + Crypto.Proc_3_0_6D2AF0(7, null, "");
+        String expectedOfficialRow = expectedOfficialNavigatorRow(officialItem);
         assertEquals(expectedOfficialRow, NavigatorPayloads.officialItem(officialItem));
         assertEquals(expectedOfficialRow, NavigatorPayloads.official(List.of(officialItem), false));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedOfficialRow,
@@ -4959,6 +4951,27 @@ public final class PortedModuleSmokeTest {
         assertEquals("12\t1\r", settings.specialGateRows());
         assertEquals(List.of(new RoomDao.WarpSpaceRow(12L, 1L, 2L, 34L, 5L, 6L, 1L)), settings.warpSpaces());
         assertEquals(List.of(new RoomDao.SpecialGateRow(12L, 1L)), settings.specialGates());
+    }
+
+    private static String expectedOfficialNavigatorRow(OfficialNavigatorItem item) {
+        String expected = Crypto.Proc_3_0_6D2AF0(item.typeId(), null, "")
+            + Crypto.Proc_3_0_6D2AF0(item.styleId(), null, "")
+            + Crypto.Proc_3_0_6D2AF0(item.iconId(), null, "");
+        expected += item.caption() + '\2' + item.captionTwo() + '\2'
+            + item.captionThree() + '\2' + item.unusedSlot() + '\2'
+            + item.roomId() + '\2' + item.roomName() + '\2'
+            + item.ownerName() + '\2' + item.doorStatus() + '\2'
+            + item.visitorsNow() + '\2' + item.visitorsMax() + '\2'
+            + item.description() + '\2' + item.hasTrading() + '\2'
+            + item.unusedTradingSlot() + '\2' + item.roomRate() + '\2'
+            + item.categoryId() + '\2' + item.roomIcon() + '\2'
+            + item.tagOne() + '\2' + item.tagTwo() + '\2'
+            + item.allowOtherPets() + '\2' + item.modelName() + '\2'
+            + item.requiredFiles() + '\2' + item.modelVisitorsMax() + '\2';
+        return expected
+            + Crypto.Proc_3_0_6D2AF0(item.parentId(), null, "")
+            + Crypto.Proc_3_0_6D2AF0(item.officialId(), null, "")
+            + Crypto.Proc_3_0_6D2AF0(item.requiredLevel(), null, "");
     }
 
     private static void assertCatalogProductCounterRows(CatalogProductSettings settings) {

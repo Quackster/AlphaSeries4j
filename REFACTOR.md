@@ -279,6 +279,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added typed navigator room loading and routed the single-room navigator detail payload through `RoomDao` plus fluent `PacketBuilder` construction, replacing raw SQL and row-string parsing for that path.
 - Added typed navigator tag-popularity rows and routed the tag-list navigator payload through `RoomDao` plus fluent `PacketBuilder`, replacing another raw navigator SQL string and tab-row parsing loop.
 - Added typed official navigator items and routed the official navigator payload through `RoomDao` plus fluent `PacketBuilder`, replacing raw official navigator SQL and row-string parsing in the runtime handler.
+- Built official navigator item payloads from named `OfficialNavigatorItem` fields instead of iterating positional compatibility `textFields()`.
 - Added typed quest definition rows and routed the quest-list fallback source through `QuestDao`, keeping legacy row serialization explicit at the remaining quest compatibility boundary.
 - Extracted staff moderation `GI`/`GH`/`GK` packet handling from `MySQL` into `game.moderation.StaffModerationPacketHandlers`, leaving the old `MySQL.Proc_5_4/5/6` methods as compatibility wrappers and routing the main packet switch through named handlers.
 - Routed runtime socket startup timestamp updates through `ServerMaintenanceDao`, replacing another fixed raw `MySQL.Proc_5_0` startup query with a prepared DAO method.

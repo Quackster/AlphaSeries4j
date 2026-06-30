@@ -231,11 +231,30 @@ public final class NavigatorPayloads {
         PacketBuilder payload = PacketBuilder.create()
             .appendInt(item.typeId())
             .appendInt(item.styleId())
-            .appendInt(item.iconId());
-        for (String textField : item.textFields()) {
-            payload.appendString(textField);
-        }
-        payload.appendInt(item.parentId())
+            .appendInt(item.iconId())
+            .appendString(item.caption())
+            .appendString(item.captionTwo())
+            .appendString(item.captionThree())
+            .appendString(item.unusedSlot())
+            .appendString(item.roomId())
+            .appendString(item.roomName())
+            .appendString(item.ownerName())
+            .appendString(item.doorStatus())
+            .appendString(item.visitorsNow())
+            .appendString(item.visitorsMax())
+            .appendString(item.description())
+            .appendString(item.hasTrading())
+            .appendString(item.unusedTradingSlot())
+            .appendString(item.roomRate())
+            .appendString(item.categoryId())
+            .appendString(item.roomIcon())
+            .appendString(item.tagOne())
+            .appendString(item.tagTwo())
+            .appendString(item.allowOtherPets())
+            .appendString(item.modelName())
+            .appendString(item.requiredFiles())
+            .appendString(item.modelVisitorsMax())
+            .appendInt(item.parentId())
             .appendInt(item.officialId());
         if (item.requiredLevelPresent()) {
             payload.appendInt(item.requiredLevel());
