@@ -417,6 +417,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved sticky-note update broadcast payload construction into `FurniturePayloads`, replacing inline legacy `Crypto` assembly in `Handling`.
 - Moved catalog gift-wrap price fallback construction into `CatalogPayloads`, bringing direct `Crypto.Proc_3_0_6D2AF0` calls in `Handling` to zero.
 - Removed unused `String[]` compatibility exporters from catalog and staff moderation DAO records now that callers use typed records directly.
+- Removed unused root `MySQL` moderation payload compatibility helpers that accepted legacy field arrays, leaving typed moderation payload construction in `StaffPayloads`/`StaffModerationPacketHandlers`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -435,7 +436,7 @@ Measured on 2026-06-30:
 - `Boot.java`: 1992 lines
 - `Handling.java`: 11887 lines
 - `Functions.java`: 746 lines
-- `MySQL.java`: 220 lines
+- `MySQL.java`: 177 lines
 - `Main.java`: 889 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 

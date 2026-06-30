@@ -3,10 +3,7 @@ package com.alphaseries;
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
-import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffModerationPacketHandlers;
-import com.alphaseries.game.moderation.StaffRoomChatRow;
-import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -172,46 +169,6 @@ public final class MySQL {
             }
         }
         return rowText.toString().replace("\\n", "\n");
-    }
-
-    public static String mySqlRoomChatLogHeader(String[] roomFields) {
-        if (roomFields == null || roomFields.length < 3) {
-            return "";
-        }
-        long roomId = NumberUtils.parseLong(roomFields[0]);
-        String roomName = roomFields[1];
-        long modelType = NumberUtils.parseLong(roomFields[2]);
-        return PacketBuilder.create()
-            .appendInt(roomId)
-            .appendInt(modelType)
-            .appendString(roomName)
-            .build();
-    }
-
-    public static String mySqlRoomChatLogRows(List<StaffRoomChatRow> chatRows) {
-        return StaffPayloads.roomChatRows(chatRows == null ? List.of() : chatRows).payload;
-    }
-
-    public static String mySqlRoomInfoPayload(String[] roomFields, String[] eventFields) {
-        if (roomFields == null || roomFields.length < 8) {
-            return "";
-        }
-        PacketBuilder payload = PacketBuilder.create()
-            .appendInt(NumberUtils.parseLong(roomFields[0]))
-            .appendInt(NumberUtils.parseLong(roomFields[1]))
-            .appendInt(NumberUtils.parseLong(roomFields[2]));
-        for (int fieldIndex = 3; fieldIndex <= 7; fieldIndex++) {
-            payload.appendString(roomFields[fieldIndex]);
-        }
-
-        boolean hasEvent = eventFields != null && eventFields.length >= 4;
-        payload.appendBoolean(hasEvent);
-        if (hasEvent) {
-            for (int fieldIndex = 0; fieldIndex <= 3; fieldIndex++) {
-                payload.appendString(eventFields[fieldIndex]);
-            }
-        }
-        return payload.build();
     }
 
     public static boolean isIgnorableSqlArg(String value) {
