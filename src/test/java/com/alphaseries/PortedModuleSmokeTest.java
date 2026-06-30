@@ -2032,6 +2032,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(2L, Handling.petNameValidationCode(""));
         assertEquals(2L, Handling.petNameValidationCode("Rex1"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "@d"), Handling.petNameValidationPayload("Rex1"));
+        String expectedPetPreview = Crypto.Proc_3_0_6D2AF0(55, null, "Ly");
+        expectedPetPreview = Crypto.Proc_3_0_6D2AF0(1, null, expectedPetPreview);
+        expectedPetPreview = Crypto.Proc_3_0_6D2AF0(2, null, expectedPetPreview);
+        expectedPetPreview = Crypto.Proc_3_0_6D2AF0(12345, null, expectedPetPreview) + "12345\2";
+        assertEquals(expectedPetPreview, Handling.petPackagePreviewPayload(55L, 1L, 2L, "12345"));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(55, null, "Lz") + Crypto.Proc_3_0_6D2AF0(2, null, "") + "Rex1\2",
+            Handling.petPackageNameValidationPayload(55L, 2L, "Rex1"));
         List<PetSettings.PetCommandRow> commandRows = List.of(
             new PetSettings.PetCommandRow(1L, 0L, "sit", "gst ok", 4),
             new PetSettings.PetCommandRow(2L, 3L, "jump", "gst jump", 4),

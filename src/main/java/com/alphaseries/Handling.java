@@ -2859,10 +2859,7 @@ public final class Handling {
             long petType = petPackage.petType();
             long petRace = petPackage.race();
             String petColor = StringUtils.text(petPackage.color());
-            String payload = Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ly");
-            payload = Crypto.Proc_3_0_6D2AF0(petType, null, payload);
-            payload = Crypto.Proc_3_0_6D2AF0(petRace, null, payload);
-            payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(petColor), null, payload) + petColor + '\2';
+            String payload = petPackagePreviewPayload(furnitureId, petType, petRace, petColor);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -2885,8 +2882,7 @@ public final class Handling {
             }
             long validationCode = Proc_6_181_7CA920(petName, 0, 0);
             if (validationCode > 0L) {
-                Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(validationCode, null,
-                    Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Lz")) + petName + '\2', 0);
+                Proc_6_244_801E80(socketIndex, petPackageNameValidationPayload(furnitureId, validationCode, petName), 0);
                 return "";
             }
             if (socketIndex <= 0 || furnitureId <= 0L) {
@@ -2948,8 +2944,7 @@ public final class Handling {
             Proc_6_146_76D300(socketIndex, furnitureId, productId);
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
             furniture.deleteFurniture(furnitureId);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(validationCode, null,
-                Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Lz")) + petName + '\2', 0);
+            Proc_6_244_801E80(socketIndex, petPackageNameValidationPayload(furnitureId, validationCode, petName), 0);
             return String.valueOf(botId);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -5963,7 +5958,7 @@ public final class Handling {
                 requestedName = readWireString(requestPayload, new LongRef(1));
             }
             requestedName = Functions.Proc_10_11_80A9C0(Functions.Proc_10_10_80A7F0(requestedName), 0, 0);
-            String payload = Crypto.Proc_3_0_6D2AF0(Proc_6_181_7CA920(requestedName, 0, 0), null, "@d");
+            String payload = petNameValidationPayload(requestedName);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -10865,6 +10860,14 @@ public final class Handling {
 
     public static String petNameValidationPayload(String candidateName) {
         return PetPayloads.nameValidation(candidateName);
+    }
+
+    public static String petPackagePreviewPayload(long furnitureId, long petType, long petRace, String petColor) {
+        return PetPayloads.packagePreview(furnitureId, petType, petRace, petColor);
+    }
+
+    public static String petPackageNameValidationPayload(long furnitureId, long validationCode, String petName) {
+        return PetPayloads.packageNameValidation(furnitureId, validationCode, petName);
     }
 
     public static String petCommandListPayload(long petLevel, Object commandRows) {

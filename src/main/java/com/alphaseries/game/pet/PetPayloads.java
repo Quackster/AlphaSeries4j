@@ -135,6 +135,24 @@ public final class PetPayloads {
             .build();
     }
 
+    public static String packagePreview(long furnitureId, long petType, long petRace, String petColor) {
+        return PacketBuilder.message("Ly")
+            .appendInt(furnitureId)
+            .appendInt(petType)
+            .appendInt(petRace)
+            .appendInt(NumberUtils.parseLong(petColor))
+            .appendString(petColor)
+            .build();
+    }
+
+    public static String packageNameValidation(long furnitureId, long validationCode, String petName) {
+        return PacketBuilder.message("Lz")
+            .appendInt(furnitureId)
+            .appendInt(validationCode)
+            .appendString(petName)
+            .build();
+    }
+
     public static String commandList(long petLevel, Object commandRows) {
         long resolvedLevel = Math.max(0L, petLevel);
         long allCount = 0L;
