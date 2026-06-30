@@ -4,6 +4,7 @@ import com.alphaseries.messages.incoming.IncomingContext;
 import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
 import com.alphaseries.protocol.ReadyPacketBuffer;
+import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.server.packet.PacketSink;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -51,7 +52,7 @@ public final class Filesystems {
             return;
         }
         if (ReadyPacketBuffer.isCrossDomainPolicyRequest(packetBuffer)) {
-            HandlingMUS.Proc_12_1_821AA0(socketIndex, buildCrossDomainPolicy());
+            MusConnectionManager.instance().sendData((int) socketIndex, buildCrossDomainPolicy());
             return;
         }
 

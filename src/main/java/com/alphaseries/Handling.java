@@ -59,6 +59,7 @@ import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.game.user.UserEffectActivationRow;
 import com.alphaseries.game.user.UserGroupRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
+import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
@@ -623,7 +624,7 @@ public final class Handling {
         if (socketIndex <= 0) {
             return;
         }
-        HandlingMUS.Proc_12_1_821AA0(socketIndex, "@R", 0);
+        MusConnectionManager.instance().sendData(socketIndex, "@R");
     }
 
     public static final class LongRef {
@@ -8019,7 +8020,7 @@ public final class Handling {
             || Licence.representedSockets().isBusy(socketIndex)) {
             return;
         }
-        HandlingMUS.Proc_12_1_821AA0(socketIndex, StringUtils.text(args[1]) + '\1', 0);
+        MusConnectionManager.instance().sendData(socketIndex, StringUtils.text(args[1]) + '\1');
     }
 
     public static long Proc_6_245_801FA0(Object... args) {

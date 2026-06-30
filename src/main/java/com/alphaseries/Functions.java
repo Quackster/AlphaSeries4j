@@ -10,6 +10,7 @@ import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.messages.outgoing.UserPayloads;
+import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -239,7 +240,7 @@ public final class Functions {
             }
             long socketIndex = Licence.Proc_9_9_808AC0(ownerId, 0, 0);
             if (socketIndex > 0L) {
-                HandlingMUS.Proc_12_1_821AA0((int) socketIndex,
+                MusConnectionManager.instance().sendData((int) socketIndex,
                     inventoryAddPayload(furnitureId, productId, itemData, secondaryValue));
             }
             return 1L;
@@ -274,7 +275,7 @@ public final class Functions {
             }
             long socketIndex = Licence.Proc_9_9_808AC0(ownerId, 0, 0);
             if (socketIndex > 0L) {
-                HandlingMUS.Proc_12_1_821AA0((int) socketIndex, inventoryRemovePayload(furnitureId));
+                MusConnectionManager.instance().sendData((int) socketIndex, inventoryRemovePayload(furnitureId));
             }
             return 1L;
         } catch (Exception ex) {
@@ -308,7 +309,7 @@ public final class Functions {
                 return 0L;
             }
             long creditsValue = userDao().credits(NumberUtils.parseLong(userId));
-            HandlingMUS.Proc_12_1_821AA0((int) socketIndex, creditsRefreshPayload(creditsValue));
+            MusConnectionManager.instance().sendData((int) socketIndex, creditsRefreshPayload(creditsValue));
             return 1L;
         } catch (Exception ex) {
             return 0L;
@@ -333,7 +334,8 @@ public final class Functions {
             long sentCount = 0L;
             for (long pointType = 0L; pointType <= 4L; pointType++) {
                 long pointsValue = users.activityPoints(numericUserId, pointType);
-                HandlingMUS.Proc_12_1_821AA0((int) socketIndex, activityPointRefreshPayload(pointType, pointsValue));
+                MusConnectionManager.instance().sendData((int) socketIndex,
+                    activityPointRefreshPayload(pointType, pointsValue));
                 sentCount++;
             }
             return sentCount;
@@ -385,7 +387,8 @@ public final class Functions {
             if (socketIndex <= 0L) {
                 return 0L;
             }
-            HandlingMUS.Proc_12_1_821AA0((int) socketIndex, roomAlertPayload(StringUtils.text(args[1]), StringUtils.text(args[2])));
+            MusConnectionManager.instance().sendData((int) socketIndex,
+                roomAlertPayload(StringUtils.text(args[1]), StringUtils.text(args[2])));
             return 1L;
         } catch (Exception ex) {
             return 0L;
@@ -408,7 +411,7 @@ public final class Functions {
                 int socketIndex = activeSocketIndex == null ? 0 : activeSocketIndex.intValue();
                 String marker = "[" + socketIndex + "]";
                 if (socketIndex > 0 && !sentMarkers.contains(marker)) {
-                    HandlingMUS.Proc_12_1_821AA0(socketIndex, payload);
+                    MusConnectionManager.instance().sendData(socketIndex, payload);
                     sentMarkers += marker;
                     sentCount++;
                 }
@@ -440,7 +443,7 @@ public final class Functions {
                 return 0L;
             }
             long emailState = userDao.emailValidated(numericUserId);
-            HandlingMUS.Proc_12_1_821AA0((int) socketIndex, emailValidatedPayload(emailState));
+            MusConnectionManager.instance().sendData((int) socketIndex, emailValidatedPayload(emailState));
             return 1L;
         } catch (Exception ex) {
             return 0L;
@@ -472,7 +475,7 @@ public final class Functions {
             if (socketIndex <= 0L) {
                 return 0L;
             }
-            HandlingMUS.Proc_12_1_821AA0((int) socketIndex,
+            MusConnectionManager.instance().sendData((int) socketIndex,
                 userIdentityRefreshPayload(userId, identity.motto(), identity.figure(), identity.gender()));
             return 1L;
         } catch (Exception ex) {

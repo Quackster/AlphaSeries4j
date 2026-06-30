@@ -217,7 +217,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("GKpayload", MySQL.mySqlRequestPayload("GKpayload", "GH"));
         Functions.global_008292A8 = new String[][]{{""}, {"\2fuse_mod\2fuse_chatlog\2fuse_receive_calls_for_help\2"}};
         final List<String> mysqlHandlerPayloads = new ArrayList<>();
-        HandlingMUS.configureMusSink((socketIndex, payload) -> mysqlHandlerPayloads.add(socketIndex + ":" + payload));
+        MusConnectionManager.instance().configureSink((socketIndex, payload) -> mysqlHandlerPayloads.add(socketIndex + ":" + payload));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -269,7 +269,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("77", MySQL.mySqlUserIdFromSocket(4));
         assertEquals(true, MySQL.mySqlUserHasPermission("77", "fuse_chatlog"));
         MySQL.configureDatabaseConnection(null);
-        HandlingMUS.configureMusSink(null);
+        MusConnectionManager.instance().configureSink(null);
         List<List<Object>> rows = Arrays.asList(
             new ArrayList<Object>(Arrays.<Object>asList(1, "alice")),
             new ArrayList<Object>(Arrays.<Object>asList(2, "bob")));
@@ -301,7 +301,7 @@ public final class PortedModuleSmokeTest {
         Functions.applicationPath = inventoryRoot.toString();
         final List<String> inventoryRefreshPayloads = new ArrayList<>();
         Licence.global_00829268 = "\2" + "200]33\0";
-        HandlingMUS.configureMusSink((socketIndex, payload) -> inventoryRefreshPayloads.add(socketIndex + ":" + payload));
+        MusConnectionManager.instance().configureSink((socketIndex, payload) -> inventoryRefreshPayloads.add(socketIndex + ":" + payload));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -328,7 +328,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(System.lineSeparator(), new String(Files.readAllBytes(inventoryCachePath), "UTF-8"));
         assertEquals("33:DATA\6" + "33\6" + Functions.inventoryRemovePayload(501) + "\7", inventoryRefreshPayloads.get(1));
         MySQL.configureDatabaseConnection(null);
-        HandlingMUS.configureMusSink(null);
+        MusConnectionManager.instance().configureSink(null);
         Licence.global_00829268 = "";
         Functions.applicationPath = previousApplicationPath;
         assertEquals("@F250.0\2", Functions.creditsRefreshPayload(250));
@@ -342,7 +342,7 @@ public final class PortedModuleSmokeTest {
         final List<String> refreshQueries = new ArrayList<>();
         final List<String> refreshPayloads = new ArrayList<>();
         Licence.global_00829268 = "\2" + "77]42\0";
-        HandlingMUS.configureMusSink((socketIndex, payload) -> refreshPayloads.add(socketIndex + ":" + payload));
+        MusConnectionManager.instance().configureSink((socketIndex, payload) -> refreshPayloads.add(socketIndex + ":" + payload));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -370,10 +370,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(0L, Functions.Proc_10_16_80C480("missing"));
         assertEquals(6, refreshPayloads.size());
         MySQL.configureDatabaseConnection(null);
-        HandlingMUS.configureMusSink(null);
+        MusConnectionManager.instance().configureSink(null);
         Licence.global_00829268 = "";
         final List<String> readyPayloads = new ArrayList<>();
-        HandlingMUS.configureMusSink((socketIndex, payload) -> readyPayloads.add(socketIndex + ":" + payload));
+        MusConnectionManager.instance().configureSink((socketIndex, payload) -> readyPayloads.add(socketIndex + ":" + payload));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -396,11 +396,11 @@ public final class PortedModuleSmokeTest {
         assertEquals("6:DATA\6" + "6\6@R\7", readyPayloads.get(1));
         assertEquals(0L, Functions.Proc_10_18_80C9E0(0));
         MySQL.configureDatabaseConnection(null);
-        HandlingMUS.configureMusSink(null);
+        MusConnectionManager.instance().configureSink(null);
         assertEquals("Baalert\2hello\2", Functions.roomAlertPayload("alert", "hello"));
         final List<String> alertPayloads = new ArrayList<>();
         Licence.global_00829268 = "\2" + "81]9\0";
-        HandlingMUS.configureMusSink((socketIndex, payload) -> alertPayloads.add(socketIndex + ":" + payload));
+        MusConnectionManager.instance().configureSink((socketIndex, payload) -> alertPayloads.add(socketIndex + ":" + payload));
         assertEquals(1L, Functions.Proc_10_20_80CF60("81", "notice", "hello"));
         assertEquals("9:DATA\6" + "9\6" + Functions.roomAlertPayload("notice", "hello") + "\7", alertPayloads.get(0));
         assertEquals(0L, Functions.Proc_10_20_80CF60("missing", "notice", "hello"));
@@ -426,7 +426,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("10:DATA\6" + "10\6" + Functions.roomAlertPayload("room", "message") + "\7", alertPayloads.get(2));
         assertEquals(0L, Functions.Proc_10_21_80D0A0(0, "room", "message"));
         MySQL.configureDatabaseConnection(null);
-        HandlingMUS.configureMusSink(null);
+        MusConnectionManager.instance().configureSink(null);
         Licence.global_00829268 = "";
         assertEquals("L}1\2" + Crypto.Proc_3_0_6D2AF0(1, null, "") + Crypto.Proc_3_0_6D2AF0(1, null, "") + "HH",
             Functions.emailValidatedPayload(0));
@@ -440,7 +440,7 @@ public final class PortedModuleSmokeTest {
         final List<String> userStatePayloads = new ArrayList<>();
         Licence.global_00829268 = "\2" + "91]14\0\2" + "92]15\0";
         Functions.global_0082928C = "[com.server.socket.game.club.gifts.hcrank1.amount=4]";
-        HandlingMUS.configureMusSink((socketIndex, payload) -> userStatePayloads.add(socketIndex + ":" + payload));
+        MusConnectionManager.instance().configureSink((socketIndex, payload) -> userStatePayloads.add(socketIndex + ":" + payload));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -469,7 +469,7 @@ public final class PortedModuleSmokeTest {
             userStateExecutions.get(1));
         assertEquals(0L, Functions.Proc_10_19_80CCD0(0));
         MySQL.configureDatabaseConnection(null);
-        HandlingMUS.configureMusSink(null);
+        MusConnectionManager.instance().configureSink(null);
         Licence.global_00829268 = "";
         assertEquals("1\0" + "1\0" + "3\0" + "1\0", Functions.Proc_10_24_80E790(0, 0, 0, 2, 2));
         assertEquals("0\0" + "0\0" + "0\0" + "0\0", Functions.Proc_10_24_80E790(0));
@@ -612,7 +612,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(Arrays.asList(), Filesystems.readyPacketPayloadsFromBuffer("<policy/>\0"));
 
         sent.clear();
-        HandlingMUS.configureMusSink((socketIndex, payload) -> sent.add(socketIndex + ":" + payload));
+        MusConnectionManager.instance().configureSink((socketIndex, payload) -> sent.add(socketIndex + ":" + payload));
         HandlingMUS.Proc_12_1_821AA0(4, "payload");
         HandlingMUS.Proc_12_0_8218C0(4);
         assertEquals(Arrays.asList("4:DATA\6" + "4\6payload\7", "4:SHUTDOWN\6" + "4\7"), sent);
@@ -1168,13 +1168,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Main.dataProcessTimer(7));
         assertEquals(Arrays.asList("7:login-data"), preSessionPackets);
         List<String> readyPacketsSent = new ArrayList<>();
-        HandlingMUS.configureMusSink((socketIndex, payload) -> readyPacketsSent.add(socketIndex + ":" + payload));
+        MusConnectionManager.instance().configureSink((socketIndex, payload) -> readyPacketsSent.add(socketIndex + ":" + payload));
         Licence.global_00829354 = "[7]";
         Main.Proc_0_25_68FBC0(7, "<policy-file-request/>\0");
         assertEquals(1, readyPacketsSent.size());
         assertEquals(true, readyPacketsSent.get(0).startsWith("7:DATA\6" + "7\6<?xml"));
         Main.configurePreSessionPacketSink(null);
-        HandlingMUS.configureMusSink(null);
+        MusConnectionManager.instance().configureSink(null);
         Guardian.setSocketConnected(7, false);
         assertEquals("payload", Main.mainRepresentedRecordByBracket("[5]payload[6]other", 5));
         assertEquals("11\talpha", Main.mainRepresentedRecordByKey("\1" + "11\talpha\2\1" + "12\tbeta\2", 11));
@@ -2458,7 +2458,7 @@ public final class PortedModuleSmokeTest {
         DataManager.global_008292BC = wiredProducts;
         final List<String> wiredSql = new ArrayList<>();
         final List<String> wiredSends = new ArrayList<>();
-        HandlingMUS.configureMusSink((socketIndex, payload) -> wiredSends.add(socketIndex + ":" + payload));
+        MusConnectionManager.instance().configureSink((socketIndex, payload) -> wiredSends.add(socketIndex + ":" + payload));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -2513,7 +2513,7 @@ public final class PortedModuleSmokeTest {
         Handling.Proc_6_240_7FC2B0(wiredRoot.resolve("cache").resolve("wired_action").resolve("9.cache").toString(), action503);
         assertEquals(1L, Handling.Proc_6_215_7E6770(4));
         assertEquals(true, containsSql(wiredSql, "UPDATE furnitures SET sign='8' WHERE id='102' LIMIT 1"));
-        HandlingMUS.configureMusSink(null);
+        MusConnectionManager.instance().configureSink(null);
         MySQL.configureDatabaseConnection(null);
         Functions.applicationPath = previousApplicationPathForWired.toString();
         DataManager.global_008292BC = previousProductCacheForWired;
@@ -2696,7 +2696,7 @@ public final class PortedModuleSmokeTest {
 
         final List<String> handlingSends = new ArrayList<>();
         final List<String> handlingSql = new ArrayList<>();
-        HandlingMUS.configureMusSink((socketIndex, payload) -> handlingSends.add(socketIndex + ":" + payload));
+        MusConnectionManager.instance().configureSink((socketIndex, payload) -> handlingSends.add(socketIndex + ":" + payload));
         Guardian.setSocketConnected(4, true);
         Guardian.setSocketConnected(8, true);
         Licence.global_00829268 = "[1:4\1" + "77\2" + "4][1:8\1" + "88\2" + "8]";
@@ -4617,7 +4617,7 @@ public final class PortedModuleSmokeTest {
         Handling.Proc_6_242_7FF0D0(4);
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET id_socket=null WHERE id = '77'"));
         MySQL.configureDatabaseConnection(null);
-        HandlingMUS.configureMusSink(null);
+        MusConnectionManager.instance().configureSink(null);
         Guardian.setSocketConnected(4, false);
         Guardian.setSocketConnected(8, false);
         DataManager.global_008292BC = originalProductCache;

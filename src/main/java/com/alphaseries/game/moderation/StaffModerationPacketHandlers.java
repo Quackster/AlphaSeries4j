@@ -1,11 +1,11 @@
 package com.alphaseries.game.moderation;
 
 import com.alphaseries.Functions;
-import com.alphaseries.HandlingMUS;
 import com.alphaseries.MySQL;
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -36,10 +36,9 @@ public final class StaffModerationPacketHandlers {
                 return;
             }
             List<StaffRoomChatRow> chatRows = moderationDao.recentChatRowsBefore(room.roomId(), room.timestampSent());
-            HandlingMUS.Proc_12_1_821AA0(
+            MusConnectionManager.instance().sendData(
                 socketIndex,
-                StaffPayloads.callForHelpChatLogResponse(callForHelpId, room, chatRows),
-                0);
+                StaffPayloads.callForHelpChatLogResponse(callForHelpId, room, chatRows));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -65,7 +64,7 @@ public final class StaffModerationPacketHandlers {
                 return;
             }
             List<StaffRoomChatRow> chatRows = moderationDao.recentChatRows(roomId);
-            HandlingMUS.Proc_12_1_821AA0(socketIndex, StaffPayloads.roomChatLogResponse(room, chatRows), 0);
+            MusConnectionManager.instance().sendData(socketIndex, StaffPayloads.roomChatLogResponse(room, chatRows));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -89,7 +88,7 @@ public final class StaffModerationPacketHandlers {
                 return;
             }
             StaffModerationDao.RoomEvent event = moderationDao.roomEvent(roomId).orElse(null);
-            HandlingMUS.Proc_12_1_821AA0(socketIndex, StaffPayloads.roomInfoResponse(room, event), 0);
+            MusConnectionManager.instance().sendData(socketIndex, StaffPayloads.roomInfoResponse(room, event));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

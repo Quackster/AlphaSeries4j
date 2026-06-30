@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -56,7 +57,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
 
     private void configurePacketSinks() {
         PacketSink sink = this::sendToGameSocket;
-        HandlingMUS.configureMusSink(sink);
+        MusConnectionManager.instance().configureSink(sink);
         Filesystems.configurePacketSink(sink);
         Main.configurePreSessionPacketSink((socketIndex, payload) -> Handling.Proc_6_241_7FC380(socketIndex, payload, 0));
     }
