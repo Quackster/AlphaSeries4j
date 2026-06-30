@@ -113,11 +113,7 @@ public final class RepresentedRoomCache {
         String markerText = "\1" + entityIndex + '\2';
         int fieldIndex = occupantType == 2L ? 2 : 1;
         int countIndex = 3;
-        String roomRecord = record(roomSlot);
-        if (roomRecord.isEmpty()) {
-            roomRecord = roomSlot + "\t\t\t0";
-        }
-        String[] fields = ensureFieldCount(roomRecord.split("\t", -1), countIndex);
+        String[] fields = ensureFieldCount(recordFields(roomSlot, roomSlot + "\t\t\t0"), countIndex);
         if (!StringUtils.text(fields[fieldIndex]).contains(markerText)) {
             fields[fieldIndex] = StringUtils.text(fields[fieldIndex]) + markerText;
             fields[countIndex] = String.valueOf(NumberUtils.parseLong(fields[countIndex]) + 1L);
@@ -127,20 +123,20 @@ public final class RepresentedRoomCache {
 
     public Position movementPosition(long roomSlot, long entityIndex) {
         Position result = new Position();
-        String roomRecord = record(roomSlot);
-        if (roomRecord.isEmpty()) {
+        RoomRecord roomRecord = roomRecord(roomSlot);
+        if (roomRecord == null) {
             return result;
         }
-        String[] fields = roomRecord.split("\t", -1);
-        if (fields.length < 5) {
+        List<String> fields = roomRecord.fields();
+        if (fields.size() < 5) {
             return result;
         }
         StringBuilder movementText = new StringBuilder();
-        for (int fieldIndex = 4; fieldIndex < fields.length; fieldIndex++) {
+        for (int fieldIndex = 4; fieldIndex < fields.size(); fieldIndex++) {
             if (fieldIndex > 4) {
                 movementText.append('\t');
             }
-            movementText.append(fields[fieldIndex]);
+            movementText.append(fields.get(fieldIndex));
         }
         for (String part : movementText.toString().split("\1", -1)) {
             String movementRecord = part;
@@ -173,11 +169,7 @@ public final class RepresentedRoomCache {
             return this;
         }
         int fieldIndex = occupantType == 2L ? 5 : 4;
-        String roomRecord = record(roomSlot);
-        if (roomRecord.isEmpty()) {
-            roomRecord = roomSlot + "\t\t\t0";
-        }
-        String[] fields = ensureFieldCount(roomRecord.split("\t", -1), fieldIndex);
+        String[] fields = ensureFieldCount(recordFields(roomSlot, roomSlot + "\t\t\t0"), fieldIndex);
         String movementRecord = entityIndex + "\t" + positionX + "\t" + positionY + "\t" + directionValue + "\t" + movingValue;
         fields[fieldIndex] = removeMovementRecord(StringUtils.text(fields[fieldIndex]), "\1" + entityIndex + '\t')
             + '\1' + movementRecord + '\2';
@@ -218,11 +210,7 @@ public final class RepresentedRoomCache {
         if (roomSlot <= 0L || entityIndex <= 0L) {
             return this;
         }
-        String roomRecord = record(roomSlot);
-        if (roomRecord.isEmpty()) {
-            roomRecord = roomSlot + "\t\t\t0";
-        }
-        String[] rawFields = ensureFieldCount(roomRecord.split("\t", -1), 4);
+        String[] rawFields = ensureFieldCount(recordFields(roomSlot, roomSlot + "\t\t\t0"), 4);
         String[] fields = new String[5];
         for (int fieldIndex = 0; fieldIndex < 4; fieldIndex++) {
             fields[fieldIndex] = rawFields[fieldIndex];
@@ -286,6 +274,14 @@ public final class RepresentedRoomCache {
             expanded[index] = index < fields.length ? fields[index] : "";
         }
         return expanded;
+    }
+
+    private String[] recordFields(long roomSlot, String defaultRecord) {
+        RoomRecord record = roomRecord(roomSlot);
+        if (record == null) {
+            return RoomRecord.fromLegacy(defaultRecord).fields().toArray(String[]::new);
+        }
+        return record.fields().toArray(String[]::new);
     }
 
     private static ParseResult parse(Object cacheText) {
