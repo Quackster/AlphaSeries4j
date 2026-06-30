@@ -7575,7 +7575,7 @@ public final class Handling {
             if (sessionSeconds <= 0L) {
                 return "";
             }
-            StringBuilder sentPayloads = new StringBuilder();
+            PacketBuilder sentPayloads = PacketBuilder.create();
             UserDao users = userDao();
             long userIdValue = NumberUtils.parseLong(userId);
             for (long pointType = 0L; pointType <= 4L; pointType++) {
@@ -7592,11 +7592,11 @@ public final class Handling {
                     if (award.shouldAward) {
                         users.addActivityPoints(userIdValue, pointType, awardAmount);
                         Proc_6_244_801E80(socketIndex, award.payload, 0);
-                        sentPayloads.append(award.payload);
+                        sentPayloads.appendRaw(award.payload);
                     }
                 }
             }
-            return sentPayloads.toString();
+            return sentPayloads.build();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
