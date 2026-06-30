@@ -6328,13 +6328,7 @@ public final class Handling {
                 return 0L;
             }
             long roomSlot = NumberUtils.parseLong(args[0]);
-            Object fieldSource = args[1];
-            String[] botFields;
-            if (fieldSource instanceof String[]) {
-                botFields = (String[]) fieldSource;
-            } else {
-                botFields = StringUtils.text(fieldSource).split("\t", -1);
-            }
+            String[] botFields = RepresentedBotRegistry.fieldsFromLegacy(args[1]);
             return allocateRepresentedBot(roomSlot, botFields);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
