@@ -496,12 +496,13 @@ public final class PortedModuleSmokeTest {
             }
         });
         assertEquals(1L, Functions.Proc_10_25_80F5D0(0, 2, 3));
+        assertEquals(1L, Functions.roomPositionAvailable(0, 2, 3));
         assertEquals(0, occupancyQueries.size());
-        assertEquals(0L, Functions.Proc_10_25_80F5D0(7, 2, 4));
+        assertEquals(0L, Functions.roomPositionAvailable(7, 2, 4));
         assertEquals(1, occupancyQueries.size());
-        assertEquals(0L, Functions.Proc_10_25_80F5D0(7, 4, 3));
+        assertEquals(0L, Functions.roomPositionAvailable(7, 4, 3));
         assertEquals(3, occupancyQueries.size());
-        assertEquals(1L, Functions.Proc_10_25_80F5D0(7, 4, 4));
+        assertEquals(1L, Functions.roomPositionAvailable(7, 4, 4));
         MySQL.configureDatabaseConnection(null);
         final List<String> botAvailabilityQueries = new ArrayList<>();
         Licence.global_00829358 = "[10:3\2" + "501\2room-bot][11:0\2" + "502\2fallback-bot][12:0\2" + "0\2self-bot]";
@@ -525,12 +526,12 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
             }
         });
-        assertEquals(1L, Functions.Proc_10_27_81F1A0(10, 4, 4));
+        assertEquals(1L, Functions.representedBotPositionAvailable(10, 4, 4));
         assertEquals(true, botAvailabilityQueries.get(0).contains("FROM rooms"));
-        assertEquals(1L, Functions.Proc_10_27_81F1A0(11, 4, 4));
+        assertEquals(1L, Functions.representedBotPositionAvailable(11, 4, 4));
         assertEquals(true, botAvailabilityQueries.get(3).contains("id_room FROM bots"));
-        assertEquals(1L, Functions.Proc_10_27_81F1A0(12, 4, 4));
-        assertEquals(0L, Functions.Proc_10_27_81F1A0(0, 4, 4));
+        assertEquals(1L, Functions.representedBotPositionAvailable(12, 4, 4));
+        assertEquals(0L, Functions.representedBotPositionAvailable(0, 4, 4));
         MySQL.configureDatabaseConnection(null);
         Path downloadSource = Files.createTempFile("alphaseries-download-source", ".txt");
         Path downloadDestination = Files.createTempFile("alphaseries-download-destination", ".txt");

@@ -6551,7 +6551,7 @@ public final class Handling {
                 return "";
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L || Functions.Proc_10_25_80F5D0(roomId, targetX, targetY) == 0L) {
+            if (roomId <= 0L || Functions.roomPositionAvailable(roomId, targetX, targetY) == 0L) {
                 return "";
             }
             long roomSlot = socketIndex;

@@ -494,7 +494,7 @@ public final class Main {
                 long targetX = rollerX + RoomRollers.deltaX(rollerR);
                 long targetY = rollerY + RoomRollers.deltaY(rollerR);
                 if (rollerId <= 0L || (targetX == rollerX && targetY == rollerY)
-                    || Functions.Proc_10_25_80F5D0(roomId, targetX, targetY) == 0L) {
+                    || Functions.roomPositionAvailable(roomId, targetX, targetY) == 0L) {
                     continue;
                 }
                 long movedId = mainRollerFurnitureOnTile(roomId, rollerId, rollerX, rollerY);
@@ -603,7 +603,8 @@ public final class Main {
             long targetX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[3]) : 0L;
             long targetY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
             MovementStep movement = MovementStep.between(currentX, currentY, targetX, targetY);
-            if (roomId <= 0L || Functions.Proc_10_27_81F1A0(entityIndex, movement.positionX(), movement.positionY()) != 0L) {
+            if (roomId <= 0L
+                || Functions.representedBotPositionAvailable(entityIndex, movement.positionX(), movement.positionY()) != 0L) {
                 mainRepresentedRoomOccupantMove(roomSlot, entityIndex, 2,
                     movement.positionX(), movement.positionY(), movement.directionValue(), movement.movingValue());
             }
@@ -628,7 +629,7 @@ public final class Main {
             long targetX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[3]) : 0L;
             long targetY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
             MovementStep movement = MovementStep.between(currentX, currentY, targetX, targetY);
-            if (roomId <= 0L || Functions.Proc_10_25_80F5D0(roomId, movement.positionX(), movement.positionY()) != 0L) {
+            if (roomId <= 0L || Functions.roomPositionAvailable(roomId, movement.positionX(), movement.positionY()) != 0L) {
                 mainRepresentedRoomOccupantMove(roomSlot, socketIndex, 1,
                     movement.positionX(), movement.positionY(), movement.directionValue(), movement.movingValue());
             }

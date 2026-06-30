@@ -554,10 +554,15 @@ public final class Functions {
         if (args == null || args.length < 3) {
             return 0L;
         }
+        return roomPositionAvailable(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]),
+            NumberUtils.parseLong(args[2]));
+    }
+
+    /**
+     * Original function: Proc_10_25_80F5D0.
+     */
+    public static long roomPositionAvailable(long roomId, long positionX, long positionY) {
         try {
-            long roomId = NumberUtils.parseLong(args[0]);
-            long positionX = NumberUtils.parseLong(args[1]);
-            long positionY = NumberUtils.parseLong(args[2]);
             if (roomId <= 0L) {
                 return 1L;
             }
@@ -579,10 +584,15 @@ public final class Functions {
         if (args == null || args.length < 3) {
             return 0L;
         }
+        return representedBotPositionAvailable(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]),
+            NumberUtils.parseLong(args[2]));
+    }
+
+    /**
+     * Original function: Proc_10_27_81F1A0.
+     */
+    public static long representedBotPositionAvailable(long botEntityId, long positionX, long positionY) {
         try {
-            long botEntityId = NumberUtils.parseLong(args[0]);
-            long positionX = NumberUtils.parseLong(args[1]);
-            long positionY = NumberUtils.parseLong(args[2]);
             if (botEntityId <= 0L) {
                 return 0L;
             }
@@ -603,7 +613,7 @@ public final class Functions {
             if (roomId <= 0L) {
                 return 1L;
             }
-            return Proc_10_25_80F5D0(roomId, positionX, positionY);
+            return roomPositionAvailable(roomId, positionX, positionY);
         } catch (Exception ex) {
             return 0L;
         }
