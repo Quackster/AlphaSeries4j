@@ -62,6 +62,16 @@ public final class FurniturePayloads {
             .build();
     }
 
+    public static String wallState(long furnitureId, long productId, String wallPosition, String signText) {
+        return PacketBuilder.message("AU")
+            .appendRaw(furnitureId)
+            .appendRaw('\2')
+            .appendInt(productId)
+            .appendString(wallPosition)
+            .appendString(signText)
+            .build();
+    }
+
     public record DimmerPresetPayload(long currentPresetId, String payload) {
     }
 }

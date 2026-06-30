@@ -1562,6 +1562,11 @@ public final class PortedModuleSmokeTest {
                 + Crypto.Proc_3_0_6D2AF0(1, null, "")
                 + Crypto.Proc_3_0_6D2AF0(100, null, "") + "#82F349\2",
             dimmerPresetPayload.payload());
+        assertEquals("AU78\2" + Crypto.Proc_3_0_6D2AF0(501, null, "") + ":w=1,2 l=3,4\2"
+                + "2,1,1,#82F349,100\2",
+            FurniturePayloads.wallState(78, 501, ":w=1,2 l=3,4", "2,1,1,#82F349,100"));
+        assertEquals("AU78\2" + Crypto.Proc_3_0_6D2AF0(501, null, "") + "1\2" + "0\2",
+            FurniturePayloads.wallState(78, 501, "1", "0"));
         UserPayloads.EffectListPayload effectListPayload = UserPayloads.effectList(List.of(
             new UserEffectSummaryRow(12L, 3600L, 2L, 1000L, 900L),
             new UserEffectSummaryRow(13L, 120L, 1L, 0L, 900L)));

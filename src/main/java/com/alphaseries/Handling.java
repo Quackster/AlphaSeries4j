@@ -2136,8 +2136,7 @@ public final class Handling {
                 nextState = 0L;
             }
             furniture.updateSign(furnitureId, nextState);
-            String payload = Crypto.Proc_3_0_6D2AF0(productId, null, "AU" + furnitureId + '\2')
-                + nextState + '\2' + "0" + '\2';
+            String payload = FurniturePayloads.wallState(furnitureId, productId, String.valueOf(nextState), "0");
             Proc_6_247_8027E0(socketIndex, payload, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -3336,8 +3335,8 @@ public final class Handling {
             String signText = nextState + "," + dimmer.presetId() + "," + dimmer.backgroundId()
                 + "," + dimmer.colour() + "," + dimmer.lightLevel();
             furniture.updateSignText(dimmerFurnitureId, signText);
-            Proc_6_247_8027E0(socketIndex, "AU" + dimmerFurnitureId + '\2'
-                + Crypto.Proc_3_0_6D2AF0(dimmer.productId(), null, "") + dimmer.wallPosition() + '\2' + signText + '\2', 0);
+            Proc_6_247_8027E0(socketIndex,
+                FurniturePayloads.wallState(dimmerFurnitureId, dimmer.productId(), dimmer.wallPosition(), signText), 0);
             return nextState;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -3380,9 +3379,12 @@ public final class Handling {
             furniture.updateSignText(dimmerFurnitureId, signText);
             FurnitureDao.WallProductPosition wallPosition = furniture.wallProductPosition(dimmerFurnitureId).orElse(null);
             if (wallPosition != null) {
-                Proc_6_247_8027E0(socketIndex, "AU" + dimmerFurnitureId + '\2'
-                    + Crypto.Proc_3_0_6D2AF0(wallPosition.productId(), null, "") + wallPosition.wallPosition()
-                    + '\2' + signText + '\2', 0);
+                Proc_6_247_8027E0(socketIndex,
+                    FurniturePayloads.wallState(
+                        dimmerFurnitureId,
+                        wallPosition.productId(),
+                        wallPosition.wallPosition(),
+                        signText), 0);
             }
             return dimmerFurnitureId;
         } catch (Exception ignored) {
