@@ -6,9 +6,9 @@ import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.room.FurnitureRoomCache;
-import com.alphaseries.server.packet.PacketSink;
+import com.alphaseries.messages.outgoing.RoomPayloads;
 import com.alphaseries.game.session.GameServerSessionState;
-import com.alphaseries.protocol.PacketBuilder;
+import com.alphaseries.server.packet.PacketSink;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -747,12 +747,7 @@ public final class Main {
     }
 
     public static String mainRollerMovePayload(long furnitureId, long positionX, long positionY, String positionZ) {
-        return PacketBuilder.message("AZ")
-            .appendInt(furnitureId)
-            .appendInt(positionX)
-            .appendInt(positionY)
-            .appendInt(NumberUtils.parseLong(positionZ))
-            .build();
+        return RoomPayloads.rollerMove(furnitureId, positionX, positionY, positionZ);
     }
 
     public static void mainRollerMoveOccupants(long roomSlot, long fromX, long fromY, long toX, long toY, long directionValue) {

@@ -370,6 +370,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed pet inventory-add, placement acknowledgement, and room-removal packets through `PetPayloads`, replacing inline `I[`, `I\`, and `@]` packet assembly in pet placement/pickup cleanup flows.
 - Added `HelpPayloads` and routed help-center FAQ/category/search/description envelopes through fluent builders, removing inline `HF`, `HG`, `HJ`, `HI`, and `HH` packet assembly from `Handling`.
 - Routed call-for-help notification, close, delete, and created envelopes through `StaffPayloads`, replacing inline `HR`, `H\`, `E@`, and `EA` packet assembly in moderation handlers.
+- Moved roller movement `AZ` payload construction into `RoomPayloads.rollerMove`, leaving `Main.mainRollerMovePayload` as a compatibility wrapper over the room payload builder.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -388,7 +389,7 @@ Measured on 2026-06-30:
 - `Handling.java`: 12004 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
-- `Main.java`: 894 lines
+- `Main.java`: 889 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 
 ## Next Targets
@@ -400,7 +401,7 @@ Measured on 2026-06-30:
 - Replace remaining `Crypto.Proc_3_*` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
 - Continue replacing duplicated local string/number helpers in root compatibility classes with `StringUtils` and `NumberUtils`.
 - Move remaining raw `Licence.global_*` caches into typed state holders under the appropriate `game.*` package.
-- Insert every missing string from `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into source in the matching Java classes and methods from the report before treating the refactor as complete. Do not leave placeholder text, invented replacements, or omitted literals where the report provides the original decompiled source text. Update or remove entries from `MISSING_STRINGS.md` as literals are restored so the remaining count reflects unresolved work; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
+- Insert every missing string from `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into source in the matching Java classes and methods from the report before treating the refactor as complete. Do not leave placeholder text, invented replacements, or omitted literals where the report provides the original decompiled source text. Update or remove entries from `MISSING_STRINGS.md` as literals are restored so the remaining count reflects unresolved work; the current report lists 1391 unique non-empty decompiled string literals still absent from Java, and every subsequent refactor slice should reduce that list when it touches an affected class or method.
 - Delete remaining deprecated compatibility aliases only after their call sites reach zero and tests pass.
 
 ## Verification

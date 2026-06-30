@@ -2,6 +2,7 @@ package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.protocol.PacketBuilder;
+import com.alphaseries.util.NumberUtils;
 
 import java.util.List;
 
@@ -50,6 +51,15 @@ public final class RoomPayloads {
             .appendInt(room.allowFeedPets())
             .appendInt(room.allowWalkthrough())
             .appendInt(room.disableWalls())
+            .build();
+    }
+
+    public static String rollerMove(long furnitureId, long positionX, long positionY, String positionZ) {
+        return PacketBuilder.message("AZ")
+            .appendInt(furnitureId)
+            .appendInt(positionX)
+            .appendInt(positionY)
+            .appendInt(NumberUtils.parseLong(positionZ))
             .build();
     }
 }

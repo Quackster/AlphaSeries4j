@@ -1283,6 +1283,8 @@ public final class PortedModuleSmokeTest {
             Crypto.Proc_3_0_6D2AF0(2, null,
                 Crypto.Proc_3_0_6D2AF0(1, null,
                     Crypto.Proc_3_0_6D2AF0(99, null, "AZ")))),
+            RoomPayloads.rollerMove(99, 1, 2, "3"));
+        assertEquals(RoomPayloads.rollerMove(99, 1, 2, "3"),
             Main.mainRollerMovePayload(99, 1, 2, "3"));
         assertEquals("[9][10]", Main.mainRepresentedEntityIds("\1" + "9\tdata\2\1" + "10\2\1" + "9\2"));
         assertEquals(10L, Main.mainRepresentedEntityIdAt("[9][10]", 1));
