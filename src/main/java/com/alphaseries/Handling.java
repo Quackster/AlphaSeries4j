@@ -7741,8 +7741,7 @@ public final class Handling {
                 return "";
             }
             long targetRoomUserIndex = representedRoomUserIndex(targetSocketIndex, targetUserId);
-            String payload = Crypto.Proc_3_0_6D2AF0(targetRoomId, null,
-                Crypto.Proc_3_0_6D2AF0(targetRoomUserIndex, null, "D^"));
+            String payload = MessengerPayloads.followRoom(targetRoomUserIndex, targetRoomId);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {

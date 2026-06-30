@@ -68,6 +68,13 @@ public final class MessengerPayloads {
             followEnabled);
     }
 
+    public static String followRoom(long roomUserIndex, long roomId) {
+        return PacketBuilder.message("D^")
+            .appendInt(roomUserIndex)
+            .appendInt(roomId)
+            .build();
+    }
+
     public static String searchResult(
         String userId,
         String userName,
