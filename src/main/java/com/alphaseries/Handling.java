@@ -90,6 +90,7 @@ import com.alphaseries.game.moderation.StaffRoomVisitRow;
 import com.alphaseries.game.moderation.StaffUserLookup;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.recycler.RecyclerSettings;
+import com.alphaseries.game.recycler.RecyclerState;
 import com.alphaseries.game.wired.WiredPayloads;
 import com.alphaseries.game.wired.WiredSettings;
 import com.alphaseries.game.wired.WiredState;
@@ -548,7 +549,7 @@ public final class Handling {
                 packetPrefix = "Gz";
             }
             if (cachedPayload.isEmpty()) {
-                cachedPayload = Licence.recyclerSettings().statusPayload();
+                cachedPayload = recyclerSettings().statusPayload();
             }
             String payload = packetPrefix + cachedPayload;
             Proc_6_244_801E80(socketIndex, payload, 0);
@@ -6723,7 +6724,7 @@ public final class Handling {
             String rewardSign = recyclerRewardSign();
             furniture.updateRecyclerRewardBox(
                 userIdValue,
-                Licence.recyclerSettings().boxProductId(),
+                recyclerSettings().boxProductId(),
                 rewardSign,
                 rewardDestinationId);
             furniture.clearRecyclerItems(userIdValue, selection.selectedItems);
@@ -7799,7 +7800,7 @@ public final class Handling {
                 case "Cd": Proc_6_101_749540(socketIndex, "EA", packetPayload); break;
                 case "Et":
                 case "Eu": Proc_6_102_749C50(socketIndex, packetCode, packetPayload); break;
-                case "@Z": Proc_6_19_6E8040(socketIndex, Licence.recyclerSettings().statusPayload(), "Gz"); break;
+                case "@Z": Proc_6_19_6E8040(socketIndex, recyclerSettings().statusPayload(), "Gz"); break;
                 case "oW": Proc_6_18_6E7480(socketIndex, "GY", packetPayload); break;
                 case "Cn": Proc_6_30_70DC90(socketIndex, packetPayload, "EG"); break;
                 case "A^": Proc_6_13_6E0A80(socketIndex, "A^", packetPayload); break;
@@ -9388,6 +9389,11 @@ public final class Handling {
     private static StaffSettings staffSettings() {
         Licence.staffSettings();
         return ModerationState.instance().staffSettings();
+    }
+
+    private static RecyclerSettings recyclerSettings() {
+        Licence.recyclerSettings();
+        return RecyclerState.instance().settings();
     }
 
     public static String officialNavigatorQuery() {
@@ -11124,7 +11130,7 @@ public final class Handling {
 
     public static long representedRecyclerRewardProduct() {
         try {
-            RecyclerSettings recyclerSettings = Licence.recyclerSettings();
+            RecyclerSettings recyclerSettings = recyclerSettings();
             if (recyclerSettings.hasRewardGroups()) {
                 for (RecyclerSettings.RewardGroup rewardGroup : recyclerSettings.rewardGroups()) {
                     long chance = rewardGroup.chance();

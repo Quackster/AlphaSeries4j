@@ -18,6 +18,9 @@ public final class RecyclerSettings {
     }
 
     public static RecyclerSettings fromLegacy(String statusPayload, Object productLists, Object chances, long groupCount, long boxProductId) {
+        if (productLists instanceof RecyclerSettings recyclerSettings) {
+            return recyclerSettings;
+        }
         List<RewardGroup> groups = new ArrayList<>();
         if (productLists instanceof Object[] productArray && chances instanceof Object[] chanceArray) {
             long maxGroups = Math.min(groupCount, Math.min(productArray.length, chanceArray.length));
@@ -26,6 +29,10 @@ public final class RecyclerSettings {
             }
         }
         return new RecyclerSettings(statusPayload, groups, boxProductId);
+    }
+
+    public static RecyclerSettings empty() {
+        return new RecyclerSettings("", List.of(), 0L);
     }
 
     public String statusPayload() {

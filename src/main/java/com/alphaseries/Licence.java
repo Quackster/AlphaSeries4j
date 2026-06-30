@@ -23,6 +23,7 @@ import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.recycler.RecyclerSettings;
+import com.alphaseries.game.recycler.RecyclerState;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
@@ -748,18 +749,30 @@ public final class Licence {
         global_00829140 = productLists == null ? "" : productLists;
         global_0082915C = chances == null ? "" : chances;
         global_00829168 = Math.max(0L, groupCount);
+        RecyclerState.instance().setSettingsFromLegacy(global_0082912C, global_00829140, global_0082915C,
+            global_00829168, global_0082916C);
     }
 
     public static void setRecyclerStatusPayload(String statusPayload) {
         global_0082912C = StringUtils.text(statusPayload);
+        RecyclerState.instance().setSettingsFromLegacy(global_0082912C, global_00829140, global_0082915C,
+            global_00829168, global_0082916C);
     }
 
     public static void setRecyclerBoxProductId(long boxProductId) {
         global_0082916C = Math.max(0L, boxProductId);
+        RecyclerState.instance().setSettingsFromLegacy(global_0082912C, global_00829140, global_0082915C,
+            global_00829168, global_0082916C);
     }
 
     public static RecyclerSettings recyclerSettings() {
-        return RecyclerSettings.fromLegacy(global_0082912C, global_00829140, global_0082915C, global_00829168, global_0082916C);
+        if (global_00829140 instanceof RecyclerSettings recyclerSettings) {
+            RecyclerState.instance().setSettings(recyclerSettings);
+        } else {
+            RecyclerState.instance().setSettingsFromLegacy(global_0082912C, global_00829140, global_0082915C,
+                global_00829168, global_0082916C);
+        }
+        return RecyclerState.instance().settings();
     }
 
     public static void setRecommendedRooms(Object payloads, long count) {
