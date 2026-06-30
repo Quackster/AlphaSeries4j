@@ -471,22 +471,31 @@ public final class Licence {
     }
 
     public static RoomPortalSettings roomPortalSettings() {
-        RoomState.instance().setPortalSettingsFromLegacy(global_00829098, global_0082909C);
+        refreshRoomPortalSettings();
         return RoomState.instance().portalSettings();
     }
 
     public static void setRoomPortalSettings(String warpSpaceRows, String specialGateRows) {
         RoomPortalSettings settings = RoomPortalSettings.fromLegacy(warpSpaceRows, specialGateRows);
-        RoomState.instance().setPortalSettings(settings);
         global_00829098 = settings;
         global_0082909C = settings;
+        refreshRoomPortalSettings();
     }
 
     public static void setRoomPortalSettings(RoomPortalSettings settings) {
         RoomPortalSettings normalized = settings == null ? RoomPortalSettings.empty() : settings;
-        RoomState.instance().setPortalSettings(normalized);
         global_00829098 = normalized;
         global_0082909C = normalized;
+        refreshRoomPortalSettings();
+    }
+
+    private static void refreshRoomPortalSettings() {
+        if (global_00829098 instanceof RoomPortalSettings settings
+            && global_0082909C instanceof RoomPortalSettings) {
+            RoomState.instance().setPortalSettings(settings);
+            return;
+        }
+        RoomState.instance().setPortalSettingsFromLegacy(global_00829098, global_0082909C);
     }
 
     public static GameServerSessionState gameServerSessionState() {
