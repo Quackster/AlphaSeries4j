@@ -4802,7 +4802,7 @@ public final class Handling {
                         || productAction.contains("score") || productSprite.contains("score") || productSprite.contains("dice")) {
                         long stateValue = NumberUtils.parseLong(row.sign());
                         Proc_6_151_78AC20(rowRoomId, furnitureId, stateValue);
-                        Proc_6_246_8024C0(rowRoomId, furnitureStatePayload(furnitureId, stateValue), 0);
+                        Proc_6_246_8024C0(rowRoomId, FurniturePayloads.stateChanged(furnitureId, stateValue), 0);
                         refreshCount++;
                     }
                 }
@@ -4900,7 +4900,7 @@ public final class Handling {
             long nextState = nextFurnitureState(productSprite, currentState, maxState);
             furniture.updateRoomFurnitureState(furnitureId, roomId, NumberUtils.parseLong(userId), nextState);
             Proc_6_151_78AC20(roomId, furnitureId, nextState);
-            String payload = furnitureStatePayload(furnitureId, nextState);
+            String payload = FurniturePayloads.stateChanged(furnitureId, nextState);
             Proc_6_247_8027E0(socketIndex, payload, 0);
             if (NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 34, 0)) != 0L) {
                 Proc_6_148_7756D0(socketIndex, productId, furnitureId);
@@ -5045,7 +5045,7 @@ public final class Handling {
                 stateValue = 0L;
             }
             Proc_6_151_78AC20(roomId, furnitureId, stateValue);
-            String payload = furnitureStatePayload(furnitureId, stateValue);
+            String payload = FurniturePayloads.stateChanged(furnitureId, stateValue);
             Proc_6_246_8024C0(roomId, payload, 0);
             if (productType == 11L || lowerSprite.contains("soundmachine") || lowerSprite.contains("jukebox")) {
                 Proc_6_224_7EF5A0(0, roomId, furnitureId);
@@ -9127,8 +9127,7 @@ public final class Handling {
                 && (Math.abs(userPosition.positionX - furnitureX) > 2L || Math.abs(userPosition.positionY - furnitureY) > 2L)) {
                 return "";
             }
-            String payload = "0" + Crypto.Proc_3_0_6D2AF0(stateValue, null,
-                Crypto.Proc_3_0_6D2AF0(furnitureId, null, "AZ"));
+            String payload = FurniturePayloads.simpleFloorUse(furnitureId, stateValue);
             Proc_6_247_8027E0(socketIndex, payload, 0);
             if (storeState) {
                 Proc_6_151_78AC20(roomId, furnitureId, stateValue);
@@ -9883,7 +9882,7 @@ public final class Handling {
     }
 
     public static String furnitureStatePayload(long furnitureId, long stateValue) {
-        return "AX" + furnitureId + '\2' + stateValue + '\2';
+        return FurniturePayloads.stateChanged(furnitureId, stateValue);
     }
 
     public static FurnitureStateCache representedFurnitureStateCache(
@@ -11334,7 +11333,7 @@ public final class Handling {
                 try {
                     furniture.updateSignLimited(furnitureId, stateValue);
                     Proc_6_151_78AC20(roomId, furnitureId, stateValue);
-                    Proc_6_246_8024C0(roomId, furnitureStatePayload(furnitureId, stateValue), 0);
+                    Proc_6_246_8024C0(roomId, FurniturePayloads.stateChanged(furnitureId, stateValue), 0);
                     appliedCount++;
                 } catch (Exception ignored) {
                     // VB6 source suppresses helper failures.
@@ -11475,7 +11474,7 @@ public final class Handling {
             parameterText,
             selectedFurnitureId,
             existingIds,
-            Handling::furnitureStatePayload);
+            FurniturePayloads::stateChanged);
         WiredApplyResult result = new WiredApplyResult();
         result.appliedCount = applied.appliedCount;
         result.statePayloads = applied.statePayloads;

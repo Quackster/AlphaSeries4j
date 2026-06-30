@@ -33,6 +33,17 @@ public final class FurniturePayloads {
                 .build());
     }
 
+    public static String stateChanged(long furnitureId, long stateValue) {
+        return "AX" + furnitureId + '\2' + stateValue + '\2';
+    }
+
+    public static String simpleFloorUse(long furnitureId, long stateValue) {
+        return "0" + PacketBuilder.message("AZ")
+            .appendInt(furnitureId)
+            .appendInt(stateValue)
+            .build();
+    }
+
     public record DimmerPresetPayload(long currentPresetId, String payload) {
     }
 }

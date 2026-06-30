@@ -371,6 +371,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `HelpPayloads` and routed help-center FAQ/category/search/description envelopes through fluent builders, removing inline `HF`, `HG`, `HJ`, `HI`, and `HH` packet assembly from `Handling`.
 - Routed call-for-help notification, close, delete, and created envelopes through `StaffPayloads`, replacing inline `HR`, `H\`, `E@`, and `EA` packet assembly in moderation handlers.
 - Moved roller movement `AZ` payload construction into `RoomPayloads.rollerMove`, leaving `Main.mainRollerMovePayload` as a compatibility wrapper over the room payload builder.
+- Moved furniture state-change `AX` payloads and simple floor-use `AZ` payloads into `FurniturePayloads`, leaving the old `Handling.furnitureStatePayload` as a compatibility wrapper.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -386,7 +387,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 12004 lines
+- `Handling.java`: 12003 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines

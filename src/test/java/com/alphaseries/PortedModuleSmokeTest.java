@@ -1818,7 +1818,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(0L, Handling.nextFurnitureState("scoreboard", 99, 0));
         long diceState = Handling.nextFurnitureState("dice_red", 0, 0);
         assertEquals(true, diceState >= 1L && diceState <= 6L);
-        assertEquals("AX77\2" + "3\2", Handling.furnitureStatePayload(77, 3));
+        assertEquals("AX77\2" + "3\2", FurniturePayloads.stateChanged(77, 3));
+        assertEquals(FurniturePayloads.stateChanged(77, 3), Handling.furnitureStatePayload(77, 3));
+        assertEquals("0" + Crypto.Proc_3_0_6D2AF0(3, null,
+            Crypto.Proc_3_0_6D2AF0(77, null, "AZ")), FurniturePayloads.simpleFloorUse(77, 3));
         Handling.FurnitureStateCache stateCache = Handling.representedFurnitureStateCache(
             "\1" + "5\2\1" + "9\told\2",
             "\1" + "77\2",
