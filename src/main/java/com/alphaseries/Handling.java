@@ -2669,9 +2669,7 @@ public final class Handling {
                 long roomUserIndex = activeEffect.roomUserIndex();
                 long effectId = activeEffect.effectId();
                 if (roomUserIndex > 0L && effectId > 0L) {
-                    String effectPayload = Crypto.Proc_3_0_6D2AF0(effectId, null,
-                        Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Ge"));
-                    Proc_6_244_801E80(socketIndex, effectPayload, 0);
+                    Proc_6_244_801E80(socketIndex, SocialPayloads.roomUserEffect(roomUserIndex, effectId), 0);
                 }
             }
         } catch (Exception ignored) {

@@ -46,6 +46,7 @@ import com.alphaseries.messages.incoming.ReadyPacketRegistry;
 import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
 import com.alphaseries.messages.outgoing.NavigatorPayloads;
+import com.alphaseries.messages.outgoing.SocialPayloads;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.PacketReader;
@@ -2102,6 +2103,8 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(123, null, "")
             + "fig\2";
         assertEquals(expectedProfile, Handling.representedRoomUserProfilePayload(9, "Alice", "motto", 123, "fig"));
+        assertEquals("Ge" + Crypto.Proc_3_0_6D2AF0(9, null, "") + Crypto.Proc_3_0_6D2AF0(12, null, ""),
+            SocialPayloads.roomUserEffect(9L, 12L));
         String equippedBadges = "0" + Crypto.Proc_3_0_6D2AF0(1, null, "") + "ACH1\2"
             + "0" + Crypto.Proc_3_0_6D2AF0(3, null, "") + "VIP\2";
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges,
