@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.game.advertising.VisitRoomAds;
 import com.alphaseries.game.advertising.AdvertisingState;
 import com.alphaseries.game.achievement.AchievementSettings;
+import com.alphaseries.game.achievement.AchievementState;
 import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.catalog.CatalogProductSettings;
 import com.alphaseries.game.catalog.CatalogRegistry;
@@ -334,10 +335,16 @@ public final class Licence {
     }
 
     public static AchievementSettings achievementSettings() {
-        return AchievementSettings.fromLegacy(global_008291E4, global_008291E8);
+        if (global_008291E8 instanceof AchievementSettings achievementSettings) {
+            AchievementState.instance().setSettings(achievementSettings);
+        } else {
+            AchievementState.instance().setSettingsFromLegacy(global_008291E4, global_008291E8);
+        }
+        return AchievementState.instance().settings();
     }
 
     public static void setAchievementSettings(String questIdPayload, Object rows) {
+        AchievementState.instance().setSettingsFromLegacy(questIdPayload, rows);
         global_008291E4 = StringUtils.text(questIdPayload);
         global_008291E8 = rows == null ? "" : rows;
     }

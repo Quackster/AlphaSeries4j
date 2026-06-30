@@ -63,6 +63,7 @@ import com.alphaseries.game.user.UserGroupRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.game.achievement.AchievementSettings;
+import com.alphaseries.game.achievement.AchievementState;
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -6821,7 +6822,7 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            AchievementSettings achievementSettings = Licence.achievementSettings();
+            AchievementSettings achievementSettings = achievementSettings();
             List<AchievementSettings.Achievement> achievements = achievementSettings.achievements();
             if (achievements.isEmpty()) {
                 return "";
@@ -6848,7 +6849,7 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            List<AchievementSettings.Achievement> achievements = Licence.achievementSettings().achievements();
+            List<AchievementSettings.Achievement> achievements = achievementSettings().achievements();
             if (achievements.isEmpty()) {
                 return "";
             }
@@ -9396,6 +9397,11 @@ public final class Handling {
         return RecyclerState.instance().settings();
     }
 
+    private static AchievementSettings achievementSettings() {
+        Licence.achievementSettings();
+        return AchievementState.instance().settings();
+    }
+
     public static String officialNavigatorQuery() {
         String separator = " UNION ALL ";
         StringBuilder queryText = new StringBuilder();
@@ -10569,11 +10575,11 @@ public final class Handling {
     }
 
     public static String achievementRowByIndex(long achievementIndex) {
-        return Licence.achievementSettings().rowByIndex(achievementIndex);
+        return achievementSettings().rowByIndex(achievementIndex);
     }
 
     public static AchievementSettings.Achievement achievementByIndex(long achievementIndex) {
-        return Licence.achievementSettings().achievementByIndex(achievementIndex);
+        return achievementSettings().achievementByIndex(achievementIndex);
     }
 
     public static Map<String, Long> achievementCurrentLevels(String userId, Iterable<AchievementSettings.Achievement> achievements) {

@@ -15,7 +15,14 @@ public final class AchievementSettings {
         this.rows = rows == null ? "" : rows;
     }
 
+    public static AchievementSettings empty() {
+        return new AchievementSettings("", "");
+    }
+
     public static AchievementSettings fromLegacy(String questIdPayload, Object rows) {
+        if (rows instanceof AchievementSettings settings) {
+            return settings;
+        }
         return new AchievementSettings(questIdPayload, rows);
     }
 
