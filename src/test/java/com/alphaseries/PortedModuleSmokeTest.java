@@ -2239,14 +2239,13 @@ public final class PortedModuleSmokeTest {
         long botEntityId = Handling.allocateRepresentedBot(3, representedBotEntry);
         assertEquals(1L, botEntityId);
         assertEquals("[1]", Licence.global_008292D4);
-        assertEquals("501", Handling.representedBotRecordField(botEntityId, 1));
-        assertEquals(501L, Handling.representedBotRecordLong(botEntityId, 1));
+        assertEquals(501L, Licence.representedBots().record(botEntityId).botId());
         assertEquals(1L, Handling.representedBotEntityFromBotId(501));
         assertEquals("1", Handling.representedBotEntitiesForRoom(3, 501));
         assertEquals(true, Handling.isRepresentedBotAllocated(3, 501));
         Handling.storeRepresentedBotPosition(botEntityId, 5, 6, "1.0", 7);
-        assertEquals(5L, Handling.representedBotRecordLong(botEntityId, 6));
-        assertEquals("1.0", Handling.representedBotRecordField(botEntityId, 8));
+        assertEquals(5L, Licence.representedBots().record(botEntityId).positionX());
+        assertEquals("1.0", Licence.representedBots().record(botEntityId).positionZ());
         String expectedBotEntry = "@\\" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
             + "Guide\2" + "5 6 1.0\2" + "7\2" + "1 2 ff\2";
         assertEquals(expectedBotEntry, Handling.representedBotRoomEntryPayload(botEntityId));
@@ -4299,7 +4298,7 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829358 = "";
         long placedPetEntityId = Handling.Proc_6_179_7C7790(4, "nz" + wireLong(10) + wireLong(2) + wireLong(3) + wireLong(4));
         assertEquals(true, placedPetEntityId > 0L);
-        assertEquals("10", Handling.representedBotRecordField(placedPetEntityId, 1));
+        assertEquals(10L, Licence.representedBots().record(placedPetEntityId).botId());
         assertEquals(true, containsSql(handlingSql, "UPDATE bots SET id_room='9',position_x='2',position_y='3',position_z='0',position_r='4' WHERE id='10'"));
         assertEquals(true, containsSend(handlingSends, "@\\"));
         assertEquals(true, containsSend(handlingSends, "I\\"));
@@ -4317,7 +4316,7 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829358 = "";
         long guideEntityId = Handling.Proc_6_188_7CF3C0(4);
         assertEquals(true, guideEntityId > 0L);
-        assertEquals("20", Handling.representedBotRecordField(guideEntityId, 1));
+        assertEquals(20L, Licence.representedBots().record(guideEntityId).botId());
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET tutorial_guide='1' WHERE id='77'"));
         assertEquals(true, containsSend(handlingSends, "@aYjO"));
         handlingSends.clear();

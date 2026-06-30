@@ -10522,14 +10522,6 @@ public final class Handling {
         return Licence.representedBots().recordText(botEntityId);
     }
 
-    public static String representedBotRecordField(long botEntityId, long fieldIndex) {
-        return Licence.representedBots().recordField(botEntityId, fieldIndex);
-    }
-
-    public static long representedBotRecordLong(long botEntityId, long fieldIndex) {
-        return Licence.representedBots().recordLong(botEntityId, fieldIndex);
-    }
-
     public static long representedBotEntityFromBotId(long botId) {
         return Licence.representedBots().entityFromBotId(botId);
     }
