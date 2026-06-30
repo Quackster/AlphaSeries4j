@@ -2971,7 +2971,7 @@ public final class PortedModuleSmokeTest {
         long originalRecommendedRoomCount = Licence.global_00829128;
         Object originalHcGiftPayload = Licence.global_00829178;
         Object originalHcGiftLookup = Licence.global_0082917C;
-        String originalGiftWrapLookup = Licence.global_0082925C;
+        Object originalGiftWrapLookup = Licence.global_0082925C;
         String originalGiftWrapPayload = Licence.global_00829260;
         Object originalCatalogPagePayloads = Licence.global_00829308;
         Object originalRecyclerProductLists = Licence.global_00829140;
@@ -4977,7 +4977,7 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829178 = previousGiftPayload;
         Licence.global_0082917C = previousGiftLookup;
         Licence.setGiftWrapState(List.of(701L, 0L, 702L), "TYPED-WRAPS");
-        assertEquals("\r701\r0\r702\r", Licence.global_0082925C);
+        assertEquals(List.of(701L, 0L, 702L), Licence.global_0082925C);
         assertEquals("TYPED-WRAPS", Licence.giftSettings().giftWrapPayload());
         assertEquals(List.of(701L, 702L), Licence.giftSettings().giftWrapProductIds());
     }

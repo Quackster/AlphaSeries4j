@@ -27,7 +27,7 @@ public final class CatalogState {
     public synchronized void setGiftSettingsFromLegacy(
         Object clubGiftPayload,
         Object clubGiftLookup,
-        String giftWrapLookup,
+        Object giftWrapLookup,
         String giftWrapPayload
     ) {
         giftSettings = GiftSettings.fromLegacy(clubGiftPayload, clubGiftLookup, giftWrapLookup, giftWrapPayload);

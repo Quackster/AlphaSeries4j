@@ -15,7 +15,7 @@ public final class GiftSettings {
     private final List<ClubGift> clubGifts;
     private final Set<Long> giftWrapProductIds;
 
-    private GiftSettings(Object clubGiftPayload, Object clubGiftLookup, String giftWrapLookup, String giftWrapPayload) {
+    private GiftSettings(Object clubGiftPayload, Object clubGiftLookup, Object giftWrapLookup, String giftWrapPayload) {
         ClubGiftState typedState = clubGiftPayload instanceof ClubGiftState state ? state : null;
         this.clubGiftPayload = typedState == null ? StringUtils.text(clubGiftPayload) : typedState.payload();
         this.giftWrapPayload = StringUtils.text(giftWrapPayload);
@@ -31,7 +31,7 @@ public final class GiftSettings {
         this.giftWrapProductIds = copyGiftWrapProductIds(giftWrapProductIds);
     }
 
-    public static GiftSettings fromLegacy(Object clubGiftPayload, Object clubGiftLookup, String giftWrapLookup, String giftWrapPayload) {
+    public static GiftSettings fromLegacy(Object clubGiftPayload, Object clubGiftLookup, Object giftWrapLookup, String giftWrapPayload) {
         if (clubGiftPayload instanceof GiftSettings giftSettings) {
             return giftSettings;
         }
@@ -92,8 +92,17 @@ public final class GiftSettings {
         return Collections.unmodifiableList(gifts);
     }
 
-    private static Set<Long> parseGiftWrapProductIds(String lookup) {
+    private static Set<Long> parseGiftWrapProductIds(Object lookup) {
         Set<Long> productIds = new LinkedHashSet<>();
+        if (lookup instanceof Iterable<?> values) {
+            for (Object productIdValue : values) {
+                long productId = NumberUtils.parseLong(productIdValue);
+                if (productId > 0L) {
+                    productIds.add(productId);
+                }
+            }
+            return Collections.unmodifiableSet(productIds);
+        }
         for (String productIdText : StringUtils.text(lookup).split("\r", -1)) {
             long productId = NumberUtils.parseLong(productIdText);
             if (productId > 0L) {

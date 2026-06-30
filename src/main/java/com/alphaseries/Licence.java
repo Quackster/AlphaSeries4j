@@ -48,6 +48,7 @@ import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class Licence {
@@ -81,7 +82,7 @@ public final class Licence {
     public static Object global_008290A0 = "";
     public static long global_008290A4 = 0L;
     public static long global_008290A8 = 0L;
-    public static String global_0082925C = "";
+    public static Object global_0082925C = "";
     public static String global_00829260 = "";
     public static String global_00829268 = "";
     public static String global_00829204 = "";
@@ -242,25 +243,25 @@ public final class Licence {
 
     public static void setGiftWrapState(List<Long> productIds, String payload) {
         GiftSettings currentSettings = giftSettings();
-        global_0082925C = giftWrapLookup(productIds);
+        List<Long> typedProductIds = copyGiftWrapProductIds(productIds);
+        global_0082925C = typedProductIds;
         global_00829260 = StringUtils.text(payload);
         CatalogState.instance().setGiftSettings(GiftSettings.fromRows(
             currentSettings.clubGiftPayload(),
             currentSettings.clubGifts(),
-            productIds,
+            typedProductIds,
             global_00829260));
     }
 
-    private static String giftWrapLookup(List<Long> productIds) {
-        StringBuilder lookup = new StringBuilder("\r");
+    private static List<Long> copyGiftWrapProductIds(List<Long> productIds) {
         if (productIds == null || productIds.isEmpty()) {
-            lookup.append('\r');
-        } else {
-            for (Long productId : productIds) {
-                lookup.append(NumberUtils.parseLong(productId)).append('\r');
-            }
+            return List.of();
         }
-        return lookup.toString();
+        List<Long> copiedProductIds = new ArrayList<>(productIds.size());
+        for (Long productId : productIds) {
+            copiedProductIds.add(NumberUtils.parseLong(productId));
+        }
+        return List.copyOf(copiedProductIds);
     }
 
     public static HelpCenterCache helpCenterCache() {
