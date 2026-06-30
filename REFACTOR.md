@@ -500,6 +500,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated remaining live `Handling` settings reads for date/time formatting, jukebox limits, songdisk defaults, activity-point awards, infobus titles, room-bot loading, navigator limits, and messenger follow checks to typed `AppSettingsCache` access; production callers no longer use `Functions.Proc_10_0_809570(...)` or `Proc_10_1_809790(...)` directly.
 - Migrated the remaining internal `Functions` HC gift-amount settings read to `AppSettingsCache`, leaving `Proc_10_0_809570(...)` and `Proc_10_1_809790(...)` only as explicit compatibility methods covered by tests.
 - Added named packet/string helpers in `Functions` for VL64 length reads, Base64 length reads, single-line text normalization, and SQL text escaping with original Proc names in Javadocs, then migrated shared `Handling` utility parsers to those names.
+- Migrated `Handling` callers away from the legacy packet/string helper names `Functions.Proc_10_6_809F10(...)`, `Proc_10_7_80A190(...)`, `Proc_10_10_80A7F0(...)`, and `Proc_10_11_80A9C0(...)`; `Handling` now uses the named packet/string helper APIs for those operations.
 
 ## VB Compatibility Class Removal Checklist
 

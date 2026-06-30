@@ -124,7 +124,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "GF");
-            long targetUserId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long targetUserId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             if (targetUserId <= 0L) {
                 targetUserId = readWireLong(requestPayload, new LongRef(1));
             }
@@ -171,15 +171,15 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long targetUserId = readWireLong(requestPayload, offset);
             if (targetUserId <= 0L) {
-                targetUserId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                targetUserId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
-            String banMessage = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            String banMessage = Functions.singleLineText(readWireString(requestPayload, offset));
             if (banMessage.isEmpty()) {
-                banMessage = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 0, 0);
+                banMessage = Functions.singleLineText(Functions.readBase64LengthString(requestPayload));
             }
             long banHours = readWireLong(requestPayload, offset);
             if (banHours <= 0L) {
-                banHours = NumberUtils.parseLong(Functions.Proc_10_6_809F10(StringUtils.mid(requestPayload, (int) offset.value), 0, 0));
+                banHours = NumberUtils.parseLong(Functions.readVl64LengthString(StringUtils.mid(requestPayload, (int) offset.value)));
             }
             String callerUserId = handlingUserIdFromSocket(socketIndex);
             if (targetUserId <= 0L || banMessage.isEmpty() || banHours <= 0L
@@ -225,13 +225,13 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long actionType = readWireLong(requestPayload, offset);
             if (actionType <= 0L) {
-                actionType = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                actionType = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
             String messageText = readWireString(requestPayload, offset);
             if (messageText.isEmpty()) {
-                messageText = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+                messageText = Functions.readBase64LengthString(requestPayload);
             }
-            messageText = Functions.Proc_10_10_80A7F0(messageText, 0, 0);
+            messageText = Functions.singleLineText(messageText);
             String callerUserId = handlingUserIdFromSocket(socketIndex);
             if (callerUserId.isEmpty() || "0".equals(callerUserId) || !handlingUserHasPermission(callerUserId, "fuse_mod")) {
                 return 0L;
@@ -397,7 +397,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "A]");
-            long danceId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long danceId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             if (danceId <= 0L) {
                 danceId = readWireLong(requestPayload, new LongRef(1));
             }
@@ -448,7 +448,7 @@ public final class Handling {
             String requestPayload = handlingRequestPayload(args, "Ex");
             LongRef offset = new LongRef(1);
             long slotId = readWireLong(requestPayload, offset);
-            String figureText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            String figureText = Functions.singleLineText(readWireString(requestPayload, offset));
             String genderText = StringUtils.left(readWireString(requestPayload, offset).toUpperCase(), 1);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId) || !handlingUserHasPermission(userId, "fuse_use_wardrobe")) {
@@ -480,7 +480,7 @@ public final class Handling {
             String requestPayload = handlingRequestPayload(args, "@l");
             LongRef offset = new LongRef(1);
             String genderText = StringUtils.left(readWireString(requestPayload, offset).toUpperCase(), 1);
-            String figureText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            String figureText = Functions.singleLineText(readWireString(requestPayload, offset));
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId) || (!"M".equals(genderText) && !"F".equals(genderText))) {
                 return;
@@ -1045,7 +1045,7 @@ public final class Handling {
                 return;
             }
             LongRef offset = new LongRef(1);
-            String descriptionText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            String descriptionText = Functions.singleLineText(readWireString(requestPayload, offset));
             if (descriptionText.length() < 30) {
                 return;
             }
@@ -1105,7 +1105,7 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String packetPayload = handlingPacketPayload(args);
             String searchText = packetPayload.length() >= 3
-                ? Functions.Proc_10_11_80A9C0(Functions.Proc_10_7_80A190(packetPayload.substring(2), 0, 0), 0, 0)
+                ? Functions.sqlEscapedText(Functions.readBase64LengthString(packetPayload.substring(2)))
                 : "";
             if (searchText.length() < 3) {
                 Proc_6_243_7FFEB0(socketIndex, 0, 0);
@@ -1129,7 +1129,7 @@ public final class Handling {
             long faqId = 0L;
             if (packetPayload.length() >= 3) {
                 String requestPayload = packetPayload.substring(2);
-                faqId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                faqId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
                 if (faqId <= 0L) {
                     faqId = readWireLong(requestPayload, new LongRef(1));
                 }
@@ -1146,9 +1146,9 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "GV");
             LongRef offset = new LongRef(1);
-            String candidateName = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            String candidateName = Functions.singleLineText(readWireString(requestPayload, offset));
             if (candidateName.isEmpty()) {
-                candidateName = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 0, 0);
+                candidateName = Functions.singleLineText(Functions.readBase64LengthString(requestPayload));
             }
             return Proc_6_40_711770(socketIndex, 0, candidateName);
         } catch (Exception ignored) {
@@ -1161,9 +1161,9 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "GW");
             LongRef offset = new LongRef(1);
-            String candidateName = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            String candidateName = Functions.singleLineText(readWireString(requestPayload, offset));
             if (candidateName.isEmpty()) {
-                candidateName = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 0, 0);
+                candidateName = Functions.singleLineText(Functions.readBase64LengthString(requestPayload));
             }
             return Proc_6_40_711770(socketIndex, -1, candidateName);
         } catch (Exception ignored) {
@@ -1221,7 +1221,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "FF");
-            long requestedRoomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long requestedRoomId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             if (requestedRoomId <= 0L) {
                 requestedRoomId = readWireLong(requestPayload, new LongRef(1));
             }
@@ -1424,7 +1424,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "Ab");
-            String targetName = Functions.Proc_10_7_80A190(requestPayload, 0, 0).trim();
+            String targetName = Functions.readBase64LengthString(requestPayload).trim();
             if (targetName.isEmpty() || !requestPayload.startsWith("@")) {
                 targetName = requestPayload.trim();
             }
@@ -1701,7 +1701,7 @@ public final class Handling {
                 Proc_6_244_801E80(socketIndex, UserPayloads.errorCode(1, 0), 0);
                 return 0L;
             }
-            String roomIdText = Functions.Proc_10_7_80A190(packetPayload, 0, 0);
+            String roomIdText = Functions.readBase64LengthString(packetPayload);
             if (roomIdText.isEmpty()) {
                 roomIdText = packetPayload;
             }
@@ -1709,7 +1709,7 @@ public final class Handling {
             int passwordStart = 2 + roomIdText.length();
             String roomPassword = "";
             if (passwordStart < packetPayload.length()) {
-                roomPassword = Functions.Proc_10_6_809F10(packetPayload.substring(passwordStart), 0, 0);
+                roomPassword = Functions.readVl64LengthString(packetPayload.substring(passwordStart));
             }
             Proc_6_57_71E8F0(socketIndex, roomId, roomPassword);
             return roomId;
@@ -2121,7 +2121,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "@W");
-            long requestFlag = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long requestFlag = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             if (requestFlag == 0L && !requestPayload.isEmpty()) {
                 requestFlag = readWireLong(requestPayload, new LongRef(1));
             }
@@ -2766,7 +2766,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long furnitureId = readWireLong(requestPayload, offset);
             if (furnitureId <= 0L) {
-                furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
             if (socketIndex <= 0 || furnitureId <= 0L) {
                 return "";
@@ -2824,11 +2824,11 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long furnitureId = readWireLong(requestPayload, offset);
             if (furnitureId <= 0L) {
-                furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
-            String petName = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+            String petName = Functions.singleLineText(readWireString(requestPayload, offset));
             if (petName.isEmpty()) {
-                petName = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 0, 0);
+                petName = Functions.singleLineText(Functions.readBase64LengthString(requestPayload));
             }
             long validationCode = Proc_6_181_7CA920(petName, 0, 0);
             if (validationCode > 0L) {
@@ -3112,7 +3112,7 @@ public final class Handling {
             String requestPayload = handlingRequestPayload(args, "AG");
             long requestedRoomUserIndex = readWireLong(requestPayload, new LongRef(1));
             if (requestedRoomUserIndex <= 0L) {
-                requestedRoomUserIndex = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                requestedRoomUserIndex = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
             if (requestedRoomUserIndex <= 0L) {
                 return;
@@ -3378,7 +3378,7 @@ public final class Handling {
             if (requestPayload.length() >= 3) {
                 requestPayload = requestPayload.substring(2);
             }
-            long effectId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long effectId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             if (effectId <= 0L) {
                 effectId = readWireLong(requestPayload, new LongRef(1));
             }
@@ -3467,8 +3467,8 @@ public final class Handling {
                 return;
             }
             LongRef offset = new LongRef(1);
-            String roomName = left(Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0), 25);
-            String modelName = left(Functions.Proc_10_11_80A9C0(readWireString(requestPayload, offset), 0, 0), 10);
+            String roomName = left(Functions.singleLineText(readWireString(requestPayload, offset)), 25);
+            String modelName = left(Functions.sqlEscapedText(readWireString(requestPayload, offset)), 10);
             if (roomName.isEmpty() || modelName.isEmpty()) {
                 return;
             }
@@ -3579,7 +3579,7 @@ public final class Handling {
             String requestPayload = handlingRequestPayload(args, "@T");
             long roomId = readWireLong(requestPayload, new LongRef(1));
             if (roomId <= 0L) {
-                roomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                roomId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
             String userId = handlingUserIdFromSocket(socketIndex);
             RoomDao rooms = roomDao();
@@ -3598,7 +3598,7 @@ public final class Handling {
             String requestPayload = handlingRequestPayload(args, "@S");
             long roomId = readWireLong(requestPayload, new LongRef(1));
             if (roomId <= 0L) {
-                roomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                roomId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
             String userId = handlingUserIdFromSocket(socketIndex);
             RoomDao rooms = roomDao();
@@ -3715,7 +3715,7 @@ public final class Handling {
             String userId = handlingUserIdFromSocket(socketIndex);
             long limitValue = navigatorListLimit();
             String queryTail = "friendships,logs_visitedrooms,users,rooms,rooms_categories WHERE friendships.id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + Functions.sqlEscapedText(userId)
                 + "' AND logs_visitedrooms.id_user=friendships.id_friend AND logs_visitedrooms.timestamp_left IS NULL "
                 + "AND rooms.id=logs_visitedrooms.id_room AND rooms_categories.id=rooms.id_category "
                 + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.id DESC LIMIT " + limitValue;
@@ -3732,7 +3732,7 @@ public final class Handling {
             String userId = handlingUserIdFromSocket(socketIndex);
             long limitValue = navigatorListLimit();
             String queryTail = "friendships,users,rooms,rooms_categories WHERE friendships.id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + Functions.sqlEscapedText(userId)
                 + "' AND users.id=friendships.id_friend AND rooms_categories.id=rooms.id_category "
                 + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
             Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GC", "\0", limitValue,
@@ -3748,7 +3748,7 @@ public final class Handling {
             String userId = handlingUserIdFromSocket(socketIndex);
             long limitValue = navigatorListLimit();
             String queryTail = "rooms_favourites,users,rooms,rooms_categories WHERE rooms_favourites.id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + Functions.sqlEscapedText(userId)
                 + "' AND rooms.id=rooms_favourites.id_room AND rooms_categories.id=rooms.id_category "
                 + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
             Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCRA", "", limitValue,
@@ -3764,7 +3764,7 @@ public final class Handling {
             String userId = handlingUserIdFromSocket(socketIndex);
             long limitValue = navigatorListLimit();
             String queryTail = "logs_visitedrooms,users,rooms,rooms_categories WHERE logs_visitedrooms.id_user='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + Functions.sqlEscapedText(userId)
                 + "' AND rooms.id=logs_visitedrooms.id_room AND rooms_categories.id=rooms.id_category "
                 + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.id DESC LIMIT " + limitValue;
             Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCSA", "", limitValue,
@@ -3780,7 +3780,7 @@ public final class Handling {
             String userId = handlingUserIdFromSocket(socketIndex);
             long limitValue = navigatorListLimit();
             String queryTail = "users,rooms,rooms_categories WHERE rooms.id_owner='"
-                + Functions.Proc_10_11_80A9C0(userId, 0, 0)
+                + Functions.sqlEscapedText(userId)
                 + "' AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
                 + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
             Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCQA", "", limitValue,
@@ -3820,7 +3820,7 @@ public final class Handling {
     public static void Proc_6_125_755650(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            String tagText = Functions.Proc_10_11_80A9C0(navigatorTextFromPacket(args), 0, 0);
+            String tagText = Functions.sqlEscapedText(navigatorTextFromPacket(args));
             long limitValue = navigatorListLimit();
             String eventQueryTail = "rooms_events,users,rooms,rooms_categories WHERE (rooms_events.name_category='" + tagText
                 + "' OR rooms_events.tag_1='" + tagText + "' OR rooms_events.tag_2='" + tagText
@@ -3877,12 +3877,12 @@ public final class Handling {
             String requestPayload = handlingRequestPayload(args, "Ad");
             LongRef offset = new LongRef(1);
             long catalogProductId = readWireLong(requestPayload, offset);
-            String signText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 1, 1);
+            String signText = Functions.singleLineText(readWireString(requestPayload, offset));
             if (catalogProductId <= 0L) {
-                catalogProductId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                catalogProductId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
             if (signText.isEmpty()) {
-                signText = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 1, 1);
+                signText = Functions.singleLineText(Functions.readBase64LengthString(requestPayload));
             }
             if (catalogProductId <= 0L) {
                 return "";
@@ -4014,7 +4014,7 @@ public final class Handling {
                     if ("TROPHY_VAR".equalsIgnoreCase(DataManager.productCache().defaultSign(itemProductId))) {
                         String trophySign = handlingUserName(handlingUserIdFromSocket(socketIndex)) + '\b'
                             + recyclerRewardSign() + '\b' + signText;
-                        furnitureDao().updateSignText(furnitureId, Functions.Proc_10_10_80A7F0(trophySign, 1, 1));
+                        furnitureDao().updateSignText(furnitureId, Functions.singleLineText(trophySign));
                     }
                     if (productType == 8L) {
                         Proc_6_244_801E80(socketIndex, CatalogPayloads.dimensionMap(furnitureId,
@@ -4068,9 +4068,9 @@ public final class Handling {
                 }
                 for (Long dealProductId : deal.itemProductIds()) {
                     if (dealProductId != null && dealProductId > 0L) {
-                        String defaultSign = Functions.Proc_10_10_80A7F0(DataManager.productCache().defaultSign(dealProductId), 0, 0);
+                        String defaultSign = Functions.singleLineText(DataManager.productCache().defaultSign(dealProductId));
                         if (defaultSign.isEmpty()) {
-                            defaultSign = Functions.Proc_10_10_80A7F0(DataManager.productCache().fallbackDefaultSign(dealProductId), 0, 0);
+                            defaultSign = Functions.singleLineText(DataManager.productCache().fallbackDefaultSign(dealProductId));
                         }
                         furniture.insertCatalogFurniture(dealProductId, userIdValue, defaultSign, catalogProductId);
                         grantedCount++;
@@ -4111,10 +4111,10 @@ public final class Handling {
                 }
                 String defaultSign = signText;
                 if (defaultSign.isEmpty()) {
-                    defaultSign = Functions.Proc_10_10_80A7F0(DataManager.productCache().defaultSign(productId), 0, 0);
+                    defaultSign = Functions.singleLineText(DataManager.productCache().defaultSign(productId));
                 }
                 if (defaultSign.isEmpty()) {
-                    defaultSign = Functions.Proc_10_10_80A7F0(DataManager.productCache().fallbackDefaultSign(productId), 0, 0);
+                    defaultSign = Functions.singleLineText(DataManager.productCache().fallbackDefaultSign(productId));
                 }
                 for (long itemIndex = 1L; itemIndex <= amount; itemIndex++) {
                     furniture.insertCatalogFurniture(productId, userIdValue, defaultSign, catalogProductId);
@@ -4149,9 +4149,9 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "G[");
-            String requestedSprite = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            String requestedSprite = Functions.readBase64LengthString(requestPayload);
             if (requestedSprite.isEmpty()) {
-                requestedSprite = Functions.Proc_10_6_809F10(requestPayload, 0, 0);
+                requestedSprite = Functions.readVl64LengthString(requestPayload);
             }
             if (requestedSprite.isEmpty()) {
                 requestedSprite = requestPayload.replace("\2", "").replace("\0", "").trim();
@@ -4225,8 +4225,8 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long catalogProductId = readWireLong(requestPayload, offset);
             long expectedProductId = readWireLong(requestPayload, offset);
-            String recipientName = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 1, 1);
-            String giftMessage = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 1, 1);
+            String recipientName = Functions.singleLineText(readWireString(requestPayload, offset));
+            String giftMessage = Functions.singleLineText(readWireString(requestPayload, offset));
             if (giftMessage.length() > 142) {
                 giftMessage = giftMessage.substring(0, 142);
             }
@@ -4234,10 +4234,10 @@ public final class Handling {
             long ribbonId = readWireLong(requestPayload, offset);
             long colorId = readWireLong(requestPayload, offset);
             if (catalogProductId <= 0L) {
-                catalogProductId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                catalogProductId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
             if (recipientName.isEmpty()) {
-                recipientName = Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 1, 1);
+                recipientName = Functions.singleLineText(Functions.readBase64LengthString(requestPayload));
             }
             if (catalogProductId <= 0L || recipientName.isEmpty()) {
                 return "";
@@ -4311,8 +4311,8 @@ public final class Handling {
             long giftSecondary = colorId * 1000L + ribbonId;
             furnitureDao().updateGiftMetadata(
                 grantedFurnitureId,
-                Functions.Proc_10_10_80A7F0(giftMessage, 0, 0),
-                Functions.Proc_10_10_80A7F0(productSign, 0, 0),
+                Functions.singleLineText(giftMessage),
+                Functions.singleLineText(productSign),
                 NumberUtils.parseLong(recipientUserId),
                 catalogProductId,
                 giftSecondary);
@@ -4351,7 +4351,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "oV");
-            long itemId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long itemId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             if (itemId <= 0L) {
                 itemId = readWireLong(requestPayload, new LongRef(1));
             }
@@ -4383,7 +4383,7 @@ public final class Handling {
             if (requestPayload.length() >= 3) {
                 requestPayload = requestPayload.substring(2);
             }
-            long pageId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long pageId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             if (pageId <= 0L) {
                 pageId = readWireLong(requestPayload, new LongRef(1));
             }
@@ -4856,7 +4856,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long furnitureId = readWireLong(requestPayload, offset);
             if (furnitureId <= 0L) {
-                furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
             if (furnitureId <= 0L) {
                 return "";
@@ -5064,7 +5064,7 @@ public final class Handling {
             long furnitureId = placementFurniture == null ? 0L : placementFurniture.furnitureId();
             long productId = placementFurniture == null ? 0L : placementFurniture.productId();
             if (furnitureId <= 0L) {
-                furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(wallPayload, 0, 0));
+                furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(wallPayload));
             }
             if (furnitureId <= 0L) {
                 return;
@@ -5095,8 +5095,8 @@ public final class Handling {
             if (!wallPlacementFromPayload(wallPayload, placement)) {
                 return;
             }
-            String wallPosition = Functions.Proc_10_11_80A9C0((":w=" + placement.wallX + "," + placement.wallY
-                + " l=" + placement.localX + "," + placement.localY).toLowerCase(), 0, 0);
+            String wallPosition = Functions.sqlEscapedText((":w=" + placement.wallX + "," + placement.wallY
+                + " l=" + placement.localX + "," + placement.localY).toLowerCase());
             FurnitureDao furniture = furnitureDao();
             if (furniture == null) {
                 return;
@@ -5520,7 +5520,7 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String searchText = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            String searchText = Functions.readBase64LengthString(requestPayload);
             if (searchText.isEmpty()) {
                 LongRef offset = new LongRef(1);
                 searchText = readWireString(requestPayload, offset);
@@ -5570,12 +5570,12 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
-                targetUserId = String.valueOf((long) NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0)));
+                targetUserId = String.valueOf((long) NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload)));
             }
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
             }
-            String messageText = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            String messageText = Functions.readBase64LengthString(requestPayload);
             if (messageText.length() > 122) {
                 messageText = messageText.substring(0, 122);
             }
@@ -5620,7 +5620,7 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String targetName = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            String targetName = Functions.readBase64LengthString(requestPayload);
             if (targetName.isEmpty()) {
                 LongRef offset = new LongRef(1);
                 targetName = readWireString(requestPayload, offset);
@@ -5737,7 +5737,7 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String productPet = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            String productPet = Functions.readBase64LengthString(requestPayload);
             if (productPet.isEmpty()) {
                 productPet = readWireString(requestPayload, new LongRef(1));
             }
@@ -5886,11 +5886,11 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String requestPayload = handlingRequestPayload(args, "@c");
-            String requestedName = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            String requestedName = Functions.readBase64LengthString(requestPayload);
             if (requestedName.isEmpty()) {
                 requestedName = readWireString(requestPayload, new LongRef(1));
             }
-            requestedName = Functions.Proc_10_11_80A9C0(Functions.Proc_10_10_80A7F0(requestedName), 0, 0);
+            requestedName = Functions.sqlEscapedText(Functions.singleLineText(requestedName));
             String payload = PetPayloads.nameValidation(requestedName);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
@@ -6506,8 +6506,8 @@ public final class Handling {
             long lookX = readWireLong(requestPayload, offset);
             long lookY = readWireLong(requestPayload, offset);
             if (lookX == 0L && lookY == 0L) {
-                lookX = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
-                lookY = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                lookX = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
+                lookY = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
             if (lookX < 0L || lookY < 0L) {
                 return "";
@@ -6546,8 +6546,8 @@ public final class Handling {
             long targetX = readWireLong(requestPayload, offset);
             long targetY = readWireLong(requestPayload, offset);
             if (targetX == 0L && targetY == 0L) {
-                targetX = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
-                targetY = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                targetX = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
+                targetY = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
             if (targetX < 0L || targetY < 0L) {
                 return "";
@@ -6931,7 +6931,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long furnitureId = readWireLong(requestPayload, offset);
             if (furnitureId <= 0L) {
-                furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
             if (socketIndex <= 0 || furnitureId <= 0L) {
                 return "";
@@ -7213,12 +7213,12 @@ public final class Handling {
             String requestPayload = handlingRequestPayload(args, "Gd");
             String rawMotto = readWireString(requestPayload, new LongRef(1));
             if (rawMotto.isEmpty()) {
-                rawMotto = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+                rawMotto = Functions.readBase64LengthString(requestPayload);
             }
             if (rawMotto.isEmpty()) {
                 rawMotto = requestPayload;
             }
-            String mottoText = left(Functions.Proc_10_10_80A7F0(rawMotto, 0, 0), 255);
+            String mottoText = left(Functions.singleLineText(rawMotto), 255);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
@@ -7252,7 +7252,7 @@ public final class Handling {
             if (packetPayload.length() >= 3) {
                 Functions.Proc_10_5_809D80(packetPayload, 3, 0);
             }
-            String valueText = Functions.Proc_10_6_809F10(requestPayload, 0, 0);
+            String valueText = Functions.readVl64LengthString(requestPayload);
             if (valueText.isEmpty()) {
                 valueText = readWireString(requestPayload, new LongRef(1));
             }
@@ -7282,7 +7282,7 @@ public final class Handling {
             }
             long requestedQuestId = questRequestIdFromWire(handlingPacketPayload(args), "p^");
             if (requestedQuestId <= 0L) {
-                requestedQuestId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(handlingRequestPayload(args, "p^"), 0, 0));
+                requestedQuestId = NumberUtils.parseLong(Functions.readVl64LengthString(handlingRequestPayload(args, "p^")));
             }
             if (requestedQuestId <= 0L) {
                 return "";
@@ -7536,7 +7536,7 @@ public final class Handling {
                     }
                 }
             }
-            String inviteText = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+            String inviteText = Functions.readBase64LengthString(requestPayload);
             if (inviteText.length() > 122) {
                 inviteText = inviteText.substring(0, 122);
             }
@@ -7591,7 +7591,7 @@ public final class Handling {
             acceptCount = Math.min(acceptCount, 75L);
             String dateFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
             String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
-            String dateTimeFormat = Functions.Proc_10_11_80A9C0(dateFormat + " " + timeFormat, 0, 0);
+            String dateTimeFormat = Functions.sqlEscapedText(dateFormat + " " + timeFormat);
             StringBuilder targetIds = new StringBuilder();
             for (long acceptIndex = 1L; acceptIndex <= acceptCount; acceptIndex++) {
                 String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
@@ -7658,7 +7658,7 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
-                targetUserId = String.valueOf((long) NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0)));
+                targetUserId = String.valueOf((long) NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload)));
             }
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
@@ -8472,7 +8472,7 @@ public final class Handling {
                 }
             }
 
-            messageText = left(Functions.Proc_10_10_80A7F0(messageText, 0, 0).trim(), 122);
+            messageText = left(Functions.singleLineText(messageText).trim(), 122);
             if (messageText.isEmpty()) {
                 return "";
             }
@@ -8574,11 +8574,11 @@ public final class Handling {
             LongRef offset = new LongRef(1);
             long targetUserId = readWireLong(requestPayload, offset);
             if (targetUserId <= 0L) {
-                targetUserId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                targetUserId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             }
             String messageText = readWireString(requestPayload, offset);
             if (messageText.isEmpty()) {
-                messageText = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+                messageText = Functions.readBase64LengthString(requestPayload);
             }
             String callerUserId = handlingUserIdFromSocket(socketIndex);
             if (targetUserId <= 0L || messageText.isEmpty()
@@ -8655,7 +8655,7 @@ public final class Handling {
                 return;
             }
             long targetUserId = includeChatRows ? staffNestedUserIdFromWire(requestPayload)
-                : NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+                : NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             if (targetUserId <= 0L) {
                 return;
             }
@@ -8916,7 +8916,7 @@ public final class Handling {
     }
 
     public static long stickyFurnitureIdFromPayload(String requestPayload) {
-        long furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        long furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
         if (furnitureId <= 0L) {
             furnitureId = readWireLong(requestPayload, new LongRef(1));
         }
@@ -9227,17 +9227,17 @@ public final class Handling {
             return false;
         }
         LongRef offset = new LongRef(1);
-        String roomName = Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset));
+        String roomName = Functions.singleLineText(readWireString(packetPayload, offset));
         if (roomName.length() < 3) {
             return false;
         }
         result.roomName = left(roomName, 60);
-        result.roomPassword = left(Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset)), 60);
+        result.roomPassword = left(Functions.singleLineText(readWireString(packetPayload, offset)), 60);
         result.doorStatus = readWireLong(packetPayload, offset);
         if (result.doorStatus < 0L || result.doorStatus > 2L) {
             return false;
         }
-        result.roomDescription = left(Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset)), 255);
+        result.roomDescription = left(Functions.singleLineText(readWireString(packetPayload, offset)), 255);
         result.visitorsMax = readWireLong(packetPayload, offset);
         if (result.visitorsMax < 1L) {
             result.visitorsMax = 1L;
@@ -9254,7 +9254,7 @@ public final class Handling {
             return false;
         }
         for (long tagIndex = 1L; tagIndex <= tagCount; tagIndex++) {
-            String tagText = left(Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset)), 60).toLowerCase();
+            String tagText = left(Functions.singleLineText(readWireString(packetPayload, offset)), 60).toLowerCase();
             if (tagIndex == 1L) {
                 result.tagOne = tagText;
             } else if (tagIndex == 2L) {
@@ -9583,7 +9583,7 @@ public final class Handling {
         if (requestPayload.startsWith("AZ")) {
             requestPayload = requestPayload.substring(2);
         }
-        long furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        long furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
         if (furnitureId <= 0L) {
             LongRef offset = new LongRef(1);
             furnitureId = readWireLong(requestPayload, offset);
@@ -9753,7 +9753,7 @@ public final class Handling {
         if (requestPayload.startsWith("F_")) {
             requestPayload = requestPayload.substring(2);
         }
-        requestPayload = Functions.Proc_10_10_80A7F0(requestPayload, 0, 0).trim();
+        requestPayload = Functions.singleLineText(requestPayload).trim();
         if (requestPayload.startsWith("F_")) {
             requestPayload = requestPayload.substring(2);
         }
@@ -9853,7 +9853,7 @@ public final class Handling {
         if (requestPayload.startsWith("Ce")) {
             requestPayload = requestPayload.substring(2);
         }
-        long soundSetting = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        long soundSetting = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
         if (soundSetting <= 0L) {
             soundSetting = NumberUtils.parseLong(requestPayload);
         }
@@ -10497,9 +10497,9 @@ public final class Handling {
         submission.pollId = readWireLong(requestPayload, offset);
         submission.questionId = readWireLong(requestPayload, offset);
         submission.answerValue = readWireLong(requestPayload, offset);
-        submission.answerText = Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0);
+        submission.answerText = Functions.singleLineText(readWireString(requestPayload, offset));
         if (submission.pollId <= 0L) {
-            submission.pollId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            submission.pollId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
         }
         if (submission.answerText.isEmpty() && submission.answerValue > 0L) {
             submission.answerText = String.valueOf(submission.answerValue);
@@ -10819,7 +10819,7 @@ public final class Handling {
         }
         LongRef offset = new LongRef(1);
         long value = readWireLong(requestPayload, offset);
-        return value > 0L ? value : NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        return value > 0L ? value : NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
     }
 
     public static String wiredCachePath(String cacheFolder, long roomId) {
@@ -10851,7 +10851,7 @@ public final class Handling {
         LongRef offset = new LongRef(1);
         long furnitureId = readWireLong(requestPayload, offset);
         if (furnitureId <= 0L) {
-            furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
         }
         if (furnitureId <= 0L || wiredCode <= 0L) {
             return "";
@@ -10868,9 +10868,9 @@ public final class Handling {
             }
             parameterValues += parameterValue;
         }
-        String textValue = left(Functions.Proc_10_10_80A7F0(readWireString(requestPayload, offset), 0, 0), 125);
+        String textValue = left(Functions.singleLineText(readWireString(requestPayload, offset)), 125);
         if (textValue.isEmpty()) {
-            textValue = left(Functions.Proc_10_10_80A7F0(Functions.Proc_10_7_80A190(requestPayload, 0, 0), 0, 0), 125);
+            textValue = left(Functions.singleLineText(Functions.readBase64LengthString(requestPayload)), 125);
         }
         long selectedCount = readWireLong(requestPayload, offset);
         if (selectedCount < 0L || selectedCount > 100L) {
@@ -10901,7 +10901,7 @@ public final class Handling {
         LongRef offset = new LongRef(1);
         long requestedCount = readWireLong(requestPayload, offset);
         if (requestedCount <= 0L) {
-            requestedCount = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            requestedCount = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
         }
         if (requestedCount > 60L) {
             requestedCount = 60L;
@@ -11002,7 +11002,7 @@ public final class Handling {
     private static String badgeUpdateSelectionFromWire(String requestPayload, LongRef offset) {
         long hasBadge = readWireLong(requestPayload, offset);
         if (hasBadge == 1L) {
-            return Functions.Proc_10_11_80A9C0(readWireString(requestPayload, offset), 0, 0);
+            return Functions.sqlEscapedText(readWireString(requestPayload, offset));
         }
         return "";
     }
@@ -11015,7 +11015,7 @@ public final class Handling {
         LongRef offset = new LongRef(1);
         long value = readWireLong(requestPayload, offset);
         if (value <= 0L) {
-            value = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            value = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
         }
         return value;
     }
@@ -11127,13 +11127,13 @@ public final class Handling {
 
     public static long staffNestedUserIdFromWire(String packetPayload) {
         String requestPayload = StringUtils.text(packetPayload);
-        long directValue = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+        long directValue = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
         if (directValue > 0L) {
             return directValue;
         }
         LongRef offset = new LongRef(1);
         String nestedPayload = readWireString(requestPayload, offset);
-        long nestedValue = NumberUtils.parseLong(Functions.Proc_10_6_809F10(nestedPayload, 0, 0));
+        long nestedValue = NumberUtils.parseLong(Functions.readVl64LengthString(nestedPayload));
         if (nestedValue <= 0L) {
             nestedValue = NumberUtils.parseLong(nestedPayload);
         }
@@ -11233,11 +11233,11 @@ public final class Handling {
     }
 
     private static boolean readRoomEventCommon(String packetPayload, LongRef offset, RoomEventPayload result, boolean requireText) {
-        result.eventName = Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset));
+        result.eventName = Functions.singleLineText(readWireString(packetPayload, offset));
         if (requireText && result.eventName.length() < 3) {
             return false;
         }
-        result.eventDescription = Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset));
+        result.eventDescription = Functions.singleLineText(readWireString(packetPayload, offset));
         if (requireText && result.eventDescription.length() < 3) {
             return false;
         }
@@ -11246,7 +11246,7 @@ public final class Handling {
             return false;
         }
         for (long tagIndex = 1L; tagIndex <= tagCount; tagIndex++) {
-            String tagText = left(Functions.Proc_10_10_80A7F0(readWireString(packetPayload, offset)), 30).toLowerCase();
+            String tagText = left(Functions.singleLineText(readWireString(packetPayload, offset)), 30).toLowerCase();
             if (tagIndex == 1L) {
                 result.tagOne = tagText;
             } else if (tagIndex == 2L) {
