@@ -546,6 +546,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `MessengerSettings` internals from raw friend-limit object storage to defensive typed `long[]` settings, leaving legacy `String[]` parsing only at the module boundary.
 - Migrated `StaffSettings` internals from raw moderation payload object storage to defensive typed `String[][]` settings, leaving legacy matrix parsing only at the module boundary.
 - Migrated `HelpCenterCache` internals from raw indexed payload objects to typed payload maps for category FAQ and description lookups, leaving legacy array/map parsing only at the module boundary.
+- Added defensive typed `PetSettings` level and command accessors so pet callers can consume `PetLevelRow`/`PetCommandRow` collections instead of legacy arrays.
 - Migrated `VisitRoomAds` internals from raw indexed payload objects to typed payload maps, leaving legacy array/map parsing only at the advertising state boundary.
 - Migrated `RecommendedRooms` internals from raw indexed payload objects to typed payload maps, leaving legacy array/map parsing only at the navigator state boundary.
 - Migrated `CatalogPages` internals from raw indexed payload and tree objects to typed page-payload maps and defensive page-tree matrices, leaving legacy array/map parsing only at the catalog state boundary.

@@ -1202,6 +1202,7 @@ public final class PortedModuleSmokeTest {
             1L);
         assertEquals("20\t30\t40", ((String[]) typedPetSettings.levelRows())[2]);
         assertEquals(cachedCommand, ((PetSettings.PetCommandRow[]) typedPetSettings.commandRows())[2]);
+        assertPetSettingsTypedAccessors(typedPetSettings, cachedCommand);
         Boot.Proc_1_8_6C6850();
         assertEquals(true, DataManager.global_008291AC.contains("party"));
         Boot.Proc_1_9_6C6DF0();
@@ -4893,6 +4894,11 @@ public final class PortedModuleSmokeTest {
         String[][] copiedRows = matrix.rows();
         copiedRows[1][1] = "";
         assertEquals(true, matrix.allows(1, "", "hc_perm", 1));
+    }
+
+    private static void assertPetSettingsTypedAccessors(PetSettings settings, PetSettings.PetCommandRow command) {
+        assertEquals(List.of(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 3)), settings.levels());
+        assertEquals(List.of(command), settings.commands());
     }
 
     private static String productRow(long productId, String... columnPairs) {

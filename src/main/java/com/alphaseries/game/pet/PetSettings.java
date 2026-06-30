@@ -74,6 +74,14 @@ public final class PetSettings {
         return rows;
     }
 
+    public List<PetLevelRow> levels() {
+        return List.copyOf(levelRows);
+    }
+
+    public List<PetCommandRow> commands() {
+        return List.copyOf(commandRows);
+    }
+
     public long commandCount() {
         return commandCount;
     }
