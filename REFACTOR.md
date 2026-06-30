@@ -660,6 +660,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed boot visit-room advertisement loading through ID-keyed payload maps instead of sparse legacy arrays, and removed the max-id DAO query that only existed to size the array.
 - Routed `Licence` visit-room advertisement refreshes through the typed `VisitRoomAds` state path when the mirrored global already contains a `VisitRoomAds` instance, leaving map/array parsing as a compatibility fallback.
 - Migrated `RecommendedRooms` internals from raw indexed payload objects to typed payload maps, leaving legacy array/map parsing only at the navigator state boundary.
+- Routed `Licence` recommended-room refreshes through the typed `RecommendedRooms` state path when the mirrored global already contains a `RecommendedRooms` instance, leaving map/array parsing as a compatibility fallback.
 - Migrated `CatalogPages` internals from raw indexed payload and tree objects to typed page-payload maps and defensive page-tree matrices, leaving legacy array/map parsing only at the catalog state boundary.
 - Exposed defensive typed `CatalogPages` page-payload map and page-tree matrix accessors so catalog callers can move away from single-value compatibility lookups.
 - Migrated `RoomCategoryCache` internals from raw row, default-category, and payload objects to typed default arrays, `RoomCategoryRow` lists, and defensive payload matrices, leaving legacy row text and matrix parsing only at the navigator state boundary.
