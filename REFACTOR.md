@@ -67,6 +67,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.moderation.StaffSettings` as a typed adapter around staff moderation payloads previously read directly from `Licence` globals.
 - Routed boot staff moderation rank/HC payload loading through typed `StaffSettings.ModerationPayload` records instead of storing `String[][]` payload mirrors in the live `Licence` cache.
 - Added `com.alphaseries.game.messenger.MessengerSettings` as a typed adapter around messenger friend-limit state previously decoded directly from `Licence` globals.
+- Routed boot messenger friend-limit loading through typed `MessengerSettings` storage instead of keeping an `int[]` mirror in the live `Licence` cache.
 - Added `com.alphaseries.game.navigator.NewFriendRooms` as a typed adapter around the cached new-friend room rows and expiry previously managed directly through `Licence` globals.
 - Added `com.alphaseries.game.navigator.RecommendedRooms` as a typed adapter around the recommended-room payload cache previously read through `Licence` globals.
 - Added `com.alphaseries.game.navigator.RoomCategoryCache` as a typed adapter around room-category defaults, raw rows, and rank/HC payloads previously read through `Licence` globals.

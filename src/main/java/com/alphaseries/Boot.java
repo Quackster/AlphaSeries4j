@@ -19,6 +19,7 @@ import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
+import com.alphaseries.game.messenger.MessengerSettings;
 import com.alphaseries.game.moderation.StaffSettings;
 import com.alphaseries.game.navigator.NavigatorState;
 import com.alphaseries.game.navigator.RoomCategoryCache;
@@ -249,9 +250,11 @@ public final class Boot {
         Proc_1_13_6C9820(0, 0, 0);
         Proc_1_22_6D0F00(0, 0, 0);
         buildChatSettingsCache();
-        Licence.setMessengerFriendLimits(buildMessengerFriendLimitCache(
+        Licence.setMessengerFriendLimits(MessengerSettings.fromLimits(
             NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.messenger.maxfriends.hclevel0", 0)),
+            0L,
             NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.messenger.maxfriends.hclevel1", 0)),
+            0L,
             NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.messenger.maxfriends.hclevel2", 0))));
     }
 
