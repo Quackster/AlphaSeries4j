@@ -10,7 +10,6 @@ import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.messages.outgoing.UserPayloads;
-import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -127,7 +126,7 @@ public final class Functions {
         }
         long firstValue = NumberUtils.parseLong(args[0]);
         long secondValue = args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-        return PacketBuilder.message("Dk").appendInt(firstValue).appendInt(secondValue).build();
+        return UserPayloads.errorCode(firstValue, secondValue);
     }
 
     public static String Proc_10_9_80A680(Object... args) {

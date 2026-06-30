@@ -86,6 +86,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(4096L, WireEncoding.decodeVl64(WireEncoding.encodeVl64(4096)));
         assertEquals("DK" + Crypto.encodeVl64(2) + "figure\2",
             PacketBuilder.message("DK").appendInt(2).appendString("figure").build());
+        assertEquals("Dk" + Crypto.Proc_3_0_6D2AF0(1, null, "")
+            + Crypto.Proc_3_0_6D2AF0(96, null, ""), UserPayloads.errorCode(1, 96));
+        assertEquals(UserPayloads.errorCode(1, 96), Functions.Proc_10_8_80A580(1, 96));
         PacketReader reader = PacketReader.of(Crypto.encodeVl64(7) + "@Dtesttail");
         assertEquals(7L, reader.readInt());
         assertEquals("test", reader.readString());

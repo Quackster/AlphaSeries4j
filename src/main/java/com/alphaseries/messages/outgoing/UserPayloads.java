@@ -19,6 +19,13 @@ public final class UserPayloads {
             .build();
     }
 
+    public static String errorCode(long firstValue, long secondValue) {
+        return PacketBuilder.message("Dk")
+            .appendInt(firstValue)
+            .appendInt(secondValue)
+            .build();
+    }
+
     public static String activityPointRefresh(long pointType, long pointsValue) {
         return PacketBuilder.message("Fv")
             .appendInt(pointsValue)

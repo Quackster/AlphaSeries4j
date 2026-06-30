@@ -1609,7 +1609,7 @@ public final class Handling {
             }
             reservedSlot = reserveRepresentedRoomSlot(preferredSlot);
             if (reservedSlot <= 0L) {
-                Proc_6_244_801E80(socketIndex, Functions.Proc_10_8_80A580(1, 0, 0), 0);
+                Proc_6_244_801E80(socketIndex, UserPayloads.errorCode(1, 0), 0);
                 return 0L;
             }
             loadRepresentedRoomBots(reservedSlot, roomId);
@@ -1754,7 +1754,7 @@ public final class Handling {
             String packetPayload = handlingRequestPayload(args, "FG");
             ensureRepresentedRoomSlotPool();
             if (Licence.representedRoomSlots().isEmpty()) {
-                Proc_6_244_801E80(socketIndex, Functions.Proc_10_8_80A580(1, 0, 0), 0);
+                Proc_6_244_801E80(socketIndex, UserPayloads.errorCode(1, 0), 0);
                 return 0L;
             }
             String roomIdText = Functions.Proc_10_7_80A190(packetPayload, 0, 0);
