@@ -240,16 +240,28 @@ public final class StaffModerationDao {
             message);
     }
 
-    public String openCallForHelpReviewRow(long callForHelpId) throws SQLException {
+    public Optional<OpenCallForHelpReviewRow> openCallForHelpReview(long callForHelpId) throws SQLException {
         return database.queryOne(
             "SELECT staff_cfh.id,users.id,users.name,staff_cfh.id_partner,staff_cfh.id_room,"
                 + "staff_cfh.id_category,staff_cfh.description,rooms.id,rooms.name FROM staff_cfh,users,rooms "
                 + "WHERE staff_cfh.id=? AND staff_cfh.id_closed='0' AND users.id=staff_cfh.id_user "
                 + "AND rooms.id=staff_cfh.id_room LIMIT 1",
-            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
-                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5) + "\t" + resultSet.getString(6)
-                + "\t" + resultSet.getString(7) + "\t" + resultSet.getString(8) + "\t" + resultSet.getString(9),
-            callForHelpId)
+            resultSet -> new OpenCallForHelpReviewRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getString(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getString(7),
+                resultSet.getLong(8),
+                resultSet.getString(9)),
+            callForHelpId);
+    }
+
+    public String openCallForHelpReviewRow(long callForHelpId) throws SQLException {
+        return openCallForHelpReview(callForHelpId)
+            .map(OpenCallForHelpReviewRow::legacyRow)
             .orElse("");
     }
 
@@ -481,6 +493,34 @@ public final class StaffModerationDao {
                 String.valueOf(partnerId),
                 String.valueOf(timestampSent)
             };
+        }
+    }
+
+    public record OpenCallForHelpReviewRow(
+        long callForHelpId,
+        long callerUserId,
+        String callerName,
+        long partnerUserId,
+        long roomId,
+        long categoryId,
+        String description,
+        long duplicateRoomId,
+        String roomName
+    ) {
+        public String legacyRow() {
+            return callForHelpId + "\t" + callerUserId + "\t" + text(callerName) + "\t" + partnerUserId
+                + "\t" + roomId + "\t" + categoryId + "\t" + text(description) + "\t" + duplicateRoomId
+                + "\t" + text(roomName);
+        }
+
+        public String reviewPayloadRow() {
+            return callForHelpId + "\t\t" + callerUserId + "\t" + text(callerName) + "\t" + partnerUserId
+                + "\t" + roomId + "\t" + categoryId + "\t" + text(description) + "\t" + duplicateRoomId
+                + "\t" + text(roomName) + "\t";
+        }
+
+        private static String text(String value) {
+            return value == null ? "" : value;
         }
     }
 

@@ -262,15 +262,12 @@ public final class Handling {
             if (moderationDao == null) {
                 return;
             }
-            String rowText = moderationDao.openCallForHelpReviewRow(callForHelpId);
-            if (rowText.isEmpty()) {
+            StaffModerationDao.OpenCallForHelpReviewRow reviewRow = moderationDao.openCallForHelpReview(callForHelpId)
+                .orElse(null);
+            if (reviewRow == null) {
                 return;
             }
-            String[] fields = rowText.split("\t", -1);
-            String representedRow = handlingField(fields, 0) + "\t\t" + handlingField(fields, 1) + "\t" + handlingField(fields, 2)
-                + "\t" + handlingField(fields, 3) + "\t" + handlingField(fields, 4) + "\t" + handlingField(fields, 5)
-                + "\t" + handlingField(fields, 6) + "\t" + handlingField(fields, 7) + "\t" + handlingField(fields, 8) + "\t";
-            String payload = "HR" + callForHelpRowPayload(representedRow, null);
+            String payload = "HR" + callForHelpRowPayload(reviewRow.reviewPayloadRow(), null);
             if (socketIndex > 0) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             } else {
@@ -8325,7 +8322,7 @@ public final class Handling {
         String recordPayload = Licence.getSessionRecordPayload("1:", String.valueOf(socketIndex));
         if (!recordPayload.isEmpty()) {
             String[] fields = recordPayload.split("\2", -1);
-            String userId = String.valueOf(NumberUtils.parseLong(handlingField(fields, 0)));
+            String userId = String.valueOf(NumberUtils.parseLong(StringUtils.field(fields, 0)));
             if (!userId.isEmpty() && !"0".equals(userId)) {
                 return userId;
             }
@@ -11656,8 +11653,8 @@ public final class Handling {
         long userIdValue = NumberUtils.parseLong(userId);
         for (String row : StringUtils.text(achievementRows).split("\r", -1)) {
             if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                String badgePrefix = handlingField(fields, 1);
+                AchievementSettings.Achievement achievement = AchievementSettings.achievement(row);
+                String badgePrefix = achievement == null ? "" : achievement.badgePrefix();
                 if (!badgePrefix.isEmpty() && !result.containsKey(badgePrefix)) {
                     long currentLevel = 0L;
                     if (users != null && userIdValue > 0L) {
@@ -12604,7 +12601,7 @@ public final class Handling {
             if (recordText.indexOf('\t') >= 0) {
                 String[] fields = recordText.split("\t", -1);
                 for (int i = 0; i < values.length; i++) {
-                    values[i] = handlingField(fields, i);
+                    values[i] = StringUtils.field(fields, i);
                 }
             } else {
                 values[0] = recordText;
@@ -12628,7 +12625,7 @@ public final class Handling {
             if (recordText.indexOf('\t') >= 0) {
                 String[] fields = recordText.split("\t", -1);
                 for (int i = 0; i < values.length; i++) {
-                    values[i] = handlingField(fields, i);
+                    values[i] = StringUtils.field(fields, i);
                 }
             } else {
                 values[0] = recordText;
