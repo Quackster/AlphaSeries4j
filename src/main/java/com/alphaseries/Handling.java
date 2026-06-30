@@ -2949,7 +2949,7 @@ public final class Handling {
             if (!inventoryRow.isEmpty()) {
                 sendToSocket(socketIndex, PetPayloads.inventoryAdd(inventoryRow));
             }
-            Proc_6_146_76D300(socketIndex, furnitureId, productId);
+            removeRepresentedFurnitureCacheMarker(socketIndex, furnitureId, productId);
             broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2');
             furniture.deleteFurniture(furnitureId);
             sendToSocket(socketIndex, PetPayloads.packageNameValidation(furnitureId, validationCode, petName));
@@ -4704,21 +4704,11 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_145_76CA20(Object... args) {
+    /**
+     * Original function: Proc_6_145_76CA20.
+     */
+    public static void trackRepresentedFurnitureCacheMarker(int socketIndex, long roomId, long furnitureId) {
         try {
-            int socketIndex = 0;
-            long roomId = 0L;
-            long furnitureId = 0L;
-            if (args != null && args.length >= 3) {
-                socketIndex = (int) NumberUtils.parseLong(args[0]);
-                roomId = NumberUtils.parseLong(args[1]);
-                furnitureId = NumberUtils.parseLong(args[2]);
-            } else if (args != null && args.length >= 2) {
-                roomId = NumberUtils.parseLong(args[0]);
-                furnitureId = NumberUtils.parseLong(args[1]);
-            } else if (args != null && args.length >= 1) {
-                furnitureId = NumberUtils.parseLong(args[0]);
-            }
             if (roomId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId)) {
@@ -4745,21 +4735,31 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_146_76D300(Object... args) {
+    /**
+     * Original function: Proc_6_145_76CA20.
+     */
+    public static void Proc_6_145_76CA20(Object... args) {
+        int socketIndex = 0;
+        long roomId = 0L;
+        long furnitureId = 0L;
+        if (args != null && args.length >= 3) {
+            socketIndex = (int) NumberUtils.parseLong(args[0]);
+            roomId = NumberUtils.parseLong(args[1]);
+            furnitureId = NumberUtils.parseLong(args[2]);
+        } else if (args != null && args.length >= 2) {
+            roomId = NumberUtils.parseLong(args[0]);
+            furnitureId = NumberUtils.parseLong(args[1]);
+        } else if (args != null && args.length >= 1) {
+            furnitureId = NumberUtils.parseLong(args[0]);
+        }
+        trackRepresentedFurnitureCacheMarker(socketIndex, roomId, furnitureId);
+    }
+
+    /**
+     * Original function: Proc_6_146_76D300.
+     */
+    public static void removeRepresentedFurnitureCacheMarker(int socketIndex, long furnitureId, long productId) {
         try {
-            int socketIndex = 0;
-            long furnitureId = 0L;
-            long productId = 0L;
-            if (args != null && args.length >= 3) {
-                socketIndex = (int) NumberUtils.parseLong(args[0]);
-                furnitureId = NumberUtils.parseLong(args[1]);
-                productId = NumberUtils.parseLong(args[2]);
-            } else if (args != null && args.length >= 2) {
-                furnitureId = NumberUtils.parseLong(args[0]);
-                productId = NumberUtils.parseLong(args[1]);
-            } else if (args != null && args.length >= 1) {
-                furnitureId = NumberUtils.parseLong(args[0]);
-            }
             if (furnitureId <= 0L) {
                 return;
             }
@@ -4795,6 +4795,26 @@ public final class Handling {
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
+    }
+
+    /**
+     * Original function: Proc_6_146_76D300.
+     */
+    public static void Proc_6_146_76D300(Object... args) {
+        int socketIndex = 0;
+        long furnitureId = 0L;
+        long productId = 0L;
+        if (args != null && args.length >= 3) {
+            socketIndex = (int) NumberUtils.parseLong(args[0]);
+            furnitureId = NumberUtils.parseLong(args[1]);
+            productId = NumberUtils.parseLong(args[2]);
+        } else if (args != null && args.length >= 2) {
+            furnitureId = NumberUtils.parseLong(args[0]);
+            productId = NumberUtils.parseLong(args[1]);
+        } else if (args != null && args.length >= 1) {
+            furnitureId = NumberUtils.parseLong(args[0]);
+        }
+        removeRepresentedFurnitureCacheMarker(socketIndex, furnitureId, productId);
     }
 
     public static long Proc_6_147_76E910(Object... args) {
@@ -5142,7 +5162,7 @@ public final class Handling {
                 }
                 moderationDao.insertFurniturePickupLog(NumberUtils.parseLong(userId), roomId, furnitureId, sessionId);
             }
-            Proc_6_146_76D300(socketIndex, furnitureId, productId);
+            removeRepresentedFurnitureCacheMarker(socketIndex, furnitureId, productId);
             furniture.moveRoomFurnitureToInventory(furnitureId, roomId, NumberUtils.parseLong(userId));
             sendToSocket(socketIndex, InventoryMessagePayloads.remove(furnitureId));
             broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2');
@@ -9152,7 +9172,7 @@ public final class Handling {
             if (storeState) {
                 refreshRepresentedFurnitureState(roomId, furnitureId, stateValue);
             } else {
-                Proc_6_145_76CA20(socketIndex, roomId, furnitureId);
+                trackRepresentedFurnitureCacheMarker(socketIndex, roomId, furnitureId);
             }
             return payload;
         } catch (Exception ignored) {
