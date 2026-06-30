@@ -5,6 +5,9 @@ import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
+import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
+import com.alphaseries.game.jukebox.SongDiskRow;
+import com.alphaseries.game.jukebox.SongInfoRow;
 import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
@@ -2121,7 +2124,9 @@ public final class PortedModuleSmokeTest {
         expectedCdPayload += Crypto.Proc_3_0_6D2AF0(4, null, Crypto.Proc_3_0_6D2AF0(51, null, ""))
             + "Song B\2Author B\2sound-b\2";
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "Dl") + expectedCdPayload,
-            Handling.songInfoPayload("Song A\t3\tAuthor A\tsound-a\t50\rSong B\t4\tAuthor B\tsound-b\t51"));
+            Handling.songInfoPayload(List.of(
+                new SongInfoRow("Song A", 3L, "Author A", "sound-a", 50L),
+                new SongInfoRow("Song B", 4L, "Author B", "sound-b", 51L))));
         assertEquals("\1" + "200\2" + "keep\1" + "300\2",
             Handling.removeSoundMachineMarkers("\1" + "100\2\1" + "200\2" + "keep\1" + "300\2", 100, 0));
         Handling.JukeboxAddRequest addRequest = Handling.jukeboxAddRequestFromWire("C" + '\177'
@@ -2138,9 +2143,13 @@ public final class PortedModuleSmokeTest {
         expectedPlaylist += Crypto.Proc_3_0_6D2AF0(3, null, "");
         expectedPlaylist += Crypto.Proc_3_0_6D2AF0(41, null, "");
         assertEquals(Crypto.Proc_3_0_6D2AF0(5, null, Crypto.Proc_3_0_6D2AF0(2, null, "EN")) + expectedPlaylist,
-            Handling.jukeboxPlaylistPayload(5, "2\t40\r3\t41"));
+            Handling.jukeboxPlaylistPayload(5, List.of(
+                new JukeboxPlaylistEntry(2L, 40L),
+                new JukeboxPlaylistEntry(3L, 41L))));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "EM") + expectedPlaylist,
-            Handling.songDiskInventoryPayload("2\t40\r3\t41"));
+            Handling.songDiskInventoryPayload(List.of(
+                new SongDiskRow(2L, 40L),
+                new SongDiskRow(3L, 41L))));
         String expectedPlayback = Crypto.Proc_3_0_6D2AF0(10, null, "EG");
         expectedPlayback = Crypto.Proc_3_0_6D2AF0(3, null, expectedPlayback);
         expectedPlayback = Crypto.Proc_3_0_6D2AF0(40, null, expectedPlayback);
@@ -3950,7 +3959,9 @@ public final class PortedModuleSmokeTest {
         assertEquals("5;1;7;1;5;0;", Handling.Proc_6_218_7EA200(1507));
         String liveSongInfoWire = "C]" + wireLong(2) + wireLong(50) + wireLong(51);
         String liveSongInfoPayload = Handling.Proc_6_223_7EEDD0(4, liveSongInfoWire);
-        assertEquals(Handling.songInfoPayload("Song A\t3\tAuthor A\tsound-a\t50\rSong B\t4\tAuthor B\tsound-b\t51"),
+        assertEquals(Handling.songInfoPayload(List.of(
+                new SongInfoRow("Song A", 3L, "Author A", "sound-a", 50L),
+                new SongInfoRow("Song B", 4L, "Author B", "sound-b", 51L))),
             liveSongInfoPayload);
         assertEquals(true, containsSend(handlingSends, "Dl"));
         assertEquals(true, containsSend(handlingSends, "Song A"));
@@ -3977,11 +3988,15 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "EM"));
         handlingSends.clear();
         String playlistPayload = Handling.Proc_6_227_7F2400(4);
-        assertEquals(Handling.jukeboxPlaylistPayload(5, "2\t40\r3\t41"), playlistPayload);
+        assertEquals(Handling.jukeboxPlaylistPayload(5, List.of(
+            new JukeboxPlaylistEntry(2L, 40L),
+            new JukeboxPlaylistEntry(3L, 41L))), playlistPayload);
         assertEquals(true, containsSend(handlingSends, "EN"));
         handlingSends.clear();
         String diskInventoryPayload = Handling.Proc_6_228_7F2AF0(4);
-        assertEquals(Handling.songDiskInventoryPayload("4\t50\r5\t51"), diskInventoryPayload);
+        assertEquals(Handling.songDiskInventoryPayload(List.of(
+            new SongDiskRow(4L, 50L),
+            new SongDiskRow(5L, 51L))), diskInventoryPayload);
         assertEquals(true, containsSend(handlingSends, "EM"));
         handlingSends.clear();
         String playbackPayload = Handling.Proc_6_229_7F3070(4);

@@ -11,10 +11,6 @@ public final class JukeboxPayloads {
     private JukeboxPayloads() {
     }
 
-    public static String songInfo(String cdRows) {
-        return songInfo(SongInfoRow.listFromLegacy(cdRows));
-    }
-
     public static String songInfo(List<SongInfoRow> songs) {
         long responseCount = 0L;
         PacketBuilder cdPayload = PacketBuilder.create();
@@ -34,10 +30,6 @@ public final class JukeboxPayloads {
             .build();
     }
 
-    public static String playlist(long playlistLimit, String playlistRows) {
-        return playlist(playlistLimit, JukeboxPlaylistEntry.listFromLegacy(playlistRows));
-    }
-
     public static String playlist(long playlistLimit, List<JukeboxPlaylistEntry> entries) {
         long effectiveLimit = playlistLimit <= 0L ? 100L : playlistLimit;
         long playlistCount = 0L;
@@ -53,10 +45,6 @@ public final class JukeboxPayloads {
             .appendInt(effectiveLimit)
             .appendRaw(playlistPayload)
             .build();
-    }
-
-    public static String diskInventory(String diskRows) {
-        return diskInventory(SongDiskRow.listFromLegacy(diskRows));
     }
 
     public static String diskInventory(List<SongDiskRow> disks) {

@@ -7151,7 +7151,7 @@ public final class Handling {
             SongInfoRequest request = songInfoRequestFromWire(handlingPacketPayload(args));
             JukeboxDao jukebox = jukeboxDao();
             String payload = jukebox == null
-                ? songInfoPayload("")
+                ? songInfoPayload(List.of())
                 : songInfoPayload(jukebox.songInfoRows(request.requestedIds, request.requestedCount));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
@@ -11906,10 +11906,6 @@ public final class Handling {
         return request;
     }
 
-    public static String songInfoPayload(String cdRows) {
-        return JukeboxPayloads.songInfo(cdRows);
-    }
-
     public static String songInfoPayload(List<SongInfoRow> cdRows) {
         return JukeboxPayloads.songInfo(cdRows);
     }
@@ -11984,16 +11980,8 @@ public final class Handling {
         return Math.max(0L, playlistOrder);
     }
 
-    public static String jukeboxPlaylistPayload(long playlistLimit, String playlistRows) {
-        return JukeboxPayloads.playlist(playlistLimit, playlistRows);
-    }
-
     public static String jukeboxPlaylistPayload(long playlistLimit, List<JukeboxPlaylistEntry> playlistRows) {
         return JukeboxPayloads.playlist(playlistLimit, playlistRows);
-    }
-
-    public static String songDiskInventoryPayload(String diskRows) {
-        return JukeboxPayloads.diskInventory(diskRows);
     }
 
     public static String songDiskInventoryPayload(List<SongDiskRow> diskRows) {
