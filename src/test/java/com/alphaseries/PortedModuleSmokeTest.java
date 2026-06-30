@@ -1669,8 +1669,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomFragment),
             Handling.navigatorLegacyRoomListPayload(List.of(legacyNavigatorRoom)));
         assertEquals(expectedRoomFragment, Handling.navigatorRoomFragment(legacyNavigatorRoom));
+        assertEquals(expectedRoomFragment, NavigatorPayloads.roomFragment(legacyNavigatorRoom));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, expectedEventFragment),
             Handling.navigatorEventListPayload(List.of(legacyNavigatorEvent)));
+        assertEquals(expectedEventFragment, NavigatorPayloads.eventFragment(legacyNavigatorEvent));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, expectedEventFragment + expectedRoomFragment),
             Handling.navigatorCombinedLegacyRoomListPayload(List.of(legacyNavigatorEvent), List.of(legacyNavigatorRoom)));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.navigatorLegacyRoomListPayload(List.of()));
@@ -1694,6 +1696,7 @@ public final class PortedModuleSmokeTest {
             "11", "12", "13", "description", "15", "16", "17", "18", "icon",
             "tag1", "tag2", "22", "model", "files", "250", 5L, 6L, 7L, true);
         assertEquals(expectedOfficialRow, Handling.officialNavigatorRowPayload(officialFields));
+        assertEquals(expectedOfficialRow, NavigatorPayloads.officialItem(officialItem));
         assertEquals(expectedOfficialRow, Handling.officialNavigatorPayload(List.of(officialItem), false));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedOfficialRow,
             Handling.officialNavigatorPayload(List.of(officialItem), true));

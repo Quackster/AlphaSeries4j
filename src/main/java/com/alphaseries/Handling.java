@@ -9570,87 +9570,27 @@ public final class Handling {
     }
 
     public static String navigatorRoomFragment(LegacyNavigatorRoomRow room) {
-        if (room == null) {
-            return "";
-        }
-        return PacketBuilder.create()
-            .appendInt(room.roomId())
-            .appendInt(room.visitorsNow())
-            .appendInt(room.visitorsMax())
-            .appendInt(room.roomRate())
-            .appendInt(room.categoryId())
-            .appendInt(room.hasTrading())
-            .appendInt(room.allowOtherPets())
-            .appendInt(room.staffPicked())
-            .appendString(room.roomName())
-            .appendString(room.ownerName())
-            .appendString(room.doorStatus())
-            .appendString(room.description())
-            .appendString(room.icon())
-            .appendString(room.tagOne())
-            .appendString(room.tagTwo())
-            .appendRaw("H")
-            .build();
+        return NavigatorPayloads.roomFragment(room);
     }
 
     public static String navigatorRoomFragment(NavigatorRoom room) {
-        if (room == null) {
-            return "";
-        }
-        return PacketBuilder.create()
-            .appendInt(room.roomId())
-            .appendInt(room.visitorsNow())
-            .appendInt(room.visitorsMax())
-            .appendInt(room.roomRate())
-            .appendInt(room.categoryId())
-            .appendInt(room.hasTrading())
-            .appendInt(room.allowOtherPets())
-            .appendInt(room.staffPicked())
-            .appendString(room.roomName())
-            .appendString(room.ownerName())
-            .appendString(room.doorStatus())
-            .appendString(room.description())
-            .appendString(room.icon())
-            .appendString(room.tagOne())
-            .appendString(room.tagTwo())
-            .appendRaw("H")
-            .build();
+        return NavigatorPayloads.roomFragment(room);
     }
 
     public static String navigatorLegacyRoomListPayload(List<LegacyNavigatorRoomRow> rows) {
-        long roomCount = 0L;
-        StringBuilder payload = new StringBuilder();
-        for (LegacyNavigatorRoomRow row : rows == null ? List.<LegacyNavigatorRoomRow>of() : rows) {
-            if (row != null) {
-                payload.append(navigatorRoomFragment(row));
-                roomCount++;
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(roomCount, null, payload.toString());
+        return NavigatorPayloads.legacyRoomList(rows);
     }
 
     public static String navigatorRoomListPayload(List<NavigatorRoom> rows) {
-        long roomCount = 0L;
-        StringBuilder payload = new StringBuilder();
-        for (NavigatorRoom row : rows == null ? List.<NavigatorRoom>of() : rows) {
-            if (row != null) {
-                payload.append(navigatorRoomFragment(row));
-                roomCount++;
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(roomCount, null, payload.toString());
+        return NavigatorPayloads.roomList(rows);
     }
 
     public static String singleNavigatorRoomPayload(NavigatorRoom room) {
-        return room == null ? "" : navigatorRoomFragment(room);
+        return NavigatorPayloads.singleRoom(room);
     }
 
     public static String navigatorTagPopularityPayload(List<NavigatorTagPopularity> rows) {
-        PacketBuilder payload = PacketBuilder.create();
-        for (NavigatorTagPopularity row : rows == null ? List.<NavigatorTagPopularity>of() : rows) {
-            payload.appendInt(row.visitorCount()).appendString(row.tag());
-        }
-        return payload.build();
+        return NavigatorPayloads.tagPopularity(rows);
     }
 
     public static String Proc_6_112_74E0C0(Object... args) {
@@ -9670,110 +9610,30 @@ public final class Handling {
     }
 
     public static String navigatorEventFragment(RoomDao.NavigatorEventRow event) {
-        if (event == null) {
-            return "";
-        }
-        return PacketBuilder.create()
-            .appendInt(event.roomId())
-            .appendInt(event.visitorsNow())
-            .appendInt(event.visitorsMax())
-            .appendInt(event.roomRate())
-            .appendInt(event.categoryId())
-            .appendInt(event.hasTrading())
-            .appendRaw(" ")
-            .appendString(event.eventName())
-            .appendString(event.ownerName())
-            .appendString(event.doorStatus())
-            .appendString(event.description())
-            .appendString(event.icon())
-            .appendString(event.tagOne())
-            .appendString(event.tagTwo())
-            .appendString(event.formattedTime())
-            .appendRaw("H")
-            .build();
+        return NavigatorPayloads.eventFragment(event);
     }
 
     public static String navigatorEventListPayload(List<RoomDao.NavigatorEventRow> rows) {
-        long eventCount = 0L;
-        StringBuilder payload = new StringBuilder();
-        for (RoomDao.NavigatorEventRow row : rows == null ? List.<RoomDao.NavigatorEventRow>of() : rows) {
-            if (row != null) {
-                payload.append(navigatorEventFragment(row));
-                eventCount++;
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(eventCount, null, payload.toString());
+        return NavigatorPayloads.eventList(rows);
     }
 
     public static String navigatorCombinedLegacyRoomListPayload(
         List<RoomDao.NavigatorEventRow> eventRows,
         List<LegacyNavigatorRoomRow> roomRows
     ) {
-        long itemCount = 0L;
-        StringBuilder payload = new StringBuilder();
-        for (RoomDao.NavigatorEventRow row : eventRows == null ? List.<RoomDao.NavigatorEventRow>of() : eventRows) {
-            if (row != null) {
-                payload.append(navigatorEventFragment(row));
-                itemCount++;
-            }
-        }
-        for (LegacyNavigatorRoomRow row : roomRows == null ? List.<LegacyNavigatorRoomRow>of() : roomRows) {
-            if (row != null) {
-                payload.append(navigatorRoomFragment(row));
-                itemCount++;
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(itemCount, null, payload.toString());
+        return NavigatorPayloads.combinedLegacyRoomList(eventRows, roomRows);
     }
 
     public static String navigatorCombinedRoomListPayload(List<RoomDao.NavigatorEventRow> eventRows, List<NavigatorRoom> roomRows) {
-        long itemCount = 0L;
-        StringBuilder payload = new StringBuilder();
-        for (RoomDao.NavigatorEventRow row : eventRows == null ? List.<RoomDao.NavigatorEventRow>of() : eventRows) {
-            if (row != null) {
-                payload.append(navigatorEventFragment(row));
-                itemCount++;
-            }
-        }
-        for (NavigatorRoom row : roomRows == null ? List.<NavigatorRoom>of() : roomRows) {
-            if (row != null) {
-                payload.append(navigatorRoomFragment(row));
-                itemCount++;
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(itemCount, null, payload.toString());
+        return NavigatorPayloads.combinedRoomList(eventRows, roomRows);
     }
 
     public static String officialNavigatorPayload(List<OfficialNavigatorItem> items, boolean includeCountPrefix) {
-        PacketBuilder payload = PacketBuilder.create();
-        long itemCount = 0L;
-        for (OfficialNavigatorItem item : items == null ? List.<OfficialNavigatorItem>of() : items) {
-            payload.appendRaw(officialNavigatorItemPayload(item));
-            itemCount++;
-        }
-        if (includeCountPrefix) {
-            return PacketBuilder.create().appendInt(itemCount).appendRaw(payload.build()).build();
-        }
-        return payload.build();
+        return NavigatorPayloads.official(items, includeCountPrefix);
     }
 
     public static String officialNavigatorItemPayload(OfficialNavigatorItem item) {
-        if (item == null) {
-            return "";
-        }
-        PacketBuilder payload = PacketBuilder.create()
-            .appendInt(item.typeId())
-            .appendInt(item.styleId())
-            .appendInt(item.iconId());
-        for (String textField : item.textFields()) {
-            payload.appendString(textField);
-        }
-        payload.appendInt(item.parentId())
-            .appendInt(item.officialId());
-        if (item.requiredLevelPresent()) {
-            payload.appendInt(item.requiredLevel());
-        }
-        return payload.build();
+        return NavigatorPayloads.officialItem(item);
     }
 
     public static String officialNavigatorRowPayload(String[] fields) {
