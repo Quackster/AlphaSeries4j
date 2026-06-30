@@ -4824,7 +4824,7 @@ public final class Handling {
                     if (productAction.isEmpty() || productAction.contains("switch") || productAction.contains("click")
                         || productAction.contains("score") || productSprite.contains("score") || productSprite.contains("dice")) {
                         long stateValue = NumberUtils.parseLong(row.sign());
-                        Proc_6_151_78AC20(rowRoomId, furnitureId, stateValue);
+                        refreshRepresentedFurnitureState(rowRoomId, furnitureId, stateValue);
                         broadcastToRoomUsers(rowRoomId, FurniturePayloads.stateChanged(furnitureId, stateValue));
                         refreshCount++;
                     }
@@ -4923,7 +4923,7 @@ public final class Handling {
             long maxState = DataManager.productCache().maxState(productId);
             long nextState = nextFurnitureState(productSprite, currentState, maxState);
             furniture.updateRoomFurnitureState(furnitureId, roomId, NumberUtils.parseLong(userId), nextState);
-            Proc_6_151_78AC20(roomId, furnitureId, nextState);
+            refreshRepresentedFurnitureState(roomId, furnitureId, nextState);
             String payload = FurniturePayloads.stateChanged(furnitureId, nextState);
             broadcastToCurrentRoom(socketIndex, payload);
             if (DataManager.productCache().hasCharges(productId)) {
@@ -5077,7 +5077,7 @@ public final class Handling {
             if ((lowerSprite.startsWith("bb_score_") || lowerSprite.startsWith("es_score_")) && stateValue < 0L) {
                 stateValue = 0L;
             }
-            Proc_6_151_78AC20(roomId, furnitureId, stateValue);
+            refreshRepresentedFurnitureState(roomId, furnitureId, stateValue);
             String payload = FurniturePayloads.stateChanged(furnitureId, stateValue);
             broadcastToRoomUsers(roomId, payload);
             if (productType == 11L || lowerSprite.contains("soundmachine") || lowerSprite.contains("jukebox")) {
@@ -9141,7 +9141,7 @@ public final class Handling {
             String payload = FurniturePayloads.simpleFloorUse(furnitureId, stateValue);
             broadcastToCurrentRoom(socketIndex, payload);
             if (storeState) {
-                Proc_6_151_78AC20(roomId, furnitureId, stateValue);
+                refreshRepresentedFurnitureState(roomId, furnitureId, stateValue);
             } else {
                 Proc_6_145_76CA20(socketIndex, roomId, furnitureId);
             }
@@ -11046,7 +11046,7 @@ public final class Handling {
             if (furnitureId > 0L && handlingFurnitureExistsInRoom(roomId, furnitureId)) {
                 try {
                     furniture.updateSignLimited(furnitureId, stateValue);
-                    Proc_6_151_78AC20(roomId, furnitureId, stateValue);
+                    refreshRepresentedFurnitureState(roomId, furnitureId, stateValue);
                     broadcastToRoomUsers(roomId, FurniturePayloads.stateChanged(furnitureId, stateValue));
                     appliedCount++;
                 } catch (Exception ignored) {
