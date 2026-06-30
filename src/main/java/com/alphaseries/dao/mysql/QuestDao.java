@@ -70,7 +70,7 @@ public final class QuestDao {
 
     public int scheduleNextTime(long userId, long questId, long waitSeconds) throws SQLException {
         return database.execute(
-            "UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL " + waitSeconds
+            "UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL " + nonNegativeSeconds(waitSeconds)
                 + " SECOND) WHERE id_user=? AND id_quest=? LIMIT 1",
             userId,
             questId);
@@ -180,6 +180,10 @@ public final class QuestDao {
                 resultSet.getLong(9),
                 resultSet.getLong(10),
                 resultSet.getLong(11)));
+    }
+
+    private static long nonNegativeSeconds(long seconds) {
+        return Math.max(0L, seconds);
     }
 
     public record UserQuestLevelRow(long questId, long level) {
