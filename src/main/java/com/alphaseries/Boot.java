@@ -201,15 +201,15 @@ public final class Boot {
             loadRoomCategoryRowsCache();
             loadRoomCategoryPayloadCache();
         });
-        runTimed("Raumwerbung im Cache gespeichert", () -> Proc_1_22_6D0F00(0, 0, 0));
+        runTimed("Raumwerbung im Cache gespeichert", Boot::loadVisitRoomAdsCache);
         runTimed("Bonussystem im Cache gespeichert", () -> Proc_1_5_6C4F80(0, 0, 0));
         runTimed("Katalog im Cache gespeichert", () -> Proc_1_1_6BB340(0, 0, 0));
         runTimed("Chat Einstellungen im Cache gespeichert", Boot::buildChatSettingsCache);
         runTimed("Haustierrassen im Cache gespeichert", Boot::loadPetRaceCache);
         runTimed("FAQ im Cache gespeichert", () -> {
-            Proc_1_19_6CF190(0, 0, 0);
-            Proc_1_20_6CF830(0, 0, 0);
-            Proc_1_21_6D08C0(0, 0, 0);
+            loadImportantFaqCache();
+            loadFaqCategoryCache();
+            loadFaqDescriptionCache();
         });
         runTimed("Aktive Serverdaten zurückgesetzt", () -> {
             ServerMaintenanceDao maintenanceDao = serverMaintenanceDao();
@@ -230,10 +230,10 @@ public final class Boot {
     public static void Proc_1_4_6C4F00(Object... args) {
         loadRoomEventLocalesCache();
         loadServerSettingsCache();
-        Proc_1_19_6CF190(0, 0, 0);
-        Proc_1_20_6CF830(0, 0, 0);
-        Proc_1_21_6D08C0(0, 0, 0);
-        Proc_1_22_6D0F00(0, 0, 0);
+        loadImportantFaqCache();
+        loadFaqCategoryCache();
+        loadFaqDescriptionCache();
+        loadVisitRoomAdsCache();
         loadRoomCategoryRowsCache();
         loadRoomCategoryPayloadCache();
         loadRecommendedRoomsCache();
@@ -256,11 +256,11 @@ public final class Boot {
         loadPermissionMatrixCache();
         loadPetRaceCache();
         loadStaffModerationCache();
-        Proc_1_19_6CF190(0, 0, 0);
-        Proc_1_20_6CF830(0, 0, 0);
-        Proc_1_21_6D08C0(0, 0, 0);
+        loadImportantFaqCache();
+        loadFaqCategoryCache();
+        loadFaqDescriptionCache();
         loadGiftWrapCache();
-        Proc_1_22_6D0F00(0, 0, 0);
+        loadVisitRoomAdsCache();
         buildChatSettingsCache();
         Licence.setMessengerFriendLimits(MessengerSettings.fromLimits(
             NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.messenger.maxfriends.hclevel0", 0)),
@@ -660,7 +660,17 @@ public final class Boot {
             gifts));
     }
 
+    /**
+     * Original function: Proc_1_19_6CF190.
+     */
     public static void Proc_1_19_6CF190(Object... args) {
+        loadImportantFaqCache();
+    }
+
+    /**
+     * Original function: Proc_1_19_6CF190.
+     */
+    public static void loadImportantFaqCache() {
         Map<Long, List<HelpDao.FaqNameRow>> rows = new LinkedHashMap<Long, List<HelpDao.FaqNameRow>>();
         HelpDao help = helpDao();
         if (help != null) {
@@ -674,7 +684,17 @@ public final class Boot {
         Licence.setImportantFaqPayload(buildImportantFaqPayloadFromRows(rows));
     }
 
+    /**
+     * Original function: Proc_1_20_6CF830.
+     */
     public static void Proc_1_20_6CF830(Object... args) {
+        loadFaqCategoryCache();
+    }
+
+    /**
+     * Original function: Proc_1_20_6CF830.
+     */
+    public static void loadFaqCategoryCache() {
         HelpDao help = helpDao();
         List<HelpDao.FaqNameRow> categoryRows = List.of();
         Map<Long, List<HelpDao.FaqNameRow>> faqRows = new LinkedHashMap<Long, List<HelpDao.FaqNameRow>>();
@@ -696,7 +716,17 @@ public final class Boot {
         Licence.setFaqCategoryCache(cache.categoryPayload, cache.faqPayloadByCategoryId);
     }
 
+    /**
+     * Original function: Proc_1_21_6D08C0.
+     */
     public static void Proc_1_21_6D08C0(Object... args) {
+        loadFaqDescriptionCache();
+    }
+
+    /**
+     * Original function: Proc_1_21_6D08C0.
+     */
+    public static void loadFaqDescriptionCache() {
         HelpDao help = helpDao();
         Map<Long, String> cache = new LinkedHashMap<Long, String>();
         if (help != null) {
@@ -709,7 +739,17 @@ public final class Boot {
         Licence.setFaqDescriptionCache(cache);
     }
 
+    /**
+     * Original function: Proc_1_22_6D0F00.
+     */
     public static void Proc_1_22_6D0F00(Object... args) {
+        loadVisitRoomAdsCache();
+    }
+
+    /**
+     * Original function: Proc_1_22_6D0F00.
+     */
+    public static void loadVisitRoomAdsCache() {
         AdvertisingDao advertising = advertisingDao();
         List<AdvertisingDao.VisitRoomAdRow> visitRoomRows = List.of();
         if (advertising != null) {
