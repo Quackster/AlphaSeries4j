@@ -154,6 +154,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed simple floor item room-slot lookup through `RoomDao`, replacing another raw room SQL lookup in `Handling`.
 - Added typed room-user entry rows and routed self-entry payload setup through `RoomDao`, replacing tab-delimited room/user/model parsing in `Handling`.
 - Added `com.alphaseries.dao.mysql.TradeDao` and routed trade ownership updates/log insertion through prepared DAO methods.
+- Routed accepted trade furniture transfers through typed `List<Long>` offer IDs and prepared `TradeDao` `IN` placeholders, leaving quoted SQL-id text only as a compatibility helper.
 - Expanded `com.alphaseries.dao.mysql.RoomDao` for room settings, rights, icon, door-status, and event create/edit/delete operations, and routed homeroom updates through `UserDao`.
 - Expanded `RoomDao`/`UserDao` for shared `Handling` socket, active-room, permission, room-right, category visibility, and room-ban helper queries.
 - Expanded `RoomDao`/`UserDao` for room-control active user lookup, room settings updates, and room-event payload row retrieval.

@@ -1,8 +1,12 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.util.NumberUtils;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public final class TradeDao {
     private final Database database;
@@ -12,13 +16,21 @@ public final class TradeDao {
     }
 
     public int transferInventoryFurniture(String furnitureIds, long fromUserId, long toUserId) throws SQLException {
+        return transferInventoryFurniture(parseSqlIdList(furnitureIds), fromUserId, toUserId);
+    }
+
+    public int transferInventoryFurniture(List<Long> furnitureIds, long fromUserId, long toUserId) throws SQLException {
         if (furnitureIds == null || furnitureIds.isEmpty()) {
             return 0;
         }
+        String placeholders = String.join(",", Collections.nCopies(furnitureIds.size(), "?"));
+        List<Object> parameters = new ArrayList<>();
+        parameters.add(toUserId);
+        parameters.addAll(furnitureIds);
+        parameters.add(fromUserId);
         return database.execute(
-            "UPDATE furnitures SET id_owner=? WHERE id IN (" + furnitureIds + ") AND id_owner=? AND id_room IS NULL",
-            toUserId,
-            fromUserId);
+            "UPDATE furnitures SET id_owner=? WHERE id IN (" + placeholders + ") AND id_owner=? AND id_room IS NULL",
+            parameters.toArray());
     }
 
     public int insertTradeLog(
@@ -38,5 +50,24 @@ public final class TradeDao {
             partnerItems,
             roomId,
             sessionId);
+    }
+
+    private static List<Long> parseSqlIdList(String furnitureIds) {
+        if (furnitureIds == null || furnitureIds.isEmpty()) {
+            return List.of();
+        }
+        List<Long> ids = new ArrayList<>();
+        for (String idText : furnitureIds.split(",", -1)) {
+            String normalized = idText.trim();
+            if (normalized.startsWith("'") && normalized.endsWith("'") && normalized.length() >= 2) {
+                normalized = normalized.substring(1, normalized.length() - 1);
+            }
+            long id = NumberUtils.parseLong(normalized);
+            if (id <= 0L) {
+                return List.of();
+            }
+            ids.add(id);
+        }
+        return List.copyOf(ids);
     }
 }

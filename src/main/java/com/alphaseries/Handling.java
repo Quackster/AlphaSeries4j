@@ -2967,9 +2967,9 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId) || targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
             }
-            String sourceSqlIds = representedTradeOfferSqlIds(representedTradeOffers, socketIndex);
-            String targetSqlIds = representedTradeOfferSqlIds(representedTradeOffers, targetSocketIndex);
-            if (sourceSqlIds.isEmpty() && targetSqlIds.isEmpty()) {
+            List<Long> sourceFurnitureIds = representedTradeOfferFurnitureIds(representedTradeOffers, socketIndex);
+            List<Long> targetFurnitureIds = representedTradeOfferFurnitureIds(representedTradeOffers, targetSocketIndex);
+            if (sourceFurnitureIds.isEmpty() && targetFurnitureIds.isEmpty()) {
                 return "";
             }
             String sourceLogItems = representedTradeOfferLogItems(representedTradeOffers, socketIndex);
@@ -2980,11 +2980,11 @@ public final class Handling {
             }
             long numericUserId = NumberUtils.parseLong(userId);
             long numericTargetUserId = NumberUtils.parseLong(targetUserId);
-            if (!sourceSqlIds.isEmpty()) {
-                trades.transferInventoryFurniture(sourceSqlIds, numericUserId, numericTargetUserId);
+            if (!sourceFurnitureIds.isEmpty()) {
+                trades.transferInventoryFurniture(sourceFurnitureIds, numericUserId, numericTargetUserId);
             }
-            if (!targetSqlIds.isEmpty()) {
-                trades.transferInventoryFurniture(targetSqlIds, numericTargetUserId, numericUserId);
+            if (!targetFurnitureIds.isEmpty()) {
+                trades.transferInventoryFurniture(targetFurnitureIds, numericTargetUserId, numericUserId);
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
             String sessionId = handlingUserSessionId(userId);
@@ -9669,6 +9669,19 @@ public final class Handling {
             }
         }
         return sqlIds.toString();
+    }
+
+    public static List<Long> representedTradeOfferFurnitureIds(List<RepresentedTradeOffer> tradeOffers, long socketIndex) {
+        if (socketIndex <= 0L || tradeOffers == null || tradeOffers.isEmpty()) {
+            return List.of();
+        }
+        List<Long> furnitureIds = new ArrayList<>();
+        for (RepresentedTradeOffer offer : tradeOffers) {
+            if (offer.socketIndex() == socketIndex && offer.furnitureId() > 0L) {
+                furnitureIds.add(offer.furnitureId());
+            }
+        }
+        return List.copyOf(furnitureIds);
     }
 
     public static String representedTradeOfferLogItems(List<RepresentedTradeOffer> tradeOffers, long socketIndex) {

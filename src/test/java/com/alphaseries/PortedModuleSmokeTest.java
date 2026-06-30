@@ -2018,6 +2018,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("new", tradeOffers.get(0).signText());
         assertEquals(6L, tradeOffers.get(0).secondaryValue());
         assertEquals("'100','101'", Handling.representedTradeOfferSqlIds(tradeOffers, 2));
+        assertEquals(List.of(100L, 101L), Handling.representedTradeOfferFurnitureIds(tradeOffers, 2));
         assertEquals("100:20\1" + "101:21", Handling.representedTradeOfferLogItems(tradeOffers, 2));
         Handling.TradeOfferItemPayload sourceTradeItems = Handling.representedTradeOfferItemPayload(tradeOffers, 2);
         String expectedSourceTradeItems = InventoryMessagePayloads.item(100, 20, "new", 6) + iconInventoryItem;
