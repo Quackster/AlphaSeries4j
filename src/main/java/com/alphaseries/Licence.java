@@ -401,13 +401,21 @@ public final class Licence {
     }
 
     public static RepresentedRoomSlots representedRoomSlots() {
-        RoomState.instance().setRepresentedRoomSlotsFromLegacy(global_0082930C);
+        refreshRepresentedRoomSlots();
         return RoomState.instance().representedRoomSlots();
     }
 
     public static void setRepresentedRoomSlots(RepresentedRoomSlots representedRoomSlots) {
-        RoomState.instance().setRepresentedRoomSlots(representedRoomSlots);
         global_0082930C = representedRoomSlots == null ? "" : representedRoomSlots;
+        refreshRepresentedRoomSlots();
+    }
+
+    private static void refreshRepresentedRoomSlots() {
+        if (global_0082930C instanceof RepresentedRoomSlots representedRoomSlots) {
+            RoomState.instance().setRepresentedRoomSlots(representedRoomSlots);
+            return;
+        }
+        RoomState.instance().setRepresentedRoomSlotsFromLegacy(global_0082930C);
     }
 
     public static RepresentedRoomCache representedRooms() {
