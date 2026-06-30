@@ -52,6 +52,7 @@ import com.alphaseries.messages.outgoing.HelpPayloads;
 import com.alphaseries.messages.outgoing.MessengerPayloads;
 import com.alphaseries.messages.outgoing.NavigatorPayloads;
 import com.alphaseries.messages.outgoing.QuestPayloads;
+import com.alphaseries.messages.outgoing.RoomPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
@@ -2415,6 +2416,26 @@ public final class PortedModuleSmokeTest {
         expectedPlayback = Crypto.Proc_3_0_6D2AF0(2, null, expectedPlayback);
         expectedPlayback = Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(0, null, expectedPlayback));
         assertEquals(expectedPlayback, Handling.jukeboxPlaybackPayload(10, 3, 40, 2));
+        RoomDao.RoomSettingsRead settingsReadRow = new RoomDao.RoomSettingsRead(
+            7L, "Room", "Desc", 2L, 4L, 25L, 30L, "tag1", "tag2", 1L, 0L, 1L, 0L);
+        List<RoomDao.RoomRight> roomRights = List.of(
+            new RoomDao.RoomRight(5L, "Alice"),
+            new RoomDao.RoomRight(6L, "Bob"));
+        String expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(7, null, "GQ") + "Room\2Desc\2";
+        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(2, null, expectedRoomSettings);
+        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(4, null, expectedRoomSettings);
+        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(25, null, expectedRoomSettings);
+        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(30, null, expectedRoomSettings);
+        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(2, null, expectedRoomSettings) + "tag1\2tag2\2";
+        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(2, null, expectedRoomSettings);
+        expectedRoomSettings += Crypto.Proc_3_0_6D2AF0(5, null, "") + "Alice\2";
+        expectedRoomSettings += Crypto.Proc_3_0_6D2AF0(6, null, "") + "Bob\2H";
+        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomSettings);
+        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(0, null, expectedRoomSettings);
+        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomSettings);
+        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(0, null, expectedRoomSettings);
+        assertEquals(expectedRoomSettings, RoomPayloads.settingsRead(settingsReadRow, roomRights));
+        assertEquals(expectedRoomSettings, Handling.roomSettingsReadPayload(settingsReadRow, roomRights));
         Map<Long, String> staffNames = new HashMap<>();
         staffNames.put(6L, "Partner");
         staffNames.put(9L, "Picker");
