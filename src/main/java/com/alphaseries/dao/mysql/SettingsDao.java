@@ -26,6 +26,14 @@ public final class SettingsDao {
             "roomevent_type_%");
     }
 
+    public List<String> levelPrivileges(long rank, long hcLevel) throws SQLException {
+        return database.query(
+            "SELECT privilege FROM level_privileges WHERE min_level <= ? AND min_level_hc <= ?",
+            resultSet -> resultSet.getString(1),
+            rank,
+            hcLevel);
+    }
+
     public String value(String variableName) throws SQLException {
         return database.queryOne(
             "SELECT value FROM settings WHERE variable=?",

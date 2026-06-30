@@ -265,6 +265,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed staff moderation message startup cache reads through `StaffModerationDao`, keeping legacy permission payload serialization explicit in `Boot`.
 - Routed navigator room-category startup cache reads through typed `RoomDao` rows, keeping legacy category row serialization explicit in `Boot`.
 - Routed recommended-room startup cache reads through typed `RoomDao` rows, keeping legacy navigator payload serialization explicit in `Boot`.
+- Routed startup permission matrix reads through prepared `SettingsDao` privilege lookups, keeping legacy permission-string serialization explicit in `Boot`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -278,8 +279,8 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 12
-- `Boot.java`: 1805 lines
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 11
+- `Boot.java`: 1824 lines
 - `Handling.java`: 12596 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines

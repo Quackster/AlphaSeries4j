@@ -446,11 +446,18 @@ public final class Boot {
 
     public static void Proc_1_16_6CCA60(Object... args) {
         String[][] permissions = new String[21][3];
+        SettingsDao settings = settingsDao();
         for (int rank = 0; rank <= 20; rank++) {
             for (int hc = 0; hc <= 2; hc++) {
-                String rows = MySQL.Proc_5_2_6D4690("SELECT privilege FROM level_privileges WHERE min_level <= '"
-                    + rank + "' AND min_level_hc <= '" + hc + "'", 0, 0);
-                permissions[rank][hc] = rows.isEmpty() ? "\2" : "\2" + rows.replace('\r', '\2') + "\2";
+                String rows = "";
+                if (settings != null) {
+                    try {
+                        rows = joinPrivilegeRows(settings.levelPrivileges(rank, hc));
+                    } catch (Exception ignored) {
+                        // Legacy startup cache loading tolerated missing tables or SQL failures.
+                    }
+                }
+                permissions[rank][hc] = permissionPayload(rows);
             }
         }
         Functions.setPermissions(permissions);
@@ -767,6 +774,10 @@ public final class Boot {
             }
         }
         return payload.toString();
+    }
+
+    public static String permissionPayload(String rows) {
+        return StringUtils.text(rows).isEmpty() ? "\2" : "\2" + StringUtils.text(rows).replace('\r', '\2') + "\2";
     }
 
     public static String buildStaffCategoryPayload(String rootRows, Map<Long, String> childRowsByParentId) {
@@ -1690,6 +1701,14 @@ public final class Boot {
         StringBuilder joined = new StringBuilder();
         for (SettingsDao.SettingRow row : rows == null ? List.<SettingsDao.SettingRow>of() : rows) {
             appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
+    private static String joinPrivilegeRows(List<String> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (String row : rows == null ? List.<String>of() : rows) {
+            appendLegacyRow(joined, row);
         }
         return joined.toString();
     }
