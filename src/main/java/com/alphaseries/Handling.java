@@ -11379,16 +11379,8 @@ public final class Handling {
         return target.orElse(null);
     }
 
-    public static String badgeInventoryPayload(String inventoryRows, String equippedPayload) {
-        return SocialPayloads.badgeInventory(inventoryRows, equippedPayload);
-    }
-
     public static String badgeInventoryPayload(List<BadgeRow> inventoryRows, String equippedPayload) {
         return SocialPayloads.badgeInventory(inventoryRows, equippedPayload);
-    }
-
-    public static String equippedBadgePayload(String badgeRows) {
-        return SocialPayloads.equippedBadges(badgeRows);
     }
 
     public static String equippedBadgePayload(List<BadgeRow> badgeRows) {

@@ -29,10 +29,6 @@ public final class SocialPayloads {
             .build();
     }
 
-    public static String badgeInventory(String inventoryRows, String equippedPayload) {
-        return badgeInventory(BadgeRow.listFromLegacy(inventoryRows), equippedPayload);
-    }
-
     public static String badgeInventory(List<BadgeRow> inventoryRows, String equippedPayload) {
         long inventoryCount = 0L;
         PacketBuilder inventoryPayload = PacketBuilder.create();
@@ -49,10 +45,6 @@ public final class SocialPayloads {
             .appendRaw(inventoryPayload)
             .appendRaw(equippedPayload)
             .build();
-    }
-
-    public static String equippedBadges(String badgeRows) {
-        return equippedBadges(BadgeRow.listFromLegacy(badgeRows));
     }
 
     public static String equippedBadges(List<BadgeRow> badgeRows) {
