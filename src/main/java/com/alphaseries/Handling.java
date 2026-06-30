@@ -4092,16 +4092,16 @@ public final class Handling {
                         itemData = DataManager.productCache().defaultSign(itemProductId);
                     }
                     long productType = DataManager.productCache().type(itemProductId);
-                    Proc_6_244_801E80(socketIndex,
-                        InventoryMessagePayloads.roomAdd(Proc_6_138_7678A0(furnitureId, itemProductId, itemData, 0)), 0);
+                    sendToSocket(socketIndex,
+                        InventoryMessagePayloads.roomAdd(Proc_6_138_7678A0(furnitureId, itemProductId, itemData, 0)));
                     if ("TROPHY_VAR".equalsIgnoreCase(DataManager.productCache().defaultSign(itemProductId))) {
                         String trophySign = handlingUserName(handlingUserIdFromSocket(socketIndex)) + '\b'
                             + recyclerRewardSign() + '\b' + signText;
                         furnitureDao().updateSignText(furnitureId, Functions.singleLineText(trophySign));
                     }
                     if (productType == 8L) {
-                        Proc_6_244_801E80(socketIndex, CatalogPayloads.dimensionMap(furnitureId,
-                            DataManager.productCache().dimensionMapId(itemProductId)), 0);
+                        sendToSocket(socketIndex, CatalogPayloads.dimensionMap(furnitureId,
+                            DataManager.productCache().dimensionMapId(itemProductId)));
                     }
                 }
             }
@@ -4278,7 +4278,7 @@ public final class Handling {
             String itemClass = DataManager.productCache().type(productId) == 9L ? "I" : "i";
             String responsePayload = CatalogPayloads.clubGiftClaim(productId,
                 DataManager.productCache().itemData(productId), itemClass, insertedFurnitureId);
-            Proc_6_244_801E80(socketIndex, responsePayload, 0);
+            sendToSocket(socketIndex, responsePayload);
             clubs.decrementPresents(userIdValue);
             Proc_6_140_769400(socketIndex, "FT", "");
             return responsePayload;
@@ -4300,7 +4300,7 @@ public final class Handling {
                 ? new ClubDao.ClubGiftStatus(0L, 0L, 0L, 0L, 0L)
                 : clubs.clubGiftStatus(NumberUtils.parseLong(userId))
                     .orElse(new ClubDao.ClubGiftStatus(0L, 0L, 0L, 0L, 0L));
-            Proc_6_244_801E80(socketIndex, ClubPayloads.clubGiftStatus(giftSettings(), status), 0);
+            sendToSocket(socketIndex, ClubPayloads.clubGiftStatus(giftSettings(), status));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -4373,15 +4373,15 @@ public final class Handling {
                 return "";
             }
             if (minClubLevel > 0L && balance.clubLevel() < minClubLevel) {
-                Proc_6_244_801E80(socketIndex, CatalogPayloads.purchaseError(3), 0);
+                sendToSocket(socketIndex, CatalogPayloads.purchaseError(3));
                 return "";
             }
             if (balance.credits() < creditPrice) {
-                Proc_6_244_801E80(socketIndex, CatalogPayloads.purchaseError(1), 0);
+                sendToSocket(socketIndex, CatalogPayloads.purchaseError(1));
                 return "";
             }
             if (balance.activityPoints() < activityPrice) {
-                Proc_6_244_801E80(socketIndex, CatalogPayloads.purchaseError(2), 0);
+                sendToSocket(socketIndex, CatalogPayloads.purchaseError(2));
                 return "";
             }
             String recipientUserId = String.valueOf(users.userIdByName(recipientName));
@@ -4421,11 +4421,11 @@ public final class Handling {
             String purchasePayload = CatalogPayloads.giftPurchase(catalogProductId,
                 Licence.catalogProductField(catalogProductId, 0), creditPrice, activityPrice, activityType,
                 grantedFurnitureId);
-            Proc_6_244_801E80(socketIndex, purchasePayload, 0);
+            sendToSocket(socketIndex, purchasePayload);
             long recipientSocket = handlingSocketFromUserId(recipientUserId);
             if (recipientSocket > 0L) {
-                Proc_6_244_801E80((int) recipientSocket,
-                    InventoryMessagePayloads.roomAdd(Proc_6_138_7678A0(grantedFurnitureId, productId, productSign, giftSecondary)), 0);
+                sendToSocket((int) recipientSocket,
+                    InventoryMessagePayloads.roomAdd(Proc_6_138_7678A0(grantedFurnitureId, productId, productSign, giftSecondary)));
                 Proc_6_205_7D9780((int) recipientSocket, 7);
             }
             return purchasePayload;
@@ -4445,7 +4445,7 @@ public final class Handling {
             }
             long itemType = NumberUtils.parseLong(Licence.catalogProductField(itemId, 9));
             long giftEnabled = itemType == 1L ? NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.enabled", 0)) : 0L;
-            Proc_6_244_801E80(socketIndex, CatalogPayloads.giftAvailability(itemId, giftEnabled), 0);
+            sendToSocket(socketIndex, CatalogPayloads.giftAvailability(itemId, giftEnabled));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -4457,8 +4457,8 @@ public final class Handling {
             String defaultPayload = CatalogPayloads.giftWrapPriceFallback(
                 NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.enabled", 0)));
             long giftWrapPrice = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.price", defaultPayload));
-            Proc_6_244_801E80(socketIndex,
-                CatalogPayloads.giftWrapOptions(giftWrapPrice, giftSettings().giftWrapPayload()), 0);
+            sendToSocket(socketIndex,
+                CatalogPayloads.giftWrapOptions(giftWrapPrice, giftSettings().giftWrapPayload()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -4477,7 +4477,7 @@ public final class Handling {
             }
             String pagePayload = catalogPages().pagePayload(pageId);
             if (!pagePayload.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, CatalogPayloads.page(pageId, pagePayload), 0);
+                sendToSocket(socketIndex, CatalogPayloads.page(pageId, pagePayload));
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -4493,18 +4493,18 @@ public final class Handling {
                 : requestPayload;
             voucherCode = voucherCode.replace(' ', '0');
             if (voucherCode.length() != 8) {
-                Proc_6_244_801E80(socketIndex, VoucherPayloads.invalid(voucherCode), 0);
+                sendToSocket(socketIndex, VoucherPayloads.invalid(voucherCode));
                 return;
             }
             VoucherDao vouchers = voucherDao();
             VoucherDao.VoucherReward voucherReward = vouchers == null ? null : vouchers.reward(voucherCode).orElse(null);
             if (voucherReward == null) {
-                Proc_6_244_801E80(socketIndex, VoucherPayloads.invalid(voucherCode), 0);
+                sendToSocket(socketIndex, VoucherPayloads.invalid(voucherCode));
                 return;
             }
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, VoucherPayloads.invalid(voucherCode), 0);
+                sendToSocket(socketIndex, VoucherPayloads.invalid(voucherCode));
                 return;
             }
             String productSprite = StringUtils.text(voucherReward.productSprite());
@@ -4520,7 +4520,7 @@ public final class Handling {
             }
             UserDao users = userDao();
             if (users == null) {
-                Proc_6_244_801E80(socketIndex, VoucherPayloads.invalid(voucherCode), 0);
+                sendToSocket(socketIndex, VoucherPayloads.invalid(voucherCode));
                 return;
             }
             long userIdValue = NumberUtils.parseLong(userId);
@@ -4533,7 +4533,7 @@ public final class Handling {
                 Functions.sendActivityPointRefreshes(userId);
             }
             vouchers.deleteVoucher(voucherCode);
-            Proc_6_244_801E80(socketIndex, VoucherPayloads.redeemed(rewardPayload), 0);
+            sendToSocket(socketIndex, VoucherPayloads.redeemed(rewardPayload));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -4585,7 +4585,7 @@ public final class Handling {
             }
             broadcastToCurrentRoom(socketIndex, "@n" + decoration.wireName() + '\2' + decoValue + '\2');
             rooms.updateDecoration(roomId, decoration, decoValue);
-            Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(furnitureId), 0);
+            sendToSocket(socketIndex, InventoryMessagePayloads.remove(furnitureId));
             furniture.deleteFurniture(furnitureId);
             Proc_6_140_769400(socketIndex, "FT", "");
         } catch (Exception ignored) {
@@ -4607,11 +4607,11 @@ public final class Handling {
             InventoryPayloads payloads = inventoryPayloadsFromInventory(
                 InventoryMessagePayloads.listFromItems(
                     furniture.inventoryFurnitureForOwner(NumberUtils.parseLong(userId))));
-            Proc_6_244_801E80(socketIndex,
-                InventoryMessagePayloads.regularList(payloads.regularCount, payloads.regularPayload), 0);
-            Proc_6_244_801E80(socketIndex,
-                InventoryMessagePayloads.iconList(payloads.iconCount, payloads.iconPayload), 0);
-            Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.emptyRentalList(), 0);
+            sendToSocket(socketIndex,
+                InventoryMessagePayloads.regularList(payloads.regularCount, payloads.regularPayload));
+            sendToSocket(socketIndex,
+                InventoryMessagePayloads.iconList(payloads.iconCount, payloads.iconPayload));
+            sendToSocket(socketIndex, InventoryMessagePayloads.emptyRentalList());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -4640,11 +4640,11 @@ public final class Handling {
             if (balance == null) {
                 return;
             }
-            Proc_6_244_801E80(socketIndex, UserPayloads.activityPointBalance(
+            sendToSocket(socketIndex, UserPayloads.activityPointBalance(
                 balance.pointTypeOne(),
                 balance.pointTypeTwo(),
                 balance.pointTypeThree(),
-                balance.pointTypeFour()), 0);
+                balance.pointTypeFour()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -4870,7 +4870,7 @@ public final class Handling {
                     chargePriceCredits,
                     chargePricePoints,
                     chargePointType);
-                Proc_6_244_801E80(socketIndex, payload, 0);
+                sendToSocket(socketIndex, payload);
             } else {
                 DataManager.writeTextFile(chargePath.toString(), String.valueOf(currentCharges - 1L));
             }
@@ -4977,7 +4977,7 @@ public final class Handling {
                 if ("packages_pets".equals(packageType) && containedId > 0L) {
                     return Proc_6_86_73B0D0(socketIndex, "FH", requestPayload);
                 } else if (!packageType.isEmpty()) {
-                    Proc_6_244_801E80(socketIndex, FurniturePayloads.packageOpened(productId, furnitureId, packageType), 0);
+                    sendToSocket(socketIndex, FurniturePayloads.packageOpened(productId, furnitureId, packageType));
                     return furnitureId;
                 }
             }
@@ -5135,7 +5135,7 @@ public final class Handling {
             }
             Proc_6_146_76D300(socketIndex, furnitureId, productId);
             furniture.moveRoomFurnitureToInventory(furnitureId, roomId, NumberUtils.parseLong(userId));
-            Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(furnitureId), 0);
+            sendToSocket(socketIndex, InventoryMessagePayloads.remove(furnitureId));
             broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2');
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
@@ -5216,7 +5216,7 @@ public final class Handling {
                 return;
             }
             furniture.placeWallFurniture(furnitureId, NumberUtils.parseLong(userId), roomId, wallPosition);
-            Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(furnitureId), 0);
+            sendToSocket(socketIndex, InventoryMessagePayloads.remove(furnitureId));
             String payload = Proc_6_156_7972B0(furnitureId, productId, wallPosition,
                 placementFurniture == null ? "" : placementFurniture.sign(),
                 placementFurniture == null ? 0L : placementFurniture.secondaryValue());
