@@ -59,7 +59,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
         PacketSink sink = this::sendToGameSocket;
         MusConnectionManager.instance().configureSink(sink);
         Filesystems.configurePacketSink(sink);
-        Main.configurePreSessionPacketSink((socketIndex, payload) -> Handling.Proc_6_241_7FC380(socketIndex, payload, 0));
+        Main.configurePreSessionPacketSink(Handling::processPreSessionPacketBuffer);
     }
 
     private void configureProtocolLogging() {

@@ -7748,12 +7748,19 @@ public final class Handling {
     }
 
     public static void Proc_6_241_7FC380(Object... args) {
+        if (args == null || args.length < 2) {
+            return;
+        }
+        long socketIndex = NumberUtils.parseLong(args[0]);
+        String packetBuffer = Functions.normalizeNullBytes(args[1]);
+        processPreSessionPacketBuffer(socketIndex, packetBuffer);
+    }
+
+    /**
+     * Original function: Proc_6_241_7FC380.
+     */
+    public static void processPreSessionPacketBuffer(long socketIndex, String packetBuffer) {
         try {
-            if (args == null || args.length < 2) {
-                return;
-            }
-            long socketIndex = NumberUtils.parseLong(args[0]);
-            String packetBuffer = Functions.normalizeNullBytes(args[1]);
             if (socketIndex <= 0L || !Guardian.isSocketConnected(socketIndex)) {
                 return;
             }
