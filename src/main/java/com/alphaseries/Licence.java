@@ -877,16 +877,38 @@ public final class Licence {
             global_00829168, global_0082916C);
     }
 
+    public static void setRecyclerRewards(List<RecyclerSettings.RewardGroup> rewardGroups) {
+        List<RecyclerSettings.RewardGroup> copiedGroups = rewardGroups == null ? List.of() : List.copyOf(rewardGroups);
+        global_00829140 = RecyclerSettings.fromRewardGroups(global_0082912C, copiedGroups, global_0082916C);
+        global_0082915C = recyclerChanceRows(copiedGroups);
+        global_00829168 = copiedGroups.size();
+        RecyclerState.instance().setSettings((RecyclerSettings) global_00829140);
+    }
+
     public static void setRecyclerStatusPayload(String statusPayload) {
         global_0082912C = StringUtils.text(statusPayload);
-        RecyclerState.instance().setSettingsFromLegacy(global_0082912C, global_00829140, global_0082915C,
-            global_00829168, global_0082916C);
+        if (global_00829140 instanceof RecyclerSettings recyclerSettings) {
+            RecyclerSettings updatedSettings = RecyclerSettings.fromRewardGroups(
+                global_0082912C, recyclerSettings.rewardGroups(), global_0082916C);
+            global_00829140 = updatedSettings;
+            RecyclerState.instance().setSettings(updatedSettings);
+        } else {
+            RecyclerState.instance().setSettingsFromLegacy(global_0082912C, global_00829140, global_0082915C,
+                global_00829168, global_0082916C);
+        }
     }
 
     public static void setRecyclerBoxProductId(long boxProductId) {
         global_0082916C = Math.max(0L, boxProductId);
-        RecyclerState.instance().setSettingsFromLegacy(global_0082912C, global_00829140, global_0082915C,
-            global_00829168, global_0082916C);
+        if (global_00829140 instanceof RecyclerSettings recyclerSettings) {
+            RecyclerSettings updatedSettings = RecyclerSettings.fromRewardGroups(
+                global_0082912C, recyclerSettings.rewardGroups(), global_0082916C);
+            global_00829140 = updatedSettings;
+            RecyclerState.instance().setSettings(updatedSettings);
+        } else {
+            RecyclerState.instance().setSettingsFromLegacy(global_0082912C, global_00829140, global_0082915C,
+                global_00829168, global_0082916C);
+        }
     }
 
     public static RecyclerSettings recyclerSettings() {
@@ -897,6 +919,21 @@ public final class Licence {
                 global_00829168, global_0082916C);
         }
         return RecyclerState.instance().settings();
+    }
+
+    private static String[] recyclerChanceRows(List<RecyclerSettings.RewardGroup> rewardGroups) {
+        String[] chanceRows = new String[50];
+        int index = 0;
+        for (RecyclerSettings.RewardGroup rewardGroup : rewardGroups == null
+            ? List.<RecyclerSettings.RewardGroup>of()
+            : rewardGroups) {
+            if (index >= chanceRows.length) {
+                break;
+            }
+            chanceRows[index] = String.valueOf(NumberUtils.parseLong(rewardGroup.chance()));
+            index++;
+        }
+        return chanceRows;
     }
 
     public static void setRecommendedRooms(Object payloads, long count) {

@@ -24,6 +24,7 @@ import com.alphaseries.game.pet.PetLevelCacheRow;
 import com.alphaseries.game.pet.PetRaceCacheRow;
 import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.quest.QuestSettings;
+import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -51,36 +52,27 @@ public final class Boot {
     }
 
     public static void Proc_1_0_6BA9D0(Object... args) {
-        Map<Long, String> productsByChance = new LinkedHashMap<Long, String>();
-        String chanceRows = "";
+        List<RecyclerSettings.RewardGroup> rewardGroups = List.of();
         RecyclerDao recycler = recyclerDao();
         if (recycler != null) {
             try {
+                List<RecyclerSettings.RewardGroup> loadedGroups = new ArrayList<RecyclerSettings.RewardGroup>();
                 List<Long> chances = recycler.recyclerChances();
-                chanceRows = joinLongRows(chances);
                 for (Long chanceValue : chances) {
                     long chance = chanceValue == null ? 0L : chanceValue.longValue();
                     if (chance != 0L) {
-                        productsByChance.put(chance, joinLongRows(recycler.rewardProductIdsByChance(chance)));
+                        loadedGroups.add(new RecyclerSettings.RewardGroup(chance,
+                            recycler.rewardProductIdsByChance(chance)));
                     }
                 }
+                rewardGroups = List.copyOf(loadedGroups);
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        RecyclerCache cache = buildRecyclerCache(chanceRows, productsByChance);
+        RecyclerCache cache = buildRecyclerCache(rewardGroups);
         Licence.setRecyclerStatusPayload(cache.payload);
-        String[] productLists = new String[50];
-        String[] chances = new String[50];
-        for (Map.Entry<Long, String> entry : cache.productListByGroupIndex.entrySet()) {
-            int index = entry.getKey().intValue();
-            if (index >= 0 && index < productLists.length) {
-                productLists[index] = entry.getValue();
-                Long chance = cache.chanceByGroupIndex.get(entry.getKey());
-                chances[index] = chance == null ? "" : String.valueOf(chance.longValue());
-            }
-        }
-        Licence.setRecyclerRewards(productLists, chances, cache.groupCount);
+        Licence.setRecyclerRewards(cache.rewardGroups);
     }
 
     public static void Proc_1_1_6BB340(Object... args) {
@@ -857,44 +849,61 @@ public final class Boot {
     public static final class RecyclerCache {
         public String payload = "";
         public long groupCount;
+        public List<RecyclerSettings.RewardGroup> rewardGroups = List.of();
         public Map<Long, String> productListByGroupIndex = new LinkedHashMap<Long, String>();
         public Map<Long, Long> chanceByGroupIndex = new LinkedHashMap<Long, Long>();
     }
 
     public static RecyclerCache buildRecyclerCache(String chanceRows, Map<Long, String> productRowsByChance) {
+        List<RecyclerSettings.RewardGroup> rewardGroups = new ArrayList<RecyclerSettings.RewardGroup>();
+        for (String chanceRow : StringUtils.text(chanceRows).split("\r", -1)) {
+            long chanceValue = NumberUtils.parseLong(chanceRow);
+            if (!chanceRow.isEmpty()) {
+                String productRows = productRowsByChance == null ? "" : productRowsByChance.get(chanceValue);
+                rewardGroups.add(new RecyclerSettings.RewardGroup(chanceValue, recyclerProductIds(productRows)));
+            }
+        }
+        return buildRecyclerCache(rewardGroups);
+    }
+
+    public static RecyclerCache buildRecyclerCache(List<RecyclerSettings.RewardGroup> rewardGroups) {
         RecyclerCache cache = new RecyclerCache();
         StringBuilder payload = new StringBuilder();
-        for (String chanceRow : StringUtils.text(chanceRows).split("\r", -1)) {
+        List<RecyclerSettings.RewardGroup> groups = new ArrayList<RecyclerSettings.RewardGroup>();
+        for (RecyclerSettings.RewardGroup rewardGroup : rewardGroups == null
+            ? List.<RecyclerSettings.RewardGroup>of()
+            : rewardGroups) {
             if (cache.groupCount > 49L) {
                 break;
             }
-            if (!chanceRow.isEmpty()) {
-                long chanceValue = NumberUtils.parseLong(chanceRow);
+            if (rewardGroup != null) {
+                long chanceValue = NumberUtils.parseLong(rewardGroup.chance());
                 long groupIndex = cache.groupCount;
                 cache.chanceByGroupIndex.put(groupIndex, chanceValue);
 
                 long productCount = 0L;
                 StringBuilder productList = new StringBuilder();
                 StringBuilder groupPayload = new StringBuilder();
-                String productRows = productRowsByChance == null ? "" : productRowsByChance.get(chanceValue);
-                for (String productRow : StringUtils.text(productRows).split("\r", -1)) {
-                    if (!productRow.isEmpty()) {
-                        long productId = NumberUtils.parseLong(productRow);
-                        if (productId > 0L) {
-                            productList.append(productId).append('\2');
-                            groupPayload.append(Crypto.Proc_3_0_6D2AF0(productId, null, ""));
-                            productCount++;
-                        }
+                List<Long> productIds = new ArrayList<Long>();
+                for (Long productIdValue : rewardGroup.productIds()) {
+                    long productId = NumberUtils.parseLong(productIdValue);
+                    if (productId > 0L) {
+                        productIds.add(productId);
+                        productList.append(productId).append('\2');
+                        groupPayload.append(Crypto.Proc_3_0_6D2AF0(productId, null, ""));
+                        productCount++;
                     }
                 }
 
                 cache.productListByGroupIndex.put(groupIndex, productList.toString());
+                groups.add(new RecyclerSettings.RewardGroup(chanceValue, productIds));
                 payload.append(Crypto.Proc_3_0_6D2AF0(chanceValue, null, ""));
                 payload.append(Crypto.Proc_3_0_6D2AF0(productCount, null, ""));
                 payload.append(groupPayload);
                 cache.groupCount++;
             }
         }
+        cache.rewardGroups = List.copyOf(groups);
         cache.payload = Crypto.Proc_3_0_6D2AF0(cache.groupCount, null, "") + payload;
         return cache;
     }
@@ -1858,6 +1867,17 @@ public final class Boot {
         return List.copyOf(productIds);
     }
 
+    private static List<Long> recyclerProductIds(String productRows) {
+        List<Long> productIds = new ArrayList<Long>();
+        for (String productRow : StringUtils.text(productRows).split("\r", -1)) {
+            long productId = NumberUtils.parseLong(productRow);
+            if (productId > 0L) {
+                productIds.add(productId);
+            }
+        }
+        return List.copyOf(productIds);
+    }
+
     private static String clientDateFormat(String formatText) {
         return StringUtils.text(formatText).replace("d", "dd").replace("Y", "yyyy").replace("m", "mm");
     }
@@ -1899,10 +1919,6 @@ public final class Boot {
             joined.append(value == null ? 0L : value.longValue());
         }
         return joined.toString();
-    }
-
-    private static String joinLongRows(List<Long> values) {
-        return joinLongs(values, "\r");
     }
 
     private static String joinPrivilegeRows(List<String> rows) {

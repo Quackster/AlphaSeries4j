@@ -825,25 +825,7 @@ public final class PortedModuleSmokeTest {
                 + Crypto.Proc_3_0_6D2AF0(3, null, "") + "hc\2"
                 + Crypto.Proc_3_0_6D2AF0(1, null, ""),
             Boot.buildRoomCategoryPayload("1\tpublic\t0\t0\t0\r2\tstaff\t1\t5\t0\r3\thc\t1\t2\t1", 2, 1));
-        Map<Long, String> recyclerProducts = new HashMap<>();
-        recyclerProducts.put(80L, "10\r0\r11");
-        recyclerProducts.put(20L, "12\rbad\r13");
-        Boot.RecyclerCache recyclerCache = Boot.buildRecyclerCache("80\r20", recyclerProducts);
-        assertEquals(2L, recyclerCache.groupCount);
-        assertEquals(80L, recyclerCache.chanceByGroupIndex.get(0L).longValue());
-        assertEquals("10\2" + "11\2", recyclerCache.productListByGroupIndex.get(0L));
-        assertEquals("12\2" + "13\2", recyclerCache.productListByGroupIndex.get(1L));
-        assertEquals(
-            Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(80, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(10, null, "")
-                + Crypto.Proc_3_0_6D2AF0(11, null, "")
-                + Crypto.Proc_3_0_6D2AF0(20, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(12, null, "")
-                + Crypto.Proc_3_0_6D2AF0(13, null, ""),
-            recyclerCache.payload);
+        assertRecyclerCacheBuilders();
         assertEquals("[pet_dog\t1\t2\t3\t4\tDog][pet_cat\t5\t6\t7\t8\tCat]",
             Boot.buildPetRaceCache("pet_dog\t1.2\t2\t3\t4\tDog\rpet_cat\t5\t6\t7\t8\tCat"));
         assertEquals("20\t30\t40", Boot.buildPetLevelCache("2\t20\t30\t40").get(2L));
@@ -1099,7 +1081,9 @@ public final class PortedModuleSmokeTest {
         });
         Boot.Proc_1_0_6BA9D0();
         assertEquals(1L, Licence.global_00829168);
-        assertEquals("10\2" + "11\2", ((String[]) Licence.global_00829140)[0]);
+        assertEquals(true, Licence.global_00829140 instanceof RecyclerSettings);
+        assertEquals("80", ((String[]) Licence.global_0082915C)[0]);
+        assertEquals(List.of(10L, 11L), Licence.recyclerSettings().rewardGroups().get(0).productIds());
         assertEquals(true, Licence.global_008292BC instanceof List);
         assertEquals(true, Licence.global_008292C0 instanceof List);
         assertEquals(true, Licence.global_00829258 instanceof List);
@@ -2910,7 +2894,7 @@ public final class PortedModuleSmokeTest {
         Guardian.setSocketConnected(8, true);
         Licence.global_00829268 = "[1:4\1" + "77\2" + "4][1:8\1" + "88\2" + "8]";
         Licence.global_0082934C = "";
-        Licence.global_0082912C = "CACHE";
+        Licence.setRecyclerStatusPayload("CACHE");
         assertEquals("CACHE", Licence.recyclerSettings().statusPayload());
         List<Long> recyclerProductIds = new ArrayList<>();
         recyclerProductIds.add(501L);
@@ -2921,6 +2905,16 @@ public final class PortedModuleSmokeTest {
         assertEquals(508L, typedRecyclerSettings.boxProductId());
         assertEquals(7L, typedRecyclerSettings.rewardGroups().get(0).chance());
         assertEquals(List.of(501L), typedRecyclerSettings.rewardGroups().get(0).productIds());
+        Licence.setRecyclerRewards(List.of(new RecyclerSettings.RewardGroup(9L, List.of(503L, 504L))));
+        assertEquals(true, Licence.global_00829140 instanceof RecyclerSettings);
+        assertEquals("9", ((String[]) Licence.global_0082915C)[0]);
+        assertEquals(1L, Licence.global_00829168);
+        Licence.setRecyclerStatusPayload("STATUS-2");
+        Licence.setRecyclerBoxProductId(509L);
+        assertEquals("STATUS-2", Licence.recyclerSettings().statusPayload());
+        assertEquals(509L, Licence.recyclerSettings().boxProductId());
+        assertEquals(List.of(503L, 504L), Licence.recyclerSettings().rewardGroups().get(0).productIds());
+        Licence.setRecyclerStatusPayload("CACHE");
         Licence.global_00829204 = "IMPORTANTFAQ";
         Licence.global_00829208 = "FAQCATS";
         Licence.global_0082920C = new String[]{"", "CATFAQ"};
@@ -4942,6 +4936,33 @@ public final class PortedModuleSmokeTest {
         assertEquals("\r701\r0\r702\r", Licence.global_0082925C);
         assertEquals("TYPED-WRAPS", Licence.giftSettings().giftWrapPayload());
         assertEquals(List.of(701L, 702L), Licence.giftSettings().giftWrapProductIds());
+    }
+
+    private static void assertRecyclerCacheBuilders() {
+        Map<Long, String> recyclerProducts = new HashMap<>();
+        recyclerProducts.put(80L, "10\r0\r11");
+        recyclerProducts.put(20L, "12\rbad\r13");
+        Boot.RecyclerCache recyclerCache = Boot.buildRecyclerCache("80\r20", recyclerProducts);
+        assertEquals(2L, recyclerCache.groupCount);
+        assertEquals(80L, recyclerCache.chanceByGroupIndex.get(0L).longValue());
+        assertEquals("10\2" + "11\2", recyclerCache.productListByGroupIndex.get(0L));
+        assertEquals("12\2" + "13\2", recyclerCache.productListByGroupIndex.get(1L));
+        Boot.RecyclerCache typedRecyclerCache = Boot.buildRecyclerCache(List.of(
+            new RecyclerSettings.RewardGroup(80L, List.of(10L, 11L)),
+            new RecyclerSettings.RewardGroup(20L, List.of(12L, 13L))));
+        assertEquals(recyclerCache.payload, typedRecyclerCache.payload);
+        assertEquals(List.of(10L, 11L), typedRecyclerCache.rewardGroups.get(0).productIds());
+        assertEquals(
+            Crypto.Proc_3_0_6D2AF0(2, null, "")
+                + Crypto.Proc_3_0_6D2AF0(80, null, "")
+                + Crypto.Proc_3_0_6D2AF0(2, null, "")
+                + Crypto.Proc_3_0_6D2AF0(10, null, "")
+                + Crypto.Proc_3_0_6D2AF0(11, null, "")
+                + Crypto.Proc_3_0_6D2AF0(20, null, "")
+                + Crypto.Proc_3_0_6D2AF0(2, null, "")
+                + Crypto.Proc_3_0_6D2AF0(12, null, "")
+                + Crypto.Proc_3_0_6D2AF0(13, null, ""),
+            recyclerCache.payload);
     }
 
     private static void assertProductCacheRows(ProductCache productCache) {
