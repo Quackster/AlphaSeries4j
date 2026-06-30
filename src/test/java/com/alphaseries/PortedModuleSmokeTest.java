@@ -46,6 +46,7 @@ import com.alphaseries.game.moderation.StaffUserLookup;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.room.MovementStep;
+import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
@@ -1531,13 +1532,15 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, complexPayload.endsWith("eleven\2"));
         assertEquals(true, complexPayload.contains("four\2"));
         assertEquals("keep\nalso", Handling.removeRepresentedLineRecord("keep\r\nremove-this\nalso", "remove"));
-        assertEquals("\1" + "1\talpha\2", Handling.removeRepresentedCacheRecord("\1" + "1\talpha\2\1" + "2\tbeta\2", "\1" + "2\t"));
-        assertEquals("2\tbeta", Handling.representedRoomRecord("\1" + "1\talpha\2\1" + "2\tbeta\2", 2));
-        assertEquals("3", Handling.representedRoomRecord("\1" + "3\2", 3));
-        assertEquals("", Handling.representedRoomRecord("\1" + "1\talpha\2", 4));
-        String roomRecordCache = Handling.representedRoomRecordSet("\1" + "1\talpha\2\1" + "2\told\2", 2, "2\tnew");
+        assertEquals("\1" + "1\talpha\2", RepresentedRoomCache.removeRecord("\1" + "1\talpha\2\1" + "2\tbeta\2", "\1" + "2\t"));
+        assertEquals("2\tbeta", RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2\1" + "2\tbeta\2").record(2));
+        assertEquals("3", RepresentedRoomCache.fromLegacy("\1" + "3\2").record(3));
+        assertEquals("", RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2").record(4));
+        String roomRecordCache = RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2\1" + "2\told\2")
+            .setRecord(2, "2\tnew").cacheText();
         assertEquals("\1" + "1\talpha\2\1" + "2\tnew\2", roomRecordCache);
-        assertEquals("\1" + "1\talpha\2", Handling.representedRoomRecordSet("\1" + "1\talpha\2", 0, "0\tignored"));
+        assertEquals("\1" + "1\talpha\2", RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2")
+            .setRecord(0, "0\tignored").cacheText());
         String movementCache = Handling.representedRoomOccupantMove("", 4, 9, 2, 3, 4, 1);
         assertEquals("\1" + "4\t\t\t0\t\1" + "9\t2\t3\t4\t1\2\2", movementCache);
         Handling.MovementPosition movementPosition = Handling.representedMovementPosition(movementCache, 4, 9);

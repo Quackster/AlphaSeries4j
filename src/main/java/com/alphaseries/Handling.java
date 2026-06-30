@@ -8737,14 +8737,6 @@ public final class Handling {
         return Functions.movementDirectionCode(deltaX, deltaY);
     }
 
-    public static String representedRoomRecord(String roomCacheText, long roomSlot) {
-        return RepresentedRoomCache.fromLegacy(roomCacheText).record(roomSlot);
-    }
-
-    public static String representedRoomRecordSet(String roomCacheText, long roomSlot, String roomRecord) {
-        return RepresentedRoomCache.fromLegacy(roomCacheText).setRecord(roomSlot, roomRecord).cacheText();
-    }
-
     public static MovementPosition representedMovementPosition(String roomCacheText, long roomSlot, long entityIndex) {
         MovementPosition result = new MovementPosition();
         RepresentedRoomCache.Position position = RepresentedRoomCache.fromLegacy(roomCacheText).movementPosition(roomSlot, entityIndex);
@@ -8860,10 +8852,6 @@ public final class Handling {
             DataManager.Proc_8_10_8068E0(cachePath, "");
         }
         return readFile(cachePath);
-    }
-
-    public static String removeRepresentedCacheRecord(String cacheText, String markerText) {
-        return RepresentedRoomCache.removeRecord(cacheText, markerText);
     }
 
     public static String readWireString(String packetPayload, LongRef offset) {
