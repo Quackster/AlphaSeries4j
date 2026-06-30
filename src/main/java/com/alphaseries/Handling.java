@@ -11526,7 +11526,7 @@ public final class Handling {
             List<QuestSettings.QuestDefinitionRow> rows = new ArrayList<>();
             for (QuestDao.QuestDefinition quest : quests.questDefinitions()) {
                 if (quest != null) {
-                    rows.add(new QuestSettings.QuestDefinitionRow(
+                    rows.add(QuestSettings.QuestDefinitionRow.fromFields(
                         quest.questId(),
                         quest.level(),
                         quest.name(),
@@ -11537,8 +11537,7 @@ public final class Handling {
                         quest.additionalId(),
                         quest.campaignId(),
                         quest.activityAmount(),
-                        quest.waitAmount(),
-                        11));
+                        quest.waitAmount()));
                 }
             }
             return QuestSettings.fromDefinitions(rows);

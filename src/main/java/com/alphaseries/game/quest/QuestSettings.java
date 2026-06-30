@@ -154,6 +154,34 @@ public final class QuestSettings {
         long waitAmount,
         int fieldCount
     ) {
+        public static QuestDefinitionRow fromFields(
+            long questId,
+            long level,
+            String name,
+            String legacyNullSlot,
+            long reward,
+            long rewardType,
+            String requiredAction,
+            long additionalId,
+            long campaignId,
+            long activityAmount,
+            long waitAmount
+        ) {
+            return new QuestDefinitionRow(
+                questId,
+                level,
+                name,
+                legacyNullSlot,
+                reward,
+                rewardType,
+                requiredAction,
+                additionalId,
+                campaignId,
+                activityAmount,
+                waitAmount,
+                11);
+        }
+
         private String toLegacyRow() {
             List<String> fields = List.of(
                 String.valueOf(questId),

@@ -1972,7 +1972,7 @@ public final class Boot {
         if (rows != null) {
             for (QuestDao.QuestDefinition row : rows) {
                 if (row != null) {
-                    definitions.add(new QuestSettings.QuestDefinitionRow(
+                    definitions.add(QuestSettings.QuestDefinitionRow.fromFields(
                         row.questId(),
                         row.level(),
                         row.name(),
@@ -1983,8 +1983,7 @@ public final class Boot {
                         row.additionalId(),
                         row.campaignId(),
                         row.activityAmount(),
-                        row.waitAmount(),
-                        11));
+                        row.waitAmount()));
                 }
             }
         }
