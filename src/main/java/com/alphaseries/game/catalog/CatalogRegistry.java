@@ -15,13 +15,13 @@ public final class CatalogRegistry {
     private final Map<Long, String> catalogProducts;
     private final Map<Long, String> deals;
 
-    private CatalogRegistry(Object products, Object catalogProducts, String deals) {
+    private CatalogRegistry(Object products, Object catalogProducts, Object deals) {
         this.products = rowsById(products);
         this.catalogProducts = rowsById(catalogProducts);
         this.deals = rowsById(deals);
     }
 
-    public static CatalogRegistry fromLegacyCaches(Object products, Object catalogProducts, String deals) {
+    public static CatalogRegistry fromLegacyCaches(Object products, Object catalogProducts, Object deals) {
         return new CatalogRegistry(products, catalogProducts, deals);
     }
 
@@ -161,6 +161,8 @@ public final class CatalogRegistry {
                 } else if (value instanceof CatalogDao.CatalogProductCacheRow row) {
                     String rowText = String.join("\t", row.values());
                     rows.put(NumberUtils.parseLong(field(row.values(), 0)), rowText);
+                } else if (value instanceof CatalogDao.ProductDealRow row) {
+                    rows.put(row.dealId(), row.dealId() + "\t" + StringUtils.text(row.items()));
                 }
             }
             return rows;

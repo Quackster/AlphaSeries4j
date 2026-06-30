@@ -620,6 +620,9 @@ public final class PortedModuleSmokeTest {
         assertEquals("alpha", Licence.Proc_9_1_8072B0(1, 1));
         assertEquals("10\t100\tchair", Licence.Proc_9_3_807930(10));
         assertEquals("1\talpha\t7", Licence.Proc_9_4_807B90(1));
+        Licence.global_00829258 = List.of(new CatalogDao.ProductDealRow(6L, "10;11"));
+        assertEquals("6\t10;11", Licence.Proc_9_5_807DF0(6));
+        assertEquals(2, Licence.productDeal(6L).itemProductIds().size());
         Licence.global_00829268 = "[0:5\1u5\2sock5][1:bob\1bob\2" + "6][room\1" + "7\2" + "8]";
         assertEquals("u5", Licence.Proc_9_6_808080(5, 0));
         assertEquals(6L, Licence.Proc_9_7_808320("bob", 1));
@@ -938,6 +941,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("10\2" + "11\2", ((String[]) Licence.global_00829140)[0]);
         assertEquals(true, Licence.global_008292BC instanceof List);
         assertEquals(true, Licence.global_008292C0 instanceof List);
+        assertEquals(true, Licence.global_00829258 instanceof List);
         Licence.setPackageRows(List.of(new PackageDao.PackageRow(10L, "i", 20L, "")));
         assertEquals(true, Licence.global_00829078 instanceof List);
         assertEquals("10\ti\t20\t", Licence.catalogProductSettings().packageRows());

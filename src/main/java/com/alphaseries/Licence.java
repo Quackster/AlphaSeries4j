@@ -53,7 +53,7 @@ public final class Licence {
     public static long global_00829168 = 0L;
     public static String global_00829178 = "";
     public static String global_0082917C = "";
-    public static String global_00829258 = "";
+    public static Object global_00829258 = "";
     public static long global_0082916C = 0L;
     public static String global_008291EC = "";
     public static String global_008291F8 = "";
@@ -583,6 +583,10 @@ public final class Licence {
 
     public static void setDealRows(String dealRows) {
         global_00829258 = StringUtils.text(dealRows);
+    }
+
+    public static void setDealRows(Object dealRows) {
+        global_00829258 = dealRows == null ? "" : dealRows;
     }
 
     public static CatalogProductSettings catalogProductSettings() {

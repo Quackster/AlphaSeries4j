@@ -196,9 +196,6 @@ public final class CatalogDao {
     }
 
     public record ProductDealRow(long dealId, String items) {
-        public String legacyRow() {
-            return dealId + "\t" + (items == null ? "" : items);
-        }
     }
 
     public record CatalogPageRow(

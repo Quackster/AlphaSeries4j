@@ -104,7 +104,7 @@ public final class Boot {
         Licence.setCatalogProductRows(catalogProducts);
         if (catalog != null) {
             try {
-                Licence.setDealRows("\r" + joinProductDealRows(catalog.productDealRows()) + "\r");
+                Licence.setDealRows(catalog.productDealRows());
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
                 Licence.setDealRows("\r\r");
@@ -1873,14 +1873,6 @@ public final class Boot {
 
     private static String joinLongRows(List<Long> values) {
         return joinLongs(values, "\r");
-    }
-
-    private static String joinProductDealRows(List<CatalogDao.ProductDealRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (CatalogDao.ProductDealRow row : rows == null ? List.<CatalogDao.ProductDealRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
     }
 
     private static String joinContainedClubProductRows(List<ClubDao.ContainedClubProductRow> rows) {
