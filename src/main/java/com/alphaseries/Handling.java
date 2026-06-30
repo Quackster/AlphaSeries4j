@@ -84,6 +84,7 @@ import com.alphaseries.game.wired.WiredPayloads;
 import com.alphaseries.messages.outgoing.AchievementPayloads;
 import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
+import com.alphaseries.messages.outgoing.HelpPayloads;
 import com.alphaseries.messages.outgoing.JukeboxPayloads;
 import com.alphaseries.messages.outgoing.MessengerPayloads;
 import com.alphaseries.messages.outgoing.NavigatorPayloads;
@@ -1054,7 +1055,8 @@ public final class Handling {
 
     public static void Proc_6_33_70F4F0(Object... args) {
         try {
-            Proc_6_244_801E80(handlingSocketIndex(args), "HF" + Licence.helpCenterCache().importantFaqPayload(), 0);
+            Proc_6_244_801E80(handlingSocketIndex(args),
+                HelpPayloads.importantFaqs(Licence.helpCenterCache().importantFaqPayload()), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1062,7 +1064,8 @@ public final class Handling {
 
     public static void Proc_6_34_70F590(Object... args) {
         try {
-            Proc_6_244_801E80(handlingSocketIndex(args), "HG" + Licence.helpCenterCache().categoryPayload(), 0);
+            Proc_6_244_801E80(handlingSocketIndex(args),
+                HelpPayloads.categories(Licence.helpCenterCache().categoryPayload()), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1075,8 +1078,7 @@ public final class Handling {
             long categoryId = packetPayload.length() >= 3 ? readWireLong(packetPayload.substring(2), new LongRef(1)) : 0L;
             HelpCenterCache helpCenterCache = Licence.helpCenterCache();
             String categoryPayload = helpCenterCache.categoryFaqPayload(categoryId);
-            Proc_6_244_801E80(socketIndex,
-                Crypto.Proc_3_0_6D2AF0(categoryId, null, "HJ") + '\2' + categoryPayload, 0);
+            Proc_6_244_801E80(socketIndex, HelpPayloads.categoryFaqs(categoryId, categoryPayload), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1098,15 +1100,7 @@ public final class Handling {
                 return;
             }
             List<HelpDao.FaqNameRow> rows = helpDao.searchFaqs(searchText);
-            long resultCount = 0L;
-            PacketBuilder resultPayload = PacketBuilder.create();
-            for (HelpDao.FaqNameRow row : rows) {
-                if (row != null) {
-                    resultPayload.appendInt(row.id()).appendString(row.name());
-                    resultCount++;
-                }
-            }
-            Proc_6_244_801E80(socketIndex, PacketBuilder.message("HI").appendInt(resultCount).appendRaw(resultPayload).build(), 0);
+            Proc_6_244_801E80(socketIndex, HelpPayloads.searchResults(rows), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1124,7 +1118,8 @@ public final class Handling {
                     faqId = readWireLong(requestPayload, new LongRef(1));
                 }
             }
-            Proc_6_244_801E80(socketIndex, "HH" + Licence.helpCenterCache().descriptionPayload(faqId), 0);
+            Proc_6_244_801E80(socketIndex,
+                HelpPayloads.description(Licence.helpCenterCache().descriptionPayload(faqId)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

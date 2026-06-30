@@ -46,6 +46,7 @@ import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
 import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
+import com.alphaseries.messages.outgoing.HelpPayloads;
 import com.alphaseries.messages.outgoing.MessengerPayloads;
 import com.alphaseries.messages.outgoing.NavigatorPayloads;
 import com.alphaseries.messages.outgoing.QuestPayloads;
@@ -791,6 +792,8 @@ public final class PortedModuleSmokeTest {
         typedImportantFaqRows.put(1L, List.of(new HelpDao.FaqNameRow(31L, "first")));
         typedImportantFaqRows.put(2L, List.of(new HelpDao.FaqNameRow(41L, "second"), new HelpDao.FaqNameRow(42L, "third")));
         assertEquals(Boot.buildImportantFaqPayload(importantFaqRows), Boot.buildImportantFaqPayloadFromRows(typedImportantFaqRows));
+        assertEquals("HF" + Boot.buildImportantFaqPayload(importantFaqRows),
+            HelpPayloads.importantFaqs(Boot.buildImportantFaqPayload(importantFaqRows)));
         Map<Long, String> faqRowsByCategory = new HashMap<>();
         faqRowsByCategory.put(7L, "70\tfaq-a\r71\tfaq-b");
         Boot.FaqCategoryCache faqCategoryCache = Boot.buildFaqCategoryCache("7\tcat-a\r9\tcat-b", faqRowsByCategory);
@@ -805,16 +808,25 @@ public final class PortedModuleSmokeTest {
                 + Crypto.Proc_3_0_6D2AF0(9, null, "") + "cat-b\2",
             faqCategoryCache.categoryPayload);
         assertEquals(faqCategoryCache.categoryPayload, typedFaqCategoryCache.categoryPayload);
+        assertEquals("HG" + faqCategoryCache.categoryPayload, HelpPayloads.categories(faqCategoryCache.categoryPayload));
         assertEquals(
             Crypto.Proc_3_0_6D2AF0(2, null, "")
                 + Crypto.Proc_3_0_6D2AF0(70, null, "") + "faq-a\2"
                 + Crypto.Proc_3_0_6D2AF0(71, null, "") + "faq-b\2",
             faqCategoryCache.faqPayloadByCategoryId.get(7L));
         assertEquals(faqCategoryCache.faqPayloadByCategoryId.get(7L), typedFaqCategoryCache.faqPayloadByCategoryId.get(7L));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "HJ") + '\2' + faqCategoryCache.faqPayloadByCategoryId.get(7L),
+            HelpPayloads.categoryFaqs(7L, faqCategoryCache.faqPayloadByCategoryId.get(7L)));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), faqCategoryCache.faqPayloadByCategoryId.get(9L));
         assertEquals(faqCategoryCache.faqPayloadByCategoryId.get(9L), typedFaqCategoryCache.faqPayloadByCategoryId.get(9L));
         assertEquals(Crypto.Proc_3_0_6D2AF0(5, null, "") + "line1\rline2\2",
             Boot.buildFaqDescriptionCache("5\tline1\nline2").get(5L));
+        assertEquals("HH" + Crypto.Proc_3_0_6D2AF0(5, null, "") + "line1\rline2\2",
+            HelpPayloads.description(Boot.buildFaqDescriptionCache("5\tline1\nline2").get(5L)));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "HI")
+            + Crypto.Proc_3_0_6D2AF0(70, null, "") + "faq-a\2"
+            + Crypto.Proc_3_0_6D2AF0(71, null, "") + "faq-b\2",
+            HelpPayloads.searchResults(List.of(new HelpDao.FaqNameRow(70L, "faq-a"), new HelpDao.FaqNameRow(71L, "faq-b"))));
         assertEquals(Boot.buildFaqDescriptionCache("5\tline1\nline2").get(5L),
             Boot.buildFaqDescriptionCache(List.of(new HelpDao.FaqDescriptionRow(5L, "line1\nline2"))).get(5L));
         Boot.VisitRoomCache visitRoomCache = Boot.buildAdvertisementVisitRoomCache("2\t/lobby\r4\t/cafe", "/ad/");
