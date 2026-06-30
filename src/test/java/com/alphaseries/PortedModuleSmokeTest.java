@@ -1174,8 +1174,8 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829310 = "";
         Main.mainRepresentedRoomOccupantAdd(4, 9, 1);
         assertEquals("\1" + "4\t\1" + "9\2\t\t1\2", Licence.global_00829310);
-        assertEquals("4", Main.mainRepresentedRoomRecordField(4, 0));
-        assertEquals("\1" + "9", Main.mainRepresentedRoomRecordField(4, 1));
+        assertEquals(4L, Licence.representedRooms().roomSlot(4));
+        assertEquals("\1" + "9", Licence.representedRooms().activeUserMarkers(4));
         Main.mainRepresentedRoomOccupantMove(4, 9, 1, 2, 3, 4, 1);
         assertEquals(true, Licence.global_00829310.contains("\1" + "9\t2\t3\t4\t1\2"));
         assertEquals(1L, Main.mainRollerDeltaX(2));

@@ -44,6 +44,26 @@ public final class RepresentedRoomCache {
         return fieldIndex >= 0 && fieldIndex < fields.length ? fields[(int) fieldIndex] : "";
     }
 
+    public long roomSlot(long roomSlot) {
+        return NumberUtils.parseLong(recordField(roomSlot, 0));
+    }
+
+    public String activeUserMarkers(long roomSlot) {
+        return recordField(roomSlot, 1);
+    }
+
+    public String activeBotMarkers(long roomSlot) {
+        return recordField(roomSlot, 2);
+    }
+
+    public String movingUserMarkers(long roomSlot) {
+        return recordField(roomSlot, 4);
+    }
+
+    public String movingBotMarkers(long roomSlot) {
+        return recordField(roomSlot, 5);
+    }
+
     public RepresentedRoomCache setRecord(long roomSlot, String roomRecord) {
         if (roomSlot <= 0L) {
             return this;

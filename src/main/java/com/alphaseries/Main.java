@@ -7,6 +7,7 @@ import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.room.FurnitureRoomCache;
+import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.messages.outgoing.RoomPayloads;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.server.packet.PacketSink;
@@ -419,8 +420,9 @@ public final class Main {
     public static long walkingTimer(long roomSlot) {
         long moved = 0L;
         try {
-            String userMarkers = mainRepresentedEntityIds(mainRepresentedRoomRecordField(roomSlot, 1)
-                + mainRepresentedRoomRecordField(roomSlot, 4));
+            RepresentedRoomCache representedRooms = Licence.representedRooms();
+            String userMarkers = mainRepresentedEntityIds(representedRooms.activeUserMarkers(roomSlot)
+                + representedRooms.movingUserMarkers(roomSlot));
             String[] userParts = userMarkers.split("\\]", -1);
             for (int markerIndex = 0; markerIndex < userParts.length; markerIndex++) {
                 long entityId = mainRepresentedEntityIdAt(userMarkers, markerIndex);
@@ -429,8 +431,8 @@ public final class Main {
                     moved++;
                 }
             }
-            String botMarkers = mainRepresentedEntityIds(mainRepresentedRoomRecordField(roomSlot, 2)
-                + mainRepresentedRoomRecordField(roomSlot, 5));
+            String botMarkers = mainRepresentedEntityIds(representedRooms.activeBotMarkers(roomSlot)
+                + representedRooms.movingBotMarkers(roomSlot));
             String[] botParts = botMarkers.split("\\]", -1);
             for (int markerIndex = 0; markerIndex < botParts.length; markerIndex++) {
                 long entityId = mainRepresentedEntityIdAt(botMarkers, markerIndex);
@@ -826,10 +828,6 @@ public final class Main {
 
     public static String mainRepresentedRoomRecord(long roomSlot) {
         return Licence.representedRooms().record(roomSlot);
-    }
-
-    public static String mainRepresentedRoomRecordField(long roomSlot, long fieldIndex) {
-        return Licence.representedRooms().recordField(roomSlot, fieldIndex);
     }
 
     public static void mainRepresentedRoomRecordSet(long roomSlot, String roomRecord) {
