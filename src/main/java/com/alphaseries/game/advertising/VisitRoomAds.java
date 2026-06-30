@@ -14,7 +14,14 @@ public final class VisitRoomAds {
     }
 
     public static VisitRoomAds fromLegacy(Object payloadsById, long count) {
+        if (payloadsById instanceof VisitRoomAds visitRoomAds) {
+            return visitRoomAds;
+        }
         return new VisitRoomAds(payloadsById, count);
+    }
+
+    public static VisitRoomAds empty() {
+        return new VisitRoomAds("", 0L);
     }
 
     public long count() {

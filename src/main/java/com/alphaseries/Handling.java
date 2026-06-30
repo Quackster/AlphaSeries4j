@@ -17,6 +17,8 @@ import com.alphaseries.dao.mysql.JukeboxDao;
 import com.alphaseries.dao.mysql.QuestDao;
 import com.alphaseries.dao.mysql.RecyclerDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.advertising.AdvertisingState;
+import com.alphaseries.game.advertising.VisitRoomAds;
 import com.alphaseries.game.jukebox.JukeboxPlaybackRow;
 import com.alphaseries.game.jukebox.JukeboxRow;
 import com.alphaseries.game.pet.BotRoomEntryRow;
@@ -1725,8 +1727,9 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String advertisementPayload = "\2\2";
-            if (Licence.visitRoomAds().count() > 0L) {
-                String candidate = Licence.visitRoomAds().randomPayload();
+            VisitRoomAds visitRoomAds = visitRoomAds();
+            if (visitRoomAds.count() > 0L) {
+                String candidate = visitRoomAds.randomPayload();
                 if (!candidate.isEmpty()) {
                     advertisementPayload = candidate;
                 }
@@ -9347,6 +9350,11 @@ public final class Handling {
     private static RoomCategoryCache roomCategoryCache() {
         Licence.roomCategoryCache();
         return NavigatorState.instance().roomCategoryCache();
+    }
+
+    private static VisitRoomAds visitRoomAds() {
+        Licence.visitRoomAds();
+        return AdvertisingState.instance().visitRoomAds();
     }
 
     public static String officialNavigatorQuery() {

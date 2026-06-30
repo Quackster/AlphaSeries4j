@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.game.advertising.VisitRoomAds;
+import com.alphaseries.game.advertising.AdvertisingState;
 import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.catalog.CatalogProductSettings;
@@ -292,10 +293,16 @@ public final class Licence {
     }
 
     public static VisitRoomAds visitRoomAds() {
-        return VisitRoomAds.fromLegacy(global_008291D4, global_008291D8);
+        if (global_008291D4 instanceof VisitRoomAds visitRoomAds) {
+            AdvertisingState.instance().setVisitRoomAds(visitRoomAds);
+        } else {
+            AdvertisingState.instance().setVisitRoomAdsFromLegacy(global_008291D4, global_008291D8);
+        }
+        return AdvertisingState.instance().visitRoomAds();
     }
 
     public static void setVisitRoomAds(Object payloadsById, long count) {
+        AdvertisingState.instance().setVisitRoomAdsFromLegacy(payloadsById, count);
         global_008291D4 = payloadsById == null ? "" : payloadsById;
         global_008291D8 = count;
     }
