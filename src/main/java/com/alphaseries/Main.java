@@ -155,6 +155,13 @@ public final class Main {
     public static void Proc_0_25_68FBC0(Object... args) {
         long socketIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
         String packetData = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
+        processClientPacket(socketIndex, packetData);
+    }
+
+    /**
+     * Original function: Proc_0_25_68FBC0.
+     */
+    public static void processClientPacket(long socketIndex, String packetData) {
         try {
             if (!Guardian.isSocketConnected(socketIndex)) {
                 return;
@@ -318,7 +325,7 @@ public final class Main {
             if (packetData.isEmpty()) {
                 return false;
             }
-            Proc_0_25_68FBC0(socketIndex, packetData);
+            processClientPacket(socketIndex, packetData);
             return true;
         } catch (Exception ignored) {
             return false;

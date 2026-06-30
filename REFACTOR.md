@@ -594,6 +594,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `StaffModerationPacketHandlers` packet ID parsing from `Functions.Proc_10_6_809F10(...)` to the named `Functions.readVl64LengthString(...)` helper; production no longer calls that legacy Proc directly.
 - Migrated the remaining live `Main`/`DataManager` callers away from `Functions.Proc_10_3_809B90(...)`, `Proc_10_4_809CA0(...)`, and the ignored `Proc_10_8_80A580(...)` payload build; production source no longer calls `Functions.Proc_10_*` methods directly outside source-history Javadocs.
 - Added named `Filesystems.processReadyPacketBuffer(...)` with the original `Proc_7_2_803D60` noted in Javadocs, then migrated live ready-packet dispatch away from the Proc-named filesystem path.
+- Added named `Main.processClientPacket(...)` with the original `Proc_0_25_68FBC0` noted in Javadocs, then migrated runtime socket reads and queued game-server packet replay away from the Proc-named packet intake path.
 
 ## VB Compatibility Class Removal Checklist
 

@@ -1282,7 +1282,7 @@ public final class PortedModuleSmokeTest {
         List<String> readyPacketsSent = new ArrayList<>();
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> readyPacketsSent.add(socketIndex + ":" + payload));
         Licence.global_00829354 = "[7]";
-        Main.Proc_0_25_68FBC0(7, "<policy-file-request/>\0");
+        Main.processClientPacket(7, "<policy-file-request/>\0");
         assertEquals(1, readyPacketsSent.size());
         assertEquals(true, readyPacketsSent.get(0).startsWith("7:DATA\6" + "7\6<?xml"));
         Main.configurePreSessionPacketSink(null);

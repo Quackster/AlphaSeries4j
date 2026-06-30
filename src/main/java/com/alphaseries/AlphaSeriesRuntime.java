@@ -114,7 +114,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
             int read;
             while ((read = input.read(buffer)) != -1) {
                 String packetBuffer = new String(buffer, 0, read, StandardCharsets.ISO_8859_1);
-                Main.Proc_0_25_68FBC0(socketIndex, packetBuffer, 0);
+                Main.processClientPacket(socketIndex, packetBuffer);
             }
         } catch (IOException ignored) {
             // Socket disconnects are part of normal client lifecycle.
