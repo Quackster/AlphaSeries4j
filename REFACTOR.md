@@ -58,6 +58,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.catalog.CatalogProductSettings` as a typed adapter around catalog package, pet package, club product, counter product, teleport, and moodlight state previously written through raw `Licence` globals.
 - Added `com.alphaseries.game.catalog.CatalogRegistry` as a typed adapter around product, catalog-product, and deal row caches previously parsed directly from `Licence` globals.
 - Added `com.alphaseries.game.catalog.ProductCache` as a typed adapter around DataManager product rows previously read from raw global cache storage.
+- Routed `DataManager.productCache()` through the module-level `CatalogState` singleton product-cache owner, keeping `DataManager.global_008292BC` as the temporary compatibility source for legacy callers.
 - Routed catalog grant club entitlement, badge, inventory furniture, newest-id, and dimmer setup operations through typed DAO methods.
 - Added `com.alphaseries.game.catalog.GiftSettings` as a typed adapter around club-gift and gift-wrap state previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.moderation.StaffPayloads` for call-for-help rows, staff user summaries, room visits, room chat history, and unsafe staff-alert checks.

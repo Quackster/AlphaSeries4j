@@ -1,5 +1,6 @@
 package com.alphaseries;
 
+import com.alphaseries.game.catalog.CatalogState;
 import com.alphaseries.game.catalog.ProductCache;
 import com.alphaseries.game.room.RoomEventLocales;
 import com.alphaseries.util.NumberUtils;
@@ -61,13 +62,18 @@ public final class DataManager {
     }
 
     public static ProductCache productCache() {
-        return ProductCache.fromLegacy(global_008292BC);
+        CatalogState.instance().setProductCacheFromLegacy(global_008292BC);
+        return CatalogState.instance().productCache();
     }
 
     public static void setProductRows(Object productRows) {
         global_008292BC = productRows == null ? "" : productRows;
+        CatalogState.instance().setProductCacheFromLegacy(global_008292BC);
     }
 
+    /**
+     * Original function: Proc_8_1_804400.
+     */
     public static long Proc_8_1_804400(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
@@ -75,6 +81,9 @@ public final class DataManager {
         return randomSmallLicenceFactor(NumberUtils.parseLong(args[0]));
     }
 
+    /**
+     * Original function: Proc_8_0_804330.
+     */
     public static String Proc_8_0_804330(Object... args) {
         if (args == null || args.length == 0) {
             return "";
@@ -82,6 +91,9 @@ public final class DataManager {
         return readHttp(StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
     }
 
+    /**
+     * Original function: Proc_8_2_804490.
+     */
     public static long Proc_8_2_804490(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
@@ -89,6 +101,9 @@ public final class DataManager {
         return randomLargeLicenceFactor(NumberUtils.parseLong(args[0]));
     }
 
+    /**
+     * Original function: Proc_8_3_804530.
+     */
     public static String Proc_8_3_804530(Object... args) {
         if (args == null || args.length == 0) {
             return "";
@@ -143,10 +158,16 @@ public final class DataManager {
         return token.toString();
     }
 
+    /**
+     * Original function: Proc_8_4_804970.
+     */
     public static void Proc_8_4_804970(Object... args) {
         markLicenceUnavailable();
     }
 
+    /**
+     * Original function: Proc_8_5_804AB0.
+     */
     public static String Proc_8_5_804AB0(Object... args) {
         if (args == null || args.length == 0) {
             return "";
@@ -178,6 +199,9 @@ public final class DataManager {
         return decoded.toString();
     }
 
+    /**
+     * Original function: Proc_8_6_804D80.
+     */
     public static int Proc_8_6_804D80(Object... args) {
         if (args == null || args.length == 0) {
             return 0;
@@ -204,6 +228,9 @@ public final class DataManager {
         return NumberUtils.parseInt(value);
     }
 
+    /**
+     * Original function: Proc_8_7_8051C0.
+     */
     public static boolean Proc_8_7_8051C0(Object... args) {
         if (args == null || args.length == 0) {
             markLicenceUnavailable();
@@ -333,6 +360,9 @@ public final class DataManager {
         return licenseCheck == 0L;
     }
 
+    /**
+     * Original function: Proc_8_8_806720.
+     */
     public static boolean Proc_8_8_806720(Object... args) {
         if (args == null || args.length == 0) {
             return false;
@@ -347,6 +377,9 @@ public final class DataManager {
         return Files.exists(Path.of(StringUtils.text(path)));
     }
 
+    /**
+     * Original function: Proc_8_9_806810.
+     */
     public static void Proc_8_9_806810(Object... args) {
         if (args == null || args.length < 2) {
             return;
@@ -366,6 +399,9 @@ public final class DataManager {
         }
     }
 
+    /**
+     * Original function: Proc_8_10_8068E0.
+     */
     public static void Proc_8_10_8068E0(Object... args) {
         if (args == null || args.length < 2) {
             return;
@@ -384,6 +420,9 @@ public final class DataManager {
         }
     }
 
+    /**
+     * Original function: Proc_8_11_8069B0.
+     */
     public static String Proc_8_11_8069B0(Object... args) {
         if (args == null || args.length == 0) {
             return "";
@@ -391,6 +430,9 @@ public final class DataManager {
         return roomEventLocaleField(StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
     }
 
+    /**
+     * Original function: Proc_8_12_806C30.
+     */
     public static String Proc_8_12_806C30(Object... args) {
         if (args == null || args.length < 2) {
             return "";
