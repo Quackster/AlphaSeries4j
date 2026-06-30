@@ -274,10 +274,10 @@ public final class UserDao {
             userId);
     }
 
-    public List<String> tagNames(long userId) throws SQLException {
+    public List<UserTagRow> tagNames(long userId) throws SQLException {
         return database.query(
             "SELECT name FROM users_tags WHERE id_user=? LIMIT 30",
-            resultSet -> resultSet.getString(1),
+            resultSet -> new UserTagRow(resultSet.getString(1)),
             userId);
     }
 
@@ -648,6 +648,9 @@ public final class UserDao {
     }
 
     public record WardrobeSlotRow(long slotId, String figure, String gender) {
+    }
+
+    public record UserTagRow(String name) {
     }
 
     public record ActivityPointBalance(long pointTypeOne, long pointTypeTwo, long pointTypeThree, long pointTypeFour) {

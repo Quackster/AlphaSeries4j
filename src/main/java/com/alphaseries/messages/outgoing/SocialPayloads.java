@@ -1,5 +1,6 @@
 package com.alphaseries.messages.outgoing;
 
+import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
@@ -241,12 +242,14 @@ public final class SocialPayloads {
             .build();
     }
 
-    public static String tags(List<String> tagRows) {
+    public static String tags(List<?> tagRows) {
         long tagCount = 0L;
         PacketBuilder tagPayload = PacketBuilder.create();
         if (tagRows != null) {
-            for (String row : tagRows) {
-                String tag = StringUtils.text(row);
+            for (Object row : tagRows) {
+                String tag = row instanceof UserDao.UserTagRow tagRow
+                    ? StringUtils.text(tagRow.name())
+                    : StringUtils.text(row);
                 if (!tag.isEmpty()) {
                     tagPayload.appendString(tag);
                     tagCount++;

@@ -45,6 +45,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Replaced the small ready-packet switch in `Filesystems` with `ReadyPacketRegistry`.
 - Added `com.alphaseries.messages.outgoing.UserPayloads` for user-state outgoing payloads.
 - Added `com.alphaseries.messages.outgoing.SocialPayloads` for room-user profile, badge, and tag outgoing payloads.
+- Loaded user tag rows through typed `UserDao.UserTagRow` records before building the social tag payload, leaving raw string tag rows only as compatibility inputs.
 - Added `com.alphaseries.messages.outgoing.PollPayloads` for poll outgoing payloads.
 - Added `com.alphaseries.game.poll` typed poll records and `PollDao`, then routed poll handlers/prompts through prepared DAO methods and typed payload building.
 - Added `com.alphaseries.messages.outgoing.AchievementPayloads` for achievement reward, award, and list outgoing payloads.

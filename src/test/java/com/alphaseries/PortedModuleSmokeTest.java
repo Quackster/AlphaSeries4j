@@ -2523,6 +2523,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("Cd" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges,
             SocialPayloads.badgeDisplay(5, Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2", SocialPayloads.tags(List.of("one", "two")));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2",
+            SocialPayloads.tags(List.of(new UserDao.UserTagRow("one"), new UserDao.UserTagRow("two"))));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), SocialPayloads.tags(List.of()));
         assertEquals("E^" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2",
             SocialPayloads.tagDisplay(5, SocialPayloads.tags(List.of("one", "two"))));

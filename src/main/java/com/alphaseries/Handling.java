@@ -6586,7 +6586,7 @@ public final class Handling {
             if (users == null) {
                 return SocialPayloads.tags(List.of());
             }
-            List<String> rows = users.tagNames(NumberUtils.parseLong(userId));
+            List<UserDao.UserTagRow> rows = users.tagNames(NumberUtils.parseLong(userId));
             return SocialPayloads.tags(rows);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
