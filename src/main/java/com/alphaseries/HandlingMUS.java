@@ -13,15 +13,21 @@ public final class HandlingMUS {
         MusConnectionManager.instance().configureSink(sink);
     }
 
+    /**
+     * Original function: Proc_12_0_8218C0.
+     */
     public static void Proc_12_0_8218C0(Object... args) {
         int socketIndex = musSocketIndex(args);
-        MusConnectionManager.instance().sendShutdown(socketIndex);
+        sendMusShutdown(socketIndex);
     }
 
+    /**
+     * Original function: Proc_12_1_821AA0.
+     */
     public static void Proc_12_1_821AA0(Object... args) {
         int socketIndex = musSocketIndex(args);
         String messageText = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
-        MusConnectionManager.instance().sendData(socketIndex, messageText);
+        sendMusData(socketIndex, messageText);
     }
 
     public static int musSocketIndex(Object... args) {
@@ -31,6 +37,23 @@ public final class HandlingMUS {
         return 0;
     }
 
+    /**
+     * Original function: Proc_12_0_8218C0.
+     */
+    public static void sendMusShutdown(int socketIndex) {
+        MusConnectionManager.instance().sendShutdown(socketIndex);
+    }
+
+    /**
+     * Original function: Proc_12_1_821AA0.
+     */
+    public static void sendMusData(int socketIndex, String messageText) {
+        MusConnectionManager.instance().sendData(socketIndex, messageText);
+    }
+
+    /**
+     * Original function: Proc_12_1_821AA0.
+     */
     public static void sendMusPayload(int socketIndex, String payload) {
         MusConnectionManager.instance().sendPayload(socketIndex, payload);
     }

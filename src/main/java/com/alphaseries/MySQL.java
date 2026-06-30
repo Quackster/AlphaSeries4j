@@ -24,30 +24,51 @@ public final class MySQL {
         return databaseConnection;
     }
 
+    /**
+     * Original function: Proc_5_0_6D3CD0.
+     */
     public static void Proc_5_0_6D3CD0(Object... args) {
         executeSql(buildSqlFromArgs(args));
     }
 
+    /**
+     * Original function: Proc_5_1_6D4110.
+     */
     public static void Proc_5_1_6D4110(Object... args) {
         executeSql(buildSqlFromArgs(args));
     }
 
+    /**
+     * Original function: Proc_5_2_6D4690.
+     */
     public static String Proc_5_2_6D4690(Object... args) {
         return readSqlRows(buildSqlFromArgs(args));
     }
 
+    /**
+     * Original function: Proc_5_3_6D4CF0.
+     */
     public static String Proc_5_3_6D4CF0(Object... args) {
         return readSqlRows(buildSqlFromArgs(args));
     }
 
+    /**
+     * Original function: Proc_5_4_6D55E0.
+     */
     public static void Proc_5_4_6D55E0(Object... args) {
         StaffModerationPacketHandlers.sendCallForHelpChatLog(args);
     }
 
+    /**
+     * Original function: Proc_5_5_6D64D0.
+     */
     public static void Proc_5_5_6D64D0(Object... args) {
         StaffModerationPacketHandlers.sendRoomChatLog(args);
     }
 
+    /**
+     * Original function: Proc_5_6_6D7090.
+     */
     public static void Proc_5_6_6D7090(Object... args) {
         StaffModerationPacketHandlers.sendRoomInfo(args);
     }
@@ -130,6 +151,9 @@ public final class MySQL {
         }
     }
 
+    /**
+     * Original functions: Proc_5_2_6D4690, Proc_5_3_6D4CF0.
+     */
     public static String readSqlRows(String sqlText) {
         if (sqlText == null || sqlText.isEmpty() || databaseConnection == null) {
             return "";
@@ -141,6 +165,9 @@ public final class MySQL {
         }
     }
 
+    /**
+     * Original functions: Proc_5_0_6D3CD0, Proc_5_1_6D4110.
+     */
     public static void executeSql(String sqlText) {
         if (sqlText == null || sqlText.isEmpty() || databaseConnection == null) {
             return;
