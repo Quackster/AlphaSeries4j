@@ -40,6 +40,7 @@ import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomOccupantRow;
+import com.alphaseries.game.room.RoomUserPosition;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.room.RoomUserEntryRow;
@@ -812,12 +813,6 @@ public final class Handling {
     public static final class TradeOfferItemPayload {
         public long itemCount;
         public String payload = "";
-    }
-
-    public static final class MovementPosition {
-        public long positionX;
-        public long positionY;
-        public boolean found;
     }
 
     public static final class StaffChatRowsPayload {
@@ -2529,10 +2524,11 @@ public final class Handling {
                     long positionX = occupant.positionX();
                     long positionY = occupant.positionY();
                     if (roomSlot > 0L) {
-                        MovementPosition movementPosition = movementPosition(Licence.representedRooms().movementPosition(roomSlot, roomUserIndex));
-                        if (movementPosition.found) {
-                            positionX = movementPosition.positionX;
-                            positionY = movementPosition.positionY;
+                        RoomUserPosition movementPosition = RoomUserPosition.from(
+                            Licence.representedRooms().movementPosition(roomSlot, roomUserIndex));
+                        if (movementPosition.found()) {
+                            positionX = movementPosition.positionX();
+                            positionY = movementPosition.positionY();
                         }
                     }
                     String positionZ = "0.0";
@@ -5181,10 +5177,10 @@ public final class Handling {
                     if (allowWalkthrough == 0L && roomSlot > 0L) {
                         for (long occupantRoomUserIndex : rooms.activeVisitIdsByRoom(roomId)) {
                             if (occupantRoomUserIndex > 0L) {
-                                MovementPosition movementPosition = movementPosition(
+                                RoomUserPosition movementPosition = RoomUserPosition.from(
                                     Licence.representedRooms().movementPosition(roomSlot, occupantRoomUserIndex));
-                                if (movementPosition.found && movementPosition.positionX == tileX
-                                    && movementPosition.positionY == tileY) {
+                                if (movementPosition.found() && movementPosition.positionX() == tileX
+                                    && movementPosition.positionY() == tileY) {
                                     return 0L;
                                 }
                             }
@@ -6518,9 +6514,9 @@ public final class Handling {
                 return "";
             }
             long roomSlot = socketIndex;
-            MovementPosition current = movementPosition(Licence.representedRooms().movementPosition(roomSlot, socketIndex));
-            long currentX = current.found ? current.positionX : 0L;
-            long currentY = current.found ? current.positionY : 0L;
+            RoomUserPosition current = RoomUserPosition.from(Licence.representedRooms().movementPosition(roomSlot, socketIndex));
+            long currentX = current.found() ? current.positionX() : 0L;
+            long currentY = current.found() ? current.positionY() : 0L;
             long directionValue = handlingDirectionCode(Long.compare(lookX, currentX), Long.compare(lookY, currentY));
             Licence.setRepresentedRooms(
                 Licence.representedRooms().moveOccupant(roomSlot, socketIndex, currentX, currentY, directionValue, 0L));
@@ -6558,9 +6554,9 @@ public final class Handling {
                 return "";
             }
             long roomSlot = socketIndex;
-            MovementPosition current = movementPosition(Licence.representedRooms().movementPosition(roomSlot, socketIndex));
-            long currentX = current.found ? current.positionX : 0L;
-            long currentY = current.found ? current.positionY : 0L;
+            RoomUserPosition current = RoomUserPosition.from(Licence.representedRooms().movementPosition(roomSlot, socketIndex));
+            long currentX = current.found() ? current.positionX() : 0L;
+            long currentY = current.found() ? current.positionY() : 0L;
             MovementStep movement = MovementStep.fromLegacy(
                 Functions.Proc_10_24_80E790(socketIndex, currentX, currentY, targetX, targetY));
             long nextX = movement.positionX();
@@ -8737,24 +8733,6 @@ public final class Handling {
         return Functions.movementDirectionCode(deltaX, deltaY);
     }
 
-    private static MovementPosition movementPosition(RepresentedRoomCache.Position position) {
-        MovementPosition result = new MovementPosition();
-        result.positionX = position.positionX;
-        result.positionY = position.positionY;
-        result.found = position.found;
-        return result;
-    }
-
-    public static MovementPosition representedUserPosition(Object[] args) {
-        MovementPosition result = new MovementPosition();
-        if (args != null && args.length >= 5) {
-            result.positionX = NumberUtils.parseLong(args[3]);
-            result.positionY = NumberUtils.parseLong(args[4]);
-            result.found = true;
-        }
-        return result;
-    }
-
     public static String Proc_6_239_7FC170(Object... args) {
         if (args == null || args.length == 0) {
             return "";
@@ -8966,13 +8944,13 @@ public final class Handling {
                 return "";
             }
             long roomSlot = rooms.roomSlot(roomId);
-            MovementPosition userPosition = representedUserPosition(args);
-            if (!userPosition.found) {
-                userPosition = movementPosition(
+            RoomUserPosition userPosition = RoomUserPosition.fromHandlerArgs(args);
+            if (!userPosition.found()) {
+                userPosition = RoomUserPosition.from(
                     Licence.representedRooms().movementPosition(roomSlot, representedRoomUserIndex(socketIndex, userId)));
             }
-            if (userPosition.found
-                && (Math.abs(userPosition.positionX - furnitureX) > 2L || Math.abs(userPosition.positionY - furnitureY) > 2L)) {
+            if (userPosition.found()
+                && (Math.abs(userPosition.positionX() - furnitureX) > 2L || Math.abs(userPosition.positionY() - furnitureY) > 2L)) {
                 return "";
             }
             String payload = FurniturePayloads.simpleFloorUse(furnitureId, stateValue);

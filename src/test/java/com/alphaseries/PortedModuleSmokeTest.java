@@ -49,6 +49,7 @@ import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomPortalSettings;
+import com.alphaseries.game.room.RoomUserPosition;
 import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.trade.RepresentedTradeOffer;
@@ -1550,11 +1551,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(2L, movementPosition.positionX);
         assertEquals(3L, movementPosition.positionY);
         assertEquals(false, RepresentedRoomCache.fromLegacy(movementCache).movementPosition(4, 10).found);
-        Handling.MovementPosition argumentPosition = Handling.representedUserPosition(new Object[]{4, "AM", "payload", 8, 9});
-        assertEquals(true, argumentPosition.found);
-        assertEquals(8L, argumentPosition.positionX);
-        assertEquals(9L, argumentPosition.positionY);
-        assertEquals(false, Handling.representedUserPosition(new Object[]{4, "AM", "payload"}).found);
+        RoomUserPosition argumentPosition = RoomUserPosition.fromHandlerArgs(new Object[]{4, "AM", "payload", 8, 9});
+        assertEquals(true, argumentPosition.found());
+        assertEquals(8L, argumentPosition.positionX());
+        assertEquals(9L, argumentPosition.positionY());
+        assertEquals(false, RoomUserPosition.fromHandlerArgs(new Object[]{4, "AM", "payload"}).found());
         movementCache = RepresentedRoomCache.fromLegacy(movementCache)
             .moveOccupant(4, 9, 5, 6, 2, 0).cacheText();
         assertEquals("\1" + "4\t\t\t0\t\1" + "9\t5\t6\t2\t0\2\2", movementCache);
