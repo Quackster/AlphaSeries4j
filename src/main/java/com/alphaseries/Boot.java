@@ -491,7 +491,7 @@ public final class Boot {
     }
 
     public static void Proc_1_18_6CE9C0(Object... args) {
-        StringBuilder payload = new StringBuilder();
+        PacketBuilder payload = PacketBuilder.create();
         StringBuilder lookup = new StringBuilder();
         List<GiftSettings.ClubGift> gifts = new ArrayList<GiftSettings.ClubGift>();
         long count = 0L;
@@ -511,19 +511,21 @@ public final class Boot {
                 productId = catalogProductId;
             }
             String giftClass = Licence.productType(productId) == 9L ? "i" : "s";
-            payload.append(Crypto.encodeVl64(catalogProductId));
-            payload.append(Crypto.encodeVl64(productId));
-            payload.append(DataManager.productCache().displayName(productId)).append('\2');
-            payload.append(DataManager.productCache().description(productId)).append('\2');
-            payload.append("IHHI").append(giftClass).append('\2');
-            payload.append(Crypto.encodeVl64(row.vipOnly()));
-            payload.append(Crypto.encodeVl64(row.requiredDays()));
+            payload
+                .appendInt(catalogProductId)
+                .appendInt(productId)
+                .appendString(DataManager.productCache().displayName(productId))
+                .appendString(DataManager.productCache().description(productId))
+                .appendRaw("IHHI")
+                .appendString(giftClass)
+                .appendInt(row.vipOnly())
+                .appendInt(row.requiredDays());
             lookup.append('[').append(catalogProductId).append('\0').append(productId).append('\1').append(row.requiredDays()).append(']');
             gifts.add(new GiftSettings.ClubGift(catalogProductId, productId, row.requiredDays()));
             count++;
         }
         Licence.setClubGiftState(new GiftSettings.ClubGiftState(
-            Crypto.encodeVl64(count) + payload,
+            PacketBuilder.create().appendInt(count).appendRaw(payload.build()).build(),
             lookup.toString(),
             gifts));
     }
