@@ -53,6 +53,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.messages.outgoing.RecyclerPayloads` for recycler status outgoing payloads.
 - Added `com.alphaseries.messages.outgoing.JukeboxPayloads` for song info, jukebox playlist, disk inventory, and playback outgoing payloads.
 - Added `com.alphaseries.game.jukebox` typed jukebox records and `JukeboxDao`, then routed jukebox lookup, song-info, playlist, disk inventory, playback, add, and remove flows through prepared DAO methods.
+- Routed jukebox song-info requests through typed CD id lists and prepared `JukeboxDao` `IN` placeholders, leaving comma-delimited requested ids only as a compatibility view.
 - Added `com.alphaseries.game.achievement.AchievementSettings` as a typed adapter around achievement quest and row state previously decoded directly from `Licence` globals.
 - Routed boot achievement settings loading through typed `AchievementSettings.Achievement` records instead of `String[][]` row mirrors, leaving legacy row parsing only at the `AchievementSettings.fromLegacy(...)` boundary.
 - Added `com.alphaseries.game.advertising.VisitRoomAds` as a typed adapter around advertisement visit-room payload state previously read directly from `Licence` globals.

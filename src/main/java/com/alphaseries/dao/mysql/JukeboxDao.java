@@ -6,9 +6,11 @@ import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
 import com.alphaseries.game.jukebox.JukeboxRow;
 import com.alphaseries.game.jukebox.SongDiskRow;
 import com.alphaseries.game.jukebox.SongInfoRow;
+import com.alphaseries.util.NumberUtils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,42 +39,40 @@ public final class JukeboxDao {
     }
 
     public List<SongInfoRow> songInfoRows(String requestedIds, long requestedCount) throws SQLException {
+        return songInfoRows(parseRequestedIds(requestedIds), requestedCount);
+    }
+
+    public List<SongInfoRow> songInfoRows(List<Long> requestedIds, long requestedCount) throws SQLException {
         long effectiveCount = requestedCount <= 0L ? 0L : Math.min(requestedCount, 60L);
-        List<Long> cdIds = new ArrayList<>();
-        for (String requestedId : String.valueOf(requestedIds == null ? "" : requestedIds).split(",", -1)) {
-            if (!requestedId.isEmpty()) {
-                try {
-                    long cdId = Long.parseLong(requestedId);
-                    if (cdId > 0L) {
-                        cdIds.add(cdId);
-                    }
-                } catch (NumberFormatException ignored) {
-                    // Ignore malformed legacy request ids.
-                }
-            }
-        }
-        if (effectiveCount <= 0L || cdIds.isEmpty()) {
+        if (effectiveCount <= 0L || requestedIds == null || requestedIds.isEmpty()) {
             return List.of();
         }
-        StringBuilder whereClause = new StringBuilder();
-        List<Object> parameters = new ArrayList<>();
-        for (Long cdId : cdIds) {
-            if (whereClause.length() > 0) {
-                whereClause.append(" OR ");
-            }
-            whereClause.append("id=?");
-            parameters.add(cdId);
-        }
+        int limit = (int) Math.min(effectiveCount, requestedIds.size());
+        List<Long> cdIds = new ArrayList<>(requestedIds.subList(0, limit));
+        String placeholders = String.join(",", Collections.nCopies(cdIds.size(), "?"));
         return database.query(
-            "SELECT title,sequence,author,sound,id FROM soundmachine_cds WHERE "
-                + whereClause + " LIMIT " + effectiveCount,
+            "SELECT title,sequence,author,sound,id FROM soundmachine_cds WHERE id IN ("
+                + placeholders + ") LIMIT " + effectiveCount,
             resultSet -> new SongInfoRow(
                 resultSet.getString(1),
                 resultSet.getLong(2),
                 resultSet.getString(3),
                 resultSet.getString(4),
                 resultSet.getLong(5)),
-            parameters.toArray());
+            cdIds.toArray());
+    }
+
+    private static List<Long> parseRequestedIds(String requestedIds) {
+        List<Long> cdIds = new ArrayList<>();
+        for (String requestedId : String.valueOf(requestedIds == null ? "" : requestedIds).split(",", -1)) {
+            if (!requestedId.isEmpty()) {
+                long cdId = NumberUtils.parseLong(requestedId);
+                if (cdId > 0L) {
+                    cdIds.add(cdId);
+                }
+            }
+        }
+        return List.copyOf(cdIds);
     }
 
     public long activeDestinationId(long jukeboxId) throws SQLException {

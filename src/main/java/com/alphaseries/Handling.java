@@ -815,6 +815,7 @@ public final class Handling {
     public static final class SongInfoRequest {
         public long requestedCount;
         public String requestedIds = "";
+        public List<Long> requestedIdList = List.of();
     }
 
     public static final class JukeboxAddRequest {
@@ -7072,7 +7073,7 @@ public final class Handling {
             JukeboxDao jukebox = jukeboxDao();
             String payload = jukebox == null
                 ? JukeboxPayloads.songInfo(List.of())
-                : JukeboxPayloads.songInfo(jukebox.songInfoRows(request.requestedIds, request.requestedCount));
+                : JukeboxPayloads.songInfo(jukebox.songInfoRows(request.requestedIdList, request.requestedCount));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -11115,17 +11116,17 @@ public final class Handling {
             requestedCount = 60L;
         }
         request.requestedCount = requestedCount;
-        String requestedIds = "";
+        List<Long> requestedIdList = new ArrayList<>();
+        List<String> requestedTokens = new ArrayList<>();
         for (long requestIndex = 0L; requestIndex < requestedCount; requestIndex++) {
             long cdId = readWireLong(requestPayload, offset);
             if (cdId > 0L) {
-                if (!requestedIds.isEmpty()) {
-                    requestedIds += ",";
-                }
-                requestedIds += cdId;
+                requestedIdList.add(cdId);
+                requestedTokens.add(String.valueOf(cdId));
             }
         }
-        request.requestedIds = requestedIds;
+        request.requestedIdList = List.copyOf(requestedIdList);
+        request.requestedIds = String.join(",", requestedTokens);
         return request;
     }
 

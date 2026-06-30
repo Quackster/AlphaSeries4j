@@ -2738,6 +2738,7 @@ public final class PortedModuleSmokeTest {
         Handling.SongInfoRequest songInfoRequest = Handling.songInfoRequestFromWire(songInfoWire);
         assertEquals(2L, songInfoRequest.requestedCount);
         assertEquals("50,51", songInfoRequest.requestedIds);
+        assertEquals(List.of(50L, 51L), songInfoRequest.requestedIdList);
         String expectedCdPayload = Crypto.Proc_3_0_6D2AF0(50, null, "");
         expectedCdPayload = Crypto.Proc_3_0_6D2AF0(3, null, expectedCdPayload) + "Song A\2Author A\2sound-a\2";
         expectedCdPayload += Crypto.Proc_3_0_6D2AF0(4, null, Crypto.Proc_3_0_6D2AF0(51, null, ""))
@@ -3205,7 +3206,7 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT id,id_question,caption FROM poll_answers WHERE id_question='8'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(1, 8, "Yes"), Arrays.<Object>asList(2, 8, "No"));
                 }
-                if (sqlText.contains("SELECT title,sequence,author,sound,id FROM soundmachine_cds WHERE id='50' OR id='51'")) {
+                if (sqlText.contains("SELECT title,sequence,author,sound,id FROM soundmachine_cds WHERE id IN ('50','51')")) {
                     return Arrays.<List<Object>>asList(
                         Arrays.<Object>asList("Song A", 3, "Author A", "sound-a", 50),
                         Arrays.<Object>asList("Song B", 4, "Author B", "sound-b", 51));
