@@ -26,8 +26,5 @@ public final class AdvertisingDao {
     }
 
     public record VisitRoomAdRow(long visitRoomId, String address) {
-        public String legacyRow() {
-            return visitRoomId + "\t" + (address == null ? "" : address);
-        }
     }
 }

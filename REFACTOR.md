@@ -329,6 +329,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved represented activity-point tick tracking from marker-packed `String` storage into a typed socket-to-seconds map.
 - Moved chat filter words and gestures from tab-delimited startup cache strings into typed `ChatSettings` records; chat filtering/gesture lookup now iterates typed rows.
 - Moved the new-friend room refresh cache from tab-delimited `Licence` row strings into typed `NewFriendRooms` state for the DAO-driven refresh path, keeping legacy string reads only at the compatibility boundary.
+- Routed visit-room advertisement startup cache building through typed `AdvertisingDao.VisitRoomAdRow` records, removing the `id\taddress` join/split round trip and the DAO legacy row formatter.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -343,7 +344,7 @@ Measured on 2026-06-30:
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
-- `Boot.java`: 1962 lines
+- `Boot.java`: 1970 lines
 - `Handling.java`: 12272 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines

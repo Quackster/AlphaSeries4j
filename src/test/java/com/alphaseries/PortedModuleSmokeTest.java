@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.config.AppDatabaseConfig;
+import com.alphaseries.dao.mysql.AdvertisingDao;
 import com.alphaseries.dao.mysql.QuestDao;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.UserDao;
@@ -776,6 +777,10 @@ public final class PortedModuleSmokeTest {
         Boot.VisitRoomCache visitRoomCache = Boot.buildAdvertisementVisitRoomCache("2\t/lobby\r4\t/cafe", "/ad/");
         assertEquals(2L, visitRoomCache.count);
         assertEquals("/ad/4\2/cafe\2", visitRoomCache.payloadByVisitRoomId.get(4L));
+        Boot.VisitRoomCache typedVisitRoomCache = Boot.buildAdvertisementVisitRoomCache(
+            List.of(new AdvertisingDao.VisitRoomAdRow(4L, "/cafe")), "/ad/");
+        assertEquals(1L, typedVisitRoomCache.count);
+        assertEquals("/ad/4\2/cafe\2", typedVisitRoomCache.payloadByVisitRoomId.get(4L));
         assertEquals(true, Boot.buildRecommendedRoomsQuery(3).contains("id_tree='3'"));
         String roomRow = "1\t2\t3\tc1\tc2\tc3\tc4\tc5\tc6\tc7\tc8\tc9\tc10\tc11\tc12\tc13\tc14\tc15\tc16\tc17\tc18\tc19\tc20\tc21\tc22\t4\t5";
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "")

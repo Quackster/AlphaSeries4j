@@ -610,11 +610,11 @@ public final class Boot {
     public static void Proc_1_22_6D0F00(Object... args) {
         AdvertisingDao advertising = advertisingDao();
         long maxId = 0L;
-        String visitRoomRows = "";
+        List<AdvertisingDao.VisitRoomAdRow> visitRoomRows = List.of();
         if (advertising != null) {
             try {
                 maxId = Math.max(0L, advertising.maxVisitRoomId());
-                visitRoomRows = joinVisitRoomAdRows(advertising.visitRoomAds());
+                visitRoomRows = advertising.visitRoomAds();
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
@@ -1285,6 +1285,22 @@ public final class Boot {
         return cache;
     }
 
+    public static VisitRoomCache buildAdvertisementVisitRoomCache(List<AdvertisingDao.VisitRoomAdRow> visitRoomRows,
+            String assetPath) {
+        VisitRoomCache cache = new VisitRoomCache();
+        if (visitRoomRows != null) {
+            for (AdvertisingDao.VisitRoomAdRow row : visitRoomRows) {
+                if (row != null) {
+                    long visitRoomId = row.visitRoomId();
+                    cache.payloadByVisitRoomId.put(visitRoomId,
+                        StringUtils.text(assetPath) + visitRoomId + '\2' + StringUtils.text(row.address()) + '\2');
+                    cache.count++;
+                }
+            }
+        }
+        return cache;
+    }
+
     public static String buildRecommendedRoomsQuery(long treeId) {
         String treeText = String.valueOf(treeId);
         String separator = " UNION ALL ";
@@ -1822,14 +1838,6 @@ public final class Boot {
     private static String joinFaqDescriptionRows(List<HelpDao.FaqDescriptionRow> rows) {
         StringBuilder joined = new StringBuilder();
         for (HelpDao.FaqDescriptionRow row : rows == null ? List.<HelpDao.FaqDescriptionRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
-    }
-
-    private static String joinVisitRoomAdRows(List<AdvertisingDao.VisitRoomAdRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (AdvertisingDao.VisitRoomAdRow row : rows == null ? List.<AdvertisingDao.VisitRoomAdRow>of() : rows) {
             appendLegacyRow(joined, row.legacyRow());
         }
         return joined.toString();
