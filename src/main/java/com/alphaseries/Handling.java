@@ -87,6 +87,7 @@ import com.alphaseries.messages.outgoing.JukeboxPayloads;
 import com.alphaseries.messages.outgoing.MessengerPayloads;
 import com.alphaseries.messages.outgoing.NavigatorPayloads;
 import com.alphaseries.messages.outgoing.PollPayloads;
+import com.alphaseries.messages.outgoing.QuestPayloads;
 import com.alphaseries.messages.outgoing.RecyclerPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
 import com.alphaseries.messages.outgoing.UserPayloads;
@@ -10462,15 +10463,8 @@ public final class Handling {
         long progressValue,
         long activityCount
     ) {
-        long resolvedActivityCount = activityCount <= 0L ? 1L : activityCount;
-        String payload = Crypto.Proc_3_0_6D2AF0(campaignId, null, "") + StringUtils.text(questName) + '\2';
-        payload += Crypto.Proc_3_0_6D2AF0(campaignLevelCount, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(questId, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(userQuestLevel, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(progressValue, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(resolvedActivityCount, null, "");
-        payload += Crypto.Proc_3_0_6D2AF0(0, null, "");
-        return payload;
+        return QuestPayloads.completion(campaignId, questName, campaignLevelCount, questId, userQuestLevel,
+            progressValue, activityCount);
     }
 
     public static long questRequestIdFromWire(String packetPayload, String prefix) {

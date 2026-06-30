@@ -349,6 +349,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed rank/staff-state payload construction through `UserPayloads.rankAndStaffState(...)`, replacing nested inline `Crypto` string concatenation in `Handling`.
 - Added `com.alphaseries.messages.outgoing.NavigatorPayloads` and routed favourite-room id list payload construction through fluent `PacketBuilder` using typed room id lists from `RoomDao`.
 - Routed active room-effect replay payload construction through `SocialPayloads.roomUserEffect(...)` and fluent `PacketBuilder` using typed `RoomDao.ActiveRoomEffect` rows.
+- Added `com.alphaseries.messages.outgoing.QuestPayloads` and routed quest completion payload construction through fluent `PacketBuilder`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -364,7 +365,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 12244 lines
+- `Handling.java`: 12238 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 894 lines

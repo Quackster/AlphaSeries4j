@@ -46,6 +46,7 @@ import com.alphaseries.messages.incoming.ReadyPacketRegistry;
 import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
 import com.alphaseries.messages.outgoing.NavigatorPayloads;
+import com.alphaseries.messages.outgoing.QuestPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
@@ -1864,6 +1865,7 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(5, null, "")
             + Crypto.Proc_3_0_6D2AF0(1, null, "")
             + Crypto.Proc_3_0_6D2AF0(0, null, "");
+        assertEquals(expectedQuestPayload, QuestPayloads.completion(7, "Quest", 3, 44, 2, 5, 0));
         assertEquals(expectedQuestPayload, Handling.questCompletionPayload(7, "Quest", 3, 44, 2, 5, 0));
         String questRows = "10\t1\tFirst\t\t5\t2\tvisit\t0\t7\t3\t30\r11\t2\tSecond\t\t6\t2\tvisit\t0\t7\t4\t0";
         assertEquals(10L, Handling.questRequestIdFromWire("p^" + Crypto.Proc_3_0_6D2AF0(10, null, ""), "p^"));
