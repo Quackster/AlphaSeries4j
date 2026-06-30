@@ -3,6 +3,7 @@ package com.alphaseries.messages.outgoing;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.util.List;
 
@@ -79,6 +80,32 @@ public final class RoomPayloads {
     public static String homeRoom(long roomId) {
         return PacketBuilder.message("GG")
             .appendInt(roomId)
+            .build();
+    }
+
+    public static String currentRoom(long roomId) {
+        return PacketBuilder.message("AE")
+            .appendInt(roomId)
+            .appendString("")
+            .build();
+    }
+
+    public static String createdRoom(long roomId, String roomName) {
+        return PacketBuilder.message("@{")
+            .appendInt(roomId)
+            .appendString(roomName)
+            .build();
+    }
+
+    public static String officialRoomModel(long roomId, RoomDao.OfficialRoomModel officialRoom) {
+        if (officialRoom == null) {
+            return "";
+        }
+        return PacketBuilder.message("GE")
+            .appendInt(roomId)
+            .appendString(StringUtils.text(officialRoom.requiredFiles()))
+            .appendInt(roomId)
+            .appendString(StringUtils.text(officialRoom.caption()))
             .build();
     }
 

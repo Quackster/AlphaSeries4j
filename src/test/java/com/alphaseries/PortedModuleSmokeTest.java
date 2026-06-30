@@ -2487,6 +2487,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GI") + '\2', RoomPayloads.iconUpdated(7));
         assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GH"), RoomPayloads.entryUpdated(7));
         assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GG"), RoomPayloads.homeRoom(7));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "AE") + '\2', RoomPayloads.currentRoom(7));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "@{") + "Created Room\2",
+            RoomPayloads.createdRoom(7, "Created Room"));
+        String expectedOfficialRoomModel = Crypto.Proc_3_0_6D2AF0(7, null, "GE") + "model.cast\2";
+        expectedOfficialRoomModel = Crypto.Proc_3_0_6D2AF0(7, null, expectedOfficialRoomModel) + "Caption\2";
+        assertEquals(expectedOfficialRoomModel,
+            RoomPayloads.officialRoomModel(7, new RoomDao.OfficialRoomModel(7, 2, "model.cast", "Caption")));
         assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GS"), RoomPayloads.settingsUpdated(7));
         assertEquals(Crypto.Proc_3_0_6D2AF0(12, null, "EY"), RoomPayloads.rating(12));
         String expectedWallOptions = Crypto.Proc_3_0_6D2AF0(1, null, "GX");

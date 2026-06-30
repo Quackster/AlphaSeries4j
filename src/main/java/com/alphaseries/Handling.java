@@ -2389,9 +2389,7 @@ public final class Handling {
             if (officialRoom == null) {
                 return;
             }
-            String payload = Crypto.Proc_3_0_6D2AF0(roomId, null, "GE") + StringUtils.text(officialRoom.requiredFiles()) + '\2';
-            payload = Crypto.Proc_3_0_6D2AF0(roomId, null, payload) + StringUtils.text(officialRoom.caption()) + '\2';
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.officialRoomModel(roomId, officialRoom), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -2475,7 +2473,7 @@ public final class Handling {
                 || handlingUserHasPermission(userId, "fuse_any_room_controller");
             boolean hasVoted = rooms.hasRatedRoom(NumberUtils.parseLong(userId), roomId);
             long ratingPayloadValue = hasVoted ? -1L : roomRate;
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "AE") + '\2', 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.currentRoom(roomId), 0);
             Proc_6_244_801E80(socketIndex, "@nfloor" + '\2' + floorPattern + '\2', 0);
             Proc_6_244_801E80(socketIndex, "@nwallpaper" + '\2' + wallpaperPattern + '\2', 0);
             Proc_6_244_801E80(socketIndex, "@nlandscape" + '\2' + landscapePattern + '\2', 0);
@@ -3535,7 +3533,7 @@ public final class Handling {
             }
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "@{") + roomName + '\2', 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.createdRoom(roomId, roomName), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
