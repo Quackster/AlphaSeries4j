@@ -94,6 +94,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Handling.disconnectSocket(...)` with the original `Proc_6_243_7FFEB0` noted in Javadocs, then migrated live runtime, game-server, ping, moderation, help, and login cleanup callers away from the Proc-named disconnect path.
 - Added named `Guardian.isSocketConnected(...)` and `toggleSocketMarker(...)` methods with original Proc names in Javadocs, then migrated live filesystem, main-loop, messenger, packet receive, and send paths away from `Guardian.Proc_11_2_821390(...)`/`Proc_11_3_821440(...)`.
 - Added named `Guardian.deleteDirectory(...)` with the original `Proc_11_1_821240` noted in Javadocs, then migrated startup cache cleanup away from the Proc-named directory delete path.
+- Added named `Guardian.createDirectory(...)` with the original `Proc_11_0_821190` noted in Javadocs, leaving `Guardian.Proc_11_*` methods as documented compatibility bridges around named APIs.
 - Added `com.alphaseries.game.wired.WiredSettings` as a typed adapter around wired state payload previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.wired.WiredPayloads` for wired record formatting, cache replacement, selected-item checks, and state payload aggregation.
 - Added `com.alphaseries.messages.outgoing.MessengerPayloads` for friend, request, search, pending-request, and friend-list outgoing payloads.

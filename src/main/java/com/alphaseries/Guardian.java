@@ -30,17 +30,30 @@ public final class Guardian {
         public boolean added;
     }
 
+    /**
+     * Original function: Proc_11_0_821190.
+     */
     public static void Proc_11_0_821190(Object... args) {
         if (args == null || args.length == 0) {
             return;
         }
+        createDirectory(Path.of(StringUtils.text(args[0])));
+    }
+
+    /**
+     * Original function: Proc_11_0_821190.
+     */
+    public static void createDirectory(Path path) {
         try {
-            Files.createDirectory(Path.of(StringUtils.text(args[0])));
+            Files.createDirectory(path);
         } catch (IOException ignored) {
             // VB6 source suppresses MkDir failures.
         }
     }
 
+    /**
+     * Original function: Proc_11_1_821240.
+     */
     public static void Proc_11_1_821240(Object... args) {
         if (args == null || args.length == 0) {
             return;
@@ -55,6 +68,9 @@ public final class Guardian {
         deleteRecursively(path);
     }
 
+    /**
+     * Original function: Proc_11_2_821390.
+     */
     public static int Proc_11_2_821390(Object... args) {
         if (args == null || args.length == 0) {
             return isSocketConnected(0L) ? 1 : 0;
@@ -72,6 +88,9 @@ public final class Guardian {
         return connectedSockets.contains((int) socketIndex);
     }
 
+    /**
+     * Original function: Proc_11_3_821440.
+     */
     public static void Proc_11_3_821440(Object... args) {
         if (args == null || args.length == 0) {
             return;
