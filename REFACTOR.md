@@ -170,6 +170,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `MessengerDao` for accepted-friendship existence checks and accepted-friend removal, replacing raw friend-removal SQL in `Handling`.
 - Expanded `MessengerDao` for pending-request rows and accepted-friend list rows, replacing raw messenger list SQL in `Handling` while keeping row-text payload compatibility at the DAO boundary.
 - Expanded `MessengerDao` for friend-request target lookup, existing friendship checks, accept-friends reads, and request inserts, replacing raw friend-request creation SQL in `Handling`.
+- Routed pending-request and accepted-friend delete targets through typed `List<Long>` parser results and prepared `MessengerDao` `IN` placeholders, leaving comma-delimited target text only as a compatibility view.
 - Expanded `MessengerDao` with typed messenger search result records and routed search friendship checks through prepared DAO methods instead of raw handler SQL.
 - Expanded `MessengerDao` for private-message chat log insertion, replacing raw messenger chat-log SQL in `Handling`.
 - Routed messenger follow-room friendship checks through `MessengerDao`, replacing raw accepted-friend SQL in `Handling`.

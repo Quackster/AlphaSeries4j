@@ -739,6 +739,7 @@ public final class Handling {
     public static final class FriendTargetList {
         public boolean deleteAllPending;
         public String targetList = "";
+        public List<Long> targetIds = List.of();
         public long targetCount;
     }
 
@@ -5544,14 +5545,14 @@ public final class Handling {
                 messenger.deletePendingRequests(NumberUtils.parseLong(userId));
                 return 1L;
             }
-            if (targets.targetList.isEmpty()) {
+            if (targets.targetIds.isEmpty()) {
                 return 0L;
             }
             MessengerDao messenger = messengerDao();
             if (messenger == null) {
                 return 0L;
             }
-            messenger.deletePendingRequests(NumberUtils.parseLong(userId), targets.targetList);
+            messenger.deletePendingRequests(NumberUtils.parseLong(userId), targets.targetIds);
             return 1L;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -5577,19 +5578,15 @@ public final class Handling {
                 return "";
             }
             removeCount = Math.min(removeCount, 75L);
-            StringBuilder targetList = new StringBuilder();
+            List<Long> targetIds = new ArrayList<>();
             StringBuilder removedIdsPayload = new StringBuilder();
             long removedCount = 0L;
             for (long removeIndex = 1L; removeIndex <= removeCount; removeIndex++) {
                 long targetUserId = readWireLong(requestPayload, offset);
                 String targetId = String.valueOf(targetUserId);
-                if (targetUserId > 0L && !targetId.equals(userId)
-                    && !("," + targetList + ",").contains("," + targetId + ",")) {
+                if (targetUserId > 0L && !targetId.equals(userId) && !targetIds.contains(targetUserId)) {
                     if (messenger.acceptedFriendshipExists(NumberUtils.parseLong(userId), targetUserId)) {
-                        if (targetList.length() > 0) {
-                            targetList.append(',');
-                        }
-                        targetList.append(targetId);
+                        targetIds.add(targetUserId);
                         removedIdsPayload.append(MessengerPayloads.removedId(targetUserId));
                         removedCount++;
                         int targetSocketIndex = handlingSocketFromUserId(targetId);
@@ -5600,10 +5597,10 @@ public final class Handling {
                     }
                 }
             }
-            if (targetList.length() == 0) {
+            if (targetIds.isEmpty()) {
                 return "";
             }
-            messenger.deleteAcceptedFriendships(NumberUtils.parseLong(userId), targetList.toString());
+            messenger.deleteAcceptedFriendships(NumberUtils.parseLong(userId), targetIds);
             String callerPayload = MessengerPayloads.removeFriends(removedIdsPayload.toString(), removedCount);
             Proc_6_244_801E80(socketIndex, callerPayload, 0);
             return callerPayload;
@@ -10406,7 +10403,8 @@ public final class Handling {
         }
 
         long maxTargets = firstValue <= 0L ? 75L : Math.min(firstValue, 75L);
-        StringBuilder targetList = new StringBuilder();
+        List<Long> targetIds = new ArrayList<>();
+        List<String> targetTokens = new ArrayList<>();
         while (offset.value <= requestPayload.length() && result.targetCount < maxTargets) {
             long previousOffset = offset.value;
             long targetUserId = readWireLong(requestPayload, offset);
@@ -10414,19 +10412,19 @@ public final class Handling {
                 break;
             }
             String token = String.valueOf(targetUserId);
-            if (!("," + targetList + ",").contains("," + token + ",")) {
-                if (targetList.length() > 0) {
-                    targetList.append(',');
-                }
-                targetList.append(token);
+            if (!targetIds.contains(targetUserId)) {
+                targetIds.add(targetUserId);
+                targetTokens.add(token);
                 result.targetCount++;
             }
         }
-        if (targetList.length() == 0 && firstValue > 1L) {
-            targetList.append(firstValue);
+        if (targetIds.isEmpty() && firstValue > 1L) {
+            targetIds.add(firstValue);
+            targetTokens.add(String.valueOf(firstValue));
             result.targetCount = 1L;
         }
-        result.targetList = targetList.toString();
+        result.targetIds = List.copyOf(targetIds);
+        result.targetList = String.join(",", targetTokens);
         return result;
     }
 
@@ -10453,19 +10451,19 @@ public final class Handling {
         if (removeCount > 75L) {
             removeCount = 75L;
         }
-        StringBuilder targetList = new StringBuilder();
+        List<Long> targetIds = new ArrayList<>();
+        List<String> targetTokens = new ArrayList<>();
         for (long removeIndex = 1L; removeIndex <= removeCount; removeIndex++) {
             long targetUserId = readWireLong(requestPayload, offset);
             String token = String.valueOf(targetUserId);
-            if (targetUserId > 0L && !token.equals(StringUtils.text(callerUserId)) && !("," + targetList + ",").contains("," + token + ",")) {
-                if (targetList.length() > 0) {
-                    targetList.append(',');
-                }
-                targetList.append(token);
+            if (targetUserId > 0L && !token.equals(StringUtils.text(callerUserId)) && !targetIds.contains(targetUserId)) {
+                targetIds.add(targetUserId);
+                targetTokens.add(token);
                 result.targetCount++;
             }
         }
-        result.targetList = targetList.toString();
+        result.targetIds = List.copyOf(targetIds);
+        result.targetList = String.join(",", targetTokens);
         return result;
     }
 

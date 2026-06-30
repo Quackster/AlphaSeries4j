@@ -2284,6 +2284,7 @@ public final class PortedModuleSmokeTest {
         Handling.FriendTargetList deleteTargets = Handling.friendDeleteTargetsFromPayload("@fCABA");
         assertEquals(false, deleteTargets.deleteAllPending);
         assertEquals("1,2", deleteTargets.targetList);
+        assertEquals(List.of(1L, 2L), deleteTargets.targetIds);
         assertEquals(2L, deleteTargets.targetCount);
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "@MH") + expectedOnlineFriend + expectedOfflineFriend,
             MessengerPayloads.acceptedFriends(expectedOnlineFriend + expectedOfflineFriend, 2));
@@ -2339,6 +2340,7 @@ public final class PortedModuleSmokeTest {
             true));
         Handling.FriendTargetList removeTargets = Handling.friendRemoveTargetsFromPayload("@hCBCA", "2");
         assertEquals("3,1", removeTargets.targetList);
+        assertEquals(List.of(3L, 1L), removeTargets.targetIds);
         assertEquals(2L, removeTargets.targetCount);
         String expectedRacePayload = Crypto.Proc_3_0_6D2AF0(2, null, "L{dog\2")
             + Crypto.Proc_3_0_6D2AF0(1, null, "") + "II"
@@ -4417,7 +4419,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "DELETE FROM friendships WHERE id_user='77' AND has_accept='0' LIMIT 75"));
         handlingSql.clear();
         assertEquals(1L, Handling.Proc_6_170_7C1100(4, "@fCABA"));
-        assertEquals(true, containsSql(handlingSql, "id_friend IN (1,2) LIMIT 75"));
+        assertEquals(true, containsSql(handlingSql, "id_friend IN ('1','2') LIMIT 75"));
         handlingSql.clear();
         handlingSends.clear();
         String followPayload = Handling.Proc_6_169_7C0DC0(4, "DF" + wireLong(88));
@@ -4446,7 +4448,7 @@ public final class PortedModuleSmokeTest {
         String removePayload = Handling.Proc_6_171_7C1520(4, "@h" + wireLong(1) + wireLong(88));
         assertEquals(MessengerPayloads.removeFriends(MessengerPayloads.removedId(88), 1), removePayload);
         assertEquals(true, containsSql(handlingSql, "DELETE FROM friendships WHERE has_accept='1'"));
-        assertEquals(true, containsSql(handlingSql, "id_friend IN (88)"));
+        assertEquals(true, containsSql(handlingSql, "id_friend IN ('88')"));
         assertEquals(true, containsSend(handlingSends, "@MMIM77"));
         assertEquals(true, containsSend(handlingSends, "@MM"));
         handlingSql.clear();
