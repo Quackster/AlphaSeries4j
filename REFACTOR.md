@@ -340,6 +340,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved product-deal startup cache rows into typed `CatalogDao.ProductDealRow` lists, removing the product-deal boot join helper and DAO legacy row formatter while preserving deal row lookups in `CatalogRegistry`.
 - Moved contained club-product startup cache rows into typed `ClubDao.ContainedClubProductRow` lists, removing the boot join helper and DAO legacy row formatter while preserving catalog club-product checks.
 - Moved club-gift startup cache state into typed `GiftSettings.ClubGiftState`, removing the `ClubDao.ClubGiftRow` legacy row formatter while preserving the legacy gift payload and lookup projections.
+- Routed live quest-list payload handling through typed `QuestSettings.UserQuestListRow` records with remaining wait values, removing the `QuestDao.UserQuestListRow` legacy row formatter while keeping the legacy string overload as a compatibility boundary.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -355,7 +356,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 12286 lines
+- `Handling.java`: 12321 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 894 lines

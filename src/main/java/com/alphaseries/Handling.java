@@ -10652,6 +10652,17 @@ public final class Handling {
     }
 
     public static String questListPayload(String questRows, String userQuestRows) {
+        List<QuestSettings.UserQuestListRow> rows = new ArrayList<>();
+        for (String rowText : StringUtils.text(userQuestRows).split("\r", -1)) {
+            QuestSettings.UserQuestListRow row = QuestSettings.userQuestListRow(rowText);
+            if (row != null) {
+                rows.add(row);
+            }
+        }
+        return questListPayload(questRows, rows);
+    }
+
+    public static String questListPayload(Object questRows, List<QuestSettings.UserQuestListRow> userQuestRows) {
         long lastCampaignId = -1L;
         long campaignLevelCount = 0L;
         long questCount = 0L;
@@ -10666,9 +10677,7 @@ public final class Handling {
                 }
                 campaignLevelCount++;
 
-                QuestSettings.UserQuestListRow userQuest = QuestSettings.userQuestListRowByQuestId(
-                    userQuestRows,
-                    quest.questId());
+                QuestSettings.UserQuestListRow userQuest = userQuestListRowByQuestId(userQuestRows, quest.questId());
                 long userLevel = userQuest == null ? 0L : userQuest.level();
                 String timestampDone = userQuest == null ? "" : StringUtils.text(userQuest.timestampDone());
                 String timestampAccepted = userQuest == null ? "" : StringUtils.text(userQuest.timestampAccepted());
@@ -10705,6 +10714,21 @@ public final class Handling {
         }
         return Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(questCount, null, "L`"))
             + questPayload;
+    }
+
+    private static QuestSettings.UserQuestListRow userQuestListRowByQuestId(
+        List<QuestSettings.UserQuestListRow> userQuestRows,
+        long questId
+    ) {
+        if (questId <= 0L || userQuestRows == null) {
+            return null;
+        }
+        for (QuestSettings.UserQuestListRow row : userQuestRows) {
+            if (row != null && row.questId() == questId) {
+                return row;
+            }
+        }
+        return null;
     }
 
     public static String Proc_6_166_7BE940(Object... args) {
@@ -12252,19 +12276,30 @@ public final class Handling {
         }
     }
 
-    private static String userQuestRowsWithRemainingWait(QuestDao quests, List<QuestDao.UserQuestListRow> userQuestRows)
+    private static List<QuestSettings.UserQuestListRow> userQuestRowsWithRemainingWait(
+        QuestDao quests,
+        List<QuestDao.UserQuestListRow> userQuestRows
+    )
         throws Exception {
 
-        StringBuilder rows = new StringBuilder();
+        List<QuestSettings.UserQuestListRow> rows = new ArrayList<>();
         for (QuestDao.UserQuestListRow row : userQuestRows == null ? List.<QuestDao.UserQuestListRow>of() : userQuestRows) {
             String timeNextText = StringUtils.text(row.timeNext());
             long remainingWait = 0L;
             if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
                 remainingWait = quests.remainingWait(timeNextText);
             }
-            appendRow(rows, row.legacyRow(remainingWait));
+            rows.add(new QuestSettings.UserQuestListRow(
+                row.questId(),
+                row.level(),
+                row.timestampDone(),
+                row.timestampAccepted(),
+                row.timeNext(),
+                row.progress(),
+                remainingWait,
+                7));
         }
-        return rows.toString();
+        return rows;
     }
 
     private static String left(String value, int maxLength) {

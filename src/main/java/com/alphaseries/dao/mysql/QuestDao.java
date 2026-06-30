@@ -199,14 +199,6 @@ public final class QuestDao {
         String timeNext,
         long progress
     ) {
-        public String legacyRow(long remainingWait) {
-            return questId + "\t" + level + "\t" + text(timestampDone) + "\t" + text(timestampAccepted)
-                + "\t" + text(timeNext) + "\t" + progress + "\t" + remainingWait;
-        }
-
-        private static String text(String value) {
-            return value == null ? "" : value;
-        }
     }
 
     public record QuestDefinition(
