@@ -22,6 +22,10 @@ public final class SessionRegistry {
         return new SessionRegistry(rawCache);
     }
 
+    public static SessionRegistry empty() {
+        return new SessionRegistry("");
+    }
+
     public String recordPayload(String recordPrefix, String recordId) {
         Record record = findRecord(StringUtils.text(recordPrefix), StringUtils.text(recordId));
         return record == null ? "" : record.payload;

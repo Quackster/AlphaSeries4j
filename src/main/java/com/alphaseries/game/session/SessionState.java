@@ -5,6 +5,7 @@ public final class SessionState {
 
     private GameServerSessionState gameServerSession = GameServerSessionState.empty();
     private RepresentedSocketCache representedSockets = RepresentedSocketCache.empty();
+    private SessionRegistry sessionRegistry = SessionRegistry.empty();
     private SocketMarkerSet socketMarkers = SocketMarkerSet.empty();
 
     private SessionState() {
@@ -20,6 +21,18 @@ public final class SessionState {
 
     public synchronized SocketMarkerSet socketMarkers() {
         return socketMarkers;
+    }
+
+    public synchronized SessionRegistry sessionRegistry() {
+        return sessionRegistry;
+    }
+
+    public synchronized void setSessionRegistry(SessionRegistry sessionRegistry) {
+        this.sessionRegistry = sessionRegistry == null ? SessionRegistry.empty() : sessionRegistry;
+    }
+
+    public synchronized void setSessionRegistryFromLegacy(String rawCache) {
+        sessionRegistry = SessionRegistry.fromLegacyCache(rawCache);
     }
 
     public synchronized void setSocketMarkers(SocketMarkerSet socketMarkers) {

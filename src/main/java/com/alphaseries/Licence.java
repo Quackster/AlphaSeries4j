@@ -753,6 +753,7 @@ public final class Licence {
     public static void storeSocketSession(int socketIndex, String sessionRecord) {
         SessionRegistry registry = sessionRegistry();
         registry.storeSocketSession(socketIndex, sessionRecord);
+        SessionState.instance().setSessionRegistry(registry);
         global_00829268 = registry.toLegacyCache();
     }
 
@@ -761,7 +762,8 @@ public final class Licence {
     }
 
     private static SessionRegistry sessionRegistry() {
-        return SessionRegistry.fromLegacyCache(global_00829268);
+        SessionState.instance().setSessionRegistryFromLegacy(global_00829268);
+        return SessionState.instance().sessionRegistry();
     }
 
     public static void setProductRows(Object productRows) {
