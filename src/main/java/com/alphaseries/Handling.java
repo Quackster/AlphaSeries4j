@@ -8790,31 +8790,31 @@ public final class Handling {
             if (includeChatRows) {
                 List<StaffRoomChatVisitRow> visitRows = moderationDao.recentChatHistoryVisits(targetUserId);
                 rowCount = visitRows.size();
-                StringBuilder rowPayload = new StringBuilder();
+                PacketBuilder rowPayload = PacketBuilder.create();
                 for (StaffRoomChatVisitRow row : visitRows) {
                     List<StaffRoomChatRow> chatRows = moderationDao.chatRowsForVisit(
                         row.roomId(),
                         targetUserId,
                         row.timestampEnter(),
                         row.timestampLeft());
-                    rowPayload.append(StaffPayloads.roomChatHistory(row, chatRows));
+                    rowPayload.appendRaw(StaffPayloads.roomChatHistory(row, chatRows));
                 }
                 String responsePayload = StaffPayloads.roomChatHistoryResponse(
                     targetUser,
                     rowCount,
-                    rowPayload.toString());
+                    rowPayload.build());
                 Proc_6_244_801E80(socketIndex, responsePayload, 0);
             } else {
                 List<StaffRoomVisitRow> visitRows = moderationDao.recentRoomVisits(targetUserId);
                 rowCount = visitRows.size();
-                StringBuilder rowPayload = new StringBuilder();
+                PacketBuilder rowPayload = PacketBuilder.create();
                 for (StaffRoomVisitRow row : visitRows) {
-                    rowPayload.append(StaffPayloads.roomVisit(row));
+                    rowPayload.appendRaw(StaffPayloads.roomVisit(row));
                 }
                 String responsePayload = StaffPayloads.roomVisitHistoryResponse(
                     targetUser,
                     rowCount,
-                    rowPayload.toString());
+                    rowPayload.build());
                 Proc_6_244_801E80(socketIndex, responsePayload, 0);
             }
         } catch (Exception ignored) {
