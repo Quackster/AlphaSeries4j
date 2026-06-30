@@ -7412,7 +7412,7 @@ public final class Handling {
                 .orElse(null);
             long requestedQuestId = nextQuestId(questSettingsFromSource(), activeRow);
             if (requestedQuestId > 0L) {
-                Proc_6_232_7F45A0(socketIndex, "p^" + Crypto.Proc_3_0_6D2AF0(requestedQuestId, null, ""));
+                Proc_6_232_7F45A0(socketIndex, QuestPayloads.request(requestedQuestId));
             }
             return "";
         } catch (Exception ignored) {

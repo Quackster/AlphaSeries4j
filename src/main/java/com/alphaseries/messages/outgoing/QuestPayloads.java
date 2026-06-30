@@ -32,6 +32,12 @@ public final class QuestPayloads {
             .build();
     }
 
+    public static String request(long questId) {
+        return PacketBuilder.message("p^")
+            .appendInt(questId)
+            .build();
+    }
+
     public static String list(Object questRows, List<QuestSettings.UserQuestListRow> userQuestRows) {
         long lastCampaignId = -1L;
         long campaignLevelCount = 0L;
