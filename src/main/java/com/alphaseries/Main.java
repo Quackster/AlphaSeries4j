@@ -156,7 +156,7 @@ public final class Main {
         long socketIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
         String packetData = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
         try {
-            if (Guardian.Proc_11_2_821390(socketIndex, 1, 0) != 1) {
+            if (!Guardian.isSocketConnected(socketIndex)) {
                 return;
             }
             if (isGameSessionReady(socketIndex)) {
@@ -311,7 +311,7 @@ public final class Main {
 
     public static boolean dataProcessTimer(long socketIndex) {
         try {
-            if (Guardian.Proc_11_2_821390(socketIndex, 1, 0) != 1) {
+            if (!Guardian.isSocketConnected(socketIndex)) {
                 return false;
             }
             String packetData = popGameServerPacketData(socketIndex);
@@ -338,7 +338,7 @@ public final class Main {
                     }
                 } else if ("LISTEN".equals(gamePacket.commandName())) {
                     if (gamePacket.socketIndex() > 0L) {
-                        Guardian.Proc_11_3_821440(gamePacket.socketIndex(), 0, 0);
+                        Guardian.toggleSocketMarker(gamePacket.socketIndex());
                     }
                 } else if ("DATA".equals(gamePacket.commandName())) {
                     if (gamePacket.socketIndex() > 0L && !gamePacket.payload().isEmpty()) {
@@ -456,7 +456,7 @@ public final class Main {
             }
             maintenanceDao.markSocketCheckTime();
             for (long socketIndex : Guardian.markedSocketIndexes()) {
-                if (Guardian.Proc_11_2_821390(socketIndex, 0, 0) == 1) {
+                if (Guardian.isSocketConnected(socketIndex)) {
                     activeCount++;
                 } else {
                     Handling.disconnectSocket(socketIndex);
@@ -559,7 +559,7 @@ public final class Main {
     public static void Proc_0_26_6ACF30(Object... args) {
         try {
             long socketIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
-            if (socketIndex <= 0L || Guardian.Proc_11_2_821390(socketIndex, 0, 0) != 1) {
+            if (socketIndex <= 0L || !Guardian.isSocketConnected(socketIndex)) {
                 return;
             }
             long roomSlot = mainRepresentedSocketRoomSlot(socketIndex);
@@ -615,7 +615,7 @@ public final class Main {
     public static void Proc_0_29_6B0E10(Object... args) {
         try {
             long socketIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
-            if (socketIndex <= 0L || Guardian.Proc_11_2_821390(socketIndex, 0, 0) != 1) {
+            if (socketIndex <= 0L || !Guardian.isSocketConnected(socketIndex)) {
                 return;
             }
             long roomSlot = mainRepresentedSocketRoomSlot(socketIndex);

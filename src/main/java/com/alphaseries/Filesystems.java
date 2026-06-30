@@ -48,7 +48,7 @@ public final class Filesystems {
         }
         long socketIndex = NumberUtils.parseLong(args[0]);
         String packetBuffer = StringUtils.text(args[1]);
-        if (Guardian.Proc_11_2_821390(socketIndex) != 1) {
+        if (!Guardian.isSocketConnected(socketIndex)) {
             return;
         }
         if (ReadyPacketBuffer.isCrossDomainPolicyRequest(packetBuffer)) {

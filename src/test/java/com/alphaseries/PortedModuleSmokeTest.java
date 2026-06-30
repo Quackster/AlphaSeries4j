@@ -5043,8 +5043,10 @@ public final class PortedModuleSmokeTest {
         Guardian.setGameServerConnected(false);
         Guardian.setSocketConnected(8, true);
         assertEquals(1, Guardian.Proc_11_2_821390(8));
+        assertEquals(true, Guardian.isSocketConnected(8));
         Guardian.setSocketConnected(8, false);
         assertEquals(0, Guardian.Proc_11_2_821390(8));
+        assertEquals(false, Guardian.isSocketConnected(8));
         Guardian.setGameServerConnected(true);
         assertEquals(1, Guardian.Proc_11_2_821390());
         Guardian.setGameServerConnected(false);
@@ -5070,7 +5072,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("[1][12]", Guardian.global_008291A0);
         Guardian.global_008291A0 = "";
         Guardian.global_0082919C = 0L;
-        Guardian.Proc_11_3_821440(12);
+        Guardian.toggleSocketMarker(12);
         assertEquals("[12]", Guardian.global_008291A0);
         assertEquals(12L, Guardian.global_0082919C);
         Guardian.Proc_11_3_821440(12);

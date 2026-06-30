@@ -5444,7 +5444,7 @@ public final class Handling {
             }
             String notifyPayload = MessengerPayloads.friendOnlineNotification(summaryPayload);
             if (targetSocketIndex > 0) {
-                if (Guardian.Proc_11_2_821390(targetSocketIndex, 0, 0) == 1L) {
+                if (Guardian.isSocketConnected(targetSocketIndex)) {
                     Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
                 }
             } else {
@@ -5454,7 +5454,7 @@ public final class Handling {
                 }
                 for (long friendSocketIndex : messenger.acceptedFriendSocketIndexes(NumberUtils.parseLong(userId))) {
                     targetSocketIndex = (int) friendSocketIndex;
-                    if (targetSocketIndex > 0 && Guardian.Proc_11_2_821390(targetSocketIndex, 0, 0) == 1L) {
+                    if (targetSocketIndex > 0 && Guardian.isSocketConnected(targetSocketIndex)) {
                         Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
                     }
                 }
@@ -5747,8 +5747,7 @@ public final class Handling {
             for (MessengerFriend friend : friends) {
                 if (friend != null) {
                     int friendSocketIndex = (int) friend.socketIndex();
-                    long friendOnline = friendSocketIndex > 0
-                        && Guardian.Proc_11_2_821390(friendSocketIndex, 0, 0) == 1L ? 1L : 0L;
+                    long friendOnline = friendSocketIndex > 0 && Guardian.isSocketConnected(friendSocketIndex) ? 1L : 0L;
                     if (friendOnline == 1L) {
                         onlineFriendIds.add(friend.userId());
                     }
@@ -7742,7 +7741,7 @@ public final class Handling {
             }
             long socketIndex = NumberUtils.parseLong(args[0]);
             String packetBuffer = Functions.normalizeNullBytes(args[1]);
-            if (socketIndex <= 0L || Guardian.Proc_11_2_821390(socketIndex, 0, 0) != 1) {
+            if (socketIndex <= 0L || !Guardian.isSocketConnected(socketIndex)) {
                 return;
             }
             long packetCount = 0L;
@@ -8066,7 +8065,7 @@ public final class Handling {
             return;
         }
         int socketIndex = (int) NumberUtils.parseLong(args[0]);
-        if (socketIndex <= 0 || Guardian.Proc_11_2_821390(socketIndex, 0, 0) != 1
+        if (socketIndex <= 0 || !Guardian.isSocketConnected(socketIndex)
             || Licence.representedSockets().isBusy(socketIndex)) {
             return;
         }

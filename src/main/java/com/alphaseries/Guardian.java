@@ -49,29 +49,40 @@ public final class Guardian {
     }
 
     public static int Proc_11_2_821390(Object... args) {
+        if (args == null || args.length == 0) {
+            return isSocketConnected(0L) ? 1 : 0;
+        }
+        return isSocketConnected(NumberUtils.parseLong(args[0])) ? 1 : 0;
+    }
+
+    /**
+     * Original function: Proc_11_2_821390.
+     */
+    public static boolean isSocketConnected(long socketIndex) {
         if (gameServerConnected) {
-            return 1;
+            return true;
         }
-        if (args != null && args.length >= 1) {
-            int socketIndex = NumberUtils.parseInt(args[0]);
-            return connectedSockets.contains(socketIndex) ? 1 : 0;
-        }
-        return 0;
+        return connectedSockets.contains((int) socketIndex);
     }
 
     public static void Proc_11_3_821440(Object... args) {
         if (args == null || args.length == 0) {
             return;
         }
-        long socketIndexLong = NumberUtils.parseLong(args[0]);
-        SocketMarkerState state = toggleSocketMarkerState(global_008291A0, global_0082919C, socketIndexLong);
+        toggleSocketMarker(NumberUtils.parseLong(args[0]));
+    }
+
+    /**
+     * Original function: Proc_11_3_821440.
+     */
+    public static void toggleSocketMarker(long socketIndex) {
+        SocketMarkerState state = toggleSocketMarkerState(global_008291A0, global_0082919C, socketIndex);
         if (!state.accepted) {
             return;
         }
-        int socketIndex = (int) socketIndexLong;
         global_008291A0 = state.markers;
         global_0082919C = state.highestIndex;
-        connectedSockets.remove(socketIndex);
+        connectedSockets.remove((int) socketIndex);
     }
 
     public static SocketMarkerState toggleSocketMarkerState(String existingMarkers, long highestIndex, long socketIndexLong) {
