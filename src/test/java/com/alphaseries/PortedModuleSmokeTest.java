@@ -43,6 +43,7 @@ import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
 import com.alphaseries.game.moderation.StaffRoomVisitRow;
+import com.alphaseries.game.moderation.StaffSettings;
 import com.alphaseries.game.moderation.StaffUserLookup;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.quest.QuestSettings;
@@ -2776,6 +2777,8 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829210 = new String[]{"", "", "FAQDESC"};
         Licence.global_008292D8 = new String[][]{{}, {"STAFFMOD"}};
         assertEquals("STAFFMOD", Licence.staffSettings().moderationPayload(1L, 0L));
+        assertEquals("HC", StaffSettings.fromPayloads(new String[][]{{"ZERO"}, {"STAFF", "HC"}})
+            .moderationPayload(1L, 1L));
         Licence.global_00829094 = "WIREDSTATE";
         assertEquals("WIREDSTATE", Licence.wiredSettings().statePayload());
         Licence.global_0082908C = "12\t1";
