@@ -5293,7 +5293,7 @@ public final class Handling {
     public static void Proc_6_162_7B3310(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            String dateFormat = Functions.Proc_10_0_809570("com.system.format.date", "DAQBHHIIKHJHPAHQA", 0);
+            String dateFormat = Functions.settingsCache().valueOrDefault("com.system.format.date", "DAQBHHIIKHJHPAHQA");
             if (dateFormat.isEmpty()) {
                 dateFormat = "DAQBHHIIKHJHPAHQA";
             }
@@ -5364,8 +5364,8 @@ public final class Handling {
                 Proc_6_244_801E80(socketIndex, UserPayloads.emailStatus(emailValidated), 0);
             }
             Proc_6_244_801E80(socketIndex, "@a" + "com.server.socket.location" + '\2' + "invalid.location" + '\2', 0);
-            if (NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.motd.message.enabled", 0, 0)) != 0L) {
-                String motdMessage = Functions.Proc_10_0_809570("com.client.motd.message", "", 0).replace("\\n", "\n");
+            if (NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.motd.message.enabled", 0)) != 0L) {
+                String motdMessage = Functions.settingsCache().valueOrDefault("com.client.motd.message", "").replace("\\n", "\n");
                 if (!motdMessage.isEmpty()) {
                     Proc_6_244_801E80(socketIndex, Console.Proc_2_4_6D28B0(motdMessage.length(), 0, 0)
                         + " " + motdMessage + '\2', 0);
@@ -5781,7 +5781,7 @@ public final class Handling {
 
     public static long Proc_6_179_7C7790(Object... args) {
         try {
-            if (NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.rooms.bots.pets.enabled", "0", 0)) == 0L) {
+            if (NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.rooms.bots.pets.enabled", "0")) == 0L) {
                 return 0L;
             }
             int socketIndex = handlingSocketIndex(args);
@@ -6027,8 +6027,8 @@ public final class Handling {
             }
             if (pet.energy() < 250L || pet.nutrition() < 250L) {
                 String commandSpeech = Functions.Proc_10_4_809CA0(0, 2, -1) == 0L
-                    ? Functions.Proc_10_0_809570("com.client.bot.pet.sad.speech", "gst thr", 0)
-                    : Functions.Proc_10_0_809570("com.client.bot.pet.angry.speech", "gst grr", 0);
+                    ? Functions.settingsCache().valueOrDefault("com.client.bot.pet.sad.speech", "gst thr")
+                    : Functions.settingsCache().valueOrDefault("com.client.bot.pet.angry.speech", "gst grr");
                 if (!commandSpeech.isEmpty()) {
                     Proc_6_248_802B80(roomId, petSpeechPayload(botEntityId, commandSpeech), 0);
                 }
@@ -6082,7 +6082,7 @@ public final class Handling {
                 experienceDelta,
                 levelRows);
             if (update.leveledUp && petState.roomId() > 0L) {
-                String levelSpeech = Functions.Proc_10_0_809570("com.client.bot.pet.level_up.speech", "gst sml", 0);
+                String levelSpeech = Functions.settingsCache().valueOrDefault("com.client.bot.pet.level_up.speech", "gst sml");
                 if (!levelSpeech.isEmpty()) {
                     Proc_6_248_802B80(petState.roomId(), petSpeechPayload(botEntityId, levelSpeech), 0);
                 }
@@ -6183,7 +6183,7 @@ public final class Handling {
             if (tutorialGuide == 0L) {
                 users.markTutorialGuide(userIdValue);
             }
-            if (NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.rooms.bots.guide.enabled", "0", 0)) == 0L) {
+            if (NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.rooms.bots.guide.enabled", "0")) == 0L) {
                 return 0L;
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
@@ -6194,7 +6194,7 @@ public final class Handling {
             if (roomSlot <= 0L) {
                 return 0L;
             }
-            long guideBotId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.bot.guide.id", "0", 0));
+            long guideBotId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.bot.guide.id", "0"));
             if (guideBotId <= 0L || !Licence.representedBots().entitiesForRoom(roomSlot, guideBotId).isEmpty()) {
                 return 0L;
             }
@@ -6244,7 +6244,7 @@ public final class Handling {
                     entityList = String.valueOf(requestedEntityId);
                 }
             } else {
-                long guideBotId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.bot.guide.id", "0", 0));
+                long guideBotId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.bot.guide.id", "0"));
                 entityList = Licence.representedBots().entitiesForRoom(roomSlot, guideBotId);
             }
             if (entityList.isEmpty()) {
@@ -6673,7 +6673,7 @@ public final class Handling {
             if (socketIndex <= 0) {
                 return "";
             }
-            long enabledValue = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.recycler.enabled", 0, 0));
+            long enabledValue = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.recycler.enabled", 0));
             if (enabledValue == 0L) {
                 return "";
             }
@@ -6729,7 +6729,7 @@ public final class Handling {
     public static String Proc_6_203_7D7F80(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            long enabledValue = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.recycler.enabled", 0, 0));
+            long enabledValue = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.recycler.enabled", 0));
             String payload = RecyclerPayloads.status(enabledValue, 0L);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;

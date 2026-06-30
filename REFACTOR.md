@@ -496,6 +496,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated remaining boot startup setting reads plus selected `Handling` permission checks to typed `AppSettingsCache`/`PermissionMatrix` access, reducing live `Functions.Proc_10_0/1` usage to larger handler workflows.
 - Migrated chat filter, chat gesture, and moderation-panel permission reads in `Handling` to typed `AppSettingsCache`/`PermissionMatrix` access, and added original Proc-name Javadocs to the renamed chat helper methods touched in that slice.
 - Migrated room ownership limits, staff-picked navigator defaults, favourite-room limits, and catalog gift settings in `Handling` to typed `AppSettingsCache` access instead of legacy `Functions.Proc_10_0_809570(...)` calls.
+- Migrated user-session date/MOTD settings, pet/guide bot toggles and speech defaults, and recycler enabled checks in `Handling` to typed `AppSettingsCache` access instead of legacy settings helper calls.
 
 ## VB Compatibility Class Removal Checklist
 
