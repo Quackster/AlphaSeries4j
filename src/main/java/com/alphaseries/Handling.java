@@ -4562,7 +4562,7 @@ public final class Handling {
             }
             Proc_6_247_8027E0(socketIndex, "@n" + decoration.wireName() + '\2' + decoValue + '\2', 0);
             rooms.updateDecoration(roomId, decoration, decoValue);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ac"), 0);
+            Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(furnitureId), 0);
             furniture.deleteFurniture(furnitureId);
             Proc_6_140_769400(socketIndex, "FT", "");
         } catch (Exception ignored) {
@@ -5102,7 +5102,7 @@ public final class Handling {
             }
             Proc_6_146_76D300(socketIndex, furnitureId, productId);
             furniture.moveRoomFurnitureToInventory(furnitureId, roomId, NumberUtils.parseLong(userId));
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ac"), 0);
+            Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(furnitureId), 0);
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2', 0);
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString(), 0, 0);
             Proc_6_106_74B750(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString(), 0, 0);
@@ -5167,7 +5167,7 @@ public final class Handling {
                 return;
             }
             furniture.placeWallFurniture(furnitureId, NumberUtils.parseLong(userId), roomId, wallPosition);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ac"), 0);
+            Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(furnitureId), 0);
             String payload = Proc_6_156_7972B0(furnitureId, productId, wallPosition,
                 placementFurniture == null ? "" : placementFurniture.sign(),
                 placementFurniture == null ? 0L : placementFurniture.secondaryValue());
@@ -6789,7 +6789,7 @@ public final class Handling {
             for (String furnitureId : selection.selectedItems.split(",", -1)) {
                 long selectedFurnitureId = NumberUtils.parseLong(furnitureId);
                 if (selectedFurnitureId > 0L) {
-                    Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(selectedFurnitureId, null, "Ac"), 0);
+                    Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(selectedFurnitureId), 0);
                 }
             }
             String payload = Crypto.Proc_3_0_6D2AF0(rewardProductId, null, "G|");
@@ -7129,7 +7129,7 @@ public final class Handling {
             }
             jukebox.removeDiskFromOwner(userIdValue, request.diskFurnitureId, songDiskProductId);
             jukebox.addPlaylistEntry(jukeboxId, request.diskFurnitureId, request.playlistOrder, destinationId);
-            String payload = Crypto.Proc_3_0_6D2AF0(request.diskFurnitureId, null, "Ac");
+            String payload = InventoryMessagePayloads.remove(request.diskFurnitureId);
             Proc_6_244_801E80(socketIndex, payload, 0);
             Proc_6_227_7F2400(socketIndex);
             Proc_6_228_7F2AF0(socketIndex);
@@ -9194,7 +9194,7 @@ public final class Handling {
                     placement.positionY,
                     positionZ,
                     placement.rotation);
-                Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(placement.furnitureId, null, "Ac"), 0);
+                Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(placement.furnitureId), 0);
             } else {
                 furniture.moveFloorFurniture(
                     placement.furnitureId,

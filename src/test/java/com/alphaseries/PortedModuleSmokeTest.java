@@ -257,7 +257,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(inventoryCache, Functions.inventoryCacheRemoveRecord(inventoryCache, 999));
         assertEquals("Ab" + Handling.inventoryItemPayload(123, 45, "data", 6) + '\1',
             Functions.inventoryAddPayload(123, 45, "data", 6));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(123, null, "Ac"), Functions.inventoryRemovePayload(123));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(123, null, "Ac"), InventoryMessagePayloads.remove(123));
+        assertEquals(InventoryMessagePayloads.remove(123), Functions.inventoryRemovePayload(123));
         Path inventoryRoot = Files.createTempDirectory("alphaseries-inventory");
         String previousApplicationPath = Functions.applicationPath;
         Functions.applicationPath = inventoryRoot.toString();

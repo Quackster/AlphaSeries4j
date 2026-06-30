@@ -41,6 +41,12 @@ public final class InventoryMessagePayloads {
             .build();
     }
 
+    public static String remove(long furnitureId) {
+        return PacketBuilder.message("Ac")
+            .appendInt(furnitureId)
+            .build();
+    }
+
     public static InventoryList listFromItems(List<InventoryItemRow> items) {
         InventoryList result = new InventoryList();
         if (items == null) {

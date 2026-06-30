@@ -7,6 +7,7 @@ import com.alphaseries.dao.mysql.FurnitureDao;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
@@ -211,7 +212,7 @@ public final class Functions {
     }
 
     public static String inventoryRemovePayload(long furnitureId) {
-        return PacketBuilder.message("Ac").appendInt(furnitureId).build();
+        return InventoryMessagePayloads.remove(furnitureId);
     }
 
     public static long Proc_10_14_80B010(Object... args) {

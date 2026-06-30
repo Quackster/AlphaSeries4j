@@ -327,6 +327,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved room settings read `GQ` payload construction into `RoomPayloads.settingsRead`, leaving `Handling` as a compatibility wrapper over typed `RoomSettingsRead` and `RoomRight` records.
 - Moved navigator room/event/list/official payload fragments into `NavigatorPayloads`, leaving `Handling` as compatibility wrappers over typed navigator records.
 - Routed active room poll prompt `D|` envelope construction through `PollPayloads.prompt`, removing the inline poll prompt packet builder from `Handling`.
+- Routed inventory removal `Ac` envelope construction through `InventoryMessagePayloads.remove`, leaving `Functions.inventoryRemovePayload` as a compatibility wrapper and removing repeated inline inventory-removal packet assembly from `Handling`.
 - Moved staff call-for-help rows and staff user summaries from tab-delimited row strings into typed moderation records; the DAO now maps those result sets directly into `StaffCallForHelpRow` and `StaffUserSummaryRow`.
 - Moved staff room chat-log queries and payload wrappers from tab-delimited row strings into typed `StaffRoomChatRow` lists and removed dead `MySQL` chat-log string wrappers.
 - Removed the dead `StaffRoomChatRow.fromLegacy` tab-delimited parser after all staff chat-log callers moved to typed rows.
@@ -384,7 +385,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
 - `Handling.java`: 12004 lines
-- `Functions.java`: 746 lines
+- `Functions.java`: 747 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 894 lines
 - `AlphaSeriesRuntime.java`: 234 lines
