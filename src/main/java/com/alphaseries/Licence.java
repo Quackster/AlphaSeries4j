@@ -340,11 +340,7 @@ public final class Licence {
     }
 
     public static PetSettings petSettings() {
-        if (global_008292D0 instanceof PetSettings petSettings) {
-            PetState.instance().setSettings(petSettings);
-        } else {
-            PetState.instance().setSettingsFromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
-        }
+        PetState.instance().setSettingsFromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
         return PetState.instance().settings();
     }
 
@@ -570,11 +566,7 @@ public final class Licence {
     }
 
     public static QuestSettings questSettings() {
-        if (global_00829080 instanceof QuestSettings questSettings) {
-            QuestState.instance().setSettings(questSettings);
-        } else {
-            QuestState.instance().setSettingsFromLegacy(global_00829080);
-        }
+        QuestState.instance().setSettingsFromLegacy(global_00829080);
         return QuestState.instance().settings();
     }
 

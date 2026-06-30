@@ -1167,6 +1167,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("20\t30\t40", ((String[]) typedPetSettings.levelRows())[2]);
         assertEquals(cachedCommand, ((PetSettings.PetCommandRow[]) typedPetSettings.commandRows())[2]);
         assertPetSettingsTypedAccessors(typedPetSettings, cachedCommand);
+        Licence.global_008292D0 = typedPetSettings;
+        assertPetSettingsTypedAccessors(Licence.petSettings(), cachedCommand);
         Boot.Proc_1_8_6C6850();
         assertEquals(true, DataManager.global_008291AC.contains("party"));
         Boot.Proc_1_9_6C6DF0();

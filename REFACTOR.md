@@ -528,8 +528,10 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `game.achievement.AchievementState` as the module-level singleton for achievement settings, routed live achievement settings reads through it, and kept `Licence.global_008291E4`/`global_008291E8` as compatibility mirrors.
 - Moved achievement settings compatibility conversion fully into `AchievementSettings.fromLegacy(...)` and simplified `Licence.achievementSettings()` to delegate directly to `AchievementState`.
 - Added `game.quest.QuestState` as the module-level singleton for quest settings, routed live quest settings reads through it, and kept `Licence.global_00829080` as a compatibility mirror.
+- Moved quest settings compatibility conversion fully into `QuestSettings.fromLegacy(...)` and simplified `Licence.questSettings()` to delegate directly to `QuestState`.
 - Added `game.catalog.CatalogState` as the module-level singleton for gift settings, routed live gift settings reads through it, and kept `Licence.global_00829178`/`global_0082917C`/`global_0082925C`/`global_00829260` as compatibility mirrors.
 - Added `game.pet.PetState` as the module-level singleton for pet settings, routed live pet command settings reads through it, and kept `Licence.global_008291EC`/`global_008292D0`/`global_008292CC`/`global_008292C8` as compatibility mirrors.
+- Moved pet settings compatibility conversion fully into `PetSettings.fromLegacy(...)` and simplified `Licence.petSettings()` to delegate directly to `PetState`.
 - Extended `game.catalog.CatalogState` to own catalog page payload/tree caches, routed live catalog page reads through it, and kept `Licence.global_00829308`/`global_008292F4` as compatibility mirrors.
 - Routed game-server packet trace configuration through typed `LicenceRuntimeState` updates instead of writing `Licence.global_00829190` directly from runtime startup.
 - Added `game.session.SessionState` as the module-level singleton for represented socket cache reads, keeping `Licence.global_0082934C` as the compatibility mirror.
