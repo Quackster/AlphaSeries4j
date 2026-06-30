@@ -4584,7 +4584,7 @@ public final class Handling {
             if (decoValue.isEmpty()) {
                 return;
             }
-            Proc_6_247_8027E0(socketIndex, "@n" + decoration.wireName() + '\2' + decoValue + '\2', 0);
+            broadcastToCurrentRoom(socketIndex, "@n" + decoration.wireName() + '\2' + decoValue + '\2');
             rooms.updateDecoration(roomId, decoration, decoValue);
             Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(furnitureId), 0);
             furniture.deleteFurniture(furnitureId);
@@ -4687,7 +4687,7 @@ public final class Handling {
                 return;
             }
             furniture.moveRoomFurnitureToInventory(furnitureId, NumberUtils.parseLong(userId));
-            Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2', 0);
+            broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2');
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
             Proc_6_140_769400(socketIndex, "FT", "");
@@ -4926,7 +4926,7 @@ public final class Handling {
             furniture.updateRoomFurnitureState(furnitureId, roomId, NumberUtils.parseLong(userId), nextState);
             Proc_6_151_78AC20(roomId, furnitureId, nextState);
             String payload = FurniturePayloads.stateChanged(furnitureId, nextState);
-            Proc_6_247_8027E0(socketIndex, payload, 0);
+            broadcastToCurrentRoom(socketIndex, payload);
             if (DataManager.productCache().hasCharges(productId)) {
                 Proc_6_148_7756D0(socketIndex, productId, furnitureId);
             }
@@ -5137,7 +5137,7 @@ public final class Handling {
             Proc_6_146_76D300(socketIndex, furnitureId, productId);
             furniture.moveRoomFurnitureToInventory(furnitureId, roomId, NumberUtils.parseLong(userId));
             Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(furnitureId), 0);
-            Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2', 0);
+            broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2');
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
             Proc_6_140_769400(socketIndex, "FT", "");
@@ -5222,7 +5222,7 @@ public final class Handling {
                 placementFurniture == null ? "" : placementFurniture.sign(),
                 placementFurniture == null ? 0L : placementFurniture.secondaryValue());
             if (!payload.isEmpty()) {
-                Proc_6_247_8027E0(socketIndex, "AS" + payload, 0);
+                broadcastToCurrentRoom(socketIndex, "AS" + payload);
             }
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
