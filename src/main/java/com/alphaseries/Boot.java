@@ -1772,7 +1772,15 @@ public final class Boot {
         if (row == null) {
             return "";
         }
-        return Proc_1_14_6C9DD0(row.pageId(), row.color(), StringUtils.text(row.name()), row.visible(), row.icon(), childCount);
+        return PacketBuilder.create()
+            .appendRaw("0")
+            .appendInt(row.pageId())
+            .appendInt(row.color())
+            .appendInt(row.icon())
+            .appendInt(row.visible())
+            .appendString(row.name())
+            .appendInt(childCount)
+            .build();
     }
 
     public static String buildCatalogPageTreeQuery(long parentId, long rankIndex, long hcLevel) {

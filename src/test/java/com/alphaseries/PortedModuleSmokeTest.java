@@ -958,6 +958,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Boot.catalogPageVisible(new String[]{"1", "name", "1", "2", "0", "1"}, 0, 0));
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_developer\2"}};
         assertEquals(true, Boot.catalogPageVisible(new String[]{"1", "name", "1", "2", "1", "1"}, 1, 0));
+        assertEquals(Boot.buildCatalogPageTreeEntry(new String[]{"10", "Root", "5", "6", "0", "1"}, 2),
+            Boot.buildCatalogPageTreeEntry(new CatalogDao.CatalogPageTreeRow(10L, "Root", 5L, 6L, 0L, 1L), 2));
         Map<Long, Long> catalogChildCounts = new HashMap<>();
         catalogChildCounts.put(10L, 2L);
         Map<Long, String> catalogChildren = new HashMap<>();

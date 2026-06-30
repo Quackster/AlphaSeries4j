@@ -309,6 +309,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed catalog page and catalog page-product startup payload reads through typed `CatalogDao` rows, keeping legacy catalog page payload serialization explicit in `Boot`.
 - Routed catalog page tree startup cache reads through typed `CatalogDao` rows and prepared child-count lookups, keeping legacy catalog tree payload serialization explicit in `Boot`.
 - Built typed catalog page-tree payloads with fluent count-prefix `PacketBuilder` composition over `CatalogPageTreeRow` roots and children.
+- Built typed catalog page-tree entries directly with fluent `PacketBuilder` over `CatalogPageTreeRow` fields instead of delegating through the legacy Proc formatter.
 - Routed dynamic navigator room/event list handlers through typed `RoomDao` rows and fluent payload builders, keeping query-tail compatibility isolated at the DAO boundary.
 - Routed updater SQL execution through `UpdaterDao`, clearing direct `MySQL.Proc_5_*` call sites outside the MySQL compatibility class.
 - Routed club subscription offer/status payload handling through typed `ClubDao` records, replacing tab-delimited DAO row strings and `handlingField(...)` reads in that handler.
