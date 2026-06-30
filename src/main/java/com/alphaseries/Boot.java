@@ -148,7 +148,17 @@ public final class Boot {
         Proc_1_0_6BA9D0(0, 0, 0);
     }
 
+    /**
+     * Original function: Proc_1_2_6BE280.
+     */
     public static void Proc_1_2_6BE280(Object... args) {
+        loadRecommendedRoomsCache();
+    }
+
+    /**
+     * Original function: Proc_1_2_6BE280.
+     */
+    public static void loadRecommendedRoomsCache() {
         Map<Long, String> recommended = new LinkedHashMap<>();
         long count = 0L;
         RoomDao rooms = roomDao();
@@ -181,7 +191,7 @@ public final class Boot {
      */
     public static void initializeStartupCaches() {
         initializeBootLogFiles();
-        runTimed("Empfohlene Räume im Cache gespeichert", () -> Proc_1_2_6BE280(0, 0, 0));
+        runTimed("Empfohlene Räume im Cache gespeichert", Boot::loadRecommendedRoomsCache);
         runTimed("Mögliche Badgevergabe im Cache gespeichert", () -> Proc_1_16_6CCA60(0, 0, 0));
         runTimed("Haustiere im Cache gespeichert", () -> Proc_1_7_6C5E10(0, 0, 0));
         runTimed("Figuredata im Cache gespeichert", Boot::writeFiguredataCache);
@@ -226,7 +236,7 @@ public final class Boot {
         Proc_1_22_6D0F00(0, 0, 0);
         Proc_1_11_6C8D10(0, 0, 0);
         Proc_1_12_6C8EF0(0, 0, 0);
-        Proc_1_2_6BE280(0);
+        loadRecommendedRoomsCache();
     }
 
     public static void Proc_1_5_6C4F80(Object... args) {
