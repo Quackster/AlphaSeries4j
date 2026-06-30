@@ -162,7 +162,17 @@ public final class Boot {
         Licence.setRecommendedRooms(count == 0L ? Crypto.Proc_3_0_6D2AF0(0, null, "") : recommended, count);
     }
 
+    /**
+     * Original function: Proc_1_3_6BEBA0.
+     */
     public static void Proc_1_3_6BEBA0(Object... args) {
+        initializeStartupCaches();
+    }
+
+    /**
+     * Original function: Proc_1_3_6BEBA0.
+     */
+    public static void initializeStartupCaches() {
         initializeBootLogFiles();
         runTimed("Empfohlene Räume im Cache gespeichert", () -> Proc_1_2_6BE280(0, 0, 0));
         runTimed("Mögliche Badgevergabe im Cache gespeichert", () -> Proc_1_16_6CCA60(0, 0, 0));

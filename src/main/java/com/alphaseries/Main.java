@@ -220,7 +220,7 @@ public final class Main {
     public static boolean runServer(String caption, String licenceResponse) {
         try {
             if (DataManager.applyLicenceResponse(licenceResponse, DataManager.LICENCE_TIME_FORMAT, 0L)) {
-                Boot.Proc_1_3_6BEBA0(0);
+                Boot.initializeStartupCaches();
                 return true;
             }
             return false;
@@ -240,7 +240,7 @@ public final class Main {
         try {
             if (DataManager.checkLicence(
                 new DataManager.LicenceCheckContext(lifecycle.productKey, Licence.runtimeState().productName()))) {
-                Boot.Proc_1_3_6BEBA0(0);
+                Boot.initializeStartupCaches();
                 return StartupResult.success();
             }
             String message = DataManager.lastLicenceFailureMessage;
