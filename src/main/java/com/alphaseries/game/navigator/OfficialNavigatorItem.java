@@ -1,8 +1,5 @@
 package com.alphaseries.game.navigator;
 
-import java.util.Arrays;
-import java.util.List;
-
 public record OfficialNavigatorItem(
     long typeId,
     long styleId,
@@ -34,30 +31,4 @@ public record OfficialNavigatorItem(
     long requiredLevel,
     boolean requiredLevelPresent
 ) {
-    public List<String> textFields() {
-        return Arrays.asList(
-            caption,
-            captionTwo,
-            captionThree,
-            unusedSlot,
-            roomId,
-            roomName,
-            ownerName,
-            doorStatus,
-            visitorsNow,
-            visitorsMax,
-            description,
-            hasTrading,
-            unusedTradingSlot,
-            roomRate,
-            categoryId,
-            roomIcon,
-            tagOne,
-            tagTwo,
-            allowOtherPets,
-            modelName,
-            requiredFiles,
-            modelVisitorsMax);
-    }
-
 }
