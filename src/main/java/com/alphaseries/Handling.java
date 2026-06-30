@@ -7694,30 +7694,25 @@ public final class Handling {
             String dateFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
             String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
             String dateTimeFormat = Functions.sqlEscapedText(dateFormat + " " + timeFormat);
-            StringBuilder targetIds = new StringBuilder();
+            List<Long> targetIds = new ArrayList<>();
             for (long acceptIndex = 1L; acceptIndex <= acceptCount; acceptIndex++) {
-                String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
-                if (!targetUserId.isEmpty() && !"0".equals(targetUserId)
-                    && !("," + targetIds + ",").contains("," + targetUserId + ",")) {
-                    if (messenger.pendingRequestExists(userIdValue, NumberUtils.parseLong(targetUserId), dateTimeFormat)) {
-                        if (targetIds.length() > 0) {
-                            targetIds.append(',');
-                        }
-                        targetIds.append(targetUserId);
+                long targetUserId = readWireLong(requestPayload, offset);
+                if (targetUserId > 0L && !targetIds.contains(targetUserId)) {
+                    if (messenger.pendingRequestExists(userIdValue, targetUserId, dateTimeFormat)) {
+                        targetIds.add(targetUserId);
                     }
                 }
             }
-            if (targetIds.length() == 0) {
+            if (targetIds.isEmpty()) {
                 return "";
             }
             long acceptedCount = 0L;
-            StringBuilder payloadRows = new StringBuilder();
-            for (String targetUserId : targetIds.toString().split(",", -1)) {
-                long targetUserIdValue = NumberUtils.parseLong(targetUserId);
-                MessengerFriend friend = messenger.messengerFriend(targetUserIdValue, dateTimeFormat).orElse(null);
+            PacketBuilder payloadRows = PacketBuilder.create();
+            for (long targetUserId : targetIds) {
+                MessengerFriend friend = messenger.messengerFriend(targetUserId, dateTimeFormat).orElse(null);
                 if (friend != null) {
                     int targetSocketIndex = (int) friend.socketIndex();
-                    payloadRows.append('H').append(messengerFriendPayload(
+                    payloadRows.appendRaw('H').appendRaw(messengerFriendPayload(
                         friend.userId(),
                         friend.userName(),
                         friend.motto(),
@@ -7727,8 +7722,8 @@ public final class Handling {
                         targetSocketIndex > 0 ? 1L : 0L,
                         friend.lastOnline(),
                         0L));
-                    messenger.insertReversePendingFriendship(targetUserIdValue, userIdValue);
-                    messenger.acceptFriendshipPair(userIdValue, targetUserIdValue);
+                    messenger.insertReversePendingFriendship(targetUserId, userIdValue);
+                    messenger.acceptFriendshipPair(userIdValue, targetUserId);
                     if (targetSocketIndex > 0) {
                         String notifyPayload = MessengerPayloads.friendOnlineNotification(
                             messengerFriendSummaryPayload(userId, 1L));
@@ -7738,7 +7733,7 @@ public final class Handling {
                 }
             }
             if (acceptedCount > 0L) {
-                String callerPayload = MessengerPayloads.acceptedFriends(payloadRows.toString(), acceptedCount);
+                String callerPayload = MessengerPayloads.acceptedFriends(payloadRows.build(), acceptedCount);
                 Proc_6_244_801E80(socketIndex, callerPayload, 0);
                 return callerPayload;
             }
