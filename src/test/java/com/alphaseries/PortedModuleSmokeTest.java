@@ -2926,8 +2926,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("FAQDESC9", typedHelpCache.descriptionPayload(9L));
         Licence.global_008292D8 = new String[][]{{}, {"STAFFMOD"}};
         assertEquals("STAFFMOD", Licence.staffSettings().moderationPayload(1L, 0L));
-        assertEquals("HC", StaffSettings.fromPayloads(new String[][]{{"ZERO"}, {"STAFF", "HC"}})
-            .moderationPayload(1L, 1L));
+        assertStaffSettingsTypedAccessors();
         Licence.global_00829094 = "WIREDSTATE";
         assertEquals("WIREDSTATE", Licence.wiredSettings().statePayload());
         Licence.global_0082908C = "12\t1";
@@ -4995,6 +4994,16 @@ public final class PortedModuleSmokeTest {
         String[][] copiedPageTrees = typedCatalogPages.pageTrees();
         copiedPageTrees[0][0] = "changed-again";
         assertEquals("TREE0", typedCatalogPages.defaultPageTree());
+    }
+
+    private static void assertStaffSettingsTypedAccessors() {
+        String[][] payloads = new String[][]{{"ZERO"}, {"STAFF", "HC"}};
+        StaffSettings settings = StaffSettings.fromPayloads(payloads);
+        payloads[1][1] = "changed";
+        assertEquals("HC", settings.moderationPayload(1L, 1L));
+        String[][] copiedPayloads = settings.moderationPayloads();
+        copiedPayloads[1][1] = "changed-again";
+        assertEquals("HC", settings.moderationPayload(1L, 1L));
     }
 
     private static void assertProductCacheRows(ProductCache productCache) {

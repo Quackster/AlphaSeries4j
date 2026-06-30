@@ -28,6 +28,10 @@ public final class StaffSettings {
         return new StaffSettings(moderationPayloads);
     }
 
+    public String[][] moderationPayloads() {
+        return copyPayloads(moderationPayloads);
+    }
+
     public String moderationPayload(long rankIndex, long hcLevel) {
         int rank = (int) Math.max(0L, Math.min(rankIndex, 20L));
         int hc = (int) Math.max(0L, Math.min(hcLevel, 2L));
