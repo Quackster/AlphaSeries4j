@@ -1208,28 +1208,7 @@ public final class Handling {
             return "";
         }
         RoomUserEntryPayloadArgs values = RoomUserEntryPayloadArgs.fromLegacyArgs(args);
-        long userId = NumberUtils.parseLong(values.userId());
-        String userName = values.userName();
-        String figureText = values.figure();
-        String mottoText = values.motto();
-        String genderText = values.gender();
-        long roomUserIndex = NumberUtils.parseLong(values.roomUserIndex());
-        long xValue = NumberUtils.parseLong(values.positionX());
-        long yValue = NumberUtils.parseLong(values.positionY());
-        String zValue = values.positionZ();
-        long firstState = NumberUtils.parseLong(values.firstState());
-        long secondState = NumberUtils.parseLong(values.secondState());
-        if (roomUserIndex <= 0L) {
-            roomUserIndex = userId;
-        }
-
-        String payload = Crypto.Proc_3_0_6D2AF0(userId, null, "") + userName + '\2' + figureText;
-        payload = Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, payload + '\2' + mottoText + '\2');
-        payload = Crypto.Proc_3_0_6D2AF0(xValue, null, "0" + payload);
-        payload = Crypto.Proc_3_0_6D2AF0(yValue, null, "0" + payload) + zValue + '\2' + "JI";
-        payload = payload + genderText + '\2' + "M";
-        payload = Crypto.Proc_3_0_6D2AF0(firstState, null, payload);
-        return Crypto.Proc_3_0_6D2AF0(secondState, null, payload + "M" + '\2');
+        return SocialPayloads.roomUserEntry(values);
     }
 
     public static String Proc_6_42_712FB0(Object... args) {
@@ -1237,37 +1216,7 @@ public final class Handling {
             return "";
         }
         RoomObjectEntryPayloadArgs values = RoomObjectEntryPayloadArgs.fromLegacyArgs(args);
-        long entityId = NumberUtils.parseLong(values.entityId());
-        String displayName = values.displayName();
-        String figureText = values.figure();
-        String genderText = values.gender();
-        long roomUserIndex = NumberUtils.parseLong(values.roomUserIndex());
-        long xValue = NumberUtils.parseLong(values.positionX());
-        long yValue = NumberUtils.parseLong(values.positionY());
-        String zValue = values.positionZ();
-        long objectType = NumberUtils.parseLong(values.objectType());
-        if (roomUserIndex <= 0L) {
-            roomUserIndex = entityId;
-        }
-
-        String payload;
-        String tailMarker;
-        if (objectType == 3L) {
-            payload = Crypto.Proc_3_0_6D2AF0(entityId, null, "");
-            tailMarker = "PAJJ";
-        } else {
-            payload = "M";
-            tailMarker = "HK";
-        }
-
-        payload = payload + displayName + '\2';
-        payload = payload + figureText + '\2';
-        payload = payload + genderText + '\2';
-        payload = payload + Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "");
-        payload = payload + Crypto.Proc_3_0_6D2AF0(xValue, null, "");
-        payload = payload + Crypto.Proc_3_0_6D2AF0(yValue, null, "");
-        payload = payload + zValue + '\2';
-        return payload + tailMarker;
+        return SocialPayloads.roomObjectEntry(values);
     }
 
     public static void Proc_6_43_713680(Object... args) {

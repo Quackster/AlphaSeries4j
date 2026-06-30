@@ -1,7 +1,10 @@
 package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.game.social.BadgeRow;
+import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
+import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
 import com.alphaseries.protocol.PacketBuilder;
+import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.List;
@@ -66,6 +69,65 @@ public final class SocialPayloads {
         return PacketBuilder.message("Ei")
             .appendInt(roomUserIndex)
             .appendRaw('\r')
+            .build();
+    }
+
+    public static String roomUserEntry(RoomUserEntryPayloadArgs values) {
+        if (values == null) {
+            return "";
+        }
+        long userId = NumberUtils.parseLong(values.userId());
+        long roomUserIndex = NumberUtils.parseLong(values.roomUserIndex());
+        if (roomUserIndex <= 0L) {
+            roomUserIndex = userId;
+        }
+        return PacketBuilder.create()
+            .appendRaw('0')
+            .appendRaw('0')
+            .appendInt(userId)
+            .appendString(values.userName())
+            .appendString(values.figure())
+            .appendString(values.motto())
+            .appendInt(roomUserIndex)
+            .appendInt(NumberUtils.parseLong(values.positionX()))
+            .appendInt(NumberUtils.parseLong(values.positionY()))
+            .appendString(values.positionZ())
+            .appendRaw("JI")
+            .appendString(values.gender())
+            .appendRaw('M')
+            .appendInt(NumberUtils.parseLong(values.firstState()))
+            .appendString("M")
+            .appendInt(NumberUtils.parseLong(values.secondState()))
+            .build();
+    }
+
+    public static String roomObjectEntry(RoomObjectEntryPayloadArgs values) {
+        if (values == null) {
+            return "";
+        }
+        long entityId = NumberUtils.parseLong(values.entityId());
+        long roomUserIndex = NumberUtils.parseLong(values.roomUserIndex());
+        if (roomUserIndex <= 0L) {
+            roomUserIndex = entityId;
+        }
+        long objectType = NumberUtils.parseLong(values.objectType());
+        PacketBuilder payload = PacketBuilder.create();
+        String tailMarker;
+        if (objectType == 3L) {
+            payload.appendInt(entityId);
+            tailMarker = "PAJJ";
+        } else {
+            payload.appendRaw('M');
+            tailMarker = "HK";
+        }
+        return payload.appendString(values.displayName())
+            .appendString(values.figure())
+            .appendString(values.gender())
+            .appendInt(roomUserIndex)
+            .appendInt(NumberUtils.parseLong(values.positionX()))
+            .appendInt(NumberUtils.parseLong(values.positionY()))
+            .appendString(values.positionZ())
+            .appendRaw(tailMarker)
             .build();
     }
 

@@ -407,6 +407,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved trade confirmation payload construction into `TradePayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved staff moderation panel `HS` envelope construction into `StaffPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved staff moderation chat-log and room-info `HV`/`HW`/`HZ` response construction into typed `StaffPayloads` builders, removing local packet helper methods from `StaffModerationPacketHandlers`.
+- Moved room user/object entry row payload construction into typed `SocialPayloads` builders, leaving the old `Handling` methods as compatibility argument adapters.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -422,7 +423,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11955 lines
+- `Handling.java`: 11904 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines

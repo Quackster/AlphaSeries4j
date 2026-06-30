@@ -40,7 +40,9 @@ import com.alphaseries.game.moderation.StaffRoomVisitRow;
 import com.alphaseries.game.moderation.StaffUserLookup;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.quest.QuestSettings;
+import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomPortalSettings;
+import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.trade.RepresentedTradeOffer;
 import com.alphaseries.game.trade.TradePayloads;
@@ -1551,12 +1553,18 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, userEntryPayload.contains("alice\2hd-1"));
         assertEquals(true, userEntryPayload.contains("motto\2"));
         assertEquals(userEntryPayload, Handling.Proc_6_41_712730("7\talice\thd-1\tmotto\tF\t8\t2\t3\t1.0\t4\t5"));
+        assertEquals(userEntryPayload, SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
+            "7", "alice", "hd-1", "motto", "F", "8", "2", "3", "1.0", "4", "5")));
         String botPayload = Handling.Proc_6_42_712FB0(9, "bot", "figure", "M", 10, 4, 5, "0.0", 2);
         assertEquals(true, botPayload.startsWith("Mbot\2figure\2M\2"));
         assertEquals(true, botPayload.endsWith("0.0\2HK"));
+        assertEquals(botPayload, SocialPayloads.roomObjectEntry(new RoomObjectEntryPayloadArgs(
+            "9", "bot", "figure", "M", "10", "4", "5", "0.0", "2")));
         String petPayload = Handling.Proc_6_42_712FB0(11, "pet", "figure", "F", 12, 6, 7, "0.5", 3);
         assertEquals(true, petPayload.startsWith(Crypto.Proc_3_0_6D2AF0(11, null, "") + "pet\2"));
         assertEquals(true, petPayload.endsWith("0.5\2PAJJ"));
+        assertEquals(petPayload, SocialPayloads.roomObjectEntry(new RoomObjectEntryPayloadArgs(
+            "11", "pet", "figure", "F", "12", "6", "7", "0.5", "3")));
         assertEquals(2L, Handling.avatarNameValidationCode("ab", "", 0));
         assertEquals(1L, Handling.avatarNameValidationCode("abcdefghijklmnop", "", 0));
         assertEquals(2L, Handling.avatarNameValidationCode("MOD-user", "", 0));
