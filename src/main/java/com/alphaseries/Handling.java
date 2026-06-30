@@ -61,6 +61,7 @@ import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
+import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.NavigatorRoom;
@@ -5850,14 +5851,14 @@ public final class Handling {
             if (messenger == null) {
                 return "";
             }
-            List<MessengerDao.MessengerFriend> friends = messenger.acceptedFriends(
+            List<MessengerFriend> friends = messenger.acceptedFriends(
                 NumberUtils.parseLong(userId),
                 dateFormat + " " + timeFormat,
                 queryLimit);
             String callerSummary = messengerFriendSummaryPayload(userId, 1L);
             long friendCount = 0L;
             StringBuilder friendPayload = new StringBuilder();
-            for (MessengerDao.MessengerFriend friend : friends) {
+            for (MessengerFriend friend : friends) {
                 if (friend != null) {
                     int friendSocketIndex = (int) friend.socketIndex();
                     long friendOnline = friendSocketIndex > 0
@@ -7789,7 +7790,7 @@ public final class Handling {
             StringBuilder payloadRows = new StringBuilder();
             for (String targetUserId : targetIds.toString().split(",", -1)) {
                 long targetUserIdValue = NumberUtils.parseLong(targetUserId);
-                MessengerDao.MessengerFriend friend = messenger.messengerFriend(targetUserIdValue, dateTimeFormat).orElse(null);
+                MessengerFriend friend = messenger.messengerFriend(targetUserIdValue, dateTimeFormat).orElse(null);
                 if (friend != null) {
                     int targetSocketIndex = (int) friend.socketIndex();
                     payloadRows.append('H').append(messengerFriendPayload(
@@ -10981,21 +10982,8 @@ public final class Handling {
         return MessengerPayloads.friendSummaryFromRow(rowText, relationshipState, messengerFollowEnabled());
     }
 
-    public static String messengerFriendSummaryPayload(MessengerDao.MessengerFriend friend, long relationshipState) {
-        if (friend == null) {
-            return "";
-        }
-        long socketIndex = friend.socketIndex();
-        return messengerFriendPayload(
-            friend.userId(),
-            friend.userName(),
-            friend.motto(),
-            friend.figure(),
-            friend.level(),
-            socketIndex > 0L ? 2L : 0L,
-            socketIndex > 0L ? 1L : 0L,
-            friend.lastOnline(),
-            relationshipState);
+    public static String messengerFriendSummaryPayload(MessengerFriend friend, long relationshipState) {
+        return MessengerPayloads.friendSummary(friend, relationshipState, messengerFollowEnabled());
     }
 
     public static String messengerFriendSummaryPayload(String userId, long relationshipState) {
@@ -11009,7 +10997,7 @@ public final class Handling {
             if (messenger == null) {
                 return "";
             }
-            MessengerDao.MessengerFriend friend = messenger
+            MessengerFriend friend = messenger
                 .messengerFriend(NumberUtils.parseLong(userId), dateFormat + " " + timeFormat)
                 .orElse(null);
             return messengerFriendSummaryPayload(friend, relationshipState);

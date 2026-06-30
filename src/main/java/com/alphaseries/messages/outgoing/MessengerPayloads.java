@@ -1,9 +1,9 @@
 package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.game.messenger.PendingFriendRequest;
+import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
-import com.alphaseries.util.StringUtils;
 
 import java.util.List;
 
@@ -46,20 +46,27 @@ public final class MessengerPayloads {
     }
 
     public static String friendSummaryFromRow(String rowText, long relationshipState, boolean followEnabled) {
-        String[] fields = StringUtils.text(rowText).split("\t", -1);
-        if (fields.length < 7) {
+        return friendSummary(MessengerFriend.fromLegacySummaryRow(rowText), relationshipState, followEnabled);
+    }
+
+    public static String friendSummary(
+        MessengerFriend friend,
+        long relationshipState,
+        boolean followEnabled
+    ) {
+        if (friend == null) {
             return "";
         }
-        long socketIndex = NumberUtils.parseLong(fields[5]);
+        long socketIndex = friend.socketIndex();
         return friend(
-            NumberUtils.parseLong(fields[0]),
-            fields[1],
-            fields[2],
-            fields[3],
-            NumberUtils.parseLong(fields[4]),
+            friend.userId(),
+            friend.userName(),
+            friend.motto(),
+            friend.figure(),
+            friend.level(),
             socketIndex > 0L ? 2L : 0L,
             socketIndex > 0L ? 1L : 0L,
-            fields[6],
+            friend.lastOnline(),
             relationshipState,
             followEnabled);
     }
@@ -151,27 +158,38 @@ public final class MessengerPayloads {
         long maxFriends2,
         boolean followEnabled
     ) {
+        return friendList(
+            MessengerFriend.listFromLegacyListRows(rowText),
+            maxFriends0,
+            maxFriends1,
+            maxFriends2,
+            followEnabled);
+    }
+
+    public static String friendList(
+        List<MessengerFriend> friends,
+        long maxFriends0,
+        long maxFriends1,
+        long maxFriends2,
+        boolean followEnabled
+    ) {
         long friendCount = 0L;
         PacketBuilder friendPayload = PacketBuilder.create();
-        for (String row : StringUtils.text(rowText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 7) {
-                    long friendSocketIndex = NumberUtils.parseLong(fields[2]);
-                    long friendOnline = friendSocketIndex > 0L ? 1L : 0L;
-                    friendPayload.appendRaw(friend(
-                        NumberUtils.parseLong(fields[0]),
-                        fields[1],
-                        fields[4],
-                        fields[3],
-                        NumberUtils.parseLong(fields[5]),
-                        friendOnline == 1L ? 2L : 0L,
-                        friendOnline,
-                        fields[6],
-                        1L,
-                        followEnabled));
-                    friendCount++;
-                }
+        for (MessengerFriend friend : friends == null ? List.<MessengerFriend>of() : friends) {
+            if (friend != null) {
+                long friendOnline = friend.socketIndex() > 0L ? 1L : 0L;
+                friendPayload.appendRaw(friend(
+                    friend.userId(),
+                    friend.userName(),
+                    friend.motto(),
+                    friend.figure(),
+                    friend.level(),
+                    friendOnline == 1L ? 2L : 0L,
+                    friendOnline,
+                    friend.lastOnline(),
+                    1L,
+                    followEnabled));
+                friendCount++;
             }
         }
         return PacketBuilder.message("@L")

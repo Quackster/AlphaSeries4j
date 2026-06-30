@@ -1,6 +1,7 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 
 import java.sql.SQLException;
@@ -249,14 +250,4 @@ public final class MessengerDao {
     ) {
     }
 
-    public record MessengerFriend(
-        long userId,
-        String userName,
-        String motto,
-        String figure,
-        long level,
-        long socketIndex,
-        String lastOnline
-    ) {
-    }
 }

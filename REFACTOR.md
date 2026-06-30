@@ -241,7 +241,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed represented room bot loading through typed `BotRoomEntryRow` records from `BotDao`, replacing raw bot SQL and tab-delimited parsing in `Handling`.
 - Added `RecyclerDao` and routed fallback recycler reward-product loading through typed prepared reads instead of raw row strings in `Handling`.
 - Routed represented dimmer furniture lookup through `FurnitureDao`, replacing another raw furniture/product SQL helper in `Handling`.
-- Routed messenger friend summary lookup through typed `MessengerDao.MessengerFriend` records, replacing raw user SQL and tab-delimited summary parsing in `Handling`.
+- Routed messenger friend summary lookup through typed messenger friend records, replacing raw user SQL and tab-delimited summary parsing in `Handling`.
 - Routed achievement badge current-level lookups through `UserDao`, replacing raw `users_badges` SQL in `Handling`.
 - Routed login ticket user loading through typed `UserDao.LoginUser`, replacing the raw login SQL and tab-delimited field parsing in `Handling`.
 - Routed gift-wrap product fallback lookup through `CatalogDao`, replacing another raw product SQL helper in `Handling`.
@@ -275,7 +275,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed wardrobe slot payload handling through typed `UserDao.WardrobeSlotRow` records, replacing tab-delimited DAO row strings and `handlingField(...)` reads in that handler.
 - Routed FAQ search payload handling through typed `HelpDao.FaqNameRow` records and fluent `PacketBuilder` construction, replacing tab-delimited DAO row strings and `handlingField(...)` reads in that handler.
 - Routed room event info payload handling through typed `RoomDao.RoomEventInfo` records and fluent `PacketBuilder` construction, replacing tab-delimited DAO row strings and `handlingField(...)` reads in that helper.
-- Routed accepted messenger friend list handling through typed `MessengerDao.MessengerFriend` records, replacing tab-delimited DAO row strings and `handlingField(...)` reads in that handler.
+- Routed accepted messenger friend list handling through typed messenger friend records, replacing tab-delimited DAO row strings and `handlingField(...)` reads in that handler.
 - Routed pending messenger request handling through typed `PendingFriendRequest` records and fluent payload aggregation, replacing tab-delimited DAO row strings in that handler.
 - Routed room-right settings payload handling through typed `RoomDao.RoomRight` records and fluent `PacketBuilder` construction, replacing tab-delimited DAO row strings in that helper.
 - Routed room settings read payload handling through typed `RoomDao.RoomSettingsRead` records and fluent `PacketBuilder` construction, replacing the 14-field tab-delimited DAO row and indexed `handlingField(...)` reads in that helper.
@@ -297,6 +297,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed badge inventory/equipped-badge payload string wrappers through typed `BadgeRow` lists, leaving tab-delimited badge rows as a compatibility parser only.
 - Routed jukebox song-info, playlist, and disk-inventory payload string wrappers through typed `SongInfoRow`, `JukeboxPlaylistEntry`, and `SongDiskRow` lists, leaving tab-delimited jukebox rows as compatibility parsers only.
 - Routed messenger pending-request payload string wrappers through typed `PendingFriendRequest` lists, leaving tab-delimited pending-request rows as a compatibility parser only.
+- Moved messenger friend rows into `game.messenger.MessengerFriend`, routed DAO reads and friend summary/list payload wrappers through typed records, and left legacy friend row layouts as explicit compatibility parsers only.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -312,7 +313,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12547 lines
+- `Handling.java`: 12535 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
 - `Main.java`: 957 lines
