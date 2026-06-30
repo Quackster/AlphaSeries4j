@@ -193,7 +193,7 @@ public final class Boot {
         initializeBootLogFiles();
         runTimed("Empfohlene Räume im Cache gespeichert", Boot::loadRecommendedRoomsCache);
         runTimed("Mögliche Badgevergabe im Cache gespeichert", () -> Proc_1_16_6CCA60(0, 0, 0));
-        runTimed("Haustiere im Cache gespeichert", () -> Proc_1_7_6C5E10(0, 0, 0));
+        runTimed("Haustiere im Cache gespeichert", Boot::loadPetLevelAndCommandCache);
         runTimed("Figuredata im Cache gespeichert", Boot::writeFiguredataCache);
         runTimed("Server Einstellungen im Cache gespeichert", () -> Proc_1_9_6C6DF0(0, 0, 0));
         runTimed("Event Kategorien im Cache gespeichert", () -> Proc_1_8_6C6850(0, 0, 0));
@@ -205,7 +205,7 @@ public final class Boot {
         runTimed("Bonussystem im Cache gespeichert", () -> Proc_1_5_6C4F80(0, 0, 0));
         runTimed("Katalog im Cache gespeichert", () -> Proc_1_1_6BB340(0, 0, 0));
         runTimed("Chat Einstellungen im Cache gespeichert", Boot::buildChatSettingsCache);
-        runTimed("Haustierrassen im Cache gespeichert", () -> Proc_1_6_6C5830(0, 0, 0));
+        runTimed("Haustierrassen im Cache gespeichert", Boot::loadPetRaceCache);
         runTimed("FAQ im Cache gespeichert", () -> {
             Proc_1_19_6CF190(0, 0, 0);
             Proc_1_20_6CF830(0, 0, 0);
@@ -251,10 +251,10 @@ public final class Boot {
         }
         Licence.setAchievementSettings(achievementCache.questIdPayload, achievementCache.achievements);
         Proc_1_9_6C6DF0(0, 0, 0);
-        Proc_1_7_6C5E10(0, 0, 0);
+        loadPetLevelAndCommandCache();
         Proc_1_18_6CE9C0(0, 0, 0);
         Proc_1_16_6CCA60(0, 0, 0);
-        Proc_1_6_6C5830(0, 0, 0);
+        loadPetRaceCache();
         Proc_1_10_6C7690(0, 0, 0);
         Proc_1_19_6CF190(0, 0, 0);
         Proc_1_20_6CF830(0, 0, 0);
@@ -270,7 +270,17 @@ public final class Boot {
             NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.messenger.maxfriends.hclevel2", 0))));
     }
 
+    /**
+     * Original function: Proc_1_6_6C5830.
+     */
     public static void Proc_1_6_6C5830(Object... args) {
+        loadPetRaceCache();
+    }
+
+    /**
+     * Original function: Proc_1_6_6C5830.
+     */
+    public static void loadPetRaceCache() {
         try {
             BotDao bots = botDao();
             if (bots == null) {
@@ -282,7 +292,17 @@ public final class Boot {
         }
     }
 
+    /**
+     * Original function: Proc_1_7_6C5E10.
+     */
     public static void Proc_1_7_6C5E10(Object... args) {
+        loadPetLevelAndCommandCache();
+    }
+
+    /**
+     * Original function: Proc_1_7_6C5E10.
+     */
+    public static void loadPetLevelAndCommandCache() {
         try {
             BotDao bots = botDao();
             if (bots == null) {
