@@ -15,6 +15,7 @@ import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.advertising.VisitRoomAds;
+import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
@@ -4374,6 +4375,9 @@ public final class PortedModuleSmokeTest {
         Licence.global_008292F4 = new String[][]{{"CATALOG_TREE"}};
         Handling.dispatchPreReadyPacket(4, "Ae", "Ae");
         assertEquals("CATALOG_TREE", Licence.catalogPages().defaultPageTree());
+        CatalogPages typedCatalogPages = CatalogPages.fromPayloads(Map.of(4L, "PAGE4"), new String[][]{{"TREE0"}});
+        assertEquals("PAGE4", typedCatalogPages.pagePayload(4L));
+        assertEquals("TREE0", typedCatalogPages.defaultPageTree());
         assertEquals(true, containsSend(handlingSends, "A~IHHM\2CATALOG_TREE"));
         handlingSends.clear();
         Handling.dispatchPreReadyPacket(4, "D}", "D}");
