@@ -353,14 +353,22 @@ public final class Licence {
     }
 
     public static AchievementSettings achievementSettings() {
-        AchievementState.instance().setSettingsFromLegacy(global_008291E4, global_008291E8);
+        refreshAchievementSettings();
         return AchievementState.instance().settings();
     }
 
     public static void setAchievementSettings(String questIdPayload, Object rows) {
-        AchievementState.instance().setSettingsFromLegacy(questIdPayload, rows);
         global_008291E4 = StringUtils.text(questIdPayload);
         global_008291E8 = rows == null ? "" : rows;
+        refreshAchievementSettings();
+    }
+
+    private static void refreshAchievementSettings() {
+        if (global_008291E8 instanceof AchievementSettings settings) {
+            AchievementState.instance().setSettings(settings);
+            return;
+        }
+        AchievementState.instance().setSettingsFromLegacy(global_008291E4, global_008291E8);
     }
 
     public static PetSettings petSettings() {

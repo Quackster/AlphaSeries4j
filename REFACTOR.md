@@ -685,6 +685,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `ProductCache` row storage from raw field lists to typed `ProductRow` records with defensive row access for future callers moving off column-index compatibility.
 - Migrated `AchievementSettings` internals from raw row objects to indexed typed achievement rows, keeping legacy row parsing only at the achievement state boundary.
 - Exposed defensive typed `AchievementSettings.AchievementRow` access so callers needing row/index metadata can avoid legacy row text lookups.
+- Routed `Licence` achievement-settings refreshes through the typed `AchievementSettings` state path when the rows mirror already contains an `AchievementSettings` instance, leaving list/string row parsing as a compatibility fallback.
 - Migrated `QuestSettings` legacy quest row text into typed `QuestDefinitionRow` records at construction, removing retained raw row-string storage while preserving compatibility serialization.
 - Added typed `QuestSettings.QuestDefinitionRow.fromFields(...)` construction and routed boot plus quest fallback loading away from legacy field-count-aware record constructors.
 - Routed `Licence` quest settings refreshes through the typed `QuestSettings` state path when the mirrored global already contains a `QuestSettings` instance, leaving row-string parsing as a compatibility fallback.
