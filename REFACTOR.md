@@ -526,6 +526,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `server.update.UpdaterState` as the module-level singleton for updater settings, keeping `Licence.global_00829040`/`global_00829044`/`global_00829048` as compatibility mirrors.
 - Added `server.lifecycle.LifecycleState` as the module-level singleton for runtime state, keeping `Licence.global_0082904C`/`global_00829038`/`global_0082903C`/`global_00829034`/`global_008290AC`/`global_00829190` as compatibility mirrors.
 - Extended `game.session.SessionState` to own the session registry cache, keeping `Licence.global_00829268` as the compatibility mirror.
+- Migrated `RoomEventLocales` from retained raw cache text to parsed typed locale-field maps, keeping legacy cache text serialization explicit at the compatibility boundary.
 - Extended `game.catalog.CatalogState` to own catalog product/package settings, keeping `Licence.global_008290A0`/`global_008290A4`/`global_008290A8`/`global_00829078`/`global_0082907C`/`global_00829084` as compatibility mirrors.
 - Extended `game.catalog.CatalogState` to own product, catalog-product, and product-deal registry caches, keeping `Licence.global_008292BC`/`global_008292C0`/`global_00829258` as compatibility mirrors.
 - Added named typed wall-furniture placement entrypoint `placeWallFurnitureFromInventory(...)` with the original `Proc_6_157_7974B0` noted in Javadocs, and routed the live floor-placement wall-item path away from the legacy `InventoryPlacementFurniture.fromLegacyArg(...)` boundary.

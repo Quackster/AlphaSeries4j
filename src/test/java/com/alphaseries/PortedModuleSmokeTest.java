@@ -174,6 +174,7 @@ public final class PortedModuleSmokeTest {
         DataManager.global_008291AC = "\0chair\1id\2name\2price\0";
         assertEquals("name", DataManager.Proc_8_11_8069B0("chair", 1));
         assertEquals("name", DataManager.roomEventLocales().field("chair", 1));
+        assertEquals("\0chair\1id\2name\2price", DataManager.roomEventLocales().cacheText());
         DataManager.global_008292BC = "10\tsofa\t5\r11\ttable\t7";
         assertEquals("table", DataManager.Proc_8_12_806C30(11, 1));
         String[] dataManagerProducts = new String[12];
