@@ -41,19 +41,22 @@ public final class StaffModerationDao {
             callForHelpId);
     }
 
-    public String recentChatRowsBefore(long roomId, long timestampSent) throws SQLException {
-        List<String> rows = database.query(
+    public List<StaffRoomChatRow> recentChatRowsBefore(long roomId, long timestampSent) throws SQLException {
+        return database.query(
             "SELECT DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%H'),"
                 + "DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%i'),users.id,users.name,logs_chat.description "
                 + "FROM logs_chat,rooms,users WHERE logs_chat.id_room=? AND logs_chat.timestamp < ? "
                 + "AND logs_chat.timestamp > ? AND users.id=logs_chat.id_user "
                 + "GROUP BY logs_chat.id ORDER BY logs_chat.id DESC LIMIT 100",
-            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
-                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5),
+            resultSet -> new StaffRoomChatRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getString(4),
+                resultSet.getString(5)),
             roomId,
             timestampSent,
             timestampSent - 600L);
-        return String.join("\r", rows);
     }
 
     public Optional<RoomChatHeader> roomChatHeader(long roomId) throws SQLException {
@@ -64,16 +67,19 @@ public final class StaffModerationDao {
             roomId);
     }
 
-    public String recentChatRows(long roomId) throws SQLException {
-        List<String> rows = database.query(
+    public List<StaffRoomChatRow> recentChatRows(long roomId) throws SQLException {
+        return database.query(
             "SELECT DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%H'),"
                 + "DATE_FORMAT(FROM_UNIXTIME(logs_chat.timestamp), '%i'),users.id,users.name,logs_chat.description "
                 + "FROM logs_chat,rooms,users WHERE logs_chat.id_room=? AND logs_chat.timestamp > UNIX_TIMESTAMP()-600 "
                 + "AND users.id=logs_chat.id_user GROUP BY logs_chat.id ORDER BY logs_chat.id DESC LIMIT 100",
-            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
-                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5),
+            resultSet -> new StaffRoomChatRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getString(4),
+                resultSet.getString(5)),
             roomId);
-        return String.join("\r", rows);
     }
 
     public Optional<RoomInfo> roomInfo(long roomId) throws SQLException {

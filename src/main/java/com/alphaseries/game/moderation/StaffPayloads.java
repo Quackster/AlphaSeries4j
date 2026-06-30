@@ -131,20 +131,6 @@ public final class StaffPayloads {
             .build();
     }
 
-    public static ChatRows roomChatRows(String chatRows) {
-        List<StaffRoomChatRow> rows = new ArrayList<>();
-        for (String row : StringUtils.text(chatRows).split("\r", -1)) {
-            String rowValue = row.trim();
-            if (!rowValue.isEmpty()) {
-                StaffRoomChatRow chatRow = StaffRoomChatRow.fromLegacy(rowValue);
-                if (chatRow != null) {
-                    rows.add(chatRow);
-                }
-            }
-        }
-        return roomChatRows(rows);
-    }
-
     public static ChatRows roomChatRows(List<StaffRoomChatRow> rows) {
         ChatRows result = new ChatRows();
         PacketBuilder chatPayload = PacketBuilder.create();
@@ -158,18 +144,6 @@ public final class StaffPayloads {
         }
         result.payload = chatPayload.build();
         return result;
-    }
-
-    public static String roomChatHistory(String visitRowText, String chatRows) {
-        String[] fields = StringUtils.text(visitRowText).split("\t", -1);
-        ChatRows chatRowsPayload = roomChatRows(chatRows);
-        return PacketBuilder.create()
-            .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 0)))
-            .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 1)))
-            .appendInt(chatRowsPayload.chatCount)
-            .appendString(StringUtils.field(fields, 2))
-            .appendRaw(chatRowsPayload.payload)
-            .build();
     }
 
     public static String roomChatHistory(StaffRoomChatVisitRow visitRow, List<StaffRoomChatRow> chatRows) {

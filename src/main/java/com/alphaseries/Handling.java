@@ -12147,16 +12147,12 @@ public final class Handling {
         return readWireLong(requestPayload, offset);
     }
 
-    public static StaffChatRowsPayload staffRoomChatRowsPayload(String chatRows) {
+    public static StaffChatRowsPayload staffRoomChatRowsPayload(List<StaffRoomChatRow> chatRows) {
         StaffPayloads.ChatRows chatRowsPayload = StaffPayloads.roomChatRows(chatRows);
         StaffChatRowsPayload result = new StaffChatRowsPayload();
         result.chatCount = chatRowsPayload.chatCount;
         result.payload = chatRowsPayload.payload;
         return result;
-    }
-
-    public static String staffRoomChatHistoryPayload(String visitRowText, String chatRows) {
-        return StaffPayloads.roomChatHistory(visitRowText, chatRows);
     }
 
     public static String staffRoomChatHistoryPayload(StaffRoomChatVisitRow visitRow, List<StaffRoomChatRow> chatRows) {

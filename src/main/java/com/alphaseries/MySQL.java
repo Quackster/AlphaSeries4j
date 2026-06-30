@@ -188,22 +188,6 @@ public final class MySQL {
             .build();
     }
 
-    public static String mySqlRoomChatLogRows(String chatRows) {
-        if (chatRows == null || chatRows.isEmpty()) {
-            return "";
-        }
-        List<StaffRoomChatRow> rows = new java.util.ArrayList<>();
-        for (String row : chatRows.split("\r", -1)) {
-            if (!row.isEmpty()) {
-                StaffRoomChatRow chatRow = StaffRoomChatRow.fromLegacy(row);
-                if (chatRow != null) {
-                    rows.add(chatRow);
-                }
-            }
-        }
-        return mySqlRoomChatLogRows(rows);
-    }
-
     public static String mySqlRoomChatLogRows(List<StaffRoomChatRow> chatRows) {
         return StaffPayloads.roomChatRows(chatRows == null ? List.of() : chatRows).payload;
     }
@@ -228,21 +212,6 @@ public final class MySQL {
             }
         }
         return payload.build();
-    }
-
-    public static String mySqlCallForHelpChatLogPayload(long cfhId, String[] cfhFields, String chatRows) {
-        if (cfhFields == null || cfhFields.length < 6) {
-            return "";
-        }
-        return PacketBuilder.create()
-            .appendInt(cfhId)
-            .appendInt(NumberUtils.parseLong(cfhFields[0]))
-            .appendInt(NumberUtils.parseLong(cfhFields[2]))
-            .appendInt(NumberUtils.parseLong(cfhFields[3]))
-            .appendInt(NumberUtils.parseLong(cfhFields[4]))
-            .appendString(cfhFields[1])
-            .appendRaw(mySqlRoomChatLogRows(chatRows))
-            .build();
     }
 
     public static boolean isIgnorableSqlArg(String value) {

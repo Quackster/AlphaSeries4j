@@ -11,6 +11,7 @@ import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.sql.SQLException;
+import java.util.List;
 
 public final class StaffModerationPacketHandlers {
     private StaffModerationPacketHandlers() {
@@ -35,7 +36,7 @@ public final class StaffModerationPacketHandlers {
             if (room == null) {
                 return;
             }
-            String chatRows = moderationDao.recentChatRowsBefore(room.roomId(), room.timestampSent());
+            List<StaffRoomChatRow> chatRows = moderationDao.recentChatRowsBefore(room.roomId(), room.timestampSent());
             HandlingMUS.Proc_12_1_821AA0(
                 socketIndex,
                 "HV" + callForHelpChatLogPayload(callForHelpId, room, chatRows),
@@ -64,7 +65,7 @@ public final class StaffModerationPacketHandlers {
             if (room == null) {
                 return;
             }
-            String chatRows = moderationDao.recentChatRows(roomId);
+            List<StaffRoomChatRow> chatRows = moderationDao.recentChatRows(roomId);
             HandlingMUS.Proc_12_1_821AA0(socketIndex, "HW" + roomChatLogHeader(room) + roomChatLogRows(chatRows), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -98,7 +99,7 @@ public final class StaffModerationPacketHandlers {
     private static String callForHelpChatLogPayload(
         long callForHelpId,
         StaffModerationDao.CallForHelpRoom room,
-        String chatRows
+        List<StaffRoomChatRow> chatRows
     ) {
         return PacketBuilder.create()
             .appendInt(callForHelpId)
@@ -119,24 +120,8 @@ public final class StaffModerationPacketHandlers {
             .build();
     }
 
-    private static String roomChatLogRows(String chatRows) {
-        if (chatRows == null || chatRows.isEmpty()) {
-            return "";
-        }
-        PacketBuilder payload = PacketBuilder.create();
-        for (String row : chatRows.split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 5) {
-                    payload.appendInt(NumberUtils.parseLong(fields[0]))
-                        .appendInt(NumberUtils.parseLong(fields[1]))
-                        .appendInt(NumberUtils.parseLong(fields[2]))
-                        .appendString(fields[3])
-                        .appendString(fields[4]);
-                }
-            }
-        }
-        return payload.build();
+    private static String roomChatLogRows(List<StaffRoomChatRow> chatRows) {
+        return StaffPayloads.roomChatRows(chatRows == null ? List.of() : chatRows).payload;
     }
 
     private static String roomInfoPayload(StaffModerationDao.RoomInfo room, StaffModerationDao.RoomEvent event) {

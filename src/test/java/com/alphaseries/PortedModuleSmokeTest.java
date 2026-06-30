@@ -21,6 +21,8 @@ import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
 import com.alphaseries.game.poll.PollQuestionRow;
 import com.alphaseries.game.moderation.StaffCallForHelpRow;
+import com.alphaseries.game.moderation.StaffRoomChatRow;
+import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
 import com.alphaseries.game.moderation.StaffRoomVisitRow;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.social.BadgeRow;
@@ -2212,7 +2214,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(expectedVisit, Handling.staffRoomVisitPayload(new StaffRoomVisitRow(1L, 7L, "Room", 12L, 30L)));
         assertEquals(123L, Handling.staffNestedUserIdFromWire("@C123"));
         assertEquals(77L, Handling.staffNestedUserIdFromWire(Crypto.Proc_3_0_6D2AF0(77, null, "")));
-        String staffChatRows = "10\t5\t7\tAlice\thello\r11\t6\t8\tBob\thi";
+        List<StaffRoomChatRow> staffChatRows = List.of(
+            new StaffRoomChatRow(10L, 5L, 7L, "Alice", "hello"),
+            new StaffRoomChatRow(11L, 6L, 8L, "Bob", "hi"));
         String expectedStaffChatRows = Crypto.Proc_3_0_6D2AF0(10, null, "");
         expectedStaffChatRows += Crypto.Proc_3_0_6D2AF0(5, null, "");
         expectedStaffChatRows += Crypto.Proc_3_0_6D2AF0(7, null, "");
@@ -2227,7 +2231,8 @@ public final class PortedModuleSmokeTest {
         String expectedStaffChatHistory = Crypto.Proc_3_0_6D2AF0(1, null, "");
         expectedStaffChatHistory = Crypto.Proc_3_0_6D2AF0(7, null, expectedStaffChatHistory);
         expectedStaffChatHistory = Crypto.Proc_3_0_6D2AF0(2, null, expectedStaffChatHistory) + "Room\2" + expectedStaffChatRows;
-        assertEquals(expectedStaffChatHistory, Handling.staffRoomChatHistoryPayload("1\t7\tRoom\t100\t200", staffChatRows));
+        assertEquals(expectedStaffChatHistory,
+            Handling.staffRoomChatHistoryPayload(new StaffRoomChatVisitRow(1L, 7L, "Room", 100L, 200L), staffChatRows));
         assertEquals(true, Handling.containsUnsafeStaffAlert("cookie plus javascript:"));
         assertEquals(false, Handling.containsUnsafeStaffAlert("cookie only"));
 
