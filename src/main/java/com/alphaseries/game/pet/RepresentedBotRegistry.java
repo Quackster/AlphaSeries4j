@@ -19,6 +19,10 @@ public final class RepresentedBotRegistry {
         return new RepresentedBotRegistry(allocatedEntityMarkers, recordCache);
     }
 
+    public static RepresentedBotRegistry empty() {
+        return new RepresentedBotRegistry("", "");
+    }
+
     public String allocatedEntityMarkers() {
         return allocatedEntityMarkers;
     }

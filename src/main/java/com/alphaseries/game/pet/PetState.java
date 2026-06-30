@@ -4,6 +4,7 @@ public final class PetState {
     private static final PetState INSTANCE = new PetState();
 
     private PetSettings settings = PetSettings.empty();
+    private RepresentedBotRegistry representedBots = RepresentedBotRegistry.empty();
 
     private PetState() {
     }
@@ -14,6 +15,18 @@ public final class PetState {
 
     public synchronized PetSettings settings() {
         return settings;
+    }
+
+    public synchronized RepresentedBotRegistry representedBots() {
+        return representedBots;
+    }
+
+    public synchronized void setRepresentedBots(RepresentedBotRegistry representedBots) {
+        this.representedBots = representedBots == null ? RepresentedBotRegistry.empty() : representedBots;
+    }
+
+    public synchronized void setRepresentedBotsFromLegacy(String allocatedEntityMarkers, String recordCache) {
+        representedBots = RepresentedBotRegistry.fromLegacy(allocatedEntityMarkers, recordCache);
     }
 
     public synchronized void setSettings(PetSettings settings) {
