@@ -80,6 +80,19 @@ public final class RoomDao {
             resultSet -> new SpecialGateRow(resultSet.getLong(1), resultSet.getLong(2)));
     }
 
+    public List<RoomCategoryRow> roomCategoryRows(long parentCategoryId) throws SQLException {
+        return database.query(
+            "SELECT id,name,has_trading,level_minrequired,hclevel_minrequired "
+                + "FROM rooms_categories WHERE id_parent=? ORDER BY id ASC",
+            resultSet -> new RoomCategoryRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5)),
+            parentCategoryId);
+    }
+
     public List<NewFriendRooms.RoomPick> newFriendRoomPicks() throws SQLException {
         return database.query(
             "SELECT rooms.id,models.type FROM rooms_categories,rooms,models "
@@ -944,6 +957,12 @@ public final class RoomDao {
     public record SpecialGateRow(long roomId, long open) {
         public String legacyRow() {
             return roomId + "\t" + open;
+        }
+    }
+
+    public record RoomCategoryRow(long categoryId, String name, long trading, long minimumRank, long minimumHcRank) {
+        public String legacyRow() {
+            return categoryId + "\t" + (name == null ? "" : name) + "\t" + trading + "\t" + minimumRank + "\t" + minimumHcRank;
         }
     }
 

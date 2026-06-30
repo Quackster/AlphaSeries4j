@@ -380,8 +380,16 @@ public final class Boot {
         defaults[2] = String.valueOf(publicCategoryId);
         Licence.setRoomCategoryDefaults(defaults);
         long parentCategoryId = privateCategoryId == 0L ? 1L : privateCategoryId;
-        Licence.setRoomCategoryRows(MySQL.Proc_5_2_6D4690("SELECT id,name,has_trading,level_minrequired,hclevel_minrequired "
-            + "FROM rooms_categories WHERE id_parent='" + parentCategoryId + "' ORDER BY id ASC", 0, 0));
+        String categoryRows = "";
+        RoomDao rooms = roomDao();
+        if (rooms != null) {
+            try {
+                categoryRows = joinRoomCategoryRows(rooms.roomCategoryRows(parentCategoryId));
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
+        Licence.setRoomCategoryRows(categoryRows);
     }
 
     public static void Proc_1_12_6C8EF0(Object... args) {
@@ -1669,6 +1677,14 @@ public final class Boot {
     private static String joinSpecialGateRows(List<RoomDao.SpecialGateRow> rows) {
         StringBuilder joined = new StringBuilder();
         for (RoomDao.SpecialGateRow row : rows == null ? List.<RoomDao.SpecialGateRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
+    private static String joinRoomCategoryRows(List<RoomDao.RoomCategoryRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (RoomDao.RoomCategoryRow row : rows == null ? List.<RoomDao.RoomCategoryRow>of() : rows) {
             appendLegacyRow(joined, row.legacyRow());
         }
         return joined.toString();
