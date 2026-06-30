@@ -4,6 +4,7 @@ import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -137,6 +138,10 @@ public final class RepresentedBotRegistry {
 
     public List<Long> allocatedEntityIds() {
         return List.copyOf(allocatedEntityIds);
+    }
+
+    public Map<Long, RepresentedBotRecord> recordsByEntityId() {
+        return Collections.unmodifiableMap(new LinkedHashMap<>(records));
     }
 
     private List<Record> records() {

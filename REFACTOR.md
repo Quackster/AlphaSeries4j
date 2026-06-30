@@ -545,6 +545,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `RepresentedRoomCache` outer cache storage from one raw marker string to typed room-record lists, preserving legacy cache serialization and replacement behavior at the compatibility boundary.
 - Exposed defensive typed `RoomPortalSettings` warp-space and special-gate row accessors so room portal callers can move away from compatibility row strings.
 - Migrated `RepresentedBotRegistry` internals from raw allocated-marker and record-cache strings to typed entity-id sets and record maps, preserving per-record legacy serialization only for the `Licence` compatibility bridge.
+- Exposed defensive typed `RepresentedBotRegistry` record maps so represented-bot callers can consume entity-id keyed records without legacy cache text.
 - Migrated `UpdaterSettings` internals from retained newline/tab-delimited update-row text to typed `UpdateEntry` lists, leaving legacy row parsing only at the settings construction boundary.
 - Routed live updater rendering through `UpdaterSettings.entryList()` typed access, leaving the `entries()` array only as a compatibility view.
 - Migrated `AppSettingsCache` internals from retained raw settings text to parsed case-insensitive setting maps, with typed map construction available for callers that no longer need legacy text.

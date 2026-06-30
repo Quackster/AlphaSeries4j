@@ -1316,6 +1316,8 @@ public final class PortedModuleSmokeTest {
         RepresentedBotRegistry representedBots = RepresentedBotRegistry.fromLegacy("[1][3]",
             "[1:" + representedBotRecord + "][3:4\2" + "601\2Helper]");
         assertEquals(List.of(1L, 3L), representedBots.allocatedEntityIds());
+        assertEquals(2, representedBots.recordsByEntityId().size());
+        assertEquals(501L, representedBots.recordsByEntityId().get(1L).botId());
         assertEquals(501L, representedBots.record(1).botId());
         assertEquals("[1:" + representedBotRecord + "][3:4\2" + "601\2Helper]", representedBots.recordCache());
         representedBots.storePosition(1, 5, 6, "1.0", 7);
