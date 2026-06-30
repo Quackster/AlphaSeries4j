@@ -238,6 +238,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed staff moderator fallback socket lookup through `UserDao.activeUserSockets`, replacing raw user SQL plus `handlingField(fields, 0)`/tab-delimited parsing in `Handling`.
 - Routed catalog purchase balance checks and debits through typed `UserDao.CatalogPurchaseBalance`, replacing raw user balance SQL and tab-delimited parsing in `Handling`.
 - Routed gift purchase balance checks, recipient lookup, debit, and gift counters through `UserDao`, replacing raw user SQL and tab-delimited parsing in `Handling`.
+- Added a typed `CatalogGrantResult` for catalog furniture grants and routed purchase/gift grant callers through explicit granted-furniture id lists instead of comma-delimited return parsing.
 - Routed represented achievement progress reads through typed `UserDao` accessors, replacing raw user/log SQL and tab-delimited summary parsing in `Handling`.
 - Routed activity-point tick balance reads and awards through `UserDao`, replacing raw activity-point SQL in `Handling`.
 - Built activity-point tick award return payloads with `PacketBuilder.appendRaw(...)` instead of handler-local `StringBuilder` accumulation.

@@ -130,6 +130,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public final class Handling {
     private static List<RepresentedInteractionPair> representedInteractionPairs = new ArrayList<>();
@@ -841,6 +842,30 @@ public final class Handling {
         public long newPoints;
         public boolean shouldAward;
         public String payload = "";
+    }
+
+    public record CatalogGrantResult(List<Long> furnitureIds) {
+        public static CatalogGrantResult empty() {
+            return new CatalogGrantResult(List.of());
+        }
+
+        public CatalogGrantResult {
+            furnitureIds = furnitureIds == null ? List.of() : List.copyOf(furnitureIds);
+        }
+
+        public boolean isEmpty() {
+            return furnitureIds.isEmpty();
+        }
+
+        public long firstFurnitureId() {
+            return furnitureIds.isEmpty() ? 0L : NumberUtils.parseLong(furnitureIds.get(0));
+        }
+
+        public String legacyIdText() {
+            return furnitureIds.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+        }
     }
 
     public static final class TradeOfferItemPayload {
@@ -4032,11 +4057,11 @@ public final class Handling {
             if (productId <= 0L) {
                 return "";
             }
-            String grantResult = Proc_6_133_760400(socketIndex, catalogProductId, signText);
+            CatalogGrantResult grantResult = grantCatalogFurniture(socketIndex, catalogProductId, signText);
             if (grantResult.isEmpty()) {
                 return "";
             }
-            String[] grantedIds = grantResult.split("[,\r]", -1);
+            List<Long> grantedIds = grantResult.furnitureIds();
             long[] productIds;
             int itemCount = 0;
             if ("products_deals".equals(typeSecondary)) {
@@ -4049,7 +4074,7 @@ public final class Handling {
                     }
                 }
             } else {
-                itemCount = Math.max(1, grantedIds.length);
+                itemCount = Math.max(1, grantedIds.size());
                 productIds = new long[itemCount];
                 for (int index = 0; index < itemCount; index++) {
                     productIds[index] = productId;
@@ -4057,7 +4082,7 @@ public final class Handling {
             }
             long firstFurnitureId = 0L;
             for (int index = 0; index < itemCount; index++) {
-                long furnitureId = index < grantedIds.length ? NumberUtils.parseLong(grantedIds[index]) : 0L;
+                long furnitureId = index < grantedIds.size() ? NumberUtils.parseLong(grantedIds.get(index)) : 0L;
                 long itemProductId = productIds[index];
                 if (furnitureId > 0L && itemProductId > 0L) {
                     if (firstFurnitureId == 0L) {
@@ -4098,110 +4123,115 @@ public final class Handling {
                 signText = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
                 socketIndex = 0;
             }
-            String userId = socketIndex > 0 ? handlingUserIdFromSocket(socketIndex) : "";
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return "";
-            }
-            CatalogRegistry.CatalogProduct catalogProduct = Licence.catalogProduct(catalogProductId);
-            if (catalogProduct == null) {
-                return "";
-            }
-            long productId = catalogProduct.productId();
-            String typeSecondary = catalogProduct.typeSecondary().toLowerCase();
-            long amount = catalogProduct.amount();
-            if (amount <= 0L) {
-                amount = 1L;
-            }
-            long userIdValue = NumberUtils.parseLong(userId);
-            FurnitureDao furniture = furnitureDao();
-            UserDao users = userDao();
-            ClubDao clubs = clubDao();
-            if (furniture == null || users == null || clubs == null) {
-                return "";
-            }
-            long grantedCount = 0L;
-            if ("products_deals".equals(typeSecondary)) {
-                CatalogRegistry.ProductDeal deal = Licence.productDeal(productId);
-                if (deal == null) {
-                    return "";
-                }
-                for (Long dealProductId : deal.itemProductIds()) {
-                    if (dealProductId != null && dealProductId > 0L) {
-                        String defaultSign = Functions.singleLineText(DataManager.productCache().defaultSign(dealProductId));
-                        if (defaultSign.isEmpty()) {
-                            defaultSign = Functions.singleLineText(DataManager.productCache().fallbackDefaultSign(dealProductId));
-                        }
-                        furniture.insertCatalogFurniture(dealProductId, userIdValue, defaultSign, catalogProductId);
-                        grantedCount++;
-                    }
-                }
-            } else {
-                ClubDao.ContainedClubProduct containedClub = clubs.containedClubProduct(catalogProductId)
-                    .orElseGet(() -> {
-                        try {
-                            return clubs.containedClubProduct(productId).orElse(null);
-                        } catch (Exception ignored) {
-                            return null;
-                        }
-                    });
-                if (containedClub != null) {
-                    long hcMonths = containedClub.months();
-                    long hcLevel = containedClub.level();
-                    if (hcLevel <= 0L) {
-                        hcLevel = 1L;
-                    }
-                    Functions.applyClubPeriod(NumberUtils.parseLong(userId), hcLevel, hcMonths, hcMonths * 31L);
-                }
-                String badgeId = DataManager.productCache().badgeId(productId).toUpperCase();
-                if (badgeId.isEmpty()) {
-                    badgeId = DataManager.productCache().fallbackBadgeId(productId).toUpperCase();
-                }
-                if (badgeId.length() > 2) {
-                    String existingBadge = StringUtils.text(users.badgeId(userIdValue, badgeId)).toUpperCase();
-                    if (!badgeId.equals(existingBadge)) {
-                        users.insertBadge(userIdValue, 0L, badgeId);
-                        long badgeRowId = users.badgeRowId(userIdValue, badgeId);
-                        Proc_6_195_7D38D0(userId, 0, 0);
-                        Proc_6_193_7D2BB0(socketIndex, "Ce", "");
-                        if (badgeRowId > 0L) {
-                            Proc_6_143_76BB80(socketIndex, 0, 0);
-                        }
-                    }
-                }
-                String defaultSign = signText;
-                if (defaultSign.isEmpty()) {
-                    defaultSign = Functions.singleLineText(DataManager.productCache().defaultSign(productId));
-                }
-                if (defaultSign.isEmpty()) {
-                    defaultSign = Functions.singleLineText(DataManager.productCache().fallbackDefaultSign(productId));
-                }
-                for (long itemIndex = 1L; itemIndex <= amount; itemIndex++) {
-                    furniture.insertCatalogFurniture(productId, userIdValue, defaultSign, catalogProductId);
-                    grantedCount++;
-                }
-            }
-            if (grantedCount <= 0L) {
-                return "";
-            }
-            StringBuilder grantedIdsBuilder = new StringBuilder();
-            for (Long newestId : furniture.newestFurnitureIdsByOwner(userIdValue, grantedCount)) {
-                if (grantedIdsBuilder.length() > 0) {
-                    grantedIdsBuilder.append(',');
-                }
-                grantedIdsBuilder.append(newestId);
-            }
-            String grantedIds = grantedIdsBuilder.toString();
-            long firstGrantedId = NumberUtils.parseLong(grantedIds);
-            if (!"products_deals".equals(typeSecondary)
-                && DataManager.productCache().type(productId) == 9L && firstGrantedId > 0L) {
-                furniture.insertDefaultDimmerPresets(firstGrantedId);
-                furniture.updateDefaultDimmerSign(firstGrantedId);
-            }
-            return grantedIds;
+            return grantCatalogFurniture(socketIndex, catalogProductId, signText).legacyIdText();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
+    }
+
+    /**
+     * Original function: Proc_6_133_760400.
+     */
+    public static CatalogGrantResult grantCatalogFurniture(int socketIndex, long catalogProductId, String signText) throws Exception {
+        String userId = socketIndex > 0 ? handlingUserIdFromSocket(socketIndex) : "";
+        if (userId.isEmpty() || "0".equals(userId)) {
+            return CatalogGrantResult.empty();
+        }
+        CatalogRegistry.CatalogProduct catalogProduct = Licence.catalogProduct(catalogProductId);
+        if (catalogProduct == null) {
+            return CatalogGrantResult.empty();
+        }
+        long productId = catalogProduct.productId();
+        String typeSecondary = catalogProduct.typeSecondary().toLowerCase();
+        long amount = catalogProduct.amount();
+        if (amount <= 0L) {
+            amount = 1L;
+        }
+        long userIdValue = NumberUtils.parseLong(userId);
+        FurnitureDao furniture = furnitureDao();
+        UserDao users = userDao();
+        ClubDao clubs = clubDao();
+        if (furniture == null || users == null || clubs == null) {
+            return CatalogGrantResult.empty();
+        }
+        long grantedCount = 0L;
+        if ("products_deals".equals(typeSecondary)) {
+            CatalogRegistry.ProductDeal deal = Licence.productDeal(productId);
+            if (deal == null) {
+                return CatalogGrantResult.empty();
+            }
+            for (Long dealProductId : deal.itemProductIds()) {
+                if (dealProductId != null && dealProductId > 0L) {
+                    String defaultSign = Functions.singleLineText(DataManager.productCache().defaultSign(dealProductId));
+                    if (defaultSign.isEmpty()) {
+                        defaultSign = Functions.singleLineText(DataManager.productCache().fallbackDefaultSign(dealProductId));
+                    }
+                    furniture.insertCatalogFurniture(dealProductId, userIdValue, defaultSign, catalogProductId);
+                    grantedCount++;
+                }
+            }
+        } else {
+            ClubDao.ContainedClubProduct containedClub = clubs.containedClubProduct(catalogProductId)
+                .orElseGet(() -> {
+                    try {
+                        return clubs.containedClubProduct(productId).orElse(null);
+                    } catch (Exception ignored) {
+                        return null;
+                    }
+                });
+            if (containedClub != null) {
+                long hcMonths = containedClub.months();
+                long hcLevel = containedClub.level();
+                if (hcLevel <= 0L) {
+                    hcLevel = 1L;
+                }
+                Functions.applyClubPeriod(NumberUtils.parseLong(userId), hcLevel, hcMonths, hcMonths * 31L);
+            }
+            String badgeId = DataManager.productCache().badgeId(productId).toUpperCase();
+            if (badgeId.isEmpty()) {
+                badgeId = DataManager.productCache().fallbackBadgeId(productId).toUpperCase();
+            }
+            if (badgeId.length() > 2) {
+                String existingBadge = StringUtils.text(users.badgeId(userIdValue, badgeId)).toUpperCase();
+                if (!badgeId.equals(existingBadge)) {
+                    users.insertBadge(userIdValue, 0L, badgeId);
+                    long badgeRowId = users.badgeRowId(userIdValue, badgeId);
+                    Proc_6_195_7D38D0(userId, 0, 0);
+                    Proc_6_193_7D2BB0(socketIndex, "Ce", "");
+                    if (badgeRowId > 0L) {
+                        Proc_6_143_76BB80(socketIndex, 0, 0);
+                    }
+                }
+            }
+            String defaultSign = signText;
+            if (defaultSign.isEmpty()) {
+                defaultSign = Functions.singleLineText(DataManager.productCache().defaultSign(productId));
+            }
+            if (defaultSign.isEmpty()) {
+                defaultSign = Functions.singleLineText(DataManager.productCache().fallbackDefaultSign(productId));
+            }
+            for (long itemIndex = 1L; itemIndex <= amount; itemIndex++) {
+                furniture.insertCatalogFurniture(productId, userIdValue, defaultSign, catalogProductId);
+                grantedCount++;
+            }
+        }
+        if (grantedCount <= 0L) {
+            return CatalogGrantResult.empty();
+        }
+        List<Long> grantedIds = new ArrayList<>();
+        for (Long newestId : furniture.newestFurnitureIdsByOwner(userIdValue, grantedCount)) {
+            if (newestId != null && newestId > 0L) {
+                grantedIds.add(newestId);
+            }
+        }
+        long firstGrantedId = grantedIds.isEmpty() ? 0L : NumberUtils.parseLong(grantedIds.get(0));
+        if (!"products_deals".equals(typeSecondary)
+            && DataManager.productCache().type(productId) == 9L && firstGrantedId > 0L) {
+            furniture.insertDefaultDimmerPresets(firstGrantedId);
+            furniture.updateDefaultDimmerSign(firstGrantedId);
+        }
+        return new CatalogGrantResult(grantedIds);
     }
 
     public static String Proc_6_130_75B770(Object... args) {
@@ -4359,7 +4389,7 @@ public final class Handling {
             if (recipientUserId.isEmpty() || "0".equals(recipientUserId)) {
                 recipientUserId = senderUserId;
             }
-            long grantedFurnitureId = NumberUtils.parseLong(Proc_6_133_760400(socketIndex, catalogProductId, giftMessage));
+            long grantedFurnitureId = grantCatalogFurniture(socketIndex, catalogProductId, giftMessage).firstFurnitureId();
             if (grantedFurnitureId <= 0L) {
                 return "";
             }
