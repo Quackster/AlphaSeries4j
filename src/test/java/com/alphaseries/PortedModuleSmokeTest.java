@@ -1144,6 +1144,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829178 instanceof GiftSettings.ClubGiftState);
         assertEquals("GIFTS", Licence.giftSettings().clubGiftPayload());
         assertEquals(506L, Licence.giftSettings().clubGiftByCatalogProductId(81L).productId());
+        GiftSettings legacyGiftSettings = GiftSettings.fromLegacy(
+            "GIFTS", "[82\0" + "507\1" + "30]", "\r501\r502\r", "WRAPS");
+        assertEquals(507L, legacyGiftSettings.clubGiftByCatalogProductId(82L).productId());
+        assertEquals(true, legacyGiftSettings.containsGiftWrapProduct(502L));
+        assertEquals(false, legacyGiftSettings.containsGiftWrapProduct(50L));
         assertEquals("IoM" + Crypto.Proc_3_0_6D2AF0(4, null, "")
                 + "GIFTS"
                 + Crypto.Proc_3_0_6D2AF0(1, null, "")

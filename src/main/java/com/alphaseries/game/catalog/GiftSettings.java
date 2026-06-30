@@ -5,22 +5,22 @@ import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class GiftSettings {
     private final String clubGiftPayload;
-    private final String clubGiftLookup;
-    private final String giftWrapLookup;
     private final String giftWrapPayload;
     private final List<ClubGift> clubGifts;
+    private final Set<Long> giftWrapProductIds;
 
     private GiftSettings(Object clubGiftPayload, Object clubGiftLookup, String giftWrapLookup, String giftWrapPayload) {
         ClubGiftState typedState = clubGiftPayload instanceof ClubGiftState state ? state : null;
         this.clubGiftPayload = typedState == null ? StringUtils.text(clubGiftPayload) : typedState.payload();
-        this.clubGiftLookup = typedState == null ? StringUtils.text(clubGiftLookup) : typedState.lookup();
-        this.giftWrapLookup = StringUtils.text(giftWrapLookup);
         this.giftWrapPayload = StringUtils.text(giftWrapPayload);
-        this.clubGifts = typedState == null ? parseClubGifts(this.clubGiftLookup) : typedState.gifts();
+        this.clubGifts = typedState == null ? parseClubGifts(clubGiftLookup) : typedState.gifts();
+        this.giftWrapProductIds = parseGiftWrapProductIds(giftWrapLookup);
     }
 
     public static GiftSettings fromLegacy(Object clubGiftPayload, Object clubGiftLookup, String giftWrapLookup, String giftWrapPayload) {
@@ -56,12 +56,12 @@ public final class GiftSettings {
     }
 
     public boolean containsGiftWrapProduct(long productId) {
-        return productId > 0L && giftWrapLookup.contains("\r" + productId + "\r");
+        return productId > 0L && giftWrapProductIds.contains(productId);
     }
 
-    private static List<ClubGift> parseClubGifts(String lookup) {
+    private static List<ClubGift> parseClubGifts(Object lookup) {
         List<ClubGift> gifts = new ArrayList<>();
-        for (String row : lookup.replace("[", "").split("]", -1)) {
+        for (String row : StringUtils.text(lookup).replace("[", "").split("]", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.replace('\1', '\0').split("\0", -1);
                 if (fields.length >= 3) {
@@ -73,6 +73,17 @@ public final class GiftSettings {
             }
         }
         return Collections.unmodifiableList(gifts);
+    }
+
+    private static Set<Long> parseGiftWrapProductIds(String lookup) {
+        Set<Long> productIds = new LinkedHashSet<>();
+        for (String productIdText : StringUtils.text(lookup).split("\r", -1)) {
+            long productId = NumberUtils.parseLong(productIdText);
+            if (productId > 0L) {
+                productIds.add(productId);
+            }
+        }
+        return Set.copyOf(productIds);
     }
 
     public record ClubGift(long catalogProductId, long productId, long requiredDays) {
