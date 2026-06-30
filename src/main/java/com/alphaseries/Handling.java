@@ -1659,7 +1659,7 @@ public final class Handling {
             }
             long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
             if (roomUserIndex > 0L) {
-                Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "@\\"), 0);
+                Proc_6_247_8027E0(socketIndex, SocialPayloads.roomUserRemoved(roomUserIndex), 0);
             }
             if (visitId > 0L) {
                 rooms.closeVisitById(visitId);

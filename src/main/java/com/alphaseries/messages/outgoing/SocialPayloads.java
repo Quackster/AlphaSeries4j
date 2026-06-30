@@ -56,6 +56,12 @@ public final class SocialPayloads {
             .build();
     }
 
+    public static String roomUserRemoved(long roomUserIndex) {
+        return PacketBuilder.message("@\\")
+            .appendInt(roomUserIndex)
+            .build();
+    }
+
     public static String badgeInventory(List<BadgeRow> inventoryRows, String equippedPayload) {
         long inventoryCount = 0L;
         PacketBuilder inventoryPayload = PacketBuilder.create();

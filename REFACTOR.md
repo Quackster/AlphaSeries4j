@@ -384,6 +384,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved respect-received `Fx` payload construction into `UserPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved official-room model, current-room, and created-room notification payloads into `RoomPayloads`, replacing more inline legacy `Crypto` packet assembly in `Handling`.
 - Moved activity-point refresh/award payload construction into `UserPayloads` and removed the no-op `Handling` packet wrappers.
+- Moved room-user removal `@\\` payload construction into `SocialPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
