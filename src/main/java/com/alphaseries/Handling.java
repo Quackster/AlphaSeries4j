@@ -70,6 +70,8 @@ import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.help.HelpCenterState;
 import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.game.messenger.MessengerSearchResult;
+import com.alphaseries.game.messenger.MessengerSettings;
+import com.alphaseries.game.messenger.MessengerState;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.NavigatorState;
@@ -9370,6 +9372,11 @@ public final class Handling {
         return WiredState.instance().settings();
     }
 
+    private static MessengerSettings messengerSettings() {
+        Licence.messengerSettings();
+        return MessengerState.instance().settings();
+    }
+
     public static String officialNavigatorQuery() {
         String separator = " UNION ALL ";
         StringBuilder queryText = new StringBuilder();
@@ -10197,7 +10204,7 @@ public final class Handling {
     }
 
     public static long messengerMaxFriends(long configIndex) {
-        return Licence.messengerSettings().maxFriends(configIndex);
+        return messengerSettings().maxFriends(configIndex);
     }
 
     public static String requestTextFromWirePayload(String packetPayload, String prefix, int maxLength) {

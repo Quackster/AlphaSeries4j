@@ -11,6 +11,7 @@ import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.help.HelpCenterState;
 import com.alphaseries.game.messenger.MessengerSettings;
+import com.alphaseries.game.messenger.MessengerState;
 import com.alphaseries.game.moderation.StaffSettings;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.NavigatorState;
@@ -314,10 +315,16 @@ public final class Licence {
     }
 
     public static MessengerSettings messengerSettings() {
-        return MessengerSettings.fromLegacy(global_0082927C);
+        if (global_0082927C instanceof MessengerSettings messengerSettings) {
+            MessengerState.instance().setSettings(messengerSettings);
+        } else {
+            MessengerState.instance().setFriendLimits(global_0082927C);
+        }
+        return MessengerState.instance().settings();
     }
 
     public static void setMessengerFriendLimits(Object friendLimits) {
+        MessengerState.instance().setFriendLimits(friendLimits);
         global_0082927C = friendLimits == null ? "" : friendLimits;
     }
 

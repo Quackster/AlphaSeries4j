@@ -10,7 +10,14 @@ public final class MessengerSettings {
     }
 
     public static MessengerSettings fromLegacy(Object friendLimits) {
+        if (friendLimits instanceof MessengerSettings messengerSettings) {
+            return messengerSettings;
+        }
         return new MessengerSettings(friendLimits);
+    }
+
+    public static MessengerSettings empty() {
+        return new MessengerSettings("");
     }
 
     public Object friendLimits() {
