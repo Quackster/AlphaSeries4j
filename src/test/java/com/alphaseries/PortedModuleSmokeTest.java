@@ -1911,6 +1911,10 @@ public final class PortedModuleSmokeTest {
                 + expectedQuestListRow + expectedSecondQuestListRow,
             Handling.questListPayload(QuestSettings.fromLegacy(questRows), List.of(
                 new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "2026-01-01", 1L, 12L, 7))));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(2, null, "L`"))
+                + expectedQuestListRow + expectedSecondQuestListRow,
+            QuestPayloads.list(QuestSettings.fromLegacy(questRows), List.of(
+                new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "2026-01-01", 1L, 12L, 7))));
         Functions.global_0082928C = "[com.client.messenger.follow.enabled=1]";
         String expectedOnlineFriend = Crypto.Proc_3_0_6D2AF0(5, null, "0") + "Alice\2";
         expectedOnlineFriend = Crypto.Proc_3_0_6D2AF0(3, null, expectedOnlineFriend);

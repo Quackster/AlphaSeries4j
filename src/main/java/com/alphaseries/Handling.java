@@ -10580,72 +10580,7 @@ public final class Handling {
     }
 
     public static String questListPayload(Object questRows, List<QuestSettings.UserQuestListRow> userQuestRows) {
-        long lastCampaignId = -1L;
-        long campaignLevelCount = 0L;
-        long questCount = 0L;
-        StringBuilder questPayload = new StringBuilder();
-        for (QuestSettings.QuestDefinitionRow quest : QuestSettings.fromLegacy(questRows).definitions()) {
-            if (quest.fieldCount() >= 11) {
-                long waitSeconds = quest.waitAmount();
-
-                if (quest.campaignId() != lastCampaignId) {
-                    lastCampaignId = quest.campaignId();
-                    campaignLevelCount = 0L;
-                }
-                campaignLevelCount++;
-
-                QuestSettings.UserQuestListRow userQuest = userQuestListRowByQuestId(userQuestRows, quest.questId());
-                long userLevel = userQuest == null ? 0L : userQuest.level();
-                String timestampDone = userQuest == null ? "" : StringUtils.text(userQuest.timestampDone());
-                String timestampAccepted = userQuest == null ? "" : StringUtils.text(userQuest.timestampAccepted());
-                String timeNextText = userQuest == null ? "" : StringUtils.text(userQuest.timeNext());
-                long progressValue = userQuest == null ? 0L : userQuest.progress();
-                long remainingWait = userQuest == null ? 0L : userQuest.remainingWait();
-
-                long stateCode = 0L;
-                if (!timestampDone.isEmpty() && !"0".equals(timestampDone)) {
-                    stateCode = 2L;
-                } else if (!timestampAccepted.isEmpty() && !"0".equals(timestampAccepted)) {
-                    stateCode = 1L;
-                }
-                if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
-                    waitSeconds = remainingWait;
-                }
-
-                String rowPayload = Crypto.Proc_3_0_6D2AF0(quest.campaignId(), null, "") + quest.name() + '\2';
-                rowPayload += Crypto.Proc_3_0_6D2AF0(quest.questId(), null, "");
-                rowPayload += Crypto.Proc_3_0_6D2AF0(quest.level(), null, "");
-                rowPayload += Crypto.Proc_3_0_6D2AF0(campaignLevelCount, null, "");
-                rowPayload += Crypto.Proc_3_0_6D2AF0(stateCode, null, "");
-                rowPayload += Crypto.Proc_3_0_6D2AF0(userLevel, null, "");
-                rowPayload += Crypto.Proc_3_0_6D2AF0(progressValue, null, "");
-                rowPayload += Crypto.Proc_3_0_6D2AF0(quest.activityAmount(), null, "");
-                rowPayload += Crypto.Proc_3_0_6D2AF0(quest.rewardType(), null, "");
-                rowPayload += Crypto.Proc_3_0_6D2AF0(quest.reward(), null, "");
-                rowPayload += "HHH\2\2H\2HHH";
-                rowPayload += Crypto.Proc_3_0_6D2AF0(waitSeconds, null, "");
-
-                questPayload.append(rowPayload);
-                questCount++;
-            }
-        }
-        return Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(questCount, null, "L`"))
-            + questPayload;
-    }
-
-    private static QuestSettings.UserQuestListRow userQuestListRowByQuestId(
-        List<QuestSettings.UserQuestListRow> userQuestRows,
-        long questId
-    ) {
-        if (questId <= 0L || userQuestRows == null) {
-            return null;
-        }
-        for (QuestSettings.UserQuestListRow row : userQuestRows) {
-            if (row != null && row.questId() == questId) {
-                return row;
-            }
-        }
-        return null;
+        return QuestPayloads.list(questRows, userQuestRows);
     }
 
     public static String Proc_6_166_7BE940(Object... args) {
