@@ -1862,7 +1862,7 @@ public final class Handling {
             }
             roomRate++;
             rooms.updateRoomRate(roomId, roomRate);
-            Proc_6_244_801E80(socketIndex, RoomPayloads.rating(roomRate), 0);
+            sendToSocket(socketIndex, RoomPayloads.rating(roomRate));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1895,7 +1895,7 @@ public final class Handling {
                 return;
             }
             rooms.deleteRoomRight(targetUserId, roomId);
-            Proc_6_244_801E80(socketIndex, RoomPayloads.roomRightRemoved(), 0);
+            sendToSocket(socketIndex, RoomPayloads.roomRightRemoved());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1927,7 +1927,7 @@ public final class Handling {
                 return;
             }
             rooms.insertRoomRight(NumberUtils.parseLong(targetUserId), roomId);
-            Proc_6_244_801E80(targetSocketIndex, "@j", 0);
+            sendToSocket(targetSocketIndex, "@j");
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -2002,7 +2002,7 @@ public final class Handling {
                 noteColor = "FFFF33";
             }
             String noteCaption = StringUtils.text(sticky.caption()).replace('\u001f', '\r');
-            Proc_6_244_801E80(socketIndex, "@p" + furnitureId + '\2' + noteColor + '\r' + noteCaption + '\2', 0);
+            sendToSocket(socketIndex, "@p" + furnitureId + '\2' + noteColor + '\r' + noteCaption + '\2');
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -2090,7 +2090,7 @@ public final class Handling {
             }
             String responsePayload = FurniturePayloads.presentOpened(openedProductId, responseClass,
                 DataManager.productCache().itemData(openedProductId));
-            Proc_6_244_801E80(socketIndex, responsePayload, 0);
+            sendToSocket(socketIndex, responsePayload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -2167,7 +2167,7 @@ public final class Handling {
             for (Long activeSocketIndex : socketIndexes) {
                 int targetSocketIndex = activeSocketIndex == null ? 0 : activeSocketIndex.intValue();
                 if (targetSocketIndex > 0) {
-                    Proc_6_244_801E80(targetSocketIndex, "@k", 0);
+                    sendToSocket(targetSocketIndex, "@k");
                 }
             }
         } catch (Exception ignored) {
@@ -2256,7 +2256,7 @@ public final class Handling {
             long numericUserId = NumberUtils.parseLong(userId);
             users.addCredits(numericUserId, creditValue);
             long updatedCredits = users.credits(numericUserId);
-            Proc_6_244_801E80(socketIndex, "@F" + updatedCredits + ".0" + '\2', 0);
+            sendToSocket(socketIndex, "@F" + updatedCredits + ".0" + '\2');
             broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2');
             furniture.deleteFurniture(furnitureId);
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
@@ -2293,7 +2293,7 @@ public final class Handling {
                     rooms.deleteRoomRight(NumberUtils.parseLong(targetUserId), roomId);
                     int targetSocketIndex = handlingSocketFromUserId(targetUserId);
                     if (targetSocketIndex > 0) {
-                        Proc_6_244_801E80(targetSocketIndex, "@k", 0);
+                        sendToSocket(targetSocketIndex, "@k");
                     }
                 }
             }
@@ -2329,7 +2329,7 @@ public final class Handling {
                 return;
             }
             rooms.deleteRoomRight(targetUserId, roomId);
-            Proc_6_244_801E80(socketIndex, RoomPayloads.roomRightRemoved(), 0);
+            sendToSocket(socketIndex, RoomPayloads.roomRightRemoved());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -2393,7 +2393,7 @@ public final class Handling {
             if (officialRoom == null) {
                 return;
             }
-            Proc_6_244_801E80(socketIndex, RoomPayloads.officialRoomModel(roomId, officialRoom), 0);
+            sendToSocket(socketIndex, RoomPayloads.officialRoomModel(roomId, officialRoom));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -2420,12 +2420,12 @@ public final class Handling {
             }
             long modelId = roomEntry.modelId();
             String modelPayload = normalizeRoomModelMap(roomEntry.modelMap());
-            Proc_6_244_801E80(socketIndex, "Bf" + "/client.php" + '\2', 0);
-            Proc_6_244_801E80(socketIndex, "AE" + roomId + '\2' + "H", 0);
+            sendToSocket(socketIndex, "Bf" + "/client.php" + '\2');
+            sendToSocket(socketIndex, "AE" + roomId + '\2' + "H");
             if (!modelPayload.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, "@_" + modelPayload + '\2', 0);
-                Proc_6_244_801E80(socketIndex, "GV" + modelPayload + '\2', 0);
-                Proc_6_244_801E80(socketIndex, "GWH" + modelPayload + '\2' + "H", 0);
+                sendToSocket(socketIndex, "@_" + modelPayload + '\2');
+                sendToSocket(socketIndex, "GV" + modelPayload + '\2');
+                sendToSocket(socketIndex, "GWH" + modelPayload + '\2' + "H");
             }
             Proc_6_81_730010(socketIndex, roomId, -1);
             Proc_6_82_731070(socketIndex, roomId, 0);
@@ -2434,7 +2434,7 @@ public final class Handling {
             Proc_6_85_73A8E0(socketIndex, roomId);
             Proc_6_235_7F77E0(socketIndex, 0, 0);
             Proc_6_80_72EB60(socketIndex, roomId);
-            Proc_6_244_801E80(socketIndex, "CP" + '\2' + '\2', 0);
+            sendToSocket(socketIndex, "CP" + '\2' + '\2');
             sendRoomPollPrompt(socketIndex, userId, roomId);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -2477,23 +2477,23 @@ public final class Handling {
                 || handlingUserHasPermission(userId, "fuse_any_room_controller");
             boolean hasVoted = rooms.hasRatedRoom(NumberUtils.parseLong(userId), roomId);
             long ratingPayloadValue = hasVoted ? -1L : roomRate;
-            Proc_6_244_801E80(socketIndex, RoomPayloads.currentRoom(roomId), 0);
-            Proc_6_244_801E80(socketIndex, "@nfloor" + '\2' + floorPattern + '\2', 0);
-            Proc_6_244_801E80(socketIndex, "@nwallpaper" + '\2' + wallpaperPattern + '\2', 0);
-            Proc_6_244_801E80(socketIndex, "@nlandscape" + '\2' + landscapePattern + '\2', 0);
-            Proc_6_244_801E80(socketIndex, RoomPayloads.rating(ratingPayloadValue), 0);
-            Proc_6_244_801E80(socketIndex, "Er" + Proc_6_51_716AC0(roomId, 0, 0), 0);
+            sendToSocket(socketIndex, RoomPayloads.currentRoom(roomId));
+            sendToSocket(socketIndex, "@nfloor" + '\2' + floorPattern + '\2');
+            sendToSocket(socketIndex, "@nwallpaper" + '\2' + wallpaperPattern + '\2');
+            sendToSocket(socketIndex, "@nlandscape" + '\2' + landscapePattern + '\2');
+            sendToSocket(socketIndex, RoomPayloads.rating(ratingPayloadValue));
+            sendToSocket(socketIndex, "Er" + Proc_6_51_716AC0(roomId, 0, 0));
             if (hasControl) {
-                Proc_6_244_801E80(socketIndex, "@j", 0);
+                sendToSocket(socketIndex, "@j");
             }
             if (ownerUserId.equals(String.valueOf((long) NumberUtils.parseLong(userId)))) {
-                Proc_6_244_801E80(socketIndex, "@o", 0);
+                sendToSocket(socketIndex, "@o");
             }
             if (!modelPayload.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, "@_" + modelPayload + '\2', 0);
-                Proc_6_244_801E80(socketIndex, "GV" + modelPayload + '\2', 0);
+                sendToSocket(socketIndex, "@_" + modelPayload + '\2');
+                sendToSocket(socketIndex, "GV" + modelPayload + '\2');
             }
-            Proc_6_244_801E80(socketIndex, RoomPayloads.wallOptions(disableWalls, thicknessFloor, thicknessWallpaper), 0);
+            sendToSocket(socketIndex, RoomPayloads.wallOptions(disableWalls, thicknessFloor, thicknessWallpaper));
             Proc_6_81_730010(socketIndex, roomId, -1);
             Proc_6_82_731070(socketIndex, roomId, 0);
             Proc_6_83_732640(socketIndex, modelId);
@@ -2501,7 +2501,7 @@ public final class Handling {
             Proc_6_85_73A8E0(socketIndex, roomId);
             Proc_6_235_7F77E0(socketIndex, 0, 0);
             Proc_6_80_72EB60(socketIndex, roomId);
-            Proc_6_244_801E80(socketIndex, "CP" + '\2' + '\2', 0);
+            sendToSocket(socketIndex, "CP" + '\2' + '\2');
             sendRoomPollPrompt(socketIndex, userId, roomId);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -2651,8 +2651,8 @@ public final class Handling {
                     }
                 }
             }
-            Proc_6_244_801E80(socketIndex, RoomPayloads.occupantEntries(occupantCount, occupantPayload.build()), -1);
-            Proc_6_244_801E80(socketIndex, RoomPayloads.occupantStatuses(statusCount, statusPayload.build()), 0);
+            sendToSocket(socketIndex, RoomPayloads.occupantEntries(occupantCount, occupantPayload.build()));
+            sendToSocket(socketIndex, RoomPayloads.occupantStatuses(statusCount, statusPayload.build()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -2679,7 +2679,7 @@ public final class Handling {
                 long roomUserIndex = activeEffect.roomUserIndex();
                 long effectId = activeEffect.effectId();
                 if (roomUserIndex > 0L && effectId > 0L) {
-                    Proc_6_244_801E80(socketIndex, SocialPayloads.roomUserEffect(roomUserIndex, effectId), 0);
+                    sendToSocket(socketIndex, SocialPayloads.roomUserEffect(roomUserIndex, effectId));
                 }
             }
         } catch (Exception ignored) {
@@ -2735,7 +2735,7 @@ public final class Handling {
             }
             String payload = FurniturePayloads.floorList(itemCount, itemPayload.build());
             if (socketIndex > 0) {
-                Proc_6_244_801E80(socketIndex, payload, 0);
+                sendToSocket(socketIndex, payload);
             }
             return payload;
         } catch (Exception ignored) {
@@ -2755,7 +2755,7 @@ public final class Handling {
                 }
             }
             if (socketIndex > 0) {
-                Proc_6_244_801E80(socketIndex, payload, 0);
+                sendToSocket(socketIndex, payload);
             }
             if (roomId <= 0L) {
                 return payload;
@@ -2806,7 +2806,7 @@ public final class Handling {
             }
             String payload = FurniturePayloads.wallList(itemCount, itemPayload.build());
             if (socketIndex > 0) {
-                Proc_6_244_801E80(socketIndex, payload, 0);
+                sendToSocket(socketIndex, payload);
             }
             return payload;
         } catch (Exception ignored) {
@@ -2868,7 +2868,7 @@ public final class Handling {
             long petRace = petPackage.race();
             String petColor = StringUtils.text(petPackage.color());
             String payload = PetPayloads.packagePreview(furnitureId, petType, petRace, petColor);
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
             return "";
@@ -2890,7 +2890,7 @@ public final class Handling {
             }
             long validationCode = Proc_6_181_7CA920(petName, 0, 0);
             if (validationCode > 0L) {
-                Proc_6_244_801E80(socketIndex, PetPayloads.packageNameValidation(furnitureId, validationCode, petName), 0);
+                sendToSocket(socketIndex, PetPayloads.packageNameValidation(furnitureId, validationCode, petName));
                 return "";
             }
             if (socketIndex <= 0 || furnitureId <= 0L) {
@@ -2947,12 +2947,12 @@ public final class Handling {
             bots.insertPetData(botId, numericUserId);
             String inventoryRow = PetPayloads.inventoryRow(new PetInventoryRow(botId, petName, petFigure, 0L));
             if (!inventoryRow.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, PetPayloads.inventoryAdd(inventoryRow), 0);
+                sendToSocket(socketIndex, PetPayloads.inventoryAdd(inventoryRow));
             }
             Proc_6_146_76D300(socketIndex, furnitureId, productId);
             broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2');
             furniture.deleteFurniture(furnitureId);
-            Proc_6_244_801E80(socketIndex, PetPayloads.packageNameValidation(furnitureId, validationCode, petName), 0);
+            sendToSocket(socketIndex, PetPayloads.packageNameValidation(furnitureId, validationCode, petName));
             return String.valueOf(botId);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -2973,7 +2973,7 @@ public final class Handling {
                 Licence.setNewFriendRooms(rooms.newFriendRoomPicks(), now.plusSeconds(90L));
             }
             NewFriendRooms.RoomPick roomPick = navigatorState.newFriendRooms().randomRoom();
-            Proc_6_244_801E80(socketIndex, NavigatorPayloads.newFriendRoom(roomPick), 0);
+            sendToSocket(socketIndex, NavigatorPayloads.newFriendRoom(roomPick));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
