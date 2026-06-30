@@ -1234,7 +1234,7 @@ public final class Handling {
                 return;
             }
             List<RoomDao.RoomRight> rightsRows = rooms.rightsRows(roomId);
-            String payload = roomSettingsReadPayload(roomSettings.get(), rightsRows);
+            String payload = RoomPayloads.settingsRead(roomSettings.get(), rightsRows);
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -9350,10 +9350,6 @@ public final class Handling {
         result.thicknessFloor = roomSettingsThickness(result.thicknessFloor);
         result.thicknessWallpaper = roomSettingsThickness(result.thicknessWallpaper);
         return true;
-    }
-
-    public static String roomSettingsReadPayload(RoomDao.RoomSettingsRead room, List<RoomDao.RoomRight> rightsRows) {
-        return RoomPayloads.settingsRead(room, rightsRows);
     }
 
     public static long roomSettingsFlag(long flagValue) {
