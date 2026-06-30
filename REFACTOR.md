@@ -324,6 +324,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved staff call-for-help rows and staff user summaries from tab-delimited row strings into typed moderation records; the DAO now maps those result sets directly into `StaffCallForHelpRow` and `StaffUserSummaryRow`.
 - Moved staff room chat-log queries and payload wrappers from tab-delimited row strings into typed `StaffRoomChatRow` lists and removed dead `MySQL` chat-log string wrappers.
 - Removed the dead `StaffRoomChatRow.fromLegacy` tab-delimited parser after all staff chat-log callers moved to typed rows.
+- Removed own-profile and login-group row-text wrappers plus dead `OwnProfileRow.fromLegacy` and `UserGroupRow.fromLegacy` parsers; those payloads now use typed user records only.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -339,7 +340,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12343 lines
+- `Handling.java`: 12320 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 894 lines

@@ -10465,18 +10465,6 @@ public final class Handling {
         return com.alphaseries.game.session.RepresentedSocketCache.fromLegacy(representedSocketCache).isBusy(socketIndex);
     }
 
-    public static String ownProfilePayload(String userRow) {
-        OwnProfileRow row = ownProfileRow(userRow);
-        if (row == null || row.userId() <= 0L) {
-            return "";
-        }
-        return ownProfilePayload(row);
-    }
-
-    public static OwnProfileRow ownProfileRow(String userRow) {
-        return OwnProfileRow.fromLegacy(userRow);
-    }
-
     public static String ownProfilePayload(OwnProfileRow row) {
         return UserPayloads.ownProfile(row);
     }
@@ -10491,17 +10479,6 @@ public final class Handling {
             soundSetting = NumberUtils.parseLong(requestPayload);
         }
         return soundSetting > 0L && soundSetting < 101L ? soundSetting : 0L;
-    }
-
-    public static String loginGroupPayload(long groupId, String groupRow) {
-        if (groupId <= 0L || StringUtils.text(groupRow).isEmpty()) {
-            return "";
-        }
-        return loginGroupPayload(groupId, userGroupRow(groupRow));
-    }
-
-    public static UserGroupRow userGroupRow(String groupRow) {
-        return UserGroupRow.fromLegacy(groupRow);
     }
 
     public static String loginGroupPayload(long groupId, UserGroupRow groupRow) {

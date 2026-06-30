@@ -26,6 +26,8 @@ import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
 import com.alphaseries.game.moderation.StaffRoomVisitRow;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.social.BadgeRow;
+import com.alphaseries.game.user.OwnProfileRow;
+import com.alphaseries.game.user.UserGroupRow;
 import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
 import com.alphaseries.protocol.PacketBuilder;
@@ -1681,14 +1683,15 @@ public final class PortedModuleSmokeTest {
         String expectedOwnProfile = "@E7\2Alice\2hello\2F\2\2\2H\2HIH";
         expectedOwnProfile = Crypto.Proc_3_0_6D2AF0(4, null, expectedOwnProfile);
         expectedOwnProfile = Crypto.Proc_3_0_6D2AF0(2, null, expectedOwnProfile);
-        assertEquals(expectedOwnProfile, Handling.ownProfilePayload("7\tAlice\thello\tfemale\t4\t2"));
+        assertEquals(expectedOwnProfile,
+            Handling.ownProfilePayload(new OwnProfileRow(7L, "Alice", "hello", "female", 4L, 2L)));
         assertEquals(50L, Handling.soundSettingFromWire("Ce50"));
         assertEquals(0L, Handling.soundSettingFromWire("Ce101"));
         String expectedGroupPayload = Crypto.Proc_3_0_6D2AF0(55, null, "Dt")
             + "Group\2Desc\2BADGE\2"
             + Crypto.Proc_3_0_6D2AF0(77, null, "")
             + "H";
-        assertEquals(expectedGroupPayload, Handling.loginGroupPayload(55, "Group\tDesc\tBADGE\t77"));
+        assertEquals(expectedGroupPayload, Handling.loginGroupPayload(55, new UserGroupRow("Group", "Desc", "BADGE", 77L)));
         String expectedQuestPayload = Crypto.Proc_3_0_6D2AF0(7, null, "") + "Quest\2"
             + Crypto.Proc_3_0_6D2AF0(3, null, "")
             + Crypto.Proc_3_0_6D2AF0(44, null, "")
@@ -4091,7 +4094,8 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         String ownProfilePayload = Handling.Proc_6_237_7F9ED0(4);
-        assertEquals(Handling.ownProfilePayload("77\tCaller\tMotto\tM\t4\t2"), ownProfilePayload);
+        assertEquals(Handling.ownProfilePayload(new OwnProfileRow(77L, "Caller", "Motto", "M", 4L, 2L)),
+            ownProfilePayload);
         assertEquals(true, containsSend(handlingSends, "@E77"));
         handlingSends.clear();
         String pointAwardPayload = Handling.Proc_6_238_7FA670(4);
