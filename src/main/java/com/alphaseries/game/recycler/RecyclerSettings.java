@@ -40,6 +40,24 @@ public final class RecyclerSettings {
         return new RecyclerSettings(statusPayload, rewardGroups == null ? List.of() : rewardGroups, boxProductId);
     }
 
+    public static RecyclerSettings fromLegacyRewardState(
+        String statusPayload,
+        Object productLists,
+        Object chances,
+        long groupCount,
+        long boxProductId
+    ) {
+        RecyclerSettings rewardSettings = fromLegacy(statusPayload, productLists, chances, groupCount, boxProductId);
+        return fromRewardGroups(statusPayload, rewardSettings.rewardGroups(), boxProductId);
+    }
+
+    public static Object compatibilityRewardSource(Object rewardSource, RecyclerSettings settings) {
+        if (rewardSource instanceof RecyclerSettings) {
+            return settings == null ? empty() : settings;
+        }
+        return rewardSource == null ? "" : rewardSource;
+    }
+
     public String statusPayload() {
         return statusPayload;
     }

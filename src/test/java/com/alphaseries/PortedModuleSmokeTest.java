@@ -4999,6 +4999,25 @@ public final class PortedModuleSmokeTest {
             new RecyclerSettings.RewardGroup(20L, List.of(12L, 13L))));
         assertEquals(recyclerCache.payload, typedRecyclerCache.payload);
         assertEquals(List.of(10L, 11L), typedRecyclerCache.rewardGroups.get(0).productIds());
+        Object previousRecyclerProductLists = Licence.global_00829140;
+        Object previousRecyclerChances = Licence.global_0082915C;
+        long previousRecyclerGroupCount = Licence.global_00829168;
+        String previousRecyclerStatusPayload = Licence.global_0082912C;
+        long previousRecyclerBoxProductId = Licence.global_0082916C;
+        Licence.global_00829140 = new String[]{"10\2" + "11\2"};
+        Licence.global_0082915C = new String[]{"80"};
+        Licence.global_00829168 = 1L;
+        Licence.setRecyclerStatusPayload("LEGACY-STATUS");
+        Licence.setRecyclerBoxProductId(55L);
+        assertEquals(false, Licence.global_00829140 instanceof RecyclerSettings);
+        assertEquals("LEGACY-STATUS", Licence.recyclerSettings().statusPayload());
+        assertEquals(55L, Licence.recyclerSettings().boxProductId());
+        assertEquals(List.of(10L, 11L), Licence.recyclerSettings().rewardGroups().get(0).productIds());
+        Licence.global_00829140 = previousRecyclerProductLists;
+        Licence.global_0082915C = previousRecyclerChances;
+        Licence.global_00829168 = previousRecyclerGroupCount;
+        Licence.global_0082912C = previousRecyclerStatusPayload;
+        Licence.global_0082916C = previousRecyclerBoxProductId;
         assertEquals(
             Crypto.Proc_3_0_6D2AF0(2, null, "")
                 + Crypto.Proc_3_0_6D2AF0(80, null, "")

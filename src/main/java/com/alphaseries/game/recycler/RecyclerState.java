@@ -29,4 +29,14 @@ public final class RecyclerState {
     ) {
         settings = RecyclerSettings.fromLegacy(statusPayload, productLists, chances, groupCount, boxProductId);
     }
+
+    public synchronized void setSettingsFromLegacyRewardState(
+        String statusPayload,
+        Object productLists,
+        Object chances,
+        long groupCount,
+        long boxProductId
+    ) {
+        settings = RecyclerSettings.fromLegacyRewardState(statusPayload, productLists, chances, groupCount, boxProductId);
+    }
 }
