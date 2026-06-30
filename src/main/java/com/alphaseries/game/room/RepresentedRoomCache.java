@@ -14,6 +14,10 @@ public final class RepresentedRoomCache {
         return new RepresentedRoomCache(cacheText);
     }
 
+    public static RepresentedRoomCache empty() {
+        return new RepresentedRoomCache("");
+    }
+
     public String cacheText() {
         return cacheText;
     }

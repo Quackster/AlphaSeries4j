@@ -32,6 +32,7 @@ import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.room.RoomPortalSettings;
+import com.alphaseries.game.room.RoomState;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.RepresentedSocketCache;
 import com.alphaseries.game.session.SessionRegistry;
@@ -413,10 +414,12 @@ public final class Licence {
     }
 
     public static RepresentedRoomCache representedRooms() {
-        return RepresentedRoomCache.fromLegacy(global_00829310);
+        RoomState.instance().setRepresentedRoomsFromLegacy(global_00829310);
+        return RoomState.instance().representedRooms();
     }
 
     public static void setRepresentedRooms(RepresentedRoomCache representedRooms) {
+        RoomState.instance().setRepresentedRooms(representedRooms);
         global_00829310 = representedRooms == null ? "" : representedRooms.cacheText();
     }
 
@@ -429,11 +432,13 @@ public final class Licence {
             global_008291F8 = "";
             global_008291FC = "";
             global_00829310 = "";
+            RoomState.instance().setRepresentedRooms(RepresentedRoomCache.empty());
             return;
         }
         global_008291F8 = StringUtils.text(state.pendingRoomCache);
         global_008291FC = StringUtils.text(state.pendingFurnitureCache);
         global_00829310 = StringUtils.text(state.representedRoomCache);
+        RoomState.instance().setRepresentedRoomsFromLegacy(global_00829310);
     }
 
     public static RoomPortalSettings roomPortalSettings() {
