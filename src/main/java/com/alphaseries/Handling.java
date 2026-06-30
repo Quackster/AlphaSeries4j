@@ -52,6 +52,7 @@ import com.alphaseries.game.user.UserEffectActivationRow;
 import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.game.user.UserGroupRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
+import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -6945,14 +6946,13 @@ public final class Handling {
             if (badgeLevel <= 0L) {
                 badgeLevel = 1L;
             }
-            String achievementRow = achievementRowByIndex(achievementIndex);
-            String[] fields = achievementRow.split("\t", -1);
-            if (userId.isEmpty() || achievementRow.isEmpty() || fields.length < 7) {
+            AchievementSettings.Achievement achievement = achievementByIndex(achievementIndex);
+            if (userId.isEmpty() || achievement == null) {
                 return "";
             }
-            String badgePrefix = handlingField(fields, 1);
+            String badgePrefix = achievement.badgePrefix();
             String badgeId = badgePrefix + badgeLevel;
-            if (NumberUtils.parseLong(handlingField(fields, 0)) == 0L || badgePrefix.isEmpty()) {
+            if (achievement.achievementId() == 0L || badgePrefix.isEmpty()) {
                 return "";
             }
             UserDao users = userDao();
@@ -6963,14 +6963,15 @@ public final class Handling {
             users.deleteBadgesByPrefix(userIdValue, badgePrefix);
             users.insertBadge(userIdValue, badgeId);
             long badgeRowId = users.badgeRowId(userIdValue, badgeId);
-            String payload = achievementRewardPayload(achievementIndex, achievementRow, badgeLevel, badgeRowId);
+            String payload = achievementRewardPayload(achievementIndex, achievement, badgeLevel, badgeRowId);
             Proc_6_244_801E80(socketIndex, payload, 0);
-            String awardPayload = achievementAwardPayload(achievementRow);
+            String awardPayload = achievementAwardPayload(achievement);
             if (!awardPayload.isEmpty()) {
-                long rewardIncrease = NumberUtils.parseLong(handlingField(fields, 3));
-                long scoreIncrease = NumberUtils.parseLong(handlingField(fields, 5));
-                long rewardType = NumberUtils.parseLong(handlingField(fields, 6));
-                users.addAchievementReward(userIdValue, rewardType, rewardIncrease, scoreIncrease);
+                users.addAchievementReward(
+                    userIdValue,
+                    achievement.rewardType(),
+                    achievement.rewardIncrease(),
+                    achievement.scoreIncrease());
                 Proc_6_244_801E80(socketIndex, awardPayload, 0);
             }
             return payload;
@@ -11600,6 +11601,10 @@ public final class Handling {
         return Licence.achievementSettings().rowByIndex(achievementIndex);
     }
 
+    public static AchievementSettings.Achievement achievementByIndex(long achievementIndex) {
+        return Licence.achievementSettings().achievementByIndex(achievementIndex);
+    }
+
     public static Map<String, Long> achievementCurrentLevels(String userId, String achievementRows) {
         Map<String, Long> result = new HashMap<>();
         UserDao users = userDao();
@@ -11665,8 +11670,21 @@ public final class Handling {
         return AchievementPayloads.reward(achievementIndex, achievementRow, badgeLevel, badgeRowId);
     }
 
+    public static String achievementRewardPayload(
+        long achievementIndex,
+        AchievementSettings.Achievement achievement,
+        long badgeLevel,
+        long badgeRowId
+    ) {
+        return AchievementPayloads.reward(achievementIndex, achievement, badgeLevel, badgeRowId);
+    }
+
     public static String achievementAwardPayload(String achievementRow) {
         return AchievementPayloads.award(achievementRow);
+    }
+
+    public static String achievementAwardPayload(AchievementSettings.Achievement achievement) {
+        return AchievementPayloads.award(achievement);
     }
 
     public static AchievementProgressDecision achievementProgressDecision(

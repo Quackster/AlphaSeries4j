@@ -1,5 +1,6 @@
 package com.alphaseries.messages.outgoing;
 
+import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -11,47 +12,50 @@ public final class AchievementPayloads {
     }
 
     public static String reward(long achievementIndex, String achievementRow, long badgeLevel, long badgeRowId) {
-        String[] fields = StringUtils.text(achievementRow).split("\t", -1);
-        if (fields.length < 7) {
+        return reward(achievementIndex, AchievementSettings.achievement(achievementRow), badgeLevel, badgeRowId);
+    }
+
+    public static String reward(
+        long achievementIndex,
+        AchievementSettings.Achievement achievement,
+        long badgeLevel,
+        long badgeRowId
+    ) {
+        if (achievement == null) {
             return "";
         }
-        long achievementId = NumberUtils.parseLong(fields[0]);
-        String badgePrefix = fields[1];
-        long rewardIncrease = NumberUtils.parseLong(fields[3]);
-        long levelTotal = NumberUtils.parseLong(fields[4]);
-        long scoreIncrease = NumberUtils.parseLong(fields[5]);
-        if (achievementId == 0L || badgePrefix.isEmpty()) {
+        if (achievement.achievementId() == 0L || achievement.badgePrefix().isEmpty()) {
             return "";
         }
         long normalizedBadgeLevel = badgeLevel <= 0L ? 1L : badgeLevel;
-        String badgeId = badgePrefix + normalizedBadgeLevel;
+        String badgeId = achievement.badgePrefix() + normalizedBadgeLevel;
         return PacketBuilder.message("Fu")
             .appendInt(achievementIndex)
-            .appendInt(achievementId)
+            .appendInt(achievement.achievementId())
             .appendInt(badgeRowId)
             .appendString(badgeId)
-            .appendInt(scoreIncrease)
-            .appendInt(rewardIncrease)
+            .appendInt(achievement.scoreIncrease())
+            .appendInt(achievement.rewardIncrease())
             .appendString("HHH")
-            .appendString(levelTotal)
+            .appendString(achievement.levelTotal())
             .build();
     }
 
     public static String award(String achievementRow) {
-        String[] fields = StringUtils.text(achievementRow).split("\t", -1);
-        if (fields.length < 7) {
+        return award(AchievementSettings.achievement(achievementRow));
+    }
+
+    public static String award(AchievementSettings.Achievement achievement) {
+        if (achievement == null) {
             return "";
         }
-        long rewardIncrease = NumberUtils.parseLong(fields[3]);
-        long scoreIncrease = NumberUtils.parseLong(fields[5]);
-        long rewardType = NumberUtils.parseLong(fields[6]);
-        if (rewardIncrease == 0L && scoreIncrease == 0L) {
+        if (achievement.rewardIncrease() == 0L && achievement.scoreIncrease() == 0L) {
             return "";
         }
         return PacketBuilder.message("Fv")
-            .appendInt(scoreIncrease)
-            .appendInt(rewardIncrease)
-            .appendInt(rewardType)
+            .appendInt(achievement.scoreIncrease())
+            .appendInt(achievement.rewardIncrease())
+            .appendInt(achievement.rewardType())
             .build();
     }
 

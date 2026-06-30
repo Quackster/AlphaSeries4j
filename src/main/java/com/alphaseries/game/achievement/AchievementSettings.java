@@ -1,6 +1,7 @@
 package com.alphaseries.game.achievement;
 
 import com.alphaseries.util.StringUtils;
+import com.alphaseries.util.NumberUtils;
 
 public final class AchievementSettings {
     private final String questIdPayload;
@@ -48,5 +49,35 @@ public final class AchievementSettings {
         }
         String[] textRows = rowsAsText().split("\r", -1);
         return achievementIndex < textRows.length ? textRows[(int) achievementIndex] : "";
+    }
+
+    public Achievement achievementByIndex(long achievementIndex) {
+        return achievement(rowByIndex(achievementIndex));
+    }
+
+    public static Achievement achievement(String row) {
+        String[] fields = StringUtils.text(row).split("\t", -1);
+        if (fields.length < 7) {
+            return null;
+        }
+        return new Achievement(
+            NumberUtils.parseLong(fields[0]),
+            fields[1],
+            NumberUtils.parseLong(fields[2]),
+            NumberUtils.parseLong(fields[3]),
+            NumberUtils.parseLong(fields[4]),
+            NumberUtils.parseLong(fields[5]),
+            NumberUtils.parseLong(fields[6]));
+    }
+
+    public record Achievement(
+        long achievementId,
+        String badgePrefix,
+        long progressRequired,
+        long rewardIncrease,
+        long levelTotal,
+        long scoreIncrease,
+        long rewardType
+    ) {
     }
 }

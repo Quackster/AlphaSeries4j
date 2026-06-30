@@ -281,6 +281,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added a typed `CatalogRegistry.CatalogProduct` view and routed catalog purchase, grant, and gift handlers through named catalog-product fields instead of tab-delimited cache rows and indexed `handlingField(...)` reads.
 - Added a typed `CatalogRegistry.ProductDeal` view and routed catalog deal grant/display handling through parsed product-id lists instead of raw deal-row splitting in `Handling`.
 - Added a typed `CatalogRegistry.Product` view and routed furniture decoration, charge, floor-placement, and inventory metadata helpers through named product-cache fields instead of raw product-row splitting.
+- Added typed `AchievementSettings.Achievement` rows and routed achievement reward/award handling through named fields while keeping string payload wrappers for compatibility.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -296,7 +297,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12622 lines
+- `Handling.java`: 12640 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines
 - `Main.java`: 957 lines
