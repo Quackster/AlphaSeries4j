@@ -7,15 +7,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 public final class SessionRegistry {
-    private final String rawCache;
     private final List<Record> records = new ArrayList<>();
+    private final List<LinkedSection> linkedSections = new ArrayList<>();
 
     private SessionRegistry(String rawCache) {
-        this.rawCache = StringUtils.text(rawCache);
-        parseRecords();
+        String cacheText = StringUtils.text(rawCache);
+        parseRecords(cacheText);
+        parseLinkedSections(cacheText);
     }
 
     public static SessionRegistry fromLegacyCache(String rawCache) {
@@ -32,15 +32,11 @@ public final class SessionRegistry {
     }
 
     public String recordField(String recordPrefix, String recordId, long columnIndex) {
-        String payload = recordPayload(recordPrefix, recordId);
-        if (payload.isEmpty()) {
+        Record record = findRecord(StringUtils.text(recordPrefix), StringUtils.text(recordId));
+        if (record == null || columnIndex < 0 || columnIndex >= record.fieldCount()) {
             return "";
         }
-        String[] fields = payload.split("\2", -1);
-        if (columnIndex < 0 || columnIndex >= fields.length) {
-            return "";
-        }
-        String[] valueParts = fields[(int) columnIndex].split("\\]", -1);
+        String[] valueParts = record.field((int) columnIndex).split("\\]", -1);
         return valueParts.length == 0 ? "" : valueParts[0];
     }
 
@@ -50,10 +46,10 @@ public final class SessionRegistry {
 
     public String cacheField(String keyName, long columnIndex) {
         Record record = findRecord("", StringUtils.text(keyName));
-        if (record == null || columnIndex < 0 || columnIndex >= record.fields.length) {
+        if (record == null || columnIndex < 0 || columnIndex >= record.fieldCount()) {
             return "";
         }
-        return record.fields[(int) columnIndex];
+        return record.field((int) columnIndex);
     }
 
     public long cacheLong(String keyName, long columnIndex) {
@@ -61,15 +57,11 @@ public final class SessionRegistry {
     }
 
     public String linkedValue(String recordId, boolean useBracketCount) {
-        if (rawCache.isEmpty()) {
+        LinkedSection section = linkedSection(StringUtils.text(recordId));
+        if (section == null) {
             return "";
         }
-        String marker = "\2" + StringUtils.text(recordId) + "]";
-        String[] parts = rawCache.split(Pattern.quote(marker), -1);
-        if (parts.length < 2) {
-            return "";
-        }
-        String sectionText = parts[parts.length - 1];
+        String sectionText = section.text();
         String[] bracketParts = sectionText.split("\\[", -1);
         int targetIndex = bracketParts.length - 1;
         String[] valueParts = useBracketCount ? sectionText.split("\1", -1) : sectionText.split("\0", -1);
@@ -87,8 +79,8 @@ public final class SessionRegistry {
         List<SocketSession> sessions = new ArrayList<>();
         for (Record record : records) {
             if (record.key.startsWith("1:")) {
-                long userId = record.fields.length >= 1 ? NumberUtils.parseLong(record.fields[0]) : 0L;
-                int socketIndex = record.fields.length >= 2 ? NumberUtils.parseInt(record.fields[1]) : 0;
+                long userId = record.fieldCount() >= 1 ? NumberUtils.parseLong(record.field(0)) : 0L;
+                int socketIndex = record.fieldCount() >= 2 ? NumberUtils.parseInt(record.field(1)) : 0;
                 sessions.add(new SocketSession(userId, socketIndex));
             }
         }
@@ -116,7 +108,7 @@ public final class SessionRegistry {
         return cache.toString();
     }
 
-    private void parseRecords() {
+    private void parseRecords(String rawCache) {
         if (rawCache.isEmpty()) {
             return;
         }
@@ -138,6 +130,20 @@ public final class SessionRegistry {
         }
     }
 
+    private void parseLinkedSections(String rawCache) {
+        int markerAt = rawCache.indexOf('\2');
+        while (markerAt >= 0) {
+            int idEndAt = rawCache.indexOf(']', markerAt + 1);
+            if (idEndAt < 0) {
+                return;
+            }
+            String recordId = rawCache.substring(markerAt + 1, idEndAt);
+            String sectionText = rawCache.substring(idEndAt + 1);
+            linkedSections.add(new LinkedSection(recordId, sectionText));
+            markerAt = rawCache.indexOf('\2', markerAt + 1);
+        }
+    }
+
     private Record findRecord(String recordPrefix, String recordId) {
         String wanted = (recordPrefix + recordId).toLowerCase(Locale.ROOT);
         for (Record record : records) {
@@ -148,16 +154,37 @@ public final class SessionRegistry {
         return null;
     }
 
+    private LinkedSection linkedSection(String recordId) {
+        LinkedSection result = null;
+        for (LinkedSection section : linkedSections) {
+            if (section.recordId().equals(recordId)) {
+                result = section;
+            }
+        }
+        return result;
+    }
+
     private static final class Record {
         private final String key;
         private final String payload;
-        private final String[] fields;
+        private final List<String> fields;
 
         private Record(String key, String payload) {
             this.key = StringUtils.text(key);
             this.payload = StringUtils.text(payload);
-            this.fields = this.payload.split("\2", -1);
+            this.fields = List.of(this.payload.split("\2", -1));
         }
+
+        private int fieldCount() {
+            return fields.size();
+        }
+
+        private String field(int index) {
+            return index >= 0 && index < fields.size() ? fields.get(index) : "";
+        }
+    }
+
+    private record LinkedSection(String recordId, String text) {
     }
 
     public static final class SocketSession {

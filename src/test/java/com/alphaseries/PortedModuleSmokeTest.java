@@ -62,6 +62,7 @@ import com.alphaseries.game.room.RoomRollers;
 import com.alphaseries.game.room.RoomUserPosition;
 import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
 import com.alphaseries.game.session.RepresentedSocketCache;
+import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.trade.RepresentedTradeOffer;
 import com.alphaseries.game.trade.TradePayloads;
@@ -753,6 +754,12 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829268 = "\2" + "91]14\0";
         assertEquals(14L, Licence.linkedUserSocketIndex("91"));
         assertEquals(14L, Licence.linkedSocketIndex("91"));
+        SessionRegistry typedSessionRegistry = SessionRegistry.fromLegacyCache(
+            "[0:5\1u5\2sock5][1:bob\1bob\2" + "6]\2" + "91]14\0\2" + "92]15\0");
+        assertEquals("u5", typedSessionRegistry.recordField("0:", "5", 0));
+        assertEquals(6L, typedSessionRegistry.recordLong("1:", "bob", 1));
+        assertEquals(14L, typedSessionRegistry.linkedLong("91", false));
+        assertEquals(15L, typedSessionRegistry.linkedLong("92", false));
 
         String[] cache = new String[12];
         Boot.cacheRowsById(cache, "10\t100\tchair\r11\t200\ttable");
