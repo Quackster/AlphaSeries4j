@@ -45,6 +45,7 @@ import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
 import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
+import com.alphaseries.messages.outgoing.MessengerPayloads;
 import com.alphaseries.messages.outgoing.NavigatorPayloads;
 import com.alphaseries.messages.outgoing.QuestPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
@@ -1979,6 +1980,15 @@ public final class PortedModuleSmokeTest {
             10,
             20,
             30));
+        assertEquals(expectedFriendList, MessengerPayloads.friendList(
+            List.of(
+                new MessengerFriend(5L, "Alice", "motto", "fig", 3L, 22L, "today"),
+                new MessengerFriend(6L, "Bob", "motto2", "fig2", 2L, 8L, "yesterday")),
+            10,
+            20,
+            30,
+            List.of(5L),
+            true));
         Handling.FriendTargetList removeTargets = Handling.friendRemoveTargetsFromPayload("@hCBCA", "2");
         assertEquals("3,1", removeTargets.targetList);
         assertEquals(2L, removeTargets.targetCount);

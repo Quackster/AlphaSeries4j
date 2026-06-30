@@ -21,6 +21,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Treat `fromLegacy(...)` and tab-delimited parsing as temporary compatibility boundaries only. The final refactor state should remove those bridges and pass typed records/collections directly.
 - Keep the refactor branch current with required runtime fixes from `dev`; commit `099dd4d17cd83efeecdb088ac1d94c8ff8404621` (`Fix AlphaSeries boot runtime`) is intentionally merged into this branch.
 - The missing decompiled string literals tracked in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` are mandatory refactor work and must be inserted into the source from that report. Treat that file as the source of truth: restore each literal in the matching Java class and method named by the entry, preserving source text unless a deliberate compatibility boundary documents otherwise; the current report lists 1391 unique non-empty literals still absent from Java and must be reduced as literals are restored.
+- Do not treat the refactor as behavior-complete until the missing strings in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` have been inserted into their matching source locations or explicitly reconciled with tests and compatibility notes.
 - Commit only verified milestones with `REFACTOR.md` metrics updated when the legacy surface changes.
 
 ## Completed Slices
@@ -351,6 +352,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed active room-effect replay payload construction through `SocialPayloads.roomUserEffect(...)` and fluent `PacketBuilder` using typed `RoomDao.ActiveRoomEffect` rows.
 - Added `com.alphaseries.messages.outgoing.QuestPayloads` and routed quest completion payload construction through fluent `PacketBuilder`.
 - Routed typed quest-list payload construction through `QuestPayloads.list(...)`, moving campaign/user quest row aggregation out of `Handling` while keeping the legacy string wrapper as the compatibility boundary.
+- Routed live messenger friend-list payload construction through `MessengerPayloads.friendList(...)` with explicit online friend ids, preserving Guardian connectivity checks while removing inline friend-list packet assembly from `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -366,7 +368,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 12173 lines
+- `Handling.java`: 12160 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 894 lines

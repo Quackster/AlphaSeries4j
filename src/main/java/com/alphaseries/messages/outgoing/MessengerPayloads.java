@@ -150,11 +150,24 @@ public final class MessengerPayloads {
         long maxFriends2,
         boolean followEnabled
     ) {
+        return friendList(friends, maxFriends0, maxFriends1, maxFriends2, null, followEnabled);
+    }
+
+    public static String friendList(
+        List<MessengerFriend> friends,
+        long maxFriends0,
+        long maxFriends1,
+        long maxFriends2,
+        List<Long> onlineUserIds,
+        boolean followEnabled
+    ) {
         long friendCount = 0L;
         PacketBuilder friendPayload = PacketBuilder.create();
         for (MessengerFriend friend : friends == null ? List.<MessengerFriend>of() : friends) {
             if (friend != null) {
-                long friendOnline = friend.socketIndex() > 0L ? 1L : 0L;
+                long friendOnline = onlineUserIds == null
+                    ? (friend.socketIndex() > 0L ? 1L : 0L)
+                    : (containsId(onlineUserIds, friend.userId()) ? 1L : 0L);
                 friendPayload.appendRaw(friend(
                     friend.userId(),
                     friend.userName(),
@@ -177,6 +190,18 @@ public final class MessengerPayloads {
             .appendRaw(friendPayload)
             .appendRaw("PYH")
             .build();
+    }
+
+    private static boolean containsId(List<Long> ids, long targetId) {
+        if (ids == null || targetId <= 0L) {
+            return false;
+        }
+        for (Long id : ids) {
+            if (id != null && id.longValue() == targetId) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

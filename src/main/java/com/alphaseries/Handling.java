@@ -5788,33 +5788,22 @@ public final class Handling {
                 dateFormat + " " + timeFormat,
                 queryLimit);
             String callerSummary = messengerFriendSummaryPayload(userId, 1L);
-            long friendCount = 0L;
-            StringBuilder friendPayload = new StringBuilder();
+            List<Long> onlineFriendIds = new ArrayList<>();
             for (MessengerFriend friend : friends) {
                 if (friend != null) {
                     int friendSocketIndex = (int) friend.socketIndex();
                     long friendOnline = friendSocketIndex > 0
                         && Guardian.Proc_11_2_821390(friendSocketIndex, 0, 0) == 1L ? 1L : 0L;
-                    friendPayload.append(messengerFriendPayload(
-                        friend.userId(),
-                        friend.userName(),
-                        friend.motto(),
-                        friend.figure(),
-                        friend.level(),
-                        friendOnline == 1L ? 2L : 0L,
-                        friendOnline,
-                        friend.lastOnline(),
-                        1L));
-                    friendCount++;
+                    if (friendOnline == 1L) {
+                        onlineFriendIds.add(friend.userId());
+                    }
                     if (friendOnline == 1L && !callerSummary.isEmpty()) {
                         Proc_6_244_801E80(friendSocketIndex, "@MHIH" + callerSummary, 0);
                     }
                 }
             }
-            String payload = Crypto.Proc_3_0_6D2AF0(maxFriends0, null, "@L")
-                + Crypto.Proc_3_0_6D2AF0(maxFriends1, null, "")
-                + Crypto.Proc_3_0_6D2AF0(maxFriends2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(friendCount, null, "") + friendPayload + "PYH";
+            String payload = MessengerPayloads.friendList(friends, maxFriends0, maxFriends1, maxFriends2,
+                onlineFriendIds, messengerFollowEnabled());
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
