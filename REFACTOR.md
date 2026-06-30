@@ -554,6 +554,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `StaffSettings` internals from raw moderation payload object storage to defensive typed `String[][]` settings, leaving legacy matrix parsing only at the module boundary.
 - Exposed defensive typed `StaffSettings` moderation-payload matrix access so moderation callers can move away from single-slot compatibility lookups.
 - Migrated `HelpCenterCache` internals from raw indexed payload objects to typed payload maps for category FAQ and description lookups, leaving legacy array/map parsing only at the module boundary.
+- Exposed defensive typed `HelpCenterCache` category-FAQ and description payload map accessors so help callers can move away from single-id compatibility lookups.
 - Added defensive typed `PetSettings` level and command accessors so pet callers can consume `PetLevelRow`/`PetCommandRow` collections instead of legacy arrays.
 - Migrated `VisitRoomAds` internals from raw indexed payload objects to typed payload maps, leaving legacy array/map parsing only at the advertising state boundary.
 - Exposed defensive typed payload-map accessors for `VisitRoomAds` and `RecommendedRooms` so callers can consume cached payload maps without legacy indexed-array views.

@@ -2924,6 +2924,8 @@ public final class PortedModuleSmokeTest {
             "IMPORTANT", "CATS", Map.of(7L, "CATFAQ7"), Map.of(9L, "FAQDESC9"));
         assertEquals("CATFAQ7", typedHelpCache.categoryFaqPayload(7L));
         assertEquals("FAQDESC9", typedHelpCache.descriptionPayload(9L));
+        assertEquals(Map.of(7L, "CATFAQ7"), typedHelpCache.categoryFaqPayloads());
+        assertEquals(Map.of(9L, "FAQDESC9"), typedHelpCache.descriptionPayloads());
         Licence.global_008292D8 = new String[][]{{}, {"STAFFMOD"}};
         assertEquals("STAFFMOD", Licence.staffSettings().moderationPayload(1L, 0L));
         assertStaffSettingsTypedAccessors();

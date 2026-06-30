@@ -49,8 +49,16 @@ public final class HelpCenterCache {
         return categoryPayload;
     }
 
+    public Map<Long, String> categoryFaqPayloads() {
+        return Map.copyOf(categoryFaqPayloads);
+    }
+
     public String categoryFaqPayload(long categoryId) {
         return payload(categoryFaqPayloads, categoryId);
+    }
+
+    public Map<Long, String> descriptionPayloads() {
+        return Map.copyOf(descriptionPayloads);
     }
 
     public String descriptionPayload(long faqId) {
