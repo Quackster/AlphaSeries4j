@@ -293,6 +293,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Built typed important/category FAQ startup payloads with fluent `PacketBuilder` over `HelpDao.FaqNameRow` records instead of raw `StringBuilder`/`Crypto.encodeVl64(...)` concatenation.
 - Built typed FAQ description startup payload values with fluent `PacketBuilder` over `HelpDao.FaqDescriptionRow` records.
 - Routed advertisement visit-room startup cache reads through typed `AdvertisingDao` rows, keeping legacy payload serialization explicit in the boot cache builder boundary.
+- Built typed advertisement visit-room payload values with fluent `PacketBuilder` over `VisitRoomAdRow` fields while preserving raw id text formatting.
 - Routed chat filter and gesture startup cache reads through typed `ChatDao` rows, keeping legacy row serialization explicit at the `ChatSettings` cache bridge.
 - Routed boot settings-cache and Figuredata setting reads through typed `SettingsDao` rows/value lookups, keeping legacy settings payload serialization explicit in `Boot`.
 - Routed recycler reward chance and product startup cache reads through typed `RecyclerDao` methods, keeping legacy recycler payload/list serialization explicit in `Boot`.

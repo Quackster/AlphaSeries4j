@@ -1394,7 +1394,11 @@ public final class Boot {
                 if (row != null) {
                     long visitRoomId = row.visitRoomId();
                     cache.payloadByVisitRoomId.put(visitRoomId,
-                        StringUtils.text(assetPath) + visitRoomId + '\2' + StringUtils.text(row.address()) + '\2');
+                        PacketBuilder.create()
+                            .appendRaw(StringUtils.text(assetPath))
+                            .appendString(visitRoomId)
+                            .appendString(row.address())
+                            .build());
                     cache.count++;
                 }
             }
