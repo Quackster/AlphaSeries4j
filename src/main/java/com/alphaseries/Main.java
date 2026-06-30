@@ -14,7 +14,6 @@ import com.alphaseries.util.StringUtils;
 
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -641,22 +640,7 @@ public final class Main {
     }
 
     public static void mainRepresentedRoomOccupantAdd(long roomSlot, long entityIndex, long occupantType) {
-        if (roomSlot <= 0L || entityIndex <= 0L) {
-            return;
-        }
-        String markerText = "\1" + entityIndex + '\2';
-        int fieldIndex = occupantType == 2L ? 2 : 1;
-        int countIndex = 3;
-        String roomRecord = mainRepresentedRoomRecord(roomSlot);
-        if (roomRecord.isEmpty()) {
-            roomRecord = roomSlot + "\t\t\t0";
-        }
-        String[] fields = ensureFieldCount(roomRecord.split("\t", -1), countIndex);
-        if (!StringUtils.text(fields[fieldIndex]).contains(markerText)) {
-            fields[fieldIndex] = StringUtils.text(fields[fieldIndex]) + markerText;
-            fields[countIndex] = String.valueOf(NumberUtils.parseLong(fields[countIndex]) + 1L);
-        }
-        mainRepresentedRoomRecordSet(roomSlot, joinTab(fields));
+        Licence.setRepresentedRooms(Licence.representedRooms().addOccupant(roomSlot, entityIndex, occupantType));
     }
 
     public static void mainRepresentedRoomOccupantMove(
@@ -668,19 +652,8 @@ public final class Main {
         long directionValue,
         long movingValue
     ) {
-        if (roomSlot <= 0L || entityIndex <= 0L) {
-            return;
-        }
-        int fieldIndex = occupantType == 2L ? 5 : 4;
-        String roomRecord = mainRepresentedRoomRecord(roomSlot);
-        if (roomRecord.isEmpty()) {
-            roomRecord = roomSlot + "\t\t\t0";
-        }
-        String[] fields = ensureFieldCount(roomRecord.split("\t", -1), fieldIndex);
-        String movementRecord = entityIndex + "\t" + positionX + "\t" + positionY + "\t" + directionValue + "\t" + movingValue;
-        fields[fieldIndex] = mainRepresentedCacheRemove(StringUtils.text(fields[fieldIndex]), "\1" + entityIndex + '\t');
-        fields[fieldIndex] = StringUtils.text(fields[fieldIndex]) + '\1' + movementRecord + '\2';
-        mainRepresentedRoomRecordSet(roomSlot, joinTab(fields));
+        Licence.setRepresentedRooms(Licence.representedRooms()
+            .moveOccupant(roomSlot, entityIndex, occupantType, positionX, positionY, directionValue, movingValue));
     }
 
     public static long mainMovementField(String movementText, long fieldIndex) {
@@ -861,8 +834,7 @@ public final class Main {
     }
 
     public static String mainRepresentedRoomRecordField(long roomSlot, long fieldIndex) {
-        String[] fields = mainRepresentedRoomRecord(roomSlot).split("\t", -1);
-        return fieldIndex >= 0 && fieldIndex < fields.length ? fields[(int) fieldIndex] : "";
+        return Licence.representedRooms().recordField(roomSlot, fieldIndex);
     }
 
     public static void mainRepresentedRoomRecordSet(long roomSlot, String roomRecord) {
@@ -911,24 +883,6 @@ public final class Main {
             return NumberUtils.parseLong(markerParts[(int) entityIndex].replace("[", ""));
         }
         return 0L;
-    }
-
-    private static String[] ensureFieldCount(String[] fields, int requiredIndex) {
-        if (fields.length > requiredIndex) {
-            return fields;
-        }
-        return Arrays.copyOf(fields, requiredIndex + 1);
-    }
-
-    private static String joinTab(String[] fields) {
-        StringBuilder joined = new StringBuilder();
-        for (int index = 0; index < fields.length; index++) {
-            if (index > 0) {
-                joined.append('\t');
-            }
-            joined.append(StringUtils.text(fields[index]));
-        }
-        return joined.toString();
     }
 
     private static RoomDao roomDao() throws SQLException {

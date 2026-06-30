@@ -305,6 +305,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed achievement current-level, progress-decision, and list payload paths through typed `AchievementSettings.Achievement` iteration, centralizing legacy achievement row parsing outside `Handling`.
 - Moved represented-bot tab-field normalization into `RepresentedBotRegistry.fieldsFromLegacy`, leaving bot allocation in `Handling` on typed field arrays.
 - Moved room user/object entry payload argument normalization into typed `RoomUserEntryPayloadArgs` and `RoomObjectEntryPayloadArgs`, removing the remaining tab-delimited entry normalizers from `Handling`.
+- Moved represented-room occupant add/move/field mutations from `Main` into `RepresentedRoomCache`, keeping `Main` as a compatibility caller over the typed cache manager.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -323,7 +324,7 @@ Measured on 2026-06-30:
 - `Handling.java`: 12431 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
-- `Main.java`: 957 lines
+- `Main.java`: 911 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 
 ## Next Targets

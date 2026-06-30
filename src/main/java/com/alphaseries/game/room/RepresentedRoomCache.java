@@ -39,6 +39,11 @@ public final class RepresentedRoomCache {
         return cacheText.substring(recordStart, recordEnd);
     }
 
+    public String recordField(long roomSlot, long fieldIndex) {
+        String[] fields = record(roomSlot).split("\t", -1);
+        return fieldIndex >= 0 && fieldIndex < fields.length ? fields[(int) fieldIndex] : "";
+    }
+
     public RepresentedRoomCache setRecord(long roomSlot, String roomRecord) {
         if (roomSlot <= 0L) {
             return this;
@@ -49,6 +54,25 @@ public final class RepresentedRoomCache {
             nextCache = nextCache.substring(1);
         }
         return new RepresentedRoomCache(nextCache + '\1' + StringUtils.text(roomRecord) + '\2');
+    }
+
+    public RepresentedRoomCache addOccupant(long roomSlot, long entityIndex, long occupantType) {
+        if (roomSlot <= 0L || entityIndex <= 0L) {
+            return this;
+        }
+        String markerText = "\1" + entityIndex + '\2';
+        int fieldIndex = occupantType == 2L ? 2 : 1;
+        int countIndex = 3;
+        String roomRecord = record(roomSlot);
+        if (roomRecord.isEmpty()) {
+            roomRecord = roomSlot + "\t\t\t0";
+        }
+        String[] fields = ensureFieldCount(roomRecord.split("\t", -1), countIndex);
+        if (!StringUtils.text(fields[fieldIndex]).contains(markerText)) {
+            fields[fieldIndex] = StringUtils.text(fields[fieldIndex]) + markerText;
+            fields[countIndex] = String.valueOf(NumberUtils.parseLong(fields[countIndex]) + 1L);
+        }
+        return setRecord(roomSlot, String.join("\t", fields));
     }
 
     public Position movementPosition(long roomSlot, long entityIndex) {
@@ -84,6 +108,30 @@ public final class RepresentedRoomCache {
             }
         }
         return result;
+    }
+
+    public RepresentedRoomCache moveOccupant(
+        long roomSlot,
+        long entityIndex,
+        long occupantType,
+        long positionX,
+        long positionY,
+        long directionValue,
+        long movingValue
+    ) {
+        if (roomSlot <= 0L || entityIndex <= 0L) {
+            return this;
+        }
+        int fieldIndex = occupantType == 2L ? 5 : 4;
+        String roomRecord = record(roomSlot);
+        if (roomRecord.isEmpty()) {
+            roomRecord = roomSlot + "\t\t\t0";
+        }
+        String[] fields = ensureFieldCount(roomRecord.split("\t", -1), fieldIndex);
+        String movementRecord = entityIndex + "\t" + positionX + "\t" + positionY + "\t" + directionValue + "\t" + movingValue;
+        fields[fieldIndex] = removeMovementRecord(StringUtils.text(fields[fieldIndex]), "\1" + entityIndex + '\t')
+            + '\1' + movementRecord + '\2';
+        return setRecord(roomSlot, String.join("\t", fields));
     }
 
     public RepresentedRoomCache moveOccupant(
