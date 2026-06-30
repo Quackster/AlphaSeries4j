@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.moderation.StaffModerationPacketHandlers;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -41,83 +42,15 @@ public final class MySQL {
     }
 
     public static void Proc_5_4_6D55E0(Object... args) {
-        try {
-            int socketIndex = mySqlSocketIndex(args);
-            String requestPayload = mySqlRequestPayload(mySqlPacketPayload(args), "GI");
-            String userId = mySqlUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)
-                || !mySqlUserHasPermission(userId, "fuse_mod")
-                || !mySqlUserHasPermission(userId, "fuse_receive_calls_for_help")) {
-                return;
-            }
-            long cfhId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
-            if (cfhId <= 0L) {
-                return;
-            }
-            StaffModerationDao moderationDao = staffModerationDao();
-            StaffModerationDao.CallForHelpRoom cfhRoom = moderationDao.callForHelpRoom(cfhId).orElse(null);
-            if (cfhRoom == null) {
-                return;
-            }
-            String chatRows = moderationDao.recentChatRowsBefore(cfhRoom.roomId(), cfhRoom.timestampSent());
-            HandlingMUS.Proc_12_1_821AA0(socketIndex, "HV" + mySqlCallForHelpChatLogPayload(cfhId, cfhRoom.toFields(), chatRows), 0);
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
+        StaffModerationPacketHandlers.sendCallForHelpChatLog(args);
     }
 
     public static void Proc_5_5_6D64D0(Object... args) {
-        try {
-            int socketIndex = mySqlSocketIndex(args);
-            String requestPayload = mySqlRequestPayload(mySqlPacketPayload(args), "GH");
-            String userId = mySqlUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)
-                || !mySqlUserHasPermission(userId, "fuse_mod")
-                || !mySqlUserHasPermission(userId, "fuse_chatlog")) {
-                return;
-            }
-            long roomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
-            if (roomId <= 0L) {
-                return;
-            }
-            StaffModerationDao moderationDao = staffModerationDao();
-            StaffModerationDao.RoomChatHeader room = moderationDao.roomChatHeader(roomId).orElse(null);
-            if (room == null) {
-                return;
-            }
-            String chatRows = moderationDao.recentChatRows(roomId);
-            HandlingMUS.Proc_12_1_821AA0(socketIndex,
-                "HW" + mySqlRoomChatLogHeader(room.toFields()) + mySqlRoomChatLogRows(chatRows), 0);
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
+        StaffModerationPacketHandlers.sendRoomChatLog(args);
     }
 
     public static void Proc_5_6_6D7090(Object... args) {
-        try {
-            int socketIndex = mySqlSocketIndex(args);
-            String requestPayload = mySqlRequestPayload(mySqlPacketPayload(args), "GK");
-            String userId = mySqlUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId) || !mySqlUserHasPermission(userId, "fuse_mod")) {
-                return;
-            }
-            long roomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
-            if (roomId <= 0L) {
-                return;
-            }
-            StaffModerationDao moderationDao = staffModerationDao();
-            StaffModerationDao.RoomInfo room = moderationDao.roomInfo(roomId).orElse(null);
-            if (room == null) {
-                return;
-            }
-            String[] eventFields = moderationDao.roomEvent(roomId)
-                .map(StaffModerationDao.RoomEvent::toFields)
-                .orElse(null);
-            HandlingMUS.Proc_12_1_821AA0(socketIndex,
-                "HZ" + mySqlRoomInfoPayload(room.toFields(), eventFields), 0);
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
+        StaffModerationPacketHandlers.sendRoomInfo(args);
     }
 
     public static String buildSqlFromArgs(Object... args) {
