@@ -745,6 +745,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated the remaining jukebox fallback, pre-ready state, simple floor-use, and furniture-placement broadcasts through `Handling.broadcastToCurrentRoom(...)`, leaving `Proc_6_247_8027E0(...)` as a compatibility adapter only.
 - Migrated fixed-room, pet-room, staff-moderator, and represented-chat broadcasts through named helpers, leaving `Proc_6_245_801FA0(...)`, `Proc_6_246_8024C0(...)`, `Proc_6_248_802B80(...)`, and `Proc_6_249_802F10(...)` as compatibility adapters only.
 - Migrated the remaining internal furniture-state cache refreshes through `Handling.refreshRepresentedFurnitureState(...)`, leaving `Proc_6_151_78AC20(...)` as a compatibility adapter only.
+- Added named `Handling.sendInventoryToSocket(...)` with the original `Proc_6_140_769400` noted in Javadocs, then migrated inventory refresh call sites away from the Proc-named inventory sender.
 
 ## VB Compatibility Class Removal Checklist
 

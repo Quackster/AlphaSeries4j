@@ -3018,8 +3018,8 @@ public final class Handling {
             trades.insertTradeLog(numericUserId, numericTargetUserId, sourceLogItems, targetLogItems, roomId, sessionId);
             sendToSocket(socketIndex, "Ap");
             sendToSocket(targetSocketIndex, "Ap");
-            Proc_6_140_769400(socketIndex, "FT", "");
-            Proc_6_140_769400(targetSocketIndex, "FT", "");
+            sendInventoryToSocket(socketIndex);
+            sendInventoryToSocket(targetSocketIndex);
             removeRepresentedInteractionPair(socketIndex);
             removeRepresentedInteractionPair(targetSocketIndex);
             return "Ap";
@@ -4031,7 +4031,7 @@ public final class Handling {
             String purchasePayload = CatalogPayloads.purchase(catalogProductId, creditPrice, activityPrice,
                 activityType, grantedFurnitureId, itemClass);
             sendToSocket(socketIndex, purchasePayload);
-            Proc_6_140_769400(socketIndex, "FT", "");
+            sendInventoryToSocket(socketIndex);
             return purchasePayload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -4280,7 +4280,7 @@ public final class Handling {
                 DataManager.productCache().itemData(productId), itemClass, insertedFurnitureId);
             sendToSocket(socketIndex, responsePayload);
             clubs.decrementPresents(userIdValue);
-            Proc_6_140_769400(socketIndex, "FT", "");
+            sendInventoryToSocket(socketIndex);
             return responsePayload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -4587,15 +4587,24 @@ public final class Handling {
             rooms.updateDecoration(roomId, decoration, decoValue);
             sendToSocket(socketIndex, InventoryMessagePayloads.remove(furnitureId));
             furniture.deleteFurniture(furnitureId);
-            Proc_6_140_769400(socketIndex, "FT", "");
+            sendInventoryToSocket(socketIndex);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
+    /**
+     * Original function: Proc_6_140_769400.
+     */
     public static void Proc_6_140_769400(Object... args) {
+        sendInventoryToSocket(handlingSocketIndex(args));
+    }
+
+    /**
+     * Original function: Proc_6_140_769400.
+     */
+    public static void sendInventoryToSocket(int socketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty()) {
                 return;
@@ -4689,7 +4698,7 @@ public final class Handling {
             broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2');
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
-            Proc_6_140_769400(socketIndex, "FT", "");
+            sendInventoryToSocket(socketIndex);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -5139,7 +5148,7 @@ public final class Handling {
             broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2');
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
-            Proc_6_140_769400(socketIndex, "FT", "");
+            sendInventoryToSocket(socketIndex);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -5225,7 +5234,7 @@ public final class Handling {
             }
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
-            Proc_6_140_769400(socketIndex, "FT", "");
+            sendInventoryToSocket(socketIndex);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -8014,7 +8023,7 @@ public final class Handling {
                 case "AK": Proc_6_197_7D43C0(socketIndex, "AK", packetPayload); break;
                 case "AO": Proc_6_198_7D4B70(socketIndex, "AO", packetPayload); break;
                 case "AG": Proc_6_93_745D90(socketIndex, "AG", packetPayload); break;
-                case "FT": Proc_6_140_769400(socketIndex, "FT", packetPayload); break;
+                case "FT": sendInventoryToSocket(socketIndex); break;
                 case "AB": Proc_6_139_768100(socketIndex, "AB", packetPayload); break;
                 case "BA": Proc_6_137_766470(socketIndex, "BA", packetPayload); break;
                 case "n\u007f": Proc_6_177_7C6580(socketIndex, "n\u007f", packetPayload); break;
@@ -9225,7 +9234,7 @@ public final class Handling {
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
             if (fromInventory) {
-                Proc_6_140_769400(socketIndex, "FT", "");
+                sendInventoryToSocket(socketIndex);
             }
             return payload;
         } catch (Exception ignored) {
