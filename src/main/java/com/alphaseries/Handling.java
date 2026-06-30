@@ -4407,9 +4407,7 @@ public final class Handling {
             }
             long itemType = NumberUtils.parseLong(Licence.Proc_9_1_8072B0(itemId, 9, 0));
             long giftEnabled = itemType == 1L ? NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.enabled", 0, 0)) : 0L;
-            String responsePayload = Crypto.Proc_3_0_6D2AF0(itemId, null, "In");
-            responsePayload = Crypto.Proc_3_0_6D2AF0(giftEnabled, null, responsePayload) + '\2';
-            Proc_6_244_801E80(socketIndex, responsePayload, 0);
+            Proc_6_244_801E80(socketIndex, CatalogPayloads.giftAvailability(itemId, giftEnabled), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

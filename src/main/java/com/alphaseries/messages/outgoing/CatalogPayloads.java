@@ -11,4 +11,12 @@ public final class CatalogPayloads {
             .appendInt(errorCode)
             .build();
     }
+
+    public static String giftAvailability(long itemId, long giftEnabled) {
+        return PacketBuilder.message("In")
+            .appendInt(itemId)
+            .appendInt(giftEnabled)
+            .appendRaw('\2')
+            .build();
+    }
 }

@@ -995,6 +995,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.catalogProductSettings().containsClubProduct(33L));
         assertEquals("\r33\t2\t1\r", Licence.catalogProductSettings().clubProductRows());
         assertEquals("AD" + Crypto.Proc_3_0_6D2AF0(2, null, ""), CatalogPayloads.purchaseError(2));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, Crypto.Proc_3_0_6D2AF0(81, null, "In")) + '\2',
+            CatalogPayloads.giftAvailability(81, 1));
         Licence.setClubGiftState(new GiftSettings.ClubGiftState(
             "GIFTS",
             "[81\0" + "506\1" + "20]",
