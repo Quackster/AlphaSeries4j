@@ -50,6 +50,16 @@ public final class UserPayloads {
             .build();
     }
 
+    public static String rankAndStaffState(long rankIndex, long staffFlag) {
+        return PacketBuilder.create()
+            .appendRaw('0')
+            .appendRaw(PacketBuilder.message("@B")
+                .appendInt(rankIndex)
+                .appendInt(rankIndex)
+                .appendInt(staffFlag))
+            .build();
+    }
+
     public static String roomAlert(String alertType, String alertText) {
         return PacketBuilder.message("Ba")
             .appendString(alertType)

@@ -549,10 +549,7 @@ public final class Handling {
             }
             long rankIndex = handlingUserRank(userId);
             long staffFlag = handlingUserHasPermission(userId, "fuse_client_staff") ? 1L : 0L;
-            String payload = Crypto.Proc_3_0_6D2AF0(rankIndex, null, "@B");
-            payload += Crypto.Proc_3_0_6D2AF0(rankIndex, null, "");
-            payload = "0" + Crypto.Proc_3_0_6D2AF0(staffFlag, null, payload);
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            Proc_6_244_801E80(socketIndex, UserPayloads.rankAndStaffState(rankIndex, staffFlag), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
