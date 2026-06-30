@@ -40,6 +40,7 @@ import com.alphaseries.game.pet.PetRaceRow;
 import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotEntry;
+import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
@@ -1313,6 +1314,21 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829358 = "[50:2\2bot-id\2name]";
         assertEquals("2\2bot-id\2name", Licence.representedBots().recordText(50));
         assertEquals("name", Licence.representedBots().record(50).name());
+        String representedBotRecord = "3\2" + "501\2Guide\2hello\2speech\2responses\2"
+            + "2\2" + "3\2" + "0.5\2" + "4\2" + "1 2 ff\2"
+            + "3\2" + "4\2cache\2submit\2" + "1\2" + "6";
+        RepresentedBotRegistry representedBots = RepresentedBotRegistry.fromLegacy("[1][3]",
+            "[1:" + representedBotRecord + "][3:4\2" + "601\2Helper]");
+        assertEquals(List.of(1L, 3L), representedBots.allocatedEntityIds());
+        assertEquals(501L, representedBots.record(1).botId());
+        assertEquals("[1:" + representedBotRecord + "][3:4\2" + "601\2Helper]", representedBots.recordCache());
+        representedBots.storePosition(1, 5, 6, "1.0", 7);
+        assertEquals(5L, representedBots.record(1).positionX());
+        assertEquals("3\2" + "501\2Guide\2hello\2speech\2responses\2"
+            + "5\2" + "6\2" + "1.0\2" + "7\2" + "1 2 ff\2"
+            + "3\2" + "4\2cache\2submit\2" + "1\2" + "6", representedBots.recordText(1));
+        assertEquals(2L, representedBots.reserveSlot());
+        assertEquals("[1][3][2]", representedBots.allocatedEntityMarkers());
         Licence.global_00829310 = "";
         Main.mainRepresentedRoomOccupantAdd(4, 9, 1);
         assertEquals("\1" + "4\t\1" + "9\2\t\t1\2", Licence.global_00829310);

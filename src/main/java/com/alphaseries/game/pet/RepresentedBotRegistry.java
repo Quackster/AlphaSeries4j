@@ -4,38 +4,53 @@ import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public final class RepresentedBotRegistry {
-    private String allocatedEntityMarkers;
-    private String recordCache;
+    private final Set<Long> allocatedEntityIds;
+    private final Map<Long, RepresentedBotRecord> records;
 
-    private RepresentedBotRegistry(String allocatedEntityMarkers, String recordCache) {
-        this.allocatedEntityMarkers = StringUtils.text(allocatedEntityMarkers);
-        this.recordCache = StringUtils.text(recordCache);
+    private RepresentedBotRegistry(Set<Long> allocatedEntityIds, Map<Long, RepresentedBotRecord> records) {
+        this.allocatedEntityIds = new LinkedHashSet<>(allocatedEntityIds);
+        this.records = new LinkedHashMap<>(records);
     }
 
     public static RepresentedBotRegistry fromLegacy(String allocatedEntityMarkers, String recordCache) {
-        return new RepresentedBotRegistry(allocatedEntityMarkers, recordCache);
+        return new RepresentedBotRegistry(allocatedEntityIds(allocatedEntityMarkers), records(recordCache));
     }
 
     public static RepresentedBotRegistry empty() {
-        return new RepresentedBotRegistry("", "");
+        return new RepresentedBotRegistry(Set.of(), Map.of());
     }
 
     public String allocatedEntityMarkers() {
-        return allocatedEntityMarkers;
+        StringBuilder result = new StringBuilder();
+        for (Long entityId : allocatedEntityIds) {
+            result.append(marker(entityId));
+        }
+        return result.toString();
     }
 
     public String recordCache() {
-        return recordCache;
+        StringBuilder result = new StringBuilder();
+        for (Map.Entry<Long, RepresentedBotRecord> record : records.entrySet()) {
+            result.append('[')
+                .append(record.getKey())
+                .append(':')
+                .append(record.getValue().recordText())
+                .append(']');
+        }
+        return result.toString();
     }
 
     public long reserveSlot() {
         for (long slotIndex = 1L; slotIndex <= 5000L; slotIndex++) {
-            String marker = marker(slotIndex);
-            if (!allocatedEntityMarkers.contains(marker)) {
-                allocatedEntityMarkers += marker;
+            if (!allocatedEntityIds.contains(slotIndex)) {
+                allocatedEntityIds.add(slotIndex);
                 return slotIndex;
             }
         }
@@ -46,35 +61,28 @@ public final class RepresentedBotRegistry {
         if (botEntityId <= 0L) {
             return;
         }
-        removeRecordOnly(botEntityId);
-        recordCache += "[" + botEntityId + ":" + StringUtils.text(recordText) + "]";
+        records.remove(botEntityId);
+        records.put(botEntityId, RepresentedBotRecord.fromText(recordText));
     }
 
     public void removeRecord(long botEntityId) {
         if (botEntityId <= 0L) {
             return;
         }
-        removeRecordOnly(botEntityId);
-        allocatedEntityMarkers = allocatedEntityMarkers.replace(marker(botEntityId), "");
+        records.remove(botEntityId);
+        allocatedEntityIds.remove(botEntityId);
     }
 
     public String recordText(long botEntityId) {
-        if (botEntityId <= 0L || recordCache.isEmpty()) {
+        if (botEntityId <= 0L) {
             return "";
         }
-        int recordStart = recordStart(botEntityId);
-        if (recordStart < 0) {
-            return "";
-        }
-        int recordEnd = recordCache.indexOf(']', recordStart);
-        if (recordEnd <= recordStart) {
-            return "";
-        }
-        return recordCache.substring(recordStart, recordEnd);
+        RepresentedBotRecord record = records.get(botEntityId);
+        return record == null ? "" : record.recordText();
     }
 
     public RepresentedBotRecord record(long botEntityId) {
-        return RepresentedBotRecord.fromFields(recordText(botEntityId).split("\2", -1));
+        return records.getOrDefault(botEntityId, RepresentedBotRecord.empty());
     }
 
     public boolean isEntityInRoom(long botEntityId, long roomSlot) {
@@ -91,7 +99,7 @@ public final class RepresentedBotRegistry {
     }
 
     public long entityFromBotId(long botId) {
-        if (botId <= 0L || recordCache.isEmpty()) {
+        if (botId <= 0L || records.isEmpty()) {
             return 0L;
         }
         for (Record record : records()) {
@@ -103,7 +111,7 @@ public final class RepresentedBotRegistry {
     }
 
     public String entitiesForRoom(long roomSlot, long onlyBotId) {
-        if (roomSlot <= 0L || recordCache.isEmpty()) {
+        if (roomSlot <= 0L || records.isEmpty()) {
             return "";
         }
         StringBuilder result = new StringBuilder();
@@ -120,20 +128,28 @@ public final class RepresentedBotRegistry {
     }
 
     public void storePosition(long botEntityId, long positionX, long positionY, String positionZ, long positionR) {
-        String[] fields = recordText(botEntityId).split("\2", -1);
-        if (fields.length < 10) {
+        RepresentedBotRecord record = records.get(botEntityId);
+        if (record == null) {
             return;
         }
-        fields[6] = String.valueOf(positionX);
-        fields[7] = String.valueOf(positionY);
-        fields[8] = StringUtils.text(positionZ);
-        fields[9] = String.valueOf(positionR);
-        storeRecord(botEntityId, String.join("\2", fields));
+        records.put(botEntityId, record.withPosition(positionX, positionY, positionZ, positionR));
     }
 
     public List<Long> allocatedEntityIds() {
-        List<Long> result = new ArrayList<>();
-        for (String part : allocatedEntityMarkers.split("\\]", -1)) {
+        return List.copyOf(allocatedEntityIds);
+    }
+
+    private List<Record> records() {
+        List<Record> result = new ArrayList<>();
+        for (Map.Entry<Long, RepresentedBotRecord> record : records.entrySet()) {
+            result.add(new Record(record.getKey(), record.getValue()));
+        }
+        return result;
+    }
+
+    private static Set<Long> allocatedEntityIds(String allocatedEntityMarkers) {
+        Set<Long> result = new LinkedHashSet<>();
+        for (String part : StringUtils.text(allocatedEntityMarkers).split("\\]", -1)) {
             long entityId = NumberUtils.parseLong(part.replace("[", ""));
             if (entityId > 0L) {
                 result.add(entityId);
@@ -142,32 +158,16 @@ public final class RepresentedBotRegistry {
         return result;
     }
 
-    private void removeRecordOnly(long botEntityId) {
-        String startMarker = "[" + botEntityId + ":";
-        int startAt = recordCache.indexOf(startMarker);
-        if (startAt >= 0) {
-            int endAt = recordCache.indexOf(']', startAt + startMarker.length());
-            if (endAt >= 0) {
-                recordCache = recordCache.substring(0, startAt) + recordCache.substring(endAt + 1);
-            }
-        }
-    }
-
-    private int recordStart(long botEntityId) {
-        String startMarker = "[" + botEntityId + ":";
-        int startAt = recordCache.indexOf(startMarker);
-        return startAt < 0 ? -1 : startAt + startMarker.length();
-    }
-
-    private List<Record> records() {
-        List<Record> result = new ArrayList<>();
-        for (String recordText : recordCache.split("\\[", -1)) {
+    private static Map<Long, RepresentedBotRecord> records(String recordCache) {
+        Map<Long, RepresentedBotRecord> result = new LinkedHashMap<>();
+        for (String recordText : StringUtils.text(recordCache).split("\\[", -1)) {
             int payloadAt = recordText.indexOf(':');
             int endAt = recordText.indexOf(']');
             if (payloadAt > 0 && endAt > payloadAt) {
                 long entityId = NumberUtils.parseLong(recordText.substring(0, payloadAt));
-                String[] fields = recordText.substring(payloadAt + 1, endAt).split("\2", -1);
-                result.add(new Record(entityId, RepresentedBotRecord.fromFields(fields)));
+                if (entityId > 0L) {
+                    result.put(entityId, RepresentedBotRecord.fromText(recordText.substring(payloadAt + 1, endAt)));
+                }
             }
         }
         return result;
@@ -204,8 +204,21 @@ public final class RepresentedBotRegistry {
         String cacheAction,
         String speechSubmit,
         long allowWalk,
-        long maxFieldsAway
+        long maxFieldsAway,
+        List<String> serializedFields
     ) {
+        public RepresentedBotRecord {
+            serializedFields = List.copyOf(serializedFields);
+        }
+
+        private static RepresentedBotRecord empty() {
+            return fromFields(new String[0]);
+        }
+
+        private static RepresentedBotRecord fromText(String recordText) {
+            return fromFields(StringUtils.text(recordText).split("\2", -1));
+        }
+
         private static RepresentedBotRecord fromFields(String[] fields) {
             return new RepresentedBotRecord(
                 number(fields, 0),
@@ -224,7 +237,42 @@ public final class RepresentedBotRegistry {
                 field(fields, 13),
                 field(fields, 14),
                 number(fields, 15),
-                number(fields, 16));
+                number(fields, 16),
+                List.of(fields));
+        }
+
+        private RepresentedBotRecord withPosition(long positionX, long positionY, String positionZ, long positionR) {
+            if (serializedFields.size() < 10) {
+                return this;
+            }
+            List<String> updatedFields = new ArrayList<>(serializedFields);
+            updatedFields.set(6, String.valueOf(positionX));
+            updatedFields.set(7, String.valueOf(positionY));
+            updatedFields.set(8, StringUtils.text(positionZ));
+            updatedFields.set(9, String.valueOf(positionR));
+            return new RepresentedBotRecord(
+                roomSlot,
+                botId,
+                name,
+                motto,
+                speech,
+                responses,
+                positionX,
+                positionY,
+                positionZ,
+                positionR,
+                figure,
+                handleId,
+                handleActionId,
+                cacheAction,
+                speechSubmit,
+                allowWalk,
+                maxFieldsAway,
+                updatedFields);
+        }
+
+        private String recordText() {
+            return String.join("\2", serializedFields);
         }
 
         private static String field(String[] fields, int index) {
