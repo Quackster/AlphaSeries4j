@@ -316,14 +316,22 @@ public final class Licence {
     }
 
     public static VisitRoomAds visitRoomAds() {
-        AdvertisingState.instance().setVisitRoomAdsFromLegacy(global_008291D4, global_008291D8);
+        refreshVisitRoomAds();
         return AdvertisingState.instance().visitRoomAds();
     }
 
     public static void setVisitRoomAds(Object payloadsById, long count) {
-        AdvertisingState.instance().setVisitRoomAdsFromLegacy(payloadsById, count);
         global_008291D4 = payloadsById == null ? "" : payloadsById;
         global_008291D8 = count;
+        refreshVisitRoomAds();
+    }
+
+    private static void refreshVisitRoomAds() {
+        if (global_008291D4 instanceof VisitRoomAds ads) {
+            AdvertisingState.instance().setVisitRoomAds(ads);
+            return;
+        }
+        AdvertisingState.instance().setVisitRoomAdsFromLegacy(global_008291D4, global_008291D8);
     }
 
     public static MessengerSettings messengerSettings() {
