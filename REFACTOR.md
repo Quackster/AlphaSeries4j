@@ -470,6 +470,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the dead `Handling.representedBotRecordField(...)` and `Handling.representedBotRecordLong(...)` compatibility accessors; tests now assert represented-bot state through named `RepresentedBotRecord` fields.
 - Removed the dead `Handling.representedBotRecordText(...)` and `Handling.representedBotEntityFromBotId(...)` compatibility accessors; tests now use the represented-bot registry directly.
 - Removed the dead `Handling.representedBotEntitiesForRoom(...)` and `Handling.isRepresentedBotAllocated(...)` compatibility accessors; live handlers and tests now use `RepresentedBotRegistry` directly.
+- Removed the generic `RepresentedBotRegistry.recordField(...)`/`recordLong(...)` API after all callers moved to named `RepresentedBotRecord` accessors.
 
 ## VB Compatibility Class Removal Checklist
 

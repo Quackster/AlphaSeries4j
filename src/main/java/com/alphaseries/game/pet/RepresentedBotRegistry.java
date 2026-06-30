@@ -73,15 +73,6 @@ public final class RepresentedBotRegistry {
         return RepresentedBotRecord.fromFields(recordText(botEntityId).split("\2", -1));
     }
 
-    public String recordField(long botEntityId, long fieldIndex) {
-        String[] fields = recordText(botEntityId).split("\2", -1);
-        return fieldIndex >= 0L && fieldIndex < fields.length ? fields[(int) fieldIndex] : "";
-    }
-
-    public long recordLong(long botEntityId, long fieldIndex) {
-        return NumberUtils.parseLong(recordField(botEntityId, fieldIndex));
-    }
-
     public boolean isEntityInRoom(long botEntityId, long roomSlot) {
         return botEntityId > 0L && roomSlot > 0L && record(botEntityId).roomSlot() == roomSlot;
     }
