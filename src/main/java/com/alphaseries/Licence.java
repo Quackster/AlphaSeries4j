@@ -544,17 +544,25 @@ public final class Licence {
     }
 
     public static CatalogPages catalogPages() {
-        CatalogState.instance().setCatalogPagesFromLegacy(global_00829308, global_008292F4);
+        refreshCatalogPages();
         return CatalogState.instance().catalogPages();
     }
 
     public static void setCatalogPagePayloads(Object pagePayloads) {
         global_00829308 = pagePayloads == null ? "" : pagePayloads;
-        CatalogState.instance().setCatalogPagesFromLegacy(global_00829308, global_008292F4);
+        refreshCatalogPages();
     }
 
     public static void setCatalogPageTrees(Object pageTrees) {
         global_008292F4 = pageTrees == null ? "" : pageTrees;
+        refreshCatalogPages();
+    }
+
+    private static void refreshCatalogPages() {
+        if (global_00829308 instanceof CatalogPages catalogPages) {
+            CatalogState.instance().setCatalogPages(catalogPages);
+            return;
+        }
         CatalogState.instance().setCatalogPagesFromLegacy(global_00829308, global_008292F4);
     }
 

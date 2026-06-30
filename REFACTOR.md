@@ -663,6 +663,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed `Licence` recommended-room refreshes through the typed `RecommendedRooms` state path when the mirrored global already contains a `RecommendedRooms` instance, leaving map/array parsing as a compatibility fallback.
 - Migrated `CatalogPages` internals from raw indexed payload and tree objects to typed page-payload maps and defensive page-tree matrices, leaving legacy array/map parsing only at the catalog state boundary.
 - Exposed defensive typed `CatalogPages` page-payload map and page-tree matrix accessors so catalog callers can move away from single-value compatibility lookups.
+- Routed `Licence` catalog-page refreshes through the typed `CatalogPages` state path when the mirrored global already contains a `CatalogPages` instance, leaving map/array parsing as a compatibility fallback.
 - Migrated `RoomCategoryCache` internals from raw row, default-category, and payload objects to typed default arrays, `RoomCategoryRow` lists, and defensive payload matrices, leaving legacy row text and matrix parsing only at the navigator state boundary.
 - Exposed defensive typed `RoomCategoryCache` payload matrix access so navigator callers can move away from single-slot payload lookups.
 - Migrated `RoomCategoryCache` legacy category row text into typed `RoomCategoryRow` records at construction, removing retained raw row-string storage while preserving compatibility serialization for valid rows.
