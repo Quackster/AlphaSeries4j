@@ -286,6 +286,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed wall furniture placement through typed `FurnitureDao.InventoryPlacementFurniture` records, replacing the placement handler's temporary string-array roundtrip and indexed `handlingField(...)` reads.
 - Added typed `RepresentedTradeOffer` rows and routed trade-offer store, removal, SQL-id, log-item, and item-payload helpers through named fields while keeping the legacy cache row serialization explicit.
 - Added typed `RepresentedInteractionPair` rows and routed interaction-pair store, lookup, state, and removal helpers through named fields while keeping the legacy cache row serialization explicit.
+- Routed own-profile and favourite-group legacy row payload wrappers through typed `OwnProfileRow` and `UserGroupRow` parser helpers instead of indexed `handlingField(...)` reads.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -301,7 +302,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12718 lines
+- `Handling.java`: 12726 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines
 - `Main.java`: 957 lines

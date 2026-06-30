@@ -10621,21 +10621,25 @@ public final class Handling {
     }
 
     public static String ownProfilePayload(String userRow) {
+        OwnProfileRow row = ownProfileRow(userRow);
+        if (row == null || row.userId() <= 0L) {
+            return "";
+        }
+        return ownProfilePayload(row);
+    }
+
+    public static OwnProfileRow ownProfileRow(String userRow) {
         String[] fields = StringUtils.text(userRow).split("\t", -1);
         if (fields.length < 6) {
-            return "";
+            return null;
         }
-        long userId = NumberUtils.parseLong(handlingField(fields, 0));
-        if (userId <= 0L) {
-            return "";
-        }
-        return ownProfilePayload(new OwnProfileRow(
-            userId,
-            handlingField(fields, 1),
-            handlingField(fields, 2),
-            handlingField(fields, 3),
-            NumberUtils.parseLong(handlingField(fields, 4)),
-            NumberUtils.parseLong(handlingField(fields, 5))));
+        return new OwnProfileRow(
+            NumberUtils.parseLong(StringUtils.field(fields, 0)),
+            StringUtils.field(fields, 1),
+            StringUtils.field(fields, 2),
+            StringUtils.field(fields, 3),
+            NumberUtils.parseLong(StringUtils.field(fields, 4)),
+            NumberUtils.parseLong(StringUtils.field(fields, 5)));
     }
 
     public static String ownProfilePayload(OwnProfileRow row) {
@@ -10658,12 +10662,16 @@ public final class Handling {
         if (groupId <= 0L || StringUtils.text(groupRow).isEmpty()) {
             return "";
         }
+        return loginGroupPayload(groupId, userGroupRow(groupRow));
+    }
+
+    public static UserGroupRow userGroupRow(String groupRow) {
         String[] fields = StringUtils.text(groupRow).split("\t", -1);
-        return loginGroupPayload(groupId, new UserGroupRow(
-            handlingField(fields, 0),
-            handlingField(fields, 1),
-            handlingField(fields, 2),
-            NumberUtils.parseLong(handlingField(fields, 3))));
+        return new UserGroupRow(
+            StringUtils.field(fields, 0),
+            StringUtils.field(fields, 1),
+            StringUtils.field(fields, 2),
+            NumberUtils.parseLong(StringUtils.field(fields, 3)));
     }
 
     public static String loginGroupPayload(long groupId, UserGroupRow groupRow) {
