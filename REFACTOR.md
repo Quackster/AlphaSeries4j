@@ -290,7 +290,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed own-profile and favourite-group legacy row payload wrappers through typed `OwnProfileRow` and `UserGroupRow` parser helpers instead of indexed `handlingField(...)` reads.
 - Expanded `QuestSettings` with typed quest definition and user quest list rows, then routed quest accept, next-quest, progress-decision, list, and completion helpers through named fields instead of indexed `handlingField(...)` reads.
 - Expanded `PetSettings` with typed pet command and level rows, then routed pet command-action and level-experience helpers through named fields instead of indexed `handlingField(...)` reads.
-- Added a typed `StaffModerationDao.OpenCallForHelpReviewRow` and routed the remaining session, achievement, and compatibility argument parsing sites off internal `handlingField(...)` usage; `handlingField(...)` now remains only as a public compatibility shim.
+- Added a typed `StaffModerationDao.OpenCallForHelpReviewRow` and routed the remaining session, achievement, and compatibility argument parsing sites off internal `handlingField(...)` usage.
 - Moved wall-placement, own-profile, and favourite-group legacy row parsing out of `Handling` and into typed `FurnitureDao.InventoryPlacementFurniture`, `OwnProfileRow`, and `UserGroupRow` compatibility factories.
 - Added `com.alphaseries.game.trade` represented trade-offer and interaction-pair row records, moving those live cache row shapes out of `Handling` while keeping legacy serialization at the compatibility boundary.
 - Routed MySQL room chat-log payload rows through typed `StaffRoomChatRow` records and the existing `StaffPayloads.roomChatRows(List<StaffRoomChatRow>)` builder, leaving string rows as a compatibility parser only.
@@ -308,6 +308,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved represented-room occupant add/move/field mutations from `Main` into `RepresentedRoomCache`, keeping `Main` as a compatibility caller over the typed cache manager.
 - Moved represented-room movement scanning from `Main` into `RepresentedRoomCache.moveOccupantsAt`, clearing the remaining tab-delimited movement parser from `Main`.
 - Removed the legacy poll payload row-string wrapper; poll payload construction now accepts typed `PollDefinition` data only.
+- Removed the dead public `Handling.handlingField(...)` compatibility shim after all indexed-field call sites had moved to typed records or explicit helpers.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -323,7 +324,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12427 lines
+- `Handling.java`: 12423 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
 - `Main.java`: 894 lines

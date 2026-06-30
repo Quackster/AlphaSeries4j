@@ -1325,8 +1325,6 @@ public final class PortedModuleSmokeTest {
         assertEquals("cache-data" + System.lineSeparator(), Handling.Proc_6_239_7FC170(tempFile.toString()));
         Path missingCache = Files.createTempDirectory("alphaseries4j-cache").resolve("room.cache");
         assertEquals(System.lineSeparator(), Handling.handlingEnsureRoomCacheFile(missingCache.toString()));
-        assertEquals("beta", Handling.handlingField(new String[]{"alpha", "beta"}, 1));
-        assertEquals("", Handling.handlingField(new String[]{"alpha"}, 3));
         String userEntryPayload = Handling.Proc_6_41_712730(7, "alice", "hd-1", "motto", "F", 8, 2, 3, "1.0", 4, 5);
         assertEquals(true, userEntryPayload.contains("alice\2hd-1"));
         assertEquals(true, userEntryPayload.contains("motto\2"));

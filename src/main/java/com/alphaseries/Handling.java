@@ -7862,10 +7862,6 @@ public final class Handling {
         }
     }
 
-    public static String handlingField(String[] fields, long fieldIndex) {
-        return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? StringUtils.text(fields[(int) fieldIndex]) : "";
-    }
-
     public static String handlingUserName(String userId) {
         try {
             if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))) {
