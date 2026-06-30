@@ -306,6 +306,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved represented-bot tab-field normalization into `RepresentedBotRegistry.fieldsFromLegacy`, leaving bot allocation in `Handling` on typed field arrays.
 - Moved room user/object entry payload argument normalization into typed `RoomUserEntryPayloadArgs` and `RoomObjectEntryPayloadArgs`, removing the remaining tab-delimited entry normalizers from `Handling`.
 - Moved represented-room occupant add/move/field mutations from `Main` into `RepresentedRoomCache`, keeping `Main` as a compatibility caller over the typed cache manager.
+- Moved represented-room movement scanning from `Main` into `RepresentedRoomCache.moveOccupantsAt`, clearing the remaining tab-delimited movement parser from `Main`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -324,7 +325,7 @@ Measured on 2026-06-30:
 - `Handling.java`: 12431 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
-- `Main.java`: 911 lines
+- `Main.java`: 894 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 
 ## Next Targets
@@ -336,7 +337,7 @@ Measured on 2026-06-30:
 - Replace remaining `Crypto.Proc_3_*` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
 - Continue replacing duplicated local string/number helpers in root compatibility classes with `StringUtils` and `NumberUtils`.
 - Move remaining raw `Licence.global_*` caches into typed state holders under the appropriate `game.*` package.
-- Insert every missing string from `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into the matching Java classes and methods from the report, then update or remove those entries as literals are restored; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
+- Insert every missing string from `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into the matching Java classes and methods from the report before treating the refactor as complete, then update or remove those entries as literals are restored; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
 - Delete remaining deprecated compatibility aliases only after their call sites reach zero and tests pass.
 
 ## Verification

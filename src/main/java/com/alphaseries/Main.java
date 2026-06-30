@@ -661,10 +661,6 @@ public final class Main {
         return fieldIndex >= 0 && fieldIndex < fields.length ? NumberUtils.parseLong(fields[(int) fieldIndex]) : 0L;
     }
 
-    public static String mainArrayField(String[] fields, long fieldIndex) {
-        return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? StringUtils.text(fields[(int) fieldIndex]) : "";
-    }
-
     public static long mainRollerDeltaX(long rotationValue) {
         if (rotationValue == 2L) {
             return 1L;
@@ -774,21 +770,8 @@ public final class Main {
         long toY,
         long directionValue
     ) {
-        String movementText = mainRepresentedRoomRecordField(roomSlot, fieldIndex);
-        if (movementText.isEmpty()) {
-            return;
-        }
-        for (String record : movementText.split("\1", -1)) {
-            if (!record.isEmpty()) {
-                String[] fields = record.replace("\2", "").split("\t", -1);
-                long entityIndex = NumberUtils.parseLong(mainArrayField(fields, 0));
-                if (entityIndex > 0L
-                    && NumberUtils.parseLong(mainArrayField(fields, 1)) == fromX
-                    && NumberUtils.parseLong(mainArrayField(fields, 2)) == fromY) {
-                    mainRepresentedRoomOccupantMove(roomSlot, entityIndex, occupantType, toX, toY, directionValue, 0);
-                }
-            }
-        }
+        Licence.setRepresentedRooms(Licence.representedRooms()
+            .moveOccupantsAt(roomSlot, fieldIndex, occupantType, fromX, fromY, toX, toY, directionValue));
     }
 
     public static String mainRepresentedRecordByBracket(String cacheText, long recordId) {

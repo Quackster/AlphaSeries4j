@@ -134,6 +134,30 @@ public final class RepresentedRoomCache {
         return setRecord(roomSlot, String.join("\t", fields));
     }
 
+    public RepresentedRoomCache moveOccupantsAt(
+        long roomSlot,
+        long fieldIndex,
+        long occupantType,
+        long fromX,
+        long fromY,
+        long toX,
+        long toY,
+        long directionValue
+    ) {
+        String movementText = recordField(roomSlot, fieldIndex);
+        if (movementText.isEmpty()) {
+            return this;
+        }
+        RepresentedRoomCache cache = this;
+        for (String record : movementText.split("\1", -1)) {
+            MovementRecord movement = MovementRecord.fromLegacy(record);
+            if (movement.entityIndex > 0L && movement.positionX == fromX && movement.positionY == fromY) {
+                cache = cache.moveOccupant(roomSlot, movement.entityIndex, occupantType, toX, toY, directionValue, 0L);
+            }
+        }
+        return cache;
+    }
+
     public RepresentedRoomCache moveOccupant(
         long roomSlot,
         long entityIndex,
@@ -219,5 +243,25 @@ public final class RepresentedRoomCache {
         public long positionX;
         public long positionY;
         public boolean found;
+    }
+
+    private static final class MovementRecord {
+        private final long entityIndex;
+        private final long positionX;
+        private final long positionY;
+
+        private MovementRecord(long entityIndex, long positionX, long positionY) {
+            this.entityIndex = entityIndex;
+            this.positionX = positionX;
+            this.positionY = positionY;
+        }
+
+        private static MovementRecord fromLegacy(String recordText) {
+            String[] fields = StringUtils.text(recordText).replace("\2", "").split("\t", -1);
+            return new MovementRecord(
+                NumberUtils.parseLong(StringUtils.field(fields, 0)),
+                NumberUtils.parseLong(StringUtils.field(fields, 1)),
+                NumberUtils.parseLong(StringUtils.field(fields, 2)));
+        }
     }
 }
