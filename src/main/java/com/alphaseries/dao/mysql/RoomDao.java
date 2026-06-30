@@ -268,7 +268,8 @@ public final class RoomDao {
             resultSet.getString(25),
             resultSet.getLong(26),
             resultSet.getLong(27),
-            resultSet.getLong(28)));
+            resultSet.getLong(28),
+            true));
     }
 
     public long ownedRoomCount(long ownerId) throws SQLException {

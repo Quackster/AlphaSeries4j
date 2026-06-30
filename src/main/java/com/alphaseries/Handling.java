@@ -9926,21 +9926,7 @@ public final class Handling {
     }
 
     public static String officialNavigatorRowsPayload(String rowText, boolean includeCountPrefix) {
-        long itemCount = 0L;
-        StringBuilder payload = new StringBuilder();
-        for (String row : StringUtils.text(rowText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 27) {
-                    payload.append(officialNavigatorRowPayload(fields));
-                    itemCount++;
-                }
-            }
-        }
-        if (includeCountPrefix) {
-            return Crypto.Proc_3_0_6D2AF0(itemCount, null, "") + payload;
-        }
-        return payload.toString();
+        return officialNavigatorPayload(OfficialNavigatorItem.listFromLegacy(rowText), includeCountPrefix);
     }
 
     public static String officialNavigatorPayload(List<OfficialNavigatorItem> items, boolean includeCountPrefix) {
@@ -9968,28 +9954,15 @@ public final class Handling {
             payload.appendString(textField);
         }
         payload.appendInt(item.parentId())
-            .appendInt(item.officialId())
-            .appendInt(item.requiredLevel());
+            .appendInt(item.officialId());
+        if (item.requiredLevelPresent()) {
+            payload.appendInt(item.requiredLevel());
+        }
         return payload.build();
     }
 
     public static String officialNavigatorRowPayload(String[] fields) {
-        if (fields == null || fields.length < 27) {
-            return "";
-        }
-        StringBuilder payload = new StringBuilder();
-        payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 0)), null, ""));
-        payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 1)), null, ""));
-        payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 2)), null, ""));
-        for (int fieldIndex = 3; fieldIndex <= 24; fieldIndex++) {
-            payload.append(navigatorField(fields, fieldIndex)).append('\2');
-        }
-        payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 25)), null, ""));
-        payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 26)), null, ""));
-        if (fields.length >= 28) {
-            payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(navigatorField(fields, 27)), null, ""));
-        }
-        return payload.toString();
+        return officialNavigatorItemPayload(OfficialNavigatorItem.fromLegacyFields(fields));
     }
 
     public static String Proc_6_138_7678A0(Object... args) {

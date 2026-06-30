@@ -300,6 +300,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved messenger friend rows into `game.messenger.MessengerFriend`, routed DAO reads and friend summary/list payload wrappers through typed records, and left legacy friend row layouts as explicit compatibility parsers only.
 - Routed quest active-row string wrappers through typed `QuestDao.UserQuestLevelRow` and `UserQuestProgressRow` factories, removing another tab-delimited parsing cluster from `Handling`.
 - Routed legacy navigator room/event row wrappers through typed `LegacyNavigatorRoomRow` and `NavigatorEventRow` lists, moving tab-delimited room/event row parsing out of navigator payload assembly in `Handling`.
+- Routed official navigator row wrappers through typed `OfficialNavigatorItem` lists with explicit optional required-level handling, moving another tab-delimited navigator parser out of `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -315,7 +316,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12524 lines
+- `Handling.java`: 12497 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
 - `Main.java`: 957 lines
