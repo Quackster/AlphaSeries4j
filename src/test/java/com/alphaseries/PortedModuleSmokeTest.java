@@ -1538,6 +1538,18 @@ public final class PortedModuleSmokeTest {
         assertEquals("42", updateEntry.title());
         assertEquals(3L, updateEntry.featureMode());
         assertEquals(7L, updateEntry.featureCost());
+        UpdaterSettings legacyUpdaterSettings = UpdaterSettings.fromLegacy("updater", "a\tA\tbody\t0\t0\n", "INSERT INTO a");
+        assertEquals(2, legacyUpdaterSettings.entries().length);
+        assertEquals("a\tA\tbody\t0\t0", legacyUpdaterSettings.updateEntries()[0]);
+        assertEquals("", legacyUpdaterSettings.updateEntries()[1]);
+        assertEquals(1L, legacyUpdaterSettings.updateCountOrOne());
+        List<UpdaterSettings.UpdateEntry> typedUpdateEntries = new ArrayList<>();
+        typedUpdateEntries.add(updateEntry);
+        UpdaterSettings typedUpdaterSettings = UpdaterSettings.fromEntries("typed-updater", typedUpdateEntries, "");
+        typedUpdateEntries.add(UpdaterSettings.UpdateEntry.fromLegacyRow("y\ttitle\tbody\t1\t2"));
+        assertEquals("typed-updater", typedUpdaterSettings.executableName());
+        assertEquals(1, typedUpdaterSettings.entries().length);
+        assertEquals("x\t42\tbody\t3\t7", typedUpdaterSettings.updateEntries()[0]);
         assertEquals("custom", Updater.getUpdaterExecutableName("custom", "app"));
         assertEquals("app", Updater.getUpdaterExecutableName("", "app"));
         assertEquals("INSERT IGNORE INTO a\nINSERT IGNORE INTO b", Updater.normalizedUpdateSql("INSERT INTO a\r\ninsert into b"));

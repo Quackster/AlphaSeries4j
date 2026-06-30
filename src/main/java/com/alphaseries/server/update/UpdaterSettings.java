@@ -3,23 +3,30 @@ package com.alphaseries.server.update;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class UpdaterSettings {
     private final String executableName;
-    private final String updateRows;
+    private final List<UpdateEntry> entries;
     private final String updateSql;
 
-    private UpdaterSettings(String executableName, String updateRows, String updateSql) {
+    private UpdaterSettings(String executableName, List<UpdateEntry> entries, String updateSql) {
         this.executableName = StringUtils.text(executableName);
-        this.updateRows = StringUtils.text(updateRows);
+        this.entries = List.copyOf(entries);
         this.updateSql = StringUtils.text(updateSql);
     }
 
     public static UpdaterSettings fromLegacy(String executableName, String updateRows, String updateSql) {
-        return new UpdaterSettings(executableName, updateRows, updateSql);
+        return new UpdaterSettings(executableName, parseEntries(updateRows), updateSql);
+    }
+
+    public static UpdaterSettings fromEntries(String executableName, List<UpdateEntry> entries, String updateSql) {
+        return new UpdaterSettings(executableName, entries == null ? List.of() : entries, updateSql);
     }
 
     public static UpdaterSettings empty() {
-        return new UpdaterSettings("", "", "");
+        return new UpdaterSettings("", parseEntries(""), "");
     }
 
     public String executableName() {
@@ -31,20 +38,19 @@ public final class UpdaterSettings {
     }
 
     public String[] updateEntries() {
-        return updateRows.split("\n", -1);
+        String[] result = new String[entries.size()];
+        for (int index = 0; index < entries.size(); index++) {
+            result[index] = entries.get(index).rawText();
+        }
+        return result;
     }
 
     public UpdateEntry[] entries() {
-        String[] rows = updateEntries();
-        UpdateEntry[] entries = new UpdateEntry[rows.length];
-        for (int index = 0; index < rows.length; index++) {
-            entries[index] = UpdateEntry.fromLegacyRow(rows[index]);
-        }
-        return entries;
+        return entries.toArray(UpdateEntry[]::new);
     }
 
     public long updateCountOrOne() {
-        long updateCount = updateEntries().length - 1L;
+        long updateCount = entries.size() - 1L;
         return updateCount <= 0L ? 1L : updateCount;
     }
 
@@ -58,6 +64,14 @@ public final class UpdaterSettings {
 
     public String normalizedUpdateSql() {
         return normalizeUpdateSql(updateSql);
+    }
+
+    private static List<UpdateEntry> parseEntries(String updateRows) {
+        List<UpdateEntry> parsedEntries = new ArrayList<>();
+        for (String row : StringUtils.text(updateRows).split("\n", -1)) {
+            parsedEntries.add(UpdateEntry.fromLegacyRow(row));
+        }
+        return parsedEntries;
     }
 
     public record UpdateEntry(String rawText, String id, String title, String bodyText, long featureMode,
