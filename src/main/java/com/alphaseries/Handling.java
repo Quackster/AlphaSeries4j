@@ -36,6 +36,7 @@ import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollPrompt;
 import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.room.FurnitureRoomCache;
+import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomOccupantRow;
@@ -6560,11 +6561,12 @@ public final class Handling {
             MovementPosition current = movementPosition(Licence.representedRooms().movementPosition(roomSlot, socketIndex));
             long currentX = current.found ? current.positionX : 0L;
             long currentY = current.found ? current.positionY : 0L;
-            String movementText = Functions.Proc_10_24_80E790(socketIndex, currentX, currentY, targetX, targetY);
-            long nextX = handlingMovementField(movementText, 0);
-            long nextY = handlingMovementField(movementText, 1);
-            long directionValue = handlingMovementField(movementText, 2);
-            long movingValue = handlingMovementField(movementText, 3);
+            MovementStep movement = MovementStep.fromLegacy(
+                Functions.Proc_10_24_80E790(socketIndex, currentX, currentY, targetX, targetY));
+            long nextX = movement.positionX();
+            long nextY = movement.positionY();
+            long directionValue = movement.directionValue();
+            long movingValue = movement.movingValue();
             if (movingValue == 0L && (currentX != targetX || currentY != targetY)) {
                 movingValue = 1L;
             }
@@ -8729,11 +8731,6 @@ public final class Handling {
             return 0L;
         }
         return existingCount > 0L ? 3L : 0L;
-    }
-
-    public static long handlingMovementField(String movementText, long fieldIndex) {
-        String[] fields = StringUtils.text(movementText).split("\0", -1);
-        return fieldIndex >= 0 && fieldIndex < fields.length ? NumberUtils.parseLong(fields[(int) fieldIndex]) : 0L;
     }
 
     public static long handlingDirectionCode(long deltaX, long deltaY) {

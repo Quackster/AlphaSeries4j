@@ -45,6 +45,7 @@ import com.alphaseries.game.moderation.StaffRoomVisitRow;
 import com.alphaseries.game.moderation.StaffUserLookup;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.quest.QuestSettings;
+import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
@@ -1575,7 +1576,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(0L, Handling.avatarNameValidationCode("Alice_1", "alice_1", 1));
         assertEquals(3L, Handling.avatarNameValidationCode("Alice_2", "alice_1", 1));
         assertEquals(0L, Handling.avatarNameValidationCode("Alice_2", "alice_1", 0));
-        assertEquals(7L, Handling.handlingMovementField("5\0" + "6\0" + "7\0", 2));
+        assertEquals(7L, MovementStep.fromLegacy("5\0" + "6\0" + "7\0").directionValue());
         assertEquals(3L, Handling.handlingDirectionCode(1, 1));
         String wireStringPayload = "@Cabc";
         Handling.LongRef wireOffset = new Handling.LongRef(1);

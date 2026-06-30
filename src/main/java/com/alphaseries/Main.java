@@ -7,6 +7,7 @@ import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.room.FurnitureRoomCache;
+import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.messages.outgoing.RoomPayloads;
 import com.alphaseries.game.session.GameServerSessionState;
@@ -601,13 +602,11 @@ public final class Main {
             long currentY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[2]) : 0L;
             long targetX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[3]) : 0L;
             long targetY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
-            String movementText = Functions.Proc_10_26_81E4E0(entityIndex, currentX, currentY, targetX, targetY);
-            long nextX = mainMovementField(movementText, 0);
-            long nextY = mainMovementField(movementText, 1);
-            long directionValue = mainMovementField(movementText, 2);
-            long movingValue = mainMovementField(movementText, 3);
-            if (roomId <= 0L || Functions.Proc_10_27_81F1A0(entityIndex, nextX, nextY) != 0L) {
-                mainRepresentedRoomOccupantMove(roomSlot, entityIndex, 2, nextX, nextY, directionValue, movingValue);
+            MovementStep movement = MovementStep.fromLegacy(
+                Functions.Proc_10_26_81E4E0(entityIndex, currentX, currentY, targetX, targetY));
+            if (roomId <= 0L || Functions.Proc_10_27_81F1A0(entityIndex, movement.positionX(), movement.positionY()) != 0L) {
+                mainRepresentedRoomOccupantMove(roomSlot, entityIndex, 2,
+                    movement.positionX(), movement.positionY(), movement.directionValue(), movement.movingValue());
             }
         } catch (Exception ignored) {
             // VB6 source suppresses walk failures.
@@ -629,13 +628,11 @@ public final class Main {
             long currentY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[2]) : 0L;
             long targetX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[3]) : 0L;
             long targetY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
-            String movementText = Functions.Proc_10_24_80E790(socketIndex, currentX, currentY, targetX, targetY);
-            long nextX = mainMovementField(movementText, 0);
-            long nextY = mainMovementField(movementText, 1);
-            long directionValue = mainMovementField(movementText, 2);
-            long movingValue = mainMovementField(movementText, 3);
-            if (roomId <= 0L || Functions.Proc_10_25_80F5D0(roomId, nextX, nextY) != 0L) {
-                mainRepresentedRoomOccupantMove(roomSlot, socketIndex, 1, nextX, nextY, directionValue, movingValue);
+            MovementStep movement = MovementStep.fromLegacy(
+                Functions.Proc_10_24_80E790(socketIndex, currentX, currentY, targetX, targetY));
+            if (roomId <= 0L || Functions.Proc_10_25_80F5D0(roomId, movement.positionX(), movement.positionY()) != 0L) {
+                mainRepresentedRoomOccupantMove(roomSlot, socketIndex, 1,
+                    movement.positionX(), movement.positionY(), movement.directionValue(), movement.movingValue());
             }
         } catch (Exception ignored) {
             // VB6 source suppresses walk failures.
@@ -673,11 +670,6 @@ public final class Main {
     ) {
         Licence.setRepresentedRooms(Licence.representedRooms()
             .moveOccupant(roomSlot, entityIndex, occupantType, positionX, positionY, directionValue, movingValue));
-    }
-
-    public static long mainMovementField(String movementText, long fieldIndex) {
-        String[] fields = StringUtils.text(movementText).split("\0", -1);
-        return fieldIndex >= 0 && fieldIndex < fields.length ? NumberUtils.parseLong(fields[(int) fieldIndex]) : 0L;
     }
 
     public static long mainRollerDeltaX(long rotationValue) {
