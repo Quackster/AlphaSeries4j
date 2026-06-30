@@ -1541,19 +1541,21 @@ public final class PortedModuleSmokeTest {
         assertEquals("\1" + "1\talpha\2\1" + "2\tnew\2", roomRecordCache);
         assertEquals("\1" + "1\talpha\2", RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2")
             .setRecord(0, "0\tignored").cacheText());
-        String movementCache = Handling.representedRoomOccupantMove("", 4, 9, 2, 3, 4, 1);
+        String movementCache = RepresentedRoomCache.fromLegacy("")
+            .moveOccupant(4, 9, 2, 3, 4, 1).cacheText();
         assertEquals("\1" + "4\t\t\t0\t\1" + "9\t2\t3\t4\t1\2\2", movementCache);
-        Handling.MovementPosition movementPosition = Handling.representedMovementPosition(movementCache, 4, 9);
+        RepresentedRoomCache.Position movementPosition = RepresentedRoomCache.fromLegacy(movementCache).movementPosition(4, 9);
         assertEquals(true, movementPosition.found);
         assertEquals(2L, movementPosition.positionX);
         assertEquals(3L, movementPosition.positionY);
-        assertEquals(false, Handling.representedMovementPosition(movementCache, 4, 10).found);
+        assertEquals(false, RepresentedRoomCache.fromLegacy(movementCache).movementPosition(4, 10).found);
         Handling.MovementPosition argumentPosition = Handling.representedUserPosition(new Object[]{4, "AM", "payload", 8, 9});
         assertEquals(true, argumentPosition.found);
         assertEquals(8L, argumentPosition.positionX);
         assertEquals(9L, argumentPosition.positionY);
         assertEquals(false, Handling.representedUserPosition(new Object[]{4, "AM", "payload"}).found);
-        movementCache = Handling.representedRoomOccupantMove(movementCache, 4, 9, 5, 6, 2, 0);
+        movementCache = RepresentedRoomCache.fromLegacy(movementCache)
+            .moveOccupant(4, 9, 5, 6, 2, 0).cacheText();
         assertEquals("\1" + "4\t\t\t0\t\1" + "9\t5\t6\t2\t0\2\2", movementCache);
         Path tempFile = Files.createTempFile("alphaseries4j", ".cache");
         Handling.Proc_6_240_7FC2B0(tempFile.toString(), "cache-data");
@@ -4365,15 +4367,18 @@ public final class PortedModuleSmokeTest {
         assertEquals(SocialPayloads.badgeDisplay(88, SocialPayloads.equippedBadges(List.of())), lookToBadgePayload);
         assertEquals(true, containsSend(handlingSends, "Cd"));
         handlingSends.clear();
-        Licence.global_00829310 = Handling.representedRoomOccupantMove("", 4, 4, 1, 1, 0, 0);
+        Licence.global_00829310 = RepresentedRoomCache.fromLegacy("")
+            .moveOccupant(4, 4, 1, 1, 0, 0).cacheText();
         Handling.Proc_6_197_7D43C0(4, "AK" + wireLong(3) + wireLong(3));
-        Handling.MovementPosition lookPosition = Handling.representedMovementPosition(Licence.global_00829310, 4, 4);
+        RepresentedRoomCache.Position lookPosition = RepresentedRoomCache.fromLegacy(Licence.global_00829310)
+            .movementPosition(4, 4);
         assertEquals(true, lookPosition.found);
         assertEquals(1L, lookPosition.positionX);
         assertEquals(1L, lookPosition.positionY);
         assertEquals(true, Licence.global_00829310.contains("\1" + "4\t1\t1\t3\t0\2"));
         Handling.Proc_6_198_7D4B70(4, "AO" + wireLong(4) + wireLong(4));
-        Handling.MovementPosition walkPosition = Handling.representedMovementPosition(Licence.global_00829310, 4, 4);
+        RepresentedRoomCache.Position walkPosition = RepresentedRoomCache.fromLegacy(Licence.global_00829310)
+            .movementPosition(4, 4);
         assertEquals(true, walkPosition.found);
         assertEquals(2L, walkPosition.positionX);
         assertEquals(2L, walkPosition.positionY);

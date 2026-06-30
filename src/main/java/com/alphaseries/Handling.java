@@ -8737,15 +8737,6 @@ public final class Handling {
         return Functions.movementDirectionCode(deltaX, deltaY);
     }
 
-    public static MovementPosition representedMovementPosition(String roomCacheText, long roomSlot, long entityIndex) {
-        MovementPosition result = new MovementPosition();
-        RepresentedRoomCache.Position position = RepresentedRoomCache.fromLegacy(roomCacheText).movementPosition(roomSlot, entityIndex);
-        result.positionX = position.positionX;
-        result.positionY = position.positionY;
-        result.found = position.found;
-        return result;
-    }
-
     private static MovementPosition movementPosition(RepresentedRoomCache.Position position) {
         MovementPosition result = new MovementPosition();
         result.positionX = position.positionX;
@@ -8762,20 +8753,6 @@ public final class Handling {
             result.found = true;
         }
         return result;
-    }
-
-    public static String representedRoomOccupantMove(
-        String roomCacheText,
-        long roomSlot,
-        long entityIndex,
-        long positionX,
-        long positionY,
-        long directionValue,
-        long movingValue
-    ) {
-        return RepresentedRoomCache.fromLegacy(roomCacheText)
-            .moveOccupant(roomSlot, entityIndex, positionX, positionY, directionValue, movingValue)
-            .cacheText();
     }
 
     public static String Proc_6_239_7FC170(Object... args) {
