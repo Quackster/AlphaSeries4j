@@ -537,10 +537,6 @@ public final class Licence {
         return sessionRegistry().cacheLong(StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
     }
 
-    public static long Proc_9_11_809220(Object... args) {
-        return Proc_9_10_808F30(args);
-    }
-
     public static int optionalColumnIndex(Object[] args, int argumentIndex, int defaultValue) {
         if (args != null && argumentIndex >= 0 && argumentIndex < args.length && !StringUtils.text(args[argumentIndex]).isEmpty()) {
             return NumberUtils.parseInt(args[argumentIndex]);

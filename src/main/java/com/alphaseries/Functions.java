@@ -8,6 +8,7 @@ import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
+import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -158,10 +159,6 @@ public final class Functions {
             return 0L;
         }
         return Filesystems.Proc_7_0_8034A0(UserPayloads.roomAlert(StringUtils.text(args[0]), StringUtils.text(args[1])));
-    }
-
-    public static long Proc_10_13_80AEC0(Object... args) {
-        return Proc_10_12_80ADB0(args);
     }
 
     public static String inventoryCacheRecord(long furnitureId, long productId, String itemData, long secondaryValue) {
@@ -630,27 +627,6 @@ public final class Functions {
         }
     }
 
-    public static long movementDirectionCode(long deltaX, long deltaY) {
-        if (deltaX == 0L && deltaY < 0L) {
-            return 0L;
-        } else if (deltaX > 0L && deltaY < 0L) {
-            return 1L;
-        } else if (deltaX > 0L && deltaY == 0L) {
-            return 2L;
-        } else if (deltaX > 0L && deltaY > 0L) {
-            return 3L;
-        } else if (deltaX == 0L && deltaY > 0L) {
-            return 4L;
-        } else if (deltaX < 0L && deltaY > 0L) {
-            return 5L;
-        } else if (deltaX < 0L && deltaY == 0L) {
-            return 6L;
-        } else if (deltaX < 0L && deltaY < 0L) {
-            return 7L;
-        }
-        return 0L;
-    }
-
     public static long representedPositionAvailable(long roomId, long furnitureCount, long botCount) {
         if (roomId <= 0L) {
             return 1L;
@@ -688,7 +664,7 @@ public final class Functions {
 
     private static String movementStep(Object... args) {
         if (args == null) {
-            return zeroMovement();
+            return MovementStep.zero().toLegacyText();
         }
         long currentX = 0L;
         long currentY = 0L;
@@ -703,20 +679,10 @@ public final class Functions {
             targetX = NumberUtils.parseLong(args[1]);
             targetY = NumberUtils.parseLong(args[2]);
         } else {
-            return zeroMovement();
+            return MovementStep.zero().toLegacyText();
         }
 
-        long deltaX = Long.compare(targetX - currentX, 0L);
-        long deltaY = Long.compare(targetY - currentY, 0L);
-        long nextX = currentX + deltaX;
-        long nextY = currentY + deltaY;
-        long isMoving = nextX != currentX || nextY != currentY ? 1L : 0L;
-        long directionValue = movementDirectionCode(deltaX, deltaY);
-        return nextX + "\0" + nextY + "\0" + directionValue + "\0" + isMoving + "\0";
-    }
-
-    private static String zeroMovement() {
-        return "0\0" + "0\0" + "0\0" + "0\0";
+        return MovementStep.between(currentX, currentY, targetX, targetY).toLegacyText();
     }
 
     private static long randomLongFromArgs(Object... args) {

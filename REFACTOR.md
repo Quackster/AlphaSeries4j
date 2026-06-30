@@ -477,6 +477,8 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the generic `RepresentedBotRegistry.recordField(...)`/`recordLong(...)` API after all callers moved to named `RepresentedBotRecord` accessors.
 - Moved pure roller direction, target-height, and movement-payload helpers from `Main` into `game.room.RoomRollers`, with original function names documented in JavaDoc above the renamed methods; DAO-backed roller lookups remain in `Main` for a later service extraction.
 - Added typed `UpdaterSettings.UpdateEntry` rows and routed `Updater` rendering/feature state through named accessors, removing root-level tab splitting and the positional update-field helper.
+- Moved movement-step calculation and direction-code mapping into `game.room.MovementStep`, leaving only live root Proc compatibility entry points for callers that still use the old names.
+- Removed dead no-op compatibility wrappers `Functions.Proc_10_13_80AEC0(...)` and `Licence.Proc_9_11_809220(...)`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -494,10 +496,11 @@ Measured on 2026-06-30:
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
 - `Handling.java`: 11355 lines
-- `Functions.java`: 741 lines
+- `Functions.java`: 707 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 820 lines
-- `Updater.java`: 315 lines
+- `Updater.java`: 314 lines
+- `Licence.java`: 703 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 
 ## Next Targets

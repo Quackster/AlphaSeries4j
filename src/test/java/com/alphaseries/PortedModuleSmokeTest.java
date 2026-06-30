@@ -1588,6 +1588,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(3L, Handling.avatarNameValidationCode("Alice_2", "alice_1", 1));
         assertEquals(0L, Handling.avatarNameValidationCode("Alice_2", "alice_1", 0));
         assertEquals(7L, MovementStep.fromLegacy("5\0" + "6\0" + "7\0").directionValue());
+        assertEquals("1\0" + "1\0" + "3\0" + "1\0", MovementStep.between(0, 0, 2, 2).toLegacyText());
+        assertEquals("0\0" + "0\0" + "0\0" + "0\0", MovementStep.zero().toLegacyText());
         assertEquals(3L, Handling.handlingDirectionCode(1, 1));
         String wireStringPayload = "@Cabc";
         Handling.LongRef wireOffset = new Handling.LongRef(1);

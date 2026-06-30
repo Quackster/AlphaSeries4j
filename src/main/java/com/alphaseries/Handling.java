@@ -8730,7 +8730,7 @@ public final class Handling {
     }
 
     public static long handlingDirectionCode(long deltaX, long deltaY) {
-        return Functions.movementDirectionCode(deltaX, deltaY);
+        return MovementStep.directionCode(deltaX, deltaY);
     }
 
     public static String Proc_6_239_7FC170(Object... args) {
