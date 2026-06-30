@@ -2545,9 +2545,8 @@ public final class Handling {
                     long directionValue = 0L;
                     occupantPayload.append(Proc_6_41_712730(occupant.userId(), occupant.name(), occupant.figure(),
                         occupant.motto(), genderText, roomUserIndex, positionX, positionY, positionZ, 0, 0));
-                    statusPayload.append(Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, ""))
-                        .append(' ').append(positionX).append(' ').append(positionY).append(' ').append(positionZ)
-                        .append(' ').append(directionValue).append(' ').append(directionValue).append('/').append('\r');
+                    statusPayload.append(SocialPayloads.roomOccupantStatus(
+                        roomUserIndex, positionX, positionY, positionZ, directionValue));
                     occupantCount++;
                     statusCount++;
                 }
@@ -2570,9 +2569,8 @@ public final class Handling {
                             positionX, positionY, positionZ, 2);
                         if (!botEntry.isEmpty()) {
                             occupantPayload.append(botEntry);
-                            statusPayload.append(Crypto.Proc_3_0_6D2AF0(botEntityId, null, ""))
-                                .append(' ').append(positionX).append(' ').append(positionY).append(' ').append(positionZ)
-                                .append(' ').append(directionValue).append(' ').append(directionValue).append('/').append('\r');
+                            statusPayload.append(SocialPayloads.roomOccupantStatus(
+                                botEntityId, positionX, positionY, positionZ, directionValue));
                             occupantCount++;
                             statusCount++;
                         }

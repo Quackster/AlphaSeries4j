@@ -131,6 +131,30 @@ public final class SocialPayloads {
             .build();
     }
 
+    public static String roomOccupantStatus(
+        long roomUserIndex,
+        long positionX,
+        long positionY,
+        String positionZ,
+        long direction
+    ) {
+        return PacketBuilder.create()
+            .appendInt(roomUserIndex)
+            .appendRaw(' ')
+            .appendRaw(positionX)
+            .appendRaw(' ')
+            .appendRaw(positionY)
+            .appendRaw(' ')
+            .appendRaw(positionZ)
+            .appendRaw(' ')
+            .appendRaw(direction)
+            .appendRaw(' ')
+            .appendRaw(direction)
+            .appendRaw('/')
+            .appendRaw('\r')
+            .build();
+    }
+
     public static String badgeInventory(List<BadgeRow> inventoryRows, String equippedPayload) {
         long inventoryCount = 0L;
         PacketBuilder inventoryPayload = PacketBuilder.create();
