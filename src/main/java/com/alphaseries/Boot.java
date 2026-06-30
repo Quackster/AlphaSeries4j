@@ -1361,7 +1361,10 @@ public final class Boot {
                 if (row != null) {
                     long faqId = row.id();
                     String descriptionText = StringUtils.text(row.description()).replace('\n', '\r');
-                    cache.put(faqId, Crypto.encodeVl64(faqId) + descriptionText + '\2');
+                    cache.put(faqId, PacketBuilder.create()
+                        .appendInt(faqId)
+                        .appendString(descriptionText)
+                        .build());
                 }
             }
         }
