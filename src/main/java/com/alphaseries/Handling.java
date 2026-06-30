@@ -169,7 +169,7 @@ public final class Handling {
                 summary.cautionCount(),
                 summary.banCount());
             if (!payload.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, payload, 0);
+                sendToSocket(socketIndex, payload);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -230,7 +230,7 @@ public final class Handling {
             }
             int targetSocketIndex = handlingSocketFromUserId(String.valueOf(targetUserId));
             if (targetSocketIndex > 0) {
-                Proc_6_244_801E80(targetSocketIndex, "@c" + banMessage + '\2', 0);
+                sendToSocket(targetSocketIndex, "@c" + banMessage + '\2');
                 disconnectSocket(targetSocketIndex);
             }
         } catch (Exception ignored) {
@@ -305,7 +305,7 @@ public final class Handling {
             }
             String payload = StaffPayloads.callForHelpNotification(StaffPayloads.callForHelpRow(reviewRow.toPayloadRow(), null));
             if (socketIndex > 0) {
-                Proc_6_244_801E80(socketIndex, payload, 0);
+                sendToSocket(socketIndex, payload);
             } else {
                 Proc_6_249_802F10(payload, 0, 0);
             }
@@ -347,7 +347,7 @@ public final class Handling {
             String reporterUserId = String.valueOf(moderationDao.callForHelpReporterUserId(callForHelpId));
             int reporterSocketIndex = handlingSocketFromUserId(reporterUserId);
             if (reporterSocketIndex > 0) {
-                Proc_6_244_801E80(reporterSocketIndex, StaffPayloads.callForHelpClosed(closeState), 0);
+                sendToSocket(reporterSocketIndex, StaffPayloads.callForHelpClosed(closeState));
             }
             moderationDao.closeCallForHelp(callForHelpId, closeState);
         } catch (Exception ignored) {
@@ -456,7 +456,7 @@ public final class Handling {
             List<UserDao.WardrobeSlotRow> wardrobeRows = users == null
                 ? List.<UserDao.WardrobeSlotRow>of()
                 : users.wardrobeRows(NumberUtils.parseLong(userId));
-            Proc_6_244_801E80(socketIndex, UserPayloads.wardrobeSlots(wardrobeRows, maxSlots).payload(), 0);
+            sendToSocket(socketIndex, UserPayloads.wardrobeSlots(wardrobeRows, maxSlots).payload());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -537,7 +537,7 @@ public final class Handling {
             }
             ClubDao.UserClubStatus status = clubDao.userClubStatus(NumberUtils.parseLong(userId))
                 .orElse(new ClubDao.UserClubStatus(0L, 0L, 0L, 0L, 0L, 0L, 0L));
-            Proc_6_244_801E80(socketIndex, ClubPayloads.subscriptionOffers(clubDao.clubProductRows(), status), 0);
+            sendToSocket(socketIndex, ClubPayloads.subscriptionOffers(clubDao.clubProductRows(), status));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -558,7 +558,7 @@ public final class Handling {
                 cachedPayload = recyclerSettings().statusPayload();
             }
             String payload = packetPrefix + cachedPayload;
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
             return "";
@@ -574,7 +574,7 @@ public final class Handling {
             }
             long rankIndex = handlingUserRank(userId);
             long staffFlag = handlingUserHasPermission(userId, "fuse_client_staff") ? 1L : 0L;
-            Proc_6_244_801E80(socketIndex, UserPayloads.rankAndStaffState(rankIndex, staffFlag), 0);
+            sendToSocket(socketIndex, UserPayloads.rankAndStaffState(rankIndex, staffFlag));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1049,7 +1049,7 @@ public final class Handling {
             long callForHelpId = moderationDao.latestOpenCallForHelpId(NumberUtils.parseLong(userId));
             if (callForHelpId > 0L) {
                 moderationDao.deleteCallForHelp(callForHelpId);
-                Proc_6_244_801E80(socketIndex, StaffPayloads.callForHelpDeleted(), 0);
+                sendToSocket(socketIndex, StaffPayloads.callForHelpDeleted());
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1069,15 +1069,15 @@ public final class Handling {
                 return;
             }
             String payload = StaffPayloads.moderationPanel(staffModerationPayload(rankIndex, hcLevel));
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
 
             StaffModerationDao moderationDao = staffModerationDao();
             if (moderationDao == null) {
                 return;
             }
             for (StaffCallForHelpRow row : moderationDao.openStaffCallRows()) {
-                Proc_6_244_801E80(socketIndex,
-                    StaffPayloads.callForHelpNotification(StaffPayloads.callForHelpRow(row, null)), 0);
+                sendToSocket(socketIndex,
+                    StaffPayloads.callForHelpNotification(StaffPayloads.callForHelpRow(row, null)));
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1120,7 +1120,7 @@ public final class Handling {
             }
             moderationDao.insertCallForHelp(NumberUtils.parseLong(userId), roomId, categoryId, partnerUserId, descriptionText);
             long callForHelpId = moderationDao.newestCallForHelpId();
-            Proc_6_244_801E80(socketIndex, StaffPayloads.callForHelpCreated(callForHelpId), 0);
+            sendToSocket(socketIndex, StaffPayloads.callForHelpCreated(callForHelpId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1128,8 +1128,8 @@ public final class Handling {
 
     public static void Proc_6_33_70F4F0(Object... args) {
         try {
-            Proc_6_244_801E80(handlingSocketIndex(args),
-                HelpPayloads.importantFaqs(helpCenterCache().importantFaqPayload()), 0);
+            sendToSocket(handlingSocketIndex(args),
+                HelpPayloads.importantFaqs(helpCenterCache().importantFaqPayload()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1137,8 +1137,8 @@ public final class Handling {
 
     public static void Proc_6_34_70F590(Object... args) {
         try {
-            Proc_6_244_801E80(handlingSocketIndex(args),
-                HelpPayloads.categories(helpCenterCache().categoryPayload()), 0);
+            sendToSocket(handlingSocketIndex(args),
+                HelpPayloads.categories(helpCenterCache().categoryPayload()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1151,7 +1151,7 @@ public final class Handling {
             long categoryId = packetPayload.length() >= 3 ? readWireLong(packetPayload.substring(2), new LongRef(1)) : 0L;
             HelpCenterCache helpCenterCache = helpCenterCache();
             String categoryPayload = helpCenterCache.categoryFaqPayload(categoryId);
-            Proc_6_244_801E80(socketIndex, HelpPayloads.categoryFaqs(categoryId, categoryPayload), 0);
+            sendToSocket(socketIndex, HelpPayloads.categoryFaqs(categoryId, categoryPayload));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1173,7 +1173,7 @@ public final class Handling {
                 return;
             }
             List<HelpDao.FaqNameRow> rows = helpDao.searchFaqs(searchText);
-            Proc_6_244_801E80(socketIndex, HelpPayloads.searchResults(rows), 0);
+            sendToSocket(socketIndex, HelpPayloads.searchResults(rows));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1191,8 +1191,8 @@ public final class Handling {
                     faqId = readWireLong(requestPayload, new LongRef(1));
                 }
             }
-            Proc_6_244_801E80(socketIndex,
-                HelpPayloads.description(helpCenterCache().descriptionPayload(faqId)), 0);
+            sendToSocket(socketIndex,
+                HelpPayloads.description(helpCenterCache().descriptionPayload(faqId)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
