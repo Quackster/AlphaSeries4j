@@ -713,7 +713,7 @@ public final class Main {
     }
 
     public static String mainUserIdFromSocket(long socketIndex) {
-        String userId = Licence.Proc_9_6_808080(String.valueOf(socketIndex), 0, 0);
+        String userId = Licence.socketUserId(String.valueOf(socketIndex));
         if (userId.isEmpty() || "0".equals(userId)) {
             try {
                 long databaseUserId = userDao().userIdBySocket(socketIndex);

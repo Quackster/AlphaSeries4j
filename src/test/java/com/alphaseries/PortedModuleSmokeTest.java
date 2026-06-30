@@ -678,6 +678,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(2, Licence.productDeal(6L).itemProductIds().size());
         Licence.global_00829268 = "[0:5\1u5\2sock5][1:bob\1bob\2" + "6][room\1" + "7\2" + "8]";
         assertEquals("u5", Licence.Proc_9_6_808080(5, 0));
+        assertEquals("u5", Licence.socketUserId("5"));
         assertEquals(6L, Licence.Proc_9_7_808320("bob", 1));
         assertEquals(7L, Licence.Proc_9_10_808F30("room", 0));
         assertEquals(7L, Licence.sessionCacheLong("room", 0));

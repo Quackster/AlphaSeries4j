@@ -506,7 +506,7 @@ public final class Licence {
         if (args == null || args.length == 0) {
             return "";
         }
-        return getSessionRecordField("0:", StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
+        return socketUserId(StringUtils.text(args[0]));
     }
 
     public static long Proc_9_7_808320(Object... args) {
@@ -558,6 +558,13 @@ public final class Licence {
 
     public static String getSessionLinkedValue(String recordId, boolean useBracketCount) {
         return sessionRegistry().linkedValue(recordId, useBracketCount);
+    }
+
+    /**
+     * Original function: Proc_9_6_808080.
+     */
+    public static String socketUserId(String socketIndex) {
+        return getSessionRecordField("0:", socketIndex, 0);
     }
 
     /**
