@@ -36,6 +36,19 @@ public final class SocialPayloads {
             .build();
     }
 
+    public static String roomUserWave(long roomUserIndex) {
+        return PacketBuilder.message("Ga")
+            .appendInt(roomUserIndex)
+            .build();
+    }
+
+    public static String roomUserDance(long roomUserIndex, long danceId) {
+        return PacketBuilder.message("G`")
+            .appendInt(roomUserIndex)
+            .appendInt(danceId)
+            .build();
+    }
+
     public static String badgeInventory(List<BadgeRow> inventoryRows, String equippedPayload) {
         long inventoryCount = 0L;
         PacketBuilder inventoryPayload = PacketBuilder.create();

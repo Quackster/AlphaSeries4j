@@ -385,7 +385,7 @@ public final class Handling {
                 return 0L;
             }
             long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
-            Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Ga"), 0);
+            Proc_6_247_8027E0(socketIndex, SocialPayloads.roomUserWave(roomUserIndex), 0);
             return roomUserIndex;
         } catch (Exception ignored) {
             return 0L;
@@ -415,8 +415,7 @@ public final class Handling {
                 return 0L;
             }
             long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
-            String payload = Crypto.Proc_3_0_6D2AF0(danceId, null,
-                Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "G`"));
+            String payload = SocialPayloads.roomUserDance(roomUserIndex, danceId);
             Proc_6_247_8027E0(socketIndex, payload, 0);
             return danceId;
         } catch (Exception ignored) {

@@ -374,6 +374,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved roller movement `AZ` payload construction into `RoomPayloads.rollerMove`, leaving `Main.mainRollerMovePayload` as a compatibility wrapper over the room payload builder.
 - Moved furniture state-change `AX` payloads and simple floor-use `AZ` payloads into `FurniturePayloads`, leaving the old `Handling.furnitureStatePayload` as a compatibility wrapper.
 - Moved furniture charge-prompt `Iu` payload construction into `FurniturePayloads.chargePrompt`, replacing chained legacy `Crypto` packet assembly in `Handling`.
+- Moved room-user wave `Ga` and dance payload construction into `SocialPayloads`, replacing chained legacy `Crypto` packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -389,7 +390,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 12004 lines
+- `Handling.java`: 12003 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines
