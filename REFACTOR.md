@@ -516,6 +516,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `game.navigator.NavigatorState` as the module-level singleton for new-friend room picks, routed the live navigator handler through it, and kept `Licence.global_0082908C` as a compatibility mirror instead of the primary owner.
 - Extended `NavigatorState` to own recommended-room payload caches, routed live recommended-room reads through the navigator manager, and kept `Licence.global_0082911C`/`global_00829128` as compatibility mirrors.
 - Extended `NavigatorState` to own room-category caches, routed boot payload building and the live room-category payload handler through the navigator manager, and kept `Licence.global_00829224`/`global_00829230`/`global_00829244` as compatibility mirrors in their legacy shapes.
+- Moved room-category cache compatibility conversion fully into `RoomCategoryCache.fromLegacy(...)` and simplified `Licence.roomCategoryCache()` to delegate directly to `NavigatorState`.
 - Added `game.advertising.AdvertisingState` as the module-level singleton for visit-room advertisement payloads, routed the live advertisement handler through it, and kept `Licence.global_008291D4`/`global_008291D8` as compatibility mirrors.
 - Moved visit-room advertisement compatibility conversion fully into `VisitRoomAds.fromLegacy(...)` and simplified `Licence.visitRoomAds()` to delegate directly to `AdvertisingState`.
 - Added `game.help.HelpCenterState` as the module-level singleton for FAQ/help-center payload caches, routed live help-center handlers through it, and kept `Licence.global_00829204`/`global_00829208`/`global_0082920C`/`global_00829210` as compatibility mirrors.
@@ -535,8 +536,10 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `game.pet.PetState` as the module-level singleton for pet settings, routed live pet command settings reads through it, and kept `Licence.global_008291EC`/`global_008292D0`/`global_008292CC`/`global_008292C8` as compatibility mirrors.
 - Moved pet settings compatibility conversion fully into `PetSettings.fromLegacy(...)` and simplified `Licence.petSettings()` to delegate directly to `PetState`.
 - Extended `game.catalog.CatalogState` to own catalog page payload/tree caches, routed live catalog page reads through it, and kept `Licence.global_00829308`/`global_008292F4` as compatibility mirrors.
+- Moved catalog-page compatibility conversion fully into `CatalogPages.fromLegacy(...)` and simplified `Licence.catalogPages()` to delegate directly to `CatalogState`.
 - Routed game-server packet trace configuration through typed `LicenceRuntimeState` updates instead of writing `Licence.global_00829190` directly from runtime startup.
 - Added `game.session.SessionState` as the module-level singleton for represented socket cache reads, keeping `Licence.global_0082934C` as the compatibility mirror.
+- Moved represented-socket compatibility conversion fully into `RepresentedSocketCache.fromLegacy(...)` and simplified `Licence.representedSockets()` to delegate directly to `SessionState`.
 - Extended `game.session.SessionState` to own queued/ready game-server session state, keeping `Licence.global_00829350`/`global_00829354` as compatibility mirrors.
 - Extended `game.session.SessionState` to own `Licence` socket marker state, keeping `Licence.global_008291A0` as the compatibility mirror.
 - Added `game.room.RoomState` as the module-level singleton for represented room cache reads, keeping `Licence.global_00829310` as the compatibility mirror.

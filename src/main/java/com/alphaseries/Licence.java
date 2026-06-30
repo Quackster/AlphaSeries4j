@@ -446,11 +446,7 @@ public final class Licence {
     }
 
     public static RepresentedSocketCache representedSockets() {
-        if (global_0082934C instanceof RepresentedSocketCache representedSocketCache) {
-            SessionState.instance().setRepresentedSockets(representedSocketCache);
-        } else {
-            SessionState.instance().setRepresentedSocketsFromLegacy(global_0082934C);
-        }
+        SessionState.instance().setRepresentedSocketsFromLegacy(global_0082934C);
         return SessionState.instance().representedSockets();
     }
 
@@ -514,11 +510,7 @@ public final class Licence {
     }
 
     public static CatalogPages catalogPages() {
-        if (global_00829308 instanceof CatalogPages catalogPages) {
-            CatalogState.instance().setCatalogPages(catalogPages);
-        } else {
-            CatalogState.instance().setCatalogPagesFromLegacy(global_00829308, global_008292F4);
-        }
+        CatalogState.instance().setCatalogPagesFromLegacy(global_00829308, global_008292F4);
         return CatalogState.instance().catalogPages();
     }
 
@@ -533,11 +525,7 @@ public final class Licence {
     }
 
     public static RoomCategoryCache roomCategoryCache() {
-        if (global_00829224 instanceof RoomCategoryCache roomCategoryCache) {
-            NavigatorState.instance().setRoomCategoryCache(roomCategoryCache);
-        } else {
-            NavigatorState.instance().setRoomCategoryCacheFromLegacy(global_00829224, global_00829230, global_00829244);
-        }
+        NavigatorState.instance().setRoomCategoryCacheFromLegacy(global_00829224, global_00829230, global_00829244);
         return NavigatorState.instance().roomCategoryCache();
     }
 

@@ -1203,6 +1203,10 @@ public final class PortedModuleSmokeTest {
         assertEquals("11", typedRoomCategoryDefaults.privateDefaultCategoryId());
         assertEquals("22", typedRoomCategoryDefaults.publicDefaultCategoryId());
         assertRoomCategoryDefaults(typedRoomCategoryDefaults);
+        Object previousRoomCategoryDefaults = Licence.global_00829224;
+        Licence.global_00829224 = typedRoomCategoryDefaults;
+        assertEquals("PAYLOAD", Licence.roomCategoryCache().payload(0L, 0L));
+        Licence.global_00829224 = previousRoomCategoryDefaults;
         Boot.Proc_1_12_6C8EF0();
         assertEquals(true, ((String[][]) Licence.global_00829244)[0][0].contains("public"));
         assertEquals(true, Licence.roomCategoryCache().payload(0L, 0L).contains("public"));
@@ -2160,6 +2164,10 @@ public final class PortedModuleSmokeTest {
         assertEquals("a\2" + "7\2c\2d\2e\2" + "1", socketCache.record(4));
         assertEquals(7L, socketCache.roomSlot(4));
         assertEquals(true, socketCache.isBusy(4));
+        Object previousRepresentedSocketCache = Licence.global_0082934C;
+        Licence.global_0082934C = socketCache;
+        assertEquals(true, Licence.representedSockets().isBusy(4));
+        Licence.global_0082934C = previousRepresentedSocketCache;
         String expectedOwnProfile = "@E7\2Alice\2hello\2F\2\2\2H\2HIH";
         expectedOwnProfile = Crypto.Proc_3_0_6D2AF0(4, null, expectedOwnProfile);
         expectedOwnProfile = Crypto.Proc_3_0_6D2AF0(2, null, expectedOwnProfile);
@@ -5000,6 +5008,12 @@ public final class PortedModuleSmokeTest {
         String[][] copiedPageTrees = typedCatalogPages.pageTrees();
         copiedPageTrees[0][0] = "changed-again";
         assertEquals("TREE0", typedCatalogPages.defaultPageTree());
+        Object previousPagePayloads = Licence.global_00829308;
+        Object previousPageTrees = Licence.global_008292F4;
+        Licence.global_00829308 = typedCatalogPages;
+        assertEquals("PAGE4", Licence.catalogPages().pagePayload(4L));
+        Licence.global_00829308 = previousPagePayloads;
+        Licence.global_008292F4 = previousPageTrees;
     }
 
     private static void assertStaffSettingsTypedAccessors() {
