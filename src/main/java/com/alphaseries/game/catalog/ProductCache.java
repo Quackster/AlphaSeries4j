@@ -10,20 +10,18 @@ import java.util.List;
 import java.util.Map;
 
 public final class ProductCache {
-    private final Object legacyRows;
     private final Map<Long, List<String>> rows;
 
     private ProductCache(Object legacyRows) {
-        this.legacyRows = legacyRows == null ? "" : legacyRows;
-        this.rows = rowsById(this.legacyRows);
+        this.rows = rowsById(legacyRows == null ? "" : legacyRows);
     }
 
     public static ProductCache fromLegacy(Object legacyRows) {
         return new ProductCache(legacyRows);
     }
 
-    public Object legacyRows() {
-        return legacyRows;
+    public static ProductCache fromRows(Iterable<CatalogDao.ProductCacheRow> rows) {
+        return new ProductCache(rows);
     }
 
     public String cell(long productId, long columnIndex) {
@@ -158,7 +156,7 @@ public final class ProductCache {
         if (cache instanceof Iterable<?> values) {
             for (Object value : values) {
                 if (value instanceof CatalogDao.ProductCacheRow row) {
-                    rows.put(NumberUtils.parseLong(field(row.values(), 0)), List.copyOf(row.values()));
+                    rows.put(NumberUtils.parseLong(field(row.values(), 0)), productFields(row.values()));
                 }
             }
             return rows;
@@ -183,5 +181,12 @@ public final class ProductCache {
 
     private static String field(List<String> fields, int index) {
         return fields != null && index >= 0 && index < fields.size() ? StringUtils.text(fields.get(index)) : "";
+    }
+
+    private static List<String> productFields(List<String> rowValues) {
+        if (rowValues == null || rowValues.size() <= 1) {
+            return List.of();
+        }
+        return List.copyOf(rowValues.subList(1, rowValues.size()));
     }
 }

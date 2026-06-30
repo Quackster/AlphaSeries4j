@@ -1,6 +1,6 @@
 # AlphaSeries4j Refactor Progress
 
-Last updated: 2026-06-30
+Last updated: 2026-07-01
 
 ## Goal
 
@@ -11,7 +11,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 
 - Preserve current source compatibility and runtime behavior for every slice; compatibility shims may stay temporarily, but each slice must move the implementation toward typed Java boundaries.
 - Do not add or keep methods that simply wrap another method and add no behavior. A method that only forwards the same arguments, bounces control straight back to another method, or returns another method's result without validation, translation, state management, or protocol compatibility work is dead weight. Do not move these wrappers back into legacy root classes or replace them with equivalent pass-through methods elsewhere. Delete no-op wrappers once call sites can move to the real API; only temporary source-compatibility bridges may remain, and they must be documented as compatibility boundaries scheduled for removal.
-- When renaming legacy `Proc_*`/VB-style methods to proper Java names, keep the original function name in the Javadocs immediately above the renamed method, for example `Original function: Proc_...`. Every renamed method should carry that source-history note directly above the method declaration. Use this only as source-history documentation, not as a reason to preserve bad names or no-op wrapper methods.
+- When renaming legacy `Proc_*`/VB-style methods to proper Java names, keep the original legacy function name in the Javadocs immediately above the renamed method, for example `Original function: Proc_...`. Every renamed method should carry that source-history note directly above the method declaration so the old source name remains discoverable without preserving bad names or no-op wrapper methods.
 - Keep tests working throughout the refactor. Run `./gradlew test --no-daemon` before committing behavior-affecting slices, and do not mark a milestone complete unless the suite passes or the failure is explicitly documented.
 - Use prepared DAO methods for database access. Handlers and services should not concatenate SQL strings or call raw `MySQL.Proc_5_*` helpers once a DAO boundary exists.
 - Load database rows into typed classes or records with named fields. Do not map result sets into tab-delimited strings such as `getString(1) + "\t" + getString(2)` except at a deliberate legacy compatibility boundary that is documented and scheduled for removal.
@@ -538,6 +538,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `CatalogPages` internals from raw indexed payload and tree objects to typed page-payload maps and defensive page-tree matrices, leaving legacy array/map parsing only at the catalog state boundary.
 - Migrated `RoomCategoryCache` internals from raw row and payload objects to typed `RoomCategoryRow` lists and defensive payload matrices, leaving legacy row text and matrix parsing only at the navigator state boundary.
 - Migrated `CatalogProductSettings` internals from raw package/product objects to typed package, pet-package, and contained-club row lists, keeping legacy row text only for compatibility inputs.
+- Migrated `ProductCache` internals from raw legacy-row object storage to a parsed typed row map, keeping legacy row parsing only at the constructor/factory boundary.
 - Migrated `AchievementSettings` internals from raw row objects to indexed typed achievement rows, keeping legacy row parsing only at the achievement state boundary.
 - Migrated `PetSettings` internals from raw level/command row objects to typed pet-level and pet-command row lists, keeping legacy array serialization only at compatibility accessors.
 - Migrated the remaining internal `Functions` HC gift-amount settings read to `AppSettingsCache`, leaving `Proc_10_0_809570(...)` and `Proc_10_1_809790(...)` only as explicit compatibility methods covered by tests.

@@ -17,6 +17,7 @@ import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.advertising.VisitRoomAds;
 import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.catalog.CatalogProductSettings;
+import com.alphaseries.game.catalog.ProductCache;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
@@ -197,6 +198,11 @@ public final class PortedModuleSmokeTest {
         assertEquals("502", DataManager.productCache().fallbackBadgeId(11));
         assertEquals(502L, DataManager.productCache().wiredCode(11));
         assertEquals(true, DataManager.productCache().hasCharges(11));
+        ProductCache typedProductCache = ProductCache.fromRows(List.of(new CatalogDao.ProductCacheRow(List.of(
+            "12", "7", "", "", "", "typed", "fallbackTyped"))));
+        assertEquals(7L, typedProductCache.type(12));
+        assertEquals("typed", typedProductCache.defaultSign(12));
+        assertEquals("fallbackTyped", typedProductCache.fallbackDefaultSign(12));
         Path dataManagerWritePath = Files.createTempFile("alphaseries-datamanager-write", ".txt");
         DataManager.writeTextFile(dataManagerWritePath.toString(), "replace");
         assertEquals("replace" + System.lineSeparator(), new String(Files.readAllBytes(dataManagerWritePath), "UTF-8"));
