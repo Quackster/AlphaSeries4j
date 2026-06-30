@@ -261,7 +261,7 @@ public final class Boot {
             if (bots == null) {
                 return;
             }
-            Licence.setPetRaceRows(buildPetRaceCache(bots.petRaceCacheRows()));
+            Licence.setPetRaceRows(bots.petRaceCacheRows());
         } catch (Exception ignored) {
             // VB6 source suppresses boot cache failures.
         }

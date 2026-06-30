@@ -7,15 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class PetSettings {
-    private final String raceRows;
+    private final List<PetRaceCacheRow> raceRows;
+    private final String legacyRaceRows;
     private final List<PetLevelRow> levelRows;
     private final List<PetCommandRow> commandRows;
     private final int levelRowSlotCount;
     private final int commandRowSlotCount;
     private final long commandCount;
 
-    private PetSettings(String raceRows, Object levelRows, Object commandRows, long commandCount) {
-        this.raceRows = StringUtils.text(raceRows);
+    private PetSettings(Object raceRows, Object levelRows, Object commandRows, long commandCount) {
+        this.raceRows = raceRows(raceRows);
+        this.legacyRaceRows = this.raceRows.isEmpty() && raceRows instanceof String
+            ? StringUtils.text(raceRows) : "";
         this.levelRows = levelRows(levelRows);
         this.commandRows = commandRows(commandRows);
         this.levelRowSlotCount = rowSlotCount(levelRows, this.levelRows);
@@ -23,8 +26,10 @@ public final class PetSettings {
         this.commandCount = commandCount;
     }
 
-    private PetSettings(String raceRows, List<PetLevelRow> levelRows, List<PetCommandRow> commandRows, long commandCount) {
-        this.raceRows = StringUtils.text(raceRows);
+    private PetSettings(Object raceRows, List<PetLevelRow> levelRows, List<PetCommandRow> commandRows, long commandCount) {
+        this.raceRows = raceRows(raceRows);
+        this.legacyRaceRows = this.raceRows.isEmpty() && raceRows instanceof String
+            ? StringUtils.text(raceRows) : "";
         this.levelRows = copyRows(levelRows);
         this.commandRows = copyRows(commandRows);
         this.levelRowSlotCount = rowSlotCount(null, this.levelRows);
@@ -32,7 +37,7 @@ public final class PetSettings {
         this.commandCount = commandCount;
     }
 
-    public static PetSettings fromLegacy(String raceRows, Object levelRows, Object commandRows, long commandCount) {
+    public static PetSettings fromLegacy(Object raceRows, Object levelRows, Object commandRows, long commandCount) {
         if (levelRows instanceof PetSettings settings) {
             return settings;
         }
@@ -48,8 +53,25 @@ public final class PetSettings {
         return new PetSettings(raceRows, levelRows, commandRows, commandCount);
     }
 
+    public static PetSettings fromRaceRows(List<PetRaceCacheRow> raceRows, List<PetLevelRow> levelRows,
+                                           List<PetCommandRow> commandRows, long commandCount) {
+        return new PetSettings(raceRows, levelRows, commandRows, commandCount);
+    }
+
     public String raceRows() {
-        return raceRows;
+        if (raceRows.isEmpty() && !legacyRaceRows.isEmpty()) {
+            return legacyRaceRows;
+        }
+        StringBuilder payload = new StringBuilder();
+        for (PetRaceCacheRow row : raceRows) {
+            payload.append('[').append(StringUtils.text(row.productPet())).append('\t');
+            payload.append(row.petId()).append('\t');
+            payload.append(row.breed()).append('\t');
+            payload.append(row.minRank()).append('\t');
+            payload.append(row.minHcRank()).append('\t');
+            payload.append(StringUtils.text(row.name())).append(']');
+        }
+        return payload.toString();
     }
 
     public Object levelRows() {
@@ -76,6 +98,10 @@ public final class PetSettings {
 
     public List<PetLevelRow> levels() {
         return List.copyOf(levelRows);
+    }
+
+    public List<PetRaceCacheRow> races() {
+        return List.copyOf(raceRows);
     }
 
     public List<PetCommandRow> commands() {
@@ -109,6 +135,43 @@ public final class PetSettings {
             return commands;
         }
         return commands;
+    }
+
+    public static List<PetRaceCacheRow> raceRows(Object rows) {
+        if (rows instanceof List<?> rowList) {
+            List<PetRaceCacheRow> races = new ArrayList<>();
+            for (Object row : rowList) {
+                if (row instanceof PetRaceCacheRow race) {
+                    races.add(race);
+                }
+            }
+            return List.copyOf(races);
+        }
+        List<PetRaceCacheRow> races = new ArrayList<>();
+        for (String row : StringUtils.text(rows).replace('[', '\r').split("\r", -1)) {
+            PetRaceCacheRow race = raceRow(row.replace("]", ""));
+            if (race != null) {
+                races.add(race);
+            }
+        }
+        return List.copyOf(races);
+    }
+
+    public static PetRaceCacheRow raceRow(String rowText) {
+        if (StringUtils.text(rowText).isEmpty()) {
+            return null;
+        }
+        String[] fields = StringUtils.text(rowText).split("\t", -1);
+        if (fields.length < 6) {
+            return null;
+        }
+        return new PetRaceCacheRow(
+            StringUtils.field(fields, 0),
+            NumberUtils.parseLong(StringUtils.field(fields, 1)),
+            NumberUtils.parseLong(StringUtils.field(fields, 2)),
+            NumberUtils.parseLong(StringUtils.field(fields, 3)),
+            NumberUtils.parseLong(StringUtils.field(fields, 4)),
+            StringUtils.field(fields, 5));
     }
 
     public static List<PetLevelRow> levelRows(Object rows) {

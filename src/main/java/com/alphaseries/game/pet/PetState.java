@@ -33,7 +33,7 @@ public final class PetState {
         this.settings = settings == null ? PetSettings.empty() : settings;
     }
 
-    public synchronized void setSettingsFromLegacy(String raceRows, Object levelRows, Object commandRows, long commandCount) {
+    public synchronized void setSettingsFromLegacy(Object raceRows, Object levelRows, Object commandRows, long commandCount) {
         settings = PetSettings.fromLegacy(raceRows, levelRows, commandRows, commandCount);
     }
 }

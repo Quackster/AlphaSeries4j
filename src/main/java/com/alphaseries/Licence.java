@@ -71,7 +71,7 @@ public final class Licence {
     public static Object global_0082917C = "";
     public static Object global_00829258 = "";
     public static long global_0082916C = 0L;
-    public static String global_008291EC = "";
+    public static Object global_008291EC = "";
     public static String global_008291F8 = "";
     public static String global_008291FC = "";
     public static Object global_00829078 = "";
@@ -340,8 +340,8 @@ public final class Licence {
         return PetState.instance().settings();
     }
 
-    public static void setPetRaceRows(String raceRows) {
-        global_008291EC = StringUtils.text(raceRows);
+    public static void setPetRaceRows(Object raceRows) {
+        global_008291EC = raceRows == null ? "" : raceRows;
         PetState.instance().setSettingsFromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
     }
 

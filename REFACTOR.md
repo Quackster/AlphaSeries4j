@@ -74,6 +74,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed boot room-category default ids through typed `List<String>` storage instead of a raw `String[]` mirror in the live `Licence` cache.
 - Added `com.alphaseries.game.pet.PetPayloads` for pet race, inventory, name-validation, command, status, scratch, and action outgoing payloads.
 - Added `com.alphaseries.game.pet.PetSettings` as a typed adapter around pet race, level, and command state previously read and written through raw `Licence` globals.
+- Routed boot pet-race cache loading through typed `PetRaceCacheRow` records instead of storing the serialized bracket/tab payload in the live `Licence` cache.
 - Added `com.alphaseries.game.pet.RepresentedBotRegistry` as a typed adapter around represented bot allocation markers and bot record caches previously manipulated as raw `Licence` strings.
 - Added `com.alphaseries.game.quest.QuestSettings` as a typed adapter around cached quest rows previously read directly from `Licence` globals.
 - Added `QuestDao` typed user-quest records and routed quest accept, auto-advance, reset, progress, completion, and list flows through prepared DAO methods.

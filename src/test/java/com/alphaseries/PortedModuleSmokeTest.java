@@ -39,6 +39,7 @@ import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.pet.PetPayloads;
+import com.alphaseries.game.pet.PetRaceCacheRow;
 import com.alphaseries.game.pet.PetRaceRow;
 import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.pet.PetStatusRow;
@@ -1159,7 +1160,9 @@ public final class PortedModuleSmokeTest {
                 List.of(new ClubDao.ClubProductRow(2L, "club_vip", 3L, 2L, 60L)),
                 new ClubDao.UserClubStatus(2L, 10L, 70L, 1L, 3L, 4L, 8L)));
         Boot.Proc_1_6_6C5830();
-        assertEquals(true, Licence.global_008291EC.contains("pet_dog"));
+        assertEquals(true, Licence.global_008291EC instanceof List);
+        assertEquals(new PetRaceCacheRow("pet_dog", 1L, 2L, 3L, 4L, "Dog"),
+            ((List<?>) Licence.global_008291EC).get(0));
         assertEquals(true, Licence.petSettings().raceRows().contains("pet_dog"));
         Boot.Proc_1_7_6C5E10();
         assertEquals(true, Licence.global_008292D0 instanceof List);
@@ -1180,9 +1183,15 @@ public final class PortedModuleSmokeTest {
             List.of(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 3)),
             List.of(cachedCommand),
             1L);
+        assertEquals("races", typedPetSettings.raceRows());
         assertEquals("20\t30\t40", ((String[]) typedPetSettings.levelRows())[2]);
         assertEquals(cachedCommand, ((PetSettings.PetCommandRow[]) typedPetSettings.commandRows())[2]);
         assertPetSettingsTypedAccessors(typedPetSettings, cachedCommand);
+        PetSettings typedPetRaceSettings = PetSettings.fromRaceRows(
+            List.of(new PetRaceCacheRow("pet_typed", 9L, 8L, 7L, 6L, "Typed")),
+            List.of(), List.of(), 0L);
+        assertEquals("[pet_typed\t9\t8\t7\t6\tTyped]", typedPetRaceSettings.raceRows());
+        assertEquals("pet_typed", typedPetRaceSettings.races().get(0).productPet());
         Licence.global_008292D0 = typedPetSettings;
         assertPetSettingsTypedAccessors(Licence.petSettings(), cachedCommand);
         Boot.Proc_1_8_6C6850();
