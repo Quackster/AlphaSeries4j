@@ -738,6 +738,39 @@ public final class Handling {
         public boolean valid;
     }
 
+    public record BadgeUpdateSelections(String first, String second, String third, String fourth, String fifth) {
+        public BadgeUpdateSelections {
+            first = StringUtils.text(first);
+            second = StringUtils.text(second);
+            third = StringUtils.text(third);
+            fourth = StringUtils.text(fourth);
+            fifth = StringUtils.text(fifth);
+        }
+
+        public int size() {
+            return 5;
+        }
+
+        public String slot(int index) {
+            if (index == 0) {
+                return first;
+            }
+            if (index == 1) {
+                return second;
+            }
+            if (index == 2) {
+                return third;
+            }
+            if (index == 3) {
+                return fourth;
+            }
+            if (index == 4) {
+                return fifth;
+            }
+            return "";
+        }
+    }
+
     public static final class AchievementProgressDecision {
         public long achievementIndex = -1L;
         public long nextLevel;
@@ -6399,9 +6432,9 @@ public final class Handling {
                 return "";
             }
             users.clearEquippedBadges(userIdValue);
-            String[] slots = badgeUpdateSelectionsFromWire(packetPayload);
-            for (int slotIndex = 0; slotIndex < slots.length; slotIndex++) {
-                String badgeId = slots[slotIndex];
+            BadgeUpdateSelections selections = badgeUpdateSelectionsFromWire(packetPayload);
+            for (int slotIndex = 0; slotIndex < selections.size(); slotIndex++) {
+                String badgeId = selections.slot(slotIndex);
                 if (!badgeId.isEmpty()) {
                     users.equipBadge(userIdValue, badgeId, slotIndex + 1L);
                 }
@@ -11110,22 +11143,26 @@ public final class Handling {
         return Math.max(0L, playlistOrder);
     }
 
-    public static String[] badgeUpdateSelectionsFromWire(String packetPayload) {
+    public static BadgeUpdateSelections badgeUpdateSelectionsFromWire(String packetPayload) {
         String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("B^")) {
             requestPayload = requestPayload.substring(2);
         }
-        String[] slots = new String[5];
         LongRef offset = new LongRef(1);
-        for (int slotIndex = 0; slotIndex < slots.length; slotIndex++) {
-            long hasBadge = readWireLong(requestPayload, offset);
-            if (hasBadge == 1L) {
-                slots[slotIndex] = Functions.Proc_10_11_80A9C0(readWireString(requestPayload, offset), 0, 0);
-            } else {
-                slots[slotIndex] = "";
-            }
+        String first = badgeUpdateSelectionFromWire(requestPayload, offset);
+        String second = badgeUpdateSelectionFromWire(requestPayload, offset);
+        String third = badgeUpdateSelectionFromWire(requestPayload, offset);
+        String fourth = badgeUpdateSelectionFromWire(requestPayload, offset);
+        String fifth = badgeUpdateSelectionFromWire(requestPayload, offset);
+        return new BadgeUpdateSelections(first, second, third, fourth, fifth);
+    }
+
+    private static String badgeUpdateSelectionFromWire(String requestPayload, LongRef offset) {
+        long hasBadge = readWireLong(requestPayload, offset);
+        if (hasBadge == 1L) {
+            return Functions.Proc_10_11_80A9C0(readWireString(requestPayload, offset), 0, 0);
         }
-        return slots;
+        return "";
     }
 
     public static long idRequestFromWire(String packetPayload, String prefix) {

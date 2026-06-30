@@ -2311,12 +2311,12 @@ public final class PortedModuleSmokeTest {
         assertEquals("E^" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2",
             SocialPayloads.tagDisplay(5, SocialPayloads.tags(List.of("one", "two"))));
         String badgeWire = "A@CONEA@CTWO";
-        String[] badgeSlots = Handling.badgeUpdateSelectionsFromWire("B^" + badgeWire);
-        assertEquals("ONE", badgeSlots[0]);
-        assertEquals("TWO", badgeSlots[1]);
-        assertEquals("", badgeSlots[2]);
-        assertEquals("", badgeSlots[3]);
-        assertEquals("", badgeSlots[4]);
+        Handling.BadgeUpdateSelections badgeSlots = Handling.badgeUpdateSelectionsFromWire("B^" + badgeWire);
+        assertEquals("ONE", badgeSlots.first());
+        assertEquals("TWO", badgeSlots.second());
+        assertEquals("", badgeSlots.third());
+        assertEquals("", badgeSlots.fourth());
+        assertEquals("", badgeSlots.fifth());
         assertEquals(1L, Handling.idRequestFromWire("CkA", "Ck"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(1, null, "G{")),
             RecyclerPayloads.status(42, 0));

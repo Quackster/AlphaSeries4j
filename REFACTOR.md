@@ -446,6 +446,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the no-op user identity payload wrapper from `Handling`; identity refresh handlers and tests now call `UserPayloads.identityRefresh` directly.
 - Removed the unused root `indexedPayload` array helper from `Handling`; indexed cache lookups now remain encapsulated in typed cache classes.
 - Added a typed `Main.GameServerPacket` parser and routed live game-server `DATA` processing through a named packet payload append path; the old `String[]` entry point remains only as a compatibility adapter.
+- Replaced badge update selection array exports with typed `BadgeUpdateSelections` slot accessors, keeping positional wire parsing inside the adapter.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -462,7 +463,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11483 lines
+- `Handling.java`: 11520 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 912 lines
