@@ -3777,23 +3777,17 @@ public final class Handling {
             }
             String eventQueryTail = StringUtils.text(args[0]);
             String roomQueryTail = StringUtils.text(args[1]);
-            String eventRows = "";
-            String roomRows = "";
+            List<RoomDao.NavigatorEventRow> eventRows = List.of();
+            List<NavigatorRoom> roomRows = List.of();
+            RoomDao rooms = roomDao();
             if (!eventQueryTail.isEmpty()) {
                 String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
-                eventRows = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms_events.name,users.name,rooms.status_door,"
-                    + "rooms.visitors_now,rooms.visitors_max,rooms_events.description,rooms_categories.has_trading,"
-                    + "rooms.allow_otherspets,rooms.rate,rooms_events.id_category,rooms.icon,rooms_events.tag_1,"
-                    + "rooms_events.tag_2,DATE_FORMAT(FROM_UNIXTIME(rooms_events.timestamp), '" + timeFormat
-                    + "') FROM " + eventQueryTail, 0, 0);
+                eventRows = rooms == null ? List.of() : rooms.navigatorEventsByTail(eventQueryTail, timeFormat, true);
             }
             if (!roomQueryTail.isEmpty()) {
-                roomRows = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
-                    + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,"
-                    + "rooms.allow_otherspets,rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2 FROM "
-                    + roomQueryTail, 0, 0);
+                roomRows = rooms == null ? List.of() : rooms.navigatorRoomsByTail(roomQueryTail, false);
             }
-            return navigatorCombinedRoomListPayloadFromRows(eventRows, roomRows);
+            return navigatorCombinedRoomListPayload(eventRows, roomRows);
         } catch (Exception ignored) {
             return "";
         }
@@ -3809,11 +3803,8 @@ public final class Handling {
                 return Crypto.Proc_3_0_6D2AF0(0, null, "");
             }
             String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms_events.name,users.name,rooms.status_door,"
-                + "rooms.visitors_now,rooms.visitors_max,rooms_events.description,rooms_categories.has_trading,NULL,"
-                + "rooms.rate,rooms_events.id_category,rooms.icon,rooms_events.tag_1,rooms_events.tag_2,"
-                + "DATE_FORMAT(FROM_UNIXTIME(rooms_events.timestamp), '" + timeFormat + "') FROM " + queryTail, 0, 0);
-            return navigatorEventListPayloadFromRows(rowText);
+            RoomDao rooms = roomDao();
+            return navigatorEventListPayload(rooms == null ? List.of() : rooms.navigatorEventsByTail(queryTail, timeFormat, false));
         } catch (Exception ignored) {
             return "";
         }
@@ -9859,6 +9850,18 @@ public final class Handling {
         return Crypto.Proc_3_0_6D2AF0(roomCount, null, payload.toString());
     }
 
+    public static String navigatorRoomListPayload(List<NavigatorRoom> rows) {
+        long roomCount = 0L;
+        StringBuilder payload = new StringBuilder();
+        for (NavigatorRoom row : rows == null ? List.<NavigatorRoom>of() : rows) {
+            if (row != null) {
+                payload.append(navigatorRoomFragment(row));
+                roomCount++;
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(roomCount, null, payload.toString());
+    }
+
     public static String singleNavigatorRoomPayload(NavigatorRoom room) {
         return room == null ? "" : navigatorRoomFragment(room);
     }
@@ -9889,11 +9892,8 @@ public final class Handling {
             if (queryTail.isEmpty()) {
                 return Crypto.Proc_3_0_6D2AF0(0, null, "");
             }
-            String rowText = MySQL.Proc_5_2_6D4690("SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
-                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
-                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,"
-                + "rooms.is_staff_picked FROM " + queryTail, 0, 0);
-            return navigatorRoomListPayloadFromRows(rowText);
+            RoomDao rooms = roomDao();
+            return navigatorRoomListPayload(rooms == null ? List.of() : rooms.navigatorRoomsByTail(queryTail, true));
         } catch (Exception ignored) {
             return Crypto.Proc_3_0_6D2AF0(0, null, "");
         }
@@ -9905,6 +9905,42 @@ public final class Handling {
         for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 payload.append(navigatorEventFragment(row.split("\t", -1)));
+                eventCount++;
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(eventCount, null, payload.toString());
+    }
+
+    public static String navigatorEventFragment(RoomDao.NavigatorEventRow event) {
+        if (event == null) {
+            return "";
+        }
+        return PacketBuilder.create()
+            .appendInt(event.roomId())
+            .appendInt(event.visitorsNow())
+            .appendInt(event.visitorsMax())
+            .appendInt(event.roomRate())
+            .appendInt(event.categoryId())
+            .appendInt(event.hasTrading())
+            .appendRaw(" ")
+            .appendString(event.eventName())
+            .appendString(event.ownerName())
+            .appendString(event.doorStatus())
+            .appendString(event.description())
+            .appendString(event.icon())
+            .appendString(event.tagOne())
+            .appendString(event.tagTwo())
+            .appendString(event.formattedTime())
+            .appendRaw("H")
+            .build();
+    }
+
+    public static String navigatorEventListPayload(List<RoomDao.NavigatorEventRow> rows) {
+        long eventCount = 0L;
+        StringBuilder payload = new StringBuilder();
+        for (RoomDao.NavigatorEventRow row : rows == null ? List.<RoomDao.NavigatorEventRow>of() : rows) {
+            if (row != null) {
+                payload.append(navigatorEventFragment(row));
                 eventCount++;
             }
         }
@@ -9923,6 +9959,24 @@ public final class Handling {
         for (String row : StringUtils.text(roomRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 payload.append(navigatorRoomFragment(row.split("\t", -1)));
+                itemCount++;
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(itemCount, null, payload.toString());
+    }
+
+    public static String navigatorCombinedRoomListPayload(List<RoomDao.NavigatorEventRow> eventRows, List<NavigatorRoom> roomRows) {
+        long itemCount = 0L;
+        StringBuilder payload = new StringBuilder();
+        for (RoomDao.NavigatorEventRow row : eventRows == null ? List.<RoomDao.NavigatorEventRow>of() : eventRows) {
+            if (row != null) {
+                payload.append(navigatorEventFragment(row));
+                itemCount++;
+            }
+        }
+        for (NavigatorRoom row : roomRows == null ? List.<NavigatorRoom>of() : roomRows) {
+            if (row != null) {
+                payload.append(navigatorRoomFragment(row));
                 itemCount++;
             }
         }

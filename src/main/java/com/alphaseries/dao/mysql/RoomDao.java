@@ -171,6 +171,58 @@ public final class RoomDao {
             roomId);
     }
 
+    public List<NavigatorRoom> navigatorRoomsByTail(String queryTail, boolean includeStaffPicked) throws SQLException {
+        String staffPickedColumn = includeStaffPicked ? "rooms.is_staff_picked" : "0";
+        return database.query(
+            "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,"
+                + staffPickedColumn + " FROM " + queryTail,
+            resultSet -> new NavigatorRoom(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getString(7),
+                resultSet.getLong(8),
+                resultSet.getLong(10),
+                resultSet.getLong(11),
+                resultSet.getString(12),
+                resultSet.getString(13),
+                resultSet.getString(14),
+                resultSet.getLong(15),
+                resultSet.getLong(16)));
+    }
+
+    public List<NavigatorEventRow> navigatorEventsByTail(String queryTail, String timeFormat, boolean includePetFlag)
+        throws SQLException {
+
+        String petColumn = includePetFlag ? "rooms.allow_otherspets" : "NULL";
+        return database.query(
+            "SELECT rooms.id,rooms_events.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms_events.description,rooms_categories.has_trading,"
+                + petColumn + ",rooms.rate,rooms_events.id_category,rooms.icon,rooms_events.tag_1,"
+                + "rooms_events.tag_2,DATE_FORMAT(FROM_UNIXTIME(rooms_events.timestamp), '" + timeFormat
+                + "') FROM " + queryTail,
+            resultSet -> new NavigatorEventRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getString(7),
+                resultSet.getLong(8),
+                resultSet.getLong(10),
+                resultSet.getLong(11),
+                resultSet.getString(12),
+                resultSet.getString(13),
+                resultSet.getString(14),
+                resultSet.getString(15)));
+    }
+
     public List<NavigatorTagPopularity> navigatorTagPopularities(long limit) throws SQLException {
         return database.query(
             "SELECT SUM(get_one) as get_one,get_two FROM (SELECT SUM(rooms.visitors_now) as get_one,"
@@ -1065,6 +1117,24 @@ public final class RoomDao {
         private static String text(String value) {
             return value == null ? "" : value;
         }
+    }
+
+    public record NavigatorEventRow(
+        long roomId,
+        String eventName,
+        String ownerName,
+        long doorStatus,
+        long visitorsNow,
+        long visitorsMax,
+        String description,
+        long hasTrading,
+        long roomRate,
+        long categoryId,
+        String icon,
+        String tagOne,
+        String tagTwo,
+        String formattedTime
+    ) {
     }
 
     public enum RoomDecoration {
