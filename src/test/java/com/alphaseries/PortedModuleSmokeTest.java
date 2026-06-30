@@ -94,6 +94,8 @@ public final class PortedModuleSmokeTest {
             Crypto.Proc_3_0_6D2AF0(77, null, "H|")) + "NewName\2",
             UserPayloads.roomUserNameChanged(77, 4, "NewName"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "DX"), UserPayloads.emailStatus(1));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(88, null, "Fx") + Crypto.Proc_3_0_6D2AF0(12, null, ""),
+            UserPayloads.respectReceived(88, 12));
         assertEquals(UserPayloads.errorCode(1, 96), Functions.Proc_10_8_80A580(1, 96));
         PacketReader reader = PacketReader.of(Crypto.encodeVl64(7) + "@Dtesttail");
         assertEquals(7L, reader.readInt());
@@ -4308,7 +4310,7 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         handlingSends.clear();
         String respectPayload = Handling.Proc_6_76_726CE0(4, "Es" + wireLong(88));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(88, null, "Fx") + Crypto.Proc_3_0_6D2AF0(12, null, ""), respectPayload);
+        assertEquals(UserPayloads.respectReceived(88, 12), respectPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_amount=respect_amount-1,respect_given=respect_given+1 WHERE id='77'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_received=respect_received+1 WHERE id='88'"));
         assertEquals(true, containsSend(handlingSends, "Fx"));

@@ -43,6 +43,13 @@ public final class UserPayloads {
         return payload.build();
     }
 
+    public static String respectReceived(long targetUserId, long respectReceived) {
+        return PacketBuilder.message("Fx")
+            .appendInt(targetUserId)
+            .appendInt(respectReceived)
+            .build();
+    }
+
     public static String activityPointBalance(long pointTypeOne, long pointTypeTwo, long pointTypeThree, long pointTypeFour) {
         long[] pointValues = {pointTypeOne, pointTypeTwo, pointTypeThree, pointTypeFour};
         PacketBuilder itemPayload = PacketBuilder.create();

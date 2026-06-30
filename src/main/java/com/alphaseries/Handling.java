@@ -2363,8 +2363,7 @@ public final class Handling {
             Proc_6_205_7D9780(socketIndex, 3);
             Proc_6_205_7D9780(targetSocketIndex, 2);
             long respectReceived = users.respectReceived(targetUserIdValue);
-            String payload = Crypto.Proc_3_0_6D2AF0(targetUserIdValue, null, "Fx")
-                + Crypto.Proc_3_0_6D2AF0(respectReceived, null, "");
+            String payload = UserPayloads.respectReceived(targetUserIdValue, respectReceived);
             Proc_6_247_8027E0(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
