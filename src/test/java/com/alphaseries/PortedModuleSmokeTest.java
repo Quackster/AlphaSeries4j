@@ -54,6 +54,7 @@ import com.alphaseries.game.moderation.StaffSettings;
 import com.alphaseries.game.moderation.StaffUserLookup;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.quest.QuestSettings;
+import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
@@ -2851,6 +2852,15 @@ public final class PortedModuleSmokeTest {
         Licence.global_0082934C = "";
         Licence.global_0082912C = "CACHE";
         assertEquals("CACHE", Licence.recyclerSettings().statusPayload());
+        List<Long> recyclerProductIds = new ArrayList<>();
+        recyclerProductIds.add(501L);
+        RecyclerSettings typedRecyclerSettings = RecyclerSettings.fromRewardGroups("STATUS",
+            List.of(new RecyclerSettings.RewardGroup(7L, recyclerProductIds)), 508L);
+        recyclerProductIds.add(502L);
+        assertEquals("STATUS", typedRecyclerSettings.statusPayload());
+        assertEquals(508L, typedRecyclerSettings.boxProductId());
+        assertEquals(7L, typedRecyclerSettings.rewardGroups().get(0).chance());
+        assertEquals(List.of(501L), typedRecyclerSettings.rewardGroups().get(0).productIds());
         Licence.global_00829204 = "IMPORTANTFAQ";
         Licence.global_00829208 = "FAQCATS";
         Licence.global_0082920C = new String[]{"", "CATFAQ"};

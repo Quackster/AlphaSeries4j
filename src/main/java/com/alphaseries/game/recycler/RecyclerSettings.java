@@ -13,7 +13,7 @@ public final class RecyclerSettings {
 
     private RecyclerSettings(String statusPayload, List<RewardGroup> rewardGroups, long boxProductId) {
         this.statusPayload = StringUtils.text(statusPayload);
-        this.rewardGroups = rewardGroups;
+        this.rewardGroups = rewardGroups == null ? List.of() : List.copyOf(rewardGroups);
         this.boxProductId = boxProductId;
     }
 
@@ -33,6 +33,11 @@ public final class RecyclerSettings {
 
     public static RecyclerSettings empty() {
         return new RecyclerSettings("", List.of(), 0L);
+    }
+
+    public static RecyclerSettings fromRewardGroups(String statusPayload, List<RewardGroup> rewardGroups,
+                                                    long boxProductId) {
+        return new RecyclerSettings(statusPayload, rewardGroups == null ? List.of() : rewardGroups, boxProductId);
     }
 
     public String statusPayload() {
@@ -62,21 +67,9 @@ public final class RecyclerSettings {
         return ids;
     }
 
-    public static final class RewardGroup {
-        private final long chance;
-        private final List<Long> productIds;
-
-        private RewardGroup(long chance, List<Long> productIds) {
-            this.chance = chance;
-            this.productIds = productIds;
-        }
-
-        public long chance() {
-            return chance;
-        }
-
-        public List<Long> productIds() {
-            return productIds;
+    public record RewardGroup(long chance, List<Long> productIds) {
+        public RewardGroup {
+            productIds = productIds == null ? List.of() : List.copyOf(productIds);
         }
     }
 }
