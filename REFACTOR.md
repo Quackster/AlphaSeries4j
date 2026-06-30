@@ -686,6 +686,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `CatalogProductSettings` counter-product storage from a retained tab-delimited string to typed counter-product rows with defensive typed ID access and compatibility serialization.
 - Exposed defensive typed `CatalogProductSettings` package, pet-package, and club-product row accessors so callers can move away from legacy row-text serializers.
 - Routed boot counter-product loading through typed product-id lists instead of joining IDs into tab-delimited text, and widened the `Licence` compatibility mirror to preserve typed counter-product lists.
+- Added a typed `Licence.setCatalogProductSettings(...)` bridge and routed catalog product settings refreshes through typed `CatalogProductSettings` state when the counter-product mirror already contains a `CatalogProductSettings` instance, leaving component row parsing as a compatibility fallback.
 - Migrated `ProductCache` internals from raw legacy-row object storage to a parsed typed row map, keeping legacy row parsing only at the constructor/factory boundary.
 - Migrated `ProductCache` row storage from raw field lists to typed `ProductRow` records with defensive row access for future callers moving off column-index compatibility.
 - Migrated `AchievementSettings` internals from raw row objects to indexed typed achievement rows, keeping legacy row parsing only at the achievement state boundary.
