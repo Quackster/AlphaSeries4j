@@ -1870,6 +1870,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("\1" + "77\t0\toff\2", stateWriteNoRoom.representedRoomCache);
         String expectedWallInventory = "0" + Crypto.Proc_3_0_6D2AF0(9, null,
             Crypto.Proc_3_0_6D2AF0(20, null, "77\2") + ":w=1,2 l=3,4\2data\2");
+        assertEquals(expectedWallInventory,
+            FurniturePayloads.wallInventoryPlacement(77, 20, ":w=1,2 l=3,4", "data", 9));
         assertEquals(expectedWallInventory, Handling.wallInventoryPlacementPayload(77, 20, ":w=1,2 l=3,4", "data", 9));
         assertEquals(expectedWallInventory, Handling.Proc_6_156_7972B0(77, 20, ":w=1,2 l=3,4", "data", 9));
         String expectedFloorPlacement = Crypto.Proc_3_0_6D2AF0(99, null, "0");
@@ -1879,6 +1881,8 @@ public final class PortedModuleSmokeTest {
         expectedFloorPlacement = Crypto.Proc_3_0_6D2AF0(3, null, expectedFloorPlacement) + "state\2";
         expectedFloorPlacement = Crypto.Proc_3_0_6D2AF0(7, null, expectedFloorPlacement) + "a\tb\tc\2M";
         expectedFloorPlacement = Crypto.Proc_3_0_6D2AF0(20, null, expectedFloorPlacement);
+        assertEquals(expectedFloorPlacement,
+            FurniturePayloads.floorPlacement(99, 1, 2, 4, 3, "state", "a\bb{{9}}c", 7, 20));
         assertEquals(expectedFloorPlacement, Handling.floorItemPlacementPayload(99, 1, 2, 4, 3, "state", "a\bb{{9}}c", 7, 20));
         assertEquals(expectedFloorPlacement, Handling.Proc_6_161_7B2EE0(99, 1, 2, 4, 3, "state", "a\bb{{9}}c", 7, 20));
         assertEquals("0DAQBHHIIKHJHPAHQA\2SAHPBhttp://www.alpha-series.com/\2QBH", Handling.systemHandshakePayload(""));

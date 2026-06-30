@@ -9983,10 +9983,7 @@ public final class Handling {
         String itemData,
         long secondaryValue
     ) {
-        String payload = Crypto.Proc_3_0_6D2AF0(productId, null, furnitureId + "\2")
-            + StringUtils.text(wallPosition) + '\2'
-            + StringUtils.text(itemData) + '\2';
-        return "0" + Crypto.Proc_3_0_6D2AF0(secondaryValue, null, payload);
+        return FurniturePayloads.wallInventoryPlacement(furnitureId, productId, wallPosition, itemData, secondaryValue);
     }
 
     public static String Proc_6_161_7B2EE0(Object... args) {
@@ -10016,14 +10013,16 @@ public final class Handling {
         long secondaryValue,
         long productId
     ) {
-        String normalizedItemData = StringUtils.text(itemData).replace('\b', '\t').replace("{{9}}", "\t");
-        String payload = Crypto.Proc_3_0_6D2AF0(furnitureId, null, "0");
-        payload = Crypto.Proc_3_0_6D2AF0(positionX, null, payload);
-        payload = "0" + Crypto.Proc_3_0_6D2AF0(positionY, null, payload);
-        payload = "0" + Crypto.Proc_3_0_6D2AF0(rotation, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(positionZ, null, payload) + StringUtils.text(stateText) + '\2';
-        payload = Crypto.Proc_3_0_6D2AF0(secondaryValue, null, payload) + normalizedItemData + '\2' + "M";
-        return Crypto.Proc_3_0_6D2AF0(productId, null, payload);
+        return FurniturePayloads.floorPlacement(
+            furnitureId,
+            positionX,
+            positionY,
+            rotation,
+            positionZ,
+            stateText,
+            itemData,
+            secondaryValue,
+            productId);
     }
 
     public static String systemHandshakePayload(String configuredDateFormat) {
