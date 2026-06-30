@@ -39,6 +39,12 @@ public final class StaffPayloads {
             .build();
     }
 
+    public static String alert(String messageText) {
+        return PacketBuilder.message("Ba")
+            .appendString(messageText)
+            .build();
+    }
+
     public static String callForHelpRow(StaffCallForHelpRow row, Map<Long, String> userNamesById) {
         long callForHelpId = row.callForHelpId();
         long callerId = row.callerUserId();

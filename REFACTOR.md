@@ -322,6 +322,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed official navigator row-text payload wrappers and dead row-text parser; official navigator lists now use typed `OfficialNavigatorItem` records.
 - Removed the pet inventory row-text list payload wrapper; pet inventory lists now use typed `PetInventoryRow` records.
 - Moved the pet command cache from tab-delimited string rows into typed `PetSettings.PetCommandRow` arrays; pet command payload/action paths now consume typed command rows.
+- Routed staff alert and room moderation `Ba` envelopes through `StaffPayloads.alert`, replacing ad hoc alert packet assembly in staff direct-message and room-moderation broadcast flows.
 - Moved staff call-for-help rows and staff user summaries from tab-delimited row strings into typed moderation records; the DAO now maps those result sets directly into `StaffCallForHelpRow` and `StaffUserSummaryRow`.
 - Moved staff room chat-log queries and payload wrappers from tab-delimited row strings into typed `StaffRoomChatRow` lists and removed dead `MySQL` chat-log string wrappers.
 - Removed the dead `StaffRoomChatRow.fromLegacy` tab-delimited parser after all staff chat-log callers moved to typed rows.

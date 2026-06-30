@@ -2426,6 +2426,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "H\\"), StaffPayloads.callForHelpClosed(2L));
         assertEquals("E@", StaffPayloads.callForHelpDeleted());
         assertEquals(Crypto.Proc_3_0_6D2AF0(50, null, "EA"), StaffPayloads.callForHelpCreated(50L));
+        assertEquals("BaCareful\2", StaffPayloads.alert("Careful"));
         String staffWhereWire = Crypto.Proc_3_0_6D2AF0(2, null, "")
             + Crypto.Proc_3_0_6D2AF0(50, null, "")
             + Crypto.Proc_3_0_6D2AF0(51, null, "");

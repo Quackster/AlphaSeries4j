@@ -248,7 +248,7 @@ public final class Handling {
             }
             long logType = actionType == 1L ? 1L : 2L;
             moderationDao.insertRoomModerationLog(logType, NumberUtils.parseLong(callerUserId), roomId, messageText, socketIndex);
-            broadcastToRoomUsers(roomId, "Ba" + messageText + '\2');
+            broadcastToRoomUsers(roomId, StaffPayloads.alert(messageText));
             if (actionType == 1L || actionType == 4L) {
                 moderationDao.deleteRoomEvent(roomId);
                 Functions.Proc_10_18_80C9E0(roomId, 0, 0);
@@ -8695,7 +8695,7 @@ public final class Handling {
                 messageText,
                 socketIndex);
             if (targetSocketIndex > 0) {
-                Proc_6_244_801E80(targetSocketIndex, PacketBuilder.message("Ba").appendString(messageText).build(), 0);
+                Proc_6_244_801E80(targetSocketIndex, StaffPayloads.alert(messageText), 0);
                 if (kickAfterSend) {
                     Proc_6_53_718E00(targetSocketIndex, 0, 0);
                 }
