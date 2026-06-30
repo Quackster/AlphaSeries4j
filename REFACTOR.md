@@ -392,6 +392,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved quest request `p^` payload construction into `QuestPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved room-right removal `Fc` payload construction into `RoomPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved new-friend room `L\u007f` payload construction into `NavigatorPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
+- Moved catalog purchase-error `AD` payload construction into `CatalogPayloads`, replacing repeated inline legacy `Crypto` packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -407,7 +408,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11969 lines
+- `Handling.java`: 11970 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines

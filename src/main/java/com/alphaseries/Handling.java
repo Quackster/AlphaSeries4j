@@ -82,6 +82,7 @@ import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.wired.WiredPayloads;
 import com.alphaseries.messages.outgoing.AchievementPayloads;
+import com.alphaseries.messages.outgoing.CatalogPayloads;
 import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
 import com.alphaseries.messages.outgoing.HelpPayloads;
@@ -3956,15 +3957,15 @@ public final class Handling {
                 return "";
             }
             if (minClubLevel > 0L && balance.clubLevel() < minClubLevel) {
-                Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(3, null, ""), 0);
+                Proc_6_244_801E80(socketIndex, CatalogPayloads.purchaseError(3), 0);
                 return "";
             }
             if (balance.credits() < creditPrice) {
-                Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(1, null, ""), 0);
+                Proc_6_244_801E80(socketIndex, CatalogPayloads.purchaseError(1), 0);
                 return "";
             }
             if (balance.activityPoints() < activityPrice) {
-                Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(2, null, ""), 0);
+                Proc_6_244_801E80(socketIndex, CatalogPayloads.purchaseError(2), 0);
                 return "";
             }
             long grantedFurnitureId = NumberUtils.parseLong(Proc_6_129_7583C0(socketIndex, catalogProductId, signText));
@@ -4331,15 +4332,15 @@ public final class Handling {
                 return "";
             }
             if (minClubLevel > 0L && balance.clubLevel() < minClubLevel) {
-                Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(3, null, ""), 0);
+                Proc_6_244_801E80(socketIndex, CatalogPayloads.purchaseError(3), 0);
                 return "";
             }
             if (balance.credits() < creditPrice) {
-                Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(1, null, ""), 0);
+                Proc_6_244_801E80(socketIndex, CatalogPayloads.purchaseError(1), 0);
                 return "";
             }
             if (balance.activityPoints() < activityPrice) {
-                Proc_6_244_801E80(socketIndex, "AD" + Crypto.Proc_3_0_6D2AF0(2, null, ""), 0);
+                Proc_6_244_801E80(socketIndex, CatalogPayloads.purchaseError(2), 0);
                 return "";
             }
             String recipientUserId = String.valueOf(users.userIdByName(recipientName));
