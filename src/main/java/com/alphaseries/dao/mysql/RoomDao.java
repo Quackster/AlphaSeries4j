@@ -692,13 +692,14 @@ public final class RoomDao {
             .orElse("");
     }
 
-    public String rightsRows(long roomId) throws SQLException {
-        List<String> rows = database.query(
+    public List<RoomRight> rightsRows(long roomId) throws SQLException {
+        return database.query(
             "SELECT users.id,users.name FROM rooms_rights,users WHERE rooms_rights.id_room=? "
                 + "AND users.id=rooms_rights.id_user LIMIT 250",
-            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2),
+            resultSet -> new RoomRight(
+                resultSet.getLong(1),
+                String.valueOf(resultSet.getString(2))),
             roomId);
-        return String.join("\r", rows);
     }
 
     public int updateIcon(long roomId, String iconPayload) throws SQLException {
@@ -997,6 +998,9 @@ public final class RoomDao {
     }
 
     public record ActiveRoomVisit(long visitId, long roomId, long slotId) {
+    }
+
+    public record RoomRight(long userId, String userName) {
     }
 
     public record ActiveRoomEffect(long roomUserIndex, long effectId) {

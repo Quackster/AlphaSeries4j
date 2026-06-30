@@ -1323,8 +1323,8 @@ public final class Handling {
             if (roomFields.length < 14) {
                 return;
             }
-            String rightsRow = rooms.rightsRows(roomId);
-            String payload = roomSettingsReadPayload(roomFields, rightsRow);
+            List<RoomDao.RoomRight> rightsRows = rooms.rightsRows(roomId);
+            String payload = roomSettingsReadPayload(roomFields, rightsRows);
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -9600,7 +9600,7 @@ public final class Handling {
         return true;
     }
 
-    public static String roomSettingsReadPayload(String[] roomFields, String rightsRow) {
+    public static String roomSettingsReadPayload(String[] roomFields, List<RoomDao.RoomRight> rightsRows) {
         StringBuilder tagPayload = new StringBuilder();
         long tagCount = 0L;
         if (!handlingField(roomFields, 7).isEmpty()) {
@@ -9612,18 +9612,12 @@ public final class Handling {
             tagCount++;
         }
 
-        StringBuilder rightsPayload = new StringBuilder();
+        PacketBuilder rightsPayload = PacketBuilder.create();
         long rightsCount = 0L;
-        if (!StringUtils.text(rightsRow).isEmpty()) {
-            for (String row : StringUtils.text(rightsRow).split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    String[] rightsFields = row.split("\t", -1);
-                    if (rightsFields.length >= 2) {
-                        rightsPayload = new StringBuilder(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(rightsFields, 0)), null, rightsPayload.toString()));
-                        rightsPayload.append(handlingField(rightsFields, 1)).append('\2');
-                        rightsCount++;
-                    }
-                }
+        for (RoomDao.RoomRight right : rightsRows == null ? List.<RoomDao.RoomRight>of() : rightsRows) {
+            if (right != null) {
+                rightsPayload.appendInt(right.userId()).appendString(right.userName());
+                rightsCount++;
             }
         }
 
