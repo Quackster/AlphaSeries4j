@@ -3482,9 +3482,7 @@ public final class Handling {
             long maxOwnedRooms = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.rooms.own.max", 0, 0));
             RoomDao rooms = roomDao();
             long ownedRoomCount = rooms == null ? 0L : rooms.ownedRoomCount(NumberUtils.parseLong(userId));
-            String payload = Crypto.Proc_3_0_6D2AF0(maxOwnedRooms, null, "H@");
-            payload = Crypto.Proc_3_0_6D2AF0(ownedRoomCount, null, payload);
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.creatableRoomCount(maxOwnedRooms, ownedRoomCount), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

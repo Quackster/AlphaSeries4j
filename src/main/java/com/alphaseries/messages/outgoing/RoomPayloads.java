@@ -109,6 +109,13 @@ public final class RoomPayloads {
             .build();
     }
 
+    public static String creatableRoomCount(long maxOwnedRooms, long ownedRoomCount) {
+        return PacketBuilder.message("H@")
+            .appendInt(maxOwnedRooms)
+            .appendInt(ownedRoomCount)
+            .build();
+    }
+
     public static String settingsUpdated(long roomId) {
         return PacketBuilder.message("GS")
             .appendInt(roomId)

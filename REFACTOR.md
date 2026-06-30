@@ -386,6 +386,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved activity-point refresh/award payload construction into `UserPayloads` and removed the no-op `Handling` packet wrappers.
 - Moved room-user removal `@\\` payload construction into `SocialPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved messenger follow-room `D^` payload construction into `MessengerPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
+- Moved creatable-room count `H@` payload construction into `RoomPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -401,7 +402,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11973 lines
+- `Handling.java`: 11971 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines
