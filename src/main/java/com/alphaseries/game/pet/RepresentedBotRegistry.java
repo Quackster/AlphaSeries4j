@@ -82,6 +82,10 @@ public final class RepresentedBotRegistry {
         return NumberUtils.parseLong(recordField(botEntityId, fieldIndex));
     }
 
+    public boolean isEntityInRoom(long botEntityId, long roomSlot) {
+        return botEntityId > 0L && roomSlot > 0L && record(botEntityId).roomSlot() == roomSlot;
+    }
+
     public RepresentedBotIdentity identityFromEntityOrBotId(long requestedId) {
         RepresentedBotRecord bot = record(requestedId);
         if (bot.botId() > 0L) {

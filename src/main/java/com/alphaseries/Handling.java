@@ -6241,7 +6241,7 @@ public final class Handling {
             }
             String entityList = "";
             if (requestedEntityId > 0L) {
-                if (representedBotRecordLong(requestedEntityId, 0) == roomSlot) {
+                if (Licence.representedBots().isEntityInRoom(requestedEntityId, roomSlot)) {
                     entityList = String.valueOf(requestedEntityId);
                 }
             } else {
