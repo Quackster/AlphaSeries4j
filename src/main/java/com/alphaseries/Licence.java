@@ -289,62 +289,22 @@ public final class Licence {
     }
 
     public static ChatSettings chatSettings() {
-        ChatState.instance().setRows(chatFilterWords(), chatGestures());
+        ChatState.instance().setSettingsFromLegacy(global_00829290, global_00829294);
         return ChatState.instance().settings();
     }
 
     public static void setChatSettings(List<ChatSettings.FilterWord> filterRows, List<ChatSettings.Gesture> gestureRows) {
         global_00829290 = filterRows == null ? List.of() : List.copyOf(filterRows);
         global_00829294 = gestureRows == null ? List.of() : List.copyOf(gestureRows);
-        ChatState.instance().setRows(chatFilterWords(), chatGestures());
+        ChatState.instance().setSettingsFromLegacy(global_00829290, global_00829294);
     }
 
     public static List<ChatSettings.FilterWord> chatFilterWords() {
-        if (global_00829290 instanceof List<?> rows) {
-            List<ChatSettings.FilterWord> result = new java.util.ArrayList<>();
-            for (Object row : rows) {
-                if (row instanceof ChatSettings.FilterWord filterWord) {
-                    result.add(filterWord);
-                }
-            }
-            return result;
-        }
-        String text = StringUtils.text(global_00829290);
-        if (text.isEmpty()) {
-            return List.of();
-        }
-        List<ChatSettings.FilterWord> result = new java.util.ArrayList<>();
-        for (String row : text.split("\r", -1)) {
-            if (!row.isEmpty()) {
-                result.add(new ChatSettings.FilterWord(row));
-            }
-        }
-        return result;
+        return ChatSettings.filterWordsFromLegacy(global_00829290);
     }
 
     public static List<ChatSettings.Gesture> chatGestures() {
-        if (global_00829294 instanceof List<?> rows) {
-            List<ChatSettings.Gesture> result = new java.util.ArrayList<>();
-            for (Object row : rows) {
-                if (row instanceof ChatSettings.Gesture gesture) {
-                    result.add(gesture);
-                }
-            }
-            return result;
-        }
-        String text = StringUtils.text(global_00829294);
-        if (text.isEmpty()) {
-            return List.of();
-        }
-        List<ChatSettings.Gesture> result = new java.util.ArrayList<>();
-        for (String row : text.split("\r", -1)) {
-            String[] fields = row.split("\t", -1);
-            if (fields.length >= 2) {
-                result.add(new ChatSettings.Gesture(StringUtils.field(fields, 0),
-                    com.alphaseries.util.NumberUtils.parseLong(StringUtils.field(fields, 1))));
-            }
-        }
-        return result;
+        return ChatSettings.gesturesFromLegacy(global_00829294);
     }
 
     public static VisitRoomAds visitRoomAds() {

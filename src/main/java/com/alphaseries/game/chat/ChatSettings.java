@@ -21,6 +21,10 @@ public final class ChatSettings {
         return new ChatSettings(filterWords, gestures);
     }
 
+    public static ChatSettings fromLegacy(Object filterRows, Object gestureRows) {
+        return fromRows(filterWordsFromLegacy(filterRows), gesturesFromLegacy(gestureRows));
+    }
+
     public static ChatSettings empty() {
         return new ChatSettings(List.of(), List.of());
     }
@@ -86,6 +90,54 @@ public final class ChatSettings {
             }
         }
         return 0L;
+    }
+
+    public static List<FilterWord> filterWordsFromLegacy(Object filterRows) {
+        if (filterRows instanceof List<?> rows) {
+            List<FilterWord> result = new ArrayList<>();
+            for (Object row : rows) {
+                if (row instanceof FilterWord filterWord) {
+                    result.add(filterWord);
+                }
+            }
+            return result;
+        }
+        String text = StringUtils.text(filterRows);
+        if (text.isEmpty()) {
+            return List.of();
+        }
+        List<FilterWord> result = new ArrayList<>();
+        for (String row : text.split("\r", -1)) {
+            if (!row.isEmpty()) {
+                result.add(new FilterWord(row));
+            }
+        }
+        return result;
+    }
+
+    public static List<Gesture> gesturesFromLegacy(Object gestureRows) {
+        if (gestureRows instanceof List<?> rows) {
+            List<Gesture> result = new ArrayList<>();
+            for (Object row : rows) {
+                if (row instanceof Gesture gesture) {
+                    result.add(gesture);
+                }
+            }
+            return result;
+        }
+        String text = StringUtils.text(gestureRows);
+        if (text.isEmpty()) {
+            return List.of();
+        }
+        List<Gesture> result = new ArrayList<>();
+        for (String row : text.split("\r", -1)) {
+            String[] fields = row.split("\t", -1);
+            if (fields.length >= 2) {
+                result.add(new Gesture(StringUtils.field(fields, 0),
+                    NumberUtils.parseLong(StringUtils.field(fields, 1))));
+            }
+        }
+        return result;
     }
 
     public record FilterWord(String word) {

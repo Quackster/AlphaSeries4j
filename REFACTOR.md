@@ -358,6 +358,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved represented trade offers and interaction pairs from raw tab-delimited `String` caches into typed `RepresentedTradeOffer`/`RepresentedInteractionPair` lists, removing their legacy row parsers and row metadata.
 - Moved represented activity-point tick tracking from marker-packed `String` storage into a typed socket-to-seconds map.
 - Moved chat filter words and gestures from tab-delimited startup cache strings into typed `ChatSettings` records; chat filtering/gesture lookup now iterates typed rows.
+- Moved legacy chat filter/gesture parsing from `Licence` into the `game.chat.ChatSettings` compatibility boundary and routed `ChatState` through `ChatSettings.fromLegacy(...)`, leaving `Licence` as a thin global mirror.
 - Moved the new-friend room refresh cache from tab-delimited `Licence` row strings into typed `NewFriendRooms` state for the DAO-driven refresh path, keeping legacy string reads only at the compatibility boundary.
 - Routed visit-room advertisement startup cache building through typed `AdvertisingDao.VisitRoomAdRow` records, removing the `id\taddress` join/split round trip and the DAO legacy row formatter.
 - Routed FAQ important/category/description startup cache building through typed `HelpDao` FAQ records, removing FAQ row join/split round trips and DAO legacy row formatters from the boot path.

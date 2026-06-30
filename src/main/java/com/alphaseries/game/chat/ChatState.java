@@ -25,4 +25,8 @@ public final class ChatState {
     public synchronized void setRows(List<ChatSettings.FilterWord> filterRows, List<ChatSettings.Gesture> gestureRows) {
         settings = ChatSettings.fromRows(filterRows, gestureRows);
     }
+
+    public synchronized void setSettingsFromLegacy(Object filterRows, Object gestureRows) {
+        settings = ChatSettings.fromLegacy(filterRows, gestureRows);
+    }
 }
