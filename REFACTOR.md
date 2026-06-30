@@ -450,6 +450,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Replaced badge update selection array exports with typed `BadgeUpdateSelections` slot accessors, keeping positional wire parsing inside the adapter.
 - Added `QuestSettings.empty()` and routed null/default quest payload and decision paths away from `QuestSettings.fromLegacy("")`; legacy quest parsing now remains only at the `Licence` bridge and explicit legacy-row tests.
 - Added `GiftSettings.empty()` and routed null club-gift payload defaults away from `GiftSettings.fromLegacy("", "", "", "")`; legacy gift parsing now remains at the `Licence` bridge.
+- Added `UpdaterSettings.normalizeUpdateSql(...)` and routed updater SQL normalization away from constructing a legacy settings object; legacy updater settings parsing now remains at the `Licence` bridge.
 
 ## VB Compatibility Class Removal Checklist
 

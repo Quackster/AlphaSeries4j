@@ -288,7 +288,7 @@ public final class Updater {
     }
 
     public static String normalizedUpdateSql(String updateSql) {
-        return UpdaterSettings.fromLegacy("", "", updateSql).normalizedUpdateSql();
+        return UpdaterSettings.normalizeUpdateSql(updateSql);
     }
 
     public static String successfulDownloadMessage(String executableName) {

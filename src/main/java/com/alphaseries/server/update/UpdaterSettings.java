@@ -38,7 +38,11 @@ public final class UpdaterSettings {
         return !updateSql.isEmpty();
     }
 
+    public static String normalizeUpdateSql(String updateSql) {
+        return StringUtils.text(updateSql).replace("\r", "").replaceAll("(?i)INSERT INTO", "INSERT IGNORE INTO");
+    }
+
     public String normalizedUpdateSql() {
-        return updateSql.replace("\r", "").replaceAll("(?i)INSERT INTO", "INSERT IGNORE INTO");
+        return normalizeUpdateSql(updateSql);
     }
 }
