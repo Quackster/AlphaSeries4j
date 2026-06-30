@@ -201,11 +201,21 @@ public final class Functions {
             .replace("\"", " ");
     }
 
+    /**
+     * Original function: Proc_10_12_80ADB0.
+     */
     public static long Proc_10_12_80ADB0(Object... args) {
         if (args == null || args.length < 2) {
             return 0L;
         }
-        return Filesystems.Proc_7_0_8034A0(UserPayloads.roomAlert(StringUtils.text(args[0]), StringUtils.text(args[1])));
+        return sendRoomAlert(StringUtils.text(args[0]), StringUtils.text(args[1]));
+    }
+
+    /**
+     * Original function: Proc_10_12_80ADB0.
+     */
+    public static long sendRoomAlert(String messageText, String linkText) {
+        return Filesystems.broadcastToActiveSessions(UserPayloads.roomAlert(messageText, linkText), "");
     }
 
     public static String inventoryCacheRecord(long furnitureId, long productId, String itemData, long secondaryValue) {

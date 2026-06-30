@@ -35,6 +35,9 @@ public final class Filesystems {
         readyPacketRegistry = registry == null ? ReadyPacketRegistry.create() : registry;
     }
 
+    /**
+     * Original function: Proc_7_0_8034A0.
+     */
     public static long Proc_7_0_8034A0(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
@@ -71,6 +74,9 @@ public final class Filesystems {
         }
     }
 
+    /**
+     * Original function: Proc_7_1_8038A0.
+     */
     public static long Proc_7_1_8038A0(Object... args) {
         if (args == null || args.length < 2) {
             return 0L;
@@ -110,6 +116,9 @@ public final class Filesystems {
         return packets;
     }
 
+    /**
+     * Original functions: Proc_7_0_8034A0, Proc_7_1_8038A0.
+     */
     public static long broadcastToActiveSessions(String payload, String onlyUserName) {
         long sentCount = 0L;
         if (global_00829268 == null || global_00829268.isEmpty()) {
