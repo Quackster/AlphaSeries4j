@@ -11,7 +11,14 @@ public final class RepresentedSocketCache {
     }
 
     public static RepresentedSocketCache fromLegacy(Object cacheText) {
+        if (cacheText instanceof RepresentedSocketCache representedSocketCache) {
+            return representedSocketCache;
+        }
         return new RepresentedSocketCache(cacheText);
+    }
+
+    public static RepresentedSocketCache empty() {
+        return new RepresentedSocketCache("");
     }
 
     public String record(long socketIndex) {

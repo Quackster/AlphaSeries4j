@@ -35,6 +35,7 @@ import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.RepresentedSocketCache;
 import com.alphaseries.game.session.SessionRegistry;
+import com.alphaseries.game.session.SessionState;
 import com.alphaseries.game.session.SocketMarkerSet;
 import com.alphaseries.server.lifecycle.LicenceRuntimeState;
 import com.alphaseries.server.update.UpdaterSettings;
@@ -466,7 +467,12 @@ public final class Licence {
     }
 
     public static RepresentedSocketCache representedSockets() {
-        return RepresentedSocketCache.fromLegacy(global_0082934C);
+        if (global_0082934C instanceof RepresentedSocketCache representedSocketCache) {
+            SessionState.instance().setRepresentedSockets(representedSocketCache);
+        } else {
+            SessionState.instance().setRepresentedSocketsFromLegacy(global_0082934C);
+        }
+        return SessionState.instance().representedSockets();
     }
 
     public static SocketMarkerSet socketMarkers() {
