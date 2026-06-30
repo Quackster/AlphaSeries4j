@@ -3,7 +3,6 @@ package com.alphaseries;
 import com.alphaseries.dao.mysql.UpdaterDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.server.update.UpdaterSettings;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.nio.file.Path;
@@ -86,21 +85,18 @@ public final class Updater {
         queueProgressWidth((PROGRESS_WIDTH_MAX / updateCount) * (currentUpdateIndex + 1L));
     }
 
-    public void applyFeatureState(String[] fields) {
-        long featureMode = getUpdateFieldNumber(fields, 3);
-        long featureCost = getUpdateFieldNumber(fields, 4);
-
+    public void applyFeatureState(UpdaterSettings.UpdateEntry entry) {
         freeFeature.visible = false;
         unfreeFeature.visible = false;
         downloadFeature.visible = false;
 
-        if (featureMode == 0L) {
+        if (entry.featureMode() == 0L) {
             freeFeature.caption = "Kostenlose Funktion";
             freeFeature.visible = true;
-        } else if (featureMode == 1L) {
+        } else if (entry.featureMode() == 1L) {
             downloadFeature.visible = true;
         } else {
-            unfreeFeature.caption = "Kostet " + featureCost + " Punkte";
+            unfreeFeature.caption = "Kostet " + entry.featureCost() + " Punkte";
             unfreeFeature.visible = true;
         }
     }
@@ -132,22 +128,22 @@ public final class Updater {
                 queueHeightAnimation(1000, 5);
                 return step;
             }
-            String[] entries = Licence.updaterSettings().updateEntries();
+            UpdaterSettings.UpdateEntry[] entries = Licence.updaterSettings().entries();
             if (currentUpdateIndex > entries.length - 1L) {
                 queueHeightAnimation(1000, 5);
                 timer3Enabled = false;
                 step.complete = true;
                 return step;
             }
-            currentUpdateEntry = entries[(int) currentUpdateIndex];
-            String[] fields = currentUpdateEntry.split("\t", -1);
-            if (fields.length < 3) {
+            UpdaterSettings.UpdateEntry entry = entries[(int) currentUpdateIndex];
+            currentUpdateEntry = entry.rawText();
+            if (!entry.valid()) {
                 advanceUpdateProgress(entries.length);
                 return step;
             }
-            step.title = fields[1];
-            step.bodyLines = visibleBodyLines(fields[2], 25);
-            applyFeatureState(fields);
+            step.title = entry.title();
+            step.bodyLines = visibleBodyLines(entry.bodyText(), 25);
+            applyFeatureState(entry);
             long visibleLineCount = step.bodyLines.length == 0 ? 1L : step.bodyLines.length;
             step.featureTop = visibleLineCount * 240L + 720L;
             queueHeightAnimation(step.featureTop + 920L, 10);
@@ -269,13 +265,6 @@ public final class Updater {
         step.complete = step.width >= PROGRESS_WIDTH_MAX && !renderTimerEnabled;
         step.walkPercentEnabled = !step.complete;
         return step;
-    }
-
-    public static long getUpdateFieldNumber(String[] fields, long fieldIndex) {
-        if (fields != null && fieldIndex >= 0L && fieldIndex < fields.length) {
-            return NumberUtils.parseLong(fields[(int) fieldIndex]);
-        }
-        return 0L;
     }
 
     public static String getUpdaterExecutableName(String configuredName, String appExeName) {
