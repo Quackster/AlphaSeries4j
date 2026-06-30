@@ -14,6 +14,7 @@ import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.achievement.AchievementSettings;
+import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
@@ -2775,6 +2776,10 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829208 = "FAQCATS";
         Licence.global_0082920C = new String[]{"", "CATFAQ"};
         Licence.global_00829210 = new String[]{"", "", "FAQDESC"};
+        HelpCenterCache typedHelpCache = HelpCenterCache.fromPayloads(
+            "IMPORTANT", "CATS", Map.of(7L, "CATFAQ7"), Map.of(9L, "FAQDESC9"));
+        assertEquals("CATFAQ7", typedHelpCache.categoryFaqPayload(7L));
+        assertEquals("FAQDESC9", typedHelpCache.descriptionPayload(9L));
         Licence.global_008292D8 = new String[][]{{}, {"STAFFMOD"}};
         assertEquals("STAFFMOD", Licence.staffSettings().moderationPayload(1L, 0L));
         assertEquals("HC", StaffSettings.fromPayloads(new String[][]{{"ZERO"}, {"STAFF", "HC"}})
