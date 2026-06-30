@@ -1279,13 +1279,14 @@ public final class Boot {
     }
 
     public static String buildImportantFaqPayloadFromRows(Map<Long, List<HelpDao.FaqNameRow>> faqRowsByImportance) {
-        StringBuilder payload = new StringBuilder();
+        PacketBuilder payload = PacketBuilder.create();
         for (long importanceLevel = 1L; importanceLevel <= 2L; importanceLevel++) {
             List<HelpDao.FaqNameRow> rows = faqRowsByImportance == null ? List.of() : faqRowsByImportance.get(importanceLevel);
-            payload.append(Crypto.encodeVl64(countFaqNameRows(rows)));
-            payload.append(buildFaqNamePayloadFromRows(rows));
+            payload
+                .appendInt(countFaqNameRows(rows))
+                .appendRaw(buildFaqNamePayloadFromRows(rows));
         }
-        return Crypto.encodeVl64(2) + payload;
+        return PacketBuilder.create().appendInt(2).appendRaw(payload.build()).build();
     }
 
     public static FaqCategoryCache buildFaqCategoryCache(String categoryRows, Map<Long, String> faqRowsByCategoryId) {
@@ -1315,21 +1316,25 @@ public final class Boot {
             Map<Long, List<HelpDao.FaqNameRow>> faqRowsByCategoryId) {
         FaqCategoryCache cache = new FaqCategoryCache();
         long categoryCount = 0L;
-        StringBuilder categoryPayload = new StringBuilder();
+        PacketBuilder categoryPayload = PacketBuilder.create();
         if (categoryRows != null) {
             for (HelpDao.FaqNameRow category : categoryRows) {
                 if (category != null) {
                     long categoryId = category.id();
                     List<HelpDao.FaqNameRow> faqRows = faqRowsByCategoryId == null ? List.of() : faqRowsByCategoryId.get(categoryId);
                     cache.faqPayloadByCategoryId.put(categoryId,
-                        Crypto.encodeVl64(countFaqNameRows(faqRows)) + buildFaqNamePayloadFromRows(faqRows));
-                    categoryPayload.append(Crypto.encodeVl64(categoryId));
-                    categoryPayload.append(StringUtils.text(category.name())).append('\2');
+                        PacketBuilder.create()
+                            .appendInt(countFaqNameRows(faqRows))
+                            .appendRaw(buildFaqNamePayloadFromRows(faqRows))
+                            .build());
+                    categoryPayload
+                        .appendInt(categoryId)
+                        .appendString(category.name());
                     categoryCount++;
                 }
             }
         }
-        cache.categoryPayload = Crypto.encodeVl64(categoryCount) + categoryPayload;
+        cache.categoryPayload = PacketBuilder.create().appendInt(categoryCount).appendRaw(categoryPayload.build()).build();
         return cache;
     }
 
@@ -1825,16 +1830,17 @@ public final class Boot {
     }
 
     private static String buildFaqNamePayloadFromRows(List<HelpDao.FaqNameRow> faqRows) {
-        StringBuilder payload = new StringBuilder();
+        PacketBuilder payload = PacketBuilder.create();
         if (faqRows != null) {
             for (HelpDao.FaqNameRow row : faqRows) {
                 if (row != null) {
-                    payload.append(Crypto.encodeVl64(row.id()));
-                    payload.append(StringUtils.text(row.name())).append('\2');
+                    payload
+                        .appendInt(row.id())
+                        .appendString(row.name());
                 }
             }
         }
-        return payload.toString();
+        return payload.build();
     }
 
     private static long countFaqNameRows(List<HelpDao.FaqNameRow> rows) {

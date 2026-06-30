@@ -287,6 +287,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed runtime socket startup timestamp updates through `ServerMaintenanceDao`, replacing another fixed raw `MySQL.Proc_5_0` startup query with a prepared DAO method.
 - Routed catalog startup product settings, package rows, pet package rows, and contained club-product rows through typed `CatalogDao`/`PackageDao`/`ClubDao` methods, keeping legacy row serialization explicit at the `Licence` cache bridge.
 - Routed important FAQ, FAQ category, category FAQ, and FAQ description startup cache reads through typed `HelpDao` rows, keeping legacy payload serialization explicit in the boot cache builder boundary.
+- Built typed important/category FAQ startup payloads with fluent `PacketBuilder` over `HelpDao.FaqNameRow` records instead of raw `StringBuilder`/`Crypto.encodeVl64(...)` concatenation.
 - Routed advertisement visit-room startup cache reads through typed `AdvertisingDao` rows, keeping legacy payload serialization explicit in the boot cache builder boundary.
 - Routed chat filter and gesture startup cache reads through typed `ChatDao` rows, keeping legacy row serialization explicit at the `ChatSettings` cache bridge.
 - Routed boot settings-cache and Figuredata setting reads through typed `SettingsDao` rows/value lookups, keeping legacy settings payload serialization explicit in `Boot`.
