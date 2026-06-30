@@ -19,6 +19,7 @@ import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.advertising.VisitRoomAds;
 import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.catalog.CatalogProductSettings;
+import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.ProductCache;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.inventory.InventoryItemRow;
@@ -757,6 +758,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(10L, Licence.product(10).productId());
         assertEquals(1L, Licence.catalogProduct(1).catalogProductId());
         assertEquals(2, Licence.productDeal(6L).itemProductIds().size());
+        assertCatalogRegistryRows();
         Licence.global_00829268 = "[0:5\1u5\2sock5][1:bob\1bob\2" + "6][room\1" + "7\2" + "8]";
         assertEquals("u5", Licence.Proc_9_6_808080(5, 0));
         assertEquals("u5", Licence.socketUserId("5"));
@@ -4918,6 +4920,19 @@ public final class PortedModuleSmokeTest {
         ProductCache.ProductRow row = productCache.rows().get(0);
         assertEquals(12L, row.productId());
         assertEquals(List.of("7", "", "", "", "typed", "fallbackTyped"), row.fields());
+    }
+
+    private static void assertCatalogRegistryRows() {
+        CatalogRegistry registry = CatalogRegistry.fromLegacyCaches(
+            List.of(new CatalogDao.ProductCacheRow(List.of("21", "3", "chair"))),
+            List.of(new CatalogDao.CatalogProductCacheRow(List.of("31", "sprite", "21"))),
+            List.of(new CatalogDao.ProductDealRow(41L, "21;22")));
+        assertEquals(List.of(new CatalogRegistry.CatalogRow("21\t3\tchair", List.of("21", "3", "chair"))),
+            registry.productRows());
+        assertEquals("sprite", registry.catalogProductRows().get(0).field(1));
+        assertEquals("41\t21;22", registry.dealRows().get(0).text());
+        List<String> copiedFields = registry.productRows().get(0).fields();
+        assertEquals("chair", copiedFields.get(2));
     }
 
     private static String productRow(long productId, String... columnPairs) {

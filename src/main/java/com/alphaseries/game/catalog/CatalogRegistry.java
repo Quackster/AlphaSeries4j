@@ -42,6 +42,10 @@ public final class CatalogRegistry {
         return row == null ? "" : row.text();
     }
 
+    public List<CatalogRow> productRows() {
+        return List.copyOf(products.values());
+    }
+
     public Optional<Product> product(long productId) {
         CatalogRow row = products.get(productId);
         if (row == null || row.isEmpty()) {
@@ -64,6 +68,10 @@ public final class CatalogRegistry {
     public String catalogProductRow(long catalogProductId) {
         CatalogRow row = catalogProducts.get(catalogProductId);
         return row == null ? "" : row.text();
+    }
+
+    public List<CatalogRow> catalogProductRows() {
+        return List.copyOf(catalogProducts.values());
     }
 
     public Optional<CatalogProduct> catalogProduct(long catalogProductId) {
@@ -90,6 +98,10 @@ public final class CatalogRegistry {
     public String dealRow(long productId) {
         CatalogRow row = deals.get(productId);
         return row == null ? "" : row.text();
+    }
+
+    public List<CatalogRow> dealRows() {
+        return List.copyOf(deals.values());
     }
 
     public Optional<ProductDeal> productDeal(long productId) {
@@ -193,21 +205,26 @@ public final class CatalogRegistry {
         return fields != null && index >= 0 && index < fields.size() ? StringUtils.text(fields.get(index)) : "";
     }
 
-    private record CatalogRow(String text, List<String> fields) {
+    public record CatalogRow(String text, List<String> fields) {
+        public CatalogRow {
+            text = StringUtils.text(text);
+            fields = fields == null ? List.of() : List.copyOf(fields);
+        }
+
         private static CatalogRow fromText(String rowText) {
             String text = StringUtils.text(rowText);
             return new CatalogRow(text, List.of(text.split("\t", -1)));
         }
 
-        private boolean isEmpty() {
+        public boolean isEmpty() {
             return text.isEmpty();
         }
 
-        private int fieldCount() {
+        public int fieldCount() {
             return fields.size();
         }
 
-        private String field(int index) {
+        public String field(int index) {
             return index >= 0 && index < fields.size() ? fields.get(index) : "";
         }
     }

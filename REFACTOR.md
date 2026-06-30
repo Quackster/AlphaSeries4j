@@ -531,6 +531,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Extended `game.catalog.CatalogState` to own product, catalog-product, and product-deal registry caches, keeping `Licence.global_008292BC`/`global_008292C0`/`global_00829258` as compatibility mirrors.
 - Migrated `GiftSettings` internals from raw club-gift and gift-wrap lookup strings to typed `ClubGift` lists and gift-wrap product id sets, keeping raw lookup text only in the `Licence` compatibility mirror.
 - Migrated `CatalogRegistry` row storage from raw row strings to parsed typed row wrappers, preserving legacy row text accessors while avoiding repeated tab splitting in typed lookups.
+- Exposed defensive typed `CatalogRegistry.CatalogRow` lists for product, catalog-product, and deal caches so callers can move off row-text and positional-cell compatibility APIs.
 - Added typed `RecyclerSettings.fromRewardGroups(...)` construction and immutable `RewardGroup` records so recycler reward state can be passed as typed product id collections instead of legacy product-list strings.
 - Added named typed wall-furniture placement entrypoint `placeWallFurnitureFromInventory(...)` with the original `Proc_6_157_7974B0` noted in Javadocs, and routed the live floor-placement wall-item path away from the legacy `InventoryPlacementFurniture.fromLegacyArg(...)` boundary.
 - Added typed `NewFriendRooms` accessors and isolated legacy new-friend room row parsing at the construction boundary, keeping navigator state collection-backed while preserving legacy `Licence` bridge behavior.
