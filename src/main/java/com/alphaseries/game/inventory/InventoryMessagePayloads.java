@@ -41,28 +41,6 @@ public final class InventoryMessagePayloads {
             .build();
     }
 
-    public static InventoryList listFromRows(String rowText) {
-        InventoryList result = new InventoryList();
-        for (String row : StringUtils.text(rowText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                long furnitureId = NumberUtils.parseLong(StringUtils.field(fields, 0));
-                long productId = NumberUtils.parseLong(StringUtils.field(fields, 1));
-                String itemData = StringUtils.field(fields, 2);
-                long secondaryValue = NumberUtils.parseLong(StringUtils.field(fields, 3));
-                String itemPayload = item(furnitureId, productId, itemData, secondaryValue);
-                if (NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 9L) {
-                    result.iconPayload += itemPayload;
-                    result.iconCount++;
-                } else {
-                    result.regularPayload += itemPayload;
-                    result.regularCount++;
-                }
-            }
-        }
-        return result;
-    }
-
     public static InventoryList listFromItems(List<InventoryItemRow> items) {
         InventoryList result = new InventoryList();
         if (items == null) {

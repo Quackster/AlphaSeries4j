@@ -2,6 +2,8 @@ package com.alphaseries;
 
 import com.alphaseries.config.AppDatabaseConfig;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.inventory.InventoryItemRow;
+import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
@@ -1513,7 +1515,10 @@ public final class PortedModuleSmokeTest {
         productTypeCache[20] = "1";
         productTypeCache[21] = "9";
         DataManager.global_008292BC = productTypeCache;
-        Handling.InventoryPayloads inventoryPayloads = Handling.inventoryPayloadsFromRows("100\t20\ta\bb\t4\r101\t21\t\t0");
+        Handling.InventoryPayloads inventoryPayloads = Handling.inventoryPayloadsFromInventory(
+            InventoryMessagePayloads.listFromItems(List.of(
+                new InventoryItemRow(100L, 20L, "a\bb", 4L),
+                new InventoryItemRow(101L, 21L, "", 0L))));
         assertEquals(1L, inventoryPayloads.regularCount);
         assertEquals(1L, inventoryPayloads.iconCount);
         assertEquals(expectedInventoryItem, inventoryPayloads.regularPayload);

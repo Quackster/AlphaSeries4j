@@ -309,6 +309,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved represented-room movement scanning from `Main` into `RepresentedRoomCache.moveOccupantsAt`, clearing the remaining tab-delimited movement parser from `Main`.
 - Removed the legacy poll payload row-string wrapper; poll payload construction now accepts typed `PollDefinition` data only.
 - Removed the dead public `Handling.handlingField(...)` compatibility shim after all indexed-field call sites had moved to typed records or explicit helpers.
+- Removed the legacy inventory payload row-string wrapper; inventory list payload construction now accepts typed `InventoryItemRow` data only.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -324,7 +325,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12423 lines
+- `Handling.java`: 12419 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
 - `Main.java`: 894 lines

@@ -10123,10 +10123,6 @@ public final class Handling {
         return result;
     }
 
-    public static InventoryPayloads inventoryPayloadsFromRows(String rowText) {
-        return inventoryPayloadsFromInventory(InventoryMessagePayloads.listFromRows(rowText));
-    }
-
     public static FurnitureMoveRequest furnitureMoveRequestFromPayload(String packetPayload) {
         FurnitureMoveRequest request = new FurnitureMoveRequest();
         String requestPayload = StringUtils.text(packetPayload);
