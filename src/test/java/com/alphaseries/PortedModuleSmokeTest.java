@@ -30,6 +30,7 @@ import com.alphaseries.game.messenger.MessengerSearchResult;
 import com.alphaseries.game.messenger.MessengerSettings;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
+import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.navigator.RoomCategoryCache;
@@ -2878,9 +2879,21 @@ public final class PortedModuleSmokeTest {
         Licence.global_0082908C = "12\t1";
         Licence.global_00829090 = java.time.LocalDateTime.now().plusSeconds(90L);
         assertEquals(false, Licence.newFriendRooms().shouldRefresh(java.time.LocalDateTime.now()));
-        Licence.setNewFriendRooms(java.util.List.of(new com.alphaseries.game.navigator.NewFriendRooms.RoomPick(12L, 1L)),
+        NewFriendRooms legacyFriendRooms = NewFriendRooms.fromLegacy("12\t1\rbad\r13\t2",
+                java.time.LocalDateTime.now().plusSeconds(30L));
+        assertEquals(List.of(
+                new NewFriendRooms.RoomPick(12L, 1L),
+                new NewFriendRooms.RoomPick(0L, 0L),
+                new NewFriendRooms.RoomPick(13L, 2L)), legacyFriendRooms.roomPicks());
+        List<NewFriendRooms.RoomPick> mutableFriendRooms = new ArrayList<>();
+        mutableFriendRooms.add(new NewFriendRooms.RoomPick(21L, 3L));
+        NewFriendRooms typedFriendRooms = NewFriendRooms.fromRoomPicks(mutableFriendRooms,
+                java.time.LocalDateTime.now().plusSeconds(30L));
+        mutableFriendRooms.add(new NewFriendRooms.RoomPick(22L, 4L));
+        assertEquals(List.of(new NewFriendRooms.RoomPick(21L, 3L)), typedFriendRooms.roomPicks());
+        Licence.setNewFriendRooms(java.util.List.of(new NewFriendRooms.RoomPick(12L, 1L)),
                 java.time.LocalDateTime.now().plusSeconds(90L));
-        assertEquals(true, Licence.global_0082908C instanceof com.alphaseries.game.navigator.NewFriendRooms);
+        assertEquals(true, Licence.global_0082908C instanceof NewFriendRooms);
         DataManager.global_008291AC = "\0" + "1\1events\2";
         Path originalApplicationPath = Path.of(Functions.applicationPath);
         Object originalProductCache = DataManager.global_008292BC;
