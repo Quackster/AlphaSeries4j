@@ -194,8 +194,8 @@ public final class Main {
             Guardian.deleteDirectory(Path.of(Functions.applicationPath, "CACHE", "USERS"));
             result.consoleTitle = StringUtils.text(captionTemplate).replace("%%", Licence.runtimeState().productName());
             result.caption = javaCaptionFromConsoleTitle(result.consoleTitle);
-            result.productKey = productKeyFromConfig(Handling.Proc_6_239_7FC170(
-                Path.of(Functions.applicationPath, "config.ini").toString(), 0, 7));
+            result.productKey = productKeyFromConfig(Handling.readFile(
+                Path.of(Functions.applicationPath, "config.ini").toString()));
             result.success = true;
             return result;
         } catch (Exception ignored) {

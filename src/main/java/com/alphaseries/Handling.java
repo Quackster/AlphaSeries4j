@@ -477,7 +477,7 @@ public final class Handling {
             if (slotId < 1L || slotId > maxSlots || (!"M".equals(genderText) && !"F".equals(genderText))) {
                 return;
             }
-            String figureData = Proc_6_239_7FC170(Functions.applicationPath + "/figuredata.cache", 0, 0);
+            String figureData = readFile(Functions.applicationPath + "/figuredata.cache");
             if (!isValidWardrobeFigure(figureText, genderText, figureData)) {
                 return;
             }
@@ -504,7 +504,7 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId) || (!"M".equals(genderText) && !"F".equals(genderText))) {
                 return;
             }
-            String figureData = Proc_6_239_7FC170(Functions.applicationPath + "/figuredata.cache", 0, 0);
+            String figureData = readFile(Functions.applicationPath + "/figuredata.cache");
             if (!isValidWardrobeFigure(figureText, genderText, figureData)) {
                 return;
             }
@@ -4796,7 +4796,7 @@ public final class Handling {
             long chargePricePoints = product.chargePriceActivityPoints();
             long chargePointType = product.chargePriceActivityPointsType();
             Path chargePath = Path.of(Functions.applicationPath, "cache", "items_charges", furnitureId + ".cache");
-            long currentCharges = NumberUtils.parseLong(Proc_6_239_7FC170(chargePath.toString(), 0, 0));
+            long currentCharges = NumberUtils.parseLong(readFile(chargePath.toString()));
             if (currentCharges < 1L) {
                 String payload = FurniturePayloads.chargePrompt(
                     furnitureId,
@@ -8797,6 +8797,9 @@ public final class Handling {
         writeFile(StringUtils.text(args[0]), StringUtils.text(args[1]));
     }
 
+    /**
+     * Original function: Proc_6_239_7FC170.
+     */
     public static String readFile(String filePath) {
         if (StringUtils.text(filePath).isEmpty()) {
             return "";
@@ -8813,6 +8816,9 @@ public final class Handling {
         }
     }
 
+    /**
+     * Original function: Proc_6_240_7FC2B0.
+     */
     public static void writeFile(String filePath, String fileText) {
         if (StringUtils.text(filePath).isEmpty()) {
             return;
@@ -10776,8 +10782,8 @@ public final class Handling {
                 return "";
             }
             String cachePath = wiredCachePath(cacheFolder, roomId);
-            String cacheText = Proc_6_239_7FC170(cachePath, 0, 0);
-            Proc_6_240_7FC2B0(cachePath, WiredPayloads.cacheWithRecord(cacheText, recordText));
+            String cacheText = readFile(cachePath);
+            writeFile(cachePath, WiredPayloads.cacheWithRecord(cacheText, recordText));
             return recordText;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -10936,7 +10942,7 @@ public final class Handling {
     }
 
     public static String readWiredCache(String cacheFolder, long roomId) {
-        return roomId <= 0L ? "" : Proc_6_239_7FC170(wiredCachePath(cacheFolder, roomId), 0, 0);
+        return roomId <= 0L ? "" : readFile(wiredCachePath(cacheFolder, roomId));
     }
 
     public static boolean handlingFurnitureExistsInRoom(long roomId, long furnitureId) {

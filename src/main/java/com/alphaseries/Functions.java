@@ -279,10 +279,10 @@ public final class Functions {
             }
 
             String cachePath = userInventoryCachePath(ownerId);
-            String cacheText = Handling.Proc_6_239_7FC170(cachePath, 0, 0);
+            String cacheText = Handling.readFile(cachePath);
             String updatedCache = inventoryCacheAddRecord(cacheText, furnitureId, productId, itemData, secondaryValue);
             if (!updatedCache.equals(trimInventoryCache(cacheText))) {
-                Handling.Proc_6_240_7FC2B0(cachePath, updatedCache);
+                Handling.writeFile(cachePath, updatedCache);
             }
             long socketIndex = Licence.linkedSocketIndex(String.valueOf(ownerId));
             if (socketIndex > 0L) {
@@ -314,10 +314,10 @@ public final class Functions {
             }
 
             String cachePath = userInventoryCachePath(ownerId);
-            String cacheText = Handling.Proc_6_239_7FC170(cachePath, 0, 0);
+            String cacheText = Handling.readFile(cachePath);
             String updatedCache = inventoryCacheRemoveRecord(cacheText, furnitureId);
             if (!updatedCache.equals(trimInventoryCache(cacheText))) {
-                Handling.Proc_6_240_7FC2B0(cachePath, updatedCache);
+                Handling.writeFile(cachePath, updatedCache);
             }
             long socketIndex = Licence.linkedSocketIndex(String.valueOf(ownerId));
             if (socketIndex > 0L) {

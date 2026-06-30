@@ -726,8 +726,8 @@ public final class Boot {
             }
         }
         String cachePath = java.nio.file.Path.of(Functions.applicationPath, "figuredata.cache").toString();
-        Handling.Proc_6_240_7FC2B0(cachePath, figureData);
-        if (Handling.Proc_6_239_7FC170(cachePath, 0, 0).trim().isEmpty()) {
+        Handling.writeFile(cachePath, figureData);
+        if (Handling.readFile(cachePath).trim().isEmpty()) {
             Console.Proc_2_0_6D1510("\"Figuredata\" Datei konnte nicht gefunden werden!", "ERROR", 255);
             return false;
         }
