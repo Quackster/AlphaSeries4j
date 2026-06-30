@@ -758,22 +758,10 @@ public final class Main {
     }
 
     public static void mainRollerMoveOccupants(long roomSlot, long fromX, long fromY, long toX, long toY, long directionValue) {
-        mainRollerMoveOccupantsInField(roomSlot, 4, 1, fromX, fromY, toX, toY, directionValue);
-        mainRollerMoveOccupantsInField(roomSlot, 5, 2, fromX, fromY, toX, toY, directionValue);
-    }
-
-    public static void mainRollerMoveOccupantsInField(
-        long roomSlot,
-        long fieldIndex,
-        long occupantType,
-        long fromX,
-        long fromY,
-        long toX,
-        long toY,
-        long directionValue
-    ) {
-        Licence.setRepresentedRooms(Licence.representedRooms()
-            .moveOccupantsAt(roomSlot, fieldIndex, occupantType, fromX, fromY, toX, toY, directionValue));
+        RepresentedRoomCache representedRooms = Licence.representedRooms()
+            .moveOccupantsAt(roomSlot, 1, fromX, fromY, toX, toY, directionValue)
+            .moveOccupantsAt(roomSlot, 2, fromX, fromY, toX, toY, directionValue);
+        Licence.setRepresentedRooms(representedRooms);
     }
 
     public static String mainRepresentedRecordByBracket(String cacheText, long recordId) {

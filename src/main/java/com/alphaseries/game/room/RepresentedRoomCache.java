@@ -39,7 +39,7 @@ public final class RepresentedRoomCache {
         return cacheText.substring(recordStart, recordEnd);
     }
 
-    public String recordField(long roomSlot, long fieldIndex) {
+    private String recordField(long roomSlot, long fieldIndex) {
         String[] fields = record(roomSlot).split("\t", -1);
         return fieldIndex >= 0 && fieldIndex < fields.length ? fields[(int) fieldIndex] : "";
     }
@@ -156,7 +156,6 @@ public final class RepresentedRoomCache {
 
     public RepresentedRoomCache moveOccupantsAt(
         long roomSlot,
-        long fieldIndex,
         long occupantType,
         long fromX,
         long fromY,
@@ -164,7 +163,7 @@ public final class RepresentedRoomCache {
         long toY,
         long directionValue
     ) {
-        String movementText = recordField(roomSlot, fieldIndex);
+        String movementText = occupantType == 2L ? movingBotMarkers(roomSlot) : movingUserMarkers(roomSlot);
         if (movementText.isEmpty()) {
             return this;
         }
