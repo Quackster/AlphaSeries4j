@@ -952,6 +952,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("i", Boot.catalogProductClass(9));
         assertEquals("s", Boot.catalogProductClass(0));
         assertEquals(false, Boot.catalogTextFieldPresent("NULL"));
+        assertCatalogProductEntryBuilder();
         assertCatalogPagePayloadMapBridge();
         assertEquals(true, Boot.catalogPageVisible(new String[]{"1", "name", "1", "2", "0", "1"}, 0, 0));
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_developer\2"}};
@@ -4984,6 +4985,16 @@ public final class PortedModuleSmokeTest {
         assertEquals("6\t7", Licence.catalogProductSettings().counterProductIds());
         assertEquals(List.of(6L, 7L), Licence.catalogProductSettings().counterProducts());
         Licence.setCounterProductIds(previousCounterProducts);
+    }
+
+    private static void assertCatalogProductEntryBuilder() {
+        Object previousProducts = Licence.global_008292BC;
+        Licence.global_008292BC = "77\t9";
+        String[] legacyFields = new String[]{"51", "77", "12", "3", "sprite", "4", "0", "secondary", "1", "2"};
+        CatalogDao.CatalogPageProductRow row = new CatalogDao.CatalogPageProductRow(
+            51L, 77L, 12L, 3L, "sprite", 4L, 0L, "secondary", 1L, 2L);
+        assertEquals(Boot.buildCatalogProductEntry(legacyFields), Boot.buildCatalogProductEntry(row));
+        Licence.global_008292BC = previousProducts;
     }
 
     private static void assertGiftSettingsTypedAccessors(GiftSettings legacyGiftSettings) {

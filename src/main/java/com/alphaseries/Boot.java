@@ -1658,17 +1658,19 @@ public final class Boot {
             amountValue = 1L;
         }
 
-        return Crypto.encodeVl64(row.catalogProductId())
-            + StringUtils.text(row.sprite()) + '\2'
-            + Crypto.encodeVl64(row.productId())
-            + productClass + '\2'
-            + Crypto.encodeVl64(row.creditPrice())
-            + Crypto.encodeVl64(row.activityPointPrice())
-            + Crypto.encodeVl64(row.activityPointType())
-            + Crypto.encodeVl64(amountValue)
-            + StringUtils.text(row.secondaryType()) + '\2'
-            + Crypto.encodeVl64(row.replaceDefaultSign())
-            + Crypto.encodeVl64(row.minimumHcRank());
+        return PacketBuilder.create()
+            .appendInt(row.catalogProductId())
+            .appendString(row.sprite())
+            .appendInt(row.productId())
+            .appendString(productClass)
+            .appendInt(row.creditPrice())
+            .appendInt(row.activityPointPrice())
+            .appendInt(row.activityPointType())
+            .appendInt(amountValue)
+            .appendString(row.secondaryType())
+            .appendInt(row.replaceDefaultSign())
+            .appendInt(row.minimumHcRank())
+            .build();
     }
 
     public static String buildCatalogProductQuery(long pageId) {
