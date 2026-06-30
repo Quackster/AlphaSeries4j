@@ -2,6 +2,8 @@ package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryItemRow;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -715,6 +717,28 @@ public final class FurnitureDao {
         long secondaryValue,
         long destinationId
     ) {
+        public static InventoryPlacementFurniture fromLegacyArg(Object itemArg) {
+            if (itemArg instanceof InventoryPlacementFurniture item) {
+                return item;
+            }
+            String[] fields;
+            if (itemArg instanceof String[] strings) {
+                fields = strings;
+            } else if (itemArg instanceof Object[] values) {
+                fields = new String[values.length];
+                for (int index = 0; index < values.length; index++) {
+                    fields[index] = StringUtils.text(values[index]);
+                }
+            } else {
+                fields = StringUtils.text(itemArg).split("\t", -1);
+            }
+            return new InventoryPlacementFurniture(
+                NumberUtils.parseLong(StringUtils.field(fields, 0)),
+                NumberUtils.parseLong(StringUtils.field(fields, 1)),
+                StringUtils.field(fields, 2),
+                NumberUtils.parseLong(StringUtils.field(fields, 3)),
+                NumberUtils.parseLong(StringUtils.field(fields, 4)));
+        }
     }
 
     public record TradeFurniture(long furnitureId, long productId, String sign, long secondaryValue) {

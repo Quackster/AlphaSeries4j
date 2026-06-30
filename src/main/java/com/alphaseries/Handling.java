@@ -5238,7 +5238,7 @@ public final class Handling {
             }
             FurnitureDao.InventoryPlacementFurniture placementFurniture = null;
             if (args != null && args.length >= 3) {
-                placementFurniture = wallPlacementFurnitureArg(args[2]);
+                placementFurniture = FurnitureDao.InventoryPlacementFurniture.fromLegacyArg(args[2]);
             }
             long furnitureId = placementFurniture == null ? 0L : placementFurniture.furnitureId();
             long productId = placementFurniture == null ? 0L : placementFurniture.productId();
@@ -9409,26 +9409,7 @@ public final class Handling {
     }
 
     public static FurnitureDao.InventoryPlacementFurniture wallPlacementFurnitureArg(Object itemArg) {
-        if (itemArg instanceof FurnitureDao.InventoryPlacementFurniture item) {
-            return item;
-        }
-        String[] fields;
-        if (itemArg instanceof String[] strings) {
-            fields = strings;
-        } else if (itemArg instanceof Object[] values) {
-            fields = new String[values.length];
-            for (int index = 0; index < values.length; index++) {
-                fields[index] = StringUtils.text(values[index]);
-            }
-        } else {
-            fields = StringUtils.text(itemArg).split("\t", -1);
-        }
-        return new FurnitureDao.InventoryPlacementFurniture(
-            NumberUtils.parseLong(StringUtils.field(fields, 0)),
-            NumberUtils.parseLong(StringUtils.field(fields, 1)),
-            StringUtils.field(fields, 2),
-            NumberUtils.parseLong(StringUtils.field(fields, 3)),
-            NumberUtils.parseLong(StringUtils.field(fields, 4)));
+        return FurnitureDao.InventoryPlacementFurniture.fromLegacyArg(itemArg);
     }
 
     public static boolean isPostItProduct(long productId) {
@@ -10629,17 +10610,7 @@ public final class Handling {
     }
 
     public static OwnProfileRow ownProfileRow(String userRow) {
-        String[] fields = StringUtils.text(userRow).split("\t", -1);
-        if (fields.length < 6) {
-            return null;
-        }
-        return new OwnProfileRow(
-            NumberUtils.parseLong(StringUtils.field(fields, 0)),
-            StringUtils.field(fields, 1),
-            StringUtils.field(fields, 2),
-            StringUtils.field(fields, 3),
-            NumberUtils.parseLong(StringUtils.field(fields, 4)),
-            NumberUtils.parseLong(StringUtils.field(fields, 5)));
+        return OwnProfileRow.fromLegacy(userRow);
     }
 
     public static String ownProfilePayload(OwnProfileRow row) {
@@ -10666,12 +10637,7 @@ public final class Handling {
     }
 
     public static UserGroupRow userGroupRow(String groupRow) {
-        String[] fields = StringUtils.text(groupRow).split("\t", -1);
-        return new UserGroupRow(
-            StringUtils.field(fields, 0),
-            StringUtils.field(fields, 1),
-            StringUtils.field(fields, 2),
-            NumberUtils.parseLong(StringUtils.field(fields, 3)));
+        return UserGroupRow.fromLegacy(groupRow);
     }
 
     public static String loginGroupPayload(long groupId, UserGroupRow groupRow) {
