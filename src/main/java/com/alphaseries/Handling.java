@@ -10552,10 +10552,6 @@ public final class Handling {
         return PetPayloads.inventoryList(rows);
     }
 
-    public static String petInventoryRowPayload(String[] fields) {
-        return PetPayloads.inventoryRow(fields);
-    }
-
     public static String petInventoryRowPayload(PetInventoryRow row) {
         return PetPayloads.inventoryRow(row);
     }

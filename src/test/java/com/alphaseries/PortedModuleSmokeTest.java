@@ -2149,7 +2149,6 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(2, null, "")
             + "0ff00aa\2"
             + Crypto.Proc_3_0_6D2AF0(4, null, "");
-        assertEquals(expectedPetRow, Handling.petInventoryRowPayload(new String[]{"10", "Rex", "1 2 FF00AA", "4"}));
         assertEquals(expectedPetRow, Handling.petInventoryRowPayload(new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L)));
         assertEquals("I[" + expectedPetRow, Handling.petInventoryAddPayload(expectedPetRow));
         assertEquals(Crypto.Proc_3_0_6D2AF0(10, null, "I\\"), Handling.petPlacedPayload(10L));

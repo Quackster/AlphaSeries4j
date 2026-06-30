@@ -121,18 +121,6 @@ public final class PetPayloads {
         return inventoryRow(row.petId(), row.name(), row.figure(), row.scratches());
     }
 
-    public static String inventoryRow(String[] fields) {
-        long petId = NumberUtils.parseLong(StringUtils.field(fields, 0));
-        if (petId <= 0L) {
-            return "";
-        }
-        return inventoryRow(
-            petId,
-            StringUtils.field(fields, 1),
-            StringUtils.field(fields, 2),
-            NumberUtils.parseLong(StringUtils.field(fields, 3)));
-    }
-
     private static String inventoryRow(long petId, String petName, String figure, long scratches) {
         if (petId <= 0L) {
             return "";
