@@ -1995,9 +1995,8 @@ public final class PortedModuleSmokeTest {
         QuestSettings typedQuestSettings = QuestSettings.fromLegacy(questRows);
         assertEquals("p^" + Crypto.Proc_3_0_6D2AF0(10, null, ""), QuestPayloads.request(10));
         assertEquals(10L, Handling.questRequestIdFromWire("p^" + Crypto.Proc_3_0_6D2AF0(10, null, ""), "p^"));
-        assertEquals(11L, Handling.nextQuestId(questRows, new QuestDao.UserQuestLevelRow(10L, 1L)));
         assertEquals(11L, Handling.nextQuestId(typedQuestSettings, new QuestDao.UserQuestLevelRow(10L, 1L)));
-        assertEquals(10L, Handling.nextQuestId(questRows, null));
+        assertEquals(10L, Handling.nextQuestId(typedQuestSettings, null));
         Handling.QuestProgressDecision waitDecision = Handling.questProgressDecision(
             new QuestDao.UserQuestProgressRow(10L, 10L, 1L, 0L, ""), typedQuestSettings, 0);
         assertEquals(10L, waitDecision.questId);
@@ -2005,7 +2004,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, waitDecision.shouldScheduleWait);
         assertEquals(true, waitDecision.shouldSendList);
         Handling.QuestProgressDecision completeDecision = Handling.questProgressDecision(
-            new QuestDao.UserQuestProgressRow(10L, 10L, 3L, 0L, "0"), questRows, 0);
+            new QuestDao.UserQuestProgressRow(10L, 10L, 3L, 0L, "0"), typedQuestSettings, 0);
         assertEquals(true, completeDecision.shouldComplete);
         String expectedQuestListRow = Crypto.Proc_3_0_6D2AF0(7, null, "") + "First\2"
             + Crypto.Proc_3_0_6D2AF0(10, null, "")
@@ -2031,17 +2030,14 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(6, null, "")
             + "HHH\2\2H\2HHH"
             + Crypto.Proc_3_0_6D2AF0(0, null, "");
+        List<QuestSettings.UserQuestListRow> userQuestListRows = List.of(
+            new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "2026-01-01", 1L, 12L, 7));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(2, null, "L`"))
                 + expectedQuestListRow + expectedSecondQuestListRow,
-            Handling.questListPayload(questRows, "10\t0\t0\t1\t2026-01-01\t1\t12"));
+            Handling.questListPayload(typedQuestSettings, userQuestListRows));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(2, null, "L`"))
                 + expectedQuestListRow + expectedSecondQuestListRow,
-            Handling.questListPayload(QuestSettings.fromLegacy(questRows), List.of(
-                new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "2026-01-01", 1L, 12L, 7))));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(2, null, "L`"))
-                + expectedQuestListRow + expectedSecondQuestListRow,
-            QuestPayloads.list(QuestSettings.fromLegacy(questRows), List.of(
-                new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "2026-01-01", 1L, 12L, 7))));
+            QuestPayloads.list(typedQuestSettings, userQuestListRows));
         Functions.global_0082928C = "[com.client.messenger.follow.enabled=1]";
         String expectedOnlineFriend = Crypto.Proc_3_0_6D2AF0(5, null, "0") + "Alice\2";
         expectedOnlineFriend = Crypto.Proc_3_0_6D2AF0(3, null, expectedOnlineFriend);
@@ -4516,7 +4512,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829080 instanceof QuestSettings);
         assertEquals(liveQuestRows, Licence.questSettings().rows());
         String questListPayload = Handling.Proc_6_236_7F8540(4);
-        assertEquals(Handling.questListPayload(liveQuestRows, "10\t0\t0\t1\t0\t1\t0"), questListPayload);
+        assertEquals(Handling.questListPayload(Licence.questSettings(), List.of(
+            new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "0", 1L, 0L, 7))), questListPayload);
         assertEquals(true, containsSend(handlingSends, "L`"));
         handlingSends.clear();
         Handling.Proc_6_234_7F75C0(4);

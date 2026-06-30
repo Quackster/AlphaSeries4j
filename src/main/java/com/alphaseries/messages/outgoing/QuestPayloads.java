@@ -38,12 +38,13 @@ public final class QuestPayloads {
             .build();
     }
 
-    public static String list(Object questRows, List<QuestSettings.UserQuestListRow> userQuestRows) {
+    public static String list(QuestSettings questSettings, List<QuestSettings.UserQuestListRow> userQuestRows) {
         long lastCampaignId = -1L;
         long campaignLevelCount = 0L;
         long questCount = 0L;
         PacketBuilder questPayload = PacketBuilder.create();
-        for (QuestSettings.QuestDefinitionRow quest : QuestSettings.fromLegacy(questRows).definitions()) {
+        QuestSettings settings = questSettings == null ? QuestSettings.fromLegacy("") : questSettings;
+        for (QuestSettings.QuestDefinitionRow quest : settings.definitions()) {
             if (quest.fieldCount() >= 11) {
                 long waitSeconds = quest.waitAmount();
 

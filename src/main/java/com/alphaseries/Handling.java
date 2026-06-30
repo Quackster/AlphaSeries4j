@@ -10142,10 +10142,6 @@ public final class Handling {
         return idRequestFromWire(packetPayload, prefix);
     }
 
-    public static long nextQuestId(String questRows, QuestDao.UserQuestLevelRow activeQuest) {
-        return nextQuestId(QuestSettings.fromLegacy(questRows), activeQuest);
-    }
-
     public static long nextQuestId(QuestSettings questSettings, QuestDao.UserQuestLevelRow activeQuest) {
         long currentQuestId = 0L;
         long currentLevel = 0L;
@@ -10191,14 +10187,6 @@ public final class Handling {
             }
         }
         return requestedQuestId > 0L ? requestedQuestId : fallbackQuestId;
-    }
-
-    public static QuestProgressDecision questProgressDecision(
-        QuestDao.UserQuestProgressRow activeQuest,
-        String questRows,
-        long remainingWait
-    ) {
-        return questProgressDecision(activeQuest, QuestSettings.fromLegacy(questRows), remainingWait);
     }
 
     public static QuestProgressDecision questProgressDecision(
@@ -10253,18 +10241,7 @@ public final class Handling {
         return decision;
     }
 
-    public static String questListPayload(String questRows, String userQuestRows) {
-        List<QuestSettings.UserQuestListRow> rows = new ArrayList<>();
-        for (String rowText : StringUtils.text(userQuestRows).split("\r", -1)) {
-            QuestSettings.UserQuestListRow row = QuestSettings.userQuestListRow(rowText);
-            if (row != null) {
-                rows.add(row);
-            }
-        }
-        return questListPayload(questRows, rows);
-    }
-
-    public static String questListPayload(Object questRows, List<QuestSettings.UserQuestListRow> userQuestRows) {
+    public static String questListPayload(QuestSettings questRows, List<QuestSettings.UserQuestListRow> userQuestRows) {
         return QuestPayloads.list(questRows, userQuestRows);
     }
 
