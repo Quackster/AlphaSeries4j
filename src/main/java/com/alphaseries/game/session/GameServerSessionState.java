@@ -22,6 +22,10 @@ public final class GameServerSessionState {
         return new GameServerSessionState(queuedPacketData, readySessionMarkers);
     }
 
+    public static GameServerSessionState empty() {
+        return new GameServerSessionState("", "");
+    }
+
     public String queuedPacketData() {
         StringBuilder data = new StringBuilder();
         for (QueuedPacket packet : queuedPackets) {

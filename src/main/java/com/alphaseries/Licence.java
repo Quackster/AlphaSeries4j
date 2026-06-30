@@ -453,10 +453,12 @@ public final class Licence {
     }
 
     public static GameServerSessionState gameServerSessionState() {
-        return GameServerSessionState.fromLegacy(global_00829350, global_00829354);
+        SessionState.instance().setGameServerSessionFromLegacy(global_00829350, global_00829354);
+        return SessionState.instance().gameServerSession();
     }
 
     public static void setGameServerSessionState(GameServerSessionState sessionState) {
+        SessionState.instance().setGameServerSession(sessionState);
         if (sessionState == null) {
             global_00829350 = "";
             global_00829354 = "";
