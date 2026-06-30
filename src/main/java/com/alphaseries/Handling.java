@@ -837,6 +837,19 @@ public final class Handling {
         }
     }
 
+    public record RepresentedInteractionPair(
+        long socketIndex,
+        long partnerSocketIndex,
+        long interactionState,
+        int fieldCount,
+        String cacheRow
+    ) {
+        public static RepresentedInteractionPair stored(long socketIndex, long partnerSocketIndex, long interactionState) {
+            String rowText = socketIndex + "\t" + partnerSocketIndex + "\t" + interactionState;
+            return new RepresentedInteractionPair(socketIndex, partnerSocketIndex, interactionState, 3, rowText);
+        }
+    }
+
     public static final class MovementPosition {
         public long positionX;
         public long positionY;
@@ -10674,8 +10687,14 @@ public final class Handling {
         }
         removeRepresentedInteractionPair(sourceSocketIndex);
         removeRepresentedInteractionPair(targetSocketIndex);
-        String sourceRow = sourceSocketIndex + "\t" + targetSocketIndex + "\t" + interactionState;
-        String targetRow = targetSocketIndex + "\t" + sourceSocketIndex + "\t" + interactionState;
+        String sourceRow = RepresentedInteractionPair.stored(
+            sourceSocketIndex,
+            targetSocketIndex,
+            interactionState).cacheRow();
+        String targetRow = RepresentedInteractionPair.stored(
+            targetSocketIndex,
+            sourceSocketIndex,
+            interactionState).cacheRow();
         representedInteractionPairs = representedInteractionPairs.isEmpty()
             ? sourceRow + "\r" + targetRow
             : representedInteractionPairs + "\r" + sourceRow + "\r" + targetRow;
@@ -10686,12 +10705,9 @@ public final class Handling {
             return;
         }
         StringBuilder rebuilt = new StringBuilder();
-        for (String row : representedInteractionPairs.split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 1 && NumberUtils.parseLong(handlingField(fields, 0)) != socketIndex) {
-                    appendRow(rebuilt, row);
-                }
+        for (RepresentedInteractionPair pair : representedInteractionPairs(representedInteractionPairs)) {
+            if (pair.fieldCount() >= 1 && pair.socketIndex() != socketIndex) {
+                appendRow(rebuilt, pair.cacheRow());
             }
         }
         representedInteractionPairs = rebuilt.toString();
@@ -10702,12 +10718,9 @@ public final class Handling {
         if (socketIndex <= 0L || representedInteractionPairs.isEmpty()) {
             return 0;
         }
-        for (String row : representedInteractionPairs.split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 2 && NumberUtils.parseLong(handlingField(fields, 0)) == socketIndex) {
-                    return (int) NumberUtils.parseLong(handlingField(fields, 1));
-                }
+        for (RepresentedInteractionPair pair : representedInteractionPairs(representedInteractionPairs)) {
+            if (pair.fieldCount() >= 2 && pair.socketIndex() == socketIndex) {
+                return (int) pair.partnerSocketIndex();
             }
         }
         return 0;
@@ -10717,15 +10730,38 @@ public final class Handling {
         if (socketIndex <= 0L || representedInteractionPairs.isEmpty()) {
             return 0L;
         }
-        for (String row : representedInteractionPairs.split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 3 && NumberUtils.parseLong(handlingField(fields, 0)) == socketIndex) {
-                    return NumberUtils.parseLong(handlingField(fields, 2));
-                }
+        for (RepresentedInteractionPair pair : representedInteractionPairs(representedInteractionPairs)) {
+            if (pair.fieldCount() >= 3 && pair.socketIndex() == socketIndex) {
+                return pair.interactionState();
             }
         }
         return 0L;
+    }
+
+    public static List<RepresentedInteractionPair> representedInteractionPairs(String interactionPairsText) {
+        List<RepresentedInteractionPair> pairs = new ArrayList<>();
+        for (String row : StringUtils.text(interactionPairsText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                RepresentedInteractionPair pair = representedInteractionPair(row);
+                if (pair != null) {
+                    pairs.add(pair);
+                }
+            }
+        }
+        return pairs;
+    }
+
+    public static RepresentedInteractionPair representedInteractionPair(String rowText) {
+        String[] fields = StringUtils.text(rowText).split("\t", -1);
+        if (fields.length < 1) {
+            return null;
+        }
+        return new RepresentedInteractionPair(
+            NumberUtils.parseLong(StringUtils.field(fields, 0)),
+            NumberUtils.parseLong(StringUtils.field(fields, 1)),
+            NumberUtils.parseLong(StringUtils.field(fields, 2)),
+            fields.length,
+            StringUtils.text(rowText));
     }
 
     public static void storeRepresentedTradeOffer(long socketIndex, long furnitureId, long productId, String signText, long secondaryValue) {
