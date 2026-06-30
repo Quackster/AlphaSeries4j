@@ -1195,7 +1195,7 @@ public final class Handling {
                 String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                     + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
                 Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
-                Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GH"), 0);
+                Proc_6_247_8027E0(socketIndex, RoomPayloads.entryUpdated(roomId), 0);
             }
             return 0L;
         } catch (Exception ignored) {
@@ -1330,8 +1330,8 @@ public final class Handling {
             String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                 + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
             Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GI") + '\2', 0);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GH"), 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.iconUpdated(roomId), 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.entryUpdated(roomId), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1396,7 +1396,7 @@ public final class Handling {
             if (users != null) {
                 users.updateHomeRoom(NumberUtils.parseLong(userId), roomId);
             }
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GG"), 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.homeRoom(roomId), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1546,12 +1546,10 @@ public final class Handling {
             String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                 + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
             Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GS"), 0);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GH"), 0);
-            String optionPayload = Crypto.Proc_3_0_6D2AF0(settings.disableWalls, null, "GX");
-            optionPayload = Crypto.Proc_3_0_6D2AF0(settings.thicknessFloor, null, optionPayload);
-            optionPayload = Crypto.Proc_3_0_6D2AF0(settings.thicknessWallpaper, null, optionPayload);
-            Proc_6_244_801E80(socketIndex, optionPayload, 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.settingsUpdated(roomId), 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.entryUpdated(roomId), 0);
+            Proc_6_244_801E80(socketIndex,
+                RoomPayloads.wallOptions(settings.disableWalls, settings.thicknessFloor, settings.thicknessWallpaper), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1859,7 +1857,7 @@ public final class Handling {
             }
             roomRate++;
             rooms.updateRoomRate(roomId, roomRate);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomRate, null, "EY"), 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.rating(roomRate), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -2484,7 +2482,7 @@ public final class Handling {
             Proc_6_244_801E80(socketIndex, "@nfloor" + '\2' + floorPattern + '\2', 0);
             Proc_6_244_801E80(socketIndex, "@nwallpaper" + '\2' + wallpaperPattern + '\2', 0);
             Proc_6_244_801E80(socketIndex, "@nlandscape" + '\2' + landscapePattern + '\2', 0);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(ratingPayloadValue, null, "EY"), 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.rating(ratingPayloadValue), 0);
             Proc_6_244_801E80(socketIndex, "Er" + Proc_6_51_716AC0(roomId, 0, 0), 0);
             if (hasControl) {
                 Proc_6_244_801E80(socketIndex, "@j", 0);
@@ -2496,10 +2494,7 @@ public final class Handling {
                 Proc_6_244_801E80(socketIndex, "@_" + modelPayload + '\2', 0);
                 Proc_6_244_801E80(socketIndex, "GV" + modelPayload + '\2', 0);
             }
-            String wallPayload = Crypto.Proc_3_0_6D2AF0(disableWalls, null, "GX");
-            wallPayload = Crypto.Proc_3_0_6D2AF0(thicknessFloor, null, wallPayload);
-            wallPayload = Crypto.Proc_3_0_6D2AF0(thicknessWallpaper, null, wallPayload);
-            Proc_6_244_801E80(socketIndex, wallPayload, 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.wallOptions(disableWalls, thicknessFloor, thicknessWallpaper), 0);
             Proc_6_81_730010(socketIndex, roomId, -1);
             Proc_6_82_731070(socketIndex, roomId, 0);
             Proc_6_83_732640(socketIndex, modelId);
@@ -3597,7 +3592,7 @@ public final class Handling {
             String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                 + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
             Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
-            Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GH"), 0);
+            Proc_6_247_8027E0(socketIndex, RoomPayloads.entryUpdated(roomId), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3637,7 +3632,7 @@ public final class Handling {
             if (rooms != null) {
                 rooms.deleteFavouriteRoom(NumberUtils.parseLong(userId), roomId);
             }
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GK") + "H", 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.favouriteRemoved(roomId), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3656,7 +3651,7 @@ public final class Handling {
             if (rooms != null) {
                 rooms.insertFavouriteRoom(NumberUtils.parseLong(userId), roomId);
             }
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomId, null, "GK") + " ", 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.favouriteAdded(roomId), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

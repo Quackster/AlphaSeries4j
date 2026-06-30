@@ -62,4 +62,57 @@ public final class RoomPayloads {
             .appendInt(NumberUtils.parseLong(positionZ))
             .build();
     }
+
+    public static String iconUpdated(long roomId) {
+        return PacketBuilder.message("GI")
+            .appendInt(roomId)
+            .appendString("")
+            .build();
+    }
+
+    public static String entryUpdated(long roomId) {
+        return PacketBuilder.message("GH")
+            .appendInt(roomId)
+            .build();
+    }
+
+    public static String homeRoom(long roomId) {
+        return PacketBuilder.message("GG")
+            .appendInt(roomId)
+            .build();
+    }
+
+    public static String settingsUpdated(long roomId) {
+        return PacketBuilder.message("GS")
+            .appendInt(roomId)
+            .build();
+    }
+
+    public static String rating(long ratingValue) {
+        return PacketBuilder.message("EY")
+            .appendInt(ratingValue)
+            .build();
+    }
+
+    public static String wallOptions(long disableWalls, long thicknessFloor, long thicknessWallpaper) {
+        return PacketBuilder.message("GX")
+            .appendInt(disableWalls)
+            .appendInt(thicknessFloor)
+            .appendInt(thicknessWallpaper)
+            .build();
+    }
+
+    public static String favouriteRemoved(long roomId) {
+        return PacketBuilder.message("GK")
+            .appendInt(roomId)
+            .appendRaw('H')
+            .build();
+    }
+
+    public static String favouriteAdded(long roomId) {
+        return PacketBuilder.message("GK")
+            .appendInt(roomId)
+            .appendRaw(' ')
+            .build();
+    }
 }

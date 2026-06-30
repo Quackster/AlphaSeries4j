@@ -2463,6 +2463,17 @@ public final class PortedModuleSmokeTest {
         expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(0, null, expectedRoomSettings);
         assertEquals(expectedRoomSettings, RoomPayloads.settingsRead(settingsReadRow, roomRights));
         assertEquals(expectedRoomSettings, Handling.roomSettingsReadPayload(settingsReadRow, roomRights));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GI") + '\2', RoomPayloads.iconUpdated(7));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GH"), RoomPayloads.entryUpdated(7));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GG"), RoomPayloads.homeRoom(7));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GS"), RoomPayloads.settingsUpdated(7));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(12, null, "EY"), RoomPayloads.rating(12));
+        String expectedWallOptions = Crypto.Proc_3_0_6D2AF0(1, null, "GX");
+        expectedWallOptions = Crypto.Proc_3_0_6D2AF0(2, null, expectedWallOptions);
+        expectedWallOptions = Crypto.Proc_3_0_6D2AF0(3, null, expectedWallOptions);
+        assertEquals(expectedWallOptions, RoomPayloads.wallOptions(1, 2, 3));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GK") + "H", RoomPayloads.favouriteRemoved(7));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GK") + " ", RoomPayloads.favouriteAdded(7));
         Map<Long, String> staffNames = new HashMap<>();
         staffNames.put(6L, "Partner");
         staffNames.put(9L, "Picker");
