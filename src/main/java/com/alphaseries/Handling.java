@@ -230,7 +230,7 @@ public final class Handling {
             int targetSocketIndex = handlingSocketFromUserId(String.valueOf(targetUserId));
             if (targetSocketIndex > 0) {
                 Proc_6_244_801E80(targetSocketIndex, "@c" + banMessage + '\2', 0);
-                Proc_6_243_7FFEB0(targetSocketIndex, 0, 0);
+                disconnectSocket(targetSocketIndex);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1127,7 +1127,7 @@ public final class Handling {
                 ? Functions.sqlEscapedText(Functions.readBase64LengthString(packetPayload.substring(2)))
                 : "";
             if (searchText.length() < 3) {
-                Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                disconnectSocket(socketIndex);
                 return;
             }
             HelpDao helpDao = helpDao();
@@ -5350,7 +5350,7 @@ public final class Handling {
             String loginTicket = handlingLoginTicketFromPayload(packetPayload);
             if (loginTicket.isEmpty() || "NULL".equalsIgnoreCase(loginTicket)) {
                 if (socketIndex > 0) {
-                    Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                    disconnectSocket(socketIndex);
                 }
                 return "";
             }
@@ -5361,7 +5361,7 @@ public final class Handling {
             UserDao.LoginUser loginUser = users.loginUser(loginTicket).orElse(null);
             if (loginUser == null) {
                 if (socketIndex > 0) {
-                    Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                    disconnectSocket(socketIndex);
                 }
                 return "";
             }
@@ -5369,13 +5369,13 @@ public final class Handling {
             String userId = String.valueOf(userIdValue);
             if (userIdValue == 0L) {
                 if (socketIndex > 0) {
-                    Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                    disconnectSocket(socketIndex);
                 }
                 return "";
             }
             int oldSocketIndex = (int) loginUser.oldSocketIndex();
             if (oldSocketIndex > 0 && oldSocketIndex != socketIndex) {
-                Proc_6_243_7FFEB0(oldSocketIndex, 0, 0);
+                disconnectSocket(oldSocketIndex);
             }
             String userName = loginUser.userName();
             long rankIndex = loginUser.rankIndex();
@@ -5424,7 +5424,7 @@ public final class Handling {
         } catch (Exception ignored) {
             int socketIndex = handlingSocketIndex(args);
             if (socketIndex > 0) {
-                Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                disconnectSocket(socketIndex);
             }
             return "";
         }
@@ -8039,17 +8039,25 @@ public final class Handling {
 
     public static void Proc_6_243_7FFEB0(Object... args) {
         int socketIndex = handlingSocketIndex(args);
+        disconnectSocket(socketIndex);
+    }
+
+    /**
+     * Original function: Proc_6_243_7FFEB0.
+     */
+    public static void disconnectSocket(long socketIndex) {
         if (socketIndex <= 0) {
             return;
         }
-        Proc_6_242_7FF0D0(socketIndex, 0, 0);
-        Guardian.setSocketConnected(socketIndex, false);
-        Guardian.removeSocketMarker(socketIndex);
+        int socketIndexValue = (int) socketIndex;
+        Proc_6_242_7FF0D0(socketIndexValue, 0, 0);
+        Guardian.setSocketConnected(socketIndexValue, false);
+        Guardian.removeSocketMarker(socketIndexValue);
         SocketMarkerSet socketMarkers = Licence.socketMarkers();
-        socketMarkers.remove(socketIndex);
+        socketMarkers.remove(socketIndexValue);
         Licence.setSocketMarkers(socketMarkers);
         GameServerSessionState sessionState = Licence.gameServerSessionState();
-        sessionState.removeSocket(socketIndex);
+        sessionState.removeSocket(socketIndexValue);
         Licence.setGameServerSessionState(sessionState);
     }
 

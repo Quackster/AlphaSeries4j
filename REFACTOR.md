@@ -91,6 +91,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed Guardian socket marker toggling, removal, and ping iteration through `SocketMarkerSet`/named Guardian methods instead of raw bracket-string edits in callers, and migrated `Guardian` off `Vb` helpers.
 - Added typed `SocketMarkerSet.fromSocketIndexes(...)` construction and defensive socket-index access so session marker state can move through collections instead of bracket-marker strings.
 - Routed accepted game-client socket marker registration through named `Guardian.addSocketMarker(...)`, removing the remaining live runtime bracket-string append for Guardian marker state.
+- Added named `Handling.disconnectSocket(...)` with the original `Proc_6_243_7FFEB0` noted in Javadocs, then migrated live runtime, game-server, ping, moderation, help, and login cleanup callers away from the Proc-named disconnect path.
 - Added `com.alphaseries.game.wired.WiredSettings` as a typed adapter around wired state payload previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.wired.WiredPayloads` for wired record formatting, cache replacement, selected-item checks, and state payload aggregation.
 - Added `com.alphaseries.messages.outgoing.MessengerPayloads` for friend, request, search, pending-request, and friend-list outgoing payloads.

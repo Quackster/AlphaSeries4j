@@ -334,7 +334,7 @@ public final class Main {
                 GameServerPacket gamePacket = gameServerPacket(packet);
                 if ("SHUTDOWN".equals(gamePacket.commandName())) {
                     if (gamePacket.socketIndex() > 0L) {
-                        Handling.Proc_6_243_7FFEB0(gamePacket.socketIndex(), 0, 0);
+                        Handling.disconnectSocket(gamePacket.socketIndex());
                     }
                 } else if ("LISTEN".equals(gamePacket.commandName())) {
                     if (gamePacket.socketIndex() > 0L) {
@@ -345,7 +345,7 @@ public final class Main {
                         appendGameServerPacketPayload(gamePacket.socketIndex(), gamePacket.payload());
                     }
                 } else if (gamePacket.socketIndex() > 0L) {
-                    Handling.Proc_6_243_7FFEB0(gamePacket.socketIndex(), 0, 0);
+                    Handling.disconnectSocket(gamePacket.socketIndex());
                 }
             }
         } catch (Exception ignored) {
@@ -459,7 +459,7 @@ public final class Main {
                 if (Guardian.Proc_11_2_821390(socketIndex, 0, 0) == 1) {
                     activeCount++;
                 } else {
-                    Handling.Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                    Handling.disconnectSocket(socketIndex);
                 }
             }
             if (activeCount > previousMostActiveCount) {

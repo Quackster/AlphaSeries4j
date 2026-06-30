@@ -120,7 +120,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
             // Socket disconnects are part of normal client lifecycle.
         } finally {
             gameSockets.remove(socketIndex);
-            Handling.Proc_6_243_7FFEB0(socketIndex, 0, 0);
+            Handling.disconnectSocket(socketIndex);
         }
     }
 
@@ -187,7 +187,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
         if (socket != null) {
             closeQuietly(socket);
         }
-        Handling.Proc_6_243_7FFEB0(socketIndex, 0, 0);
+        Handling.disconnectSocket(socketIndex);
     }
 
     public static int configuredPort(String settingName) {
