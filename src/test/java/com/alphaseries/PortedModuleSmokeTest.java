@@ -4994,6 +4994,8 @@ public final class PortedModuleSmokeTest {
         CatalogDao.CatalogPageProductRow row = new CatalogDao.CatalogPageProductRow(
             51L, 77L, 12L, 3L, "sprite", 4L, 0L, "secondary", 1L, 2L);
         assertEquals(Boot.buildCatalogProductEntry(legacyFields), Boot.buildCatalogProductEntry(row));
+        String legacyRows = String.join("\t", legacyFields);
+        assertEquals(Boot.buildCatalogProductPayload(1L, legacyRows), Boot.buildCatalogProductPayload(1L, List.of(row)));
         Licence.global_008292BC = previousProducts;
     }
 

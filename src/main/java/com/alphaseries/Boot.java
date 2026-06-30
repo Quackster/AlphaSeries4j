@@ -1609,16 +1609,16 @@ public final class Boot {
 
     public static String buildCatalogProductPayload(long pageId, List<CatalogDao.CatalogPageProductRow> productRows) {
         long productCount = 0L;
-        StringBuilder productPayload = new StringBuilder();
+        PacketBuilder productPayload = PacketBuilder.create();
         if (productRows != null) {
             for (CatalogDao.CatalogPageProductRow row : productRows) {
                 if (row != null) {
-                    productPayload.append(buildCatalogProductEntry(row));
+                    productPayload.appendRaw(buildCatalogProductEntry(row));
                     productCount++;
                 }
             }
         }
-        return Crypto.encodeVl64(productCount) + productPayload;
+        return PacketBuilder.create().appendInt(productCount).appendRaw(productPayload.build()).build();
     }
 
     public static String buildCatalogProductEntry(String[] fields) {
