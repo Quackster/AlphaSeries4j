@@ -2291,7 +2291,7 @@ public final class PortedModuleSmokeTest {
         String equippedBadges = "0" + Crypto.Proc_3_0_6D2AF0(1, null, "") + "ACH1\2"
             + "0" + Crypto.Proc_3_0_6D2AF0(3, null, "") + "VIP\2";
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges,
-            Handling.equippedBadgePayload(List.of(
+            SocialPayloads.equippedBadges(List.of(
                 new BadgeRow("ACH1", 1L, 10L),
                 new BadgeRow("VIP", 3L, 11L))));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), SocialPayloads.equippedBadges(List.of()));
@@ -2299,16 +2299,16 @@ public final class PortedModuleSmokeTest {
             + "0" + Crypto.Proc_3_0_6D2AF0(20, null, "") + "ACH2\2"
             + "0" + Crypto.Proc_3_0_6D2AF0(21, null, "") + "MOD\2"
             + Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges;
-        assertEquals(expectedBadgeInventory, Handling.badgeInventoryPayload(List.of(
+        assertEquals(expectedBadgeInventory, SocialPayloads.badgeInventory(List.of(
                 new BadgeRow("ACH2", 0L, 20L),
                 new BadgeRow("MOD", 0L, 21L)),
             Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges));
         assertEquals("Cd" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges,
             SocialPayloads.badgeDisplay(5, Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2", Handling.tagListPayload(List.of("one", "two")));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2", SocialPayloads.tags(List.of("one", "two")));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), SocialPayloads.tags(List.of()));
         assertEquals("E^" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2",
-            SocialPayloads.tagDisplay(5, Handling.tagListPayload(List.of("one", "two"))));
+            SocialPayloads.tagDisplay(5, SocialPayloads.tags(List.of("one", "two"))));
         String badgeWire = "A@CONEA@CTWO";
         String[] badgeSlots = Handling.badgeUpdateSelectionsFromWire("B^" + badgeWire);
         assertEquals("ONE", badgeSlots[0]);
@@ -4341,9 +4341,9 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         String badgeInventoryPayload = Handling.Proc_6_193_7D2BB0(4);
-        assertEquals(Handling.badgeInventoryPayload(
+        assertEquals(SocialPayloads.badgeInventory(
                 List.of(new BadgeRow("ACH1", 0L, 201L), new BadgeRow("MOD", 0L, 202L)),
-                Handling.equippedBadgePayload(List.of(new BadgeRow("VIP", 1L, 203L)))),
+                SocialPayloads.equippedBadges(List.of(new BadgeRow("VIP", 1L, 203L)))),
             badgeInventoryPayload);
         assertEquals(true, containsSend(handlingSends, "Ce"));
         assertEquals(true, containsSend(handlingSends, "Cd"));
@@ -4351,20 +4351,20 @@ public final class PortedModuleSmokeTest {
         String badgeUpdateWire = "B^" + wireLong(1) + wireString("VIP")
             + wireLong(0) + wireLong(0) + wireLong(0) + wireLong(0);
         String updatedBadgesPayload = Handling.Proc_6_194_7D3180(4, badgeUpdateWire);
-        assertEquals(Handling.equippedBadgePayload(List.of(new BadgeRow("VIP", 1L, 203L))), updatedBadgesPayload);
+        assertEquals(SocialPayloads.equippedBadges(List.of(new BadgeRow("VIP", 1L, 203L))), updatedBadgesPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE users_badges SET id_slot='0' WHERE id_user='77'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users_badges SET id_slot='1' WHERE id_badge='VIP' AND id_user='77'"));
         assertEquals(true, containsSend(handlingSends, "Cd"));
         handlingSends.clear();
-        assertEquals(Handling.equippedBadgePayload(List.of(new BadgeRow("VIP", 1L, 203L))), Handling.Proc_6_195_7D38D0("77"));
-        assertEquals(Handling.tagListPayload(List.of("alpha", "beta")), Handling.Proc_6_196_7D3ED0("77"));
+        assertEquals(SocialPayloads.equippedBadges(List.of(new BadgeRow("VIP", 1L, 203L))), Handling.Proc_6_195_7D38D0("77"));
+        assertEquals(SocialPayloads.tags(List.of("alpha", "beta")), Handling.Proc_6_196_7D3ED0("77"));
         String tagDisplay = Handling.Proc_6_191_7D18B0(4, "DG" + wireLong(88));
-        assertEquals(SocialPayloads.tagDisplay(88, Handling.tagListPayload(List.of("target"))), tagDisplay);
+        assertEquals(SocialPayloads.tagDisplay(88, SocialPayloads.tags(List.of("target"))), tagDisplay);
         assertEquals(true, containsSend(handlingSends, "E^"));
         assertEquals(true, containsSend(handlingSends, "target"));
         handlingSends.clear();
         String lookToBadgePayload = Handling.Proc_6_192_7D1B80(4, "B_" + wireLong(61));
-        assertEquals(SocialPayloads.badgeDisplay(88, Handling.equippedBadgePayload(List.of())), lookToBadgePayload);
+        assertEquals(SocialPayloads.badgeDisplay(88, SocialPayloads.equippedBadges(List.of())), lookToBadgePayload);
         assertEquals(true, containsSend(handlingSends, "Cd"));
         handlingSends.clear();
         Licence.global_00829310 = Handling.representedRoomOccupantMove("", 4, 4, 1, 1, 0, 0);

@@ -430,6 +430,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed no-op pet payload wrappers from `Handling`; live pet package, inventory, placement, validation, and command-list paths now call `PetPayloads` directly.
 - Removed no-op navigator payload wrappers from `Handling`; live navigator handlers and tests now call `NavigatorPayloads` directly.
 - Removed the no-op inventory item payload wrapper from `Handling`; inventory cache/add and trade payload paths now call `InventoryMessagePayloads` directly.
+- Removed no-op badge and tag payload wrappers from `Handling`; badge inventory, equipped badge, tag-list handlers, and tests now call `SocialPayloads` directly.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -446,7 +447,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11681 lines
+- `Handling.java`: 11669 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 889 lines

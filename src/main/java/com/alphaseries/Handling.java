@@ -6383,7 +6383,7 @@ public final class Handling {
             }
             List<BadgeRow> inventoryRows = users.unequippedBadges(NumberUtils.parseLong(userId));
             String equippedPayload = Proc_6_195_7D38D0(userId, 0, 0);
-            String payload = badgeInventoryPayload(inventoryRows, equippedPayload);
+            String payload = SocialPayloads.badgeInventory(inventoryRows, equippedPayload);
             Proc_6_244_801E80(socketIndex, payload, 0);
             Proc_6_244_801E80(socketIndex, SocialPayloads.badgeDisplay(NumberUtils.parseLong(userId), equippedPayload), 0);
             return payload;
@@ -6443,17 +6443,17 @@ public final class Handling {
                 }
             }
             if (userId.isEmpty() || "0".equals(userId)) {
-                return equippedBadgePayload(List.of());
+                return SocialPayloads.equippedBadges(List.of());
             }
             UserDao users = userDao();
             if (users == null) {
-                return equippedBadgePayload(List.of());
+                return SocialPayloads.equippedBadges(List.of());
             }
             List<BadgeRow> rows = users.equippedBadges(NumberUtils.parseLong(userId));
-            return equippedBadgePayload(rows);
+            return SocialPayloads.equippedBadges(rows);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
-            return equippedBadgePayload(List.of());
+            return SocialPayloads.equippedBadges(List.of());
         }
     }
 
@@ -6470,17 +6470,17 @@ public final class Handling {
                 }
             }
             if (userId.isEmpty() || "0".equals(userId)) {
-                return tagListPayload(List.of());
+                return SocialPayloads.tags(List.of());
             }
             UserDao users = userDao();
             if (users == null) {
-                return tagListPayload(List.of());
+                return SocialPayloads.tags(List.of());
             }
             List<String> rows = users.tagNames(NumberUtils.parseLong(userId));
-            return tagListPayload(rows);
+            return SocialPayloads.tags(rows);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
-            return tagListPayload(List.of());
+            return SocialPayloads.tags(List.of());
         }
     }
 
@@ -10680,18 +10680,6 @@ public final class Handling {
             target = rooms.activeRoomUserTargetByUserId(roomId, requestedRoomUserIndex);
         }
         return target.orElse(null);
-    }
-
-    public static String badgeInventoryPayload(List<BadgeRow> inventoryRows, String equippedPayload) {
-        return SocialPayloads.badgeInventory(inventoryRows, equippedPayload);
-    }
-
-    public static String equippedBadgePayload(List<BadgeRow> badgeRows) {
-        return SocialPayloads.equippedBadges(badgeRows);
-    }
-
-    public static String tagListPayload(List<String> tagRows) {
-        return SocialPayloads.tags(tagRows);
     }
 
     public static String representedRoomUserStatusPayload(long roomUserIndex, long statusCode) {
