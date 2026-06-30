@@ -6280,9 +6280,9 @@ public final class Handling {
                 return 0L;
             }
             long roomSlot = NumberUtils.parseLong(args[0]);
-            RepresentedBotEntry botEntry = args[1] instanceof RepresentedBotEntry entry
-                ? entry
-                : RepresentedBotEntry.fromLegacy(args[1]);
+            if (!(args[1] instanceof RepresentedBotEntry botEntry)) {
+                return 0L;
+            }
             return allocateRepresentedBot(roomSlot, botEntry);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
