@@ -45,6 +45,7 @@ import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
 import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
+import com.alphaseries.messages.outgoing.NavigatorPayloads;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.PacketReader;
@@ -1405,6 +1406,14 @@ public final class PortedModuleSmokeTest {
                 + Crypto.Proc_3_0_6D2AF0(7, null, "")
                 + Crypto.Proc_3_0_6D2AF0(1, null, ""),
             UserPayloads.rankAndStaffState(7L, 1L));
+        NavigatorPayloads.FavouriteRoomsPayload favouriteRoomsPayload =
+            NavigatorPayloads.favouriteRoomIds(List.of(9L, 0L, 12L), 30L);
+        assertEquals(2L, favouriteRoomsPayload.roomCount());
+        assertEquals("GJ" + Crypto.Proc_3_0_6D2AF0(30, null, "")
+                + Crypto.Proc_3_0_6D2AF0(2, null, "")
+                + Crypto.Proc_3_0_6D2AF0(9, null, "")
+                + Crypto.Proc_3_0_6D2AF0(12, null, ""),
+            favouriteRoomsPayload.payload());
         assertEquals(true, Handling.isValidWardrobeFigure("hd-180-1.ch-255-66", "M"));
         assertEquals(false, Handling.isValidWardrobeFigure("bad-1", "M"));
         assertEquals(false, Handling.isValidWardrobeFigure("hd-'1", "M"));

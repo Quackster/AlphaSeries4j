@@ -85,6 +85,7 @@ import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
 import com.alphaseries.messages.outgoing.JukeboxPayloads;
 import com.alphaseries.messages.outgoing.MessengerPayloads;
+import com.alphaseries.messages.outgoing.NavigatorPayloads;
 import com.alphaseries.messages.outgoing.PollPayloads;
 import com.alphaseries.messages.outgoing.RecyclerPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
@@ -3623,16 +3624,10 @@ public final class Handling {
             if (rooms == null) {
                 return;
             }
-            StringBuilder roomIds = new StringBuilder();
-            long roomCount = 0L;
-            for (long roomId : rooms.favouriteRoomIds(NumberUtils.parseLong(userId), maxFavorites)) {
-                if (roomId > 0L) {
-                    roomIds.append(Crypto.Proc_3_0_6D2AF0(roomId, null, ""));
-                    roomCount++;
-                }
-            }
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(roomCount, null,
-                Crypto.Proc_3_0_6D2AF0(maxFavorites, null, "GJ")) + roomIds, 0);
+            Proc_6_244_801E80(socketIndex,
+                NavigatorPayloads.favouriteRoomIds(rooms.favouriteRoomIds(NumberUtils.parseLong(userId), maxFavorites),
+                    maxFavorites).payload(),
+                0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
