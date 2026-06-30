@@ -8,6 +8,7 @@ import com.alphaseries.dao.mysql.ClubDao;
 import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.PackageDao;
 import com.alphaseries.dao.mysql.ServerMaintenanceDao;
+import com.alphaseries.dao.mysql.SettingsDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetCommandCacheRow;
 import com.alphaseries.game.pet.PetLevelCacheRow;
@@ -260,8 +261,16 @@ public final class Boot {
         Proc_1_16_6CCA60(0, 0, 0);
         String systemDate = Functions.Proc_10_0_809570("com.system.format.date", "", 0);
         String systemTime = Functions.Proc_10_0_809570("com.system.format.time", "", 0);
-        Functions.setSettingsCache(buildSettingsCache(MySQL.Proc_5_2_6D4690("SELECT variable,value FROM settings", 0, 0),
-            systemDate, systemTime));
+        SettingsDao settings = settingsDao();
+        String settingsRows = "";
+        if (settings != null) {
+            try {
+                settingsRows = joinSettingRows(settings.allSettings());
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
+        Functions.setSettingsCache(buildSettingsCache(settingsRows, systemDate, systemTime));
         Licence.setQuestRows(MySQL.Proc_5_2_6D4690(
             "SELECT id,level,name,NULL,reward,reward_type,require_action,id_additional,id_campaign,amount_activities,waitamount FROM quests ORDER BY id_campaign DESC,level ASC", 0, 0));
     }
@@ -588,7 +597,15 @@ public final class Boot {
     }
 
     public static boolean writeFiguredataCache() {
-        String figureData = MySQL.Proc_5_2_6D4690("SELECT value FROM settings WHERE variable='com.cache.figuredata'", 0, 0);
+        String figureData = "";
+        SettingsDao settings = settingsDao();
+        if (settings != null) {
+            try {
+                figureData = settings.value("com.cache.figuredata");
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         String cachePath = java.nio.file.Path.of(Functions.applicationPath, "figuredata.cache").toString();
         Handling.Proc_6_240_7FC2B0(cachePath, figureData);
         if (Handling.Proc_6_239_7FC170(cachePath, 0, 0).trim().isEmpty()) {
@@ -1463,6 +1480,14 @@ public final class Boot {
         return joined.toString();
     }
 
+    private static String joinSettingRows(List<SettingsDao.SettingRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (SettingsDao.SettingRow row : rows == null ? List.<SettingsDao.SettingRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
     private static void appendLegacyRow(StringBuilder joined, String rowText) {
         if (joined.length() > 0) {
             joined.append('\r');
@@ -1498,6 +1523,11 @@ public final class Boot {
     private static ChatDao chatDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new ChatDao(database);
+    }
+
+    private static SettingsDao settingsDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new SettingsDao(database);
     }
 
     private static ServerMaintenanceDao serverMaintenanceDao() {
