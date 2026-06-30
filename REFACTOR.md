@@ -291,6 +291,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `PetSettings` with typed pet command and level rows, then routed pet command-action and level-experience helpers through named fields instead of indexed `handlingField(...)` reads.
 - Added a typed `StaffModerationDao.OpenCallForHelpReviewRow` and routed the remaining session, achievement, and compatibility argument parsing sites off internal `handlingField(...)` usage; `handlingField(...)` now remains only as a public compatibility shim.
 - Moved wall-placement, own-profile, and favourite-group legacy row parsing out of `Handling` and into typed `FurnitureDao.InventoryPlacementFurniture`, `OwnProfileRow`, and `UserGroupRow` compatibility factories.
+- Added `com.alphaseries.game.trade` represented trade-offer and interaction-pair row records, moving those live cache row shapes out of `Handling` while keeping legacy serialization at the compatibility boundary.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -306,7 +307,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12607 lines
+- `Handling.java`: 12547 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines
 - `Main.java`: 957 lines

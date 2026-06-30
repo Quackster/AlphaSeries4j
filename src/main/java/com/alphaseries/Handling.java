@@ -48,6 +48,8 @@ import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.session.SocketMarkerSet;
 import com.alphaseries.game.social.BadgeRow;
+import com.alphaseries.game.trade.RepresentedInteractionPair;
+import com.alphaseries.game.trade.RepresentedTradeOffer;
 import com.alphaseries.game.user.ExpiredUserEffectRow;
 import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.game.user.UserEffectActivationRow;
@@ -805,48 +807,6 @@ public final class Handling {
     public static final class TradeOfferItemPayload {
         public long itemCount;
         public String payload = "";
-    }
-
-    public record RepresentedTradeOffer(
-        long socketIndex,
-        long furnitureId,
-        long productId,
-        String signText,
-        long secondaryValue,
-        int fieldCount,
-        String cacheRow
-    ) {
-        public static RepresentedTradeOffer stored(
-            long socketIndex,
-            long furnitureId,
-            long productId,
-            String signText,
-            long secondaryValue
-        ) {
-            String rowText = socketIndex + "\t" + furnitureId + "\t" + productId + "\t"
-                + StringUtils.text(signText).replace("\r", "") + "\t" + secondaryValue;
-            return new RepresentedTradeOffer(
-                socketIndex,
-                furnitureId,
-                productId,
-                StringUtils.text(signText).replace("\r", ""),
-                secondaryValue,
-                5,
-                rowText);
-        }
-    }
-
-    public record RepresentedInteractionPair(
-        long socketIndex,
-        long partnerSocketIndex,
-        long interactionState,
-        int fieldCount,
-        String cacheRow
-    ) {
-        public static RepresentedInteractionPair stored(long socketIndex, long partnerSocketIndex, long interactionState) {
-            String rowText = socketIndex + "\t" + partnerSocketIndex + "\t" + interactionState;
-            return new RepresentedInteractionPair(socketIndex, partnerSocketIndex, interactionState, 3, rowText);
-        }
     }
 
     public static final class MovementPosition {
@@ -10169,18 +10129,7 @@ public final class Handling {
     }
 
     public static RepresentedTradeOffer representedTradeOffer(String rowText) {
-        String[] fields = StringUtils.text(rowText).split("\t", -1);
-        if (fields.length < 2) {
-            return null;
-        }
-        return new RepresentedTradeOffer(
-            NumberUtils.parseLong(StringUtils.field(fields, 0)),
-            NumberUtils.parseLong(StringUtils.field(fields, 1)),
-            NumberUtils.parseLong(StringUtils.field(fields, 2)),
-            StringUtils.field(fields, 3),
-            NumberUtils.parseLong(StringUtils.field(fields, 4)),
-            fields.length,
-            StringUtils.text(rowText));
+        return RepresentedTradeOffer.fromLegacy(rowText);
     }
 
     public static String representedTradeOfferPayload(
@@ -10726,16 +10675,7 @@ public final class Handling {
     }
 
     public static RepresentedInteractionPair representedInteractionPair(String rowText) {
-        String[] fields = StringUtils.text(rowText).split("\t", -1);
-        if (fields.length < 1) {
-            return null;
-        }
-        return new RepresentedInteractionPair(
-            NumberUtils.parseLong(StringUtils.field(fields, 0)),
-            NumberUtils.parseLong(StringUtils.field(fields, 1)),
-            NumberUtils.parseLong(StringUtils.field(fields, 2)),
-            fields.length,
-            StringUtils.text(rowText));
+        return RepresentedInteractionPair.fromLegacy(rowText);
     }
 
     public static void storeRepresentedTradeOffer(long socketIndex, long furnitureId, long productId, String signText, long secondaryValue) {
