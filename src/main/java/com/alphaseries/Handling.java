@@ -5953,7 +5953,7 @@ public final class Handling {
             bots.placeBotInRoom(petId, roomId, positionX, positionY, positionZ, positionR);
             String placementPayload = representedBotRoomEntryPayload(botEntityId);
             if (!placementPayload.isEmpty()) {
-                Proc_6_247_8027E0(socketIndex, placementPayload, 0);
+                broadcastToCurrentRoom(socketIndex, placementPayload);
             }
             Proc_6_244_801E80(socketIndex, PetPayloads.placed(petId), 0);
             return botEntityId;
@@ -5981,7 +5981,7 @@ public final class Handling {
             }
             bots.clearBotRoom(botId);
             bots.touchPetData(botId);
-            Proc_6_247_8027E0(socketIndex, PetPayloads.removedFromRoom(botEntityId), 0);
+            broadcastToCurrentRoom(socketIndex, PetPayloads.removedFromRoom(botEntityId));
             String petName = bot.name();
             String petFigure = bot.figure().toLowerCase();
             long scratches = bots.petScratches(botId);
@@ -6265,7 +6265,7 @@ public final class Handling {
             if (botEntityId <= 0L) {
                 botEntityId = botId;
             }
-            Proc_6_247_8027E0(socketIndex, petScratchPayload(botEntityId, userIdValue, scratches, pet.name(), pet.figure()), 0);
+            broadcastToCurrentRoom(socketIndex, petScratchPayload(botEntityId, userIdValue, scratches, pet.name(), pet.figure()));
             return scratches;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6492,10 +6492,10 @@ public final class Handling {
                 String callerStatusPayload = SocialPayloads.roomUserStatus(callerRoomUserIndex, 0L);
                 String targetStatusPayload = SocialPayloads.roomUserStatus(targetRoomUserIndex, 0L);
                 if (!callerStatusPayload.isEmpty()) {
-                    Proc_6_247_8027E0(socketIndex, callerStatusPayload, 0);
+                    broadcastToCurrentRoom(socketIndex, callerStatusPayload);
                 }
                 if (!targetStatusPayload.isEmpty()) {
-                    Proc_6_247_8027E0(socketIndex, targetStatusPayload, 0);
+                    broadcastToCurrentRoom(socketIndex, targetStatusPayload);
                 }
             }
             return targetBadgePayload;
@@ -6559,7 +6559,7 @@ public final class Handling {
             String displayPayload = SocialPayloads.badgeDisplay(NumberUtils.parseLong(userId), equippedPayload);
             Proc_6_244_801E80(socketIndex, displayPayload, 0);
             if (handlingCurrentRoomId(socketIndex, userId) > 0L) {
-                Proc_6_247_8027E0(socketIndex, displayPayload, 0);
+                broadcastToCurrentRoom(socketIndex, displayPayload);
             }
             return equippedPayload;
         } catch (Exception ignored) {

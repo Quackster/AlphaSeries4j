@@ -734,6 +734,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated room-exit, sticky-note update/delete, gift-box open, wall-state, credit-furniture, and respect broadcasts through `Handling.broadcastToCurrentRoom(...)` instead of the Proc-named current-room broadcast path.
 - Migrated room occupant entry, pet-package placement, dimmer state, user-effect, expired-effect, and staff-pick broadcasts through `Handling.broadcastToCurrentRoom(...)` instead of the Proc-named current-room broadcast path.
 - Migrated room decoration, floor-furniture pickup/state, room-right pickup, and wall-furniture placement broadcasts through `Handling.broadcastToCurrentRoom(...)` instead of the Proc-named current-room broadcast path.
+- Migrated pet placement/removal/scratch and badge status/display broadcasts through `Handling.broadcastToCurrentRoom(...)` instead of the Proc-named current-room broadcast path.
 
 ## VB Compatibility Class Removal Checklist
 
