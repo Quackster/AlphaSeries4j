@@ -1988,7 +1988,7 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(1, null, "")
             + Crypto.Proc_3_0_6D2AF0(0, null, "");
         assertEquals(expectedQuestPayload, QuestPayloads.completion(7, "Quest", 3, 44, 2, 5, 0));
-        assertEquals(expectedQuestPayload, Handling.questCompletionPayload(7, "Quest", 3, 44, 2, 5, 0));
+        assertEquals(expectedQuestPayload, QuestPayloads.completion(7, "Quest", 3, 44, 2, 5, 0));
         String questRows = "10\t1\tFirst\t\t5\t2\tvisit\t0\t7\t3\t30\r11\t2\tSecond\t\t6\t2\tvisit\t0\t7\t4\t0";
         QuestSettings typedQuestSettings = QuestSettings.fromLegacy(questRows);
         assertEquals("p^" + Crypto.Proc_3_0_6D2AF0(10, null, ""), QuestPayloads.request(10));
@@ -2032,7 +2032,7 @@ public final class PortedModuleSmokeTest {
             new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "2026-01-01", 1L, 12L, 7));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(2, null, "L`"))
                 + expectedQuestListRow + expectedSecondQuestListRow,
-            Handling.questListPayload(typedQuestSettings, userQuestListRows));
+            QuestPayloads.list(typedQuestSettings, userQuestListRows));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(2, null, "L`"))
                 + expectedQuestListRow + expectedSecondQuestListRow,
             QuestPayloads.list(typedQuestSettings, userQuestListRows));
@@ -4514,7 +4514,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829080 instanceof QuestSettings);
         assertEquals(liveQuestRows, Licence.questSettings().rows());
         String questListPayload = Handling.Proc_6_236_7F8540(4);
-        assertEquals(Handling.questListPayload(Licence.questSettings(), List.of(
+        assertEquals(QuestPayloads.list(Licence.questSettings(), List.of(
             new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "0", 1L, 0L, 7))), questListPayload);
         assertEquals(true, containsSend(handlingSends, "L`"));
         handlingSends.clear();

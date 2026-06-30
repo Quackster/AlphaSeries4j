@@ -7417,7 +7417,7 @@ public final class Handling {
             if (quests == null) {
                 return "";
             }
-            String payload = questListPayload(questSettingsFromSource(),
+            String payload = QuestPayloads.list(questSettingsFromSource(),
                 userQuestRowsWithRemainingWait(quests, quests.listRows(NumberUtils.parseLong(userId))));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
@@ -10054,19 +10054,6 @@ public final class Handling {
         representedTradeOffers = representedTradeOfferRemove(representedTradeOffers, socketIndex, furnitureId);
     }
 
-    public static String questCompletionPayload(
-        long campaignId,
-        String questName,
-        long campaignLevelCount,
-        long questId,
-        long userQuestLevel,
-        long progressValue,
-        long activityCount
-    ) {
-        return QuestPayloads.completion(campaignId, questName, campaignLevelCount, questId, userQuestLevel,
-            progressValue, activityCount);
-    }
-
     public static long questRequestIdFromWire(String packetPayload, String prefix) {
         return idRequestFromWire(packetPayload, prefix);
     }
@@ -10170,10 +10157,6 @@ public final class Handling {
         return decision;
     }
 
-    public static String questListPayload(QuestSettings questRows, List<QuestSettings.UserQuestListRow> userQuestRows) {
-        return QuestPayloads.list(questRows, userQuestRows);
-    }
-
     public static String Proc_6_166_7BE940(Object... args) {
         long userId = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
         String userName = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
@@ -10229,7 +10212,7 @@ public final class Handling {
                 activityCount = 1L;
             }
             long campaignLevelCount = questSettings.campaignLevelCount(campaignId);
-            String completionPayload = questCompletionPayload(campaignId, questName, campaignLevelCount, questId,
+            String completionPayload = QuestPayloads.completion(campaignId, questName, campaignLevelCount, questId,
                 userQuestLevel, progressValue, activityCount);
             Proc_6_244_801E80(socketIndex, "Lb" + completionPayload, 0);
             if (progressValue < activityCount) {

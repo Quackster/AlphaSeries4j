@@ -433,6 +433,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed no-op badge and tag payload wrappers from `Handling`; badge inventory, equipped badge, tag-list handlers, and tests now call `SocialPayloads` directly.
 - Removed no-op jukebox and recycler payload wrappers from `Handling`; song info, playlist, disk inventory, playback, and recycler-status paths now call `JukeboxPayloads`/`RecyclerPayloads` directly.
 - Removed no-op user activity-point and own-profile payload wrappers from `Handling`; handlers and tests now call `UserPayloads` directly.
+- Removed no-op quest completion/list payload wrappers from `Handling`; handlers and tests now call `QuestPayloads` directly.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -449,7 +450,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11635 lines
+- `Handling.java`: 11618 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 889 lines
