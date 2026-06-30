@@ -498,6 +498,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated room ownership limits, staff-picked navigator defaults, favourite-room limits, and catalog gift settings in `Handling` to typed `AppSettingsCache` access instead of legacy `Functions.Proc_10_0_809570(...)` calls.
 - Migrated user-session date/MOTD settings, pet/guide bot toggles and speech defaults, and recycler enabled checks in `Handling` to typed `AppSettingsCache` access instead of legacy settings helper calls.
 - Migrated remaining live `Handling` settings reads for date/time formatting, jukebox limits, songdisk defaults, activity-point awards, infobus titles, room-bot loading, navigator limits, and messenger follow checks to typed `AppSettingsCache` access; production callers no longer use `Functions.Proc_10_0_809570(...)` or `Proc_10_1_809790(...)` directly.
+- Migrated the remaining internal `Functions` HC gift-amount settings read to `AppSettingsCache`, leaving `Proc_10_0_809570(...)` and `Proc_10_1_809790(...)` only as explicit compatibility methods covered by tests.
 
 ## VB Compatibility Class Removal Checklist
 

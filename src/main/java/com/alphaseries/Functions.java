@@ -541,8 +541,8 @@ public final class Functions {
             if (userId <= 0L) {
                 return 0L;
             }
-            long giftIncrementDefault = NumberUtils.parseLong(Proc_10_0_809570(
-                "com.server.socket.game.club.gifts.hcrank" + hcRank + ".amount", 0, 0));
+            long giftIncrementDefault = NumberUtils.parseLong(settingsCache().valueOrDefault(
+                "com.server.socket.game.club.gifts.hcrank" + hcRank + ".amount", 0));
             clubDao().applyClubPeriod(userId, hcRank, currentPeriods, paidDays, giftIncrementDefault);
             return 1L;
         } catch (Exception ex) {
