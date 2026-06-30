@@ -23,7 +23,7 @@ public final class DataManager {
     public static final int[] global_00829068 = new int[5001];
     public static Object global_008292BC = "";
     public static String lastLicenceFailureMessage = "";
-    private static LicenceHttpFetcher licenceHttpFetcher = (url, action) -> Proc_8_0_804330(url, action);
+    private static LicenceHttpFetcher licenceHttpFetcher = DataManager::readHttp;
 
     private DataManager() {
     }
@@ -49,7 +49,7 @@ public final class DataManager {
     }
 
     public static void configureLicenceHttpFetcher(LicenceHttpFetcher fetcher) {
-        licenceHttpFetcher = fetcher == null ? (url, action) -> Proc_8_0_804330(url, action) : fetcher;
+        licenceHttpFetcher = fetcher == null ? DataManager::readHttp : fetcher;
     }
 
     public static RoomEventLocales roomEventLocales() {
@@ -72,33 +72,61 @@ public final class DataManager {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return NumberUtils.parseLong(args[0]) * Functions.randomLongInclusive(1, 4);
+        return randomSmallLicenceFactor(NumberUtils.parseLong(args[0]));
     }
 
     public static String Proc_8_0_804330(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        return PrivSockHTTP.readHTTP(StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
+        return readHttp(StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
     }
 
     public static long Proc_8_2_804490(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return NumberUtils.parseLong(args[0]) * Functions.randomLongInclusive(60, 90);
+        return randomLargeLicenceFactor(NumberUtils.parseLong(args[0]));
     }
 
     public static String Proc_8_3_804530(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
+        return randomisedLicenceToken(StringUtils.text(args[0]));
+    }
+
+    /**
+     * Original function: Proc_8_0_804330.
+     */
+    public static String readHttp(String requestUrl, int action) {
+        return PrivSockHTTP.readHTTP(StringUtils.text(requestUrl), action);
+    }
+
+    /**
+     * Original function: Proc_8_1_804400.
+     */
+    public static long randomSmallLicenceFactor(long value) {
+        return value * Functions.randomLongInclusive(1, 4);
+    }
+
+    /**
+     * Original function: Proc_8_2_804490.
+     */
+    public static long randomLargeLicenceFactor(long value) {
+        return value * Functions.randomLongInclusive(60, 90);
+    }
+
+    /**
+     * Original function: Proc_8_3_804530.
+     */
+    public static String randomisedLicenceToken(String sourceValue) {
         long saltValue = Functions.randomLongInclusive(1, 100);
         if (saltValue == 0L) {
             saltValue = 1L;
         }
         long markerValue = Functions.randomLongInclusive(0x5A, 0x41);
-        return buildLicenceToken(StringUtils.text(args[0]), saltValue, markerValue, null);
+        return buildLicenceToken(sourceValue, saltValue, markerValue, null);
     }
 
     public static String buildLicenceToken(String sourceValue, long saltValue, long markerValue, String fillerCharacters) {
@@ -116,22 +144,36 @@ public final class DataManager {
     }
 
     public static void Proc_8_4_804970(Object... args) {
-        lastLicenceFailureMessage = "Das Lizenzsystem ist zurzeit nicht erreichbar. Versuch es sp\u00e4ter wieder!";
+        markLicenceUnavailable();
     }
 
     public static String Proc_8_5_804AB0(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        String encodedValue = StringUtils.text(args[0]);
-        if (encodedValue.isEmpty()) {
+        return decodeShiftedLicenceText(StringUtils.text(args[0]));
+    }
+
+    /**
+     * Original function: Proc_8_4_804970.
+     */
+    public static void markLicenceUnavailable() {
+        lastLicenceFailureMessage = "Das Lizenzsystem ist zurzeit nicht erreichbar. Versuch es sp\u00e4ter wieder!";
+    }
+
+    /**
+     * Original function: Proc_8_5_804AB0.
+     */
+    public static String decodeShiftedLicenceText(String encodedValue) {
+        String encodedText = StringUtils.text(encodedValue);
+        if (encodedText.isEmpty()) {
             return "";
         }
 
-        int shiftValue = encodedValue.charAt(0) - 87;
+        int shiftValue = encodedText.charAt(0) - 87;
         StringBuilder decoded = new StringBuilder();
-        for (int index = 1; index < encodedValue.length(); index++) {
-            decoded.append((char) (encodedValue.charAt(index) - shiftValue));
+        for (int index = 1; index < encodedText.length(); index++) {
+            decoded.append((char) (encodedText.charAt(index) - shiftValue));
         }
         return decoded.toString();
     }
@@ -140,8 +182,15 @@ public final class DataManager {
         if (args == null || args.length == 0) {
             return 0;
         }
-        String keyName = StringUtils.text(args[0]);
-        String marker = "\r" + keyName + ":" + global_00829054 + "=";
+        return licenceRankValue(StringUtils.text(args[0]));
+    }
+
+    /**
+     * Original function: Proc_8_6_804D80.
+     */
+    public static int licenceRankValue(String keyName) {
+        String keyText = StringUtils.text(keyName);
+        String marker = "\r" + keyText + ":" + global_00829054 + "=";
         if (global_00829050.contains(marker + "1")) {
             return 1;
         }
@@ -157,7 +206,7 @@ public final class DataManager {
 
     public static boolean Proc_8_7_8051C0(Object... args) {
         if (args == null || args.length == 0) {
-            Proc_8_4_804970();
+            markLicenceUnavailable();
             return false;
         }
         if (args[0] instanceof LicenceCheckContext) {
@@ -166,6 +215,9 @@ public final class DataManager {
         return applyLicenceResponse(StringUtils.text(args[0]), LICENCE_TIME_FORMAT, 0L);
     }
 
+    /**
+     * Original function: Proc_8_7_8051C0.
+     */
     public static boolean checkLicence(LicenceCheckContext context) {
         try {
             long checksumSalt = licenceChecksumSalt();
@@ -173,13 +225,13 @@ public final class DataManager {
             String responseText = licenceHttpFetcher.read(requestUrl, 1);
             return applyLicenceResponse(responseText, LICENCE_TIME_FORMAT, checksumSalt);
         } catch (Exception ex) {
-            Proc_8_4_804970();
+            markLicenceUnavailable();
             return false;
         }
     }
 
     public static long licenceChecksumSalt() {
-        return Proc_8_2_804490(7, 0x5A) + Proc_8_1_804400(0) + Proc_8_2_804490(1, 10);
+        return randomLargeLicenceFactor(7) + randomSmallLicenceFactor(0) + randomLargeLicenceFactor(1);
     }
 
     public static String buildLicenceRequestUrl(LicenceCheckContext context) {
@@ -202,7 +254,7 @@ public final class DataManager {
             + urlEncode(timePrefix + timeFormatText + ":")
             + "&version=" + urlEncode(context.version)
             + "&productKey=" + urlEncode(context.productKey)
-            + "&token=" + urlEncode(Proc_8_3_804530(tokenSeed));
+            + "&token=" + urlEncode(randomisedLicenceToken(tokenSeed));
     }
 
     public static String urlEncode(String value) {
@@ -250,7 +302,7 @@ public final class DataManager {
             return false;
         }
         if (response.isEmpty()) {
-            Proc_8_4_804970();
+            markLicenceUnavailable();
             return false;
         }
 
@@ -258,10 +310,10 @@ public final class DataManager {
         global_00829050 = licenceCacheTextFromBlock(licenseBlock);
         global_00829054 = NumberUtils.parseInt(extractLicenceSetting(global_00829050, "rank"));
         for (int rankIndex = 1; rankIndex < global_00829068.length; rankIndex++) {
-            global_00829068[rankIndex] = Proc_8_6_804D80(String.valueOf(rankIndex));
+            global_00829068[rankIndex] = licenceRankValue(String.valueOf(rankIndex));
         }
         if (!licenceChecksumValid(licenseBlock, checksumSalt)) {
-            Proc_8_4_804970();
+            markLicenceUnavailable();
             return false;
         }
         lastLicenceFailureMessage = "";
@@ -285,7 +337,14 @@ public final class DataManager {
         if (args == null || args.length == 0) {
             return false;
         }
-        return Files.exists(Path.of(StringUtils.text(args[0])));
+        return fileExists(StringUtils.text(args[0]));
+    }
+
+    /**
+     * Original function: Proc_8_8_806720.
+     */
+    public static boolean fileExists(String path) {
+        return Files.exists(Path.of(StringUtils.text(path)));
     }
 
     public static void Proc_8_9_806810(Object... args) {
@@ -329,14 +388,28 @@ public final class DataManager {
         if (args == null || args.length == 0) {
             return "";
         }
-        return roomEventLocales().field(StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
+        return roomEventLocaleField(StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
     }
 
     public static String Proc_8_12_806C30(Object... args) {
         if (args == null || args.length < 2) {
             return "";
         }
-        return getProductCacheCell(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]));
+        return productCacheField(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]));
+    }
+
+    /**
+     * Original function: Proc_8_11_8069B0.
+     */
+    public static String roomEventLocaleField(String keyName, long columnIndex) {
+        return roomEventLocales().field(StringUtils.text(keyName), columnIndex);
+    }
+
+    /**
+     * Original function: Proc_8_12_806C30.
+     */
+    public static String productCacheField(long productId, long columnIndex) {
+        return productCache().cell(productId, columnIndex);
     }
 
     public static String extractLicenceSetting(String sourceText, String keyName) {
@@ -385,10 +458,6 @@ public final class DataManager {
             return "";
         }
         return fields[(int) columnIndex];
-    }
-
-    public static String getProductCacheCell(long productId, long columnIndex) {
-        return productCache().cell(productId, columnIndex);
     }
 
     public static String getDelimitedProductRow(String tableText, long productId) {
