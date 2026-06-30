@@ -38,6 +38,7 @@ import com.alphaseries.game.session.RepresentedSocketCache;
 import com.alphaseries.game.session.SessionRegistry;
 import com.alphaseries.game.session.SessionState;
 import com.alphaseries.game.session.SocketMarkerSet;
+import com.alphaseries.server.lifecycle.LifecycleState;
 import com.alphaseries.server.lifecycle.LicenceRuntimeState;
 import com.alphaseries.server.update.UpdaterSettings;
 import com.alphaseries.server.update.UpdaterState;
@@ -501,11 +502,13 @@ public final class Licence {
     }
 
     public static LicenceRuntimeState runtimeState() {
-        return LicenceRuntimeState.fromLegacy(global_0082904C, global_00829038, global_0082903C,
+        LifecycleState.instance().setRuntimeStateFromLegacy(global_0082904C, global_00829038, global_0082903C,
             global_00829034, global_008290AC, global_00829190);
+        return LifecycleState.instance().runtimeState();
     }
 
     public static void setRuntimeState(LicenceRuntimeState runtimeState) {
+        LifecycleState.instance().setRuntimeState(runtimeState);
         if (runtimeState == null) {
             global_0082904C = 0L;
             global_00829038 = "";

@@ -52,6 +52,10 @@ public final class LicenceRuntimeState {
             packetTraceEnabled);
     }
 
+    public static LicenceRuntimeState empty() {
+        return new LicenceRuntimeState(0L, "", 0L, false, 0L, false);
+    }
+
     public long primaryColor() {
         return primaryColor;
     }

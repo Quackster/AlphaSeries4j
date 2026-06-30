@@ -524,6 +524,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Extended `game.pet.PetState` to own represented bot registry reads, keeping `Licence.global_008292D4`/`global_00829358` as compatibility mirrors.
 - Extended `game.room.RoomState` to own room portal settings, keeping `Licence.global_00829098`/`global_0082909C` as compatibility mirrors.
 - Added `server.update.UpdaterState` as the module-level singleton for updater settings, keeping `Licence.global_00829040`/`global_00829044`/`global_00829048` as compatibility mirrors.
+- Added `server.lifecycle.LifecycleState` as the module-level singleton for runtime state, keeping `Licence.global_0082904C`/`global_00829038`/`global_0082903C`/`global_00829034`/`global_008290AC`/`global_00829190` as compatibility mirrors.
 - Migrated the remaining internal `Functions` HC gift-amount settings read to `AppSettingsCache`, leaving `Proc_10_0_809570(...)` and `Proc_10_1_809790(...)` only as explicit compatibility methods covered by tests.
 - Added named packet/string helpers in `Functions` for VL64 length reads, Base64 length reads, single-line text normalization, and SQL text escaping with original Proc names in Javadocs, then migrated shared `Handling` utility parsers to those names.
 - Migrated `Handling` callers away from the legacy packet/string helper names `Functions.Proc_10_6_809F10(...)`, `Proc_10_7_80A190(...)`, `Proc_10_10_80A7F0(...)`, and `Proc_10_11_80A9C0(...)`; `Handling` now uses the named packet/string helper APIs for those operations.
