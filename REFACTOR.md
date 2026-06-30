@@ -542,6 +542,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `RepresentedBotRegistry` internals from raw allocated-marker and record-cache strings to typed entity-id sets and record maps, preserving per-record legacy serialization only for the `Licence` compatibility bridge.
 - Migrated `UpdaterSettings` internals from retained newline/tab-delimited update-row text to typed `UpdateEntry` lists, leaving legacy row parsing only at the settings construction boundary.
 - Migrated `AppSettingsCache` internals from retained raw settings text to parsed case-insensitive setting maps, with typed map construction available for callers that no longer need legacy text.
+- Migrated `PermissionMatrix` internals from raw legacy permission objects to defensive `String[][]` rows, keeping `String[]` compatibility only at construction.
 - Migrated `MessengerSettings` internals from raw friend-limit object storage to defensive typed `long[]` settings, leaving legacy `String[]` parsing only at the module boundary.
 - Migrated `StaffSettings` internals from raw moderation payload object storage to defensive typed `String[][]` settings, leaving legacy matrix parsing only at the module boundary.
 - Migrated `HelpCenterCache` internals from raw indexed payload objects to typed payload maps for category FAQ and description lookups, leaving legacy array/map parsing only at the module boundary.

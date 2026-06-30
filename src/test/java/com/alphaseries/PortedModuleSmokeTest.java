@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.config.AppDatabaseConfig;
 import com.alphaseries.config.AppSettingsCache;
+import com.alphaseries.config.PermissionMatrix;
 import com.alphaseries.dao.mysql.AdvertisingDao;
 import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.dao.mysql.ClubDao;
@@ -335,6 +336,7 @@ public final class PortedModuleSmokeTest {
         Functions.global_008292A8 = new String[][]{{"\2base\2"}, {"\2fuse_mod\2"}};
         assertEquals(true, Functions.Proc_10_1_809790(1, "", "fuse_mod", 0));
         assertEquals(true, Functions.permissionMatrix().allows(1, "", "fuse_mod", 0));
+        assertPermissionMatrix();
         assertEquals("bcd", Functions.Proc_10_5_809D80("abcdef", 2, 3));
         assertEquals("O''Reilly test ", Functions.Proc_10_11_80A9C0("O'Reilly\\rtest\""));
         assertEquals("O''Reilly test ", Functions.sqlEscapedText("O'Reilly\\rtest\""));
@@ -4879,6 +4881,18 @@ public final class PortedModuleSmokeTest {
         assertEquals("alpha", parsedSettings.value("name"));
         AppSettingsCache typedSettings = AppSettingsCache.fromSettings(Map.of("Server.Port", "4321"));
         assertEquals("4321", typedSettings.value("server.port"));
+    }
+
+    private static void assertPermissionMatrix() {
+        assertEquals(true, PermissionMatrix.fromLegacy(new String[]{"", "\2legacy_perm\2"})
+            .allows(1, "", "legacy_perm", 2));
+        String[][] permissionRows = new String[][]{{""}, {"", "\2hc_perm\2"}};
+        PermissionMatrix matrix = PermissionMatrix.fromRows(permissionRows);
+        permissionRows[1][1] = "";
+        assertEquals(true, matrix.allows(1, "", "hc_perm", 1));
+        String[][] copiedRows = matrix.rows();
+        copiedRows[1][1] = "";
+        assertEquals(true, matrix.allows(1, "", "hc_perm", 1));
     }
 
     private static String productRow(long productId, String... columnPairs) {
