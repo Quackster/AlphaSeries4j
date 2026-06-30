@@ -587,6 +587,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved pet settings compatibility conversion fully into `PetSettings.fromLegacy(...)` and simplified `Licence.petSettings()` to delegate directly to `PetState`.
 - Routed boot pet-level cache loading through typed `PetSettings.PetLevelRow` records instead of building tab-delimited level strings for the `Licence` mirror; legacy array serialization remains only on the `PetSettings.levelRows()` compatibility view.
 - Routed boot pet-command cache loading through typed `PetSettings.PetCommandRow` lists instead of sparse legacy arrays for the `Licence` mirror; legacy array serialization remains only on the `PetSettings.commandRows()` compatibility view.
+- Routed `Licence` pet-settings refreshes through the typed `PetSettings` state path when the level-row mirror already contains a `PetSettings` instance, leaving typed-list/string/array row parsing as a compatibility fallback.
 - Moved recycler reward-state merge logic into `RecyclerSettings`/`RecyclerState`, preserving legacy mirror shapes while removing the remaining recycler `global_* instanceof` branches from `Licence`.
 - Extended `game.catalog.CatalogState` to own catalog page payload/tree caches, routed live catalog page reads through it, and kept `Licence.global_00829308`/`global_008292F4` as compatibility mirrors.
 - Moved catalog-page compatibility conversion fully into `CatalogPages.fromLegacy(...)` and simplified `Licence.catalogPages()` to delegate directly to `CatalogState`.

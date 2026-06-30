@@ -372,23 +372,31 @@ public final class Licence {
     }
 
     public static PetSettings petSettings() {
-        PetState.instance().setSettingsFromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
+        refreshPetSettings();
         return PetState.instance().settings();
     }
 
     public static void setPetRaceRows(Object raceRows) {
         global_008291EC = raceRows == null ? "" : raceRows;
-        PetState.instance().setSettingsFromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
+        refreshPetSettings();
     }
 
     public static void setPetLevelRows(Object levelRows) {
         global_008292D0 = levelRows == null ? "" : levelRows;
-        PetState.instance().setSettingsFromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
+        refreshPetSettings();
     }
 
     public static void setPetCommandRows(Object commandRows, long commandCount) {
         global_008292CC = commandRows == null ? "" : commandRows;
         global_008292C8 = commandCount;
+        refreshPetSettings();
+    }
+
+    private static void refreshPetSettings() {
+        if (global_008292D0 instanceof PetSettings settings) {
+            PetState.instance().setSettings(settings);
+            return;
+        }
         PetState.instance().setSettingsFromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
     }
 
