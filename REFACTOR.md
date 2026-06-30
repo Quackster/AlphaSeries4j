@@ -491,6 +491,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `ProductCache` with named product type, sprite, item-data, and wired-code accessors carrying the original `DataManager.Proc_8_12_806C30` source note, then routed matching `Handling` and inventory payload callers away from raw product field numbers.
 - Expanded `ProductCache` with named default-sign, display-name, badge, state-count, charge, interaction, and dimension-map accessors, clearing live production calls to `DataManager.Proc_8_12_806C30(...)`; only compatibility test coverage still calls the old Proc name.
 - Added named `DataManager.appendTextFile(...)` and `writeTextFile(...)` methods with original Proc names in Javadocs, then migrated live `Boot`/`Main`/`Handling` callers away from `DataManager.Proc_8_9_806810(...)` and `Proc_8_10_8068E0(...)`.
+- Migrated live license startup checks and room-event locale lookup away from `DataManager.Proc_8_7_8051C0(...)` and `Proc_8_11_8069B0(...)`; production no longer calls `DataManager.Proc_8_*` methods directly.
 
 ## VB Compatibility Class Removal Checklist
 

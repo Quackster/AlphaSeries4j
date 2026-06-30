@@ -9198,7 +9198,7 @@ public final class Handling {
         if (categoryId < 1L) {
             return false;
         }
-        String categoryName = DataManager.Proc_8_11_8069B0(categoryId, 0);
+        String categoryName = DataManager.roomEventLocales().field(String.valueOf(categoryId), 0);
         if (categoryName.isEmpty()) {
             return false;
         }

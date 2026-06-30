@@ -213,7 +213,7 @@ public final class Main {
 
     public static boolean runServer(String caption, String licenceResponse) {
         try {
-            if (DataManager.Proc_8_7_8051C0(licenceResponse, 0, 0)) {
+            if (DataManager.applyLicenceResponse(licenceResponse, DataManager.LICENCE_TIME_FORMAT, 0L)) {
                 Boot.Proc_1_3_6BEBA0(0);
                 return true;
             }
@@ -232,8 +232,8 @@ public final class Main {
             return StartupResult.failure("lifecycle", "Lifecycle initialization did not return a result.");
         }
         try {
-            if (DataManager.Proc_8_7_8051C0(
-                new DataManager.LicenceCheckContext(lifecycle.productKey, Licence.runtimeState().productName()), 0, 0)) {
+            if (DataManager.checkLicence(
+                new DataManager.LicenceCheckContext(lifecycle.productKey, Licence.runtimeState().productName()))) {
                 Boot.Proc_1_3_6BEBA0(0);
                 return StartupResult.success();
             }
