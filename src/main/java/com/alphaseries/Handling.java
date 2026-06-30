@@ -5073,16 +5073,32 @@ public final class Handling {
     public static void Proc_6_157_7974B0(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            if (socketIndex <= 0) {
-                return;
-            }
             String wallPayload = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
-            if (wallPayload.startsWith("rv")) {
-                wallPayload = wallPayload.substring(2);
-            }
             FurnitureDao.InventoryPlacementFurniture placementFurniture = null;
             if (args != null && args.length >= 3) {
                 placementFurniture = FurnitureDao.InventoryPlacementFurniture.fromLegacyArg(args[2]);
+            }
+            placeWallFurnitureFromInventory(socketIndex, wallPayload, placementFurniture);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_157_7974B0.
+     */
+    public static void placeWallFurnitureFromInventory(
+        int socketIndex,
+        String wallPayload,
+        FurnitureDao.InventoryPlacementFurniture placementFurniture
+    ) {
+        try {
+            if (socketIndex <= 0) {
+                return;
+            }
+            wallPayload = StringUtils.text(wallPayload);
+            if (wallPayload.startsWith("rv")) {
+                wallPayload = wallPayload.substring(2);
             }
             long furnitureId = placementFurniture == null ? 0L : placementFurniture.furnitureId();
             long productId = placementFurniture == null ? 0L : placementFurniture.productId();
@@ -9032,7 +9048,7 @@ public final class Handling {
             long productType = product.type();
             if (productType == 9L) {
                 if (fromInventory) {
-                    Proc_6_157_7974B0(socketIndex, requestPayload, item);
+                    placeWallFurnitureFromInventory(socketIndex, requestPayload, item);
                 }
                 return "";
             }
@@ -9107,10 +9123,6 @@ public final class Handling {
             placement.furnitureId = readWireLong(StringUtils.text(packetPayload), new LongRef(1));
         }
         return placement;
-    }
-
-    public static FurnitureDao.InventoryPlacementFurniture wallPlacementFurnitureArg(Object itemArg) {
-        return FurnitureDao.InventoryPlacementFurniture.fromLegacyArg(itemArg);
     }
 
     public static boolean isPostItProduct(long productId) {
