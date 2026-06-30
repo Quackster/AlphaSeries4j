@@ -576,7 +576,7 @@ public final class Licence {
     }
 
     public static QuestSettings questSettings() {
-        QuestState.instance().setSettingsFromLegacy(global_00829080);
+        refreshQuestSettings();
         return QuestState.instance().settings();
     }
 
@@ -590,6 +590,14 @@ public final class Licence {
         QuestSettings settings = QuestSettings.fromDefinitions(questDefinitions);
         QuestState.instance().setSettings(settings);
         global_00829080 = settings;
+    }
+
+    private static void refreshQuestSettings() {
+        if (global_00829080 instanceof QuestSettings settings) {
+            QuestState.instance().setQuestSettings(settings);
+            return;
+        }
+        QuestState.instance().setSettingsFromLegacy(global_00829080);
     }
 
     public static WiredSettings wiredSettings() {

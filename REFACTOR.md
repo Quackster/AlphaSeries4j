@@ -676,6 +676,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Exposed defensive typed `AchievementSettings.AchievementRow` access so callers needing row/index metadata can avoid legacy row text lookups.
 - Migrated `QuestSettings` legacy quest row text into typed `QuestDefinitionRow` records at construction, removing retained raw row-string storage while preserving compatibility serialization.
 - Added typed `QuestSettings.QuestDefinitionRow.fromFields(...)` construction and routed boot plus quest fallback loading away from legacy field-count-aware record constructors.
+- Routed `Licence` quest settings refreshes through the typed `QuestSettings` state path when the mirrored global already contains a `QuestSettings` instance, leaving row-string parsing as a compatibility fallback.
 - Migrated `PetSettings` internals from raw level/command row objects to typed pet-level and pet-command row lists, keeping legacy array serialization only at compatibility accessors.
 - Migrated the remaining internal `Functions` HC gift-amount settings read to `AppSettingsCache`, leaving `Proc_10_0_809570(...)` and `Proc_10_1_809790(...)` only as explicit compatibility methods covered by tests.
 - Added named packet/string helpers in `Functions` for VL64 length reads, Base64 length reads, single-line text normalization, and SQL text escaping with original Proc names in Javadocs, then migrated shared `Handling` utility parsers to those names.
