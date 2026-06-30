@@ -14,6 +14,7 @@ import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
+import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
@@ -1807,7 +1808,9 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(0, null, "")
             + "0\2"
             + Crypto.Proc_3_0_6D2AF0(0, null, "");
-        assertEquals(expectedPetList, Handling.petInventoryListPayload("10\tRex\t1 2 FF00AA\t4\r11\tMia\t3\t0"));
+        assertEquals(expectedPetList, Handling.petInventoryListPayload(List.of(
+            new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L),
+            new PetInventoryRow(11L, "Mia", "3", 0L))));
         assertEquals(0L, Handling.petNameValidationCode("Rex"));
         assertEquals(1L, Handling.petNameValidationCode("abcdefghijklmnopqrstuvwxyzabcde"));
         assertEquals(2L, Handling.petNameValidationCode(""));
@@ -3750,7 +3753,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "L{dog\2"));
         handlingSends.clear();
         String petInventoryPayload = Handling.Proc_6_178_7C6E60(4);
-        assertEquals(Handling.petInventoryListPayload("10\tRex\t1 2 FF00AA\t4"), petInventoryPayload);
+        assertEquals(Handling.petInventoryListPayload(List.of(new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L))),
+            petInventoryPayload);
         assertEquals(true, containsSend(handlingSends, "IX"));
         assertEquals(true, containsSend(handlingSends, "Rex"));
         handlingSends.clear();

@@ -52,27 +52,6 @@ public final class PetPayloads {
             .build();
     }
 
-    public static String inventoryList(String rowText) {
-        long petCount = 0L;
-        PacketBuilder petPayload = PacketBuilder.create();
-        for (String row : StringUtils.text(rowText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 4) {
-                    String rowPayload = inventoryRow(fields);
-                    if (!rowPayload.isEmpty()) {
-                        petPayload.appendRaw(rowPayload);
-                        petCount++;
-                    }
-                }
-            }
-        }
-        return PacketBuilder.message("IX")
-            .appendInt(petCount)
-            .appendRaw(petPayload)
-            .build();
-    }
-
     public static String inventoryList(List<PetInventoryRow> rows) {
         long petCount = 0L;
         PacketBuilder petPayload = PacketBuilder.create();

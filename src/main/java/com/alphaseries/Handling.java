@@ -26,6 +26,7 @@ import com.alphaseries.game.pet.BotRoomEntryRow;
 import com.alphaseries.game.pet.PetCommandActionRow;
 import com.alphaseries.game.pet.PetCommandTargetRow;
 import com.alphaseries.game.pet.PetExperienceStateRow;
+import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.pet.PetLevelExperienceRow;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.PetPlacementRow;
@@ -11047,8 +11048,8 @@ public final class Handling {
         return PetPayloads.raceList(productPet, rowText, rankIndex, hcLevel);
     }
 
-    public static String petInventoryListPayload(String rowText) {
-        return PetPayloads.inventoryList(rowText);
+    public static String petInventoryListPayload(List<PetInventoryRow> rows) {
+        return PetPayloads.inventoryList(rows);
     }
 
     public static String petInventoryRowPayload(String[] fields) {

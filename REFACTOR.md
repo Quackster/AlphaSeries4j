@@ -319,6 +319,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the staff room-visit row-text payload wrapper; room-visit payloads now use typed `StaffRoomVisitRow` records.
 - Removed quest active-level/progress row-text parsers and routed next-quest/progress decisions through typed `QuestDao` records.
 - Removed official navigator row-text payload wrappers and dead row-text parser; official navigator lists now use typed `OfficialNavigatorItem` records.
+- Removed the pet inventory row-text list payload wrapper; pet inventory lists now use typed `PetInventoryRow` records.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -334,7 +335,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12347 lines
+- `Handling.java`: 12348 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
 - `Main.java`: 894 lines
