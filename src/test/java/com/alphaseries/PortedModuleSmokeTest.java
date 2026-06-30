@@ -59,6 +59,7 @@ import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.game.room.RepresentedRoomCache;
+import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.room.RoomRollers;
@@ -1705,6 +1706,14 @@ public final class PortedModuleSmokeTest {
         assertEquals("2\tbeta", RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2\1" + "2\tbeta\2").record(2));
         assertEquals("3", RepresentedRoomCache.fromLegacy("\1" + "3\2").record(3));
         assertEquals("", RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2").record(4));
+        List<Long> mutableRoomSlots = new ArrayList<>();
+        mutableRoomSlots.add(5L);
+        mutableRoomSlots.add(7L);
+        RepresentedRoomSlots typedRoomSlots = RepresentedRoomSlots.fromSlots(mutableRoomSlots);
+        mutableRoomSlots.add(9L);
+        assertEquals(List.of(5L, 7L), typedRoomSlots.availableSlots());
+        assertEquals("[5][7]", typedRoomSlots.availableSlotMarkers());
+        assertEquals(List.of(5L, 7L), RepresentedRoomSlots.fromLegacy("[5][7]").availableSlots());
         String roomRecordCache = RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2\1" + "2\told\2")
             .setRecord(2, "2\tnew").cacheText();
         assertEquals("\1" + "1\talpha\2\1" + "2\tnew\2", roomRecordCache);
