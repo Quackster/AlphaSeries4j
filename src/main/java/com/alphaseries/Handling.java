@@ -7370,8 +7370,7 @@ public final class Handling {
             if (requestedQuestId <= 0L) {
                 return "";
             }
-            QuestSettings.QuestDefinitionRow questDefinition = QuestSettings.fromLegacy(questRowsFromSource())
-                .definitionById(requestedQuestId);
+            QuestSettings.QuestDefinitionRow questDefinition = questSettingsFromSource().definitionById(requestedQuestId);
             if (questDefinition == null || questDefinition.fieldCount() < 11) {
                 return "";
             }
@@ -7433,7 +7432,7 @@ public final class Handling {
                     }
                 })
                 .orElse(null);
-            long requestedQuestId = nextQuestId(questRowsFromSource(), activeRow);
+            long requestedQuestId = nextQuestId(questSettingsFromSource(), activeRow);
             if (requestedQuestId > 0L) {
                 Proc_6_232_7F45A0(socketIndex, "p^" + Crypto.Proc_3_0_6D2AF0(requestedQuestId, null, ""));
             }
@@ -7485,7 +7484,7 @@ public final class Handling {
             if (!StringUtils.text(activeQuest.timeNext()).isEmpty() && !"0".equals(StringUtils.text(activeQuest.timeNext()))) {
                 remainingWait = quests.remainingWait(activeQuest.timeNext());
             }
-            QuestProgressDecision decision = questProgressDecision(activeQuest, questRowsFromSource(), remainingWait);
+            QuestProgressDecision decision = questProgressDecision(activeQuest, questSettingsFromSource(), remainingWait);
             if (decision.shouldScheduleWait) {
                 quests.scheduleNextTime(userIdValue, activeQuest.questId(), decision.waitAmount);
             }
@@ -7512,7 +7511,7 @@ public final class Handling {
             if (quests == null) {
                 return "";
             }
-            String payload = questListPayload(questRowsFromSource(),
+            String payload = questListPayload(questSettingsFromSource(),
                 userQuestRowsWithRemainingWait(quests, quests.listRows(NumberUtils.parseLong(userId))));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
@@ -10454,6 +10453,10 @@ public final class Handling {
     }
 
     public static long nextQuestId(String questRows, QuestDao.UserQuestLevelRow activeQuest) {
+        return nextQuestId(QuestSettings.fromLegacy(questRows), activeQuest);
+    }
+
+    public static long nextQuestId(QuestSettings questSettings, QuestDao.UserQuestLevelRow activeQuest) {
         long currentQuestId = 0L;
         long currentLevel = 0L;
         if (activeQuest != null) {
@@ -10466,7 +10469,8 @@ public final class Handling {
         long fallbackCampaignId = 0L;
         long fallbackLevel = Integer.MAX_VALUE;
         boolean foundCurrent = false;
-        for (QuestSettings.QuestDefinitionRow definition : QuestSettings.fromLegacy(questRows).definitions()) {
+        QuestSettings settings = questSettings == null ? QuestSettings.fromLegacy("") : questSettings;
+        for (QuestSettings.QuestDefinitionRow definition : settings.definitions()) {
             if (definition.fieldCount() >= 9) {
                 if (fallbackQuestId <= 0L || definition.level() < fallbackLevel) {
                     fallbackQuestId = definition.questId();
@@ -10487,7 +10491,7 @@ public final class Handling {
 
         long requestedQuestId = 0L;
         long bestLevel = Integer.MAX_VALUE;
-        for (QuestSettings.QuestDefinitionRow definition : QuestSettings.fromLegacy(questRows).definitions()) {
+        for (QuestSettings.QuestDefinitionRow definition : settings.definitions()) {
             if (definition.fieldCount() >= 9) {
                 if (definition.campaignId() == currentCampaignId && definition.level() > currentLevel
                     && definition.level() < bestLevel) {
@@ -10504,6 +10508,14 @@ public final class Handling {
         String questRows,
         long remainingWait
     ) {
+        return questProgressDecision(activeQuest, QuestSettings.fromLegacy(questRows), remainingWait);
+    }
+
+    public static QuestProgressDecision questProgressDecision(
+        QuestDao.UserQuestProgressRow activeQuest,
+        QuestSettings questSettings,
+        long remainingWait
+    ) {
         QuestProgressDecision decision = new QuestProgressDecision();
         if (activeQuest == null) {
             return decision;
@@ -10517,7 +10529,8 @@ public final class Handling {
         }
 
         boolean matchedQuest = false;
-        QuestSettings.QuestDefinitionRow questDefinition = QuestSettings.fromLegacy(questRows).definitionById(decision.questId);
+        QuestSettings settings = questSettings == null ? QuestSettings.fromLegacy("") : questSettings;
+        QuestSettings.QuestDefinitionRow questDefinition = settings.definitionById(decision.questId);
         if (questDefinition != null && questDefinition.fieldCount() >= 11) {
             decision.amountRequired = questDefinition.activityAmount();
             decision.waitAmount = questDefinition.waitAmount();
@@ -10606,8 +10619,8 @@ public final class Handling {
             if (questId <= 0L) {
                 return "";
             }
-            String questRows = questRowsFromSource();
-            QuestSettings.QuestDefinitionRow questDefinition = QuestSettings.fromLegacy(questRows).definitionById(questId);
+            QuestSettings questSettings = questSettingsFromSource();
+            QuestSettings.QuestDefinitionRow questDefinition = questSettings.definitionById(questId);
             if (questDefinition == null || questDefinition.fieldCount() < 11) {
                 return "";
             }
@@ -10619,7 +10632,7 @@ public final class Handling {
             if (activityCount <= 0L) {
                 activityCount = 1L;
             }
-            long campaignLevelCount = QuestSettings.fromLegacy(questRows).campaignLevelCount(campaignId);
+            long campaignLevelCount = questSettings.campaignLevelCount(campaignId);
             String completionPayload = questCompletionPayload(campaignId, questName, campaignLevelCount, questId,
                 userQuestLevel, progressValue, activityCount);
             Proc_6_244_801E80(socketIndex, "Lb" + completionPayload, 0);
@@ -12078,12 +12091,17 @@ public final class Handling {
     }
 
     private static String questRowsFromSource() {
-        if (Licence.questSettings().hasRows()) {
-            return Licence.questSettings().rows();
+        return questSettingsFromSource().rows();
+    }
+
+    private static QuestSettings questSettingsFromSource() {
+        QuestSettings settings = Licence.questSettings();
+        if (settings.hasRows()) {
+            return settings;
         }
         QuestDao quests = questDao();
         if (quests == null) {
-            return "";
+            return QuestSettings.fromLegacy("");
         }
         try {
             List<QuestSettings.QuestDefinitionRow> rows = new ArrayList<>();
@@ -12104,9 +12122,9 @@ public final class Handling {
                         11));
                 }
             }
-            return QuestSettings.fromDefinitions(rows).rows();
+            return QuestSettings.fromDefinitions(rows);
         } catch (Exception ignored) {
-            return "";
+            return QuestSettings.fromLegacy("");
         }
     }
 

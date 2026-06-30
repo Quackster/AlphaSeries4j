@@ -1870,11 +1870,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(expectedQuestPayload, QuestPayloads.completion(7, "Quest", 3, 44, 2, 5, 0));
         assertEquals(expectedQuestPayload, Handling.questCompletionPayload(7, "Quest", 3, 44, 2, 5, 0));
         String questRows = "10\t1\tFirst\t\t5\t2\tvisit\t0\t7\t3\t30\r11\t2\tSecond\t\t6\t2\tvisit\t0\t7\t4\t0";
+        QuestSettings typedQuestSettings = QuestSettings.fromLegacy(questRows);
         assertEquals(10L, Handling.questRequestIdFromWire("p^" + Crypto.Proc_3_0_6D2AF0(10, null, ""), "p^"));
         assertEquals(11L, Handling.nextQuestId(questRows, new QuestDao.UserQuestLevelRow(10L, 1L)));
+        assertEquals(11L, Handling.nextQuestId(typedQuestSettings, new QuestDao.UserQuestLevelRow(10L, 1L)));
         assertEquals(10L, Handling.nextQuestId(questRows, null));
         Handling.QuestProgressDecision waitDecision = Handling.questProgressDecision(
-            new QuestDao.UserQuestProgressRow(10L, 10L, 1L, 0L, ""), questRows, 0);
+            new QuestDao.UserQuestProgressRow(10L, 10L, 1L, 0L, ""), typedQuestSettings, 0);
         assertEquals(10L, waitDecision.questId);
         assertEquals(3L, waitDecision.amountRequired);
         assertEquals(true, waitDecision.shouldScheduleWait);
