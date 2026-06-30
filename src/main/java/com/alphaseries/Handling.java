@@ -2692,7 +2692,7 @@ public final class Handling {
                 return "";
             }
             long itemCount = 0L;
-            StringBuilder itemPayload = new StringBuilder();
+            PacketBuilder itemPayload = PacketBuilder.create();
             for (RoomModelFurnitureRow row : rooms.modelFurnitureRows(modelId)) {
                 if (row != null) {
                     long productId = row.productId();
@@ -2703,12 +2703,12 @@ public final class Handling {
                     if (productId <= 0L) {
                         productId = sourceId;
                     }
-                    itemPayload.append(Proc_6_161_7B2EE0(sourceId, row.positionX(), row.positionY(), row.rotation(),
+                    itemPayload.appendRaw(Proc_6_161_7B2EE0(sourceId, row.positionX(), row.positionY(), row.rotation(),
                         row.positionZ(), "", row.action(), 0, productId));
                     itemCount++;
                 }
             }
-            String payload = FurniturePayloads.floorList(itemCount, itemPayload.toString());
+            String payload = FurniturePayloads.floorList(itemCount, itemPayload.build());
             if (socketIndex > 0) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -2767,7 +2767,7 @@ public final class Handling {
                 return "";
             }
             long itemCount = 0L;
-            StringBuilder itemPayload = new StringBuilder();
+            PacketBuilder itemPayload = PacketBuilder.create();
             for (FurnitureDao.WallFurniture wallFurniture : furniture.wallFurnitureInRoom(roomId)) {
                 long furnitureId = wallFurniture.furnitureId();
                 long productId = wallFurniture.productId();
@@ -2775,11 +2775,11 @@ public final class Handling {
                 String signText = StringUtils.text(wallFurniture.sign());
                 long secondaryValue = wallFurniture.secondaryValue();
                 if (furnitureId > 0L && productId > 0L && !wallPosition.isEmpty()) {
-                    itemPayload.append(Proc_6_156_7972B0(furnitureId, productId, wallPosition, signText, secondaryValue));
+                    itemPayload.appendRaw(Proc_6_156_7972B0(furnitureId, productId, wallPosition, signText, secondaryValue));
                     itemCount++;
                 }
             }
-            String payload = FurniturePayloads.wallList(itemCount, itemPayload.toString());
+            String payload = FurniturePayloads.wallList(itemCount, itemPayload.build());
             if (socketIndex > 0) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }

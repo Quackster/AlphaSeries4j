@@ -165,6 +165,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Expanded `RoomDao` with prepared room-rating existence checks for room entry payloads.
 - Expanded `RoomDao` with typed active room effect rows for room effect payload broadcasts.
 - Expanded `RoomDao` with prepared room model-id lookup for model furniture payload fallback.
+- Built typed floor and wall furniture list fragments with `PacketBuilder.appendRaw(...)` over DAO row records instead of raw `StringBuilder` accumulation in room list handlers.
 - Expanded `RoomDao` for room-right wipe notifications, batch right revocation, and room deletion operations.
 - Expanded `RoomDao` with typed `OfficialRoomModel` loading for official-room model/caption payloads.
 - Expanded `RoomDao` with typed `RoomModelEntry` loading for room model entry payload setup.
