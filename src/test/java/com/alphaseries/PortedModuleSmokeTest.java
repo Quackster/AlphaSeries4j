@@ -1115,6 +1115,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("10\ti\t20\t", typedCatalogProducts.packageRows());
         assertEquals("7\t8\t9\tffeeaa", typedCatalogProducts.petPackageRows());
         assertEquals("\r33\t2\t1\r", typedCatalogProducts.clubProductRows());
+        assertCatalogProductCounterRows(typedCatalogProducts);
         assertEquals("\r\r", CatalogProductSettings.fromRows("", 0L, 0L, List.of(), List.of(), List.of()).clubProductRows());
         CatalogProductSettings legacyCatalogProducts = CatalogProductSettings.fromLegacy(
             "1\t2", 10L, 11L, "10\ti\t20\t", "7\t8\t9\tffeeaa", "33");
@@ -4899,6 +4900,16 @@ public final class PortedModuleSmokeTest {
     private static void assertPetSettingsTypedAccessors(PetSettings settings, PetSettings.PetCommandRow command) {
         assertEquals(List.of(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 3)), settings.levels());
         assertEquals(List.of(command), settings.commands());
+    }
+
+    private static void assertCatalogProductCounterRows(CatalogProductSettings settings) {
+        assertEquals("1\t2", settings.counterProductIds());
+        assertEquals(List.of(1L, 2L), settings.counterProducts());
+        assertEquals(true, settings.containsCounterProduct(2L));
+        CatalogProductSettings typedCounterProducts = CatalogProductSettings.fromCounterProductIds(
+            List.of(4L, 5L), 0L, 0L, List.of(), List.of(), List.of());
+        assertEquals("4\t5", typedCounterProducts.counterProductIds());
+        assertEquals(List.of(4L, 5L), typedCounterProducts.counterProducts());
     }
 
     private static String productRow(long productId, String... columnPairs) {
