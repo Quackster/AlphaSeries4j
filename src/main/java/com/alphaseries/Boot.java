@@ -21,6 +21,7 @@ import com.alphaseries.game.pet.PetLevelCacheRow;
 import com.alphaseries.game.pet.PetRaceCacheRow;
 import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.quest.QuestSettings;
+import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -317,17 +318,15 @@ public final class Boot {
 
     public static void Proc_1_9_6C6DF0(Object... args) {
         RoomDao rooms = roomDao();
-        String warpSpaceRows = "0\r";
-        String specialGateRows = "\r";
+        RoomPortalSettings portalSettings = RoomPortalSettings.fromRows(List.of(), List.of());
         if (rooms != null) {
             try {
-                warpSpaceRows = "0" + joinWarpSpaceRows(rooms.warpSpaceRows()) + "\r";
-                specialGateRows = joinSpecialGateRows(rooms.specialGateRows()) + "\r";
+                portalSettings = RoomPortalSettings.fromRows(rooms.warpSpaceRows(), rooms.specialGateRows());
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        Licence.setRoomPortalSettings(warpSpaceRows, specialGateRows);
+        Licence.setRoomPortalSettings(portalSettings);
         Proc_1_16_6CCA60(0, 0, 0);
         String systemDate = Functions.Proc_10_0_809570("com.system.format.date", "", 0);
         String systemTime = Functions.Proc_10_0_809570("com.system.format.time", "", 0);
@@ -1925,22 +1924,6 @@ public final class Boot {
         StringBuilder joined = new StringBuilder();
         for (String row : rows == null ? List.<String>of() : rows) {
             appendLegacyRow(joined, row);
-        }
-        return joined.toString();
-    }
-
-    private static String joinWarpSpaceRows(List<RoomDao.WarpSpaceRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (RoomDao.WarpSpaceRow row : rows == null ? List.<RoomDao.WarpSpaceRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
-    }
-
-    private static String joinSpecialGateRows(List<RoomDao.SpecialGateRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (RoomDao.SpecialGateRow row : rows == null ? List.<RoomDao.SpecialGateRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
         }
         return joined.toString();
     }

@@ -30,6 +30,7 @@ import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
 import com.alphaseries.game.moderation.StaffRoomVisitRow;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.quest.QuestSettings;
+import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.trade.RepresentedTradeOffer;
 import com.alphaseries.game.user.OwnProfileRow;
@@ -942,8 +943,15 @@ public final class PortedModuleSmokeTest {
         Boot.Proc_1_8_6C6850();
         assertEquals(true, DataManager.global_008291AC.contains("party"));
         Boot.Proc_1_9_6C6DF0();
-        assertEquals(Licence.global_00829098, Licence.roomPortalSettings().warpSpaceRows());
-        assertEquals(Licence.global_0082909C, Licence.roomPortalSettings().specialGateRows());
+        assertEquals(true, Licence.global_00829098 instanceof RoomPortalSettings);
+        assertEquals(true, Licence.global_0082909C instanceof RoomPortalSettings);
+        assertEquals("00\t0\t0\t0\t0\t0\t0\r", Licence.roomPortalSettings().warpSpaceRows());
+        assertEquals("0\t0\r", Licence.roomPortalSettings().specialGateRows());
+        RoomPortalSettings typedRoomPortalSettings = RoomPortalSettings.fromRows(
+            List.of(new RoomDao.WarpSpaceRow(12L, 1L, 2L, 34L, 5L, 6L, 1L)),
+            List.of(new RoomDao.SpecialGateRow(12L, 1L)));
+        assertEquals("012\t1\t2\t34\t5\t6\t1\r", typedRoomPortalSettings.warpSpaceRows());
+        assertEquals("12\t1\r", typedRoomPortalSettings.specialGateRows());
         assertEquals(true, Functions.global_0082928C.contains("com.mysql.format.time=%H:%i:%s"));
         Boot.Proc_1_11_6C8D10();
         Boot.Proc_1_12_6C8EF0();

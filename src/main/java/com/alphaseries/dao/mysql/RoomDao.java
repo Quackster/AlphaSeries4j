@@ -1080,16 +1080,9 @@ public final class RoomDao {
         long warpY,
         long special
     ) {
-        public String legacyRow() {
-            return roomId + "\t" + positionX + "\t" + positionY + "\t" + warpRoomId + "\t"
-                + warpX + "\t" + warpY + "\t" + special;
-        }
     }
 
     public record SpecialGateRow(long roomId, long open) {
-        public String legacyRow() {
-            return roomId + "\t" + open;
-        }
     }
 
     public record RoomCategoryRow(long categoryId, String name, long trading, long minimumRank, long minimumHcRank) {

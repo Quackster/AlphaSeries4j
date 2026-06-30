@@ -95,8 +95,8 @@ public final class Licence {
     public static Object global_00829080 = "";
     public static Object global_0082908C = "";
     public static LocalDateTime global_00829090 = null;
-    public static String global_00829098 = "";
-    public static String global_0082909C = "";
+    public static Object global_00829098 = "";
+    public static Object global_0082909C = "";
     public static Object global_0082934C = "";
     public static String global_00829310 = "";
     public static String global_0082930C = "";
@@ -343,8 +343,15 @@ public final class Licence {
     }
 
     public static void setRoomPortalSettings(String warpSpaceRows, String specialGateRows) {
-        global_00829098 = StringUtils.text(warpSpaceRows);
-        global_0082909C = StringUtils.text(specialGateRows);
+        RoomPortalSettings settings = RoomPortalSettings.fromLegacy(warpSpaceRows, specialGateRows);
+        global_00829098 = settings;
+        global_0082909C = settings;
+    }
+
+    public static void setRoomPortalSettings(RoomPortalSettings settings) {
+        RoomPortalSettings normalized = settings == null ? RoomPortalSettings.fromLegacy("", "") : settings;
+        global_00829098 = normalized;
+        global_0082909C = normalized;
     }
 
     public static GameServerSessionState gameServerSessionState() {
