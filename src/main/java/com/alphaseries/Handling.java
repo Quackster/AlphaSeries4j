@@ -4094,16 +4094,11 @@ public final class Handling {
             long[] productIds;
             int itemCount = 0;
             if ("products_deals".equals(typeSecondary)) {
-                String dealRow = Licence.Proc_9_5_807DF0(productId, 0, 0);
-                String[] dealFields = dealRow.split("\t", -1);
-                if (dealFields.length >= 2) {
-                    dealRow = dealFields[1];
-                }
-                String[] dealItems = dealRow.replace(',', ';').split(";", -1);
-                productIds = new long[dealItems.length];
-                for (String dealItem : dealItems) {
-                    long dealProductId = NumberUtils.parseLong(dealItem);
-                    if (dealProductId > 0L) {
+                CatalogRegistry.ProductDeal deal = Licence.productDeal(productId);
+                List<Long> dealProductIds = deal == null ? List.<Long>of() : deal.itemProductIds();
+                productIds = new long[dealProductIds.size()];
+                for (Long dealProductId : dealProductIds) {
+                    if (dealProductId != null && dealProductId > 0L) {
                         productIds[itemCount++] = dealProductId;
                     }
                 }
@@ -4180,17 +4175,12 @@ public final class Handling {
             }
             long grantedCount = 0L;
             if ("products_deals".equals(typeSecondary)) {
-                String dealRow = Licence.Proc_9_5_807DF0(productId, 0, 0);
-                if (dealRow.isEmpty()) {
+                CatalogRegistry.ProductDeal deal = Licence.productDeal(productId);
+                if (deal == null) {
                     return "";
                 }
-                String[] dealFields = dealRow.split("\t", -1);
-                if (dealFields.length >= 2) {
-                    dealRow = dealFields[1];
-                }
-                for (String dealItem : dealRow.replace(',', ';').split(";", -1)) {
-                    long dealProductId = NumberUtils.parseLong(dealItem);
-                    if (dealProductId > 0L) {
+                for (Long dealProductId : deal.itemProductIds()) {
+                    if (dealProductId != null && dealProductId > 0L) {
                         String defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(dealProductId, 4, 0), 0, 0);
                         if (defaultSign.isEmpty()) {
                             defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(dealProductId, 5, 0), 0, 0);

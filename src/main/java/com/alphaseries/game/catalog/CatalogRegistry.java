@@ -3,7 +3,9 @@ package com.alphaseries.game.catalog;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -64,6 +66,23 @@ public final class CatalogRegistry {
         return StringUtils.text(deals.get(productId));
     }
 
+    public Optional<ProductDeal> productDeal(long productId) {
+        String row = StringUtils.text(deals.get(productId));
+        if (row.isEmpty()) {
+            return Optional.empty();
+        }
+        String[] fields = row.split("\t", -1);
+        String itemText = fields.length >= 2 ? fields[1] : row;
+        List<Long> itemProductIds = new ArrayList<>();
+        for (String item : itemText.replace(',', ';').split(";", -1)) {
+            long itemProductId = NumberUtils.parseLong(item);
+            if (itemProductId > 0L) {
+                itemProductIds.add(itemProductId);
+            }
+        }
+        return Optional.of(new ProductDeal(NumberUtils.parseLong(StringUtils.field(fields, 0)), itemProductIds));
+    }
+
     public record CatalogProduct(
         long catalogProductId,
         String sprite,
@@ -82,6 +101,9 @@ public final class CatalogRegistry {
         public boolean isDeal() {
             return "products_deals".equalsIgnoreCase(typeSecondary);
         }
+    }
+
+    public record ProductDeal(long productId, List<Long> itemProductIds) {
     }
 
     private static String cell(Map<Long, String> rows, long rowId, long columnIndex) {

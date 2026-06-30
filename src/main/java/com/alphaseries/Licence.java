@@ -153,6 +153,10 @@ public final class Licence {
         return catalogRegistry().dealRow(NumberUtils.parseLong(args[0]));
     }
 
+    public static CatalogRegistry.ProductDeal productDeal(long productId) {
+        return catalogRegistry().productDeal(productId).orElse(null);
+    }
+
     public static GiftSettings giftSettings() {
         return GiftSettings.fromLegacy(global_00829178, global_0082917C, global_0082925C, global_00829260);
     }
