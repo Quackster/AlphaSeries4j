@@ -71,6 +71,7 @@ import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.RepresentedSocketCache;
 import com.alphaseries.game.session.SessionRegistry;
+import com.alphaseries.game.session.SocketMarkerSet;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.trade.RepresentedTradeOffer;
 import com.alphaseries.game.trade.TradePayloads;
@@ -709,6 +710,9 @@ public final class PortedModuleSmokeTest {
         Guardian.setGameServerConnected(true);
         assertEquals(1, Guardian.Proc_11_2_821390());
         Guardian.setGameServerConnected(false);
+        SocketMarkerSet typedSocketMarkers = SocketMarkerSet.fromSocketIndexes(List.of(1L, 12L, 0L));
+        assertEquals(Set.of(1L, 12L), typedSocketMarkers.socketIndexes());
+        assertEquals("[1][12]", typedSocketMarkers.toLegacyMarkers());
         Guardian.SocketMarkerState addedMarkerState = Guardian.toggleSocketMarkerState("[1]", 1, 12);
         assertEquals("[1][12]", addedMarkerState.markers);
         assertEquals(12L, addedMarkerState.highestIndex);

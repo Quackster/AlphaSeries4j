@@ -3,6 +3,8 @@ package com.alphaseries.game.session;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -13,12 +15,30 @@ public final class SocketMarkerSet {
         parse(StringUtils.text(markers));
     }
 
+    private SocketMarkerSet(Collection<Long> socketIndexes) {
+        if (socketIndexes != null) {
+            for (Long socketIndex : socketIndexes) {
+                if (socketIndex != null && socketIndex > 0L) {
+                    this.socketIndexes.add(socketIndex);
+                }
+            }
+        }
+    }
+
     public static SocketMarkerSet fromLegacy(String markers) {
         return new SocketMarkerSet(markers);
     }
 
+    public static SocketMarkerSet fromSocketIndexes(Collection<Long> socketIndexes) {
+        return new SocketMarkerSet(socketIndexes);
+    }
+
     public static SocketMarkerSet empty() {
         return new SocketMarkerSet("");
+    }
+
+    public Set<Long> socketIndexes() {
+        return Collections.unmodifiableSet(new LinkedHashSet<>(socketIndexes));
     }
 
     public void add(long socketIndex) {
