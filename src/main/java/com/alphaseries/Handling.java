@@ -638,8 +638,18 @@ public final class Handling {
         return handlingRepresentedChatRoute(args, 2L);
     }
 
+    /**
+     * Original function: Proc_6_53_718E00.
+     */
     public static void Proc_6_53_718E00(Object... args) {
         int socketIndex = args != null && args.length >= 1 ? (int) NumberUtils.parseLong(args[0]) : 0;
+        sendRoomReady(socketIndex);
+    }
+
+    /**
+     * Original function: Proc_6_53_718E00.
+     */
+    public static void sendRoomReady(int socketIndex) {
         if (socketIndex <= 0) {
             return;
         }
@@ -1587,7 +1597,7 @@ public final class Handling {
             rooms.insertVisit(userIdValue, roomId, sessionId);
             rooms.markRoomEntered(roomId, reservedSlot);
             Proc_6_56_71E730(socketIndex, 0, 0);
-            Proc_6_53_718E00(socketIndex, 0, 0);
+            sendRoomReady(socketIndex);
             return reservedSlot;
         } catch (Exception ignored) {
             if (reservedSlot > 0L) {
@@ -1684,23 +1694,23 @@ public final class Handling {
             boolean isOwner = entryState.ownerUserId() == userIdValue;
             if (!isOwner) {
                 if (rooms.userBannedFromRoom(userIdValue, roomId)) {
-                    Proc_6_53_718E00(socketIndex, 0, 0);
+                    sendRoomReady(socketIndex);
                     Proc_6_244_801E80(socketIndex, "C`PA", 0);
                     return 0L;
                 }
                 if (entryState.visitorsMax() > 0L && entryState.visitorsNow() >= entryState.visitorsMax()
                     && !handlingUserHasPermission(userId, "fuse_enter_full_rooms")) {
-                    Proc_6_53_718E00(socketIndex, 0, 0);
+                    sendRoomReady(socketIndex);
                     Proc_6_244_801E80(socketIndex, "C`I", 0);
                     return 0L;
                 }
                 if (entryState.doorStatus() == 1L && !handlingUserHasPermission(userId, "fuse_enter_locked_rooms")) {
-                    Proc_6_53_718E00(socketIndex, 0, 0);
+                    sendRoomReady(socketIndex);
                     Proc_6_244_801E80(socketIndex, "C`H", 0);
                     return 0L;
                 }
                 if (entryState.doorStatus() == 2L && !StringUtils.text(entryState.password()).equals(suppliedPassword)) {
-                    Proc_6_53_718E00(socketIndex, 0, 0);
+                    sendRoomReady(socketIndex);
                     Proc_6_244_801E80(socketIndex, "@afhFF", 0);
                     return 0L;
                 }
@@ -2161,7 +2171,7 @@ public final class Handling {
             if (rooms != null) {
                 rooms.deleteRoom(roomId);
             }
-            Proc_6_53_718E00(socketIndex, 0, 0);
+            sendRoomReady(socketIndex);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -5362,9 +5372,18 @@ public final class Handling {
         }
     }
 
+    /**
+     * Original function: Proc_6_162_7B3310.
+     */
     public static void Proc_6_162_7B3310(Object... args) {
+        sendClientDateSettings(handlingSocketIndex(args));
+    }
+
+    /**
+     * Original function: Proc_6_162_7B3310.
+     */
+    public static void sendClientDateSettings(int socketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String dateFormat = Functions.settingsCache().valueOrDefault("com.system.format.date", "DAQBHHIIKHJHPAHQA");
             if (dateFormat.isEmpty()) {
                 dateFormat = "DAQBHHIIKHJHPAHQA";
@@ -5376,10 +5395,20 @@ public final class Handling {
         }
     }
 
+    /**
+     * Original function: Proc_6_163_7B3480.
+     */
     public static String Proc_6_163_7B3480(Object... args) {
+        int socketIndex = handlingSocketIndex(args);
+        String packetPayload = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
+        return handleLoginTicket(socketIndex, packetPayload);
+    }
+
+    /**
+     * Original function: Proc_6_163_7B3480.
+     */
+    public static String handleLoginTicket(int socketIndex, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
             String loginTicket = handlingLoginTicketFromPayload(packetPayload);
             if (loginTicket.isEmpty() || "NULL".equalsIgnoreCase(loginTicket)) {
                 if (socketIndex > 0) {
@@ -5455,7 +5484,6 @@ public final class Handling {
             }
             return userId;
         } catch (Exception ignored) {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex > 0) {
                 disconnectSocket(socketIndex);
             }
@@ -7526,7 +7554,17 @@ public final class Handling {
         }
     }
 
+    /**
+     * Original function: Proc_7FA5A0.
+     */
     public static String Proc_7FA5A0(Object... args) {
+        return ignoreClientReadyPacket();
+    }
+
+    /**
+     * Original function: Proc_7FA5A0.
+     */
+    public static String ignoreClientReadyPacket() {
         return "";
     }
 
@@ -7850,7 +7888,7 @@ public final class Handling {
                 case "EV": Proc_6_100_748C80(socketIndex, "EV", packetPayload); break;
                 case "EU": Proc_6_98_747D80(socketIndex, "EU", packetPayload); break;
                 case "Er": Proc_6_206_7DA450(socketIndex, "Er", packetPayload); break;
-                case "CD": Proc_7FA5A0(socketIndex, "CD", packetPayload); break;
+                case "CD": ignoreClientReadyPacket(); break;
                 case "@G": Proc_6_237_7F9ED0(socketIndex, "@G", packetPayload); break;
                 case "D{":
                 case "Fe": break;
@@ -7935,7 +7973,7 @@ public final class Handling {
                 case "Gj": Proc_6_88_73E4F0(socketIndex, "Gj", packetPayload); break;
                 case "@L": Proc_6_176_7C4EE0(socketIndex, "@L", packetPayload); break;
                 case "@u":
-                case "Ao": Proc_6_53_718E00(socketIndex, packetCode, packetPayload); break;
+                case "Ao": sendRoomReady(socketIndex); break;
                 case "@j": Proc_6_182_7CAAD0(socketIndex, "@j", packetPayload); break;
                 case "@f": Proc_6_170_7C1100(socketIndex, "@f", packetPayload); break;
                 case "DF": Proc_6_169_7C0DC0(socketIndex, "DF", packetPayload); break;
@@ -8302,7 +8340,7 @@ public final class Handling {
                 return;
             }
             Proc_6_244_801E80(targetSocketIndex, "@aXjO", 0);
-            Proc_6_53_718E00(targetSocketIndex, "@aXjO", 0);
+            sendRoomReady(targetSocketIndex);
             if (addRoomBan) {
                 RoomDao rooms = roomDao();
                 if (rooms != null) {
@@ -8697,7 +8735,7 @@ public final class Handling {
             if (targetSocketIndex > 0) {
                 Proc_6_244_801E80(targetSocketIndex, StaffPayloads.alert(messageText), 0);
                 if (kickAfterSend) {
-                    Proc_6_53_718E00(targetSocketIndex, 0, 0);
+                    sendRoomReady(targetSocketIndex);
                 }
             }
             if ("4".equals(logType)) {

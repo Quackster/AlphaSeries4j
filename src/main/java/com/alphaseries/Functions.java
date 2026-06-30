@@ -435,7 +435,7 @@ public final class Functions {
                 int socketIndex = activeSocketIndex == null ? 0 : activeSocketIndex.intValue();
                 String marker = "[" + socketIndex + "]";
                 if (socketIndex > 0 && !sentMarkers.contains(marker)) {
-                    Handling.Proc_6_53_718E00(socketIndex, 0, 0);
+                    Handling.sendRoomReady(socketIndex);
                     sentMarkers += marker;
                     readyCount++;
                 }

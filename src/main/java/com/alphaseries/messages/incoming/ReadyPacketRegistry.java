@@ -16,7 +16,7 @@ public final class ReadyPacketRegistry {
 
                 @Override
                 public void handle(IncomingContext context, String header, String payload) {
-                    Handling.Proc_6_162_7B3310(context.socketIndex(), payload, 0);
+                    Handling.sendClientDateSettings(context.socketIndex());
                 }
             })
             .register(new IncomingMessage() {
@@ -27,7 +27,7 @@ public final class ReadyPacketRegistry {
 
                 @Override
                 public void handle(IncomingContext context, String header, String payload) {
-                    Handling.Proc_6_163_7B3480(context.socketIndex(), payload, 0);
+                    Handling.handleLoginTicket(context.socketIndex(), payload);
                 }
             })
             .register(new IncomingMessage() {
@@ -38,7 +38,7 @@ public final class ReadyPacketRegistry {
 
                 @Override
                 public void handle(IncomingContext context, String header, String payload) {
-                    Handling.Proc_7FA5A0(context.socketIndex(), "CD", payload);
+                    Handling.ignoreClientReadyPacket();
                 }
             });
     }
