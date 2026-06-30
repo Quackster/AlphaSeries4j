@@ -3439,7 +3439,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
-            long maxOwnedRooms = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.rooms.own.max", 0, 0));
+            long maxOwnedRooms = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.rooms.own.max", 0));
             RoomDao rooms = roomDao();
             long ownedRoomCount = rooms == null ? 0L : rooms.ownedRoomCount(NumberUtils.parseLong(userId));
             Proc_6_244_801E80(socketIndex, RoomPayloads.creatableRoomCount(maxOwnedRooms, ownedRoomCount), 0);
@@ -3460,7 +3460,7 @@ public final class Handling {
             if (rooms == null) {
                 return;
             }
-            long maxOwnedRooms = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.rooms.own.max", 0, 0));
+            long maxOwnedRooms = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.rooms.own.max", 0));
             long userIdValue = NumberUtils.parseLong(userId);
             long ownedRoomCount = rooms.ownedRoomCount(userIdValue);
             if (maxOwnedRooms > 0L && ownedRoomCount >= maxOwnedRooms) {
@@ -3528,14 +3528,14 @@ public final class Handling {
             }
             long currentPicked = rooms.staffPickedState(roomId);
             long newPicked = currentPicked == 0L ? 1L : 0L;
-            long categoryId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.category.id.default", 0, 0));
+            long categoryId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.navigator.staff_picked.category.id.default", 0));
             if (categoryId <= 0L) {
                 categoryId = 1L;
             }
             rooms.deleteStaffPickedOfficialRoom(categoryId, roomId);
             if (newPicked != 0L) {
-                long styleId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.style.default", 0, 0));
-                long iconId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.staff_picked.category.icon.default", 0, 0));
+                long styleId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.navigator.staff_picked.style.default", 0));
+                long iconId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.navigator.staff_picked.category.icon.default", 0));
                 rooms.insertStaffPickedOfficialRoom(categoryId, roomId, styleId, iconId);
                 UserDao users = userDao();
                 if (users != null) {
@@ -3556,7 +3556,7 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
-            long maxFavorites = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.rooms.favourites.max", 30, 0));
+            long maxFavorites = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.rooms.favourites.max", 30));
             if (maxFavorites <= 0L) {
                 maxFavorites = 30L;
             }
@@ -4262,8 +4262,8 @@ public final class Handling {
             if (activityType < 0L || activityType > 4L) {
                 activityType = 0L;
             }
-            if (NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.enabled", 0, 0)) != 0L) {
-                long wrapPrice = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.price", 0, 0));
+            if (NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.enabled", 0)) != 0L) {
+                long wrapPrice = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.price", 0));
                 if (wrapProductId <= 0L) {
                     CatalogDao catalog = catalogDao();
                     if (catalog == null) {
@@ -4356,7 +4356,7 @@ public final class Handling {
                 itemId = readWireLong(requestPayload, new LongRef(1));
             }
             long itemType = NumberUtils.parseLong(Licence.catalogProductField(itemId, 9));
-            long giftEnabled = itemType == 1L ? NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.enabled", 0, 0)) : 0L;
+            long giftEnabled = itemType == 1L ? NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.enabled", 0)) : 0L;
             Proc_6_244_801E80(socketIndex, CatalogPayloads.giftAvailability(itemId, giftEnabled), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -4367,8 +4367,8 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             String defaultPayload = CatalogPayloads.giftWrapPriceFallback(
-                NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.enabled", 0, 0)));
-            long giftWrapPrice = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.price", defaultPayload, 0));
+                NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.enabled", 0)));
+            long giftWrapPrice = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.price", defaultPayload));
             Proc_6_244_801E80(socketIndex,
                 CatalogPayloads.giftWrapOptions(giftWrapPrice, Licence.giftSettings().giftWrapPayload()), 0);
         } catch (Exception ignored) {
