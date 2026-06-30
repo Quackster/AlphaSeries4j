@@ -752,6 +752,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Handling.consumeFurnitureChargeOrPrompt(...)` with the original `Proc_6_148_7756D0` noted in Javadocs, then migrated the floor-state toggle charge path away from the Proc-named charge helper.
 - Added named `Handling.toggleFloorFurnitureState(...)` with the original `Proc_6_149_775C10` noted in Javadocs, then migrated packet dispatch and package fallback callers away from the Proc-named floor-state toggle handler.
 - Added named `Handling.openFloorFurniturePackageOrToggleState(...)` with the original `Proc_6_150_777FA0` noted in Javadocs, then migrated packet dispatch away from the Proc-named package-open handler.
+- Added named `Handling.moveFloorFurnitureInRoom(...)` and `placeFloorFurnitureFromInventory(...)` methods with original Proc names in Javadocs, then migrated packet dispatch and internal floor-placement retry callers away from `Proc_6_141_76A670(...)` and `Proc_6_142_76B310(...)`.
 
 ## VB Compatibility Class Removal Checklist
 

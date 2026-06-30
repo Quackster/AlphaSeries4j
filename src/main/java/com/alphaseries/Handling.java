@@ -4626,12 +4626,32 @@ public final class Handling {
         }
     }
 
+    /**
+     * Original function: Proc_6_141_76A670.
+     */
     public static String Proc_6_141_76A670(Object... args) {
-        return handlingFloorFurnitureMove(args, "A[", false);
+        return moveFloorFurnitureInRoom(handlingSocketIndex(args), handlingRequestPayload(args, "A["));
     }
 
+    /**
+     * Original function: Proc_6_141_76A670.
+     */
+    public static String moveFloorFurnitureInRoom(int socketIndex, String floorPlacementPayload) {
+        return placeOrMoveFloorFurniture(socketIndex, floorPlacementPayload, false);
+    }
+
+    /**
+     * Original function: Proc_6_142_76B310.
+     */
     public static String Proc_6_142_76B310(Object... args) {
-        return handlingFloorFurnitureMove(args, "rv", true);
+        return placeFloorFurnitureFromInventory(handlingSocketIndex(args), handlingRequestPayload(args, "rv"));
+    }
+
+    /**
+     * Original function: Proc_6_142_76B310.
+     */
+    public static String placeFloorFurnitureFromInventory(int socketIndex, String floorPlacementPayload) {
+        return placeOrMoveFloorFurniture(socketIndex, floorPlacementPayload, true);
     }
 
     /**
@@ -5394,7 +5414,7 @@ public final class Handling {
             if (requestPayload.isEmpty()) {
                 return "";
             }
-            return Proc_6_141_76A670(handlingSocketIndex(args), "A[", "A[" + requestPayload);
+            return moveFloorFurnitureInRoom(handlingSocketIndex(args), requestPayload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
@@ -7946,12 +7966,12 @@ public final class Handling {
                     break;
                 case "AZ": Proc_6_144_76BE70(socketIndex, "AZ", packetPayload); break;
                 case "AC": Proc_6_155_795C90(socketIndex, "AC", packetPayload); break;
-                case "A[": Proc_6_141_76A670(socketIndex, "A[", packetPayload); break;
+                case "A[": moveFloorFurnitureInRoom(socketIndex, packetPayload); break;
                 case "AI": Proc_6_159_79FCD0(socketIndex, "AI", packetPayload); break;
                 case "Ch": toggleFloorFurnitureState(socketIndex, packetPayload); break;
                 case "FH": openFloorFurniturePackageOrToggleState(socketIndex, packetPayload); break;
                 case "@B": Proc_6_78_7279A0(socketIndex, "@B", packetPayload); break;
-                case "rv": Proc_6_142_76B310(socketIndex, "rv", packetPayload); break;
+                case "rv": placeFloorFurnitureFromInventory(socketIndex, packetPayload); break;
                 case "pa": sendToSocket(socketIndex, "J|H"); break;
                 case "Ce": dispatchPreReadySoundSetting(socketIndex, packetPayload); break;
                 case "Cy": break;
@@ -9224,10 +9244,15 @@ public final class Handling {
         }
     }
 
-    public static String handlingFloorFurnitureMove(Object[] args, String packetPrefix, boolean fromInventory) {
+    /**
+     * Original functions: Proc_6_141_76A670 and Proc_6_142_76B310.
+     */
+    public static String placeOrMoveFloorFurniture(int socketIndex, String floorPlacementPayload, boolean fromInventory) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, packetPrefix);
+            String requestPayload = StringUtils.text(floorPlacementPayload);
+            if (requestPayload.startsWith("A[") || requestPayload.startsWith("rv")) {
+                requestPayload = requestPayload.substring(2);
+            }
             FloorFurniturePlacement placement = floorFurniturePlacementFromPayload(requestPayload);
             if (placement.furnitureId <= 0L) {
                 return "";
