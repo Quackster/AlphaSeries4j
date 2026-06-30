@@ -1,6 +1,7 @@
 package com.alphaseries.game.navigator;
 
 import com.alphaseries.dao.mysql.RoomDao;
+import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -9,20 +10,17 @@ import java.util.List;
 
 public final class RoomCategoryCache {
     private final String[] defaultCategoryIds;
-    private final String legacyCategoryRows;
     private final List<RoomDao.RoomCategoryRow> categoryRows;
     private final String[][] payloads;
 
     private RoomCategoryCache(Object defaultCategoryIds, Object categoryRows, Object payloads) {
         this.defaultCategoryIds = parseDefaultCategoryIds(defaultCategoryIds);
-        this.legacyCategoryRows = categoryRows instanceof List<?> ? "" : StringUtils.text(categoryRows);
         this.categoryRows = parseCategoryRows(categoryRows);
         this.payloads = parsePayloads(payloads);
     }
 
     private RoomCategoryCache(Object defaultCategoryIds, List<RoomDao.RoomCategoryRow> categoryRows, String[][] payloads) {
         this.defaultCategoryIds = parseDefaultCategoryIds(defaultCategoryIds);
-        this.legacyCategoryRows = "";
         this.categoryRows = copyCategoryRows(categoryRows);
         this.payloads = copyPayloads(payloads);
     }
@@ -64,7 +62,7 @@ public final class RoomCategoryCache {
             }
             return joined.toString();
         }
-        return legacyCategoryRows;
+        return "";
     }
 
     public List<RoomDao.RoomCategoryRow> categoryRowList() {
@@ -89,6 +87,23 @@ public final class RoomCategoryCache {
                     parsedRows.add(row);
                 }
             }
+            return List.copyOf(parsedRows);
+        }
+        List<RoomDao.RoomCategoryRow> parsedRows = new ArrayList<>();
+        for (String row : StringUtils.text(categoryRows).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                if (fields.length >= 5) {
+                    parsedRows.add(new RoomDao.RoomCategoryRow(
+                        NumberUtils.parseLong(StringUtils.field(fields, 0)),
+                        StringUtils.field(fields, 1),
+                        NumberUtils.parseLong(StringUtils.field(fields, 2)),
+                        NumberUtils.parseLong(StringUtils.field(fields, 3)),
+                        NumberUtils.parseLong(StringUtils.field(fields, 4))));
+                }
+            }
+        }
+        if (!parsedRows.isEmpty()) {
             return List.copyOf(parsedRows);
         }
         return List.of();
