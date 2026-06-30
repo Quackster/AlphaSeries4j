@@ -195,8 +195,8 @@ public final class Boot {
         runTimed("Mögliche Badgevergabe im Cache gespeichert", () -> Proc_1_16_6CCA60(0, 0, 0));
         runTimed("Haustiere im Cache gespeichert", Boot::loadPetLevelAndCommandCache);
         runTimed("Figuredata im Cache gespeichert", Boot::writeFiguredataCache);
-        runTimed("Server Einstellungen im Cache gespeichert", () -> Proc_1_9_6C6DF0(0, 0, 0));
-        runTimed("Event Kategorien im Cache gespeichert", () -> Proc_1_8_6C6850(0, 0, 0));
+        runTimed("Server Einstellungen im Cache gespeichert", Boot::loadServerSettingsCache);
+        runTimed("Event Kategorien im Cache gespeichert", Boot::loadRoomEventLocalesCache);
         runTimed("Navigator Kategorien im Cache gespeichert", () -> {
             Proc_1_11_6C8D10(0, 0, 0);
             Proc_1_12_6C8EF0(0, 0, 0);
@@ -228,8 +228,8 @@ public final class Boot {
     }
 
     public static void Proc_1_4_6C4F00(Object... args) {
-        Proc_1_8_6C6850(0, 0, 0);
-        Proc_1_9_6C6DF0(0, 0, 0);
+        loadRoomEventLocalesCache();
+        loadServerSettingsCache();
         Proc_1_19_6CF190(0, 0, 0);
         Proc_1_20_6CF830(0, 0, 0);
         Proc_1_21_6D08C0(0, 0, 0);
@@ -250,7 +250,7 @@ public final class Boot {
             }
         }
         Licence.setAchievementSettings(achievementCache.questIdPayload, achievementCache.achievements);
-        Proc_1_9_6C6DF0(0, 0, 0);
+        loadServerSettingsCache();
         loadPetLevelAndCommandCache();
         Proc_1_18_6CE9C0(0, 0, 0);
         Proc_1_16_6CCA60(0, 0, 0);
@@ -316,7 +316,17 @@ public final class Boot {
         }
     }
 
+    /**
+     * Original function: Proc_1_8_6C6850.
+     */
     public static void Proc_1_8_6C6850(Object... args) {
+        loadRoomEventLocalesCache();
+    }
+
+    /**
+     * Original function: Proc_1_8_6C6850.
+     */
+    public static void loadRoomEventLocalesCache() {
         SettingsDao settings = settingsDao();
         RoomEventLocales locales = DataManager.roomEventLocales();
         if (settings != null) {
@@ -329,7 +339,17 @@ public final class Boot {
         DataManager.setRoomEventLocales(locales);
     }
 
+    /**
+     * Original function: Proc_1_9_6C6DF0.
+     */
     public static void Proc_1_9_6C6DF0(Object... args) {
+        loadServerSettingsCache();
+    }
+
+    /**
+     * Original function: Proc_1_9_6C6DF0.
+     */
+    public static void loadServerSettingsCache() {
         RoomDao rooms = roomDao();
         RoomPortalSettings portalSettings = RoomPortalSettings.fromRows(List.of(), List.of());
         if (rooms != null) {
