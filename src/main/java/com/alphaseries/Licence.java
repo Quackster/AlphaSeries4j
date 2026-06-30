@@ -40,6 +40,7 @@ import com.alphaseries.game.session.SessionState;
 import com.alphaseries.game.session.SocketMarkerSet;
 import com.alphaseries.server.lifecycle.LicenceRuntimeState;
 import com.alphaseries.server.update.UpdaterSettings;
+import com.alphaseries.server.update.UpdaterState;
 import com.alphaseries.game.wired.WiredSettings;
 import com.alphaseries.game.wired.WiredState;
 import com.alphaseries.util.NumberUtils;
@@ -527,19 +528,23 @@ public final class Licence {
     }
 
     public static UpdaterSettings updaterSettings() {
-        return UpdaterSettings.fromLegacy(global_00829040, global_00829044, global_00829048);
+        UpdaterState.instance().setSettingsFromLegacy(global_00829040, global_00829044, global_00829048);
+        return UpdaterState.instance().settings();
     }
 
     public static void setUpdaterExecutableName(String executableName) {
         global_00829040 = StringUtils.text(executableName);
+        UpdaterState.instance().setSettingsFromLegacy(global_00829040, global_00829044, global_00829048);
     }
 
     public static void setUpdaterRows(String updateRows) {
         global_00829044 = StringUtils.text(updateRows);
+        UpdaterState.instance().setSettingsFromLegacy(global_00829040, global_00829044, global_00829048);
     }
 
     public static void setUpdaterSql(String updateSql) {
         global_00829048 = StringUtils.text(updateSql);
+        UpdaterState.instance().setSettingsFromLegacy(global_00829040, global_00829044, global_00829048);
     }
 
     public static CatalogPages catalogPages() {

@@ -18,6 +18,10 @@ public final class UpdaterSettings {
         return new UpdaterSettings(executableName, updateRows, updateSql);
     }
 
+    public static UpdaterSettings empty() {
+        return new UpdaterSettings("", "", "");
+    }
+
     public String executableName() {
         return executableName;
     }
