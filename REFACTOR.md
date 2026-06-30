@@ -336,6 +336,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved room portal startup cache state into typed `RoomPortalSettings` warp-space and special-gate rows, removing the room portal join helpers and DAO legacy row formatters from the boot path.
 - Moved package and pet-package startup caches into typed `PackageDao` row lists, removing the package join helpers and DAO legacy row formatters from the boot path.
 - Moved room-category startup cache rows into typed `RoomDao.RoomCategoryRow` lists, routing navigator category payload matrix building through typed rows and removing the DAO legacy row formatter.
+- Moved product and catalog-product startup caches into typed `CatalogDao` row lists, removing their boot join helpers and DAO legacy row formatters while keeping compatibility row lookup in catalog cache adapters.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -350,7 +351,7 @@ Measured on 2026-06-30:
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
-- `Boot.java`: 2034 lines
+- `Boot.java`: 2002 lines
 - `Handling.java`: 12286 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines

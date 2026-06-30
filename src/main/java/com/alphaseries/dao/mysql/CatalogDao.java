@@ -190,15 +190,9 @@ public final class CatalogDao {
     }
 
     public record ProductCacheRow(List<String> values) {
-        public String legacyRow() {
-            return String.join("\t", values);
-        }
     }
 
     public record CatalogProductCacheRow(List<String> values) {
-        public String legacyRow() {
-            return String.join("\t", values);
-        }
     }
 
     public record ProductDealRow(long dealId, String items) {

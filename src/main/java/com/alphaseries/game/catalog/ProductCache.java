@@ -1,5 +1,6 @@
 package com.alphaseries.game.catalog;
 
+import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -34,6 +35,15 @@ public final class ProductCache {
 
     private static Map<Long, String> rowsById(Object cache) {
         Map<Long, String> rows = new LinkedHashMap<>();
+        if (cache instanceof Iterable<?> values) {
+            for (Object value : values) {
+                if (value instanceof CatalogDao.ProductCacheRow row) {
+                    String rowText = String.join("\t", row.values());
+                    rows.put(NumberUtils.parseLong(field(row.values(), 0)), rowText);
+                }
+            }
+            return rows;
+        }
         if (cache instanceof String[] rowArray) {
             for (int index = 0; index < rowArray.length; index++) {
                 String row = StringUtils.text(rowArray[index]);
@@ -50,5 +60,9 @@ public final class ProductCache {
             }
         }
         return rows;
+    }
+
+    private static String field(java.util.List<String> fields, int index) {
+        return fields != null && index >= 0 && index < fields.size() ? StringUtils.text(fields.get(index)) : "";
     }
 }

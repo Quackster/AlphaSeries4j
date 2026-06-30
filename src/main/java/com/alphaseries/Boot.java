@@ -82,18 +82,10 @@ public final class Boot {
 
     public static void Proc_1_1_6BB340(Object... args) {
         CatalogDao catalog = catalogDao();
-        long maxProductId = 0L;
+        Object products = "";
         if (catalog != null) {
             try {
-                maxProductId = Math.max(0L, catalog.maxProductId());
-            } catch (Exception ignored) {
-                // Legacy startup cache loading tolerated missing tables or SQL failures.
-            }
-        }
-        String[] products = new String[(int) maxProductId + 1];
-        if (catalog != null) {
-            try {
-                cacheRowsById(products, joinProductCacheRows(catalog.productCacheRows()));
+                products = catalog.productCacheRows();
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
@@ -101,18 +93,10 @@ public final class Boot {
         Licence.setProductRows(products);
         DataManager.setProductRows(products);
 
-        long maxCatalogId = 0L;
+        Object catalogProducts = "";
         if (catalog != null) {
             try {
-                maxCatalogId = Math.max(0L, catalog.maxCatalogProductId());
-            } catch (Exception ignored) {
-                // Legacy startup cache loading tolerated missing tables or SQL failures.
-            }
-        }
-        String[] catalogProducts = new String[(int) maxCatalogId + 1];
-        if (catalog != null) {
-            try {
-                cacheRowsById(catalogProducts, joinCatalogProductCacheRows(catalog.catalogProductCacheRows()));
+                catalogProducts = catalog.catalogProductCacheRows();
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
@@ -1889,22 +1873,6 @@ public final class Boot {
 
     private static String joinLongRows(List<Long> values) {
         return joinLongs(values, "\r");
-    }
-
-    private static String joinProductCacheRows(List<CatalogDao.ProductCacheRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (CatalogDao.ProductCacheRow row : rows == null ? List.<CatalogDao.ProductCacheRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
-    }
-
-    private static String joinCatalogProductCacheRows(List<CatalogDao.CatalogProductCacheRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (CatalogDao.CatalogProductCacheRow row : rows == null ? List.<CatalogDao.CatalogProductCacheRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
     }
 
     private static String joinProductDealRows(List<CatalogDao.ProductDealRow> rows) {

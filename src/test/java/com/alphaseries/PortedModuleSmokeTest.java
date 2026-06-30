@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.config.AppDatabaseConfig;
 import com.alphaseries.dao.mysql.AdvertisingDao;
+import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.PackageDao;
 import com.alphaseries.dao.mysql.QuestDao;
@@ -613,6 +614,12 @@ public final class PortedModuleSmokeTest {
         assertEquals("11\t200\ttable", Licence.Proc_9_3_807930(11));
         assertEquals("1\talpha\t7", Licence.Proc_9_4_807B90(1));
         assertEquals("6\trow-six", Licence.Proc_9_5_807DF0(6));
+        Licence.global_008292BC = List.of(new CatalogDao.ProductCacheRow(List.of("10", "100", "chair")));
+        Licence.global_008292C0 = List.of(new CatalogDao.CatalogProductCacheRow(List.of("1", "alpha", "7")));
+        assertEquals(100L, Licence.Proc_9_0_806F70(10, 1));
+        assertEquals("alpha", Licence.Proc_9_1_8072B0(1, 1));
+        assertEquals("10\t100\tchair", Licence.Proc_9_3_807930(10));
+        assertEquals("1\talpha\t7", Licence.Proc_9_4_807B90(1));
         Licence.global_00829268 = "[0:5\1u5\2sock5][1:bob\1bob\2" + "6][room\1" + "7\2" + "8]";
         assertEquals("u5", Licence.Proc_9_6_808080(5, 0));
         assertEquals(6L, Licence.Proc_9_7_808320("bob", 1));
@@ -929,6 +936,8 @@ public final class PortedModuleSmokeTest {
         Boot.Proc_1_0_6BA9D0();
         assertEquals(1L, Licence.global_00829168);
         assertEquals("10\2" + "11\2", ((String[]) Licence.global_00829140)[0]);
+        assertEquals(true, Licence.global_008292BC instanceof List);
+        assertEquals(true, Licence.global_008292C0 instanceof List);
         Licence.setPackageRows(List.of(new PackageDao.PackageRow(10L, "i", 20L, "")));
         assertEquals(true, Licence.global_00829078 instanceof List);
         assertEquals("10\ti\t20\t", Licence.catalogProductSettings().packageRows());
