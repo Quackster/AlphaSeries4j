@@ -14,6 +14,7 @@ import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.achievement.AchievementSettings;
+import com.alphaseries.game.advertising.VisitRoomAds;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
@@ -1181,6 +1182,7 @@ public final class PortedModuleSmokeTest {
         Boot.Proc_1_22_6D0F00();
         assertEquals("/ad/4\2/cafe\2", ((String[]) Licence.global_008291D4)[4]);
         assertEquals("/ad/4\2/cafe\2", Licence.visitRoomAds().payload(4L));
+        assertEquals("/ad/8\2/lounge\2", VisitRoomAds.fromPayloads(Map.of(8L, "/ad/8\2/lounge\2"), 1L).payload(8L));
         Boot.Proc_1_23_6D1480("booted", "DEBUG");
         Boot.Proc_1_5_6C4F80();
         assertEquals("7\2", Licence.global_008291E4);
