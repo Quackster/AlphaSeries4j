@@ -292,8 +292,15 @@ public final class DataManager {
         if (args == null || args.length < 2) {
             return;
         }
+        appendTextFile(StringUtils.text(args[0]), StringUtils.text(args[1]));
+    }
+
+    /**
+     * Original function: Proc_8_9_806810.
+     */
+    public static void appendTextFile(String path, String text) {
         try {
-            Files.writeString(Path.of(StringUtils.text(args[0])), StringUtils.text(args[1]) + System.lineSeparator(),
+            Files.writeString(Path.of(StringUtils.text(path)), StringUtils.text(text) + System.lineSeparator(),
                 StandardCharsets.UTF_8, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
         } catch (IOException ignored) {
             // VB6 source suppresses append failures.
@@ -304,8 +311,15 @@ public final class DataManager {
         if (args == null || args.length < 2) {
             return;
         }
+        writeTextFile(StringUtils.text(args[0]), StringUtils.text(args[1]));
+    }
+
+    /**
+     * Original function: Proc_8_10_8068E0.
+     */
+    public static void writeTextFile(String path, String text) {
         try {
-            Files.writeString(Path.of(StringUtils.text(args[0])), StringUtils.text(args[1]) + System.lineSeparator(), StandardCharsets.UTF_8);
+            Files.writeString(Path.of(StringUtils.text(path)), StringUtils.text(text) + System.lineSeparator(), StandardCharsets.UTF_8);
         } catch (IOException ignored) {
             // VB6 source suppresses write failures.
         }

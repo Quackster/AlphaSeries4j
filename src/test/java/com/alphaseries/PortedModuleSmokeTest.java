@@ -187,6 +187,12 @@ public final class PortedModuleSmokeTest {
         assertEquals("502", DataManager.productCache().fallbackBadgeId(11));
         assertEquals(502L, DataManager.productCache().wiredCode(11));
         assertEquals(true, DataManager.productCache().hasCharges(11));
+        Path dataManagerWritePath = Files.createTempFile("alphaseries-datamanager-write", ".txt");
+        DataManager.writeTextFile(dataManagerWritePath.toString(), "replace");
+        assertEquals("replace" + System.lineSeparator(), new String(Files.readAllBytes(dataManagerWritePath), "UTF-8"));
+        DataManager.appendTextFile(dataManagerWritePath.toString(), "append");
+        assertEquals("replace" + System.lineSeparator() + "append" + System.lineSeparator(),
+            new String(Files.readAllBytes(dataManagerWritePath), "UTF-8"));
         assertEquals("pro", DataManager.extractLicenceSetting("\rrank=7\rmode:pro\r", "mode"));
         assertEquals("rank=7\rmode\nok", DataManager.licenceBlockFromResponse("aFMTbFMTcFMTrank=7--*-mode*-*-ok", "FMT"));
         assertEquals("fallback", DataManager.licenceBlockFromResponse("prefixFMTfallback", "FMT"));

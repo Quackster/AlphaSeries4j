@@ -168,7 +168,7 @@ public final class Main {
             if (Licence.runtimeState().debugLoggingEnabled()) {
                 Console.Proc_2_0_6D1510("[" + socketIndex + "] " + ex.getMessage() + " -> " + packetData,
                     "ERROR", "255");
-                DataManager.Proc_8_9_806810(Functions.applicationPath + "/ERR.log",
+                DataManager.appendTextFile(Functions.applicationPath + "/ERR.log",
                     "ERROR] " + packetData + " (" + ex.getMessage() + ")\r\n0\r\n\r\n\r\n");
                 Functions.Proc_10_8_80A580(socketIndex, 0x60, 0);
             }

@@ -490,6 +490,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Functions.downloadFile(...)` with the original Proc name in Javadocs and migrated `Updater` away from `Functions.Proc_10_28_8210C0(...)`.
 - Expanded `ProductCache` with named product type, sprite, item-data, and wired-code accessors carrying the original `DataManager.Proc_8_12_806C30` source note, then routed matching `Handling` and inventory payload callers away from raw product field numbers.
 - Expanded `ProductCache` with named default-sign, display-name, badge, state-count, charge, interaction, and dimension-map accessors, clearing live production calls to `DataManager.Proc_8_12_806C30(...)`; only compatibility test coverage still calls the old Proc name.
+- Added named `DataManager.appendTextFile(...)` and `writeTextFile(...)` methods with original Proc names in Javadocs, then migrated live `Boot`/`Main`/`Handling` callers away from `DataManager.Proc_8_9_806810(...)` and `Proc_8_10_8068E0(...)`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -508,7 +509,7 @@ Measured on 2026-06-30:
 - `Boot.java`: 1992 lines
 - `Handling.java`: 11355 lines
 - `Functions.java`: 695 lines
-- `DataManager.java`: 395 lines
+- `DataManager.java`: 409 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 819 lines
 - `Updater.java`: 314 lines

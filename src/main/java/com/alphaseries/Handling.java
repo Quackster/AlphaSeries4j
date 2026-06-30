@@ -4778,7 +4778,7 @@ public final class Handling {
                     chargePointType);
                 Proc_6_244_801E80(socketIndex, payload, 0);
             } else {
-                DataManager.Proc_8_10_8068E0(chargePath.toString(), String.valueOf(currentCharges - 1L), 0);
+                DataManager.writeTextFile(chargePath.toString(), String.valueOf(currentCharges - 1L));
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6950,7 +6950,7 @@ public final class Handling {
             }
             Path snapshotPath = Path.of(Functions.applicationPath, "cache", "wired_snapshots", furnitureId + ".cache");
             Files.createDirectories(snapshotPath.getParent());
-            DataManager.Proc_8_10_8068E0(snapshotPath.toString(), Licence.representedRooms().cacheText(), wiredCode);
+            DataManager.writeTextFile(snapshotPath.toString(), Licence.representedRooms().cacheText());
             return snapshotPath.toString();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -8785,7 +8785,7 @@ public final class Handling {
         }
         Path path = Path.of(cachePath);
         if (!Files.exists(path)) {
-            DataManager.Proc_8_10_8068E0(cachePath, "");
+            DataManager.writeTextFile(cachePath, "");
         }
         return readFile(cachePath);
     }

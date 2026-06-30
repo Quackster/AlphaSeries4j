@@ -635,8 +635,8 @@ public final class Boot {
         String productName = Licence.runtimeState().productName();
         String nowText = java.time.LocalDateTime.now().toString();
         java.nio.file.Path appPath = java.nio.file.Path.of(Functions.applicationPath);
-        DataManager.Proc_8_9_806810(appPath.resolve("ERR.log").toString(), bootErrorLogHeader(productName, nowText));
-        DataManager.Proc_8_9_806810(appPath.resolve("SLOW.log").toString(), bootSlowLogHeader(productName, nowText));
+        DataManager.appendTextFile(appPath.resolve("ERR.log").toString(), bootErrorLogHeader(productName, nowText));
+        DataManager.appendTextFile(appPath.resolve("SLOW.log").toString(), bootSlowLogHeader(productName, nowText));
     }
 
     public static void printStartupNotice() {
