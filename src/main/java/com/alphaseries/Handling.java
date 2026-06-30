@@ -95,6 +95,7 @@ import com.alphaseries.messages.outgoing.RecyclerPayloads;
 import com.alphaseries.messages.outgoing.RoomPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
 import com.alphaseries.messages.outgoing.UserPayloads;
+import com.alphaseries.messages.outgoing.VoucherPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -4446,18 +4447,18 @@ public final class Handling {
                 : requestPayload;
             voucherCode = voucherCode.replace(' ', '0');
             if (voucherCode.length() != 8) {
-                Proc_6_244_801E80(socketIndex, "CU" + voucherCode + '\2', 0);
+                Proc_6_244_801E80(socketIndex, VoucherPayloads.invalid(voucherCode), 0);
                 return;
             }
             VoucherDao vouchers = voucherDao();
             VoucherDao.VoucherReward voucherReward = vouchers == null ? null : vouchers.reward(voucherCode).orElse(null);
             if (voucherReward == null) {
-                Proc_6_244_801E80(socketIndex, "CU" + voucherCode + '\2', 0);
+                Proc_6_244_801E80(socketIndex, VoucherPayloads.invalid(voucherCode), 0);
                 return;
             }
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, "CU" + voucherCode + '\2', 0);
+                Proc_6_244_801E80(socketIndex, VoucherPayloads.invalid(voucherCode), 0);
                 return;
             }
             String productSprite = StringUtils.text(voucherReward.productSprite());
@@ -4473,7 +4474,7 @@ public final class Handling {
             }
             UserDao users = userDao();
             if (users == null) {
-                Proc_6_244_801E80(socketIndex, "CU" + voucherCode + '\2', 0);
+                Proc_6_244_801E80(socketIndex, VoucherPayloads.invalid(voucherCode), 0);
                 return;
             }
             long userIdValue = NumberUtils.parseLong(userId);
@@ -4486,7 +4487,7 @@ public final class Handling {
                 Functions.Proc_10_17_80C6B0(userId, 0, 0);
             }
             vouchers.deleteVoucher(voucherCode);
-            Proc_6_244_801E80(socketIndex, "CT" + rewardPayload, 0);
+            Proc_6_244_801E80(socketIndex, VoucherPayloads.redeemed(rewardPayload), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

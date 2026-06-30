@@ -59,6 +59,7 @@ import com.alphaseries.messages.outgoing.RecyclerPayloads;
 import com.alphaseries.messages.outgoing.RoomPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
 import com.alphaseries.messages.outgoing.UserPayloads;
+import com.alphaseries.messages.outgoing.VoucherPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.PacketReader;
 import com.alphaseries.protocol.WireEncoding;
@@ -1014,6 +1015,8 @@ public final class PortedModuleSmokeTest {
         expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(0, null, expectedGiftPurchase);
         expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(97, null, expectedGiftPurchase) + '\2' + "i" + '\2' + "IH";
         assertEquals(expectedGiftPurchase, CatalogPayloads.giftPurchase(81, "chair", 10, 2, 0, 97));
+        assertEquals("CUABCD0000\2", VoucherPayloads.invalid("ABCD0000"));
+        assertEquals("CTRewardA\2RewardB\2", VoucherPayloads.redeemed("RewardA\2RewardB\2"));
         Licence.setClubGiftState(new GiftSettings.ClubGiftState(
             "GIFTS",
             "[81\0" + "506\1" + "20]",
