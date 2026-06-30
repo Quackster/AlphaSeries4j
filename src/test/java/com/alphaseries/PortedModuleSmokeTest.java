@@ -2397,9 +2397,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(3L, achievementDecision.nextLevel);
         assertEquals(30L, achievementDecision.requiredProgress);
         assertEquals(true, achievementDecision.shouldReward);
-        assertEquals("5;1;7;1;5;0;", Handling.wiredSpecialStatePayload(1507));
-        assertEquals("", Handling.wiredSpecialStatePayload(1));
-        String wiredRecord = Handling.wiredRecordText(502, 44, "100;101", "7;8", "txt", "9");
+        assertEquals("5;1;7;1;5;0;", WiredPayloads.specialState(1507));
+        assertEquals("", WiredPayloads.specialState(1));
+        String wiredRecord = WiredPayloads.recordText(502, 44, "100;101", "7;8", "txt", "9");
         assertEquals("\1" + "502\2" + "44\3" + "100;101\4" + "7;8\5" + "txt\6" + "9", wiredRecord);
         WiredPayloads.WiredRecord parsedWiredRecord = WiredPayloads.record(wiredRecord);
         assertEquals("502", parsedWiredRecord.code());
@@ -2418,16 +2418,18 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(101, null, "")
             + Crypto.Proc_3_0_6D2AF0(9, null, "");
         assertEquals(wiredRecord, Handling.wiredEditRecordFromWire(wiredWire, "ok", 502, true));
-        String replacementRecord = Handling.wiredRecordText(502, 44, "102", "5", "next", "3");
-        String otherRecord = Handling.wiredRecordText(503, 45, "200", "1", "", "");
+        String replacementRecord = WiredPayloads.recordText(502, 44, "102", "5", "next", "3");
+        String otherRecord = WiredPayloads.recordText(503, 45, "200", "1", "", "");
         assertEquals(replacementRecord + "\n" + otherRecord,
-            Handling.wiredCacheWithRecord(wiredRecord + "\n" + otherRecord, replacementRecord));
-        assertEquals(true, Handling.wiredSelectedItemsExist("100;101", "99,100,101"));
-        assertEquals(false, Handling.wiredSelectedItemsExist("100;101", "99,100"));
-        Handling.WiredApplyResult wiredApply = Handling.wiredApplySelected("100;101,102", "5;ignored", 0, "100;102");
+            WiredPayloads.cacheWithRecord(wiredRecord + "\n" + otherRecord, replacementRecord));
+        assertEquals(true, WiredPayloads.selectedItemsExist("100;101", "99,100,101"));
+        assertEquals(false, WiredPayloads.selectedItemsExist("100;101", "99,100"));
+        WiredPayloads.ApplyResult wiredApply = WiredPayloads.applySelected(
+            "100;101,102", "5;ignored", 0, "100;102", FurniturePayloads::stateChanged);
         assertEquals(2L, wiredApply.appliedCount);
         assertEquals(FurniturePayloads.stateChanged(100, 5) + FurniturePayloads.stateChanged(102, 5), wiredApply.statePayloads);
-        Handling.WiredApplyResult wiredOverride = Handling.wiredApplySelected("100", "7", 101, "100;101");
+        WiredPayloads.ApplyResult wiredOverride = WiredPayloads.applySelected(
+            "100", "7", 101, "100;101", FurniturePayloads::stateChanged);
         assertEquals(1L, wiredOverride.appliedCount);
         assertEquals(FurniturePayloads.stateChanged(101, 7), wiredOverride.statePayloads);
         Path previousApplicationPathForWired = Path.of(Functions.applicationPath);
@@ -2483,14 +2485,14 @@ public final class PortedModuleSmokeTest {
         String snapshotPath = Handling.Proc_6_221_7ED1E0(4, "on" + Crypto.Proc_3_0_6D2AF0(44, null, ""));
         assertEquals(wiredRoot.resolve("cache").resolve("wired_snapshots").resolve("44.cache").toString(), snapshotPath);
         assertEquals("snapshot-room-cache" + System.lineSeparator(), new String(Files.readAllBytes(Path.of(snapshotPath)), "UTF-8"));
-        String triggerRecord = Handling.wiredRecordText(1001, 55, "", "", "", "");
+        String triggerRecord = WiredPayloads.recordText(1001, 55, "", "", "", "");
         Handling.Proc_6_240_7FC2B0(wiredRoot.resolve("cache").resolve("wired_trigger").resolve("9.cache").toString(), triggerRecord);
         assertEquals(2L, Handling.Proc_6_212_7E36C0(4));
         assertEquals(true, containsSql(wiredSql, "UPDATE furnitures SET sign='7' WHERE id='100' LIMIT 1"));
         assertEquals(true, containsSql(wiredSql, "UPDATE furnitures SET sign='7' WHERE id='101' LIMIT 1"));
         wiredSql.clear();
         wiredSends.clear();
-        String action503 = Handling.wiredRecordText(503, 45, "102", "8", "", "");
+        String action503 = WiredPayloads.recordText(503, 45, "102", "8", "", "");
         Handling.Proc_6_240_7FC2B0(wiredRoot.resolve("cache").resolve("wired_action").resolve("9.cache").toString(), action503);
         assertEquals(1L, Handling.Proc_6_215_7E6770(4));
         assertEquals(true, containsSql(wiredSql, "UPDATE furnitures SET sign='8' WHERE id='102' LIMIT 1"));

@@ -778,11 +778,6 @@ public final class Handling {
         public boolean shouldReward;
     }
 
-    public static final class WiredApplyResult {
-        public long appliedCount;
-        public String statePayloads = "";
-    }
-
     public static final class SongInfoRequest {
         public long requestedCount;
         public String requestedIds = "";
@@ -6910,7 +6905,7 @@ public final class Handling {
             if (args == null || args.length == 0) {
                 return "";
             }
-            return wiredSpecialStatePayload(NumberUtils.parseLong(args[0]));
+            return WiredPayloads.specialState(NumberUtils.parseLong(args[0]));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
@@ -10721,10 +10716,6 @@ public final class Handling {
         return AchievementPayloads.list(achievements, currentLevelsByBadgePrefix);
     }
 
-    public static String wiredSpecialStatePayload(long itemState) {
-        return WiredPayloads.specialState(itemState);
-    }
-
     public static String handlingRepresentedWiredEdit(
         Object[] args,
         String packetCode,
@@ -10765,7 +10756,7 @@ public final class Handling {
             }
             String cachePath = wiredCachePath(cacheFolder, roomId);
             String cacheText = Proc_6_239_7FC170(cachePath, 0, 0);
-            Proc_6_240_7FC2B0(cachePath, wiredCacheWithRecord(cacheText, recordText));
+            Proc_6_240_7FC2B0(cachePath, WiredPayloads.cacheWithRecord(cacheText, recordText));
             return recordText;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -10985,49 +10976,8 @@ public final class Handling {
             selectedIdsText += selectedFurnitureId;
         }
         long extraValue = includeExtraValue ? readWireLong(requestPayload, offset) : 0L;
-        return wiredRecordText(wiredCode, furnitureId, selectedIdsText, parameterValues, textValue,
+        return WiredPayloads.recordText(wiredCode, furnitureId, selectedIdsText, parameterValues, textValue,
             includeExtraValue ? String.valueOf(extraValue) : "");
-    }
-
-    public static String wiredRecordText(
-        long wiredCode,
-        long furnitureId,
-        String selectedIdsText,
-        String parameterValues,
-        String textValue,
-        String extraValue
-    ) {
-        return WiredPayloads.recordText(wiredCode, furnitureId, selectedIdsText, parameterValues, textValue, extraValue);
-    }
-
-    public static String wiredRecordMarker(String recordText) {
-        return WiredPayloads.recordMarker(recordText);
-    }
-
-    public static String wiredCacheWithRecord(String cacheText, String recordText) {
-        return WiredPayloads.cacheWithRecord(cacheText, recordText);
-    }
-
-    public static boolean wiredSelectedItemsExist(String selectedIds, String existingIds) {
-        return WiredPayloads.selectedItemsExist(selectedIds, existingIds);
-    }
-
-    public static WiredApplyResult wiredApplySelected(
-        String selectedIds,
-        String parameterText,
-        long selectedFurnitureId,
-        String existingIds
-    ) {
-        WiredPayloads.ApplyResult applied = WiredPayloads.applySelected(
-            selectedIds,
-            parameterText,
-            selectedFurnitureId,
-            existingIds,
-            FurniturePayloads::stateChanged);
-        WiredApplyResult result = new WiredApplyResult();
-        result.appliedCount = applied.appliedCount;
-        result.statePayloads = applied.statePayloads;
-        return result;
     }
 
     public static SongInfoRequest songInfoRequestFromWire(String packetPayload) {
