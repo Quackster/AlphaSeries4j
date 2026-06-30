@@ -298,6 +298,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed jukebox song-info, playlist, and disk-inventory payload string wrappers through typed `SongInfoRow`, `JukeboxPlaylistEntry`, and `SongDiskRow` lists, leaving tab-delimited jukebox rows as compatibility parsers only.
 - Routed messenger pending-request payload string wrappers through typed `PendingFriendRequest` lists, leaving tab-delimited pending-request rows as a compatibility parser only.
 - Moved messenger friend rows into `game.messenger.MessengerFriend`, routed DAO reads and friend summary/list payload wrappers through typed records, and left legacy friend row layouts as explicit compatibility parsers only.
+- Routed quest active-row string wrappers through typed `QuestDao.UserQuestLevelRow` and `UserQuestProgressRow` factories, removing another tab-delimited parsing cluster from `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -313,7 +314,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12535 lines
+- `Handling.java`: 12529 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
 - `Main.java`: 957 lines

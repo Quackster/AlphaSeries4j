@@ -1,6 +1,8 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -181,12 +183,29 @@ public final class QuestDao {
     }
 
     public record UserQuestLevelRow(long questId, long level) {
+        public static UserQuestLevelRow fromLegacy(String rowText) {
+            String[] fields = StringUtils.text(rowText).split("\t", -1);
+            return new UserQuestLevelRow(
+                NumberUtils.parseLong(StringUtils.field(fields, 0)),
+                NumberUtils.parseLong(StringUtils.field(fields, 1)));
+        }
+
         public String legacyRow() {
             return questId + "\t" + level;
         }
     }
 
     public record UserQuestProgressRow(long questId, long numericQuestId, long progress, long level, String timeNext) {
+        public static UserQuestProgressRow fromLegacy(String rowText) {
+            String[] fields = StringUtils.text(rowText).split("\t", -1);
+            return new UserQuestProgressRow(
+                NumberUtils.parseLong(StringUtils.field(fields, 0)),
+                NumberUtils.parseLong(StringUtils.field(fields, 1)),
+                NumberUtils.parseLong(StringUtils.field(fields, 2)),
+                NumberUtils.parseLong(StringUtils.field(fields, 3)),
+                StringUtils.field(fields, 4));
+        }
+
         public String legacyRow() {
             return questId + "\t" + numericQuestId + "\t" + progress + "\t" + level + "\t" + (timeNext == null ? "" : timeNext);
         }

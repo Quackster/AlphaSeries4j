@@ -10715,9 +10715,9 @@ public final class Handling {
         long currentQuestId = 0L;
         long currentLevel = 0L;
         if (!StringUtils.text(activeRow).isEmpty()) {
-            String[] activeFields = StringUtils.text(activeRow).split("\t", -1);
-            currentQuestId = NumberUtils.parseLong(StringUtils.field(activeFields, 0));
-            currentLevel = NumberUtils.parseLong(StringUtils.field(activeFields, 1));
+            QuestDao.UserQuestLevelRow activeQuest = QuestDao.UserQuestLevelRow.fromLegacy(activeRow);
+            currentQuestId = activeQuest.questId();
+            currentLevel = activeQuest.level();
         }
 
         long currentCampaignId = 0L;
@@ -10762,13 +10762,7 @@ public final class Handling {
         if (StringUtils.text(activeRow).isEmpty()) {
             return new QuestProgressDecision();
         }
-        String[] activeFields = StringUtils.text(activeRow).split("\t", -1);
-        return questProgressDecision(new QuestDao.UserQuestProgressRow(
-            NumberUtils.parseLong(StringUtils.field(activeFields, 0)),
-            NumberUtils.parseLong(StringUtils.field(activeFields, 1)),
-            NumberUtils.parseLong(StringUtils.field(activeFields, 2)),
-            NumberUtils.parseLong(StringUtils.field(activeFields, 3)),
-            StringUtils.field(activeFields, 4)), questRows, remainingWait);
+        return questProgressDecision(QuestDao.UserQuestProgressRow.fromLegacy(activeRow), questRows, remainingWait);
     }
 
     public static QuestProgressDecision questProgressDecision(
