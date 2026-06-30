@@ -27,6 +27,7 @@ import com.alphaseries.game.navigator.OfficialNavigatorItem;
 import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.PetSettings;
+import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
@@ -2223,8 +2224,8 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(4, null, "") + "1 2 ff\2"
             + Crypto.Proc_3_0_6D2AF0(12, null, "")
             + Crypto.Proc_3_0_6D2AF0(5, null, "") + "Owner\2";
-        assertEquals(expectedPetStatus, Handling.representedPetStatusPayload(50,
-            new String[]{"10", "Rex", "1 2 ff", "2", "7", "100", "90", "4", "12", "5", "Owner"}));
+        PetStatusRow expectedPetStatusRow = new PetStatusRow(10L, "Rex", "1 2 ff", 2L, 7L, 100L, 90L, 4L, 12L, 5L, "Owner");
+        assertEquals(expectedPetStatus, PetPayloads.status(50, expectedPetStatusRow));
         String levelRows = "1\t10\r2\t20\r3\t30";
         assertEquals(20L, Handling.petLevelMaxExperience(2, levelRows));
         Handling.PetExperienceUpdate expUpdate = Handling.petExperienceUpdate(50, "Rex", "1 2 ff", 2, 18, 100, 90, 4, 3, levelRows);
@@ -4256,8 +4257,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "Lz"));
         handlingSends.clear();
         String petStatusPayload = Handling.Proc_6_183_7CABF0(4, "ny" + wireLong(10));
-        assertEquals(Handling.representedPetStatusPayload(10,
-            new String[]{"10", "Rex", "1 2 ff", "2", "7", "100", "90", "4", "12", "5", "Owner"}), petStatusPayload);
+        assertEquals(PetPayloads.status(10, expectedPetStatusRow), petStatusPayload);
         assertEquals(true, containsSend(handlingSends, "IY"));
         assertEquals(true, containsSend(handlingSends, "Owner"));
         handlingSends.clear();

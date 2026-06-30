@@ -208,24 +208,6 @@ public final class PetPayloads {
             .build();
     }
 
-    public static String status(long botEntityId, String[] petFields) {
-        if (botEntityId <= 0L || petFields == null || petFields.length < 11) {
-            return "";
-        }
-        return fullStatus(
-            botEntityId,
-            StringUtils.field(petFields, 1),
-            StringUtils.field(petFields, 2),
-            NumberUtils.parseLong(StringUtils.field(petFields, 3)),
-            NumberUtils.parseLong(StringUtils.field(petFields, 4)),
-            NumberUtils.parseLong(StringUtils.field(petFields, 5)),
-            NumberUtils.parseLong(StringUtils.field(petFields, 6)),
-            NumberUtils.parseLong(StringUtils.field(petFields, 7)),
-            NumberUtils.parseLong(StringUtils.field(petFields, 8)),
-            NumberUtils.parseLong(StringUtils.field(petFields, 9)),
-            StringUtils.field(petFields, 10));
-    }
-
     public static String status(long botEntityId, PetStatusRow petStatus) {
         if (botEntityId <= 0L || petStatus == null) {
             return "";

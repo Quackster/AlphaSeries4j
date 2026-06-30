@@ -10617,10 +10617,6 @@ public final class Handling {
         return result;
     }
 
-    public static String representedPetStatusPayload(long botEntityId, String[] petFields) {
-        return PetPayloads.status(botEntityId, petFields);
-    }
-
     public static PetExperienceUpdate petExperienceUpdate(
         long botEntityId,
         String petName,
