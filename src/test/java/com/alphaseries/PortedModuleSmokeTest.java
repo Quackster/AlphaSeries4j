@@ -1960,6 +1960,10 @@ public final class PortedModuleSmokeTest {
         assertEquals("DDH\2", Handling.messengerRequestDeniedPayload());
         assertEquals(Crypto.Proc_3_0_6D2AF0(5, null, "BD") + "Alice\2" + "5\2",
             Handling.messengerRequestNotifyPayload(5, "Alice"));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BF") + "hello\2",
+            MessengerPayloads.privateChatMessage(77, "hello"));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BG") + "join\2",
+            MessengerPayloads.roomInviteMessage(77, "join"));
         String expectedPendingRequestRows = "0" + Crypto.Proc_3_0_6D2AF0(5, null, "") + "Alice\2Alice\2"
             + "0" + Crypto.Proc_3_0_6D2AF0(6, null, "") + "Bob\2Bob\2";
         String expectedPendingPayload = Crypto.Proc_3_0_6D2AF0(2, null, "Dz")

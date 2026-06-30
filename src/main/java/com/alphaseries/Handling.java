@@ -5677,7 +5677,7 @@ public final class Handling {
                 "(Chat To:     " + handlingUserName(targetUserId) + ") -- " + messageText,
                 socketIndex);
             String filteredText = Proc_6_22_6E9300(messageText, 0, 0);
-            String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(userId), null, "BF") + filteredText + '\2';
+            String payload = MessengerPayloads.privateChatMessage(NumberUtils.parseLong(userId), filteredText);
             Proc_6_244_801E80(targetSocketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -7629,7 +7629,7 @@ public final class Handling {
                 }
             }
             String filteredText = Proc_6_22_6E9300(inviteText, 0, 0);
-            String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(userId), null, "BG") + filteredText + '\2';
+            String payload = MessengerPayloads.roomInviteMessage(NumberUtils.parseLong(userId), filteredText);
             if (targetList.length() > 0) {
                 for (String targetUserId : targetList.toString().split(",", -1)) {
                     int targetSocketIndex = handlingSocketFromUserId(targetUserId);

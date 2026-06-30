@@ -354,6 +354,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed typed quest-list payload construction through `QuestPayloads.list(...)`, moving campaign/user quest row aggregation out of `Handling` while keeping the legacy string wrapper as the compatibility boundary.
 - Routed live messenger friend-list payload construction through `MessengerPayloads.friendList(...)` with explicit online friend ids, preserving Guardian connectivity checks while removing inline friend-list packet assembly from `Handling`.
 - Added typed messenger search-result rows and routed friend-search result grouping through `MessengerPayloads.searchResults(...)`, replacing inline friend/other counters and payload concatenation in `Handling`.
+- Routed messenger private-chat and room-invite delivery packets through fluent `MessengerPayloads` builders, removing the remaining inline `BF`/`BG` packet concatenation from `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 

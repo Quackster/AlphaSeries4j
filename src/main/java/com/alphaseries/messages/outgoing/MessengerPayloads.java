@@ -123,6 +123,20 @@ public final class MessengerPayloads {
             .build();
     }
 
+    public static String privateChatMessage(long senderUserId, String messageText) {
+        return PacketBuilder.message("BF")
+            .appendInt(senderUserId)
+            .appendString(messageText)
+            .build();
+    }
+
+    public static String roomInviteMessage(long senderUserId, String inviteText) {
+        return PacketBuilder.message("BG")
+            .appendInt(senderUserId)
+            .appendString(inviteText)
+            .build();
+    }
+
     public static String acceptedFriends(String payloadRows, long acceptedCount) {
         return acceptedCount > 0L
             ? PacketBuilder.message("@MH").appendInt(acceptedCount).appendRaw(payloadRows).build()
