@@ -47,6 +47,20 @@ public final class InventoryMessagePayloads {
             .build();
     }
 
+    public static String add(String itemPayload) {
+        return PacketBuilder.message("Ab")
+            .appendRaw(itemPayload)
+            .appendRaw('\1')
+            .build();
+    }
+
+    public static String roomAdd(String itemPayload) {
+        return PacketBuilder.message("Ab")
+            .appendRaw(itemPayload)
+            .appendRaw('\2')
+            .build();
+    }
+
     public static String regularList(long itemCount, String itemPayload) {
         return PacketBuilder.create()
             .appendRaw('\2')

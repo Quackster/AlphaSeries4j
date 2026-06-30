@@ -4049,16 +4049,16 @@ public final class Handling {
                         itemData = DataManager.Proc_8_12_806C30(itemProductId, 4, 0);
                     }
                     long productType = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(itemProductId, 0, 0));
-                    Proc_6_244_801E80(socketIndex, "Ab" + Proc_6_138_7678A0(furnitureId, itemProductId, itemData, 0)
-                        + '\2', 0);
+                    Proc_6_244_801E80(socketIndex,
+                        InventoryMessagePayloads.roomAdd(Proc_6_138_7678A0(furnitureId, itemProductId, itemData, 0)), 0);
                     if ("TROPHY_VAR".equalsIgnoreCase(DataManager.Proc_8_12_806C30(itemProductId, 4, 0))) {
                         String trophySign = handlingUserName(handlingUserIdFromSocket(socketIndex)) + '\b'
                             + recyclerRewardSign() + '\b' + signText;
                         furnitureDao().updateSignText(furnitureId, Functions.Proc_10_10_80A7F0(trophySign, 1, 1));
                     }
                     if (productType == 8L) {
-                        Proc_6_244_801E80(socketIndex, "GM" + Crypto.Proc_3_0_6D2AF0(furnitureId, null, "")
-                            + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(DataManager.Proc_8_12_806C30(itemProductId, 20, 0)), null, ""), 0);
+                        Proc_6_244_801E80(socketIndex, CatalogPayloads.dimensionMap(furnitureId,
+                            NumberUtils.parseLong(DataManager.Proc_8_12_806C30(itemProductId, 20, 0))), 0);
                     }
                 }
             }
@@ -4377,7 +4377,7 @@ public final class Handling {
             long recipientSocket = handlingSocketFromUserId(recipientUserId);
             if (recipientSocket > 0L) {
                 Proc_6_244_801E80((int) recipientSocket,
-                    "Ab" + Proc_6_138_7678A0(grantedFurnitureId, productId, productSign, giftSecondary) + '\2', 0);
+                    InventoryMessagePayloads.roomAdd(Proc_6_138_7678A0(grantedFurnitureId, productId, productSign, giftSecondary)), 0);
                 Proc_6_205_7D9780((int) recipientSocket, 7);
             }
             return purchasePayload;

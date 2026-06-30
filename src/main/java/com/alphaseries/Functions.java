@@ -207,7 +207,7 @@ public final class Functions {
     }
 
     public static String inventoryAddPayload(long furnitureId, long productId, String itemData, long secondaryValue) {
-        return "Ab" + Handling.inventoryItemPayload(furnitureId, productId, itemData, secondaryValue) + '\1';
+        return InventoryMessagePayloads.add(Handling.inventoryItemPayload(furnitureId, productId, itemData, secondaryValue));
     }
 
     public static String inventoryRemovePayload(long furnitureId) {

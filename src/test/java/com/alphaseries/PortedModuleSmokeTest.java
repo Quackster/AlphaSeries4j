@@ -271,6 +271,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(inventoryCache, Functions.inventoryCacheRemoveRecord(inventoryCache, 999));
         assertEquals("Ab" + Handling.inventoryItemPayload(123, 45, "data", 6) + '\1',
             Functions.inventoryAddPayload(123, 45, "data", 6));
+        assertEquals(Functions.inventoryAddPayload(123, 45, "data", 6),
+            InventoryMessagePayloads.add(Handling.inventoryItemPayload(123, 45, "data", 6)));
+        assertEquals("Ab" + Handling.inventoryItemPayload(123, 45, "data", 6) + '\2',
+            InventoryMessagePayloads.roomAdd(Handling.inventoryItemPayload(123, 45, "data", 6)));
         assertEquals(Crypto.Proc_3_0_6D2AF0(123, null, "Ac"), InventoryMessagePayloads.remove(123));
         assertEquals(InventoryMessagePayloads.remove(123), Functions.inventoryRemovePayload(123));
         Path inventoryRoot = Files.createTempDirectory("alphaseries-inventory");
@@ -1015,6 +1019,8 @@ public final class PortedModuleSmokeTest {
         expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(0, null, expectedGiftPurchase);
         expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(97, null, expectedGiftPurchase) + '\2' + "i" + '\2' + "IH";
         assertEquals(expectedGiftPurchase, CatalogPayloads.giftPurchase(81, "chair", 10, 2, 0, 97));
+        assertEquals("GM" + Crypto.Proc_3_0_6D2AF0(97, null, "") + Crypto.Proc_3_0_6D2AF0(12, null, ""),
+            CatalogPayloads.dimensionMap(97, 12));
         assertEquals("CUABCD0000\2", VoucherPayloads.invalid("ABCD0000"));
         assertEquals("CTRewardA\2RewardB\2", VoucherPayloads.redeemed("RewardA\2RewardB\2"));
         Licence.setClubGiftState(new GiftSettings.ClubGiftState(

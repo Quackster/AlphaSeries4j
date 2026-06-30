@@ -74,4 +74,11 @@ public final class CatalogPayloads {
             .appendRaw("IH")
             .build();
     }
+
+    public static String dimensionMap(long furnitureId, long destinationId) {
+        return PacketBuilder.message("GM")
+            .appendInt(furnitureId)
+            .appendInt(destinationId)
+            .build();
+    }
 }

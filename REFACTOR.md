@@ -403,6 +403,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved room occupant entry/status envelope construction into `RoomPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved navigator query-result envelope construction into `NavigatorPayloads`, replacing repeated inline legacy `Crypto` packet assembly in `Handling`.
 - Moved furniture floor/wall list envelope construction into `FurniturePayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
+- Moved inventory add and catalog dimension-map send payload construction into typed payload builders, replacing inline string/legacy `Crypto` assembly in `Functions` and `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
