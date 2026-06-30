@@ -933,6 +933,7 @@ public final class PortedModuleSmokeTest {
         RecommendedRooms typedRecommendedRooms = RecommendedRooms.fromPayloads(Map.of(0L, "REC"), 1L);
         assertEquals("REC", typedRecommendedRooms.payload(1L));
         assertEquals(Map.of(0L, "REC"), typedRecommendedRooms.payloadsByIndex());
+        assertRecommendedRoomsPayloadMapBridge();
         Object previousRecommendedRooms = Licence.global_0082911C;
         long previousRecommendedRoomCount = Licence.global_00829128;
         Licence.global_0082911C = typedRecommendedRooms;
@@ -5045,6 +5046,16 @@ public final class PortedModuleSmokeTest {
             com.alphaseries.game.room.RoomEventLocales.fromLegacy("\0existing\1old"));
         assertEquals("old", locales.field("existing", 0));
         assertEquals("party", locales.field("5", 0));
+    }
+
+    private static void assertRecommendedRoomsPayloadMapBridge() {
+        Object previousRecommendedRooms = Licence.global_0082911C;
+        long previousRecommendedRoomCount = Licence.global_00829128;
+        Licence.global_0082911C = Map.of(0L, "RECOMMENDED_MAP");
+        Licence.global_00829128 = 1L;
+        assertEquals("RECOMMENDED_MAP", Licence.recommendedRooms().payload(1L));
+        Licence.global_0082911C = previousRecommendedRooms;
+        Licence.global_00829128 = previousRecommendedRoomCount;
     }
 
     private static void assertCatalogPagePayloadMapBridge() {

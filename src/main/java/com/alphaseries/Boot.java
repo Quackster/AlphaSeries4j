@@ -144,16 +144,16 @@ public final class Boot {
     }
 
     public static void Proc_1_2_6BE280(Object... args) {
-        String[] recommended = new String[100];
+        Map<Long, String> recommended = new LinkedHashMap<>();
         long count = 0L;
         RoomDao rooms = roomDao();
         if (rooms != null) {
             try {
                 for (Long treeIdValue : rooms.recommendedRoomTreeIds()) {
                     long treeId = treeIdValue == null ? 0L : treeIdValue.longValue();
-                    if (treeId != 0L && count < recommended.length) {
-                        recommended[(int) count] = Crypto.encodeVl64(treeId)
-                            + buildRecommendedRoomsPayload(rooms.recommendedRoomRows(treeId));
+                    if (treeId != 0L) {
+                        recommended.put(count, Crypto.encodeVl64(treeId)
+                            + buildRecommendedRoomsPayload(rooms.recommendedRoomRows(treeId)));
                         count++;
                     }
                 }
@@ -161,7 +161,7 @@ public final class Boot {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        Licence.setRecommendedRooms(count == 0L ? Crypto.encodeVl64(0) : recommended, count);
+        Licence.setRecommendedRooms(recommended, count);
     }
 
     /**

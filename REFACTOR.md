@@ -517,6 +517,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved new-friend room compatibility conversion fully into `NewFriendRooms.fromLegacy(...)` and simplified `Licence.newFriendRooms()` to delegate directly to `NavigatorState`.
 - Extended `NavigatorState` to own recommended-room payload caches, routed live recommended-room reads through the navigator manager, and kept `Licence.global_0082911C`/`global_00829128` as compatibility mirrors.
 - Moved recommended-room compatibility conversion fully into `RecommendedRooms.fromLegacy(...)` and simplified `Licence.recommendedRooms()` to delegate directly to `NavigatorState`.
+- Routed boot recommended-room payload loading through index-keyed payload maps instead of a fixed legacy string array before entering `NavigatorState`.
 - Extended `NavigatorState` to own room-category caches, routed boot payload building and the live room-category payload handler through the navigator manager, and kept `Licence.global_00829224`/`global_00829230`/`global_00829244` as compatibility mirrors in their legacy shapes.
 - Moved room-category cache compatibility conversion fully into `RoomCategoryCache.fromLegacy(...)` and simplified `Licence.roomCategoryCache()` to delegate directly to `NavigatorState`.
 - Added `game.advertising.AdvertisingState` as the module-level singleton for visit-room advertisement payloads, routed the live advertisement handler through it, and kept `Licence.global_008291D4`/`global_008291D8` as compatibility mirrors.
