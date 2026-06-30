@@ -1703,9 +1703,20 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, complexPayload.contains("four\2"));
         assertEquals("keep\nalso", StringUtils.removeLineRecord("keep\r\nremove-this\nalso", "remove"));
         assertEquals("\1" + "1\talpha\2", RepresentedRoomCache.removeRecord("\1" + "1\talpha\2\1" + "2\tbeta\2", "\1" + "2\t"));
-        assertEquals("2\tbeta", RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2\1" + "2\tbeta\2").record(2));
+        RepresentedRoomCache representedRoomCache = RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2\1" + "2\tbeta\2");
+        assertEquals("2\tbeta", representedRoomCache.record(2));
+        assertEquals(List.of(
+            new RepresentedRoomCache.RoomRecord(1L, "1\talpha"),
+            new RepresentedRoomCache.RoomRecord(2L, "2\tbeta")), representedRoomCache.roomRecords());
+        RepresentedRoomCache duplicateRoomCache = RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2\1" + "1\tbeta\2");
+        assertEquals("1\talpha", duplicateRoomCache.record(1));
+        assertEquals("\1" + "1\talpha\2\1" + "1\tbeta\2", duplicateRoomCache.cacheText());
+        assertEquals("\1" + "1\tgamma\2", duplicateRoomCache.setRecord(1, "1\tgamma").cacheText());
         assertEquals("3", RepresentedRoomCache.fromLegacy("\1" + "3\2").record(3));
         assertEquals("", RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2").record(4));
+        assertEquals("snapshot-room-cache", RepresentedRoomCache.fromLegacy("snapshot-room-cache").cacheText());
+        assertEquals("snapshot-room-cache\1" + "2\tbeta\2",
+            RepresentedRoomCache.fromLegacy("snapshot-room-cache").setRecord(2, "2\tbeta").cacheText());
         List<Long> mutableRoomSlots = new ArrayList<>();
         mutableRoomSlots.add(5L);
         mutableRoomSlots.add(7L);

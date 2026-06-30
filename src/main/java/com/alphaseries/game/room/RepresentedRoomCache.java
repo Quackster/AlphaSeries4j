@@ -3,11 +3,28 @@ package com.alphaseries.game.room;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class RepresentedRoomCache {
-    private final String cacheText;
+    private final String leadingText;
+    private final List<RoomRecord> records;
 
     private RepresentedRoomCache(String cacheText) {
-        this.cacheText = StringUtils.text(cacheText);
+        this(parse(cacheText));
+    }
+
+    private RepresentedRoomCache(List<RoomRecord> records) {
+        this("", records);
+    }
+
+    private RepresentedRoomCache(String leadingText, List<RoomRecord> records) {
+        this.leadingText = StringUtils.text(leadingText);
+        this.records = List.copyOf(records);
+    }
+
+    private RepresentedRoomCache(ParseResult parseResult) {
+        this(parseResult.leadingText(), parseResult.records());
     }
 
     public static RepresentedRoomCache fromLegacy(String cacheText) {
@@ -19,28 +36,27 @@ public final class RepresentedRoomCache {
     }
 
     public String cacheText() {
-        return cacheText;
+        StringBuilder result = new StringBuilder(leadingText);
+        for (RoomRecord record : records) {
+            result.append('\1').append(record.recordText()).append('\2');
+        }
+        return result.toString();
+    }
+
+    public List<RoomRecord> roomRecords() {
+        return List.copyOf(records);
     }
 
     public String record(long roomSlot) {
         if (roomSlot <= 0L) {
             return "";
         }
-        String markerText = "\1" + roomSlot + '\t';
-        int startAt = cacheText.indexOf(markerText);
-        if (startAt < 0) {
-            markerText = "\1" + roomSlot + '\2';
-            startAt = cacheText.indexOf(markerText);
+        for (RoomRecord record : records) {
+            if (record.roomSlot() == roomSlot) {
+                return record.recordText();
+            }
         }
-        if (startAt < 0) {
-            return "";
-        }
-        int recordStart = startAt + 1;
-        int recordEnd = cacheText.indexOf('\2', recordStart);
-        if (recordEnd < 0) {
-            recordEnd = cacheText.length();
-        }
-        return cacheText.substring(recordStart, recordEnd);
+        return "";
     }
 
     private String recordField(long roomSlot, long fieldIndex) {
@@ -72,12 +88,14 @@ public final class RepresentedRoomCache {
         if (roomSlot <= 0L) {
             return this;
         }
-        String nextCache = removeRecord(cacheText, "\1" + roomSlot + '\t');
-        nextCache = removeRecord(nextCache, "\1" + roomSlot + '\2');
-        while (nextCache.startsWith("\2")) {
-            nextCache = nextCache.substring(1);
+        List<RoomRecord> nextRecords = new ArrayList<>();
+        for (RoomRecord record : records) {
+            if (record.roomSlot() != roomSlot) {
+                nextRecords.add(record);
+            }
         }
-        return new RepresentedRoomCache(nextCache + '\1' + StringUtils.text(roomRecord) + '\2');
+        nextRecords.add(RoomRecord.fromLegacy(roomRecord));
+        return new RepresentedRoomCache(leadingText, nextRecords);
     }
 
     public RepresentedRoomCache addOccupant(long roomSlot, long entityIndex, long occupantType) {
@@ -260,6 +278,40 @@ public final class RepresentedRoomCache {
             expanded[index] = index < fields.length ? fields[index] : "";
         }
         return expanded;
+    }
+
+    private static ParseResult parse(String cacheText) {
+        List<RoomRecord> parsedRecords = new ArrayList<>();
+        String cache = StringUtils.text(cacheText);
+        int recordStart = cache.indexOf('\1');
+        String leadingText = recordStart < 0 ? cache : cache.substring(0, recordStart);
+        while (recordStart >= 0) {
+            int payloadStart = recordStart + 1;
+            int recordEnd = cache.indexOf('\2', payloadStart);
+            String recordText = recordEnd < 0 ? cache.substring(payloadStart) : cache.substring(payloadStart, recordEnd);
+            parsedRecords.add(RoomRecord.fromLegacy(recordText));
+            recordStart = recordEnd < 0 ? -1 : cache.indexOf('\1', recordEnd + 1);
+        }
+        return new ParseResult(leadingText, parsedRecords);
+    }
+
+    private record ParseResult(String leadingText, List<RoomRecord> records) {
+    }
+
+    public record RoomRecord(long roomSlot, String recordText) {
+        public RoomRecord {
+            recordText = StringUtils.text(recordText);
+        }
+
+        private static RoomRecord fromLegacy(String recordText) {
+            String text = StringUtils.text(recordText);
+            String slotText = text;
+            int fieldAt = text.indexOf('\t');
+            if (fieldAt >= 0) {
+                slotText = text.substring(0, fieldAt);
+            }
+            return new RoomRecord(NumberUtils.parseLong(slotText), text);
+        }
     }
 
     public static final class Position {
