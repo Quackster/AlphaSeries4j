@@ -10169,12 +10169,7 @@ public final class Handling {
     }
 
     public static String activityPointBalancePayload(String rowText) {
-        String[] fields = StringUtils.text(rowText).split("\t", -1);
-        return UserPayloads.activityPointBalance(
-            NumberUtils.parseLong(navigatorField(fields, 0)),
-            NumberUtils.parseLong(navigatorField(fields, 1)),
-            NumberUtils.parseLong(navigatorField(fields, 2)),
-            NumberUtils.parseLong(navigatorField(fields, 3)));
+        return activityPointBalancePayload(UserDao.ActivityPointBalance.fromLegacy(rowText));
     }
 
     public static String activityPointBalancePayload(UserDao.ActivityPointBalance balance) {

@@ -7,6 +7,8 @@ import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.game.user.UserEffectActivationRow;
 import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.game.user.UserGroupRow;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -649,6 +651,15 @@ public final class UserDao {
     }
 
     public record ActivityPointBalance(long pointTypeOne, long pointTypeTwo, long pointTypeThree, long pointTypeFour) {
+        public static ActivityPointBalance fromLegacy(String rowText) {
+            String[] fields = StringUtils.text(rowText).split("\t", -1);
+            return new ActivityPointBalance(
+                NumberUtils.parseLong(StringUtils.field(fields, 0)),
+                NumberUtils.parseLong(StringUtils.field(fields, 1)),
+                NumberUtils.parseLong(StringUtils.field(fields, 2)),
+                NumberUtils.parseLong(StringUtils.field(fields, 3)));
+        }
+
         public long valueFor(long pointType) {
             if (pointType == 1L) {
                 return pointTypeOne;
