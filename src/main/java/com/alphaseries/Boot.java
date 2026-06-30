@@ -7,6 +7,7 @@ import com.alphaseries.dao.mysql.ChatDao;
 import com.alphaseries.dao.mysql.ClubDao;
 import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.PackageDao;
+import com.alphaseries.dao.mysql.RecyclerDao;
 import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.dao.mysql.SettingsDao;
 import com.alphaseries.db.Database;
@@ -39,13 +40,20 @@ public final class Boot {
 
     public static void Proc_1_0_6BA9D0(Object... args) {
         Map<Long, String> productsByChance = new LinkedHashMap<Long, String>();
-        String chanceRows = MySQL.Proc_5_2_6D4690(
-            "SELECT chance FROM settings_recycler GROUP BY settings_recycler.chance ORDER BY settings_recycler.chance DESC LIMIT 50", 0, 0);
-        for (String row : StringUtils.text(chanceRows).split("\r", -1)) {
-            long chance = NumberUtils.parseLong(row);
-            if (chance != 0L) {
-                productsByChance.put(chance, MySQL.Proc_5_2_6D4690(
-                    "SELECT id_product FROM settings_recycler WHERE chance='" + chance + "' LIMIT 100", 0, 0));
+        String chanceRows = "";
+        RecyclerDao recycler = recyclerDao();
+        if (recycler != null) {
+            try {
+                List<Long> chances = recycler.recyclerChances();
+                chanceRows = joinLongRows(chances);
+                for (Long chanceValue : chances) {
+                    long chance = chanceValue == null ? 0L : chanceValue.longValue();
+                    if (chance != 0L) {
+                        productsByChance.put(chance, joinLongRows(recycler.rewardProductIdsByChance(chance)));
+                    }
+                }
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
         RecyclerCache cache = buildRecyclerCache(chanceRows, productsByChance);
@@ -1416,6 +1424,10 @@ public final class Boot {
         return joined.toString();
     }
 
+    private static String joinLongRows(List<Long> values) {
+        return joinLongs(values, "\r");
+    }
+
     private static String joinPackageRows(List<PackageDao.PackageRow> rows) {
         StringBuilder joined = new StringBuilder();
         for (PackageDao.PackageRow row : rows == null ? List.<PackageDao.PackageRow>of() : rows) {
@@ -1528,6 +1540,11 @@ public final class Boot {
     private static SettingsDao settingsDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new SettingsDao(database);
+    }
+
+    private static RecyclerDao recyclerDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new RecyclerDao(database);
     }
 
     private static ServerMaintenanceDao serverMaintenanceDao() {
