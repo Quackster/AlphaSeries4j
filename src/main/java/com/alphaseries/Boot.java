@@ -842,7 +842,7 @@ public final class Boot {
 
     public static RecyclerCache buildRecyclerCache(List<RecyclerSettings.RewardGroup> rewardGroups) {
         RecyclerCache cache = new RecyclerCache();
-        StringBuilder payload = new StringBuilder();
+        PacketBuilder payload = PacketBuilder.create();
         List<RecyclerSettings.RewardGroup> groups = new ArrayList<RecyclerSettings.RewardGroup>();
         for (RecyclerSettings.RewardGroup rewardGroup : rewardGroups == null
             ? List.<RecyclerSettings.RewardGroup>of()
@@ -857,28 +857,29 @@ public final class Boot {
 
                 long productCount = 0L;
                 StringBuilder productList = new StringBuilder();
-                StringBuilder groupPayload = new StringBuilder();
+                PacketBuilder groupPayload = PacketBuilder.create();
                 List<Long> productIds = new ArrayList<Long>();
                 for (Long productIdValue : rewardGroup.productIds()) {
                     long productId = NumberUtils.parseLong(productIdValue);
                     if (productId > 0L) {
                         productIds.add(productId);
                         productList.append(productId).append('\2');
-                        groupPayload.append(Crypto.encodeVl64(productId));
+                        groupPayload.appendInt(productId);
                         productCount++;
                     }
                 }
 
                 cache.productListByGroupIndex.put(groupIndex, productList.toString());
                 groups.add(new RecyclerSettings.RewardGroup(chanceValue, productIds));
-                payload.append(Crypto.encodeVl64(chanceValue));
-                payload.append(Crypto.encodeVl64(productCount));
-                payload.append(groupPayload);
+                payload
+                    .appendInt(chanceValue)
+                    .appendInt(productCount)
+                    .appendRaw(groupPayload.build());
                 cache.groupCount++;
             }
         }
         cache.rewardGroups = List.copyOf(groups);
-        cache.payload = Crypto.encodeVl64(cache.groupCount) + payload;
+        cache.payload = PacketBuilder.create().appendInt(cache.groupCount).appendRaw(payload.build()).build();
         return cache;
     }
 
