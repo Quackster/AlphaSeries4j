@@ -161,7 +161,7 @@ public final class Updater {
         DownloadPlan plan = downloadPlan(appExeName, LocalDateTime.now());
         queueProgressWidth(plan.targetWidth);
         currentUpdateIndex = 0L;
-        boolean downloaded = Functions.Proc_10_28_8210C0(plan.sourceUrl, plan.destinationPath);
+        boolean downloaded = Functions.downloadFile(plan.sourceUrl, plan.destinationPath);
         if (downloaded) {
             initCaption = "Installiere...";
             timer3Enabled = true;

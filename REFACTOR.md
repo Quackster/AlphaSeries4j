@@ -487,6 +487,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Licence.socketUserId(...)` over `SessionRegistry` and migrated `Main.mainUserIdFromSocket(...)` away from `Licence.Proc_9_6_808080(...)`.
 - Added named `Functions.roomPositionAvailable(...)` and `Functions.representedBotPositionAvailable(...)`, then migrated live `Main`/`Handling` movement and roller checks away from the old room-position Proc wrappers.
 - Added named `Licence` catalog/product cache accessors with original Proc names in Javadocs, then migrated live `Boot`/`Handling` callers away from `Licence.Proc_9_0_806F70(...)`, `Proc_9_1_8072B0(...)`, and `Proc_9_2_8075F0(...)`.
+- Added named `Functions.downloadFile(...)` with the original Proc name in Javadocs and migrated `Updater` away from `Functions.Proc_10_28_8210C0(...)`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -504,7 +505,7 @@ Measured on 2026-06-30:
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
 - `Handling.java`: 11355 lines
-- `Functions.java`: 688 lines
+- `Functions.java`: 695 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 819 lines
 - `Updater.java`: 314 lines

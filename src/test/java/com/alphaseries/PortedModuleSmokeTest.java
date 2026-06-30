@@ -538,7 +538,10 @@ public final class PortedModuleSmokeTest {
         Files.write(downloadSource, "update-payload".getBytes("UTF-8"));
         assertEquals(true, Functions.Proc_10_28_8210C0(downloadSource.toUri().toURL().toString(), downloadDestination.toString()));
         assertEquals("update-payload", new String(Files.readAllBytes(downloadDestination), "UTF-8"));
+        assertEquals(true, Functions.downloadFile(downloadSource.toUri().toURL().toString(), downloadDestination.toString()));
+        assertEquals("update-payload", new String(Files.readAllBytes(downloadDestination), "UTF-8"));
         assertEquals(false, Functions.Proc_10_28_8210C0(downloadSource.toUri().toURL().toString()));
+        assertEquals(false, Functions.downloadFile(downloadSource.toUri().toURL().toString(), ""));
         assertEquals("@@", Console.Proc_2_4_6D28B0(-1));
         assertEquals("@A", Console.Proc_2_4_6D28B0(1));
         assertEquals("A@", Console.Proc_2_4_6D28B0(64));

@@ -623,8 +623,15 @@ public final class Functions {
         if (args == null || args.length < 2) {
             return false;
         }
-        try (InputStream input = new URL(StringUtils.text(args[0])).openStream()) {
-            Files.copy(input, Paths.get(StringUtils.text(args[1])), StandardCopyOption.REPLACE_EXISTING);
+        return downloadFile(StringUtils.text(args[0]), StringUtils.text(args[1]));
+    }
+
+    /**
+     * Original function: Proc_10_28_8210C0.
+     */
+    public static boolean downloadFile(String sourceUrl, String destinationPath) {
+        try (InputStream input = new URL(StringUtils.text(sourceUrl)).openStream()) {
+            Files.copy(input, Paths.get(StringUtils.text(destinationPath)), StandardCopyOption.REPLACE_EXISTING);
             return true;
         } catch (Exception ex) {
             return false;
