@@ -385,19 +385,29 @@ public final class Licence {
     }
 
     public static RepresentedBotRegistry representedBots() {
-        PetState.instance().setRepresentedBotsFromLegacy(global_008292D4, global_00829358);
+        refreshRepresentedBots();
         return PetState.instance().representedBots();
     }
 
     public static void setRepresentedBots(RepresentedBotRegistry representedBots) {
-        PetState.instance().setRepresentedBots(representedBots);
         if (representedBots == null) {
             global_008292D4 = "";
             global_00829358 = "";
+            refreshRepresentedBots();
             return;
         }
         global_008292D4 = representedBots;
         global_00829358 = representedBots;
+        refreshRepresentedBots();
+    }
+
+    private static void refreshRepresentedBots() {
+        if (global_008292D4 instanceof RepresentedBotRegistry representedBots
+            && global_00829358 instanceof RepresentedBotRegistry) {
+            PetState.instance().setRepresentedBots(representedBots);
+            return;
+        }
+        PetState.instance().setRepresentedBotsFromLegacy(global_008292D4, global_00829358);
     }
 
     public static RepresentedRoomSlots representedRoomSlots() {
