@@ -2941,7 +2941,7 @@ public final class Handling {
                 return "";
             }
             bots.insertPetData(botId, numericUserId);
-            String inventoryRow = petInventoryRowPayload(new String[]{String.valueOf(botId), petName, petFigure, "0"});
+            String inventoryRow = petInventoryRowPayload(new PetInventoryRow(botId, petName, petFigure, 0L));
             if (!inventoryRow.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, "I[" + inventoryRow, 0);
             }
@@ -5930,7 +5930,7 @@ public final class Handling {
             String petName = representedBotRecordField(botEntityId, 2);
             String petFigure = representedBotRecordField(botEntityId, 10).toLowerCase();
             long scratches = bots.petScratches(botId);
-            String pickupPayload = petInventoryRowPayload(new String[]{String.valueOf(botId), petName, petFigure, String.valueOf(scratches)});
+            String pickupPayload = petInventoryRowPayload(new PetInventoryRow(botId, petName, petFigure, scratches));
             if (!pickupPayload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, "I[" + pickupPayload, 0);
             }
@@ -10853,6 +10853,10 @@ public final class Handling {
 
     public static String petInventoryRowPayload(String[] fields) {
         return PetPayloads.inventoryRow(fields);
+    }
+
+    public static String petInventoryRowPayload(PetInventoryRow row) {
+        return PetPayloads.inventoryRow(row);
     }
 
     public static long petNameValidationCode(String candidateName) {

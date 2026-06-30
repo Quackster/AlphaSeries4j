@@ -2016,6 +2016,7 @@ public final class PortedModuleSmokeTest {
             + "0ff00aa\2"
             + Crypto.Proc_3_0_6D2AF0(4, null, "");
         assertEquals(expectedPetRow, Handling.petInventoryRowPayload(new String[]{"10", "Rex", "1 2 FF00AA", "4"}));
+        assertEquals(expectedPetRow, Handling.petInventoryRowPayload(new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L)));
         String expectedPetList = Crypto.Proc_3_0_6D2AF0(2, null, "IX")
             + expectedPetRow
             + "0" + Crypto.Proc_3_0_6D2AF0(11, null, "") + "Mia\2"

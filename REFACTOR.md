@@ -357,6 +357,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed messenger private-chat and room-invite delivery packets through fluent `MessengerPayloads` builders, removing the remaining inline `BF`/`BG` packet concatenation from `Handling`.
 - Routed messenger friend-online and friend-removed notifications through `MessengerPayloads`, replacing the remaining hard-coded `@MHIH` and `@MMIM` notification packet assembly in `Handling`.
 - Routed live quest selection/progress/list/completion flows through typed `QuestSettings` instead of serializing DAO-loaded quest definitions back into tab-delimited rows and reparsing them inside `Handling`; string wrappers remain only as compatibility boundaries.
+- Routed live pet inventory row payload construction through typed `PetInventoryRow` records and kept the `String[]` parser only as a compatibility wrapper inside `PetPayloads`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -372,7 +373,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 12173 lines
+- `Handling.java`: 12177 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 894 lines

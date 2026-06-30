@@ -76,12 +76,7 @@ public final class PetPayloads {
         if (row == null || row.petId() <= 0L) {
             return "";
         }
-        return inventoryRow(new String[]{
-            String.valueOf(row.petId()),
-            row.name(),
-            row.figure(),
-            String.valueOf(row.scratches())
-        });
+        return inventoryRow(row.petId(), row.name(), row.figure(), row.scratches());
     }
 
     public static String inventoryRow(String[] fields) {
@@ -89,9 +84,18 @@ public final class PetPayloads {
         if (petId <= 0L) {
             return "";
         }
-        String petName = StringUtils.field(fields, 1);
-        String petFigure = StringUtils.field(fields, 2).toLowerCase();
-        long scratches = NumberUtils.parseLong(StringUtils.field(fields, 3));
+        return inventoryRow(
+            petId,
+            StringUtils.field(fields, 1),
+            StringUtils.field(fields, 2),
+            NumberUtils.parseLong(StringUtils.field(fields, 3)));
+    }
+
+    private static String inventoryRow(long petId, String petName, String figure, long scratches) {
+        if (petId <= 0L) {
+            return "";
+        }
+        String petFigure = StringUtils.text(figure).toLowerCase();
         String[] figureParts = petFigure.split(" ", -1);
         long petType = figureParts.length >= 1 ? NumberUtils.parseLong(figureParts[0]) : 0L;
         long petRace = figureParts.length >= 2 ? NumberUtils.parseLong(figureParts[1]) : 0L;
@@ -99,7 +103,7 @@ public final class PetPayloads {
 
         return PacketBuilder.message("0")
             .appendInt(petId)
-            .appendString(petName)
+            .appendString(StringUtils.text(petName))
             .appendInt(petType)
             .appendInt(petRace)
             .appendString("0" + petColor)
