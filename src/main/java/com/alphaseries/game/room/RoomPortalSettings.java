@@ -34,6 +34,10 @@ public final class RoomPortalSettings {
         return new RoomPortalSettings("0\r", "\r", warpSpaces, specialGates);
     }
 
+    public static RoomPortalSettings empty() {
+        return new RoomPortalSettings("", "", List.of(), List.of());
+    }
+
     public String warpSpaceRows() {
         if (!warpSpaces.isEmpty()) {
             StringBuilder rows = new StringBuilder("0");

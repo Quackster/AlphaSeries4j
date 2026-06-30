@@ -446,17 +446,20 @@ public final class Licence {
     }
 
     public static RoomPortalSettings roomPortalSettings() {
-        return RoomPortalSettings.fromLegacy(global_00829098, global_0082909C);
+        RoomState.instance().setPortalSettingsFromLegacy(global_00829098, global_0082909C);
+        return RoomState.instance().portalSettings();
     }
 
     public static void setRoomPortalSettings(String warpSpaceRows, String specialGateRows) {
         RoomPortalSettings settings = RoomPortalSettings.fromLegacy(warpSpaceRows, specialGateRows);
+        RoomState.instance().setPortalSettings(settings);
         global_00829098 = settings;
         global_0082909C = settings;
     }
 
     public static void setRoomPortalSettings(RoomPortalSettings settings) {
-        RoomPortalSettings normalized = settings == null ? RoomPortalSettings.fromLegacy("", "") : settings;
+        RoomPortalSettings normalized = settings == null ? RoomPortalSettings.empty() : settings;
+        RoomState.instance().setPortalSettings(normalized);
         global_00829098 = normalized;
         global_0082909C = normalized;
     }

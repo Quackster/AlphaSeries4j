@@ -5,6 +5,7 @@ public final class RoomState {
 
     private RepresentedRoomCache representedRooms = RepresentedRoomCache.empty();
     private RepresentedRoomSlots representedRoomSlots = RepresentedRoomSlots.empty();
+    private RoomPortalSettings portalSettings = RoomPortalSettings.empty();
 
     private RoomState() {
     }
@@ -19,6 +20,18 @@ public final class RoomState {
 
     public synchronized RepresentedRoomSlots representedRoomSlots() {
         return representedRoomSlots;
+    }
+
+    public synchronized RoomPortalSettings portalSettings() {
+        return portalSettings;
+    }
+
+    public synchronized void setPortalSettings(RoomPortalSettings portalSettings) {
+        this.portalSettings = portalSettings == null ? RoomPortalSettings.empty() : portalSettings;
+    }
+
+    public synchronized void setPortalSettingsFromLegacy(Object warpSpaceRows, Object specialGateRows) {
+        portalSettings = RoomPortalSettings.fromLegacy(warpSpaceRows, specialGateRows);
     }
 
     public synchronized void setRepresentedRoomSlots(RepresentedRoomSlots representedRoomSlots) {
