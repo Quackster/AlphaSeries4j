@@ -255,6 +255,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed catalog startup product settings, package rows, pet package rows, and contained club-product rows through typed `CatalogDao`/`PackageDao`/`ClubDao` methods, keeping legacy row serialization explicit at the `Licence` cache bridge.
 - Routed important FAQ, FAQ category, category FAQ, and FAQ description startup cache reads through typed `HelpDao` rows, keeping legacy payload serialization explicit in the boot cache builder boundary.
 - Routed advertisement visit-room startup cache reads through typed `AdvertisingDao` rows, keeping legacy payload serialization explicit in the boot cache builder boundary.
+- Routed chat filter and gesture startup cache reads through typed `ChatDao` rows, keeping legacy row serialization explicit at the `ChatSettings` cache bridge.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -268,8 +269,8 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 35
-- `Boot.java`: 1481 lines
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 33
+- `Boot.java`: 1512 lines
 - `Handling.java`: 12596 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines

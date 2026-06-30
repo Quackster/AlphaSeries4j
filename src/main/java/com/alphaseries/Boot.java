@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.dao.mysql.AdvertisingDao;
 import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.dao.mysql.CatalogDao;
+import com.alphaseries.dao.mysql.ChatDao;
 import com.alphaseries.dao.mysql.ClubDao;
 import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.PackageDao;
@@ -966,9 +967,18 @@ public final class Boot {
     }
 
     public static void buildChatSettingsCache() {
-        Licence.setChatSettings(
-            MySQL.Proc_5_2_6D4690("SELECT word FROM settings_filter LIMIT 100", 0, 0),
-            MySQL.Proc_5_2_6D4690("SELECT smiley,gesture FROM settings_gesture LIMIT 100", 0, 0));
+        ChatDao chat = chatDao();
+        String filterRows = "";
+        String gestureRows = "";
+        if (chat != null) {
+            try {
+                filterRows = joinFilterWords(chat.filterWords());
+                gestureRows = joinGestureRows(chat.gestureRows());
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
+        Licence.setChatSettings(filterRows, gestureRows);
     }
 
     private static String[][] achievementRowsByIndex(AchievementSettingsCache cache) {
@@ -1437,6 +1447,22 @@ public final class Boot {
         return joined.toString();
     }
 
+    private static String joinFilterWords(List<ChatDao.FilterWord> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (ChatDao.FilterWord row : rows == null ? List.<ChatDao.FilterWord>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
+    private static String joinGestureRows(List<ChatDao.GestureRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (ChatDao.GestureRow row : rows == null ? List.<ChatDao.GestureRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
     private static void appendLegacyRow(StringBuilder joined, String rowText) {
         if (joined.length() > 0) {
             joined.append('\r');
@@ -1467,6 +1493,11 @@ public final class Boot {
     private static AdvertisingDao advertisingDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new AdvertisingDao(database);
+    }
+
+    private static ChatDao chatDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new ChatDao(database);
     }
 
     private static ServerMaintenanceDao serverMaintenanceDao() {
