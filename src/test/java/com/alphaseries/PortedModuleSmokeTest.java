@@ -16,6 +16,7 @@ import com.alphaseries.db.Database;
 import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.advertising.VisitRoomAds;
 import com.alphaseries.game.catalog.CatalogPages;
+import com.alphaseries.game.catalog.CatalogProductSettings;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
@@ -1082,6 +1083,15 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829084 instanceof List);
         assertEquals(true, Licence.catalogProductSettings().containsClubProduct(33L));
         assertEquals("\r33\t2\t1\r", Licence.catalogProductSettings().clubProductRows());
+        CatalogProductSettings typedCatalogProducts = CatalogProductSettings.fromRows(
+            "1\t2", 10L, 11L,
+            List.of(new PackageDao.PackageRow(10L, "i", 20L, "")),
+            List.of(new PackageDao.PetPackageRow(7L, 8L, 9L, "ffeeaa")),
+            List.of(new ClubDao.ContainedClubProductRow(33L, 2L, 1L)));
+        assertEquals("10\ti\t20\t", typedCatalogProducts.packageRows());
+        assertEquals("7\t8\t9\tffeeaa", typedCatalogProducts.petPackageRows());
+        assertEquals("\r33\t2\t1\r", typedCatalogProducts.clubProductRows());
+        assertEquals("\r\r", CatalogProductSettings.fromRows("", 0L, 0L, List.of(), List.of(), List.of()).clubProductRows());
         assertEquals("AD" + Crypto.Proc_3_0_6D2AF0(2, null, ""), CatalogPayloads.purchaseError(2));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, Crypto.Proc_3_0_6D2AF0(81, null, "In")) + '\2',
             CatalogPayloads.giftAvailability(81, 1));
