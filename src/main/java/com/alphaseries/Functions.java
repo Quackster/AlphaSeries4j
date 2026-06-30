@@ -8,7 +8,6 @@ import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
-import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -650,10 +649,6 @@ public final class Functions {
             return 7L;
         }
         return 0L;
-    }
-
-    public static String representedBotRecordField(String botCacheText, long botEntityId, long fieldIndex) {
-        return RepresentedBotRegistry.fromLegacy("", botCacheText).recordField(botEntityId, fieldIndex);
     }
 
     public static long representedPositionAvailable(long roomId, long furnitureCount, long botCount) {

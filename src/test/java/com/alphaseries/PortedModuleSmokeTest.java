@@ -464,10 +464,6 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829268 = "";
         assertEquals("1\0" + "1\0" + "3\0" + "1\0", Functions.Proc_10_24_80E790(0, 0, 0, 2, 2));
         assertEquals("0\0" + "0\0" + "0\0" + "0\0", Functions.Proc_10_24_80E790(0));
-        String botCache = "[10:3\2" + "501\2bot][11:4\2" + "502\2next]";
-        assertEquals("501", Functions.representedBotRecordField(botCache, 10, 1));
-        assertEquals("", Functions.representedBotRecordField(botCache, 10, 9));
-        assertEquals("", Functions.representedBotRecordField(botCache, 12, 1));
         assertEquals(1L, Functions.representedPositionAvailable(0, 5, 5));
         assertEquals(0L, Functions.representedPositionAvailable(7, 1, 0));
         assertEquals(0L, Functions.representedPositionAvailable(7, 0, 1));

@@ -451,6 +451,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `QuestSettings.empty()` and routed null/default quest payload and decision paths away from `QuestSettings.fromLegacy("")`; legacy quest parsing now remains only at the `Licence` bridge and explicit legacy-row tests.
 - Added `GiftSettings.empty()` and routed null club-gift payload defaults away from `GiftSettings.fromLegacy("", "", "", "")`; legacy gift parsing now remains at the `Licence` bridge.
 - Added `UpdaterSettings.normalizeUpdateSql(...)` and routed updater SQL normalization away from constructing a legacy settings object; legacy updater settings parsing now remains at the `Licence` bridge.
+- Removed the dead `Functions.representedBotRecordField(...)` root wrapper; represented-bot cache field access now stays behind the typed registry/handler compatibility boundaries.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -468,7 +469,7 @@ Measured on 2026-06-30:
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
 - `Handling.java`: 11522 lines
-- `Functions.java`: 746 lines
+- `Functions.java`: 741 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 908 lines
 - `AlphaSeriesRuntime.java`: 234 lines
