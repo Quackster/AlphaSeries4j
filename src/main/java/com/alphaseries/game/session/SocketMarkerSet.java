@@ -17,6 +17,10 @@ public final class SocketMarkerSet {
         return new SocketMarkerSet(markers);
     }
 
+    public static SocketMarkerSet empty() {
+        return new SocketMarkerSet("");
+    }
+
     public void add(long socketIndex) {
         if (socketIndex > 0L) {
             socketIndexes.add(socketIndex);

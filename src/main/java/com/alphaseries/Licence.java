@@ -478,10 +478,12 @@ public final class Licence {
     }
 
     public static SocketMarkerSet socketMarkers() {
-        return SocketMarkerSet.fromLegacy(global_008291A0);
+        SessionState.instance().setSocketMarkersFromLegacy(global_008291A0);
+        return SessionState.instance().socketMarkers();
     }
 
     public static void setSocketMarkers(SocketMarkerSet socketMarkers) {
+        SessionState.instance().setSocketMarkers(socketMarkers);
         global_008291A0 = socketMarkers == null ? "" : socketMarkers.toLegacyMarkers();
     }
 
