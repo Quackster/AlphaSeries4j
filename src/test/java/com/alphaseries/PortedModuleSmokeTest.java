@@ -4,6 +4,7 @@ import com.alphaseries.config.AppDatabaseConfig;
 import com.alphaseries.dao.mysql.AdvertisingDao;
 import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.dao.mysql.ClubDao;
+import com.alphaseries.dao.mysql.FurnitureDao;
 import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.PackageDao;
 import com.alphaseries.dao.mysql.QuestDao;
@@ -42,6 +43,7 @@ import com.alphaseries.game.user.UserGroupRow;
 import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
 import com.alphaseries.messages.outgoing.ClubPayloads;
+import com.alphaseries.messages.outgoing.FurniturePayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.PacketReader;
 import com.alphaseries.protocol.WireEncoding;
@@ -1492,6 +1494,19 @@ public final class PortedModuleSmokeTest {
         assertEquals(false, Handling.isStickyNoteColor("ffffff"));
         assertEquals(true, Handling.isDimmerColour("#82f349"));
         assertEquals(false, Handling.isDimmerColour("#ffffff"));
+        FurniturePayloads.DimmerPresetPayload dimmerPresetPayload = FurniturePayloads.dimmerPresets(List.of(
+            new FurnitureDao.DimmerPreset(150L, 1L, 1L, "#0053F7", 1L),
+            new FurnitureDao.DimmerPreset(100L, 2L, 1L, "#82F349", 2L)));
+        assertEquals(2L, dimmerPresetPayload.currentPresetId());
+        assertEquals("Em" + Crypto.Proc_3_0_6D2AF0(0, null, "")
+                + Crypto.Proc_3_0_6D2AF0(2, null, "")
+                + Crypto.Proc_3_0_6D2AF0(1, null, "")
+                + Crypto.Proc_3_0_6D2AF0(1, null, "")
+                + Crypto.Proc_3_0_6D2AF0(150, null, "") + "#0053F7\2"
+                + Crypto.Proc_3_0_6D2AF0(2, null, "")
+                + Crypto.Proc_3_0_6D2AF0(1, null, "")
+                + Crypto.Proc_3_0_6D2AF0(100, null, "") + "#82F349\2",
+            dimmerPresetPayload.payload());
         Handling.WallPlacement placement = new Handling.WallPlacement();
         assertEquals(true, Handling.wallPlacementFromPayload(":w= 10,20 l= 3,4", placement));
         assertEquals(10L, placement.wallX);

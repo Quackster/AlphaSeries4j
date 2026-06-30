@@ -83,6 +83,7 @@ import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.wired.WiredPayloads;
 import com.alphaseries.messages.outgoing.AchievementPayloads;
 import com.alphaseries.messages.outgoing.ClubPayloads;
+import com.alphaseries.messages.outgoing.FurniturePayloads;
 import com.alphaseries.messages.outgoing.JukeboxPayloads;
 import com.alphaseries.messages.outgoing.MessengerPayloads;
 import com.alphaseries.messages.outgoing.PollPayloads;
@@ -3319,19 +3320,10 @@ public final class Handling {
             if (furniture == null) {
                 return 0L;
             }
-            StringBuilder presetPayload = new StringBuilder();
-            for (FurnitureDao.DimmerPreset preset : furniture.dimmerPresets(dimmerFurnitureId)) {
-                if (preset.stateId() == 2L || currentPresetId == 0L) {
-                    currentPresetId = preset.presetId();
-                }
-                presetPayload.append(Crypto.Proc_3_0_6D2AF0(preset.presetId(), null, ""));
-                presetPayload.append(Crypto.Proc_3_0_6D2AF0(preset.backgroundId(), null, ""));
-                presetPayload.append(Crypto.Proc_3_0_6D2AF0(preset.lightLevel(), null, ""));
-                presetPayload.append(preset.colour()).append('\2');
-            }
-            String payload = Crypto.Proc_3_0_6D2AF0(currentPresetId, null,
-                Crypto.Proc_3_0_6D2AF0(0, null, "Em")) + presetPayload;
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            FurniturePayloads.DimmerPresetPayload dimmerPayload =
+                FurniturePayloads.dimmerPresets(furniture.dimmerPresets(dimmerFurnitureId));
+            currentPresetId = dimmerPayload.currentPresetId();
+            Proc_6_244_801E80(socketIndex, dimmerPayload.payload(), 0);
             return currentPresetId;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
