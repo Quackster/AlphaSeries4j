@@ -150,7 +150,7 @@ public final class Boot {
                 for (Long treeIdValue : rooms.recommendedRoomTreeIds()) {
                     long treeId = treeIdValue == null ? 0L : treeIdValue.longValue();
                     if (treeId != 0L && count < recommended.length) {
-                        recommended[(int) count] = Crypto.Proc_3_0_6D2AF0(treeId, null, "")
+                        recommended[(int) count] = Crypto.encodeVl64(treeId)
                             + buildRecommendedRoomsPayload(rooms.recommendedRoomRows(treeId));
                         count++;
                     }
@@ -159,7 +159,7 @@ public final class Boot {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        Licence.setRecommendedRooms(count == 0L ? Crypto.Proc_3_0_6D2AF0(0, null, "") : recommended, count);
+        Licence.setRecommendedRooms(count == 0L ? Crypto.encodeVl64(0) : recommended, count);
     }
 
     /**
@@ -521,19 +521,19 @@ public final class Boot {
                 productId = catalogProductId;
             }
             String giftClass = Licence.productType(productId) == 9L ? "i" : "s";
-            payload.append(Crypto.Proc_3_0_6D2AF0(catalogProductId, null, ""));
-            payload.append(Crypto.Proc_3_0_6D2AF0(productId, null, ""));
+            payload.append(Crypto.encodeVl64(catalogProductId));
+            payload.append(Crypto.encodeVl64(productId));
             payload.append(DataManager.productCache().displayName(productId)).append('\2');
             payload.append(DataManager.productCache().description(productId)).append('\2');
             payload.append("IHHI").append(giftClass).append('\2');
-            payload.append(Crypto.Proc_3_0_6D2AF0(row.vipOnly(), null, ""));
-            payload.append(Crypto.Proc_3_0_6D2AF0(row.requiredDays(), null, ""));
+            payload.append(Crypto.encodeVl64(row.vipOnly()));
+            payload.append(Crypto.encodeVl64(row.requiredDays()));
             lookup.append('[').append(catalogProductId).append('\0').append(productId).append('\1').append(row.requiredDays()).append(']');
             gifts.add(new GiftSettings.ClubGift(catalogProductId, productId, row.requiredDays()));
             count++;
         }
         Licence.setClubGiftState(new GiftSettings.ClubGiftState(
-            Crypto.Proc_3_0_6D2AF0(count, null, "") + payload,
+            Crypto.encodeVl64(count) + payload,
             lookup.toString(),
             gifts));
     }
@@ -782,7 +782,7 @@ public final class Boot {
                 }
             }
         }
-        return Crypto.Proc_3_0_6D2AF0(replacementCount, null, "") + payload;
+        return Crypto.encodeVl64(replacementCount) + payload;
     }
 
     public static String buildStaffMessageList(String rowText) {
@@ -825,15 +825,15 @@ public final class Boot {
                         if (!childRow.isEmpty()) {
                             String[] childFields = childRow.split("\t", -1);
                             if (childFields.length >= 2) {
-                                childPayload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(childFields[0]), null, ""));
+                                childPayload.append(Crypto.encodeVl64(NumberUtils.parseLong(childFields[0])));
                                 childPayload.append(childFields[1]).append('\2');
                                 childCount++;
                             }
                         }
                     }
-                    payload.append(Crypto.Proc_3_0_6D2AF0(rootId, null, ""));
+                    payload.append(Crypto.encodeVl64(rootId));
                     payload.append(rootFields[1]).append('\2');
-                    payload.append(Crypto.Proc_3_0_6D2AF0(childCount, null, ""));
+                    payload.append(Crypto.encodeVl64(childCount));
                     payload.append(childPayload);
                 }
             }
@@ -910,21 +910,21 @@ public final class Boot {
                     if (productId > 0L) {
                         productIds.add(productId);
                         productList.append(productId).append('\2');
-                        groupPayload.append(Crypto.Proc_3_0_6D2AF0(productId, null, ""));
+                        groupPayload.append(Crypto.encodeVl64(productId));
                         productCount++;
                     }
                 }
 
                 cache.productListByGroupIndex.put(groupIndex, productList.toString());
                 groups.add(new RecyclerSettings.RewardGroup(chanceValue, productIds));
-                payload.append(Crypto.Proc_3_0_6D2AF0(chanceValue, null, ""));
-                payload.append(Crypto.Proc_3_0_6D2AF0(productCount, null, ""));
+                payload.append(Crypto.encodeVl64(chanceValue));
+                payload.append(Crypto.encodeVl64(productCount));
                 payload.append(groupPayload);
                 cache.groupCount++;
             }
         }
         cache.rewardGroups = List.copyOf(groups);
-        cache.payload = Crypto.Proc_3_0_6D2AF0(cache.groupCount, null, "") + payload;
+        cache.payload = Crypto.encodeVl64(cache.groupCount) + payload;
         return cache;
     }
 
@@ -1105,25 +1105,25 @@ public final class Boot {
             long wrapId = NumberUtils.parseLong(productId);
             if (wrapId != 0L) {
                 wrapCount++;
-                wrapPayload.append(Crypto.Proc_3_0_6D2AF0(wrapId, null, ""));
+                wrapPayload.append(Crypto.encodeVl64(wrapId));
             }
         }
 
         StringBuilder accessoryPayload = new StringBuilder();
         for (long optionIndex = 1L; optionIndex <= accessoryCount; optionIndex++) {
-            accessoryPayload.append(Crypto.Proc_3_0_6D2AF0(optionIndex, null, ""));
+            accessoryPayload.append(Crypto.encodeVl64(optionIndex));
         }
 
         StringBuilder colorPayload = new StringBuilder();
         for (long optionIndex = 1L; optionIndex <= colorCount; optionIndex++) {
-            colorPayload.append(Crypto.Proc_3_0_6D2AF0(optionIndex, null, ""));
+            colorPayload.append(Crypto.encodeVl64(optionIndex));
         }
 
-        return Crypto.Proc_3_0_6D2AF0(accessoryCount, null, "")
+        return Crypto.encodeVl64(accessoryCount)
             + accessoryPayload
-            + Crypto.Proc_3_0_6D2AF0(wrapCount, null, "")
+            + Crypto.encodeVl64(wrapCount)
             + wrapPayload
-            + Crypto.Proc_3_0_6D2AF0(colorCount, null, "")
+            + Crypto.encodeVl64(colorCount)
             + colorPayload;
     }
 
@@ -1149,12 +1149,12 @@ public final class Boot {
                     String giftName = mapString(nameByProductId, productId);
                     String giftDescription = mapString(descriptionByProductId, productId);
 
-                    giftPayload.append(Crypto.Proc_3_0_6D2AF0(catalogProductId, null, ""));
-                    giftPayload.append(Crypto.Proc_3_0_6D2AF0(productId, null, ""));
+                    giftPayload.append(Crypto.encodeVl64(catalogProductId));
+                    giftPayload.append(Crypto.encodeVl64(productId));
                     giftPayload.append(giftName).append('\2').append(giftDescription).append('\2');
                     giftPayload.append("IHHI").append(giftClass).append('\2');
-                    giftPayload.append(Crypto.Proc_3_0_6D2AF0(isVip, null, ""));
-                    giftPayload.append(Crypto.Proc_3_0_6D2AF0(requiredDays, null, ""));
+                    giftPayload.append(Crypto.encodeVl64(isVip));
+                    giftPayload.append(Crypto.encodeVl64(requiredDays));
 
                     giftLookup.append('[').append(catalogProductId).append('\0').append(productId)
                         .append('\1').append(requiredDays).append(']');
@@ -1162,7 +1162,7 @@ public final class Boot {
                 }
             }
         }
-        cache.giftPayload = Crypto.Proc_3_0_6D2AF0(giftCount, null, "") + giftPayload;
+        cache.giftPayload = Crypto.encodeVl64(giftCount) + giftPayload;
         cache.giftLookup = giftLookup.toString();
         return cache;
     }
@@ -1270,15 +1270,15 @@ public final class Boot {
                     long minRank = NumberUtils.parseLong(fields[3]);
                     long minHcLevel = NumberUtils.parseLong(fields[4]);
                     if (rankIndex >= minRank && hcLevel >= minHcLevel) {
-                        categoryPayload.append(Crypto.Proc_3_0_6D2AF0(categoryId, null, ""));
+                        categoryPayload.append(Crypto.encodeVl64(categoryId));
                         categoryPayload.append(fields[1]).append('\2');
-                        categoryPayload.append(Crypto.Proc_3_0_6D2AF0(hasTrading, null, ""));
+                        categoryPayload.append(Crypto.encodeVl64(hasTrading));
                         categoryCount++;
                     }
                 }
             }
         }
-        return Crypto.Proc_3_0_6D2AF0(categoryCount, null, "") + categoryPayload;
+        return Crypto.encodeVl64(categoryCount) + categoryPayload;
     }
 
     public static String buildRoomCategoryPayload(List<RoomDao.RoomCategoryRow> categoryRows, long rankIndex, long hcLevel) {
@@ -1287,14 +1287,14 @@ public final class Boot {
         if (categoryRows != null) {
             for (RoomDao.RoomCategoryRow row : categoryRows) {
                 if (row != null && rankIndex >= row.minimumRank() && hcLevel >= row.minimumHcRank()) {
-                    categoryPayload.append(Crypto.Proc_3_0_6D2AF0(row.categoryId(), null, ""));
+                    categoryPayload.append(Crypto.encodeVl64(row.categoryId()));
                     categoryPayload.append(StringUtils.text(row.name())).append('\2');
-                    categoryPayload.append(Crypto.Proc_3_0_6D2AF0(row.trading(), null, ""));
+                    categoryPayload.append(Crypto.encodeVl64(row.trading()));
                     categoryCount++;
                 }
             }
         }
-        return Crypto.Proc_3_0_6D2AF0(categoryCount, null, "") + categoryPayload;
+        return Crypto.encodeVl64(categoryCount) + categoryPayload;
     }
 
     public static String buildImportantFaqPayload(Map<Long, String> faqRowsByImportance) {
@@ -1302,20 +1302,20 @@ public final class Boot {
         for (long importanceLevel = 1L; importanceLevel <= 2L; importanceLevel++) {
             String groupPayload = buildFaqNamePayload(faqRowsByImportance == null ? "" : faqRowsByImportance.get(importanceLevel));
             long groupCount = countRowsWithFields(faqRowsByImportance == null ? "" : faqRowsByImportance.get(importanceLevel), 2);
-            payload.append(Crypto.Proc_3_0_6D2AF0(groupCount, null, ""));
+            payload.append(Crypto.encodeVl64(groupCount));
             payload.append(groupPayload);
         }
-        return Crypto.Proc_3_0_6D2AF0(2, null, "") + payload;
+        return Crypto.encodeVl64(2) + payload;
     }
 
     public static String buildImportantFaqPayloadFromRows(Map<Long, List<HelpDao.FaqNameRow>> faqRowsByImportance) {
         StringBuilder payload = new StringBuilder();
         for (long importanceLevel = 1L; importanceLevel <= 2L; importanceLevel++) {
             List<HelpDao.FaqNameRow> rows = faqRowsByImportance == null ? List.of() : faqRowsByImportance.get(importanceLevel);
-            payload.append(Crypto.Proc_3_0_6D2AF0(countFaqNameRows(rows), null, ""));
+            payload.append(Crypto.encodeVl64(countFaqNameRows(rows)));
             payload.append(buildFaqNamePayloadFromRows(rows));
         }
-        return Crypto.Proc_3_0_6D2AF0(2, null, "") + payload;
+        return Crypto.encodeVl64(2) + payload;
     }
 
     public static FaqCategoryCache buildFaqCategoryCache(String categoryRows, Map<Long, String> faqRowsByCategoryId) {
@@ -1330,14 +1330,14 @@ public final class Boot {
                     String faqRows = faqRowsByCategoryId == null ? "" : faqRowsByCategoryId.get(categoryId);
                     String faqPayload = buildFaqNamePayload(faqRows);
                     long faqCount = countRowsWithFields(faqRows, 2);
-                    cache.faqPayloadByCategoryId.put(categoryId, Crypto.Proc_3_0_6D2AF0(faqCount, null, "") + faqPayload);
-                    categoryPayload.append(Crypto.Proc_3_0_6D2AF0(categoryId, null, ""));
+                    cache.faqPayloadByCategoryId.put(categoryId, Crypto.encodeVl64(faqCount) + faqPayload);
+                    categoryPayload.append(Crypto.encodeVl64(categoryId));
                     categoryPayload.append(categoryFields[1]).append('\2');
                     categoryCount++;
                 }
             }
         }
-        cache.categoryPayload = Crypto.Proc_3_0_6D2AF0(categoryCount, null, "") + categoryPayload;
+        cache.categoryPayload = Crypto.encodeVl64(categoryCount) + categoryPayload;
         return cache;
     }
 
@@ -1352,14 +1352,14 @@ public final class Boot {
                     long categoryId = category.id();
                     List<HelpDao.FaqNameRow> faqRows = faqRowsByCategoryId == null ? List.of() : faqRowsByCategoryId.get(categoryId);
                     cache.faqPayloadByCategoryId.put(categoryId,
-                        Crypto.Proc_3_0_6D2AF0(countFaqNameRows(faqRows), null, "") + buildFaqNamePayloadFromRows(faqRows));
-                    categoryPayload.append(Crypto.Proc_3_0_6D2AF0(categoryId, null, ""));
+                        Crypto.encodeVl64(countFaqNameRows(faqRows)) + buildFaqNamePayloadFromRows(faqRows));
+                    categoryPayload.append(Crypto.encodeVl64(categoryId));
                     categoryPayload.append(StringUtils.text(category.name())).append('\2');
                     categoryCount++;
                 }
             }
         }
-        cache.categoryPayload = Crypto.Proc_3_0_6D2AF0(categoryCount, null, "") + categoryPayload;
+        cache.categoryPayload = Crypto.encodeVl64(categoryCount) + categoryPayload;
         return cache;
     }
 
@@ -1371,7 +1371,7 @@ public final class Boot {
                 if (fields.length >= 2) {
                     long faqId = NumberUtils.parseLong(fields[0]);
                     String descriptionText = fields[1].replace('\n', '\r');
-                    cache.put(faqId, Crypto.Proc_3_0_6D2AF0(faqId, null, "") + descriptionText + '\2');
+                    cache.put(faqId, Crypto.encodeVl64(faqId) + descriptionText + '\2');
                 }
             }
         }
@@ -1385,7 +1385,7 @@ public final class Boot {
                 if (row != null) {
                     long faqId = row.id();
                     String descriptionText = StringUtils.text(row.description()).replace('\n', '\r');
-                    cache.put(faqId, Crypto.Proc_3_0_6D2AF0(faqId, null, "") + descriptionText + '\2');
+                    cache.put(faqId, Crypto.encodeVl64(faqId) + descriptionText + '\2');
                 }
             }
         }
@@ -1471,18 +1471,18 @@ public final class Boot {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 27) {
                     roomCount++;
-                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[0]), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[1]), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[2]), null, ""));
+                    payload.append(Crypto.encodeVl64(NumberUtils.parseLong(fields[0])));
+                    payload.append(Crypto.encodeVl64(NumberUtils.parseLong(fields[1])));
+                    payload.append(Crypto.encodeVl64(NumberUtils.parseLong(fields[2])));
                     for (int fieldIndex = 3; fieldIndex <= 24; fieldIndex++) {
                         payload.append(fields[fieldIndex]).append('\2');
                     }
-                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[25]), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[26]), null, ""));
+                    payload.append(Crypto.encodeVl64(NumberUtils.parseLong(fields[25])));
+                    payload.append(Crypto.encodeVl64(NumberUtils.parseLong(fields[26])));
                 }
             }
         }
-        return Crypto.Proc_3_0_6D2AF0(roomCount, null, "") + payload;
+        return Crypto.encodeVl64(roomCount) + payload;
     }
 
     public static String buildRecommendedRoomsPayload(List<RoomDao.RecommendedRoomRow> roomRows) {
@@ -1492,18 +1492,18 @@ public final class Boot {
             for (RoomDao.RecommendedRoomRow row : roomRows) {
                 if (row != null) {
                     roomCount++;
-                    payload.append(Crypto.Proc_3_0_6D2AF0(row.type(), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(row.style(), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(row.icon(), null, ""));
+                    payload.append(Crypto.encodeVl64(row.type()));
+                    payload.append(Crypto.encodeVl64(row.style()));
+                    payload.append(Crypto.encodeVl64(row.icon()));
                     for (String field : row.legacyTextFields()) {
                         payload.append(StringUtils.text(field)).append('\2');
                     }
-                    payload.append(Crypto.Proc_3_0_6D2AF0(row.treeId(), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(row.recommendedId(), null, ""));
+                    payload.append(Crypto.encodeVl64(row.treeId()));
+                    payload.append(Crypto.encodeVl64(row.recommendedId()));
                 }
             }
         }
-        return Crypto.Proc_3_0_6D2AF0(roomCount, null, "") + payload;
+        return Crypto.encodeVl64(roomCount) + payload;
     }
 
     public static String Proc_1_14_6C9DD0(Object... args) {
@@ -1515,12 +1515,12 @@ public final class Boot {
         long childCount = args != null && args.length >= 6 ? NumberUtils.parseLong(args[5]) : 0L;
 
         return "0"
-            + Crypto.Proc_3_0_6D2AF0(pageId, null, "")
-            + Crypto.Proc_3_0_6D2AF0(parentId, null, "")
-            + Crypto.Proc_3_0_6D2AF0(iconId, null, "")
-            + Crypto.Proc_3_0_6D2AF0(visibleState, null, "")
+            + Crypto.encodeVl64(pageId)
+            + Crypto.encodeVl64(parentId)
+            + Crypto.encodeVl64(iconId)
+            + Crypto.encodeVl64(visibleState)
             + caption + '\2'
-            + Crypto.Proc_3_0_6D2AF0(childCount, null, "");
+            + Crypto.encodeVl64(childCount);
     }
 
     public static String buildCatalogPagePayload(String[] fields, String productRows) {
@@ -1530,7 +1530,7 @@ public final class Boot {
         long pageId = NumberUtils.parseLong(fields[0]);
         StringBuilder payload = new StringBuilder();
         payload.append(fields[1]).append('\2');
-        payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[4]), null, ""));
+        payload.append(Crypto.encodeVl64(NumberUtils.parseLong(fields[4])));
         payload.append(fields[5]).append('\2');
         payload.append(fields[6]).append('\2');
         payload.append(fields[7]).append('\2');
@@ -1544,12 +1544,12 @@ public final class Boot {
                 textPayload.append(fields[textIndex]).append('\2');
             }
         }
-        payload.append(Crypto.Proc_3_0_6D2AF0(textCount, null, "")).append(textPayload);
+        payload.append(Crypto.encodeVl64(textCount)).append(textPayload);
 
         if (catalogTextFieldPresent(fields[20])) {
-            payload.append(Crypto.Proc_3_0_6D2AF0(1, null, "")).append(fields[20]).append('\2');
+            payload.append(Crypto.encodeVl64(1)).append(fields[20]).append('\2');
         } else {
-            payload.append(Crypto.Proc_3_0_6D2AF0(0, null, ""));
+            payload.append(Crypto.encodeVl64(0));
         }
         return payload.append(buildCatalogProductPayload(pageId, productRows)).toString();
     }
@@ -1560,7 +1560,7 @@ public final class Boot {
         }
         StringBuilder payload = new StringBuilder();
         payload.append(StringUtils.text(page.name())).append('\2');
-        payload.append(Crypto.Proc_3_0_6D2AF0(page.clickable(), null, ""));
+        payload.append(Crypto.encodeVl64(page.clickable()));
         payload.append(StringUtils.text(page.template())).append('\2');
         payload.append(StringUtils.text(page.headerImage())).append('\2');
         payload.append(StringUtils.text(page.specialImage())).append('\2');
@@ -1587,12 +1587,12 @@ public final class Boot {
                 textPayload.append(textField).append('\2');
             }
         }
-        payload.append(Crypto.Proc_3_0_6D2AF0(textCount, null, "")).append(textPayload);
+        payload.append(Crypto.encodeVl64(textCount)).append(textPayload);
 
         if (catalogTextFieldPresent(page.link())) {
-            payload.append(Crypto.Proc_3_0_6D2AF0(1, null, "")).append(page.link()).append('\2');
+            payload.append(Crypto.encodeVl64(1)).append(page.link()).append('\2');
         } else {
-            payload.append(Crypto.Proc_3_0_6D2AF0(0, null, ""));
+            payload.append(Crypto.encodeVl64(0));
         }
         return payload.append(buildCatalogProductPayload(page.pageId(), productRows)).toString();
     }
@@ -1609,7 +1609,7 @@ public final class Boot {
                 }
             }
         }
-        return Crypto.Proc_3_0_6D2AF0(productCount, null, "") + productPayload;
+        return Crypto.encodeVl64(productCount) + productPayload;
     }
 
     public static String buildCatalogProductPayload(long pageId, List<CatalogDao.CatalogPageProductRow> productRows) {
@@ -1623,7 +1623,7 @@ public final class Boot {
                 }
             }
         }
-        return Crypto.Proc_3_0_6D2AF0(productCount, null, "") + productPayload;
+        return Crypto.encodeVl64(productCount) + productPayload;
     }
 
     public static String buildCatalogProductEntry(String[] fields) {
@@ -1639,17 +1639,17 @@ public final class Boot {
             amountValue = 1L;
         }
 
-        return Crypto.Proc_3_0_6D2AF0(catalogProductId, null, "")
+        return Crypto.encodeVl64(catalogProductId)
             + fields[4] + '\2'
-            + Crypto.Proc_3_0_6D2AF0(productId, null, "")
+            + Crypto.encodeVl64(productId)
             + productClass + '\2'
-            + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[2]), null, "")
-            + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[3]), null, "")
-            + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[5]), null, "")
-            + Crypto.Proc_3_0_6D2AF0(amountValue, null, "")
+            + Crypto.encodeVl64(NumberUtils.parseLong(fields[2]))
+            + Crypto.encodeVl64(NumberUtils.parseLong(fields[3]))
+            + Crypto.encodeVl64(NumberUtils.parseLong(fields[5]))
+            + Crypto.encodeVl64(amountValue)
             + fields[7] + '\2'
-            + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[8]), null, "")
-            + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[9]), null, "");
+            + Crypto.encodeVl64(NumberUtils.parseLong(fields[8]))
+            + Crypto.encodeVl64(NumberUtils.parseLong(fields[9]));
     }
 
     public static String buildCatalogProductEntry(CatalogDao.CatalogPageProductRow row) {
@@ -1663,17 +1663,17 @@ public final class Boot {
             amountValue = 1L;
         }
 
-        return Crypto.Proc_3_0_6D2AF0(row.catalogProductId(), null, "")
+        return Crypto.encodeVl64(row.catalogProductId())
             + StringUtils.text(row.sprite()) + '\2'
-            + Crypto.Proc_3_0_6D2AF0(row.productId(), null, "")
+            + Crypto.encodeVl64(row.productId())
             + productClass + '\2'
-            + Crypto.Proc_3_0_6D2AF0(row.creditPrice(), null, "")
-            + Crypto.Proc_3_0_6D2AF0(row.activityPointPrice(), null, "")
-            + Crypto.Proc_3_0_6D2AF0(row.activityPointType(), null, "")
-            + Crypto.Proc_3_0_6D2AF0(amountValue, null, "")
+            + Crypto.encodeVl64(row.creditPrice())
+            + Crypto.encodeVl64(row.activityPointPrice())
+            + Crypto.encodeVl64(row.activityPointType())
+            + Crypto.encodeVl64(amountValue)
             + StringUtils.text(row.secondaryType()) + '\2'
-            + Crypto.Proc_3_0_6D2AF0(row.replaceDefaultSign(), null, "")
-            + Crypto.Proc_3_0_6D2AF0(row.minimumHcRank(), null, "");
+            + Crypto.encodeVl64(row.replaceDefaultSign())
+            + Crypto.encodeVl64(row.minimumHcRank());
     }
 
     public static String buildCatalogProductQuery(long pageId) {
@@ -1708,7 +1708,7 @@ public final class Boot {
                 }
             }
         }
-        return Crypto.Proc_3_0_6D2AF0(rootCount, null, "") + payload;
+        return Crypto.encodeVl64(rootCount) + payload;
     }
 
     public static String buildCatalogPageTreePayload(List<CatalogDao.CatalogPageTreeRow> rootRows,
@@ -1730,7 +1730,7 @@ public final class Boot {
                 }
             }
         }
-        return Crypto.Proc_3_0_6D2AF0(rootCount, null, "") + payload;
+        return Crypto.encodeVl64(rootCount) + payload;
     }
 
     public static String buildCatalogPageChildPayload(String childRows, long rankIndex, long hcLevel) {
@@ -1826,7 +1826,7 @@ public final class Boot {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 2) {
-                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[0]), null, ""));
+                    payload.append(Crypto.encodeVl64(NumberUtils.parseLong(fields[0])));
                     payload.append(fields[1]).append('\2');
                 }
             }
@@ -1839,7 +1839,7 @@ public final class Boot {
         if (faqRows != null) {
             for (HelpDao.FaqNameRow row : faqRows) {
                 if (row != null) {
-                    payload.append(Crypto.Proc_3_0_6D2AF0(row.id(), null, ""));
+                    payload.append(Crypto.encodeVl64(row.id()));
                     payload.append(StringUtils.text(row.name())).append('\2');
                 }
             }
