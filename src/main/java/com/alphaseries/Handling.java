@@ -9705,10 +9705,10 @@ public final class Handling {
         if (socketIndex <= 0L || tradeOffers == null || tradeOffers.isEmpty()) {
             return result;
         }
-        StringBuilder payload = new StringBuilder();
+        PacketBuilder payload = PacketBuilder.create();
         for (RepresentedTradeOffer offer : tradeOffers) {
             if (offer.socketIndex() == socketIndex) {
-                payload.append(InventoryMessagePayloads.item(
+                payload.appendRaw(InventoryMessagePayloads.item(
                     offer.furnitureId(),
                     offer.productId(),
                     offer.signText(),
@@ -9716,7 +9716,7 @@ public final class Handling {
                 result.itemCount++;
             }
         }
-        result.payload = payload.toString();
+        result.payload = payload.build();
         return result;
     }
 
