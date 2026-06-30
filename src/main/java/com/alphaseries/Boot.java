@@ -1,5 +1,6 @@
 package com.alphaseries;
 
+import com.alphaseries.dao.mysql.AdvertisingDao;
 import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.dao.mysql.ClubDao;
@@ -476,10 +477,20 @@ public final class Boot {
     }
 
     public static void Proc_1_22_6D0F00(Object... args) {
-        long maxId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM advertisement_visitrooms", 0, 0)));
+        AdvertisingDao advertising = advertisingDao();
+        long maxId = 0L;
+        String visitRoomRows = "";
+        if (advertising != null) {
+            try {
+                maxId = Math.max(0L, advertising.maxVisitRoomId());
+                visitRoomRows = joinVisitRoomAdRows(advertising.visitRoomAds());
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         String[] visitRooms = new String[(int) maxId + 1];
         VisitRoomCache cache = buildAdvertisementVisitRoomCache(
-            MySQL.Proc_5_2_6D4690("SELECT id,address FROM advertisement_visitrooms", 0, 0),
+            visitRoomRows,
             Functions.Proc_10_0_809570("com.server.socket.game.advertisement.visitrooms.path", "", 0));
         for (Map.Entry<Long, String> entry : cache.payloadByVisitRoomId.entrySet()) {
             if (entry.getKey() >= 0L && entry.getKey() < visitRooms.length) {
@@ -1418,6 +1429,14 @@ public final class Boot {
         return joined.toString();
     }
 
+    private static String joinVisitRoomAdRows(List<AdvertisingDao.VisitRoomAdRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (AdvertisingDao.VisitRoomAdRow row : rows == null ? List.<AdvertisingDao.VisitRoomAdRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
     private static void appendLegacyRow(StringBuilder joined, String rowText) {
         if (joined.length() > 0) {
             joined.append('\r');
@@ -1443,6 +1462,11 @@ public final class Boot {
     private static HelpDao helpDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new HelpDao(database);
+    }
+
+    private static AdvertisingDao advertisingDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new AdvertisingDao(database);
     }
 
     private static ServerMaintenanceDao serverMaintenanceDao() {
