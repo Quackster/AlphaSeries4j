@@ -493,6 +493,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `DataManager.appendTextFile(...)` and `writeTextFile(...)` methods with original Proc names in Javadocs, then migrated live `Boot`/`Main`/`Handling` callers away from `DataManager.Proc_8_9_806810(...)` and `Proc_8_10_8068E0(...)`.
 - Migrated live license startup checks and room-event locale lookup away from `DataManager.Proc_8_7_8051C0(...)` and `Proc_8_11_8069B0(...)`; production no longer calls `DataManager.Proc_8_*` methods directly.
 - Migrated runtime protocol logging, configured ports, boot messenger-friend limits, catalog-page permission checks, staff moderation permission checks, and the legacy MySQL permission helper to typed `AppSettingsCache`/`PermissionMatrix` access instead of `Functions.Proc_10_0_809570(...)` and `Proc_10_1_809790(...)`.
+- Migrated remaining boot startup setting reads plus selected `Handling` permission checks to typed `AppSettingsCache`/`PermissionMatrix` access, reducing live `Functions.Proc_10_0/1` usage to larger handler workflows.
 
 ## VB Compatibility Class Removal Checklist
 

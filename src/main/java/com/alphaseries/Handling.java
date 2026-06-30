@@ -8173,7 +8173,7 @@ public final class Handling {
     public static boolean handlingUserHasPermission(String userId, String permissionName) {
         long rankIndex = handlingUserRank(userId);
         long hcLevel = handlingUserHcLevel(userId);
-        return Functions.Proc_10_1_809790(rankIndex, "", permissionName, hcLevel);
+        return Functions.permissionMatrix().allows(rankIndex, "", permissionName, hcLevel);
     }
 
     private static void roomKickOrBanUser(Object[] args, boolean addRoomBan) {
@@ -8491,7 +8491,7 @@ public final class Handling {
             long userRank = handlingUserRank(userId);
             long hcLevel = handlingUserHcLevel(userId);
             if (!Proc_6_21_6E8BA0(messageText, 0, 0).isEmpty()
-                && !Functions.Proc_10_1_809790(userRank, "", "fuse_can_chat_links", hcLevel)) {
+                && !Functions.permissionMatrix().allows(userRank, "", "fuse_can_chat_links", hcLevel)) {
                 return "";
             }
             String filteredText = Proc_6_22_6E9300(messageText, 0, 0);

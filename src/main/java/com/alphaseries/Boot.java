@@ -313,8 +313,8 @@ public final class Boot {
         }
         Licence.setRoomPortalSettings(portalSettings);
         Proc_1_16_6CCA60(0, 0, 0);
-        String systemDate = Functions.Proc_10_0_809570("com.system.format.date", "", 0);
-        String systemTime = Functions.Proc_10_0_809570("com.system.format.time", "", 0);
+        String systemDate = Functions.settingsCache().valueOrDefault("com.system.format.date", "");
+        String systemTime = Functions.settingsCache().valueOrDefault("com.system.format.time", "");
         SettingsDao settings = settingsDao();
         List<SettingsDao.SettingRow> settingsRows = List.of();
         if (settings != null) {
@@ -368,8 +368,10 @@ public final class Boot {
     }
 
     public static void Proc_1_11_6C8D10(Object... args) {
-        long privateCategoryId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.categories.default.private.id", 0, 0));
-        long publicCategoryId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.categories.default.public.id", 0, 0));
+        long privateCategoryId = NumberUtils.parseLong(
+            Functions.settingsCache().valueOrDefault("com.client.navigator.categories.default.private.id", 0));
+        long publicCategoryId = NumberUtils.parseLong(
+            Functions.settingsCache().valueOrDefault("com.client.navigator.categories.default.public.id", 0));
         String[] defaults = new String[3];
         defaults[0] = String.valueOf(privateCategoryId);
         defaults[2] = String.valueOf(publicCategoryId);
@@ -411,8 +413,10 @@ public final class Boot {
             }
         }
         long wrapCount = countNonZeroRows(wrapRows);
-        long accessoryCount = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.count.accessories", wrapCount, 0));
-        long colorCount = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.count.colors", 0, 0));
+        long accessoryCount = NumberUtils.parseLong(
+            Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.count.accessories", wrapCount));
+        long colorCount = NumberUtils.parseLong(
+            Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.count.colors", 0));
         Licence.setGiftWrapState("\r" + wrapRows + "\r", buildGiftWrapPayload(wrapRows, accessoryCount, colorCount));
     }
 
@@ -616,7 +620,7 @@ public final class Boot {
         String[] visitRooms = new String[(int) maxId + 1];
         VisitRoomCache cache = buildAdvertisementVisitRoomCache(
             visitRoomRows,
-            Functions.Proc_10_0_809570("com.server.socket.game.advertisement.visitrooms.path", "", 0));
+            Functions.settingsCache().valueOrDefault("com.server.socket.game.advertisement.visitrooms.path", ""));
         for (Map.Entry<Long, String> entry : cache.payloadByVisitRoomId.entrySet()) {
             if (entry.getKey() >= 0L && entry.getKey() < visitRooms.length) {
                 visitRooms[entry.getKey().intValue()] = entry.getValue();
