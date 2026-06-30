@@ -499,6 +499,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated user-session date/MOTD settings, pet/guide bot toggles and speech defaults, and recycler enabled checks in `Handling` to typed `AppSettingsCache` access instead of legacy settings helper calls.
 - Migrated remaining live `Handling` settings reads for date/time formatting, jukebox limits, songdisk defaults, activity-point awards, infobus titles, room-bot loading, navigator limits, and messenger follow checks to typed `AppSettingsCache` access; production callers no longer use `Functions.Proc_10_0_809570(...)` or `Proc_10_1_809790(...)` directly.
 - Migrated the remaining internal `Functions` HC gift-amount settings read to `AppSettingsCache`, leaving `Proc_10_0_809570(...)` and `Proc_10_1_809790(...)` only as explicit compatibility methods covered by tests.
+- Added named packet/string helpers in `Functions` for VL64 length reads, Base64 length reads, single-line text normalization, and SQL text escaping with original Proc names in Javadocs, then migrated shared `Handling` utility parsers to those names.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -516,7 +517,7 @@ Measured on 2026-06-30:
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
 - `Handling.java`: 11362 lines
-- `Functions.java`: 695 lines
+- `Functions.java`: 723 lines
 - `DataManager.java`: 409 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 819 lines

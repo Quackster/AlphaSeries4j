@@ -99,25 +99,39 @@ public final class Functions {
         if (args == null || args.length == 0) {
             return "";
         }
-        String sourceValue = StringUtils.text(args[0]);
-        long encodedLengthSize = Crypto.Proc_3_2_6D30A0(sourceValue);
-        long fieldLength = Crypto.Proc_3_3_6D3240(sourceValue);
+        return readVl64LengthString(args[0]);
+    }
+
+    /**
+     * Original function: Proc_10_6_809F10.
+     */
+    public static String readVl64LengthString(Object sourceValue) {
+        String sourceText = StringUtils.text(sourceValue);
+        long encodedLengthSize = Crypto.Proc_3_2_6D30A0(sourceText);
+        long fieldLength = Crypto.Proc_3_3_6D3240(sourceText);
         if (encodedLengthSize <= 0L || fieldLength <= 0L) {
             return "";
         }
-        return StringUtils.mid(sourceValue, (int) encodedLengthSize + 1, (int) fieldLength);
+        return StringUtils.mid(sourceText, (int) encodedLengthSize + 1, (int) fieldLength);
     }
 
     public static String Proc_10_7_80A190(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        String sourceValue = StringUtils.text(args[0]);
-        long fieldLength = Crypto.Proc_3_4_6D3620(sourceValue);
+        return readBase64LengthString(args[0]);
+    }
+
+    /**
+     * Original function: Proc_10_7_80A190.
+     */
+    public static String readBase64LengthString(Object sourceValue) {
+        String sourceText = StringUtils.text(sourceValue);
+        long fieldLength = Crypto.Proc_3_4_6D3620(sourceText);
         if (fieldLength <= 0L) {
             return "";
         }
-        return StringUtils.mid(sourceValue, 3, (int) fieldLength);
+        return StringUtils.mid(sourceText, 3, (int) fieldLength);
     }
 
     public static String Proc_10_8_80A580(Object... args) {
@@ -140,14 +154,28 @@ public final class Functions {
         if (args == null || args.length == 0) {
             return "";
         }
-        return StringUtils.text(args[0]).replace('\n', ' ').replace('\r', ' ');
+        return singleLineText(args[0]);
+    }
+
+    /**
+     * Original function: Proc_10_10_80A7F0.
+     */
+    public static String singleLineText(Object value) {
+        return StringUtils.text(value).replace('\n', ' ').replace('\r', ' ');
     }
 
     public static String Proc_10_11_80A9C0(Object... args) {
         if (args == null || args.length == 0) {
             return "";
         }
-        return StringUtils.text(args[0])
+        return sqlEscapedText(args[0]);
+    }
+
+    /**
+     * Original function: Proc_10_11_80A9C0.
+     */
+    public static String sqlEscapedText(Object value) {
+        return StringUtils.text(value)
             .replace("'", "''")
             .replace("\\r", " ")
             .replace("\\n", " ")

@@ -8861,7 +8861,7 @@ public final class Handling {
             return false;
         }
         String payload = StringUtils.text(packetPayload);
-        String idText = Functions.Proc_10_6_809F10(payload);
+        String idText = Functions.readVl64LengthString(payload);
         long furnitureId = NumberUtils.parseLong(idText);
         String notePayload = "";
         if (furnitureId <= 0L) {
@@ -8875,7 +8875,7 @@ public final class Handling {
             }
         }
         if (notePayload.isEmpty()) {
-            notePayload = Functions.Proc_10_7_80A190(payload);
+            notePayload = Functions.readBase64LengthString(payload);
         }
         if (notePayload.isEmpty()) {
             return false;
@@ -9293,7 +9293,7 @@ public final class Handling {
     }
 
     public static String nullableSqlText(String valueText) {
-        return StringUtils.text(valueText).isEmpty() ? "null" : "'" + Functions.Proc_10_11_80A9C0(valueText) + "'";
+        return StringUtils.text(valueText).isEmpty() ? "null" : "'" + Functions.sqlEscapedText(valueText) + "'";
     }
 
     public static long navigatorListLimit() {
@@ -9302,12 +9302,12 @@ public final class Handling {
     }
 
     public static String navigatorSearchTerm(String rawText) {
-        return Functions.Proc_10_11_80A9C0(rawText).replace("%", "");
+        return Functions.sqlEscapedText(rawText).replace("%", "");
     }
 
     public static long navigatorCategoryIdFromPacket(Object[] args, String packetPrefix) {
         String requestPayload = handlingRequestPayload(args, packetPrefix);
-        long categoryId = NumberUtils.parseLong(Functions.Proc_10_7_80A190(requestPayload, 0, 0));
+        long categoryId = NumberUtils.parseLong(Functions.readBase64LengthString(requestPayload));
         if (categoryId <= 0L) {
             categoryId = readWireLong(requestPayload, new LongRef(1));
         }
@@ -10171,7 +10171,7 @@ public final class Handling {
         if (!StringUtils.text(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
             requestPayload = requestPayload.substring(prefix.length());
         }
-        String value = Functions.Proc_10_7_80A190(requestPayload, 0, 0);
+        String value = Functions.readBase64LengthString(requestPayload);
         if (value.isEmpty()) {
             LongRef offset = new LongRef(1);
             value = readWireString(requestPayload, offset);

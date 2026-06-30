@@ -314,6 +314,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Functions.permissionMatrix().allows(1, "", "fuse_mod", 0));
         assertEquals("bcd", Functions.Proc_10_5_809D80("abcdef", 2, 3));
         assertEquals("O''Reilly test ", Functions.Proc_10_11_80A9C0("O'Reilly\\rtest\""));
+        assertEquals("O''Reilly test ", Functions.sqlEscapedText("O'Reilly\\rtest\""));
+        assertEquals("Line Break", Functions.singleLineText("Line\nBreak"));
+        String vl64LengthPayload = wireLong(3) + "abc";
+        assertEquals(Functions.Proc_10_6_809F10(vl64LengthPayload), Functions.readVl64LengthString(vl64LengthPayload));
+        assertEquals("packet", Functions.readBase64LengthString(wireString("packet")));
         assertEquals("\1" + "123\t45\tdata\t6\2", Functions.inventoryCacheRecord(123, 45, "data", 6));
         assertEquals("x", Functions.trimInventoryCache("x\r\n"));
         String inventoryCache = Functions.inventoryCacheAddRecord("x\r\n", 123, 45, "data", 6);
