@@ -1906,9 +1906,7 @@ public final class Handling {
                 return;
             }
             furniture.updatePostIt(note.furnitureId, note.noteColor, note.noteCaption);
-            String broadcastPayload = "AT" + note.furnitureId + '\1' + "AS" + note.furnitureId + '\2';
-            broadcastPayload = Crypto.Proc_3_0_6D2AF0(productId, null, broadcastPayload)
-                + productId + '\2' + note.noteColor + '\2';
+            String broadcastPayload = FurniturePayloads.stickyNoteUpdated(note.furnitureId, productId, note.noteColor);
             Proc_6_247_8027E0(socketIndex, broadcastPayload, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.

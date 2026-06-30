@@ -73,6 +73,21 @@ public final class FurniturePayloads {
             .build();
     }
 
+    public static String stickyNoteUpdated(long furnitureId, long productId, String noteColor) {
+        return PacketBuilder.create()
+            .appendRaw("AT")
+            .appendRaw(furnitureId)
+            .appendRaw('\1')
+            .appendRaw("AS")
+            .appendRaw(furnitureId)
+            .appendString("")
+            .appendInt(productId)
+            .appendRaw(productId)
+            .appendString("")
+            .appendString(noteColor)
+            .build();
+    }
+
     public static String wallInventoryPlacement(
         long furnitureId,
         long productId,

@@ -414,6 +414,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved represented-bot room-entry `@\\` payload construction into `PetPayloads`, leaving `Handling.representedBotRoomEntryPayload` as a compatibility lookup adapter.
 - Moved room icon payload construction into `RoomPayloads` with typed `RoomIconItem` records, leaving `Handling.roomIconPayloadFromWire` as a wire parser only.
 - Replaced raw zero-count `Crypto` fallback payloads for navigator room/event lists, equipped badges, and tag lists with the existing typed payload builders.
+- Moved sticky-note update broadcast payload construction into `FurniturePayloads`, replacing inline legacy `Crypto` assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -429,7 +430,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11889 lines
+- `Handling.java`: 11887 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines
