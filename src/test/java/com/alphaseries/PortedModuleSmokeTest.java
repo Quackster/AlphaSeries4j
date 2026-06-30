@@ -1196,13 +1196,11 @@ public final class PortedModuleSmokeTest {
         Boot.Proc_1_9_6C6DF0();
         assertEquals(true, Licence.global_00829098 instanceof RoomPortalSettings);
         assertEquals(true, Licence.global_0082909C instanceof RoomPortalSettings);
-        assertEquals("00\t0\t0\t0\t0\t0\t0\r", Licence.roomPortalSettings().warpSpaceRows());
-        assertEquals("0\t0\r", Licence.roomPortalSettings().specialGateRows());
+        assertRoomPortalSettingsBootRows(Licence.roomPortalSettings());
         RoomPortalSettings typedRoomPortalSettings = RoomPortalSettings.fromRows(
             List.of(new RoomDao.WarpSpaceRow(12L, 1L, 2L, 34L, 5L, 6L, 1L)),
             List.of(new RoomDao.SpecialGateRow(12L, 1L)));
-        assertEquals("012\t1\t2\t34\t5\t6\t1\r", typedRoomPortalSettings.warpSpaceRows());
-        assertEquals("12\t1\r", typedRoomPortalSettings.specialGateRows());
+        assertRoomPortalSettingsTypedRows(typedRoomPortalSettings);
         assertEquals(true, Functions.global_0082928C.contains("com.mysql.format.time=%H:%i:%s"));
         Boot.Proc_1_11_6C8D10();
         assertEquals(true, Licence.global_00829230 instanceof List);
@@ -4902,6 +4900,20 @@ public final class PortedModuleSmokeTest {
     private static void assertPetSettingsTypedAccessors(PetSettings settings, PetSettings.PetCommandRow command) {
         assertEquals(List.of(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 3)), settings.levels());
         assertEquals(List.of(command), settings.commands());
+    }
+
+    private static void assertRoomPortalSettingsBootRows(RoomPortalSettings settings) {
+        assertEquals("00\t0\t0\t0\t0\t0\t0\r", settings.warpSpaceRows());
+        assertEquals("0\t0\r", settings.specialGateRows());
+        assertEquals(List.of(new RoomDao.WarpSpaceRow(0L, 0L, 0L, 0L, 0L, 0L, 0L)), settings.warpSpaces());
+        assertEquals(List.of(new RoomDao.SpecialGateRow(0L, 0L)), settings.specialGates());
+    }
+
+    private static void assertRoomPortalSettingsTypedRows(RoomPortalSettings settings) {
+        assertEquals("012\t1\t2\t34\t5\t6\t1\r", settings.warpSpaceRows());
+        assertEquals("12\t1\r", settings.specialGateRows());
+        assertEquals(List.of(new RoomDao.WarpSpaceRow(12L, 1L, 2L, 34L, 5L, 6L, 1L)), settings.warpSpaces());
+        assertEquals(List.of(new RoomDao.SpecialGateRow(12L, 1L)), settings.specialGates());
     }
 
     private static void assertCatalogProductCounterRows(CatalogProductSettings settings) {

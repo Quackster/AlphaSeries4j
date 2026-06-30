@@ -38,6 +38,10 @@ public final class RoomPortalSettings {
         return new RoomPortalSettings("", "", List.of(), List.of());
     }
 
+    public List<RoomDao.WarpSpaceRow> warpSpaces() {
+        return List.copyOf(warpSpaces);
+    }
+
     public String warpSpaceRows() {
         if (!warpSpaces.isEmpty()) {
             StringBuilder rows = new StringBuilder("0");
@@ -58,6 +62,10 @@ public final class RoomPortalSettings {
             return rows.toString();
         }
         return warpSpaceRows;
+    }
+
+    public List<RoomDao.SpecialGateRow> specialGates() {
+        return List.copyOf(specialGates);
     }
 
     public String specialGateRows() {
