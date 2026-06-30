@@ -35,6 +35,10 @@ public final class CatalogPages {
         return new CatalogPages(pagePayloads, pageTrees);
     }
 
+    public Map<Long, String> pagePayloads() {
+        return Map.copyOf(pagePayloads);
+    }
+
     public String pagePayload(long pageId) {
         if (pageId < 0L) {
             return "";
@@ -50,6 +54,10 @@ public final class CatalogPages {
         }
         return rank < pageTrees.length && pageTrees[rank] != null && hc < pageTrees[rank].length
             ? StringUtils.text(pageTrees[rank][hc]) : "";
+    }
+
+    public String[][] pageTrees() {
+        return copyPageTrees(pageTrees);
     }
 
     public String defaultPageTree() {

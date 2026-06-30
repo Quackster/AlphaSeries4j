@@ -4526,9 +4526,7 @@ public final class PortedModuleSmokeTest {
         Licence.global_008292F4 = new String[][]{{"CATALOG_TREE"}};
         Handling.dispatchPreReadyPacket(4, "Ae", "Ae");
         assertEquals("CATALOG_TREE", Licence.catalogPages().defaultPageTree());
-        CatalogPages typedCatalogPages = CatalogPages.fromPayloads(Map.of(4L, "PAGE4"), new String[][]{{"TREE0"}});
-        assertEquals("PAGE4", typedCatalogPages.pagePayload(4L));
-        assertEquals("TREE0", typedCatalogPages.defaultPageTree());
+        assertCatalogPagesTypedAccessors();
         assertEquals(true, containsSend(handlingSends, "A~IHHM\2CATALOG_TREE"));
         handlingSends.clear();
         Handling.dispatchPreReadyPacket(4, "D}", "D}");
@@ -4985,6 +4983,18 @@ public final class PortedModuleSmokeTest {
                 + Crypto.Proc_3_0_6D2AF0(12, null, "")
                 + Crypto.Proc_3_0_6D2AF0(13, null, ""),
             recyclerCache.payload);
+    }
+
+    private static void assertCatalogPagesTypedAccessors() {
+        String[][] pageTrees = new String[][]{{"TREE0"}};
+        CatalogPages typedCatalogPages = CatalogPages.fromPayloads(Map.of(4L, "PAGE4"), pageTrees);
+        pageTrees[0][0] = "changed";
+        assertEquals("PAGE4", typedCatalogPages.pagePayload(4L));
+        assertEquals("TREE0", typedCatalogPages.defaultPageTree());
+        assertEquals(Map.of(4L, "PAGE4"), typedCatalogPages.pagePayloads());
+        String[][] copiedPageTrees = typedCatalogPages.pageTrees();
+        copiedPageTrees[0][0] = "changed-again";
+        assertEquals("TREE0", typedCatalogPages.defaultPageTree());
     }
 
     private static void assertProductCacheRows(ProductCache productCache) {
