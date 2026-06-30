@@ -1089,31 +1089,33 @@ public final class Boot {
 
     public static String buildGiftWrapPayload(List<Long> wrapProductIds, long accessoryCount, long colorCount) {
         long wrapCount = 0L;
-        StringBuilder wrapPayload = new StringBuilder();
+        PacketBuilder wrapPayload = PacketBuilder.create();
         for (Long productId : wrapProductIds == null ? List.<Long>of() : wrapProductIds) {
             long wrapId = NumberUtils.parseLong(productId);
             if (wrapId != 0L) {
                 wrapCount++;
-                wrapPayload.append(Crypto.encodeVl64(wrapId));
+                wrapPayload.appendInt(wrapId);
             }
         }
 
-        StringBuilder accessoryPayload = new StringBuilder();
+        PacketBuilder accessoryPayload = PacketBuilder.create();
         for (long optionIndex = 1L; optionIndex <= accessoryCount; optionIndex++) {
-            accessoryPayload.append(Crypto.encodeVl64(optionIndex));
+            accessoryPayload.appendInt(optionIndex);
         }
 
-        StringBuilder colorPayload = new StringBuilder();
+        PacketBuilder colorPayload = PacketBuilder.create();
         for (long optionIndex = 1L; optionIndex <= colorCount; optionIndex++) {
-            colorPayload.append(Crypto.encodeVl64(optionIndex));
+            colorPayload.appendInt(optionIndex);
         }
 
-        return Crypto.encodeVl64(accessoryCount)
-            + accessoryPayload
-            + Crypto.encodeVl64(wrapCount)
-            + wrapPayload
-            + Crypto.encodeVl64(colorCount)
-            + colorPayload;
+        return PacketBuilder.create()
+            .appendInt(accessoryCount)
+            .appendRaw(accessoryPayload.build())
+            .appendInt(wrapCount)
+            .appendRaw(wrapPayload.build())
+            .appendInt(colorCount)
+            .appendRaw(colorPayload.build())
+            .build();
     }
 
     public static ClubGiftCache buildClubGiftCache(String giftRows, Map<Long, Long> productIdByCatalogProductId,

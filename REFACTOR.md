@@ -586,6 +586,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Built `CatalogRegistry.CatalogRow` entries directly from typed `CatalogDao` cache row values instead of joining typed rows into tab text and reparsing them.
 - Added typed `GiftSettings.fromRows(...)` construction and defensive gift-wrap product ID access so gift settings can move through typed club-gift rows and product IDs instead of legacy lookup strings.
 - Routed boot gift-wrap cache loading through typed product ID lists and a typed `Licence.setGiftWrapState(...)` bridge, storing live gift-wrap product ids as typed `List<Long>` state while preserving legacy lookup parsing only for compatibility.
+- Built typed gift-wrap payloads with fluent `PacketBuilder` integer appends instead of separate raw `StringBuilder`/`Crypto.encodeVl64(...)` concatenation.
 - Added typed `RecyclerSettings.fromRewardGroups(...)` construction and immutable `RewardGroup` records so recycler reward state can be passed as typed product id collections instead of legacy product-list strings.
 - Routed boot recycler reward cache loading through typed `RecyclerSettings.RewardGroup` lists and a typed `Licence.setRecyclerRewards(...)` bridge, leaving legacy chance/count mirrors only as compatibility state.
 - Added named typed wall-furniture placement entrypoint `placeWallFurnitureFromInventory(...)` with the original `Proc_6_157_7974B0` noted in Javadocs, and routed the live floor-placement wall-item path away from the legacy `InventoryPlacementFurniture.fromLegacyArg(...)` boundary.
