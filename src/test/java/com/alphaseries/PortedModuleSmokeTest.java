@@ -28,6 +28,7 @@ import com.alphaseries.game.messenger.MessengerSettings;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
+import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.PetRaceRow;
@@ -940,6 +941,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(1L, typedVisitRoomCache.count);
         assertEquals("/ad/4\2/cafe\2", typedVisitRoomCache.payloadByVisitRoomId.get(4L));
         assertEquals(true, Boot.buildRecommendedRoomsQuery(3).contains("id_tree='3'"));
+        assertEquals("REC", RecommendedRooms.fromPayloads(Map.of(0L, "REC"), 1L).payload(1L));
         String roomRow = "1\t2\t3\tc1\tc2\tc3\tc4\tc5\tc6\tc7\tc8\tc9\tc10\tc11\tc12\tc13\tc14\tc15\tc16\tc17\tc18\tc19\tc20\tc21\tc22\t4\t5";
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "")
             + Crypto.Proc_3_0_6D2AF0(1, null, "")
