@@ -82,6 +82,7 @@ import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.wired.WiredPayloads;
 import com.alphaseries.messages.outgoing.AchievementPayloads;
+import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.JukeboxPayloads;
 import com.alphaseries.messages.outgoing.MessengerPayloads;
 import com.alphaseries.messages.outgoing.PollPayloads;
@@ -517,32 +518,13 @@ public final class Handling {
             if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
-            long offerCount = 0L;
-            StringBuilder offerPayload = new StringBuilder();
             ClubDao clubDao = clubDao();
             if (clubDao == null) {
                 return;
             }
-            for (ClubDao.ClubProductRow row : clubDao.clubProductRows()) {
-                if (row != null) {
-                    offerPayload.append(Crypto.Proc_3_0_6D2AF0(row.productId(), null, ""));
-                    offerPayload.append(StringUtils.text(row.spriteName())).append('\2');
-                    offerPayload.append(Crypto.Proc_3_0_6D2AF0(row.months(), null, ""));
-                    offerPayload.append(Crypto.Proc_3_0_6D2AF0(row.months() * 31L, null, ""));
-                    offerPayload.append(Crypto.Proc_3_0_6D2AF0(row.level(), null, ""));
-                    offerPayload.append(Crypto.Proc_3_0_6D2AF0(row.creditPrice(), null, ""));
-                    offerPayload.append(Crypto.Proc_3_0_6D2AF0(0, null, ""));
-                    offerCount++;
-                }
-            }
             ClubDao.UserClubStatus status = clubDao.userClubStatus(NumberUtils.parseLong(userId))
                 .orElse(new ClubDao.UserClubStatus(0L, 0L, 0L, 0L, 0L, 0L, 0L));
-            String payload = Crypto.Proc_3_0_6D2AF0(offerCount, null, "Iq") + offerPayload;
-            payload += Crypto.Proc_3_0_6D2AF0(status.hcLevel(), null, "");
-            payload += Crypto.Proc_3_0_6D2AF0(status.activeDays(), null, "");
-            payload += Crypto.Proc_3_0_6D2AF0(status.periodsLeft(), null, "");
-            payload += Crypto.Proc_3_0_6D2AF0(status.presentsAvailable(), null, "");
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            Proc_6_244_801E80(socketIndex, ClubPayloads.subscriptionOffers(clubDao.clubProductRows(), status), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

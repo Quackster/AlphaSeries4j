@@ -41,6 +41,7 @@ import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.game.user.UserGroupRow;
 import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
+import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.PacketReader;
 import com.alphaseries.protocol.WireEncoding;
@@ -960,6 +961,20 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829178 instanceof GiftSettings.ClubGiftState);
         assertEquals("GIFTS", Licence.giftSettings().clubGiftPayload());
         assertEquals(506L, Licence.giftSettings().clubGiftByCatalogProductId(81L).productId());
+        assertEquals("Iq" + Crypto.Proc_3_0_6D2AF0(1, null, "")
+                + Crypto.Proc_3_0_6D2AF0(2, null, "") + "club_vip\2"
+                + Crypto.Proc_3_0_6D2AF0(3, null, "")
+                + Crypto.Proc_3_0_6D2AF0(93, null, "")
+                + Crypto.Proc_3_0_6D2AF0(2, null, "")
+                + Crypto.Proc_3_0_6D2AF0(60, null, "")
+                + Crypto.Proc_3_0_6D2AF0(0, null, "")
+                + Crypto.Proc_3_0_6D2AF0(2, null, "")
+                + Crypto.Proc_3_0_6D2AF0(62, null, "")
+                + Crypto.Proc_3_0_6D2AF0(3, null, "")
+                + Crypto.Proc_3_0_6D2AF0(4, null, ""),
+            ClubPayloads.subscriptionOffers(
+                List.of(new ClubDao.ClubProductRow(2L, "club_vip", 3L, 2L, 60L)),
+                new ClubDao.UserClubStatus(2L, 10L, 70L, 1L, 3L, 4L, 8L)));
         Boot.Proc_1_6_6C5830();
         assertEquals(true, Licence.global_008291EC.contains("pet_dog"));
         assertEquals(true, Licence.petSettings().raceRows().contains("pet_dog"));
