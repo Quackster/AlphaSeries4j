@@ -69,6 +69,7 @@ import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.game.messenger.MessengerSearchResult;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.NewFriendRooms;
+import com.alphaseries.game.navigator.NavigatorState;
 import com.alphaseries.game.navigator.NavigatorRoom;
 import com.alphaseries.game.moderation.StaffCallForHelpRow;
 import com.alphaseries.game.moderation.StaffPayloads;
@@ -2906,14 +2907,15 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             LocalDateTime now = LocalDateTime.now();
-            if (Licence.newFriendRooms().shouldRefresh(now)) {
+            NavigatorState navigatorState = NavigatorState.instance();
+            if (navigatorState.newFriendRooms().shouldRefresh(now)) {
                 RoomDao rooms = roomDao();
                 if (rooms == null) {
                     return;
                 }
                 Licence.setNewFriendRooms(rooms.newFriendRoomPicks(), now.plusSeconds(90L));
             }
-            NewFriendRooms.RoomPick roomPick = Licence.newFriendRooms().randomRoom();
+            NewFriendRooms.RoomPick roomPick = navigatorState.newFriendRooms().randomRoom();
             Proc_6_244_801E80(socketIndex, NavigatorPayloads.newFriendRoom(roomPick), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.

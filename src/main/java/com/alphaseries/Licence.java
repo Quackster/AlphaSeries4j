@@ -11,6 +11,7 @@ import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.messenger.MessengerSettings;
 import com.alphaseries.game.moderation.StaffSettings;
 import com.alphaseries.game.navigator.NewFriendRooms;
+import com.alphaseries.game.navigator.NavigatorState;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.pet.PetSettings;
@@ -517,16 +518,23 @@ public final class Licence {
     }
 
     public static NewFriendRooms newFriendRooms() {
-        return NewFriendRooms.fromLegacy(global_0082908C, global_00829090);
+        if (global_0082908C instanceof NewFriendRooms newFriendRooms) {
+            NavigatorState.instance().setNewFriendRooms(newFriendRooms);
+        } else {
+            NavigatorState.instance().setNewFriendRoomsFromLegacy(global_0082908C, global_00829090);
+        }
+        return NavigatorState.instance().newFriendRooms();
     }
 
     public static void setNewFriendRooms(String rows, LocalDateTime expiresAt) {
-        global_0082908C = NewFriendRooms.fromLegacy(rows, expiresAt);
+        NavigatorState.instance().setNewFriendRoomsFromLegacy(rows, expiresAt);
+        global_0082908C = NavigatorState.instance().newFriendRooms();
         global_00829090 = expiresAt;
     }
 
     public static void setNewFriendRooms(List<NewFriendRooms.RoomPick> rooms, LocalDateTime expiresAt) {
-        global_0082908C = NewFriendRooms.fromRoomPicks(rooms, expiresAt);
+        NavigatorState.instance().setNewFriendRooms(rooms, expiresAt);
+        global_0082908C = NavigatorState.instance().newFriendRooms();
         global_00829090 = expiresAt;
     }
 

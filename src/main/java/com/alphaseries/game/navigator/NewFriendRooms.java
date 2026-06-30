@@ -21,6 +21,15 @@ public final class NewFriendRooms {
         if (rows instanceof NewFriendRooms newFriendRooms) {
             return newFriendRooms;
         }
+        if (rows instanceof Iterable<?> values) {
+            List<RoomPick> rooms = new ArrayList<>();
+            for (Object value : values) {
+                if (value instanceof RoomPick roomPick) {
+                    rooms.add(roomPick);
+                }
+            }
+            return new NewFriendRooms(rooms, expiresAt);
+        }
         List<RoomPick> rooms = new ArrayList<>();
         String rowText = StringUtils.text(rows);
         if (rowText.isEmpty()) {
@@ -43,6 +52,10 @@ public final class NewFriendRooms {
 
     public static NewFriendRooms fromRoomPicks(List<RoomPick> rooms, LocalDateTime expiresAt) {
         return new NewFriendRooms(rooms, expiresAt);
+    }
+
+    public static NewFriendRooms empty(LocalDateTime expiresAt) {
+        return new NewFriendRooms(List.of(), expiresAt);
     }
 
     public boolean shouldRefresh(LocalDateTime now) {
