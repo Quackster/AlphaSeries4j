@@ -935,8 +935,7 @@ public final class Licence {
         global_00829140 = productLists == null ? "" : productLists;
         global_0082915C = chances == null ? "" : chances;
         global_00829168 = Math.max(0L, groupCount);
-        RecyclerState.instance().setSettingsFromLegacy(global_0082912C, global_00829140, global_0082915C,
-            global_00829168, global_0082916C);
+        refreshRecyclerSettings();
     }
 
     public static void setRecyclerRewards(List<RecyclerSettings.RewardGroup> rewardGroups) {
@@ -944,7 +943,7 @@ public final class Licence {
         global_00829140 = RecyclerSettings.fromRewardGroups(global_0082912C, copiedGroups, global_0082916C);
         global_0082915C = recyclerChanceRows(copiedGroups);
         global_00829168 = copiedGroups.size();
-        RecyclerState.instance().setSettings((RecyclerSettings) global_00829140);
+        refreshRecyclerSettings();
     }
 
     public static void setRecyclerStatusPayload(String statusPayload) {
@@ -962,9 +961,17 @@ public final class Licence {
     }
 
     public static RecyclerSettings recyclerSettings() {
+        refreshRecyclerSettings();
+        return RecyclerState.instance().settings();
+    }
+
+    private static void refreshRecyclerSettings() {
+        if (global_00829140 instanceof RecyclerSettings settings) {
+            RecyclerState.instance().setSettings(settings);
+            return;
+        }
         RecyclerState.instance().setSettingsFromLegacy(global_0082912C, global_00829140, global_0082915C,
             global_00829168, global_0082916C);
-        return RecyclerState.instance().settings();
     }
 
     private static String[] recyclerChanceRows(List<RecyclerSettings.RewardGroup> rewardGroups) {

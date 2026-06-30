@@ -620,6 +620,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Built typed gift-wrap payloads with fluent `PacketBuilder` integer appends instead of separate raw `StringBuilder`/`Crypto.encodeVl64(...)` concatenation.
 - Added typed `RecyclerSettings.fromRewardGroups(...)` construction and immutable `RewardGroup` records so recycler reward state can be passed as typed product id collections instead of legacy product-list strings.
 - Routed boot recycler reward cache loading through typed `RecyclerSettings.RewardGroup` lists and a typed `Licence.setRecyclerRewards(...)` bridge, leaving legacy chance/count mirrors only as compatibility state.
+- Routed `Licence` recycler-settings refreshes through the typed `RecyclerSettings` state path when the reward mirror already contains a `RecyclerSettings` instance, leaving legacy product/chance array parsing as a compatibility fallback.
 - Built typed recycler reward payloads with fluent `PacketBuilder` over `RecyclerSettings.RewardGroup` chances and product IDs while keeping legacy product-list mirrors explicit.
 - Added named typed wall-furniture placement entrypoint `placeWallFurnitureFromInventory(...)` with the original `Proc_6_157_7974B0` noted in Javadocs, and routed the live floor-placement wall-item path away from the legacy `InventoryPlacementFurniture.fromLegacyArg(...)` boundary.
 - Removed the `InventoryPlacementFurniture.fromLegacyArg(...)` tab-delimited compatibility parser; wall placement tests and live callers now pass typed `InventoryPlacementFurniture` records directly.
