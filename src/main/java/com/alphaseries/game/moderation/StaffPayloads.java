@@ -184,6 +184,24 @@ public final class StaffPayloads {
             .build();
     }
 
+    public static String roomChatHistoryResponse(StaffUserLookup targetUser, long rowCount, String rowPayload) {
+        return PacketBuilder.message("HX")
+            .appendInt(targetUser.userId())
+            .appendString(targetUser.userName())
+            .appendInt(rowCount)
+            .appendRaw(rowPayload)
+            .build();
+    }
+
+    public static String roomVisitHistoryResponse(StaffUserLookup targetUser, long rowCount, String rowPayload) {
+        return PacketBuilder.message("HY")
+            .appendInt(targetUser.userId())
+            .appendString(targetUser.userName())
+            .appendInt(rowCount)
+            .appendRaw(rowPayload)
+            .build();
+    }
+
     public static boolean containsUnsafeAlert(String messageText) {
         String lowerMessage = StringUtils.text(messageText).toLowerCase();
         return lowerMessage.contains("cookie") && lowerMessage.contains("javascript:");

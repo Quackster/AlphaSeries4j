@@ -8773,12 +8773,10 @@ public final class Handling {
                         row.timestampLeft());
                     rowPayload.append(staffRoomChatHistoryPayload(row, chatRows));
                 }
-                String responsePayload = PacketBuilder.message("HX")
-                    .appendInt(targetUserId)
-                    .appendString(targetUser.userName())
-                    .appendInt(rowCount)
-                    .appendRaw(rowPayload)
-                    .build();
+                String responsePayload = StaffPayloads.roomChatHistoryResponse(
+                    targetUser,
+                    rowCount,
+                    rowPayload.toString());
                 Proc_6_244_801E80(socketIndex, responsePayload, 0);
             } else {
                 List<StaffRoomVisitRow> visitRows = moderationDao.recentRoomVisits(targetUserId);
@@ -8787,12 +8785,10 @@ public final class Handling {
                 for (StaffRoomVisitRow row : visitRows) {
                     rowPayload.append(staffRoomVisitPayload(row));
                 }
-                String responsePayload = PacketBuilder.message("HY")
-                    .appendInt(targetUserId)
-                    .appendString(targetUser.userName())
-                    .appendInt(rowCount)
-                    .appendRaw(rowPayload)
-                    .build();
+                String responsePayload = StaffPayloads.roomVisitHistoryResponse(
+                    targetUser,
+                    rowCount,
+                    rowPayload.toString());
                 Proc_6_244_801E80(socketIndex, responsePayload, 0);
             }
         } catch (Exception ignored) {

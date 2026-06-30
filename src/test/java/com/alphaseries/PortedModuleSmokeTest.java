@@ -35,6 +35,7 @@ import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
 import com.alphaseries.game.moderation.StaffRoomVisitRow;
+import com.alphaseries.game.moderation.StaffUserLookup;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.room.RoomPortalSettings;
@@ -2468,6 +2469,15 @@ public final class PortedModuleSmokeTest {
         expectedStaffChatHistory = Crypto.Proc_3_0_6D2AF0(2, null, expectedStaffChatHistory) + "Room\2" + expectedStaffChatRows;
         assertEquals(expectedStaffChatHistory,
             Handling.staffRoomChatHistoryPayload(new StaffRoomChatVisitRow(1L, 7L, "Room", 100L, 200L), staffChatRows));
+        StaffUserLookup staffTarget = new StaffUserLookup(88L, "Target");
+        String expectedRoomChatHistoryResponse = Crypto.Proc_3_0_6D2AF0(88, null, "HX")
+            + "Target\2" + Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedStaffChatHistory;
+        assertEquals(expectedRoomChatHistoryResponse,
+            StaffPayloads.roomChatHistoryResponse(staffTarget, 1L, expectedStaffChatHistory));
+        String expectedRoomVisitHistoryResponse = Crypto.Proc_3_0_6D2AF0(88, null, "HY")
+            + "Target\2" + Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedVisit;
+        assertEquals(expectedRoomVisitHistoryResponse,
+            StaffPayloads.roomVisitHistoryResponse(staffTarget, 1L, expectedVisit));
         assertEquals(true, Handling.containsUnsafeStaffAlert("cookie plus javascript:"));
         assertEquals(false, Handling.containsUnsafeStaffAlert("cookie only"));
 
