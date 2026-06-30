@@ -90,22 +90,25 @@ public final class UserDao {
     }
 
     public int addActivityPoints(long userId, long pointType, long points) throws SQLException {
+        String pointColumn = activityPointColumn(pointType);
         return database.execute(
-            "UPDATE users SET activitypoints_" + pointType + "=activitypoints_" + pointType + "+" + points
+            "UPDATE users SET " + pointColumn + "=" + pointColumn + "+" + points
                 + " WHERE id=?",
             userId);
     }
 
     public int addActivityPointsLimited(long userId, long pointType, long points) throws SQLException {
+        String pointColumn = activityPointColumn(pointType);
         return database.execute(
-            "UPDATE users SET activitypoints_" + pointType + "=activitypoints_" + pointType + "+" + points
+            "UPDATE users SET " + pointColumn + "=" + pointColumn + "+" + points
                 + " WHERE id=? LIMIT 1",
             userId);
     }
 
     public int addAchievementReward(long userId, long rewardType, long rewardIncrease, long scoreIncrease) throws SQLException {
+        String pointColumn = activityPointColumn(rewardType);
         return database.execute(
-            "UPDATE users SET activitypoints_" + rewardType + "=activitypoints_" + rewardType + "+" + rewardIncrease
+            "UPDATE users SET " + pointColumn + "=" + pointColumn + "+" + rewardIncrease
                 + ",achievement_score=achievement_score+" + scoreIncrease + " WHERE id=?",
             userId);
     }
@@ -339,7 +342,7 @@ public final class UserDao {
 
     public long activityPoints(long userId, long pointType) throws SQLException {
         return database.queryOne(
-            "SELECT activitypoints_" + pointType + " FROM users WHERE id=? LIMIT 1",
+            "SELECT " + activityPointColumn(pointType) + " FROM users WHERE id=? LIMIT 1",
             resultSet -> resultSet.getLong(1),
             userId)
             .orElse(0L);
@@ -358,7 +361,7 @@ public final class UserDao {
 
     public Optional<CatalogPurchaseBalance> catalogPurchaseBalance(long userId, long activityType) throws SQLException {
         return database.queryOne(
-            "SELECT credits,activitypoints_" + activityType + ",level_hc FROM users WHERE id=? LIMIT 1",
+            "SELECT credits," + activityPointColumn(activityType) + ",level_hc FROM users WHERE id=? LIMIT 1",
             resultSet -> new CatalogPurchaseBalance(
                 resultSet.getLong(1),
                 resultSet.getLong(2),
@@ -371,9 +374,10 @@ public final class UserDao {
         long creditPrice,
         long activityType,
         long activityPrice) throws SQLException {
+        String pointColumn = activityPointColumn(activityType);
         return database.execute(
-            "UPDATE users SET credits=credits-" + creditPrice + ",activitypoints_" + activityType
-                + "=activitypoints_" + activityType + "-" + activityPrice + " WHERE id=?",
+            "UPDATE users SET credits=credits-" + creditPrice + "," + pointColumn
+                + "=" + pointColumn + "-" + activityPrice + " WHERE id=?",
             userId);
     }
 
@@ -636,6 +640,11 @@ public final class UserDao {
         database.execute(
             "DELETE FROM users_effects WHERE users_effects.timestamp_expire IS NOT NULL "
                 + "AND users_effects.timestamp_expire<UNIX_TIMESTAMP() LIMIT 500");
+    }
+
+    private static String activityPointColumn(long pointType) {
+        long normalizedType = pointType < 0L || pointType > 4L ? 0L : pointType;
+        return "activitypoints_" + normalizedType;
     }
 
     public record UserIdentity(long userId, long socketIndex, String motto, String figure, String gender) {

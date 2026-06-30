@@ -242,6 +242,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed represented achievement progress reads through typed `UserDao` accessors, replacing raw user/log SQL and tab-delimited summary parsing in `Handling`.
 - Routed activity-point tick balance reads and awards through `UserDao`, replacing raw activity-point SQL in `Handling`.
 - Built activity-point tick award return payloads with `PacketBuilder.appendRaw(...)` instead of handler-local `StringBuilder` accumulation.
+- Centralized dynamic activity-point column selection in `UserDao.activityPointColumn(...)`, constraining all activity point reads/updates to the known `activitypoints_0` through `activitypoints_4` columns instead of assembling caller-provided column fragments inline.
 - Added typed `OwnProfileRow` loading and routed own-profile payloads through `UserDao` plus fluent `UserPayloads` construction instead of tab-delimited handler parsing.
 - Added typed `RoomUserProfileRow` loading and routed room-user profile lookups through `RoomDao`, replacing raw visit/user fallback SQL and tab-delimited handler parsing.
 - Added typed `RoomUserTargetRow` loading and routed room interaction/badge target lookups through `RoomDao`, replacing duplicated raw visit/user fallback SQL and field-index parsing.
