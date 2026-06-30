@@ -2547,7 +2547,7 @@ public final class Handling {
                 directionValue,
                 0);
             if (!entryPayload.isEmpty()) {
-                Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(1, null, "@\\") + entryPayload, 0);
+                Proc_6_247_8027E0(socketIndex, RoomPayloads.occupantEntries(1, entryPayload), 0);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -2631,8 +2631,8 @@ public final class Handling {
                     }
                 }
             }
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(occupantCount, null, "@\\") + occupantPayload, -1);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(statusCount, null, "Du") + statusPayload, 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.occupantEntries(occupantCount, occupantPayload.toString()), -1);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.occupantStatuses(statusCount, statusPayload.toString()), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

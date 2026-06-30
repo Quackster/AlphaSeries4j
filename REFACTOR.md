@@ -400,6 +400,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved voucher invalid/redeemed payload construction into `VoucherPayloads`, replacing repeated inline string assembly in `Handling`.
 - Moved inventory list envelope payload construction into `InventoryMessagePayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved present-opened and package-opened furniture payload construction into `FurniturePayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
+- Moved room occupant entry/status envelope construction into `RoomPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 

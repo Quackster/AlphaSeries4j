@@ -90,6 +90,20 @@ public final class RoomPayloads {
             .build();
     }
 
+    public static String occupantEntries(long occupantCount, String occupantPayload) {
+        return PacketBuilder.message("@\\")
+            .appendInt(occupantCount)
+            .appendRaw(occupantPayload)
+            .build();
+    }
+
+    public static String occupantStatuses(long statusCount, String statusPayload) {
+        return PacketBuilder.message("Du")
+            .appendInt(statusCount)
+            .appendRaw(statusPayload)
+            .build();
+    }
+
     public static String createdRoom(long roomId, String roomName) {
         return PacketBuilder.message("@{")
             .appendInt(roomId)
