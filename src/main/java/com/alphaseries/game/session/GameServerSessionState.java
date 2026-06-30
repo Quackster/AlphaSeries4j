@@ -14,12 +14,12 @@ public final class GameServerSessionState {
     private final List<QueuedPacket> queuedPackets = new ArrayList<>();
     private final Set<Long> readySocketIndexes = new LinkedHashSet<>();
 
-    private GameServerSessionState(String queuedPacketData, String readySessionMarkers) {
+    private GameServerSessionState(String queuedPacketData, Object readySessionMarkers) {
         parseQueuedPackets(StringUtils.text(queuedPacketData));
-        parseReadyMarkers(StringUtils.text(readySessionMarkers));
+        parseReadyMarkers(readySessionMarkers);
     }
 
-    public static GameServerSessionState fromLegacy(String queuedPacketData, String readySessionMarkers) {
+    public static GameServerSessionState fromLegacy(String queuedPacketData, Object readySessionMarkers) {
         return new GameServerSessionState(queuedPacketData, readySessionMarkers);
     }
 
@@ -111,8 +111,17 @@ public final class GameServerSessionState {
         }
     }
 
-    private void parseReadyMarkers(String readySessionMarkers) {
-        for (String part : readySessionMarkers.split("\\]", -1)) {
+    private void parseReadyMarkers(Object readySessionMarkers) {
+        if (readySessionMarkers instanceof Iterable<?> socketIndexes) {
+            for (Object socketIndexValue : socketIndexes) {
+                long socketIndex = NumberUtils.parseLong(socketIndexValue);
+                if (socketIndex > 0L) {
+                    readySocketIndexes.add(socketIndex);
+                }
+            }
+            return;
+        }
+        for (String part : StringUtils.text(readySessionMarkers).split("\\]", -1)) {
             String marker = part.replace("[", "");
             if (!marker.isEmpty()) {
                 long socketIndex = NumberUtils.parseLong(marker);

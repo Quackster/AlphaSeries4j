@@ -118,7 +118,7 @@ public final class Licence {
     public static String global_00829310 = "";
     public static Object global_0082930C = "";
     public static String global_00829350 = "";
-    public static String global_00829354 = "";
+    public static Object global_00829354 = "";
     public static String global_00829358 = "";
 
     private Licence() {
@@ -443,7 +443,7 @@ public final class Licence {
             return;
         }
         global_00829350 = sessionState.queuedPacketData();
-        global_00829354 = sessionState.readySessionMarkers();
+        global_00829354 = sessionState.readySocketIndexes();
     }
 
     public static RepresentedSocketCache representedSockets() {

@@ -1266,7 +1266,7 @@ public final class PortedModuleSmokeTest {
             typedGameSession.queuedPackets());
         assertEquals(Set.of(12L), typedGameSession.readySocketIndexes());
         assertEquals("[12:typed-packet]", typedGameSession.queuedPacketData());
-        assertEquals("[12]", typedGameSession.readySessionMarkers());
+        assertTypedGameServerSessionState(typedGameSession);
         Guardian.global_008291A0 = "";
         Guardian.global_0082919C = 0;
         Main.processGameServerData("DATA\2" + "7\2queued\2packet\1LISTEN\2" + "9");
@@ -4926,6 +4926,17 @@ public final class PortedModuleSmokeTest {
         assertEquals(":-)\t5", settings.gestureRows());
         assertEquals(List.of(new ChatSettings.FilterWord("badword")), settings.filterWords());
         assertEquals(List.of(new ChatSettings.Gesture(":-)", 5L)), settings.gestures());
+    }
+
+    private static void assertTypedGameServerSessionState(GameServerSessionState sessionState) {
+        assertEquals("[12]", sessionState.readySessionMarkers());
+        String previousQueuedPackets = Licence.global_00829350;
+        Object previousReadySessions = Licence.global_00829354;
+        Licence.setGameServerSessionState(sessionState);
+        assertEquals(true, Licence.global_00829354 instanceof Set);
+        assertEquals(Set.of(12L), Licence.gameServerSessionState().readySocketIndexes());
+        Licence.global_00829350 = previousQueuedPackets;
+        Licence.global_00829354 = previousReadySessions;
     }
 
     private static void assertRoomPortalSettingsBootRows(RoomPortalSettings settings) {

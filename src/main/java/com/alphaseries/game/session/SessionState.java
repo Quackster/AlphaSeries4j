@@ -51,7 +51,7 @@ public final class SessionState {
         this.gameServerSession = gameServerSession == null ? GameServerSessionState.empty() : gameServerSession;
     }
 
-    public synchronized void setGameServerSessionFromLegacy(String queuedPacketData, String readySessionMarkers) {
+    public synchronized void setGameServerSessionFromLegacy(String queuedPacketData, Object readySessionMarkers) {
         gameServerSession = GameServerSessionState.fromLegacy(queuedPacketData, readySessionMarkers);
     }
 
