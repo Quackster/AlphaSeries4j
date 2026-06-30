@@ -278,12 +278,12 @@ public final class PortedModuleSmokeTest {
         assertEquals(inventoryCache, Functions.inventoryCacheAddRecord(inventoryCache, 123, 99, "other", 1));
         assertEquals("x", Functions.inventoryCacheRemoveRecord(inventoryCache, 123));
         assertEquals(inventoryCache, Functions.inventoryCacheRemoveRecord(inventoryCache, 999));
-        assertEquals("Ab" + Handling.inventoryItemPayload(123, 45, "data", 6) + '\1',
+        assertEquals("Ab" + InventoryMessagePayloads.item(123, 45, "data", 6) + '\1',
             Functions.inventoryAddPayload(123, 45, "data", 6));
         assertEquals(Functions.inventoryAddPayload(123, 45, "data", 6),
-            InventoryMessagePayloads.add(Handling.inventoryItemPayload(123, 45, "data", 6)));
-        assertEquals("Ab" + Handling.inventoryItemPayload(123, 45, "data", 6) + '\2',
-            InventoryMessagePayloads.roomAdd(Handling.inventoryItemPayload(123, 45, "data", 6)));
+            InventoryMessagePayloads.add(InventoryMessagePayloads.item(123, 45, "data", 6)));
+        assertEquals("Ab" + InventoryMessagePayloads.item(123, 45, "data", 6) + '\2',
+            InventoryMessagePayloads.roomAdd(InventoryMessagePayloads.item(123, 45, "data", 6)));
         assertEquals(Crypto.Proc_3_0_6D2AF0(123, null, "Ac"), InventoryMessagePayloads.remove(123));
         assertEquals(InventoryMessagePayloads.remove(123), Functions.inventoryRemovePayload(123));
         Path inventoryRoot = Files.createTempDirectory("alphaseries-inventory");
@@ -1779,9 +1779,9 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(4, null, "")
             + "chair\2seat\2chair_sprite\2M\2"
             + Crypto.Proc_3_0_6D2AF0(4, null, "");
-        assertEquals(expectedInventoryItem, Handling.inventoryItemPayload(100, 20, "a\bb", 4));
+        assertEquals(expectedInventoryItem, InventoryMessagePayloads.item(100, 20, "a\bb", 4));
         assertEquals(expectedInventoryItem, Handling.Proc_6_138_7678A0(100, 20, "a\bb", 4));
-        String iconInventoryItem = Handling.inventoryItemPayload(101, 21, "", 0);
+        String iconInventoryItem = InventoryMessagePayloads.item(101, 21, "", 0);
         assertEquals(true, iconInventoryItem.contains("0" + Crypto.Proc_3_0_6D2AF0(101, null, "") + "I\2"));
         assertEquals(true, iconInventoryItem.contains("poster\2wall\2poster_sprite\2"));
         String[] productTypeCache = new String[22];
@@ -1823,11 +1823,11 @@ public final class PortedModuleSmokeTest {
         assertEquals("'100','101'", Handling.representedTradeOfferSqlIds(tradeOffers, 2));
         assertEquals("100:20\1" + "101:21", Handling.representedTradeOfferLogItems(tradeOffers, 2));
         Handling.TradeOfferItemPayload sourceTradeItems = Handling.representedTradeOfferItemPayload(tradeOffers, 2);
-        String expectedSourceTradeItems = Handling.inventoryItemPayload(100, 20, "new", 6) + iconInventoryItem;
+        String expectedSourceTradeItems = InventoryMessagePayloads.item(100, 20, "new", 6) + iconInventoryItem;
         assertEquals(2L, sourceTradeItems.itemCount);
         assertEquals(expectedSourceTradeItems, sourceTradeItems.payload);
         Handling.TradeOfferItemPayload targetTradeItems = Handling.representedTradeOfferItemPayload(tradeOffers, 3);
-        String expectedTargetTradeItems = Handling.inventoryItemPayload(102, 20, "x", 5);
+        String expectedTargetTradeItems = InventoryMessagePayloads.item(102, 20, "x", 5);
         assertEquals(1L, targetTradeItems.itemCount);
         assertEquals(expectedTargetTradeItems, targetTradeItems.payload);
         String expectedTradePayload = Crypto.Proc_3_0_6D2AF0(5, null, "Al");

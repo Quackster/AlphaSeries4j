@@ -9486,13 +9486,9 @@ public final class Handling {
         if (args == null || args.length < 2) {
             return "";
         }
-        return inventoryItemPayload(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]),
+        return InventoryMessagePayloads.item(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]),
             args.length >= 3 ? StringUtils.text(args[2]) : "",
             args.length >= 4 ? NumberUtils.parseLong(args[3]) : 0L);
-    }
-
-    public static String inventoryItemPayload(long itemId, long productId, String itemData, long extraValue) {
-        return InventoryMessagePayloads.item(itemId, productId, itemData, extraValue);
     }
 
     public static List<RepresentedTradeOffer> representedTradeOfferStore(
@@ -9589,7 +9585,7 @@ public final class Handling {
         StringBuilder payload = new StringBuilder();
         for (RepresentedTradeOffer offer : tradeOffers) {
             if (offer.socketIndex() == socketIndex) {
-                payload.append(inventoryItemPayload(
+                payload.append(InventoryMessagePayloads.item(
                     offer.furnitureId(),
                     offer.productId(),
                     offer.signText(),
