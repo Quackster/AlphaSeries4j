@@ -26,6 +26,10 @@ public final class QuestSettings {
         return new QuestSettings("", definitions);
     }
 
+    public static QuestSettings empty() {
+        return new QuestSettings("", List.of());
+    }
+
     public String rows() {
         if (!rows.isEmpty()) {
             return rows;

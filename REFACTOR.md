@@ -448,6 +448,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added a typed `Main.GameServerPacket` parser and routed live game-server `DATA` processing through a named packet payload append path.
 - Removed the game-server queued-packet `String[]` compatibility entry point from `Main`; packet field arrays are now private parser internals only.
 - Replaced badge update selection array exports with typed `BadgeUpdateSelections` slot accessors, keeping positional wire parsing inside the adapter.
+- Added `QuestSettings.empty()` and routed null/default quest payload and decision paths away from `QuestSettings.fromLegacy("")`; legacy quest parsing now remains only at the `Licence` bridge and explicit legacy-row tests.
 
 ## VB Compatibility Class Removal Checklist
 

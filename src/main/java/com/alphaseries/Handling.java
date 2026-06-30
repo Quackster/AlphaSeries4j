@@ -10037,7 +10037,7 @@ public final class Handling {
         long fallbackCampaignId = 0L;
         long fallbackLevel = Integer.MAX_VALUE;
         boolean foundCurrent = false;
-        QuestSettings settings = questSettings == null ? QuestSettings.fromLegacy("") : questSettings;
+        QuestSettings settings = questSettings == null ? QuestSettings.empty() : questSettings;
         for (QuestSettings.QuestDefinitionRow definition : settings.definitions()) {
             if (definition.fieldCount() >= 9) {
                 if (fallbackQuestId <= 0L || definition.level() < fallbackLevel) {
@@ -10089,7 +10089,7 @@ public final class Handling {
         }
 
         boolean matchedQuest = false;
-        QuestSettings settings = questSettings == null ? QuestSettings.fromLegacy("") : questSettings;
+        QuestSettings settings = questSettings == null ? QuestSettings.empty() : questSettings;
         QuestSettings.QuestDefinitionRow questDefinition = settings.definitionById(decision.questId);
         if (questDefinition != null && questDefinition.fieldCount() >= 11) {
             decision.amountRequired = questDefinition.activityAmount();
@@ -11450,7 +11450,7 @@ public final class Handling {
         }
         QuestDao quests = questDao();
         if (quests == null) {
-            return QuestSettings.fromLegacy("");
+            return QuestSettings.empty();
         }
         try {
             List<QuestSettings.QuestDefinitionRow> rows = new ArrayList<>();
@@ -11473,7 +11473,7 @@ public final class Handling {
             }
             return QuestSettings.fromDefinitions(rows);
         } catch (Exception ignored) {
-            return QuestSettings.fromLegacy("");
+            return QuestSettings.empty();
         }
     }
 

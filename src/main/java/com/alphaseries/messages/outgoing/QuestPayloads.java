@@ -43,7 +43,7 @@ public final class QuestPayloads {
         long campaignLevelCount = 0L;
         long questCount = 0L;
         PacketBuilder questPayload = PacketBuilder.create();
-        QuestSettings settings = questSettings == null ? QuestSettings.fromLegacy("") : questSettings;
+        QuestSettings settings = questSettings == null ? QuestSettings.empty() : questSettings;
         for (QuestSettings.QuestDefinitionRow quest : settings.definitions()) {
             if (quest.fieldCount() >= 11) {
                 long waitSeconds = quest.waitAmount();
