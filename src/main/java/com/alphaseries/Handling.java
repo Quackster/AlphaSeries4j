@@ -2564,12 +2564,13 @@ public final class Handling {
                 for (String botRow : botEntities.split("\r", -1)) {
                     long botEntityId = NumberUtils.parseLong(botRow);
                     if (botEntityId > 0L) {
-                        String botName = representedBotRecordField(botEntityId, 2);
-                        String botFigure = representedBotRecordField(botEntityId, 10);
-                        long positionX = representedBotRecordLong(botEntityId, 6);
-                        long positionY = representedBotRecordLong(botEntityId, 7);
-                        String positionZ = representedBotRecordField(botEntityId, 8);
-                        long directionValue = representedBotRecordLong(botEntityId, 9);
+                        RepresentedBotRegistry.RepresentedBotRecord bot = Licence.representedBots().record(botEntityId);
+                        String botName = bot.name();
+                        String botFigure = bot.figure();
+                        long positionX = bot.positionX();
+                        long positionY = bot.positionY();
+                        String positionZ = bot.positionZ();
+                        long directionValue = bot.positionR();
                         if (positionZ.isEmpty()) {
                             positionZ = "0.0";
                         }
