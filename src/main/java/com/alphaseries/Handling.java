@@ -7249,9 +7249,6 @@ public final class Handling {
         try {
             String packetPayload = handlingPacketPayload(args);
             String requestPayload = packetPayload.startsWith("oL") ? packetPayload.substring(2) : packetPayload;
-            if (packetPayload.length() >= 3) {
-                Functions.Proc_10_5_809D80(packetPayload, 3, 0);
-            }
             String valueText = Functions.readVl64LengthString(requestPayload);
             if (valueText.isEmpty()) {
                 valueText = readWireString(requestPayload, new LongRef(1));
@@ -7705,7 +7702,7 @@ public final class Handling {
                 return;
             }
             long socketIndex = NumberUtils.parseLong(args[0]);
-            String packetBuffer = Functions.Proc_10_9_80A680(StringUtils.text(args[1]), 0, 0);
+            String packetBuffer = Functions.normalizeNullBytes(args[1]);
             if (socketIndex <= 0L || Guardian.Proc_11_2_821390(socketIndex, 0, 0) != 1) {
                 return;
             }

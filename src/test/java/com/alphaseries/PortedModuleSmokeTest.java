@@ -322,6 +322,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(5L, Functions.randomLongInclusive(5, 5));
         long randomRangeValue = Functions.randomLongInclusive(2, 4);
         assertEquals(true, randomRangeValue >= 2L && randomRangeValue <= 4L);
+        assertEquals("a\u00a0b", Functions.normalizeNullBytes("a\0b"));
         assertEquals("\1" + "123\t45\tdata\t6\2", Functions.inventoryCacheRecord(123, 45, "data", 6));
         assertEquals("x", Functions.trimInventoryCache("x\r\n"));
         String inventoryCache = Functions.inventoryCacheAddRecord("x\r\n", 123, 45, "data", 6);

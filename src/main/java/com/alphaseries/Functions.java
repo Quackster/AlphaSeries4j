@@ -159,7 +159,14 @@ public final class Functions {
         if (args == null || args.length == 0) {
             return "";
         }
-        return StringUtils.text(args[0]).replace('\0', '\u00a0');
+        return normalizeNullBytes(args[0]);
+    }
+
+    /**
+     * Original function: Proc_10_9_80A680.
+     */
+    public static String normalizeNullBytes(Object value) {
+        return StringUtils.text(value).replace('\0', '\u00a0');
     }
 
     public static String Proc_10_10_80A7F0(Object... args) {
