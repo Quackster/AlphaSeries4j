@@ -12,7 +12,7 @@ public final class AlphaSeriesApp {
         AppDatabaseConfig.configureDefaultConnector();
         String configText = Handling.readFile(Path.of(Functions.applicationPath, "config.ini").toString());
         long databaseStartedAt = System.nanoTime();
-        if (Crypto.Proc_3_5_6D3880(configText) != 1L) {
+        if (Crypto.connectDatabaseFromConfig(configText) != 1L) {
             System.err.println("AlphaSeries database connection failed");
             System.exit(1);
         }

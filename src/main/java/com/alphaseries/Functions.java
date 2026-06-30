@@ -119,8 +119,8 @@ public final class Functions {
      */
     public static String readVl64LengthString(Object sourceValue) {
         String sourceText = StringUtils.text(sourceValue);
-        long encodedLengthSize = Crypto.Proc_3_2_6D30A0(sourceText);
-        long fieldLength = Crypto.Proc_3_3_6D3240(sourceText);
+        long encodedLengthSize = Crypto.encodedVl64LengthByteCount(sourceText);
+        long fieldLength = Crypto.decodeVl64(sourceText);
         if (encodedLengthSize <= 0L || fieldLength <= 0L) {
             return "";
         }
@@ -139,7 +139,7 @@ public final class Functions {
      */
     public static String readBase64LengthString(Object sourceValue) {
         String sourceText = StringUtils.text(sourceValue);
-        long fieldLength = Crypto.Proc_3_4_6D3620(sourceText);
+        long fieldLength = Crypto.decodeBase64Length(sourceText);
         if (fieldLength <= 0L) {
             return "";
         }

@@ -45,11 +45,18 @@ public final class Crypto {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        String encodedValue = text(args[0]);
-        if (encodedValue.isEmpty()) {
+        return encodedVl64LengthByteCount(text(args[0]));
+    }
+
+    /**
+     * Original function: Proc_3_2_6D30A0.
+     */
+    public static long encodedVl64LengthByteCount(String encodedValue) {
+        String value = text(encodedValue);
+        if (value.isEmpty()) {
             return 0L;
         }
-        long firstByte = encodedValue.charAt(0) - 72L;
+        long firstByte = value.charAt(0) - 72L;
         return (firstByte / 8L) + 1L;
     }
 
@@ -57,14 +64,14 @@ public final class Crypto {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return WireEncoding.decodeVl64(text(args[0]));
+        return decodeVl64(text(args[0]));
     }
 
     public static long Proc_3_4_6D3620(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return WireEncoding.decodeBase64Length(text(args[0]));
+        return decodeBase64Length(text(args[0]));
     }
 
     public static String buildDatabaseConnectionString(Object... args) {
@@ -111,7 +118,17 @@ public final class Crypto {
             + ";Database=" + databaseName + ";User=" + userName + ";Password=" + password + ";Option=3;";
     }
 
+    /**
+     * Original function: Proc_3_5_6D3880.
+     */
     public static long Proc_3_5_6D3880(Object... args) {
+        return connectDatabaseFromConfig(args);
+    }
+
+    /**
+     * Original function: Proc_3_5_6D3880.
+     */
+    public static long connectDatabaseFromConfig(Object... args) {
         try {
             String connectionString = buildDatabaseConnectionString(args);
             if (connectionString.isEmpty()) {
@@ -140,12 +157,25 @@ public final class Crypto {
         return result;
     }
 
+    /**
+     * Original function: Proc_3_0_6D2AF0.
+     */
     public static String encodeVl64(long value) {
         return WireEncoding.encodeVl64(value);
     }
 
+    /**
+     * Original function: Proc_3_3_6D3240.
+     */
     public static long decodeVl64(String encodedValue) {
         return WireEncoding.decodeVl64(encodedValue);
+    }
+
+    /**
+     * Original function: Proc_3_4_6D3620.
+     */
+    public static long decodeBase64Length(String encodedValue) {
+        return WireEncoding.decodeBase64Length(encodedValue);
     }
 
     private static String text(Object value) {

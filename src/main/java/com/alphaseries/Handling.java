@@ -7825,7 +7825,7 @@ public final class Handling {
             long packetCount = 0L;
             while (packetBuffer.length() > 2 && packetCount < 10L) {
                 packetBuffer = packetBuffer.substring(1);
-                long packetLength = Crypto.Proc_3_4_6D3620(StringUtils.left(packetBuffer, 2));
+                long packetLength = Crypto.decodeBase64Length(StringUtils.left(packetBuffer, 2));
                 if (packetLength <= 0L || packetBuffer.length() < packetLength + 2L) {
                     break;
                 }
@@ -8942,7 +8942,7 @@ public final class Handling {
             return "";
         }
         int start = (int) offset.value - 1;
-        long fieldLength = Crypto.Proc_3_4_6D3620(payload.substring(start));
+        long fieldLength = Crypto.decodeBase64Length(payload.substring(start));
         if (fieldLength <= 0L) {
             return "";
         }
@@ -8971,7 +8971,7 @@ public final class Handling {
         if (encodedLengthSize <= 0L) {
             return 0L;
         }
-        long value = Crypto.Proc_3_3_6D3240(remainingPayload);
+        long value = Crypto.decodeVl64(remainingPayload);
         offset.value += encodedLengthSize;
         return value;
     }
@@ -9002,7 +9002,7 @@ public final class Handling {
             furnitureId = readWireLong(payload, offset);
             notePayload = StringUtils.mid(payload, (int) offset.value);
         } else {
-            long idLengthSize = Crypto.Proc_3_2_6D30A0(payload);
+            long idLengthSize = Crypto.encodedVl64LengthByteCount(payload);
             if (idLengthSize > 0L) {
                 notePayload = StringUtils.mid(payload, (int) idLengthSize + idText.length() + 1);
             }

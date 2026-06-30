@@ -185,7 +185,7 @@ public final class Main {
         LifecycleResult result = new LifecycleResult();
         try {
             Licence.resetRuntimeDefaults();
-            if (Crypto.Proc_3_3_6D3240("K", -1, 0) != 3L) {
+            if (Crypto.decodeVl64("K") != 3L) {
                 result.shouldExit = true;
                 return result;
             }
