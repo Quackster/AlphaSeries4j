@@ -15,6 +15,7 @@ import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
 import com.alphaseries.game.pet.PetInventoryRow;
+import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
@@ -677,7 +678,11 @@ public final class PortedModuleSmokeTest {
         assertEquals("20\t30\t40", Boot.buildPetLevelCache("2\t20\t30\t40").get(2L));
         Boot.PetCommandCache petCommandCache = Boot.buildPetCommandCache("1\t0\tsit\tidle\r2\t3\tjump\tmove");
         assertEquals(2L, petCommandCache.commandCount);
-        assertEquals("2\t3\tjump\tmove", petCommandCache.commandById.get(2L));
+        PetSettings.PetCommandRow jumpCommand = petCommandCache.commandById.get(2L);
+        assertEquals(2L, jumpCommand.commandId());
+        assertEquals(3L, jumpCommand.requiredLevel());
+        assertEquals("jump", jumpCommand.command());
+        assertEquals("move", jumpCommand.action());
         assertEquals("base" + "\0" + "5\1party\2" + "\0" + "7\1game\2",
             Boot.buildRoomEventLocaleCache("roomevent_type_5\tparty\rroomevent_type_7\tgame", "base"));
         assertEquals("[site.name=Alpha][com.client.format.date=dd.mm.yyyy][com.client.format.time=hh:nn:ss]"
@@ -896,8 +901,12 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.petSettings().raceRows().contains("pet_dog"));
         Boot.Proc_1_7_6C5E10();
         assertEquals("20\t30\t40", ((String[]) Licence.global_008292D0)[2]);
-        assertEquals("2\t3\tjump\tmove", ((String[]) Licence.global_008292CC)[2]);
-        assertEquals("2\t3\tjump\tmove", ((String[]) Licence.petSettings().commandRows())[2]);
+        PetSettings.PetCommandRow cachedCommand = ((PetSettings.PetCommandRow[]) Licence.global_008292CC)[2];
+        assertEquals(2L, cachedCommand.commandId());
+        assertEquals(3L, cachedCommand.requiredLevel());
+        assertEquals("jump", cachedCommand.command());
+        assertEquals("move", cachedCommand.action());
+        assertEquals(cachedCommand, ((PetSettings.PetCommandRow[]) Licence.petSettings().commandRows())[2]);
         Boot.Proc_1_8_6C6850();
         assertEquals(true, DataManager.global_008291AC.contains("party"));
         Boot.Proc_1_9_6C6DF0();
@@ -1816,7 +1825,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(2L, Handling.petNameValidationCode(""));
         assertEquals(2L, Handling.petNameValidationCode("Rex1"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "@d"), Handling.petNameValidationPayload("Rex1"));
-        String commandRows = "1\t0\tsit\tgst ok\r2\t3\tjump\tgst jump\r3\t5\thigh\tgst high";
+        List<PetSettings.PetCommandRow> commandRows = List.of(
+            new PetSettings.PetCommandRow(1L, 0L, "sit", "gst ok", 4),
+            new PetSettings.PetCommandRow(2L, 3L, "jump", "gst jump", 4),
+            new PetSettings.PetCommandRow(3L, 5L, "high", "gst high", 4));
         String expectedCommandList = Crypto.Proc_3_0_6D2AF0(3, null, "I]")
             + Crypto.Proc_3_0_6D2AF0(3, null, "")
             + "0" + Crypto.Proc_3_0_6D2AF0(1, null, "")
@@ -3779,7 +3791,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "IY"));
         assertEquals(true, containsSend(handlingSends, "Owner"));
         handlingSends.clear();
-        Licence.global_008292CC = new String[]{"", "1\t0\tsit\tgst sit", "2\t3\tjump\tgst jump"};
+        Licence.global_008292CC = new PetSettings.PetCommandRow[]{
+            null,
+            new PetSettings.PetCommandRow(1L, 0L, "sit", "gst sit", 4),
+            new PetSettings.PetCommandRow(2L, 3L, "jump", "gst jump", 4)
+        };
         String petCommandPayload = Handling.Proc_6_184_7CBDA0(4, 2);
         assertEquals(Handling.petCommandListPayload(2, Licence.global_008292CC), petCommandPayload);
         assertEquals(true, containsSend(handlingSends, "I]"));

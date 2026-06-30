@@ -18,6 +18,7 @@ import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetCommandCacheRow;
 import com.alphaseries.game.pet.PetLevelCacheRow;
 import com.alphaseries.game.pet.PetRaceCacheRow;
+import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -285,9 +286,9 @@ public final class Boot {
             Licence.setPetLevelRows(levels);
             long commandCount = bots.petCommandCount();
             long maxCommandId = Math.max(commandCount, bots.maxPetCommandId());
-            String[] commands = new String[(int) Math.max(0L, maxCommandId) + 1];
+            PetSettings.PetCommandRow[] commands = new PetSettings.PetCommandRow[(int) Math.max(0L, maxCommandId) + 1];
             PetCommandCache cache = buildPetCommandCache(bots.petCommandCacheRows());
-            for (Map.Entry<Long, String> entry : cache.commandById.entrySet()) {
+            for (Map.Entry<Long, PetSettings.PetCommandRow> entry : cache.commandById.entrySet()) {
                 if (entry.getKey() >= 0L && entry.getKey() < commands.length) {
                     commands[entry.getKey().intValue()] = entry.getValue();
                 }
@@ -833,7 +834,7 @@ public final class Boot {
 
     public static final class PetCommandCache {
         public long commandCount;
-        public Map<Long, String> commandById = new LinkedHashMap<Long, String>();
+        public Map<Long, PetSettings.PetCommandRow> commandById = new LinkedHashMap<Long, PetSettings.PetCommandRow>();
     }
 
     public static final class ClubGiftCache {
@@ -959,7 +960,12 @@ public final class Boot {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 4) {
                     long commandId = NumberUtils.parseLong(fields[0]);
-                    cache.commandById.put(commandId, commandId + "\t" + NumberUtils.parseLong(fields[1]) + "\t" + fields[2] + "\t" + fields[3]);
+                    cache.commandById.put(commandId, new PetSettings.PetCommandRow(
+                        commandId,
+                        NumberUtils.parseLong(fields[1]),
+                        fields[2],
+                        fields[3],
+                        fields.length));
                     cache.commandCount++;
                 }
             }
@@ -972,9 +978,12 @@ public final class Boot {
         if (commandRows != null) {
             for (PetCommandCacheRow row : commandRows) {
                 if (row != null) {
-                    cache.commandById.put(row.commandId(),
-                        row.commandId() + "\t" + row.requiredLevel() + "\t"
-                            + StringUtils.text(row.command()) + "\t" + StringUtils.text(row.action()));
+                    cache.commandById.put(row.commandId(), new PetSettings.PetCommandRow(
+                        row.commandId(),
+                        row.requiredLevel(),
+                        StringUtils.text(row.command()),
+                        StringUtils.text(row.action()),
+                        4));
                     cache.commandCount++;
                 }
             }

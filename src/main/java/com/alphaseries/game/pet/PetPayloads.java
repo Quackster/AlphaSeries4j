@@ -133,23 +133,17 @@ public final class PetPayloads {
 
     public static String commandList(long petLevel, Object commandRows) {
         long resolvedLevel = Math.max(0L, petLevel);
-        String[] rows = normalizeRows(commandRows);
         long allCount = 0L;
         long availableCount = 0L;
         PacketBuilder allPayload = PacketBuilder.create();
         PacketBuilder availablePayload = PacketBuilder.create();
-        for (String row : rows) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                long commandId = NumberUtils.parseLong(StringUtils.field(fields, 0));
-                long requiredLevel = NumberUtils.parseLong(StringUtils.field(fields, 1));
-                if (commandId > 0L) {
-                    allPayload.appendRaw('0').appendInt(commandId);
-                    allCount++;
-                    if (requiredLevel <= resolvedLevel) {
-                        availablePayload.appendRaw('0').appendInt(commandId);
-                        availableCount++;
-                    }
+        for (PetSettings.PetCommandRow row : PetSettings.commandRows(commandRows)) {
+            if (row != null && row.commandId() > 0L) {
+                allPayload.appendRaw('0').appendInt(row.commandId());
+                allCount++;
+                if (row.requiredLevel() <= resolvedLevel) {
+                    availablePayload.appendRaw('0').appendInt(row.commandId());
+                    availableCount++;
                 }
             }
         }
@@ -270,20 +264,4 @@ public final class PetPayloads {
             .build();
     }
 
-    private static String[] normalizeRows(Object rows) {
-        if (rows == null) {
-            return new String[0];
-        }
-        if (rows instanceof String[] rowArray) {
-            return rowArray;
-        }
-        if (rows instanceof String[][] table) {
-            String[] normalized = new String[table.length];
-            for (int index = 0; index < table.length; index++) {
-                normalized[index] = table[index] == null ? "" : String.join("\t", table[index]);
-            }
-            return normalized;
-        }
-        return StringUtils.text(rows).split("\r", -1);
-    }
 }

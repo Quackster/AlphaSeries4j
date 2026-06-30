@@ -45,26 +45,23 @@ public final class PetSettings {
 
     public static List<PetCommandRow> commandRows(Object rows) {
         List<PetCommandRow> commands = new ArrayList<>();
-        for (String row : normalizeRows(rows)) {
-            PetCommandRow command = commandRow(row);
-            if (command != null) {
-                commands.add(command);
+        if (rows instanceof PetCommandRow[] rowArray) {
+            for (PetCommandRow command : rowArray) {
+                if (command != null) {
+                    commands.add(command);
+                }
             }
+            return commands;
+        }
+        if (rows instanceof List<?> rowList) {
+            for (Object row : rowList) {
+                if (row instanceof PetCommandRow command) {
+                    commands.add(command);
+                }
+            }
+            return commands;
         }
         return commands;
-    }
-
-    public static PetCommandRow commandRow(String rowText) {
-        if (StringUtils.text(rowText).isEmpty()) {
-            return null;
-        }
-        String[] fields = StringUtils.text(rowText).split("\t", -1);
-        return new PetCommandRow(
-            NumberUtils.parseLong(StringUtils.field(fields, 0)),
-            NumberUtils.parseLong(StringUtils.field(fields, 1)),
-            StringUtils.field(fields, 2),
-            StringUtils.field(fields, 3),
-            fields.length);
     }
 
     public static List<PetLevelRow> levelRows(Object rows) {

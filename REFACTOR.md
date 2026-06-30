@@ -20,7 +20,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Each domain module should expose a single module-level manager/registry for its live instances and cached state instead of relying on `Licence.java` globals or scattered static ownership. `Licence` accessors are only temporary compatibility bridges while callers migrate to those managers.
 - Treat `fromLegacy(...)` and tab-delimited parsing as temporary compatibility boundaries only. The final refactor state should remove those bridges and pass typed records/collections directly.
 - Keep the refactor branch current with required runtime fixes from `dev`; commit `099dd4d17cd83efeecdb088ac1d94c8ff8404621` (`Fix AlphaSeries boot runtime`) is intentionally merged into this branch.
-- The missing decompiled string literals tracked in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` are part of the refactor scope and must be inserted from that report. Treat that file as the source of truth: restore each literal in the matching Java class and method named by the entry, preserving source text unless a deliberate compatibility boundary documents otherwise; the current report lists 1391 unique non-empty literals still absent from Java.
+- The missing decompiled string literals tracked in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` are part of the refactor scope and must be inserted from that report. Treat that file as the source of truth: restore each literal in the matching Java class and method named by the entry, preserving source text unless a deliberate compatibility boundary documents otherwise; the current report lists 1391 unique non-empty literals still absent from Java and must be reduced as literals are restored.
 - Commit only verified milestones with `REFACTOR.md` metrics updated when the legacy surface changes.
 
 ## Completed Slices
@@ -320,6 +320,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed quest active-level/progress row-text parsers and routed next-quest/progress decisions through typed `QuestDao` records.
 - Removed official navigator row-text payload wrappers and dead row-text parser; official navigator lists now use typed `OfficialNavigatorItem` records.
 - Removed the pet inventory row-text list payload wrapper; pet inventory lists now use typed `PetInventoryRow` records.
+- Moved the pet command cache from tab-delimited string rows into typed `PetSettings.PetCommandRow` arrays; pet command payload/action paths now consume typed command rows.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -350,7 +351,7 @@ Measured on 2026-06-30:
 - Replace remaining `Crypto.Proc_3_*` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
 - Continue replacing duplicated local string/number helpers in root compatibility classes with `StringUtils` and `NumberUtils`.
 - Move remaining raw `Licence.global_*` caches into typed state holders under the appropriate `game.*` package.
-- Insert every missing string from `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into the matching Java classes and methods from the report before treating the refactor as complete, then update or remove those entries as literals are restored; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
+- Insert every missing string from `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into the matching Java classes and methods from the report before treating the refactor as complete. Update or remove entries from `MISSING_STRINGS.md` as literals are restored so the remaining count reflects unresolved work; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
 - Delete remaining deprecated compatibility aliases only after their call sites reach zero and tests pass.
 
 ## Verification
