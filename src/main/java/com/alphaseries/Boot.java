@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.dao.mysql.ClubDao;
+import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.PackageDao;
 import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.db.Database;
@@ -399,20 +400,43 @@ public final class Boot {
 
     public static void Proc_1_19_6CF190(Object... args) {
         Map<Long, String> rows = new LinkedHashMap<Long, String>();
-        rows.put(1L, MySQL.Proc_5_2_6D4690("SELECT id,name FROM faq WHERE is_important='1' ORDER BY id DESC LIMIT 1", 0, 0));
-        rows.put(2L, MySQL.Proc_5_2_6D4690("SELECT id,name FROM faq WHERE is_important='2' ORDER BY id DESC LIMIT 1", 0, 0));
+        HelpDao help = helpDao();
+        if (help != null) {
+            try {
+                rows.put(1L, joinFaqNameRows(help.importantFaqRows(1L)));
+                rows.put(2L, joinFaqNameRows(help.importantFaqRows(2L)));
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         Licence.setImportantFaqPayload(buildImportantFaqPayload(rows));
     }
 
     public static void Proc_1_20_6CF830(Object... args) {
-        long maxCategoryId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM faq_categories", 0, 0)));
+        HelpDao help = helpDao();
+        long maxCategoryId = 0L;
+        if (help != null) {
+            try {
+                maxCategoryId = Math.max(0L, help.maxCategoryId());
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         String[] categoryFaqs = new String[(int) maxCategoryId + 1];
-        String categoryRows = MySQL.Proc_5_2_6D4690("SELECT id,name FROM faq_categories", 0, 0);
+        String categoryRows = "";
         Map<Long, String> faqRows = new LinkedHashMap<Long, String>();
-        for (String row : categoryRows.split("\r", -1)) {
-            long categoryId = NumberUtils.parseLong(row);
-            if (categoryId >= 0L && categoryId < categoryFaqs.length) {
-                faqRows.put(categoryId, MySQL.Proc_5_2_6D4690("SELECT id,name FROM faq WHERE id_category='" + categoryId + "'", 0, 0));
+        if (help != null) {
+            try {
+                List<HelpDao.FaqNameRow> categories = help.categoryRows();
+                categoryRows = joinFaqNameRows(categories);
+                for (HelpDao.FaqNameRow category : categories) {
+                    long categoryId = category.id();
+                    if (categoryId >= 0L && categoryId < categoryFaqs.length) {
+                        faqRows.put(categoryId, joinFaqNameRows(help.faqRowsByCategory(categoryId)));
+                    }
+                }
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
         FaqCategoryCache cache = buildFaqCategoryCache(categoryRows, faqRows);
@@ -425,9 +449,24 @@ public final class Boot {
     }
 
     public static void Proc_1_21_6D08C0(Object... args) {
-        long maxFaqId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM faq", 0, 0)));
+        HelpDao help = helpDao();
+        long maxFaqId = 0L;
+        if (help != null) {
+            try {
+                maxFaqId = Math.max(0L, help.maxFaqId());
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         String[] descriptions = new String[(int) maxFaqId + 1];
-        Map<Long, String> cache = buildFaqDescriptionCache(MySQL.Proc_5_2_6D4690("SELECT id,description FROM faq", 0, 0));
+        Map<Long, String> cache = new LinkedHashMap<Long, String>();
+        if (help != null) {
+            try {
+                cache = buildFaqDescriptionCache(joinFaqDescriptionRows(help.descriptionRows()));
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         for (Map.Entry<Long, String> entry : cache.entrySet()) {
             if (entry.getKey() >= 0L && entry.getKey() < descriptions.length) {
                 descriptions[entry.getKey().intValue()] = entry.getValue();
@@ -1363,6 +1402,22 @@ public final class Boot {
         return joined.toString();
     }
 
+    private static String joinFaqNameRows(List<HelpDao.FaqNameRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (HelpDao.FaqNameRow row : rows == null ? List.<HelpDao.FaqNameRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
+    private static String joinFaqDescriptionRows(List<HelpDao.FaqDescriptionRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (HelpDao.FaqDescriptionRow row : rows == null ? List.<HelpDao.FaqDescriptionRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
     private static void appendLegacyRow(StringBuilder joined, String rowText) {
         if (joined.length() > 0) {
             joined.append('\r');
@@ -1383,6 +1438,11 @@ public final class Boot {
     private static ClubDao clubDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new ClubDao(database);
+    }
+
+    private static HelpDao helpDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new HelpDao(database);
     }
 
     private static ServerMaintenanceDao serverMaintenanceDao() {

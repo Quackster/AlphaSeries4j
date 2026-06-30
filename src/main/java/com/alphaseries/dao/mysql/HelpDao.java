@@ -19,4 +19,56 @@ public final class HelpDao {
             "%" + searchText + "%");
         return String.join("\r", rows);
     }
+
+    public List<FaqNameRow> importantFaqRows(long importanceLevel) throws SQLException {
+        return database.query(
+            "SELECT id,name FROM faq WHERE is_important=? ORDER BY id DESC LIMIT 1",
+            resultSet -> new FaqNameRow(resultSet.getLong(1), resultSet.getString(2)),
+            importanceLevel);
+    }
+
+    public long maxCategoryId() throws SQLException {
+        return database.queryOne(
+            "SELECT MAX(id) FROM faq_categories",
+            resultSet -> resultSet.getLong(1))
+            .orElse(0L);
+    }
+
+    public List<FaqNameRow> categoryRows() throws SQLException {
+        return database.query(
+            "SELECT id,name FROM faq_categories",
+            resultSet -> new FaqNameRow(resultSet.getLong(1), resultSet.getString(2)));
+    }
+
+    public List<FaqNameRow> faqRowsByCategory(long categoryId) throws SQLException {
+        return database.query(
+            "SELECT id,name FROM faq WHERE id_category=?",
+            resultSet -> new FaqNameRow(resultSet.getLong(1), resultSet.getString(2)),
+            categoryId);
+    }
+
+    public long maxFaqId() throws SQLException {
+        return database.queryOne(
+            "SELECT MAX(id) FROM faq",
+            resultSet -> resultSet.getLong(1))
+            .orElse(0L);
+    }
+
+    public List<FaqDescriptionRow> descriptionRows() throws SQLException {
+        return database.query(
+            "SELECT id,description FROM faq",
+            resultSet -> new FaqDescriptionRow(resultSet.getLong(1), resultSet.getString(2)));
+    }
+
+    public record FaqNameRow(long id, String name) {
+        public String legacyRow() {
+            return id + "\t" + (name == null ? "" : name);
+        }
+    }
+
+    public record FaqDescriptionRow(long id, String description) {
+        public String legacyRow() {
+            return id + "\t" + (description == null ? "" : description);
+        }
+    }
 }
