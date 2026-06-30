@@ -419,7 +419,7 @@ public final class Licence {
     }
 
     public static RepresentedRoomCache representedRooms() {
-        RoomState.instance().setRepresentedRoomsFromLegacy(global_00829310);
+        refreshRepresentedRooms();
         return RoomState.instance().representedRooms();
     }
 
@@ -432,6 +432,14 @@ public final class Licence {
         RepresentedRoomCache normalizedRooms = RepresentedRoomCache.fromLegacy(representedRooms.cacheText());
         RoomState.instance().setRepresentedRooms(normalizedRooms);
         global_00829310 = normalizedRooms;
+    }
+
+    private static void refreshRepresentedRooms() {
+        if (global_00829310 instanceof RepresentedRoomCache representedRooms) {
+            RoomState.instance().setRepresentedRooms(representedRooms);
+            return;
+        }
+        RoomState.instance().setRepresentedRoomsFromLegacy(global_00829310);
     }
 
     public static FurnitureRoomCache.State furnitureRoomCache() {

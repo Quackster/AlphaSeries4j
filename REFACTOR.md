@@ -633,6 +633,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed `Licence` represented-room slot refreshes through the typed `RepresentedRoomSlots` state path when the mirrored global already contains a `RepresentedRoomSlots` instance, leaving marker-string parsing as a compatibility fallback.
 - Migrated `RepresentedRoomCache` outer cache storage from one raw marker string to typed room-record lists, preserving legacy cache serialization and replacement behavior at the compatibility boundary.
 - Routed represented-room cache updates into typed `RepresentedRoomCache` live storage in `Licence.global_00829310`, leaving raw cache text only at furniture compatibility inputs and legacy direct assignments.
+- Routed `Licence` represented-room cache refreshes through the typed `RepresentedRoomCache` state path when the mirrored global already contains a `RepresentedRoomCache` instance, leaving raw cache-text parsing as a compatibility fallback.
 - Migrated `RepresentedRoomCache.RoomRecord` to carry parsed field values beside its compatibility text, so room-cache accessors read named record state instead of splitting tab-delimited text on every lookup.
 - Routed represented-room occupant and movement mutations through `RoomRecord` parsed fields, keeping tab-delimited parsing isolated to legacy cache construction and movement-record compatibility text.
 - Routed represented-room movement-position lookups through the typed `MovementRecord` parser instead of splitting movement rows inline.
