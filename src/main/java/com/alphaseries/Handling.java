@@ -10904,10 +10904,6 @@ public final class Handling {
             messengerFollowEnabled());
     }
 
-    public static String messengerFriendSummaryPayloadFromRow(String rowText, long relationshipState) {
-        return MessengerPayloads.friendSummaryFromRow(rowText, relationshipState, messengerFollowEnabled());
-    }
-
     public static String messengerFriendSummaryPayload(MessengerFriend friend, long relationshipState) {
         return MessengerPayloads.friendSummary(friend, relationshipState, messengerFollowEnabled());
     }
@@ -11030,16 +11026,17 @@ public final class Handling {
         return MessengerPayloads.requestNotify(userId, userName);
     }
 
-    public static String messengerPendingRequestsPayload(String rowText) {
-        return MessengerPayloads.pendingRequests(rowText);
-    }
-
     public static String messengerPendingRequestsPayload(List<PendingFriendRequest> requests) {
         return MessengerPayloads.pendingRequests(requests);
     }
 
-    public static String messengerFriendListPayload(String rowText, long maxFriends0, long maxFriends1, long maxFriends2) {
-        return MessengerPayloads.friendList(rowText, maxFriends0, maxFriends1, maxFriends2, messengerFollowEnabled());
+    public static String messengerFriendListPayload(
+        List<MessengerFriend> friends,
+        long maxFriends0,
+        long maxFriends1,
+        long maxFriends2
+    ) {
+        return MessengerPayloads.friendList(friends, maxFriends0, maxFriends1, maxFriends2, messengerFollowEnabled());
     }
 
     public static FriendTargetList friendRemoveTargetsFromPayload(String packetPayload, String callerUserId) {

@@ -312,6 +312,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the legacy inventory payload row-string wrapper; inventory list payload construction now accepts typed `InventoryItemRow` data only.
 - Removed the legacy navigator room/event payload row-string wrappers and dead navigator row-text parsers, leaving navigator payload list construction on typed row records.
 - Renamed pet race and inventory payload methods away from `FromRows` naming now that their production paths accept typed DAO row lists.
+- Removed messenger friend and pending-request row-text payload wrappers plus their dead tab-delimited record parsers; messenger payload tests now use typed records.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -327,7 +328,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12400 lines
+- `Handling.java`: 12397 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
 - `Main.java`: 894 lines

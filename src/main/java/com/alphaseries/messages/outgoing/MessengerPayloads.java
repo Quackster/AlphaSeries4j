@@ -45,10 +45,6 @@ public final class MessengerPayloads {
             .build();
     }
 
-    public static String friendSummaryFromRow(String rowText, long relationshipState, boolean followEnabled) {
-        return friendSummary(MessengerFriend.fromLegacySummaryRow(rowText), relationshipState, followEnabled);
-    }
-
     public static String friendSummary(
         MessengerFriend friend,
         long relationshipState,
@@ -126,10 +122,6 @@ public final class MessengerPayloads {
             .build();
     }
 
-    public static String pendingRequests(String rowText) {
-        return pendingRequests(PendingFriendRequest.listFromLegacy(rowText));
-    }
-
     public static String pendingRequests(List<PendingFriendRequest> requests) {
         long requestCount = 0L;
         PacketBuilder requestPayload = PacketBuilder.create();
@@ -149,21 +141,6 @@ public final class MessengerPayloads {
             .appendInt(requestCount)
             .appendRaw(requestPayload)
             .build();
-    }
-
-    public static String friendList(
-        String rowText,
-        long maxFriends0,
-        long maxFriends1,
-        long maxFriends2,
-        boolean followEnabled
-    ) {
-        return friendList(
-            MessengerFriend.listFromLegacyListRows(rowText),
-            maxFriends0,
-            maxFriends1,
-            maxFriends2,
-            followEnabled);
     }
 
     public static String friendList(

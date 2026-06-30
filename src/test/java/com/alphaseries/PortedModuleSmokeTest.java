@@ -5,6 +5,8 @@ import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
+import com.alphaseries.game.messenger.MessengerFriend;
+import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
@@ -1719,7 +1721,8 @@ public final class PortedModuleSmokeTest {
         expectedOfflineFriend = Crypto.Proc_3_0_6D2AF0(0, null, expectedOfflineFriend)
             + "\2Hfig2\2" + "4\2yesterday\2\2";
         assertEquals(expectedOfflineFriend, Handling.Proc_6_166_7BE940(6, "Bob", "motto2", "fig2", 2, 0, 0, "yesterday", 4));
-        assertEquals(expectedOnlineFriend, Handling.messengerFriendSummaryPayloadFromRow("5\tAlice\tmotto\tfig\t3\t22\ttoday", 1));
+        assertEquals(expectedOnlineFriend,
+            Handling.messengerFriendSummaryPayload(new MessengerFriend(5L, "Alice", "motto", "fig", 3L, 22L, "today"), 1));
         String expectedSearch = Crypto.Proc_3_0_6D2AF0(8, null, "") + "Carol\2hi\2";
         expectedSearch = "1" + Crypto.Proc_3_0_6D2AF0(1, null, expectedSearch) + "H\2nick\2fig\2now\2";
         assertEquals(expectedSearch, Handling.messengerSearchResultPayload("8", "Carol", "fig", "hi", "nick", "now", 1));
@@ -1750,8 +1753,9 @@ public final class PortedModuleSmokeTest {
         String expectedPendingPayload = Crypto.Proc_3_0_6D2AF0(2, null, "Dz")
             + Crypto.Proc_3_0_6D2AF0(2, null, "Dz");
         expectedPendingPayload = Crypto.Proc_3_0_6D2AF0(2, null, expectedPendingPayload) + expectedPendingRequestRows;
-        assertEquals(expectedPendingPayload, Handling.messengerPendingRequestsPayload("5\tAlice\r6\tBob"));
-        String friendRows = "5\tAlice\t22\tfig\tmotto\t3\ttoday\r6\tBob\t0\tfig2\tmotto2\t2\tyesterday";
+        assertEquals(expectedPendingPayload, Handling.messengerPendingRequestsPayload(List.of(
+            new PendingFriendRequest(5L, "Alice"),
+            new PendingFriendRequest(6L, "Bob"))));
         String expectedListedOfflineFriend = Crypto.Proc_3_0_6D2AF0(6, null, "0") + "Bob\2";
         expectedListedOfflineFriend = Crypto.Proc_3_0_6D2AF0(2, null, expectedListedOfflineFriend);
         expectedListedOfflineFriend = Crypto.Proc_3_0_6D2AF0(0, null, expectedListedOfflineFriend)
@@ -1763,7 +1767,13 @@ public final class PortedModuleSmokeTest {
             + expectedOnlineFriend
             + expectedListedOfflineFriend
             + "PYH";
-        assertEquals(expectedFriendList, Handling.messengerFriendListPayload(friendRows, 10, 20, 30));
+        assertEquals(expectedFriendList, Handling.messengerFriendListPayload(
+            List.of(
+                new MessengerFriend(5L, "Alice", "motto", "fig", 3L, 22L, "today"),
+                new MessengerFriend(6L, "Bob", "motto2", "fig2", 2L, 0L, "yesterday")),
+            10,
+            20,
+            30));
         Handling.FriendTargetList removeTargets = Handling.friendRemoveTargetsFromPayload("@hCBCA", "2");
         assertEquals("3,1", removeTargets.targetList);
         assertEquals(2L, removeTargets.targetCount);
@@ -3701,7 +3711,7 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         handlingSends.clear();
         String pendingPayload = Handling.Proc_6_175_7C4800(4);
-        assertEquals(Handling.messengerPendingRequestsPayload("88\tTarget"), pendingPayload);
+        assertEquals(Handling.messengerPendingRequestsPayload(List.of(new PendingFriendRequest(88L, "Target"))), pendingPayload);
         assertEquals(true, containsSend(handlingSends, "Dz"));
         assertEquals(true, containsSend(handlingSends, "Target"));
         handlingSends.clear();
