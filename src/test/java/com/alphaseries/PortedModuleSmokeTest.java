@@ -1862,8 +1862,7 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(0, null, "")
             + Crypto.Proc_3_0_6D2AF0(4, null, "")
             + Crypto.Proc_3_0_6D2AF0(40, null, "");
-        assertEquals(expectedPointBalance, Handling.activityPointBalancePayload(
-            new UserDao.ActivityPointBalance(10L, 20L, 0L, 40L)));
+        assertEquals(expectedPointBalance, UserPayloads.activityPointBalance(10L, 20L, 0L, 40L));
         assertEquals(1L, Handling.pickupFurnitureIdFromPayload("AZA"));
         assertEquals(1L, Handling.pickupFurnitureIdFromPayload("A"));
         Handling.FurnitureCacheState tracked = Handling.trackFurnitureCacheMarker(
@@ -1973,7 +1972,7 @@ public final class PortedModuleSmokeTest {
         expectedOwnProfile = Crypto.Proc_3_0_6D2AF0(4, null, expectedOwnProfile);
         expectedOwnProfile = Crypto.Proc_3_0_6D2AF0(2, null, expectedOwnProfile);
         assertEquals(expectedOwnProfile,
-            Handling.ownProfilePayload(new OwnProfileRow(7L, "Alice", "hello", "female", 4L, 2L)));
+            UserPayloads.ownProfile(new OwnProfileRow(7L, "Alice", "hello", "female", 4L, 2L)));
         assertEquals(50L, Handling.soundSettingFromWire("Ce50"));
         assertEquals(0L, Handling.soundSettingFromWire("Ce101"));
         String expectedGroupPayload = Crypto.Proc_3_0_6D2AF0(55, null, "Dt")
@@ -4551,7 +4550,7 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         String ownProfilePayload = Handling.Proc_6_237_7F9ED0(4);
-        assertEquals(Handling.ownProfilePayload(new OwnProfileRow(77L, "Caller", "Motto", "M", 4L, 2L)),
+        assertEquals(UserPayloads.ownProfile(new OwnProfileRow(77L, "Caller", "Motto", "M", 4L, 2L)),
             ownProfilePayload);
         assertEquals(true, containsSend(handlingSends, "@E77"));
         handlingSends.clear();

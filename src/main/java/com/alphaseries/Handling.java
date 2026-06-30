@@ -4529,7 +4529,11 @@ public final class Handling {
             if (balance == null) {
                 return;
             }
-            Proc_6_244_801E80(socketIndex, activityPointBalancePayload(balance), 0);
+            Proc_6_244_801E80(socketIndex, UserPayloads.activityPointBalance(
+                balance.pointTypeOne(),
+                balance.pointTypeTwo(),
+                balance.pointTypeThree(),
+                balance.pointTypeFour()), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -7431,7 +7435,7 @@ public final class Handling {
                 return "";
             }
             String payload = userDao().ownProfile(NumberUtils.parseLong(userId))
-                .map(Handling::ownProfilePayload)
+                .map(UserPayloads::ownProfile)
                 .orElse("");
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
@@ -9660,17 +9664,6 @@ public final class Handling {
         return request;
     }
 
-    public static String activityPointBalancePayload(UserDao.ActivityPointBalance balance) {
-        if (balance == null) {
-            return "";
-        }
-        return UserPayloads.activityPointBalance(
-            balance.pointTypeOne(),
-            balance.pointTypeTwo(),
-            balance.pointTypeThree(),
-            balance.pointTypeFour());
-    }
-
     public static long pickupFurnitureIdFromPayload(String packetPayload) {
         String requestPayload = StringUtils.text(packetPayload);
         if (requestPayload.startsWith("AZ")) {
@@ -9976,10 +9969,6 @@ public final class Handling {
 
     public static boolean isSocketMarkedBusy(String representedSocketCache, long socketIndex) {
         return com.alphaseries.game.session.RepresentedSocketCache.fromLegacy(representedSocketCache).isBusy(socketIndex);
-    }
-
-    public static String ownProfilePayload(OwnProfileRow row) {
-        return UserPayloads.ownProfile(row);
     }
 
     public static long soundSettingFromWire(String packetPayload) {
