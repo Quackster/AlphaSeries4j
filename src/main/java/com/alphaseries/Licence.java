@@ -327,13 +327,21 @@ public final class Licence {
     }
 
     public static MessengerSettings messengerSettings() {
-        MessengerState.instance().setFriendLimits(global_0082927C);
+        refreshMessengerSettings();
         return MessengerState.instance().settings();
     }
 
     public static void setMessengerFriendLimits(Object friendLimits) {
-        MessengerState.instance().setFriendLimits(friendLimits);
         global_0082927C = friendLimits == null ? "" : friendLimits;
+        refreshMessengerSettings();
+    }
+
+    private static void refreshMessengerSettings() {
+        if (global_0082927C instanceof MessengerSettings settings) {
+            MessengerState.instance().setFriendLimits(settings);
+            return;
+        }
+        MessengerState.instance().setFriendLimits(global_0082927C);
     }
 
     public static AchievementSettings achievementSettings() {

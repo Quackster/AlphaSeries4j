@@ -20,6 +20,10 @@ public final class MessengerState {
         this.settings = settings == null ? MessengerSettings.empty() : settings;
     }
 
+    public synchronized void setFriendLimits(MessengerSettings settings) {
+        setSettings(settings);
+    }
+
     public synchronized void setFriendLimits(Object friendLimits) {
         settings = MessengerSettings.fromLegacy(friendLimits);
     }
