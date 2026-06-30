@@ -116,6 +116,12 @@ public final class RoomPayloads {
             .build();
     }
 
+    public static String roomRightRemoved() {
+        return PacketBuilder.message("Fc")
+            .appendInt(0L)
+            .build();
+    }
+
     public static String settingsUpdated(long roomId) {
         return PacketBuilder.message("GS")
             .appendInt(roomId)

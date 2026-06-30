@@ -390,6 +390,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved recycler reward `G|` payload construction into `RecyclerPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved room-user pre-ready `Ei` payload construction into `SocialPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved quest request `p^` payload construction into `QuestPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
+- Moved room-right removal `Fc` payload construction into `RoomPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 

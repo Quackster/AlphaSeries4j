@@ -1889,7 +1889,7 @@ public final class Handling {
                 return;
             }
             rooms.deleteRoomRight(targetUserId, roomId);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(0, null, "Fc"), 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.roomRightRemoved(), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -2325,7 +2325,7 @@ public final class Handling {
                 return;
             }
             rooms.deleteRoomRight(targetUserId, roomId);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(0, null, "Fc"), 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.roomRightRemoved(), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
