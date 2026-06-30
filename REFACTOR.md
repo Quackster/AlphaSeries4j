@@ -412,6 +412,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved room interaction request/state/close `Ah`/`Am`/`An` payload construction into named `SocialPayloads` builders, replacing inline legacy `Crypto` assembly in interaction handlers.
 - Moved room-user status `Ge` payload construction into `SocialPayloads`, leaving `Handling.representedRoomUserStatusPayload` as a compatibility adapter.
 - Moved represented-bot room-entry `@\\` payload construction into `PetPayloads`, leaving `Handling.representedBotRoomEntryPayload` as a compatibility lookup adapter.
+- Moved room icon payload construction into `RoomPayloads` with typed `RoomIconItem` records, leaving `Handling.roomIconPayloadFromWire` as a wire parser only.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -427,7 +428,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11893 lines
+- `Handling.java`: 11889 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines

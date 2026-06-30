@@ -71,6 +71,21 @@ public final class RoomPayloads {
             .build();
     }
 
+    public static String icon(long backgroundId, long foregroundId, List<RoomIconItem> items) {
+        PacketBuilder payload = PacketBuilder.create()
+            .appendInt(backgroundId)
+            .appendInt(foregroundId);
+        List<RoomIconItem> iconItems = items == null ? List.of() : items;
+        payload.appendInt(iconItems.size());
+        for (RoomIconItem item : iconItems) {
+            if (item != null) {
+                payload.appendInt(item.type())
+                    .appendInt(item.position());
+            }
+        }
+        return payload.build();
+    }
+
     public static String entryUpdated(long roomId) {
         return PacketBuilder.message("GH")
             .appendInt(roomId)
@@ -168,5 +183,8 @@ public final class RoomPayloads {
             .appendInt(roomId)
             .appendRaw(' ')
             .build();
+    }
+
+    public record RoomIconItem(long type, long position) {
     }
 }

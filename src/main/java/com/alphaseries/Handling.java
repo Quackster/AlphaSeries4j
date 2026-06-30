@@ -9257,10 +9257,7 @@ public final class Handling {
             return "";
         }
 
-        String payload = Crypto.Proc_3_0_6D2AF0(backgroundId, null, "");
-        payload = Crypto.Proc_3_0_6D2AF0(foregroundId, null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(itemCount, null, payload);
-
+        List<RoomPayloads.RoomIconItem> items = new ArrayList<>();
         for (long itemIndex = 1L; itemIndex <= itemCount; itemIndex++) {
             previousOffset = offset.value;
             long itemType = readWireLong(packetPayload, offset);
@@ -9274,10 +9271,9 @@ public final class Handling {
                 return "";
             }
 
-            payload = Crypto.Proc_3_0_6D2AF0(itemType, null, payload);
-            payload = Crypto.Proc_3_0_6D2AF0(itemPosition, null, payload);
+            items.add(new RoomPayloads.RoomIconItem(itemType, itemPosition));
         }
-        return payload;
+        return RoomPayloads.icon(backgroundId, foregroundId, items);
     }
 
     public static boolean roomEventCreatePayloadFromWire(String packetPayload, RoomEventPayload result) {

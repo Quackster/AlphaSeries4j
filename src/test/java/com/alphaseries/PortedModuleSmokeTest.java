@@ -1641,6 +1641,7 @@ public final class PortedModuleSmokeTest {
         iconPayload = Crypto.Proc_3_0_6D2AF0(1, null, iconPayload);
         iconPayload = Crypto.Proc_3_0_6D2AF0(3, null, iconPayload);
         iconPayload = Crypto.Proc_3_0_6D2AF0(2, null, iconPayload);
+        assertEquals(iconPayload, RoomPayloads.icon(1L, 2L, List.of(new RoomPayloads.RoomIconItem(3L, 2L))));
         assertEquals(iconPayload, Handling.roomIconPayloadFromWire(iconWire));
         assertEquals("", Handling.roomIconPayloadFromWire("Z"));
         DataManager.global_008291AC = "\0" + "1\1events\2";
