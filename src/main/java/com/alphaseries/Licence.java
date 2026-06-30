@@ -509,13 +509,21 @@ public final class Licence {
     }
 
     public static SocketMarkerSet socketMarkers() {
-        SessionState.instance().setSocketMarkersFromLegacy(global_008291A0);
+        refreshSocketMarkers();
         return SessionState.instance().socketMarkers();
     }
 
     public static void setSocketMarkers(SocketMarkerSet socketMarkers) {
-        SessionState.instance().setSocketMarkers(socketMarkers);
         global_008291A0 = socketMarkers == null ? "" : socketMarkers;
+        refreshSocketMarkers();
+    }
+
+    private static void refreshSocketMarkers() {
+        if (global_008291A0 instanceof SocketMarkerSet socketMarkers) {
+            SessionState.instance().setSocketMarkers(socketMarkers);
+            return;
+        }
+        SessionState.instance().setSocketMarkersFromLegacy(global_008291A0);
     }
 
     public static LicenceRuntimeState runtimeState() {
