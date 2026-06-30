@@ -4927,13 +4927,25 @@ public final class Handling {
         }
     }
 
+    /**
+     * Original function: Proc_6_149_775C10.
+     */
     public static void Proc_6_149_775C10(Object... args) {
+        toggleFloorFurnitureState(handlingSocketIndex(args), handlingRequestPayload(args, "Ch"));
+    }
+
+    /**
+     * Original function: Proc_6_149_775C10.
+     */
+    public static void toggleFloorFurnitureState(int socketIndex, String floorStatePayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return;
             }
-            String requestPayload = handlingRequestPayload(args, "Ch");
+            String requestPayload = StringUtils.text(floorStatePayload);
+            if (requestPayload.startsWith("Ch")) {
+                requestPayload = requestPayload.substring(2);
+            }
             long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
             if (furnitureId <= 0L) {
                 return;
@@ -5029,7 +5041,7 @@ public final class Handling {
                     return furnitureId;
                 }
             }
-            Proc_6_149_775C10(socketIndex, "Ch", requestPayload);
+            toggleFloorFurnitureState(socketIndex, requestPayload);
             return furnitureId;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7924,7 +7936,7 @@ public final class Handling {
                 case "AC": Proc_6_155_795C90(socketIndex, "AC", packetPayload); break;
                 case "A[": Proc_6_141_76A670(socketIndex, "A[", packetPayload); break;
                 case "AI": Proc_6_159_79FCD0(socketIndex, "AI", packetPayload); break;
-                case "Ch": Proc_6_149_775C10(socketIndex, "Ch", packetPayload); break;
+                case "Ch": toggleFloorFurnitureState(socketIndex, packetPayload); break;
                 case "FH": Proc_6_150_777FA0(socketIndex, "FH", packetPayload); break;
                 case "@B": Proc_6_78_7279A0(socketIndex, "@B", packetPayload); break;
                 case "rv": Proc_6_142_76B310(socketIndex, "rv", packetPayload); break;
