@@ -258,6 +258,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed chat filter and gesture startup cache reads through typed `ChatDao` rows, keeping legacy row serialization explicit at the `ChatSettings` cache bridge.
 - Routed boot settings-cache and Figuredata setting reads through typed `SettingsDao` rows/value lookups, keeping legacy settings payload serialization explicit in `Boot`.
 - Routed recycler reward chance and product startup cache reads through typed `RecyclerDao` methods, keeping legacy recycler payload/list serialization explicit in `Boot`.
+- Routed product, catalog-product, and product-deal startup cache reads through typed `CatalogDao` cache rows, keeping legacy array/string cache serialization explicit in `Boot`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -271,8 +272,8 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 29
-- `Boot.java`: 1559 lines
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 24
+- `Boot.java`: 1609 lines
 - `Handling.java`: 12596 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines

@@ -72,27 +72,53 @@ public final class Boot {
     }
 
     public static void Proc_1_1_6BB340(Object... args) {
-        long maxProductId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM products", 0, 0)));
+        CatalogDao catalog = catalogDao();
+        long maxProductId = 0L;
+        if (catalog != null) {
+            try {
+                maxProductId = Math.max(0L, catalog.maxProductId());
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         String[] products = new String[(int) maxProductId + 1];
-        String productQuery = "SELECT id,id_type,action,NULL,NULL,default_sign,status_max,handitems,distance_allowed,"
-            + "is_tradeable,is_recycleable,is_signable,default_sign,min_roomrights,name,description,NULL,NULL,sprite,"
-            + "is_iconstack,id_deco,time_rent,square_x,square_y,square_z,NULL,effect,receive_badge,wire,id_counter,"
-            + "square_rotation,status_walkon,status_walkoff,NULL,has_charge,charge_price_credits,"
-            + "charge_price_activitypoints,charge_price_activitypoints_type,charge_size,NULL,is_marketofferable,is_badgeshop "
-            + "FROM products ORDER BY id ASC";
-        cacheRowsById(products, MySQL.Proc_5_2_6D4690(productQuery, 0, 0));
+        if (catalog != null) {
+            try {
+                cacheRowsById(products, joinProductCacheRows(catalog.productCacheRows()));
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         Licence.setProductRows(products);
         DataManager.setProductRows(products);
 
-        long maxCatalogId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM catalog_products", 0, 0)));
+        long maxCatalogId = 0L;
+        if (catalog != null) {
+            try {
+                maxCatalogId = Math.max(0L, catalog.maxCatalogProductId());
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         String[] catalogProducts = new String[(int) maxCatalogId + 1];
-        String catalogQuery = "SELECT id,sprite,id_product,ctlg_pageid,type_secondary,amount,receive_badge,price_credits,"
-            + "price_activitypoints,type_activitypoints,allow_gifts,min_hc_level_required,replace_defaultsign "
-            + "FROM catalog_products ORDER BY id ASC";
-        cacheRowsById(catalogProducts, MySQL.Proc_5_2_6D4690(catalogQuery, 0, 0));
+        if (catalog != null) {
+            try {
+                cacheRowsById(catalogProducts, joinCatalogProductCacheRows(catalog.catalogProductCacheRows()));
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         Licence.setCatalogProductRows(catalogProducts);
-        Licence.setDealRows("\r" + MySQL.Proc_5_2_6D4690("SELECT id,items FROM products_deals ORDER BY id ASC", "\r", 0) + "\r");
-        CatalogDao catalog = catalogDao();
+        if (catalog != null) {
+            try {
+                Licence.setDealRows("\r" + joinProductDealRows(catalog.productDealRows()) + "\r");
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+                Licence.setDealRows("\r\r");
+            }
+        } else {
+            Licence.setDealRows("\r\r");
+        }
         PackageDao packages = packageDao();
         ClubDao clubs = clubDao();
         if (catalog != null) {
@@ -1431,6 +1457,30 @@ public final class Boot {
     private static String joinPackageRows(List<PackageDao.PackageRow> rows) {
         StringBuilder joined = new StringBuilder();
         for (PackageDao.PackageRow row : rows == null ? List.<PackageDao.PackageRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
+    private static String joinProductCacheRows(List<CatalogDao.ProductCacheRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (CatalogDao.ProductCacheRow row : rows == null ? List.<CatalogDao.ProductCacheRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
+    private static String joinCatalogProductCacheRows(List<CatalogDao.CatalogProductCacheRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (CatalogDao.CatalogProductCacheRow row : rows == null ? List.<CatalogDao.CatalogProductCacheRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
+    private static String joinProductDealRows(List<CatalogDao.ProductDealRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (CatalogDao.ProductDealRow row : rows == null ? List.<CatalogDao.ProductDealRow>of() : rows) {
             appendLegacyRow(joined, row.legacyRow());
         }
         return joined.toString();
