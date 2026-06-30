@@ -1,5 +1,6 @@
 package com.alphaseries;
 
+import com.alphaseries.config.AppConfigState;
 import com.alphaseries.config.AppSettingsCache;
 import com.alphaseries.config.PermissionMatrix;
 import com.alphaseries.dao.mysql.ClubDao;
@@ -738,19 +739,23 @@ public final class Functions {
     }
 
     public static AppSettingsCache settingsCache() {
-        return AppSettingsCache.fromLegacy(global_0082928C);
+        AppConfigState.instance().setSettingsCacheFromLegacy(global_0082928C);
+        return AppConfigState.instance().settingsCache();
     }
 
     public static void setSettingsCache(String settingsCache) {
         global_0082928C = settingsCache == null ? "" : settingsCache;
+        AppConfigState.instance().setSettingsCacheFromLegacy(global_0082928C);
     }
 
     public static PermissionMatrix permissionMatrix() {
-        return PermissionMatrix.fromLegacy(global_008292A8);
+        AppConfigState.instance().setPermissionMatrixFromLegacy(global_008292A8);
+        return AppConfigState.instance().permissionMatrix();
     }
 
     public static void setPermissions(Object permissions) {
         global_008292A8 = permissions == null ? "" : permissions;
+        AppConfigState.instance().setPermissionMatrixFromLegacy(global_008292A8);
     }
 
     public static String userInventoryCachePath(long ownerId) {
