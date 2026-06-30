@@ -18,6 +18,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Do not duplicate common conversion helpers. Use `StringUtils`, `NumberUtils`, and protocol utilities instead of reintroducing VB-style local helper methods.
 - Move raw `Licence.global_*` string caches into typed collection-backed state holders under the appropriate `game.*` package, keeping legacy serialization only at explicit compatibility boundaries.
 - Each domain module should expose a single module-level manager/registry for its live instances and cached state instead of relying on `Licence.java` globals or scattered static ownership. `Licence` accessors are only temporary compatibility bridges while callers migrate to those managers.
+- Treat `fromLegacy(...)` and tab-delimited parsing as temporary compatibility boundaries only. The final refactor state should remove those bridges and pass typed records/collections directly.
 - Keep the refactor branch current with required runtime fixes from `dev`; commit `099dd4d17cd83efeecdb088ac1d94c8ff8404621` (`Fix AlphaSeries boot runtime`) is intentionally merged into this branch.
 - The missing decompiled string literals tracked in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` are part of the refactor scope and must be inserted from that report. Treat that file as the source of truth: restore each literal in the matching Java class and method named by the entry, preserving source text unless a deliberate compatibility boundary documents otherwise; the current report lists 1391 unique non-empty literals still absent from Java.
 - Commit only verified milestones with `REFACTOR.md` metrics updated when the legacy surface changes.
@@ -292,6 +293,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added a typed `StaffModerationDao.OpenCallForHelpReviewRow` and routed the remaining session, achievement, and compatibility argument parsing sites off internal `handlingField(...)` usage; `handlingField(...)` now remains only as a public compatibility shim.
 - Moved wall-placement, own-profile, and favourite-group legacy row parsing out of `Handling` and into typed `FurnitureDao.InventoryPlacementFurniture`, `OwnProfileRow`, and `UserGroupRow` compatibility factories.
 - Added `com.alphaseries.game.trade` represented trade-offer and interaction-pair row records, moving those live cache row shapes out of `Handling` while keeping legacy serialization at the compatibility boundary.
+- Routed MySQL room chat-log payload rows through typed `StaffRoomChatRow` records and the existing `StaffPayloads.roomChatRows(List<StaffRoomChatRow>)` builder, leaving string rows as a compatibility parser only.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -309,7 +311,7 @@ Measured on 2026-06-30:
 - `Boot.java`: 1968 lines
 - `Handling.java`: 12547 lines
 - `Functions.java`: 746 lines
-- `MySQL.java`: 249 lines
+- `MySQL.java`: 251 lines
 - `Main.java`: 957 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 

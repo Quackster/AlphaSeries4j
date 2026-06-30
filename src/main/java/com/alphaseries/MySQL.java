@@ -3,7 +3,9 @@ package com.alphaseries;
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffModerationPacketHandlers;
+import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -190,20 +192,20 @@ public final class MySQL {
         if (chatRows == null || chatRows.isEmpty()) {
             return "";
         }
-        PacketBuilder payload = PacketBuilder.create();
+        List<StaffRoomChatRow> rows = new java.util.ArrayList<>();
         for (String row : chatRows.split("\r", -1)) {
             if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 5) {
-                    payload.appendInt(NumberUtils.parseLong(fields[0]))
-                        .appendInt(NumberUtils.parseLong(fields[1]))
-                        .appendInt(NumberUtils.parseLong(fields[2]))
-                        .appendString(fields[3])
-                        .appendString(fields[4]);
+                StaffRoomChatRow chatRow = StaffRoomChatRow.fromLegacy(row);
+                if (chatRow != null) {
+                    rows.add(chatRow);
                 }
             }
         }
-        return payload.build();
+        return mySqlRoomChatLogRows(rows);
+    }
+
+    public static String mySqlRoomChatLogRows(List<StaffRoomChatRow> chatRows) {
+        return StaffPayloads.roomChatRows(chatRows == null ? List.of() : chatRows).payload;
     }
 
     public static String mySqlRoomInfoPayload(String[] roomFields, String[] eventFields) {

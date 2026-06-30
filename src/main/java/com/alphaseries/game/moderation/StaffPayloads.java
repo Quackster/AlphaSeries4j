@@ -150,24 +150,17 @@ public final class StaffPayloads {
     }
 
     public static ChatRows roomChatRows(String chatRows) {
-        ChatRows result = new ChatRows();
-        PacketBuilder chatPayload = PacketBuilder.create();
+        List<StaffRoomChatRow> rows = new ArrayList<>();
         for (String row : StringUtils.text(chatRows).split("\r", -1)) {
             String rowValue = row.trim();
             if (!rowValue.isEmpty()) {
-                String[] fields = rowValue.split("\t", -1);
-                if (fields.length >= 5) {
-                    chatPayload.appendInt(NumberUtils.parseLong(StringUtils.field(fields, 0)))
-                        .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 1)))
-                        .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 2)))
-                        .appendString(StringUtils.field(fields, 3))
-                        .appendString(StringUtils.field(fields, 4));
-                    result.chatCount++;
+                StaffRoomChatRow chatRow = StaffRoomChatRow.fromLegacy(rowValue);
+                if (chatRow != null) {
+                    rows.add(chatRow);
                 }
             }
         }
-        result.payload = chatPayload.build();
-        return result;
+        return roomChatRows(rows);
     }
 
     public static ChatRows roomChatRows(List<StaffRoomChatRow> rows) {
