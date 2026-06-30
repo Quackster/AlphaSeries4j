@@ -286,4 +286,15 @@ public final class PetPayloads {
             .build();
     }
 
+    public static String speech(long botEntityId, String speechText) {
+        if (StringUtils.text(speechText).isEmpty()) {
+            return "";
+        }
+        return PacketBuilder.message("@X")
+            .appendInt(botEntityId)
+            .appendString(speechText)
+            .appendRaw('H')
+            .build();
+    }
+
 }

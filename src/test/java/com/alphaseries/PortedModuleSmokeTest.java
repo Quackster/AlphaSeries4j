@@ -2110,6 +2110,8 @@ public final class PortedModuleSmokeTest {
             + "Rex\2" + "1 2 ff\2", Handling.petScratchPayload(50, 5, 6, "Rex", "1 2 ff"));
         assertEquals("IZ" + Crypto.Proc_3_0_6D2AF0(50, null, "") + "gst jump\2"
             + Crypto.Proc_3_0_6D2AF0(2, null, ""), Handling.petCommandActionPayload(50, "gst jump", 2));
+        assertEquals("@X" + Crypto.Proc_3_0_6D2AF0(50, null, "") + "gst sml\2H",
+            Handling.petSpeechPayload(50, "gst sml"));
         Licence.global_008292D4 = "";
         Licence.global_00829358 = "";
         String[] representedBotFields = new String[]{

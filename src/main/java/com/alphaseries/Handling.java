@@ -6098,8 +6098,7 @@ public final class Handling {
                 return 0L;
             }
             if (!commandAction.action.isEmpty()) {
-                String payload = "IZ" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
-                    + commandAction.action + '\2' + Crypto.Proc_3_0_6D2AF0(commandId, null, "");
+                String payload = petCommandActionPayload(botEntityId, commandAction.action, commandId);
                 Proc_6_248_802B80(roomId, payload, 0);
             }
             if (pet.energy() < 250L || pet.nutrition() < 250L) {
@@ -6107,8 +6106,7 @@ public final class Handling {
                     ? Functions.Proc_10_0_809570("com.client.bot.pet.sad.speech", "gst thr", 0)
                     : Functions.Proc_10_0_809570("com.client.bot.pet.angry.speech", "gst grr", 0);
                 if (!commandSpeech.isEmpty()) {
-                    Proc_6_248_802B80(roomId, "@X" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
-                        + commandSpeech + '\2' + "H", 0);
+                    Proc_6_248_802B80(roomId, petSpeechPayload(botEntityId, commandSpeech), 0);
                 }
             } else {
                 Proc_6_185_7CC2D0(botEntityId, commandId * 10L, 0);
@@ -6164,7 +6162,7 @@ public final class Handling {
             if (update.leveledUp && petState.roomId() > 0L) {
                 String levelSpeech = Functions.Proc_10_0_809570("com.client.bot.pet.level_up.speech", "gst sml", 0);
                 if (!levelSpeech.isEmpty()) {
-                    Proc_6_248_802B80(petState.roomId(), "@X" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "") + levelSpeech + '\2' + "H", 0);
+                    Proc_6_248_802B80(petState.roomId(), petSpeechPayload(botEntityId, levelSpeech), 0);
                 }
             }
             bots.updatePetExperience(botId, update.petLevel, update.petExperience);
@@ -11016,6 +11014,10 @@ public final class Handling {
 
     public static String petCommandActionPayload(long botEntityId, String commandAction, long commandId) {
         return PetPayloads.commandAction(botEntityId, commandAction, commandId);
+    }
+
+    public static String petSpeechPayload(long botEntityId, String speechText) {
+        return PetPayloads.speech(botEntityId, speechText);
     }
 
     public static long reserveRepresentedBotSlot() {

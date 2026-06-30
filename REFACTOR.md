@@ -359,6 +359,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed live quest selection/progress/list/completion flows through typed `QuestSettings` instead of serializing DAO-loaded quest definitions back into tab-delimited rows and reparsing them inside `Handling`; string wrappers remain only as compatibility boundaries.
 - Routed live pet inventory row payload construction through typed `PetInventoryRow` records and kept the `String[]` parser only as a compatibility wrapper inside `PetPayloads`.
 - Routed pet package preview, package name-validation, and name-check packets through fluent `PetPayloads` builders, removing inline `Ly`, `Lz`, and `@d` packet assembly from `Handling`.
+- Routed live pet command-action and speech packets through `PetPayloads`, removing inline `IZ` and `@X` packet assembly from command and level-up handlers.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -374,7 +375,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 12180 lines
+- `Handling.java`: 12182 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 894 lines
