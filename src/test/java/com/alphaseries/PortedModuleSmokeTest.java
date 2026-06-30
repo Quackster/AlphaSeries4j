@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.config.AppDatabaseConfig;
+import com.alphaseries.config.AppSettingsCache;
 import com.alphaseries.dao.mysql.AdvertisingDao;
 import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.dao.mysql.ClubDao;
@@ -330,6 +331,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("1234", Functions.settingsCache().valueOrDefault("server.port", "0"));
         assertEquals("fallback", Functions.Proc_10_0_809570("missing", "fallback"));
         assertEquals("fallback", Functions.settingsCache().valueOrDefault("missing", "fallback"));
+        assertAppSettingsCache();
         Functions.global_008292A8 = new String[][]{{"\2base\2"}, {"\2fuse_mod\2"}};
         assertEquals(true, Functions.Proc_10_1_809790(1, "", "fuse_mod", 0));
         assertEquals(true, Functions.permissionMatrix().allows(1, "", "fuse_mod", 0));
@@ -4869,6 +4871,14 @@ public final class PortedModuleSmokeTest {
 
     private static String wireLong(long value) {
         return Crypto.Proc_3_0_6D2AF0(value, null, "");
+    }
+
+    private static void assertAppSettingsCache() {
+        AppSettingsCache parsedSettings = AppSettingsCache.fromLegacy("[server.port=1234][SERVER.PORT=5678]\r\nname=alpha");
+        assertEquals("1234", parsedSettings.value("SERVER.PORT"));
+        assertEquals("alpha", parsedSettings.value("name"));
+        AppSettingsCache typedSettings = AppSettingsCache.fromSettings(Map.of("Server.Port", "4321"));
+        assertEquals("4321", typedSettings.value("server.port"));
     }
 
     private static String productRow(long productId, String... columnPairs) {
