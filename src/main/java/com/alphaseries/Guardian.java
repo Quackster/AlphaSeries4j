@@ -14,7 +14,7 @@ import java.util.Set;
 
 public final class Guardian {
     public static final int WINSOCK_CONNECTED_STATE = 7;
-    public static String global_008291A0 = "";
+    public static Object global_008291A0 = "";
     public static long global_0082919C = 0L;
 
     private static final Set<Integer> connectedSockets = new HashSet<Integer>();
@@ -106,12 +106,12 @@ public final class Guardian {
         if (!state.accepted) {
             return;
         }
-        global_008291A0 = state.markers;
+        global_008291A0 = SocketMarkerSet.fromLegacy(state.markers);
         global_0082919C = state.highestIndex;
         connectedSockets.remove((int) socketIndex);
     }
 
-    public static SocketMarkerState toggleSocketMarkerState(String existingMarkers, long highestIndex, long socketIndexLong) {
+    public static SocketMarkerState toggleSocketMarkerState(Object existingMarkers, long highestIndex, long socketIndexLong) {
         SocketMarkerState state = new SocketMarkerState();
         SocketMarkerSet socketMarkers = SocketMarkerSet.fromLegacy(existingMarkers);
         state.highestIndex = highestIndex;
@@ -148,13 +148,13 @@ public final class Guardian {
     public static void removeSocketMarker(long socketIndex) {
         SocketMarkerSet socketMarkers = SocketMarkerSet.fromLegacy(global_008291A0);
         socketMarkers.remove(socketIndex);
-        global_008291A0 = socketMarkers.toLegacyMarkers();
+        global_008291A0 = socketMarkers;
     }
 
     public static void addSocketMarker(long socketIndex) {
         SocketMarkerSet socketMarkers = SocketMarkerSet.fromLegacy(global_008291A0);
         socketMarkers.add(socketIndex);
-        global_008291A0 = socketMarkers.toLegacyMarkers();
+        global_008291A0 = socketMarkers;
     }
 
     public static void setGameServerConnected(boolean connected) {

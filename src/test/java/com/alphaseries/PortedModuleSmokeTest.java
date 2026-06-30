@@ -706,7 +706,8 @@ public final class PortedModuleSmokeTest {
         Guardian.global_008291A0 = "[12]";
         Licence.global_008291A0 = "[4][12]";
         Handling.Proc_6_243_7FFEB0(12);
-        assertEquals("", Guardian.global_008291A0);
+        assertEquals(true, Guardian.global_008291A0 instanceof SocketMarkerSet);
+        assertEquals("", SocketMarkerSet.fromLegacy(Guardian.global_008291A0).toLegacyMarkers());
         assertEquals(true, Licence.global_008291A0 instanceof SocketMarkerSet);
         assertEquals("[4]", Licence.socketMarkers().toLegacyMarkers());
 
@@ -1272,7 +1273,7 @@ public final class PortedModuleSmokeTest {
         Guardian.global_0082919C = 0;
         Main.processGameServerData("DATA\2" + "7\2queued\2packet\1LISTEN\2" + "9");
         assertEquals("queued\2packet", Main.popGameServerPacketData(7));
-        assertEquals(true, Guardian.global_008291A0.contains("[9]"));
+        assertEquals(true, SocketMarkerSet.fromLegacy(Guardian.global_008291A0).contains(9L));
         assertEquals("bcd", Main.shiftIdentityText("abc", 1));
         assertEquals("abc", Main.easyGetIdentity(Main.shiftIdentityText("abc", 25)));
         assertEquals("cde", Main.createSuperEasyIdentity("abc"));
@@ -5260,14 +5261,16 @@ public final class PortedModuleSmokeTest {
         assertEquals(false, rejectedMarkerState.accepted);
         Guardian.global_008291A0 = "[1]";
         Guardian.addSocketMarker(12);
-        assertEquals("[1][12]", Guardian.global_008291A0);
+        assertEquals(true, Guardian.global_008291A0 instanceof SocketMarkerSet);
+        assertEquals("[1][12]", SocketMarkerSet.fromLegacy(Guardian.global_008291A0).toLegacyMarkers());
         Guardian.global_008291A0 = "";
         Guardian.global_0082919C = 0L;
         Guardian.toggleSocketMarker(12);
-        assertEquals("[12]", Guardian.global_008291A0);
+        assertEquals(true, Guardian.global_008291A0 instanceof SocketMarkerSet);
+        assertEquals("[12]", SocketMarkerSet.fromLegacy(Guardian.global_008291A0).toLegacyMarkers());
         assertEquals(12L, Guardian.global_0082919C);
         Guardian.Proc_11_3_821440(12);
-        assertEquals("", Guardian.global_008291A0);
+        assertEquals("", SocketMarkerSet.fromLegacy(Guardian.global_008291A0).toLegacyMarkers());
         assertEquals(12L, Guardian.global_0082919C);
     }
 
