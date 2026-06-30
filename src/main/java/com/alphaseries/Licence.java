@@ -108,7 +108,7 @@ public final class Licence {
     public static boolean global_00829034 = false;
     public static long global_008290AC = 0L;
     public static String global_00829040 = "";
-    public static String global_00829044 = "";
+    public static Object global_00829044 = "";
     public static String global_00829048 = "";
     public static Object global_00829080 = "";
     public static Object global_0082908C = "";
@@ -596,23 +596,59 @@ public final class Licence {
     }
 
     public static UpdaterSettings updaterSettings() {
-        UpdaterState.instance().setSettingsFromLegacy(global_00829040, global_00829044, global_00829048);
+        refreshUpdaterSettings();
         return UpdaterState.instance().settings();
     }
 
     public static void setUpdaterExecutableName(String executableName) {
-        global_00829040 = StringUtils.text(executableName);
-        UpdaterState.instance().setSettingsFromLegacy(global_00829040, global_00829044, global_00829048);
+        String normalizedExecutableName = StringUtils.text(executableName);
+        if (global_00829044 instanceof UpdaterSettings settings) {
+            global_00829044 = UpdaterSettings.fromEntries(
+                normalizedExecutableName,
+                settings.entryList(),
+                settings.updateSql());
+        }
+        global_00829040 = normalizedExecutableName;
+        refreshUpdaterSettings();
     }
 
     public static void setUpdaterRows(String updateRows) {
         global_00829044 = StringUtils.text(updateRows);
-        UpdaterState.instance().setSettingsFromLegacy(global_00829040, global_00829044, global_00829048);
+        refreshUpdaterSettings();
+    }
+
+    public static void setUpdaterSettings(UpdaterSettings settings) {
+        if (settings == null) {
+            global_00829040 = "";
+            global_00829044 = "";
+            global_00829048 = "";
+            refreshUpdaterSettings();
+            return;
+        }
+        global_00829040 = settings.executableName();
+        global_00829044 = settings;
+        global_00829048 = settings.updateSql();
+        refreshUpdaterSettings();
     }
 
     public static void setUpdaterSql(String updateSql) {
-        global_00829048 = StringUtils.text(updateSql);
-        UpdaterState.instance().setSettingsFromLegacy(global_00829040, global_00829044, global_00829048);
+        String normalizedUpdateSql = StringUtils.text(updateSql);
+        if (global_00829044 instanceof UpdaterSettings settings) {
+            global_00829044 = UpdaterSettings.fromEntries(
+                settings.executableName(),
+                settings.entryList(),
+                normalizedUpdateSql);
+        }
+        global_00829048 = normalizedUpdateSql;
+        refreshUpdaterSettings();
+    }
+
+    private static void refreshUpdaterSettings() {
+        if (global_00829044 instanceof UpdaterSettings settings) {
+            UpdaterState.instance().setSettings(settings);
+            return;
+        }
+        UpdaterState.instance().setSettingsFromLegacy(global_00829040, StringUtils.text(global_00829044), global_00829048);
     }
 
     public static CatalogPages catalogPages() {
