@@ -2982,10 +2982,8 @@ public final class Handling {
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return;
             }
-            String sourcePayload = "0" + Crypto.Proc_3_0_6D2AF0(interactionState, null,
-                "0" + Crypto.Proc_3_0_6D2AF0(sourceRoomUserIndex, null, "Am"));
-            String targetPayload = Crypto.Proc_3_0_6D2AF0(interactionState, null,
-                Crypto.Proc_3_0_6D2AF0(sourceRoomUserIndex, null, "Am"));
+            String sourcePayload = SocialPayloads.interactionStateForSource(sourceRoomUserIndex, interactionState);
+            String targetPayload = SocialPayloads.interactionStateForTarget(sourceRoomUserIndex, interactionState);
             Proc_6_244_801E80(socketIndex, sourcePayload, 0);
             Proc_6_244_801E80(targetSocketIndex, targetPayload, 0);
             if (interactionState == 1L) {
@@ -3128,10 +3126,10 @@ public final class Handling {
                 return;
             }
             storeRepresentedInteractionPair(socketIndex, targetSocketIndex, 1L);
-            String callerPayload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(targetUserId), null,
-                Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(callerUserId), null, "Ah"));
-            String targetPayload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(callerUserId), null,
-                Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(targetUserId), null, "Ah"));
+            String callerPayload = SocialPayloads.interactionRequest(
+                NumberUtils.parseLong(callerUserId), NumberUtils.parseLong(targetUserId));
+            String targetPayload = SocialPayloads.interactionRequest(
+                NumberUtils.parseLong(targetUserId), NumberUtils.parseLong(callerUserId));
             Proc_6_244_801E80(socketIndex, callerPayload, 0);
             Proc_6_244_801E80(targetSocketIndex, targetPayload, 0);
         } catch (Exception ignored) {
@@ -3168,7 +3166,7 @@ public final class Handling {
             if (targetRoomUserIndex <= 0L) {
                 return;
             }
-            String payload = "0" + Crypto.Proc_3_0_6D2AF0(sourceRoomUserIndex, null, "An");
+            String payload = SocialPayloads.interactionClosed(sourceRoomUserIndex);
             Proc_6_244_801E80(socketIndex, payload, 0);
             Proc_6_244_801E80(targetSocketIndex, payload, 0);
             removeRepresentedInteractionPair(socketIndex);

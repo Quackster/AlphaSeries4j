@@ -2284,6 +2284,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "Ei") + '\r', SocialPayloads.roomUserPreReadyState(9L));
         assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "") + " 2 3 1.0 4 4/\r",
             SocialPayloads.roomOccupantStatus(9L, 2L, 3L, "1.0", 4L));
+        assertEquals("00" + Crypto.Proc_3_0_6D2AF0(9, null, "Am") + Crypto.Proc_3_0_6D2AF0(1, null, ""),
+            SocialPayloads.interactionStateForSource(9L, 1L));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "Am") + Crypto.Proc_3_0_6D2AF0(1, null, ""),
+            SocialPayloads.interactionStateForTarget(9L, 1L));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(88, null, Crypto.Proc_3_0_6D2AF0(77, null, "Ah")),
+            SocialPayloads.interactionRequest(77L, 88L));
+        assertEquals("0" + Crypto.Proc_3_0_6D2AF0(9, null, "An"), SocialPayloads.interactionClosed(9L));
         String equippedBadges = "0" + Crypto.Proc_3_0_6D2AF0(1, null, "") + "ACH1\2"
             + "0" + Crypto.Proc_3_0_6D2AF0(3, null, "") + "VIP\2";
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges,

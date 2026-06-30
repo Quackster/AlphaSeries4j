@@ -155,6 +155,38 @@ public final class SocialPayloads {
             .build();
     }
 
+    public static String interactionStateForSource(long sourceRoomUserIndex, long interactionState) {
+        return PacketBuilder.create()
+            .appendRaw('0')
+            .appendRaw('0')
+            .appendRaw("Am")
+            .appendInt(sourceRoomUserIndex)
+            .appendInt(interactionState)
+            .build();
+    }
+
+    public static String interactionStateForTarget(long sourceRoomUserIndex, long interactionState) {
+        return PacketBuilder.message("Am")
+            .appendInt(sourceRoomUserIndex)
+            .appendInt(interactionState)
+            .build();
+    }
+
+    public static String interactionRequest(long sourceUserId, long targetUserId) {
+        return PacketBuilder.message("Ah")
+            .appendInt(sourceUserId)
+            .appendInt(targetUserId)
+            .build();
+    }
+
+    public static String interactionClosed(long sourceRoomUserIndex) {
+        return PacketBuilder.create()
+            .appendRaw('0')
+            .appendRaw("An")
+            .appendInt(sourceRoomUserIndex)
+            .build();
+    }
+
     public static String badgeInventory(List<BadgeRow> inventoryRows, String equippedPayload) {
         long inventoryCount = 0L;
         PacketBuilder inventoryPayload = PacketBuilder.create();
