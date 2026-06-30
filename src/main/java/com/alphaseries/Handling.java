@@ -5468,7 +5468,7 @@ public final class Handling {
                             targetList.append(',');
                         }
                         targetList.append(targetId);
-                        removedIdsPayload.append(messengerRemovedIdPayload(targetUserId));
+                        removedIdsPayload.append(MessengerPayloads.removedId(targetUserId));
                         removedCount++;
                         int targetSocketIndex = handlingSocketFromUserId(targetId);
                         if (targetSocketIndex > 0) {
@@ -5482,7 +5482,7 @@ public final class Handling {
                 return "";
             }
             messenger.deleteAcceptedFriendships(NumberUtils.parseLong(userId), targetList.toString());
-            String callerPayload = messengerRemoveFriendsPayload(removedIdsPayload.toString(), removedCount);
+            String callerPayload = MessengerPayloads.removeFriends(removedIdsPayload.toString(), removedCount);
             Proc_6_244_801E80(socketIndex, callerPayload, 0);
             return callerPayload;
         } catch (Exception ignored) {
@@ -5614,14 +5614,14 @@ public final class Handling {
             }
             String targetUserId = String.valueOf(messenger.userIdByName(targetName));
             if (targetUserId.isEmpty() || "0".equals(targetUserId) || targetUserId.equals(userId)) {
-                String callerPayload = messengerRequestDeniedPayload();
+                String callerPayload = MessengerPayloads.requestDenied();
                 Proc_6_244_801E80(socketIndex, callerPayload, 0);
                 return callerPayload;
             }
             long callerUserId = NumberUtils.parseLong(userId);
             long targetUserIdValue = NumberUtils.parseLong(targetUserId);
             if (messenger.friendshipExists(callerUserId, targetUserIdValue) || messenger.acceptFriends(targetUserIdValue) != 1L) {
-                String callerPayload = messengerRequestDeniedPayload();
+                String callerPayload = MessengerPayloads.requestDenied();
                 Proc_6_244_801E80(socketIndex, callerPayload, 0);
                 return callerPayload;
             }
@@ -5629,9 +5629,9 @@ public final class Handling {
             String userName = handlingUserName(userId);
             int targetSocketIndex = handlingSocketFromUserId(targetUserId);
             if (targetSocketIndex > 0) {
-                Proc_6_244_801E80(targetSocketIndex, messengerRequestNotifyPayload(callerUserId, userName), 0);
+                Proc_6_244_801E80(targetSocketIndex, MessengerPayloads.requestNotify(callerUserId, userName), 0);
             }
-            String callerPayload = messengerRequestAcceptedCallerPayload(targetUserIdValue);
+            String callerPayload = MessengerPayloads.requestAcceptedCaller(targetUserIdValue);
             Proc_6_244_801E80(socketIndex, callerPayload, 0);
             return callerPayload;
         } catch (Exception ignored) {
@@ -5652,7 +5652,7 @@ public final class Handling {
                 return "";
             }
             List<PendingFriendRequest> requests = messenger.pendingRequests(NumberUtils.parseLong(userId));
-            String payload = messengerPendingRequestsPayload(requests);
+            String payload = MessengerPayloads.pendingRequests(requests);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -7627,7 +7627,7 @@ public final class Handling {
                 }
             }
             if (acceptedCount > 0L) {
-                String callerPayload = messengerAcceptedFriendsPayload(payloadRows.toString(), acceptedCount);
+                String callerPayload = MessengerPayloads.acceptedFriends(payloadRows.toString(), acceptedCount);
                 Proc_6_244_801E80(socketIndex, callerPayload, 0);
                 return callerPayload;
             }
@@ -10442,34 +10442,6 @@ public final class Handling {
         }
         result.targetList = targetList.toString();
         return result;
-    }
-
-    public static String messengerAcceptedFriendsPayload(String payloadRows, long acceptedCount) {
-        return MessengerPayloads.acceptedFriends(payloadRows, acceptedCount);
-    }
-
-    public static String messengerRemoveFriendsPayload(String targetIdsPayload, long removedCount) {
-        return MessengerPayloads.removeFriends(targetIdsPayload, removedCount);
-    }
-
-    public static String messengerRemovedIdPayload(long targetUserId) {
-        return MessengerPayloads.removedId(targetUserId);
-    }
-
-    public static String messengerRequestAcceptedCallerPayload(long targetUserId) {
-        return MessengerPayloads.requestAcceptedCaller(targetUserId);
-    }
-
-    public static String messengerRequestDeniedPayload() {
-        return MessengerPayloads.requestDenied();
-    }
-
-    public static String messengerRequestNotifyPayload(long userId, String userName) {
-        return MessengerPayloads.requestNotify(userId, userName);
-    }
-
-    public static String messengerPendingRequestsPayload(List<PendingFriendRequest> requests) {
-        return MessengerPayloads.pendingRequests(requests);
     }
 
     public static String messengerFriendListPayload(

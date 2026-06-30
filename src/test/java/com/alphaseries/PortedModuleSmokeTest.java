@@ -2074,14 +2074,14 @@ public final class PortedModuleSmokeTest {
         assertEquals("1,2", deleteTargets.targetList);
         assertEquals(2L, deleteTargets.targetCount);
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "@MH") + expectedOnlineFriend + expectedOfflineFriend,
-            Handling.messengerAcceptedFriendsPayload(expectedOnlineFriend + expectedOfflineFriend, 2));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(44, null, ""), Handling.messengerRemovedIdPayload(44));
+            MessengerPayloads.acceptedFriends(expectedOnlineFriend + expectedOfflineFriend, 2));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(44, null, ""), MessengerPayloads.removedId(44));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "@MM") + Crypto.Proc_3_0_6D2AF0(44, null, ""),
-            Handling.messengerRemoveFriendsPayload(Handling.messengerRemovedIdPayload(44), 1));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(88, null, "DD") + "H", Handling.messengerRequestAcceptedCallerPayload(88));
-        assertEquals("DDH\2", Handling.messengerRequestDeniedPayload());
+            MessengerPayloads.removeFriends(MessengerPayloads.removedId(44), 1));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(88, null, "DD") + "H", MessengerPayloads.requestAcceptedCaller(88));
+        assertEquals("DDH\2", MessengerPayloads.requestDenied());
         assertEquals(Crypto.Proc_3_0_6D2AF0(5, null, "BD") + "Alice\2" + "5\2",
-            Handling.messengerRequestNotifyPayload(5, "Alice"));
+            MessengerPayloads.requestNotify(5, "Alice"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BF") + "hello\2",
             MessengerPayloads.privateChatMessage(77, "hello"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BG") + "join\2",
@@ -2095,7 +2095,7 @@ public final class PortedModuleSmokeTest {
         String expectedPendingPayload = Crypto.Proc_3_0_6D2AF0(2, null, "Dz")
             + Crypto.Proc_3_0_6D2AF0(2, null, "Dz");
         expectedPendingPayload = Crypto.Proc_3_0_6D2AF0(2, null, expectedPendingPayload) + expectedPendingRequestRows;
-        assertEquals(expectedPendingPayload, Handling.messengerPendingRequestsPayload(List.of(
+        assertEquals(expectedPendingPayload, MessengerPayloads.pendingRequests(List.of(
             new PendingFriendRequest(5L, "Alice"),
             new PendingFriendRequest(6L, "Bob"))));
         String expectedListedOfflineFriend = Crypto.Proc_3_0_6D2AF0(6, null, "0") + "Bob\2";
@@ -4181,7 +4181,7 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         handlingSends.clear();
         String removePayload = Handling.Proc_6_171_7C1520(4, "@h" + wireLong(1) + wireLong(88));
-        assertEquals(Handling.messengerRemoveFriendsPayload(Handling.messengerRemovedIdPayload(88), 1), removePayload);
+        assertEquals(MessengerPayloads.removeFriends(MessengerPayloads.removedId(88), 1), removePayload);
         assertEquals(true, containsSql(handlingSql, "DELETE FROM friendships WHERE has_accept='1'"));
         assertEquals(true, containsSql(handlingSql, "id_friend IN (88)"));
         assertEquals(true, containsSend(handlingSends, "@MMIM77"));
@@ -4204,14 +4204,14 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         handlingSends.clear();
         String requestPayload = Handling.Proc_6_174_7C3BC0(4, "@g" + wireString("Target"));
-        assertEquals(Handling.messengerRequestAcceptedCallerPayload(88), requestPayload);
+        assertEquals(MessengerPayloads.requestAcceptedCaller(88), requestPayload);
         assertEquals(true, containsSql(handlingSql, "INSERT IGNORE INTO friendships(id_user,id_friend) VALUES('88','77')"));
         assertEquals(true, containsSend(handlingSends, "BD"));
         assertEquals(true, containsSend(handlingSends, "DD"));
         handlingSql.clear();
         handlingSends.clear();
         String pendingPayload = Handling.Proc_6_175_7C4800(4);
-        assertEquals(Handling.messengerPendingRequestsPayload(List.of(new PendingFriendRequest(88L, "Target"))), pendingPayload);
+        assertEquals(MessengerPayloads.pendingRequests(List.of(new PendingFriendRequest(88L, "Target"))), pendingPayload);
         assertEquals(true, containsSend(handlingSends, "Dz"));
         assertEquals(true, containsSend(handlingSends, "Target"));
         handlingSends.clear();
