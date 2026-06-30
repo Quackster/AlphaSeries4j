@@ -23,11 +23,24 @@ public final class GiftSettings {
         this.giftWrapProductIds = parseGiftWrapProductIds(giftWrapLookup);
     }
 
+    private GiftSettings(String clubGiftPayload, List<ClubGift> clubGifts, List<Long> giftWrapProductIds,
+                         String giftWrapPayload) {
+        this.clubGiftPayload = StringUtils.text(clubGiftPayload);
+        this.giftWrapPayload = StringUtils.text(giftWrapPayload);
+        this.clubGifts = clubGifts == null ? List.of() : List.copyOf(clubGifts);
+        this.giftWrapProductIds = copyGiftWrapProductIds(giftWrapProductIds);
+    }
+
     public static GiftSettings fromLegacy(Object clubGiftPayload, Object clubGiftLookup, String giftWrapLookup, String giftWrapPayload) {
         if (clubGiftPayload instanceof GiftSettings giftSettings) {
             return giftSettings;
         }
         return new GiftSettings(clubGiftPayload, clubGiftLookup, giftWrapLookup, giftWrapPayload);
+    }
+
+    public static GiftSettings fromRows(String clubGiftPayload, List<ClubGift> clubGifts,
+                                        List<Long> giftWrapProductIds, String giftWrapPayload) {
+        return new GiftSettings(clubGiftPayload, clubGifts, giftWrapProductIds, giftWrapPayload);
     }
 
     public static GiftSettings empty() {
@@ -44,6 +57,10 @@ public final class GiftSettings {
 
     public List<ClubGift> clubGifts() {
         return clubGifts;
+    }
+
+    public List<Long> giftWrapProductIds() {
+        return List.copyOf(giftWrapProductIds);
     }
 
     public ClubGift clubGiftByCatalogProductId(long catalogProductId) {
@@ -83,7 +100,20 @@ public final class GiftSettings {
                 productIds.add(productId);
             }
         }
-        return Set.copyOf(productIds);
+        return Collections.unmodifiableSet(productIds);
+    }
+
+    private static Set<Long> copyGiftWrapProductIds(List<Long> productIds) {
+        Set<Long> copiedProductIds = new LinkedHashSet<>();
+        if (productIds != null) {
+            for (Long productId : productIds) {
+                long value = NumberUtils.parseLong(productId);
+                if (value > 0L) {
+                    copiedProductIds.add(value);
+                }
+            }
+        }
+        return Collections.unmodifiableSet(copiedProductIds);
     }
 
     public record ClubGift(long catalogProductId, long productId, long requiredDays) {

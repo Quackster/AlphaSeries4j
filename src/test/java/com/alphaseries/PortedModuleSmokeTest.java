@@ -1160,9 +1160,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(506L, Licence.giftSettings().clubGiftByCatalogProductId(81L).productId());
         GiftSettings legacyGiftSettings = GiftSettings.fromLegacy(
             "GIFTS", "[82\0" + "507\1" + "30]", "\r501\r502\r", "WRAPS");
-        assertEquals(507L, legacyGiftSettings.clubGiftByCatalogProductId(82L).productId());
-        assertEquals(true, legacyGiftSettings.containsGiftWrapProduct(502L));
-        assertEquals(false, legacyGiftSettings.containsGiftWrapProduct(50L));
+        assertGiftSettingsTypedAccessors(legacyGiftSettings);
         assertEquals("IoM" + Crypto.Proc_3_0_6D2AF0(4, null, "")
                 + "GIFTS"
                 + Crypto.Proc_3_0_6D2AF0(1, null, "")
@@ -4922,6 +4920,22 @@ public final class PortedModuleSmokeTest {
             List.of(4L, 5L), 0L, 0L, List.of(), List.of(), List.of());
         assertEquals("4\t5", typedCounterProducts.counterProductIds());
         assertEquals(List.of(4L, 5L), typedCounterProducts.counterProducts());
+    }
+
+    private static void assertGiftSettingsTypedAccessors(GiftSettings legacyGiftSettings) {
+        assertEquals(List.of(new GiftSettings.ClubGift(82L, 507L, 30L)), legacyGiftSettings.clubGifts());
+        assertEquals(507L, legacyGiftSettings.clubGiftByCatalogProductId(82L).productId());
+        assertEquals(List.of(501L, 502L), legacyGiftSettings.giftWrapProductIds());
+        assertEquals(true, legacyGiftSettings.containsGiftWrapProduct(502L));
+        assertEquals(false, legacyGiftSettings.containsGiftWrapProduct(50L));
+        GiftSettings typedGiftSettings = GiftSettings.fromRows("TYPED",
+            List.of(new GiftSettings.ClubGift(83L, 508L, 40L)),
+            List.of(601L, 0L, 602L, 601L),
+            "WRAPS");
+        assertEquals("TYPED", typedGiftSettings.clubGiftPayload());
+        assertEquals(List.of(new GiftSettings.ClubGift(83L, 508L, 40L)), typedGiftSettings.clubGifts());
+        assertEquals(List.of(601L, 602L), typedGiftSettings.giftWrapProductIds());
+        assertEquals(true, typedGiftSettings.containsGiftWrapProduct(602L));
     }
 
     private static void assertProductCacheRows(ProductCache productCache) {
