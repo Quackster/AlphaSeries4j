@@ -93,6 +93,27 @@ public final class PetPayloads {
             .build();
     }
 
+    public static String representedBotRoomEntry(
+        long botEntityId,
+        String botName,
+        long positionX,
+        long positionY,
+        String positionZ,
+        long positionR,
+        String botFigure
+    ) {
+        if (botEntityId <= 0L) {
+            return "";
+        }
+        return PacketBuilder.message("@\\")
+            .appendInt(botEntityId)
+            .appendString(botName)
+            .appendString(positionX + " " + positionY + " " + StringUtils.text(positionZ))
+            .appendString(positionR)
+            .appendString(botFigure)
+            .build();
+    }
+
     public static String inventoryRow(PetInventoryRow row) {
         if (row == null || row.petId() <= 0L) {
             return "";

@@ -25,6 +25,7 @@ import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
 import com.alphaseries.game.pet.PetInventoryRow;
+import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
@@ -2266,6 +2267,8 @@ public final class PortedModuleSmokeTest {
         String expectedBotEntry = "@\\" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
             + "Guide\2" + "5 6 1.0\2" + "7\2" + "1 2 ff\2";
         assertEquals(expectedBotEntry, Handling.representedBotRoomEntryPayload(botEntityId));
+        assertEquals(expectedBotEntry, PetPayloads.representedBotRoomEntry(
+            botEntityId, "Guide", 5L, 6L, "1.0", 7L, "1 2 ff"));
         Handling.removeRepresentedBotRecord(botEntityId);
         assertEquals("", Handling.representedBotRecordText(botEntityId));
         assertEquals("", Licence.global_008292D4);

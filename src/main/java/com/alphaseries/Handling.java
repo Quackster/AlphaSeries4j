@@ -10851,10 +10851,7 @@ public final class Handling {
         String positionZ = representedBotRecordField(botEntityId, 8);
         long positionR = representedBotRecordLong(botEntityId, 9);
         String botFigure = representedBotRecordField(botEntityId, 10);
-        return "@\\" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
-            + botName + '\2'
-            + positionX + " " + positionY + " " + positionZ + '\2'
-            + positionR + "\2" + botFigure + '\2';
+        return PetPayloads.representedBotRoomEntry(botEntityId, botName, positionX, positionY, positionZ, positionR, botFigure);
     }
 
     public static String representedRoomUserProfilePayload(
