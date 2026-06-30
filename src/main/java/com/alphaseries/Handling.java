@@ -4875,14 +4875,24 @@ public final class Handling {
         }
     }
 
+    /**
+     * Original function: Proc_6_148_7756D0.
+     */
     public static void Proc_6_148_7756D0(Object... args) {
+        if (args == null || args.length < 3) {
+            return;
+        }
+        consumeFurnitureChargeOrPrompt(
+            handlingSocketIndex(args),
+            NumberUtils.parseLong(args[1]),
+            NumberUtils.parseLong(args[2]));
+    }
+
+    /**
+     * Original function: Proc_6_148_7756D0.
+     */
+    public static void consumeFurnitureChargeOrPrompt(int socketIndex, long productId, long furnitureId) {
         try {
-            if (args == null || args.length < 3) {
-                return;
-            }
-            int socketIndex = handlingSocketIndex(args);
-            long productId = NumberUtils.parseLong(args[1]);
-            long furnitureId = NumberUtils.parseLong(args[2]);
             if (socketIndex <= 0 || productId <= 0L || furnitureId <= 0L) {
                 return;
             }
@@ -4965,7 +4975,7 @@ public final class Handling {
             String payload = FurniturePayloads.stateChanged(furnitureId, nextState);
             broadcastToCurrentRoom(socketIndex, payload);
             if (DataManager.productCache().hasCharges(productId)) {
-                Proc_6_148_7756D0(socketIndex, productId, furnitureId);
+                consumeFurnitureChargeOrPrompt(socketIndex, productId, furnitureId);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
