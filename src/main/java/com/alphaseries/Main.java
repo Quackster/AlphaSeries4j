@@ -94,9 +94,18 @@ public final class Main {
         return output.toString();
     }
 
+    /**
+     * Original function: Proc_0_22_68C1A0.
+     */
     public static String Proc_0_22_68C1A0(Object... args) {
+        return encodeIdentity(args != null && args.length >= 1 ? StringUtils.text(args[0]) : "");
+    }
+
+    /**
+     * Original function: Proc_0_22_68C1A0.
+     */
+    public static String encodeIdentity(String sourceText) {
         try {
-            String sourceText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
             long seedValue = Functions.randomLongInclusive(0x41, 0x5A);
             StringBuilder output = new StringBuilder(sourceText.length() + 1);
             output.append((char) (seedValue & 0xFF));
@@ -109,8 +118,18 @@ public final class Main {
         }
     }
 
+    /**
+     * Original function: Proc_0_23_68C430.
+     */
     public static String Proc_0_23_68C430(Object... args) {
-        return shiftIdentityText(args != null && args.length >= 1 ? StringUtils.text(args[0]) : "", 7L);
+        return shiftIdentity(args != null && args.length >= 1 ? StringUtils.text(args[0]) : "");
+    }
+
+    /**
+     * Original function: Proc_0_23_68C430.
+     */
+    public static String shiftIdentity(String sourceText) {
+        return shiftIdentityText(sourceText, 7L);
     }
 
     public static final class LifecycleResult {
@@ -148,7 +167,17 @@ public final class Main {
         }
     }
 
+    /**
+     * Original function: Proc_0_24_68EEF0.
+     */
     public static void Proc_0_24_68EEF0(Object... args) {
+        runRecoveredStartupNoop();
+    }
+
+    /**
+     * Original function: Proc_0_24_68EEF0.
+     */
+    public static void runRecoveredStartupNoop() {
         // Empty in the recovered VB6 reference.
     }
 
@@ -563,9 +592,19 @@ public final class Main {
         return Licence.gameServerSessionState().isReady(socketIndex);
     }
 
+    /**
+     * Original function: Proc_0_26_6ACF30.
+     */
     public static void Proc_0_26_6ACF30(Object... args) {
+        long socketIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
+        attachRepresentedUser(socketIndex);
+    }
+
+    /**
+     * Original function: Proc_0_26_6ACF30.
+     */
+    public static void attachRepresentedUser(long socketIndex) {
         try {
-            long socketIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
             if (socketIndex <= 0L || !Guardian.isSocketConnected(socketIndex)) {
                 return;
             }
@@ -578,9 +617,19 @@ public final class Main {
         }
     }
 
+    /**
+     * Original function: Proc_0_27_6AD400.
+     */
     public static void Proc_0_27_6AD400(Object... args) {
+        long entityIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
+        attachRepresentedBot(entityIndex);
+    }
+
+    /**
+     * Original function: Proc_0_27_6AD400.
+     */
+    public static void attachRepresentedBot(long entityIndex) {
         try {
-            long entityIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
             if (entityIndex <= 0L) {
                 return;
             }
