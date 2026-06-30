@@ -1471,7 +1471,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("", DataManager.Proc_8_0_804330(""));
 
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "hd-180-1\2M\2",
-            Handling.wardrobeSlotPayload(2, "hd-180-1", "M"));
+            UserPayloads.wardrobeSlot(2, "hd-180-1", "M"));
         UserPayloads.WardrobePayload wardrobePayload = UserPayloads.wardrobeSlots(List.of(
             new UserDao.WardrobeSlotRow(1L, "hd-180-1", "m"),
             new UserDao.WardrobeSlotRow(6L, "ch-255-66", "x")), 5L);
@@ -1503,7 +1503,7 @@ public final class PortedModuleSmokeTest {
             Handling.userIdentityPayload(44, "hello", "M", "hd-180-1"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(7, null,
             Crypto.Proc_3_0_6D2AF0(3, null, "@Y") + "hi\2"),
-            Handling.representedChatPayload(3, "hi", 7, 1));
+            UserPayloads.representedChat(3, "hi", 7, 1));
         assertEquals(true, Handling.legacyChatCommandPayload(":about").contains(
             "This is a copy of the unique Alpha Series written in Visual Basic 2006."));
         assertEquals(true, Handling.legacyChatCommandPayload(":entwicklung").contains("UNIQUE ID: --"));
@@ -2351,7 +2351,7 @@ public final class PortedModuleSmokeTest {
         expectedQuestionPayload = Crypto.Proc_3_0_6D2AF0(2, null, expectedQuestionPayload) + "Yes\2No\2";
         String expectedPollPayload = Crypto.Proc_3_0_6D2AF0(7, null, "D}") + "Title\2Thanks\2";
         expectedPollPayload = Crypto.Proc_3_0_6D2AF0(1, null, expectedPollPayload) + expectedQuestionPayload;
-        assertEquals(expectedPollPayload, Handling.pollPayload(testPoll));
+        assertEquals(expectedPollPayload, PollPayloads.poll(testPoll));
         assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "D|") + "Title\2",
             PollPayloads.prompt(new PollPrompt(7L, "Title")));
         String recyclerWire = "F^" + Crypto.Proc_3_0_6D2AF0(5, null, "")
@@ -4395,7 +4395,7 @@ public final class PortedModuleSmokeTest {
                     new PollAnswerRow(1L, 8L, "Yes"),
                     new PollAnswerRow(2L, 8L, "No")))));
         String livePollPayload = Handling.Proc_6_201_7D5AC0(4, "Cj" + wireLong(7));
-        assertEquals(Handling.pollPayload(livePoll), livePollPayload);
+        assertEquals(PollPayloads.poll(livePoll), livePollPayload);
         assertEquals(true, containsSend(handlingSends, "D}"));
         assertEquals(true, containsSend(handlingSends, "Question?"));
         handlingSends.clear();

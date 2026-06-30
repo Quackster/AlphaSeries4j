@@ -796,10 +796,6 @@ public final class Handling {
         public String payload = "";
     }
 
-    public static String wardrobeSlotPayload(long slotId, String figureText, String genderText) {
-        return UserPayloads.wardrobeSlot(slotId, figureText, genderText);
-    }
-
     public static boolean isValidWardrobeFigure(String figureText, String genderText) {
         return isValidWardrobeFigure(figureText, genderText, "");
     }
@@ -879,10 +875,6 @@ public final class Handling {
 
     public static String userIdentityPayload(long userId, String mottoText, String genderText, String figureText) {
         return UserPayloads.identityRefresh(userId, mottoText, figureText, genderText);
-    }
-
-    public static String representedChatPayload(long roomUserIndex, String filteredText, long gestureId, long chatType) {
-        return UserPayloads.representedChat(roomUserIndex, filteredText, gestureId, chatType);
     }
 
     public static String Proc_6_21_6E8BA0(Object... args) {
@@ -6646,7 +6638,7 @@ public final class Handling {
                 return "";
             }
             PollDefinition poll = polls.pollDefinition(pollId, roomId).orElse(null);
-            String payload = pollPayload(poll);
+            String payload = PollPayloads.poll(poll);
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -8521,7 +8513,7 @@ public final class Handling {
                 filteredText,
                 chatType,
                 handlingUserSessionId(userId));
-            String payload = representedChatPayload(roomUserIndex, filteredText, gestureId, chatType);
+            String payload = UserPayloads.representedChat(roomUserIndex, filteredText, gestureId, chatType);
             if (chatType == 2L) {
                 int targetSocketIndex = handlingSocketIndexForUserName(targetName);
                 if (targetSocketIndex > 0) {
@@ -10625,10 +10617,6 @@ public final class Handling {
         }
         submission.valid = submission.pollId > 0L && submission.questionId > 0L;
         return submission;
-    }
-
-    public static String pollPayload(PollDefinition poll) {
-        return PollPayloads.poll(poll);
     }
 
     public static String achievementRowByIndex(long achievementIndex) {
