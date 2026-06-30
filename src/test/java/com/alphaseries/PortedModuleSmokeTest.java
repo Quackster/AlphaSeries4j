@@ -30,6 +30,7 @@ import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
 import com.alphaseries.game.navigator.RecommendedRooms;
+import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.PetRaceRow;
@@ -1166,6 +1167,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829230 instanceof List);
         assertEquals(Boot.buildRoomCategoryPayload("1\tpublic\t0\t0\t0", 0L, 0L),
             Boot.buildRoomCategoryPayload(List.of(new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L)), 0L, 0L));
+        RoomCategoryCache typedRoomCategories = RoomCategoryCache.fromRows("defaults",
+            List.of(new RoomDao.RoomCategoryRow(5L, "typed", 1L, 2L, 3L)),
+            new String[][]{{"CATEGORY"}});
+        assertEquals("5\ttyped\t1\t2\t3", typedRoomCategories.categoryRows());
+        assertEquals("CATEGORY", typedRoomCategories.payload(0L, 0L));
         Boot.Proc_1_12_6C8EF0();
         assertEquals(true, ((String[][]) Licence.global_00829244)[0][0].contains("public"));
         assertEquals(true, Licence.roomCategoryCache().payload(0L, 0L).contains("public"));
