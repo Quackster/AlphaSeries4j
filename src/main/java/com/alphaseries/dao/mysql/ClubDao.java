@@ -13,23 +13,30 @@ public final class ClubDao {
         this.database = database;
     }
 
-    public String clubProductRows() throws SQLException {
-        List<String> rows = database.query(
+    public List<ClubProductRow> clubProductRows() throws SQLException {
+        return database.query(
             "SELECT id,sprite_name,months,level,price_credits FROM products_club ORDER BY id ASC",
-            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
-                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5));
-        return String.join("\r", rows);
+            resultSet -> new ClubProductRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5)));
     }
 
-    public String userClubStatusRow(long userId) throws SQLException {
+    public Optional<UserClubStatus> userClubStatus(long userId) throws SQLException {
         return database.queryOne(
             "SELECT level_hc,hc_days,hc2_days,hc_periods,hc2_periods,hc_presents,"
                 + "ROUND((UNIX_TIMESTAMP()-hc_startperiod)/60/60/24,0) FROM users WHERE id=? LIMIT 1",
-            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
-                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5) + "\t" + resultSet.getString(6)
-                + "\t" + resultSet.getString(7),
-            userId)
-            .orElse("");
+            resultSet -> new UserClubStatus(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getLong(7)),
+            userId);
     }
 
     public Optional<ClubGiftStatus> clubGiftStatus(long userId) throws SQLException {
@@ -97,6 +104,33 @@ public final class ClubDao {
     }
 
     public record ContainedClubProduct(long months, long level) {
+    }
+
+    public record ClubProductRow(long productId, String spriteName, long months, long level, long creditPrice) {
+    }
+
+    public record UserClubStatus(
+        long hcLevel,
+        long hcDays,
+        long vipDays,
+        long hcPeriods,
+        long vipPeriods,
+        long presentsAvailable,
+        long daysSinceStart
+    ) {
+        public long activeDays() {
+            long activeDays = (hcLevel > 1L ? vipDays : hcDays) - daysSinceStart;
+            return Math.max(0L, activeDays);
+        }
+
+        public long periodsLeft() {
+            long periodsLeft = hcLevel > 1L ? vipPeriods : hcPeriods;
+            long daysLeft = activeDays();
+            if (periodsLeft < 1L && daysLeft > 0L) {
+                return (daysLeft + 30L) / 31L;
+            }
+            return Math.max(0L, periodsLeft);
+        }
     }
 
     public record ContainedClubProductRow(long productId, long months, long level) {

@@ -515,46 +515,25 @@ public final class Handling {
             if (clubDao == null) {
                 return;
             }
-            String offerRows = clubDao.clubProductRows();
-            for (String row : offerRows.split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    String[] fields = row.split("\t", -1);
-                    if (fields.length >= 5) {
-                        long months = NumberUtils.parseLong(handlingField(fields, 2));
-                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 0)), null, ""));
-                        offerPayload.append(handlingField(fields, 1)).append('\2');
-                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(months, null, ""));
-                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(months * 31L, null, ""));
-                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 3)), null, ""));
-                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 4)), null, ""));
-                        offerPayload.append(Crypto.Proc_3_0_6D2AF0(0, null, ""));
-                        offerCount++;
-                    }
+            for (ClubDao.ClubProductRow row : clubDao.clubProductRows()) {
+                if (row != null) {
+                    offerPayload.append(Crypto.Proc_3_0_6D2AF0(row.productId(), null, ""));
+                    offerPayload.append(StringUtils.text(row.spriteName())).append('\2');
+                    offerPayload.append(Crypto.Proc_3_0_6D2AF0(row.months(), null, ""));
+                    offerPayload.append(Crypto.Proc_3_0_6D2AF0(row.months() * 31L, null, ""));
+                    offerPayload.append(Crypto.Proc_3_0_6D2AF0(row.level(), null, ""));
+                    offerPayload.append(Crypto.Proc_3_0_6D2AF0(row.creditPrice(), null, ""));
+                    offerPayload.append(Crypto.Proc_3_0_6D2AF0(0, null, ""));
+                    offerCount++;
                 }
             }
-            String rowText = clubDao.userClubStatusRow(NumberUtils.parseLong(userId));
-            String[] userFields = rowText.split("\t", -1);
-            long hcLevel = NumberUtils.parseLong(handlingField(userFields, 0));
-            long hcDays = NumberUtils.parseLong(handlingField(userFields, 1));
-            long vipDays = NumberUtils.parseLong(handlingField(userFields, 2));
-            long hcPeriods = NumberUtils.parseLong(handlingField(userFields, 3));
-            long vipPeriods = NumberUtils.parseLong(handlingField(userFields, 4));
-            long presentsAvailable = NumberUtils.parseLong(handlingField(userFields, 5));
-            long daysSinceStart = NumberUtils.parseLong(handlingField(userFields, 6));
-            long activeDays = hcLevel > 1L ? vipDays : hcDays;
-            long periodsLeft = hcLevel > 1L ? vipPeriods : hcPeriods;
-            long daysLeft = activeDays - daysSinceStart;
-            if (daysLeft < 0L) {
-                daysLeft = 0L;
-            }
-            if (periodsLeft < 1L && daysLeft > 0L) {
-                periodsLeft = (daysLeft + 30L) / 31L;
-            }
+            ClubDao.UserClubStatus status = clubDao.userClubStatus(NumberUtils.parseLong(userId))
+                .orElse(new ClubDao.UserClubStatus(0L, 0L, 0L, 0L, 0L, 0L, 0L));
             String payload = Crypto.Proc_3_0_6D2AF0(offerCount, null, "Iq") + offerPayload;
-            payload += Crypto.Proc_3_0_6D2AF0(hcLevel, null, "");
-            payload += Crypto.Proc_3_0_6D2AF0(daysLeft, null, "");
-            payload += Crypto.Proc_3_0_6D2AF0(periodsLeft, null, "");
-            payload += Crypto.Proc_3_0_6D2AF0(presentsAvailable, null, "");
+            payload += Crypto.Proc_3_0_6D2AF0(status.hcLevel(), null, "");
+            payload += Crypto.Proc_3_0_6D2AF0(status.activeDays(), null, "");
+            payload += Crypto.Proc_3_0_6D2AF0(status.periodsLeft(), null, "");
+            payload += Crypto.Proc_3_0_6D2AF0(status.presentsAvailable(), null, "");
             Proc_6_244_801E80(socketIndex, payload, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
