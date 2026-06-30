@@ -932,6 +932,13 @@ public final class PortedModuleSmokeTest {
         RecommendedRooms typedRecommendedRooms = RecommendedRooms.fromPayloads(Map.of(0L, "REC"), 1L);
         assertEquals("REC", typedRecommendedRooms.payload(1L));
         assertEquals(Map.of(0L, "REC"), typedRecommendedRooms.payloadsByIndex());
+        Object previousRecommendedRooms = Licence.global_0082911C;
+        long previousRecommendedRoomCount = Licence.global_00829128;
+        Licence.global_0082911C = typedRecommendedRooms;
+        Licence.global_00829128 = typedRecommendedRooms.count();
+        assertEquals("REC", Licence.recommendedRooms().payload(1L));
+        Licence.global_0082911C = previousRecommendedRooms;
+        Licence.global_00829128 = previousRecommendedRoomCount;
         String roomRow = "1\t2\t3\tc1\tc2\tc3\tc4\tc5\tc6\tc7\tc8\tc9\tc10\tc11\tc12\tc13\tc14\tc15\tc16\tc17\tc18\tc19\tc20\tc21\tc22\t4\t5";
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "")
             + Crypto.Proc_3_0_6D2AF0(1, null, "")
@@ -2954,6 +2961,13 @@ public final class PortedModuleSmokeTest {
         Licence.setNewFriendRooms(java.util.List.of(new NewFriendRooms.RoomPick(12L, 1L)),
                 java.time.LocalDateTime.now().plusSeconds(90L));
         assertEquals(true, Licence.global_0082908C instanceof NewFriendRooms);
+        Object previousNewFriendRooms = Licence.global_0082908C;
+        java.time.LocalDateTime previousNewFriendRoomsExpiresAt = Licence.global_00829090;
+        Licence.global_0082908C = typedFriendRooms;
+        Licence.global_00829090 = typedFriendRooms.expiresAt();
+        assertEquals(List.of(new NewFriendRooms.RoomPick(21L, 3L)), Licence.newFriendRooms().roomPicks());
+        Licence.global_0082908C = previousNewFriendRooms;
+        Licence.global_00829090 = previousNewFriendRoomsExpiresAt;
         DataManager.global_008291AC = "\0" + "1\1events\2";
         Path originalApplicationPath = Path.of(Functions.applicationPath);
         Object originalProductCache = DataManager.global_008292BC;

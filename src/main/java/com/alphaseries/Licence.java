@@ -577,11 +577,7 @@ public final class Licence {
     }
 
     public static NewFriendRooms newFriendRooms() {
-        if (global_0082908C instanceof NewFriendRooms newFriendRooms) {
-            NavigatorState.instance().setNewFriendRooms(newFriendRooms);
-        } else {
-            NavigatorState.instance().setNewFriendRoomsFromLegacy(global_0082908C, global_00829090);
-        }
+        NavigatorState.instance().setNewFriendRoomsFromLegacy(global_0082908C, global_00829090);
         return NavigatorState.instance().newFriendRooms();
     }
 
@@ -863,11 +859,7 @@ public final class Licence {
     }
 
     public static RecommendedRooms recommendedRooms() {
-        if (global_0082911C instanceof RecommendedRooms recommendedRooms) {
-            NavigatorState.instance().setRecommendedRooms(recommendedRooms);
-        } else {
-            NavigatorState.instance().setRecommendedRoomsFromLegacy(global_0082911C, global_00829128);
-        }
+        NavigatorState.instance().setRecommendedRoomsFromLegacy(global_0082911C, global_00829128);
         return NavigatorState.instance().recommendedRooms();
     }
 
