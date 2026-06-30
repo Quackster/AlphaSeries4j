@@ -62,6 +62,13 @@ public final class SocialPayloads {
             .build();
     }
 
+    public static String roomUserPreReadyState(long roomUserIndex) {
+        return PacketBuilder.message("Ei")
+            .appendInt(roomUserIndex)
+            .appendRaw('\r')
+            .build();
+    }
+
     public static String badgeInventory(List<BadgeRow> inventoryRows, String equippedPayload) {
         long inventoryCount = 0L;
         PacketBuilder inventoryPayload = PacketBuilder.create();

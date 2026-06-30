@@ -8039,7 +8039,7 @@ public final class Handling {
             if (roomUserIndex <= 0L) {
                 return;
             }
-            Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Ei") + '\r', 0);
+            Proc_6_247_8027E0(socketIndex, SocialPayloads.roomUserPreReadyState(roomUserIndex), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses dispatcher helper failures.
         }
