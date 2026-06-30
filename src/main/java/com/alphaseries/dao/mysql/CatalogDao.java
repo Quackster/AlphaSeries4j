@@ -222,32 +222,6 @@ public final class CatalogDao {
         String link,
         long develop
     ) {
-        public String[] legacyFields() {
-            return new String[] {
-                String.valueOf(pageId),
-                text(name),
-                String.valueOf(minimumRank),
-                String.valueOf(minimumHcRank),
-                String.valueOf(clickable),
-                text(template),
-                text(headerImage),
-                text(specialImage),
-                text(specialTemplate),
-                text(textOne),
-                text(textTwo),
-                text(textThree),
-                text(textFour),
-                text(textFive),
-                text(textSix),
-                text(textSeven),
-                text(textEight),
-                text(textNine),
-                text(textTen),
-                text(textEleven),
-                text(link),
-                String.valueOf(develop)
-            };
-        }
     }
 
     public record CatalogPageProductRow(
@@ -265,16 +239,6 @@ public final class CatalogDao {
     }
 
     public record CatalogPageTreeRow(long pageId, String name, long color, long icon, long develop, long visible) {
-        public String[] legacyFields() {
-            return new String[] {
-                String.valueOf(pageId),
-                text(name),
-                String.valueOf(color),
-                String.valueOf(icon),
-                String.valueOf(develop),
-                String.valueOf(visible)
-            };
-        }
     }
 
     private static List<String> rowValues(ResultSet resultSet, int columnCount) throws SQLException {
@@ -284,9 +248,5 @@ public final class CatalogDao {
             values.add(value == null ? "" : value);
         }
         return values;
-    }
-
-    private static String text(String value) {
-        return value == null ? "" : value;
     }
 }

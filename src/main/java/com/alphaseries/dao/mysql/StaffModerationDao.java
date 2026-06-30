@@ -497,16 +497,6 @@ public final class StaffModerationDao {
     }
 
     public record CallForHelpRoom(long roomId, String roomName, long modelType, long userId, long partnerId, long timestampSent) {
-        public String[] toFields() {
-            return new String[]{
-                String.valueOf(roomId),
-                roomName,
-                String.valueOf(modelType),
-                String.valueOf(userId),
-                String.valueOf(partnerId),
-                String.valueOf(timestampSent)
-            };
-        }
     }
 
     public record OpenCallForHelpReviewRow(
@@ -537,31 +527,13 @@ public final class StaffModerationDao {
     }
 
     public record RoomChatHeader(long roomId, String roomName, long modelType) {
-        public String[] toFields() {
-            return new String[]{String.valueOf(roomId), roomName, String.valueOf(modelType)};
-        }
     }
 
     public record RoomInfo(long roomId, long visitorsNow, long ownerId, String ownerName, String roomName,
                            String description, String tag1, String tag2) {
-        public String[] toFields() {
-            return new String[]{
-                String.valueOf(roomId),
-                String.valueOf(visitorsNow),
-                String.valueOf(ownerId),
-                ownerName,
-                roomName,
-                description,
-                tag1,
-                tag2
-            };
-        }
     }
 
     public record RoomEvent(String name, String description, String tag1, String tag2) {
-        public String[] toFields() {
-            return new String[]{name, description, tag1, tag2};
-        }
     }
 
     public record UserModerationSummary(StaffUserSummaryRow userRow, long callForHelpCount, long pickedCallForHelpCount,

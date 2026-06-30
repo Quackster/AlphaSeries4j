@@ -416,6 +416,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Replaced raw zero-count `Crypto` fallback payloads for navigator room/event lists, equipped badges, and tag lists with the existing typed payload builders.
 - Moved sticky-note update broadcast payload construction into `FurniturePayloads`, replacing inline legacy `Crypto` assembly in `Handling`.
 - Moved catalog gift-wrap price fallback construction into `CatalogPayloads`, bringing direct `Crypto.Proc_3_0_6D2AF0` calls in `Handling` to zero.
+- Removed unused `String[]` compatibility exporters from catalog and staff moderation DAO records now that callers use typed records directly.
 
 ## VB Compatibility Class Removal Checklist
 
