@@ -61,6 +61,15 @@ public final class ClubDao {
                 resultSet.getLong(3)));
     }
 
+    public List<ClubGiftRow> clubGiftRows() throws SQLException {
+        return database.query(
+            "SELECT id_product,is_vip,required_days FROM club_gifts ORDER by id ASC",
+            resultSet -> new ClubGiftRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3)));
+    }
+
     public int applyClubPeriod(long userId, long hcRank, long currentPeriods, long paidDays, long giftIncrementDefault)
         throws SQLException {
 
@@ -93,6 +102,12 @@ public final class ClubDao {
     public record ContainedClubProductRow(long productId, long months, long level) {
         public String legacyRow() {
             return productId + "\t" + months + "\t" + level;
+        }
+    }
+
+    public record ClubGiftRow(long catalogProductId, long vipOnly, long requiredDays) {
+        public String legacyRow() {
+            return catalogProductId + "\t" + vipOnly + "\t" + requiredDays;
         }
     }
 

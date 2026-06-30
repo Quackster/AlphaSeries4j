@@ -38,6 +38,13 @@ public final class CatalogDao {
             .orElse(0L);
     }
 
+    public List<Long> giftWrapProductIds() throws SQLException {
+        return database.query(
+            "SELECT id FROM products WHERE sprite LIKE ?",
+            resultSet -> resultSet.getLong(1),
+            "present_wrap*%");
+    }
+
     public long productIdBySprite(String sprite) throws SQLException {
         return database.queryOne(
             "SELECT id FROM products WHERE sprite=? LIMIT 1",

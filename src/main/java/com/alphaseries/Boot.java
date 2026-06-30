@@ -355,7 +355,15 @@ public final class Boot {
     }
 
     public static void Proc_1_13_6C9820(Object... args) {
-        String wrapRows = MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE sprite LIKE 'present_wrap*%'", "\r", 0);
+        String wrapRows = "";
+        CatalogDao catalog = catalogDao();
+        if (catalog != null) {
+            try {
+                wrapRows = joinLongRows(catalog.giftWrapProductIds());
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         long wrapCount = countNonZeroRows(wrapRows);
         long accessoryCount = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.count.accessories", wrapCount, 0));
         long colorCount = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.count.colors", 0, 0));
@@ -418,27 +426,31 @@ public final class Boot {
         StringBuilder payload = new StringBuilder();
         StringBuilder lookup = new StringBuilder();
         long count = 0L;
-        for (String row : MySQL.Proc_5_2_6D4690("SELECT id_product,is_vip,required_days FROM club_gifts ORDER by id ASC", 0, 0).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 3) {
-                    long catalogProductId = NumberUtils.parseLong(fields[0]);
-                    long productId = Licence.Proc_9_2_8075F0(catalogProductId, 2, 0);
-                    if (productId == 0L) {
-                        productId = catalogProductId;
-                    }
-                    String giftClass = Licence.Proc_9_0_806F70(productId, 1, 0) == 9L ? "i" : "s";
-                    payload.append(Crypto.Proc_3_0_6D2AF0(catalogProductId, null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(productId, null, ""));
-                    payload.append(DataManager.Proc_8_12_806C30(productId, 14, 0)).append('\2');
-                    payload.append(DataManager.Proc_8_12_806C30(productId, 15, 0)).append('\2');
-                    payload.append("IHHI").append(giftClass).append('\2');
-                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[1]), null, ""));
-                    payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[2]), null, ""));
-                    lookup.append('[').append(catalogProductId).append('\0').append(productId).append('\1').append(NumberUtils.parseLong(fields[2])).append(']');
-                    count++;
-                }
+        ClubDao clubs = clubDao();
+        List<ClubDao.ClubGiftRow> giftRows = List.of();
+        if (clubs != null) {
+            try {
+                giftRows = clubs.clubGiftRows();
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
+        }
+        for (ClubDao.ClubGiftRow row : giftRows) {
+            long catalogProductId = row.catalogProductId();
+            long productId = Licence.Proc_9_2_8075F0(catalogProductId, 2, 0);
+            if (productId == 0L) {
+                productId = catalogProductId;
+            }
+            String giftClass = Licence.Proc_9_0_806F70(productId, 1, 0) == 9L ? "i" : "s";
+            payload.append(Crypto.Proc_3_0_6D2AF0(catalogProductId, null, ""));
+            payload.append(Crypto.Proc_3_0_6D2AF0(productId, null, ""));
+            payload.append(DataManager.Proc_8_12_806C30(productId, 14, 0)).append('\2');
+            payload.append(DataManager.Proc_8_12_806C30(productId, 15, 0)).append('\2');
+            payload.append("IHHI").append(giftClass).append('\2');
+            payload.append(Crypto.Proc_3_0_6D2AF0(row.vipOnly(), null, ""));
+            payload.append(Crypto.Proc_3_0_6D2AF0(row.requiredDays(), null, ""));
+            lookup.append('[').append(catalogProductId).append('\0').append(productId).append('\1').append(row.requiredDays()).append(']');
+            count++;
         }
         Licence.setClubGiftState(Crypto.Proc_3_0_6D2AF0(count, null, "") + payload, lookup.toString());
     }

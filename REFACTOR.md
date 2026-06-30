@@ -19,7 +19,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Move raw `Licence.global_*` string caches into typed collection-backed state holders under the appropriate `game.*` package, keeping legacy serialization only at explicit compatibility boundaries.
 - Each domain module should expose a single module-level manager/registry for its live instances and cached state instead of relying on `Licence.java` globals or scattered static ownership. `Licence` accessors are only temporary compatibility bridges while callers migrate to those managers.
 - Keep the refactor branch current with required runtime fixes from `dev`; commit `099dd4d17cd83efeecdb088ac1d94c8ff8404621` (`Fix AlphaSeries boot runtime`) is intentionally merged into this branch.
-- The missing decompiled string literals listed in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` are required restoration work for this refactor. Insert each string into the matching Java class and method, preserving source text unless a deliberate compatibility boundary documents otherwise.
+- The missing decompiled string literals listed in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` are required restoration work for this refactor. Insert each string into the matching Java class and method named by that report, preserving source text unless a deliberate compatibility boundary documents otherwise; the current report lists 1391 unique non-empty literals still absent from Java.
 - Commit only verified milestones with `REFACTOR.md` metrics updated when the legacy surface changes.
 
 ## Completed Slices
@@ -259,6 +259,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed boot settings-cache and Figuredata setting reads through typed `SettingsDao` rows/value lookups, keeping legacy settings payload serialization explicit in `Boot`.
 - Routed recycler reward chance and product startup cache reads through typed `RecyclerDao` methods, keeping legacy recycler payload/list serialization explicit in `Boot`.
 - Routed product, catalog-product, and product-deal startup cache reads through typed `CatalogDao` cache rows, keeping legacy array/string cache serialization explicit in `Boot`.
+- Routed gift-wrap and club-gift startup cache reads through typed `CatalogDao`/`ClubDao` methods, keeping legacy gift cache serialization explicit in `Boot`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -272,8 +273,8 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 24
-- `Boot.java`: 1609 lines
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 22
+- `Boot.java`: 1621 lines
 - `Handling.java`: 12596 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines
@@ -289,7 +290,7 @@ Measured on 2026-06-30:
 - Replace remaining `Crypto.Proc_3_*` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
 - Continue replacing duplicated local string/number helpers in root compatibility classes with `StringUtils` and `NumberUtils`.
 - Move remaining raw `Licence.global_*` caches into typed state holders under the appropriate `game.*` package.
-- Insert the missing strings tracked in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md`; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
+- Insert the missing strings tracked in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into the matching Java classes and methods from the report; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
 - Delete remaining deprecated compatibility aliases only after their call sites reach zero and tests pass.
 
 ## Verification
