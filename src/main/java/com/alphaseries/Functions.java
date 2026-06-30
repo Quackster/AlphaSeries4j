@@ -8,7 +8,6 @@ import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
-import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.util.NumberUtils;
@@ -551,10 +550,6 @@ public final class Functions {
         }
     }
 
-    public static String Proc_10_24_80E790(Object... args) {
-        return movementStep(args);
-    }
-
     public static long Proc_10_25_80F5D0(Object... args) {
         if (args == null || args.length < 3) {
             return 0L;
@@ -578,10 +573,6 @@ public final class Functions {
         } catch (Exception ex) {
             return 0L;
         }
-    }
-
-    public static String Proc_10_26_81E4E0(Object... args) {
-        return movementStep(args);
     }
 
     public static long Proc_10_27_81F1A0(Object... args) {
@@ -663,29 +654,6 @@ public final class Functions {
     public static String userInventoryCachePath(long ownerId) {
         Path basePath = Paths.get(StringUtils.text(applicationPath));
         return basePath.resolve("cache").resolve("users").resolve(ownerId + ".cache").toString();
-    }
-
-    private static String movementStep(Object... args) {
-        if (args == null) {
-            return MovementStep.zero().toLegacyText();
-        }
-        long currentX = 0L;
-        long currentY = 0L;
-        long targetX;
-        long targetY;
-        if (args.length >= 5) {
-            currentX = NumberUtils.parseLong(args[1]);
-            currentY = NumberUtils.parseLong(args[2]);
-            targetX = NumberUtils.parseLong(args[3]);
-            targetY = NumberUtils.parseLong(args[4]);
-        } else if (args.length >= 3) {
-            targetX = NumberUtils.parseLong(args[1]);
-            targetY = NumberUtils.parseLong(args[2]);
-        } else {
-            return MovementStep.zero().toLegacyText();
-        }
-
-        return MovementStep.between(currentX, currentY, targetX, targetY).toLegacyText();
     }
 
     private static long randomLongFromArgs(Object... args) {

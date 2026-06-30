@@ -6558,8 +6558,7 @@ public final class Handling {
             RoomUserPosition current = RoomUserPosition.from(Licence.representedRooms().movementPosition(roomSlot, socketIndex));
             long currentX = current.found() ? current.positionX() : 0L;
             long currentY = current.found() ? current.positionY() : 0L;
-            MovementStep movement = MovementStep.fromLegacy(
-                Functions.Proc_10_24_80E790(socketIndex, currentX, currentY, targetX, targetY));
+            MovementStep movement = MovementStep.between(currentX, currentY, targetX, targetY);
             long nextX = movement.positionX();
             long nextY = movement.positionY();
             long directionValue = movement.directionValue();

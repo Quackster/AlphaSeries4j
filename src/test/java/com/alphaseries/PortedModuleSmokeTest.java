@@ -471,8 +471,8 @@ public final class PortedModuleSmokeTest {
         MySQL.configureDatabaseConnection(null);
         MusConnectionManager.instance().configureSink(null);
         Licence.global_00829268 = "";
-        assertEquals("1\0" + "1\0" + "3\0" + "1\0", Functions.Proc_10_24_80E790(0, 0, 0, 2, 2));
-        assertEquals("0\0" + "0\0" + "0\0" + "0\0", Functions.Proc_10_24_80E790(0));
+        assertEquals("1\0" + "1\0" + "3\0" + "1\0", MovementStep.between(0, 0, 2, 2).toLegacyText());
+        assertEquals("0\0" + "0\0" + "0\0" + "0\0", MovementStep.zero().toLegacyText());
         assertEquals(1L, Functions.representedPositionAvailable(0, 5, 5));
         assertEquals(0L, Functions.representedPositionAvailable(7, 1, 0));
         assertEquals(0L, Functions.representedPositionAvailable(7, 0, 1));

@@ -602,8 +602,7 @@ public final class Main {
             long currentY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[2]) : 0L;
             long targetX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[3]) : 0L;
             long targetY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
-            MovementStep movement = MovementStep.fromLegacy(
-                Functions.Proc_10_26_81E4E0(entityIndex, currentX, currentY, targetX, targetY));
+            MovementStep movement = MovementStep.between(currentX, currentY, targetX, targetY);
             if (roomId <= 0L || Functions.Proc_10_27_81F1A0(entityIndex, movement.positionX(), movement.positionY()) != 0L) {
                 mainRepresentedRoomOccupantMove(roomSlot, entityIndex, 2,
                     movement.positionX(), movement.positionY(), movement.directionValue(), movement.movingValue());
@@ -628,8 +627,7 @@ public final class Main {
             long currentY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[2]) : 0L;
             long targetX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[3]) : 0L;
             long targetY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
-            MovementStep movement = MovementStep.fromLegacy(
-                Functions.Proc_10_24_80E790(socketIndex, currentX, currentY, targetX, targetY));
+            MovementStep movement = MovementStep.between(currentX, currentY, targetX, targetY);
             if (roomId <= 0L || Functions.Proc_10_25_80F5D0(roomId, movement.positionX(), movement.positionY()) != 0L) {
                 mainRepresentedRoomOccupantMove(roomSlot, socketIndex, 1,
                     movement.positionX(), movement.positionY(), movement.directionValue(), movement.movingValue());
