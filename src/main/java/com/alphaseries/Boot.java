@@ -1,6 +1,9 @@
 package com.alphaseries;
 
 import com.alphaseries.dao.mysql.BotDao;
+import com.alphaseries.dao.mysql.CatalogDao;
+import com.alphaseries.dao.mysql.ClubDao;
+import com.alphaseries.dao.mysql.PackageDao;
 import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetCommandCacheRow;
@@ -77,13 +80,34 @@ public final class Boot {
         cacheRowsById(catalogProducts, MySQL.Proc_5_2_6D4690(catalogQuery, 0, 0));
         Licence.setCatalogProductRows(catalogProducts);
         Licence.setDealRows("\r" + MySQL.Proc_5_2_6D4690("SELECT id,items FROM products_deals ORDER BY id ASC", "\r", 0) + "\r");
-        Licence.setRecyclerBoxProductId(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE sprite='ecotron_box' LIMIT 1", 0, 0)));
-        Licence.setCounterProductIds(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_counter IS NOT NULL", 0, 0).replace('\r', '\t'));
-        Licence.setTeleportProductId(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='11' LIMIT 1", 0, 0)));
-        Licence.setMoodlightProductId(NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT id FROM products WHERE id_type='19' LIMIT 1", 0, 0)));
-        Licence.setPackageRows(MySQL.Proc_5_2_6D4690("SELECT id_product,type_secondary,id_contain,type_check FROM packages", 0, 0));
-        Licence.setPetPackageRows(MySQL.Proc_5_2_6D4690("SELECT id,id_pet,id_race,color FROM packages_pets", 0, 0));
-        Licence.setClubProductRows("\r" + MySQL.Proc_5_2_6D4690("SELECT id_product,months,level FROM products_containshc", "\r", 0) + "\r");
+        CatalogDao catalog = catalogDao();
+        PackageDao packages = packageDao();
+        ClubDao clubs = clubDao();
+        if (catalog != null) {
+            try {
+                Licence.setRecyclerBoxProductId(catalog.productIdBySprite("ecotron_box"));
+                Licence.setCounterProductIds(joinLongs(catalog.counterProductIds(), "\t"));
+                Licence.setTeleportProductId(catalog.firstProductIdByType(11L));
+                Licence.setMoodlightProductId(catalog.firstProductIdByType(19L));
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
+        if (packages != null) {
+            try {
+                Licence.setPackageRows(joinPackageRows(packages.packageRows()));
+                Licence.setPetPackageRows(joinPetPackageRows(packages.petPackageRows()));
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
+        if (clubs != null) {
+            try {
+                Licence.setClubProductRows("\r" + joinContainedClubProductRows(clubs.containedClubProductRows()) + "\r");
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         Proc_1_17_6CCDC0(0, 0, 0);
         Proc_1_15_6CA000(0, 0, 0);
         Proc_1_18_6CE9C0(0, 0, 0);
@@ -1302,6 +1326,63 @@ public final class Boot {
         }
         String value = valuesById.get(id);
         return value == null ? "" : value;
+    }
+
+    private static String joinLongs(List<Long> values, String separator) {
+        StringBuilder joined = new StringBuilder();
+        for (Long value : values == null ? List.<Long>of() : values) {
+            if (joined.length() > 0) {
+                joined.append(separator);
+            }
+            joined.append(value == null ? 0L : value.longValue());
+        }
+        return joined.toString();
+    }
+
+    private static String joinPackageRows(List<PackageDao.PackageRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (PackageDao.PackageRow row : rows == null ? List.<PackageDao.PackageRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
+    private static String joinPetPackageRows(List<PackageDao.PetPackageRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (PackageDao.PetPackageRow row : rows == null ? List.<PackageDao.PetPackageRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
+    private static String joinContainedClubProductRows(List<ClubDao.ContainedClubProductRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (ClubDao.ContainedClubProductRow row : rows == null ? List.<ClubDao.ContainedClubProductRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
+    private static void appendLegacyRow(StringBuilder joined, String rowText) {
+        if (joined.length() > 0) {
+            joined.append('\r');
+        }
+        joined.append(StringUtils.text(rowText));
+    }
+
+    private static CatalogDao catalogDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new CatalogDao(database);
+    }
+
+    private static PackageDao packageDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new PackageDao(database);
+    }
+
+    private static ClubDao clubDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new ClubDao(database);
     }
 
     private static ServerMaintenanceDao serverMaintenanceDao() {

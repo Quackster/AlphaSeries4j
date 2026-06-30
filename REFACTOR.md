@@ -252,6 +252,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added typed quest definition rows and routed the quest-list fallback source through `QuestDao`, keeping legacy row serialization explicit at the remaining quest compatibility boundary.
 - Extracted staff moderation `GI`/`GH`/`GK` packet handling from `MySQL` into `game.moderation.StaffModerationPacketHandlers`, leaving the old `MySQL.Proc_5_4/5/6` methods as compatibility wrappers and routing the main packet switch through named handlers.
 - Routed runtime socket startup timestamp updates through `ServerMaintenanceDao`, replacing another fixed raw `MySQL.Proc_5_0` startup query with a prepared DAO method.
+- Routed catalog startup product settings, package rows, pet package rows, and contained club-product rows through typed `CatalogDao`/`PackageDao`/`ClubDao` methods, keeping legacy row serialization explicit at the `Licence` cache bridge.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -265,8 +266,8 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 51
-- `Boot.java`: 1316 lines
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 44
+- `Boot.java`: 1397 lines
 - `Handling.java`: 12596 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines
