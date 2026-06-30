@@ -1233,6 +1233,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(new ChatSettings.FilterWord("badword"), ((List<?>) Licence.global_00829290).get(0));
         assertChatSettingsTypedAccessors(Licence.chatSettings());
         assertEquals(75, ((int[]) Licence.global_0082927C)[2]);
+        assertEquals(75L, Licence.messengerSettings().maxFriends(2));
         MySQL.configureDatabaseConnection(null);
 
         Licence.global_00829350 = "";

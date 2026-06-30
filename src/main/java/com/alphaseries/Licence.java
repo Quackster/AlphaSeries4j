@@ -323,11 +323,7 @@ public final class Licence {
     }
 
     public static MessengerSettings messengerSettings() {
-        if (global_0082927C instanceof MessengerSettings messengerSettings) {
-            MessengerState.instance().setSettings(messengerSettings);
-        } else {
-            MessengerState.instance().setFriendLimits(global_0082927C);
-        }
+        MessengerState.instance().setFriendLimits(global_0082927C);
         return MessengerState.instance().settings();
     }
 

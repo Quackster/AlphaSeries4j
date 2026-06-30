@@ -52,6 +52,13 @@ public final class MessengerSettings {
         if (friendLimits instanceof long[] values) {
             return Arrays.copyOf(values, values.length);
         }
+        if (friendLimits instanceof int[] values) {
+            long[] parsedValues = new long[values.length];
+            for (int index = 0; index < values.length; index++) {
+                parsedValues[index] = values[index];
+            }
+            return parsedValues;
+        }
         if (friendLimits instanceof String[] values) {
             long[] parsedValues = new long[values.length];
             for (int index = 0; index < values.length; index++) {
