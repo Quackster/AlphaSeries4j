@@ -415,23 +415,19 @@ public final class Handling {
             }
             long maxSlots = handlingUserHasPermission(userId, "fuse_larger_wardrobe") ? 10L : 5L;
             UserDao users = userDao();
-            String rowText = users == null ? "" : users.wardrobeRows(NumberUtils.parseLong(userId));
             long slotCount = 0L;
             StringBuilder wardrobePayload = new StringBuilder();
-            for (String row : rowText.split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    String[] fields = row.split("\t", -1);
-                    if (fields.length >= 3) {
-                        long slotId = NumberUtils.parseLong(handlingField(fields, 0));
-                        if (slotId >= 1L && slotId <= maxSlots) {
-                            String genderText = StringUtils.left(handlingField(fields, 2).toUpperCase(), 1);
-                            if (!"M".equals(genderText) && !"F".equals(genderText)) {
-                                genderText = "M";
-                            }
-                            wardrobePayload.append(wardrobeSlotPayload(slotId, handlingField(fields, 1), genderText));
-                            slotCount++;
-                        }
+            List<UserDao.WardrobeSlotRow> wardrobeRows = users == null
+                ? List.<UserDao.WardrobeSlotRow>of()
+                : users.wardrobeRows(NumberUtils.parseLong(userId));
+            for (UserDao.WardrobeSlotRow row : wardrobeRows) {
+                if (row != null && row.slotId() >= 1L && row.slotId() <= maxSlots) {
+                    String genderText = StringUtils.left(StringUtils.text(row.gender()).toUpperCase(), 1);
+                    if (!"M".equals(genderText) && !"F".equals(genderText)) {
+                        genderText = "M";
                     }
+                    wardrobePayload.append(wardrobeSlotPayload(row.slotId(), row.figure(), genderText));
+                    slotCount++;
                 }
             }
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(slotCount, null, "DK") + wardrobePayload, 0);

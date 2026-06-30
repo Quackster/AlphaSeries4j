@@ -435,11 +435,14 @@ public final class UserDao {
             loginTicket);
     }
 
-    public String wardrobeRows(long userId) throws SQLException {
-        return String.join("\r", database.query(
+    public List<WardrobeSlotRow> wardrobeRows(long userId) throws SQLException {
+        return database.query(
             "SELECT id_slot,figure,gender FROM users_wardrobe WHERE id_user=? ORDER BY id_slot",
-            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3),
-            userId));
+            resultSet -> new WardrobeSlotRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3)),
+            userId);
     }
 
     public int deleteWardrobeSlot(long userId, long slotId) throws SQLException {
@@ -640,6 +643,9 @@ public final class UserDao {
     }
 
     public record UserSocket(long userId, long socketIndex) {
+    }
+
+    public record WardrobeSlotRow(long slotId, String figure, String gender) {
     }
 
     public record ActivityPointBalance(long pointTypeOne, long pointTypeTwo, long pointTypeThree, long pointTypeFour) {
