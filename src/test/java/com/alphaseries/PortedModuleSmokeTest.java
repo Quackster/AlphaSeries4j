@@ -1964,6 +1964,8 @@ public final class PortedModuleSmokeTest {
             MessengerPayloads.privateChatMessage(77, "hello"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BG") + "join\2",
             MessengerPayloads.roomInviteMessage(77, "join"));
+        assertEquals("@MHIH" + expectedOnlineFriend, MessengerPayloads.friendOnlineNotification(expectedOnlineFriend));
+        assertEquals("@MMIM77", MessengerPayloads.friendRemovedNotification(77));
         String expectedPendingRequestRows = "0" + Crypto.Proc_3_0_6D2AF0(5, null, "") + "Alice\2Alice\2"
             + "0" + Crypto.Proc_3_0_6D2AF0(6, null, "") + "Bob\2Bob\2";
         String expectedPendingPayload = Crypto.Proc_3_0_6D2AF0(2, null, "Dz")

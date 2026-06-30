@@ -137,6 +137,18 @@ public final class MessengerPayloads {
             .build();
     }
 
+    public static String friendOnlineNotification(String friendSummaryPayload) {
+        return PacketBuilder.message("@MHIH")
+            .appendRaw(friendSummaryPayload)
+            .build();
+    }
+
+    public static String friendRemovedNotification(long userId) {
+        return PacketBuilder.message("@MMIM")
+            .appendRaw(userId)
+            .build();
+    }
+
     public static String acceptedFriends(String payloadRows, long acceptedCount) {
         return acceptedCount > 0L
             ? PacketBuilder.message("@MH").appendInt(acceptedCount).appendRaw(payloadRows).build()

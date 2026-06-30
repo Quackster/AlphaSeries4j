@@ -355,6 +355,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed live messenger friend-list payload construction through `MessengerPayloads.friendList(...)` with explicit online friend ids, preserving Guardian connectivity checks while removing inline friend-list packet assembly from `Handling`.
 - Added typed messenger search-result rows and routed friend-search result grouping through `MessengerPayloads.searchResults(...)`, replacing inline friend/other counters and payload concatenation in `Handling`.
 - Routed messenger private-chat and room-invite delivery packets through fluent `MessengerPayloads` builders, removing the remaining inline `BF`/`BG` packet concatenation from `Handling`.
+- Routed messenger friend-online and friend-removed notifications through `MessengerPayloads`, replacing the remaining hard-coded `@MHIH` and `@MMIM` notification packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -370,7 +371,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 12152 lines
+- `Handling.java`: 12155 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 894 lines

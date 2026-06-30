@@ -5478,7 +5478,7 @@ public final class Handling {
             if (summaryPayload.isEmpty()) {
                 return "";
             }
-            String notifyPayload = "@MHIH" + summaryPayload;
+            String notifyPayload = MessengerPayloads.friendOnlineNotification(summaryPayload);
             if (targetSocketIndex > 0) {
                 if (Guardian.Proc_11_2_821390(targetSocketIndex, 0, 0) == 1L) {
                     Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
@@ -5568,7 +5568,8 @@ public final class Handling {
                         removedCount++;
                         int targetSocketIndex = handlingSocketFromUserId(targetId);
                         if (targetSocketIndex > 0) {
-                            Proc_6_244_801E80(targetSocketIndex, "@MMIM" + userId, 0);
+                            Proc_6_244_801E80(targetSocketIndex,
+                                MessengerPayloads.friendRemovedNotification(NumberUtils.parseLong(userId)), 0);
                         }
                     }
                 }
@@ -5788,7 +5789,8 @@ public final class Handling {
                         onlineFriendIds.add(friend.userId());
                     }
                     if (friendOnline == 1L && !callerSummary.isEmpty()) {
-                        Proc_6_244_801E80(friendSocketIndex, "@MHIH" + callerSummary, 0);
+                        Proc_6_244_801E80(friendSocketIndex,
+                            MessengerPayloads.friendOnlineNotification(callerSummary), 0);
                     }
                 }
             }
@@ -7710,7 +7712,8 @@ public final class Handling {
                     messenger.insertReversePendingFriendship(targetUserIdValue, userIdValue);
                     messenger.acceptFriendshipPair(userIdValue, targetUserIdValue);
                     if (targetSocketIndex > 0) {
-                        String notifyPayload = "@MHIH" + messengerFriendSummaryPayload(userId, 1L);
+                        String notifyPayload = MessengerPayloads.friendOnlineNotification(
+                            messengerFriendSummaryPayload(userId, 1L));
                         Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
                     }
                     acceptedCount++;
