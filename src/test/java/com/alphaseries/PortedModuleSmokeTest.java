@@ -2595,6 +2595,7 @@ public final class PortedModuleSmokeTest {
         AchievementSettings typedAchievements = AchievementSettings.fromAchievements("42\2", achievements);
         assertEquals("42\tACH_\t10\t5\t3\t7\t2", typedAchievements.rowByIndex(0L));
         assertEquals(achievement, typedAchievements.achievementByIndex(0L));
+        assertAchievementRows(typedAchievements, achievement);
         String expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(1, null, "Fu");
         expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(42, null, expectedAchievementReward);
         expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(99, null, expectedAchievementReward) + "ACH_2\2";
@@ -4938,6 +4939,11 @@ public final class PortedModuleSmokeTest {
 
     private static void assertRoomCategoryDefaults(RoomCategoryCache cache) {
         assertEquals(List.of("11", "", "22"), cache.defaultCategoryIdList());
+    }
+
+    private static void assertAchievementRows(AchievementSettings settings, AchievementSettings.Achievement achievement) {
+        assertEquals(List.of(new AchievementSettings.AchievementRow(
+            achievement, "42\tACH_\t10\t5\t3\t7\t2", true)), settings.rows());
     }
 
     private static String productRow(long productId, String... columnPairs) {

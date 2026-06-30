@@ -89,6 +89,10 @@ public final class AchievementSettings {
         return achievements;
     }
 
+    public List<AchievementRow> rows() {
+        return List.copyOf(rowsByIndex.values());
+    }
+
     public static List<Achievement> achievements(String rowsText) {
         List<Achievement> achievements = new ArrayList<>();
         for (String row : StringUtils.text(rowsText).split("\r", -1)) {
@@ -160,7 +164,10 @@ public final class AchievementSettings {
     public record IndexedAchievement(long achievementIndex, Achievement achievement) {
     }
 
-    private record AchievementRow(Achievement achievement, String rowText, boolean includeInRowsAsText) {
+    public record AchievementRow(Achievement achievement, String rowText, boolean includeInRowsAsText) {
+        public AchievementRow {
+            rowText = StringUtils.text(rowText);
+        }
     }
 
     private static Map<Long, AchievementRow> parseRows(Object rows) {

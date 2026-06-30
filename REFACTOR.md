@@ -560,6 +560,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `ProductCache` internals from raw legacy-row object storage to a parsed typed row map, keeping legacy row parsing only at the constructor/factory boundary.
 - Migrated `ProductCache` row storage from raw field lists to typed `ProductRow` records with defensive row access for future callers moving off column-index compatibility.
 - Migrated `AchievementSettings` internals from raw row objects to indexed typed achievement rows, keeping legacy row parsing only at the achievement state boundary.
+- Exposed defensive typed `AchievementSettings.AchievementRow` access so callers needing row/index metadata can avoid legacy row text lookups.
 - Migrated `QuestSettings` legacy quest row text into typed `QuestDefinitionRow` records at construction, removing retained raw row-string storage while preserving compatibility serialization.
 - Migrated `PetSettings` internals from raw level/command row objects to typed pet-level and pet-command row lists, keeping legacy array serialization only at compatibility accessors.
 - Migrated the remaining internal `Functions` HC gift-amount settings read to `AppSettingsCache`, leaving `Proc_10_0_809570(...)` and `Proc_10_1_809790(...)` only as explicit compatibility methods covered by tests.
