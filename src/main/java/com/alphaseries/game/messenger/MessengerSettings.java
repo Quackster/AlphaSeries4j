@@ -1,12 +1,18 @@
 package com.alphaseries.game.messenger;
 
+import java.util.Arrays;
+
 import com.alphaseries.util.NumberUtils;
 
 public final class MessengerSettings {
-    private final Object friendLimits;
+    private final long[] friendLimits;
 
     private MessengerSettings(Object friendLimits) {
-        this.friendLimits = friendLimits == null ? "" : friendLimits;
+        this.friendLimits = parseFriendLimits(friendLimits);
+    }
+
+    private MessengerSettings(long[] friendLimits) {
+        this.friendLimits = friendLimits == null ? new long[0] : Arrays.copyOf(friendLimits, friendLimits.length);
     }
 
     public static MessengerSettings fromLegacy(Object friendLimits) {
@@ -20,17 +26,29 @@ public final class MessengerSettings {
         return new MessengerSettings("");
     }
 
-    public Object friendLimits() {
-        return friendLimits;
+    public static MessengerSettings fromLimits(long... friendLimits) {
+        return new MessengerSettings(friendLimits);
+    }
+
+    public long[] friendLimits() {
+        return Arrays.copyOf(friendLimits, friendLimits.length);
     }
 
     public long maxFriends(long configIndex) {
+        return configIndex >= 0 && configIndex < friendLimits.length ? friendLimits[(int) configIndex] : 0L;
+    }
+
+    private static long[] parseFriendLimits(Object friendLimits) {
         if (friendLimits instanceof long[] values) {
-            return configIndex >= 0 && configIndex < values.length ? values[(int) configIndex] : 0L;
+            return Arrays.copyOf(values, values.length);
         }
         if (friendLimits instanceof String[] values) {
-            return configIndex >= 0 && configIndex < values.length ? NumberUtils.parseLong(values[(int) configIndex]) : 0L;
+            long[] parsedValues = new long[values.length];
+            for (int index = 0; index < values.length; index++) {
+                parsedValues[index] = NumberUtils.parseLong(values[index]);
+            }
+            return parsedValues;
         }
-        return 0L;
+        return new long[0];
     }
 }

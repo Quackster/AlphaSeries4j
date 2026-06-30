@@ -22,6 +22,7 @@ import com.alphaseries.game.jukebox.SongDiskRow;
 import com.alphaseries.game.jukebox.SongInfoRow;
 import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.game.messenger.MessengerSearchResult;
+import com.alphaseries.game.messenger.MessengerSettings;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
@@ -2136,6 +2137,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(20L, Licence.messengerSettings().maxFriends(2));
         assertEquals(20L, Handling.messengerMaxFriends(2));
         assertEquals(0L, Handling.messengerMaxFriends(99));
+        assertEquals(30L, MessengerSettings.fromLimits(10, 0, 20, 0, 30).maxFriends(4));
         assertEquals("hello world", Handling.requestTextFromWirePayload("@i@Khello world", "@i", 50));
         assertEquals("abc", Handling.requestTextFromWirePayload("@g@Cabc", "@g", 2_000));
         assertEquals("he", Handling.requestTextFromWirePayload("@g@Khello", "@g", 2));
