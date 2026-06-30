@@ -611,6 +611,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `CatalogRegistry` row storage from raw row strings to parsed typed row wrappers, preserving legacy row text accessors while avoiding repeated tab splitting in typed lookups.
 - Exposed defensive typed `CatalogRegistry.CatalogRow` lists for product, catalog-product, and deal caches so callers can move off row-text and positional-cell compatibility APIs.
 - Built `CatalogRegistry.CatalogRow` entries directly from typed `CatalogDao` cache row values instead of joining typed rows into tab text and reparsing them.
+- Added explicit `CatalogRegistry.fromRows(...)`/`CatalogState.setRegistryFromRows(...)` typed construction and routed `Licence` registry refreshes through it when all catalog caches are typed DAO row collections.
 - Added typed `GiftSettings.fromRows(...)` construction and defensive gift-wrap product ID access so gift settings can move through typed club-gift rows and product IDs instead of legacy lookup strings.
 - Routed boot gift-wrap cache loading through typed product ID lists and a typed `Licence.setGiftWrapState(...)` bridge, storing live gift-wrap product ids as typed `List<Long>` state while preserving legacy lookup parsing only for compatibility.
 - Built typed gift-wrap payloads with fluent `PacketBuilder` integer appends instead of separate raw `StringBuilder`/`Crypto.encodeVl64(...)` concatenation.

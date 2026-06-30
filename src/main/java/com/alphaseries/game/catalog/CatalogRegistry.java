@@ -21,8 +21,29 @@ public final class CatalogRegistry {
         this.deals = rowsById(deals);
     }
 
+    private CatalogRegistry(
+        Map<Long, CatalogRow> products,
+        Map<Long, CatalogRow> catalogProducts,
+        Map<Long, CatalogRow> deals
+    ) {
+        this.products = new LinkedHashMap<>(products);
+        this.catalogProducts = new LinkedHashMap<>(catalogProducts);
+        this.deals = new LinkedHashMap<>(deals);
+    }
+
     public static CatalogRegistry fromLegacyCaches(Object products, Object catalogProducts, Object deals) {
         return new CatalogRegistry(products, catalogProducts, deals);
+    }
+
+    public static CatalogRegistry fromRows(
+        Iterable<CatalogDao.ProductCacheRow> products,
+        Iterable<CatalogDao.CatalogProductCacheRow> catalogProducts,
+        Iterable<CatalogDao.ProductDealRow> deals
+    ) {
+        return new CatalogRegistry(
+            productRowsById(products),
+            catalogProductRowsById(catalogProducts),
+            dealRowsById(deals));
     }
 
     public static CatalogRegistry empty() {
@@ -198,6 +219,48 @@ public final class CatalogRegistry {
                 String[] fields = row.split("\t", -1);
                 long rowId = NumberUtils.parseLong(StringUtils.field(fields, 0));
                 rows.put(rowId, new CatalogRow(row, List.of(fields)));
+            }
+        }
+        return rows;
+    }
+
+    private static Map<Long, CatalogRow> productRowsById(Iterable<CatalogDao.ProductCacheRow> productRows) {
+        Map<Long, CatalogRow> rows = new LinkedHashMap<>();
+        if (productRows != null) {
+            for (CatalogDao.ProductCacheRow row : productRows) {
+                if (row != null) {
+                    CatalogRow catalogRow = CatalogRow.fromFields(row.values());
+                    rows.put(NumberUtils.parseLong(catalogRow.field(0)), catalogRow);
+                }
+            }
+        }
+        return rows;
+    }
+
+    private static Map<Long, CatalogRow> catalogProductRowsById(
+        Iterable<CatalogDao.CatalogProductCacheRow> catalogProductRows
+    ) {
+        Map<Long, CatalogRow> rows = new LinkedHashMap<>();
+        if (catalogProductRows != null) {
+            for (CatalogDao.CatalogProductCacheRow row : catalogProductRows) {
+                if (row != null) {
+                    CatalogRow catalogRow = CatalogRow.fromFields(row.values());
+                    rows.put(NumberUtils.parseLong(catalogRow.field(0)), catalogRow);
+                }
+            }
+        }
+        return rows;
+    }
+
+    private static Map<Long, CatalogRow> dealRowsById(Iterable<CatalogDao.ProductDealRow> dealRows) {
+        Map<Long, CatalogRow> rows = new LinkedHashMap<>();
+        if (dealRows != null) {
+            for (CatalogDao.ProductDealRow row : dealRows) {
+                if (row != null) {
+                    rows.put(row.dealId(), CatalogRow.fromFields(List.of(
+                        String.valueOf(row.dealId()),
+                        StringUtils.text(row.items()))));
+                }
             }
         }
         return rows;

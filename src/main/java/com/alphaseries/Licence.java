@@ -1,5 +1,6 @@
 package com.alphaseries;
 
+import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.game.advertising.VisitRoomAds;
 import com.alphaseries.game.advertising.AdvertisingState;
 import com.alphaseries.game.achievement.AchievementSettings;
@@ -714,22 +715,22 @@ public final class Licence {
 
     public static void setProductRows(Object productRows) {
         global_008292BC = productRows == null ? "" : productRows;
-        CatalogState.instance().setRegistryFromLegacy(global_008292BC, global_008292C0, global_00829258);
+        refreshCatalogRegistry();
     }
 
     public static void setCatalogProductRows(Object catalogProductRows) {
         global_008292C0 = catalogProductRows == null ? "" : catalogProductRows;
-        CatalogState.instance().setRegistryFromLegacy(global_008292BC, global_008292C0, global_00829258);
+        refreshCatalogRegistry();
     }
 
     public static void setDealRows(String dealRows) {
         global_00829258 = StringUtils.text(dealRows);
-        CatalogState.instance().setRegistryFromLegacy(global_008292BC, global_008292C0, global_00829258);
+        refreshCatalogRegistry();
     }
 
     public static void setDealRows(Object dealRows) {
         global_00829258 = dealRows == null ? "" : dealRows;
-        CatalogState.instance().setRegistryFromLegacy(global_008292BC, global_008292C0, global_00829258);
+        refreshCatalogRegistry();
     }
 
     public static CatalogProductSettings catalogProductSettings() {
@@ -855,8 +856,34 @@ public final class Licence {
     }
 
     private static CatalogRegistry catalogRegistry() {
-        CatalogState.instance().setRegistryFromLegacy(global_008292BC, global_008292C0, global_00829258);
+        refreshCatalogRegistry();
         return CatalogState.instance().registry();
+    }
+
+    private static void refreshCatalogRegistry() {
+        List<CatalogDao.ProductCacheRow> products = typedRows(global_008292BC, CatalogDao.ProductCacheRow.class);
+        List<CatalogDao.CatalogProductCacheRow> catalogProducts =
+            typedRows(global_008292C0, CatalogDao.CatalogProductCacheRow.class);
+        List<CatalogDao.ProductDealRow> deals = typedRows(global_00829258, CatalogDao.ProductDealRow.class);
+        if (products != null && catalogProducts != null && deals != null) {
+            CatalogState.instance().setRegistryFromRows(products, catalogProducts, deals);
+            return;
+        }
+        CatalogState.instance().setRegistryFromLegacy(global_008292BC, global_008292C0, global_00829258);
+    }
+
+    private static <T> List<T> typedRows(Object rows, Class<T> rowType) {
+        if (!(rows instanceof Iterable<?> values)) {
+            return null;
+        }
+        List<T> typedRows = new ArrayList<>();
+        for (Object value : values) {
+            if (!rowType.isInstance(value)) {
+                return null;
+            }
+            typedRows.add(rowType.cast(value));
+        }
+        return List.copyOf(typedRows);
     }
 
     public static String getTableCell(Object tableCache, long rowId, long columnIndex) {

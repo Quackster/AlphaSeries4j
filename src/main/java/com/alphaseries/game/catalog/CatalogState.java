@@ -1,5 +1,7 @@
 package com.alphaseries.game.catalog;
 
+import com.alphaseries.dao.mysql.CatalogDao;
+
 public final class CatalogState {
     private static final CatalogState INSTANCE = new CatalogState();
 
@@ -63,6 +65,14 @@ public final class CatalogState {
 
     public synchronized void setRegistryFromLegacy(Object products, Object catalogProducts, Object deals) {
         registry = CatalogRegistry.fromLegacyCaches(products, catalogProducts, deals);
+    }
+
+    public synchronized void setRegistryFromRows(
+        Iterable<CatalogDao.ProductCacheRow> products,
+        Iterable<CatalogDao.CatalogProductCacheRow> catalogProducts,
+        Iterable<CatalogDao.ProductDealRow> deals
+    ) {
+        registry = CatalogRegistry.fromRows(products, catalogProducts, deals);
     }
 
     public synchronized void setProductSettings(CatalogProductSettings productSettings) {
