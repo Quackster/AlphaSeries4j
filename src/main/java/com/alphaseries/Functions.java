@@ -326,16 +326,23 @@ public final class Functions {
         if (args == null || args.length == 0) {
             return 0L;
         }
+        return sendCreditsRefresh(StringUtils.text(args[0]));
+    }
+
+    /**
+     * Original function: Proc_10_16_80C480.
+     */
+    public static long sendCreditsRefresh(String userId) {
         try {
-            String userId = StringUtils.text(args[0]);
-            if (userId.isEmpty()) {
+            String userIdText = StringUtils.text(userId);
+            if (userIdText.isEmpty()) {
                 return 0L;
             }
-            long socketIndex = Licence.linkedSocketIndex(userId);
+            long socketIndex = Licence.linkedSocketIndex(userIdText);
             if (socketIndex == 0L) {
                 return 0L;
             }
-            long creditsValue = userDao().credits(NumberUtils.parseLong(userId));
+            long creditsValue = userDao().credits(NumberUtils.parseLong(userIdText));
             MusConnectionManager.instance().sendData((int) socketIndex, creditsRefreshPayload(creditsValue));
             return 1L;
         } catch (Exception ex) {
@@ -347,17 +354,24 @@ public final class Functions {
         if (args == null || args.length == 0) {
             return 0L;
         }
+        return sendActivityPointRefreshes(StringUtils.text(args[0]));
+    }
+
+    /**
+     * Original function: Proc_10_17_80C6B0.
+     */
+    public static long sendActivityPointRefreshes(String userId) {
         try {
-            String userId = StringUtils.text(args[0]);
-            if (userId.isEmpty()) {
+            String userIdText = StringUtils.text(userId);
+            if (userIdText.isEmpty()) {
                 return 0L;
             }
-            long socketIndex = Licence.linkedSocketIndex(userId);
+            long socketIndex = Licence.linkedSocketIndex(userIdText);
             if (socketIndex == 0L) {
                 return 0L;
             }
             UserDao users = userDao();
-            long numericUserId = NumberUtils.parseLong(userId);
+            long numericUserId = NumberUtils.parseLong(userIdText);
             long sentCount = 0L;
             for (long pointType = 0L; pointType <= 4L; pointType++) {
                 long pointsValue = users.activityPoints(numericUserId, pointType);

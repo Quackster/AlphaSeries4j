@@ -400,12 +400,13 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
             }
         });
-        assertEquals(1L, Functions.Proc_10_16_80C480("77"));
+        assertEquals(1L, Functions.sendCreditsRefresh("77"));
         assertEquals("42:DATA\6" + "42\6" + Functions.creditsRefreshPayload(250) + "\7", refreshPayloads.get(0));
-        assertEquals(5L, Functions.Proc_10_17_80C6B0("77"));
+        assertEquals(5L, Functions.sendActivityPointRefreshes("77"));
         assertEquals(6, refreshPayloads.size());
         assertEquals("42:DATA\6" + "42\6" + Functions.activityPointRefreshPayload(4, 40) + "\7", refreshPayloads.get(5));
         assertEquals(0L, Functions.Proc_10_16_80C480("missing"));
+        assertEquals(0L, Functions.Proc_10_17_80C6B0("missing"));
         assertEquals(6, refreshPayloads.size());
         MySQL.configureDatabaseConnection(null);
         MusConnectionManager.instance().configureSink(null);

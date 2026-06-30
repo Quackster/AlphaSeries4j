@@ -501,6 +501,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated the remaining internal `Functions` HC gift-amount settings read to `AppSettingsCache`, leaving `Proc_10_0_809570(...)` and `Proc_10_1_809790(...)` only as explicit compatibility methods covered by tests.
 - Added named packet/string helpers in `Functions` for VL64 length reads, Base64 length reads, single-line text normalization, and SQL text escaping with original Proc names in Javadocs, then migrated shared `Handling` utility parsers to those names.
 - Migrated `Handling` callers away from the legacy packet/string helper names `Functions.Proc_10_6_809F10(...)`, `Proc_10_7_80A190(...)`, `Proc_10_10_80A7F0(...)`, and `Proc_10_11_80A9C0(...)`; `Handling` now uses the named packet/string helper APIs for those operations.
+- Added named `Functions.sendCreditsRefresh(...)` and `sendActivityPointRefreshes(...)` methods with original Proc names in Javadocs, then migrated catalog purchase, gift purchase, and voucher redemption handlers away from `Proc_10_16_80C480(...)`/`Proc_10_17_80C6B0(...)`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -518,7 +519,7 @@ Measured on 2026-06-30:
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
 - `Handling.java`: 11362 lines
-- `Functions.java`: 723 lines
+- `Functions.java`: 737 lines
 - `DataManager.java`: 409 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 819 lines

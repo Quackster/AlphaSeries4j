@@ -3934,10 +3934,10 @@ public final class Handling {
             if (creditPrice > 0L || activityPrice > 0L) {
                 users.spendCatalogPurchaseBalance(userIdValue, creditPrice, activityType, activityPrice);
                 if (creditPrice > 0L) {
-                    Functions.Proc_10_16_80C480(userId, 0, 0);
+                    Functions.sendCreditsRefresh(userId);
                 }
                 if (activityPrice > 0L) {
-                    Functions.Proc_10_17_80C6B0(userId, activityType, 0);
+                    Functions.sendActivityPointRefreshes(userId);
                 }
             }
             String itemClass = "i";
@@ -4319,10 +4319,10 @@ public final class Handling {
             if (creditPrice > 0L || activityPrice > 0L) {
                 users.spendCatalogPurchaseBalance(senderUserIdValue, creditPrice, activityType, activityPrice);
                 if (creditPrice > 0L) {
-                    Functions.Proc_10_16_80C480(senderUserId, 0, 0);
+                    Functions.sendCreditsRefresh(senderUserId);
                 }
                 if (activityPrice > 0L) {
-                    Functions.Proc_10_17_80C6B0(senderUserId, activityType, 0);
+                    Functions.sendActivityPointRefreshes(senderUserId);
                 }
             }
             users.incrementGiftsGiven(senderUserIdValue);
@@ -4438,11 +4438,11 @@ public final class Handling {
             long userIdValue = NumberUtils.parseLong(userId);
             if (creditsValue != 0L) {
                 users.addCredits(userIdValue, creditsValue);
-                Functions.Proc_10_16_80C480(userId, 0, 0);
+                Functions.sendCreditsRefresh(userId);
             }
             if (shellsValue != 0L) {
                 users.addActivityPoints(userIdValue, 0L, shellsValue);
-                Functions.Proc_10_17_80C6B0(userId, 0, 0);
+                Functions.sendActivityPointRefreshes(userId);
             }
             vouchers.deleteVoucher(voucherCode);
             Proc_6_244_801E80(socketIndex, VoucherPayloads.redeemed(rewardPayload), 0);
