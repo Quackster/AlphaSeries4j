@@ -8,6 +8,7 @@ import com.alphaseries.game.catalog.CatalogProductSettings;
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
+import com.alphaseries.game.chat.ChatState;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.help.HelpCenterState;
 import com.alphaseries.game.messenger.MessengerSettings;
@@ -243,12 +244,14 @@ public final class Licence {
     }
 
     public static ChatSettings chatSettings() {
-        return ChatSettings.fromRows(chatFilterWords(), chatGestures());
+        ChatState.instance().setRows(chatFilterWords(), chatGestures());
+        return ChatState.instance().settings();
     }
 
     public static void setChatSettings(List<ChatSettings.FilterWord> filterRows, List<ChatSettings.Gesture> gestureRows) {
         global_00829290 = filterRows == null ? List.of() : List.copyOf(filterRows);
         global_00829294 = gestureRows == null ? List.of() : List.copyOf(gestureRows);
+        ChatState.instance().setRows(chatFilterWords(), chatGestures());
     }
 
     public static List<ChatSettings.FilterWord> chatFilterWords() {

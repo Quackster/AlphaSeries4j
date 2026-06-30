@@ -21,6 +21,10 @@ public final class ChatSettings {
         return new ChatSettings(filterWords, gestures);
     }
 
+    public static ChatSettings empty() {
+        return new ChatSettings(List.of(), List.of());
+    }
+
     public String filterRows() {
         List<String> rows = new ArrayList<>();
         for (FilterWord row : filterWords) {

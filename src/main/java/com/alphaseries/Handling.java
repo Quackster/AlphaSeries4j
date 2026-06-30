@@ -66,6 +66,7 @@ import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
+import com.alphaseries.game.chat.ChatState;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.help.HelpCenterState;
 import com.alphaseries.game.messenger.MessengerFriend;
@@ -939,7 +940,7 @@ public final class Handling {
         }
         boolean enabled = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.chat.filter.enabled", 0)) != 0L;
         String replacement = Functions.settingsCache().valueOrDefault("com.client.chat.filter.replacement", "");
-        return Licence.chatSettings().filterText(StringUtils.text(args[0]), enabled, replacement);
+        return chatSettings().filterText(StringUtils.text(args[0]), enabled, replacement);
     }
 
     /**
@@ -959,7 +960,7 @@ public final class Handling {
             return 0L;
         }
         boolean enabled = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.chat.gesture.enabled", 0)) != 0L;
-        return Licence.chatSettings().gestureId(StringUtils.text(args[0]), enabled);
+        return chatSettings().gestureId(StringUtils.text(args[0]), enabled);
     }
 
     /**
@@ -9375,6 +9376,11 @@ public final class Handling {
     private static MessengerSettings messengerSettings() {
         Licence.messengerSettings();
         return MessengerState.instance().settings();
+    }
+
+    private static ChatSettings chatSettings() {
+        Licence.chatSettings();
+        return ChatState.instance().settings();
     }
 
     public static String officialNavigatorQuery() {
