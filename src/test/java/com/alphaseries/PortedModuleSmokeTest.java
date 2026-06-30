@@ -2242,8 +2242,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("[1]", Licence.global_008292D4);
         assertEquals(501L, Licence.representedBots().record(botEntityId).botId());
         assertEquals(1L, Licence.representedBots().entityFromBotId(501));
-        assertEquals("1", Handling.representedBotEntitiesForRoom(3, 501));
-        assertEquals(true, Handling.isRepresentedBotAllocated(3, 501));
+        assertEquals("1", Licence.representedBots().entitiesForRoom(3, 501));
+        assertEquals(true, !Licence.representedBots().entitiesForRoom(3, 501).isEmpty());
         Handling.storeRepresentedBotPosition(botEntityId, 5, 6, "1.0", 7);
         assertEquals(5L, Licence.representedBots().record(botEntityId).positionX());
         assertEquals("1.0", Licence.representedBots().record(botEntityId).positionZ());

@@ -2555,7 +2555,7 @@ public final class Handling {
                 }
             }
             if (roomSlot > 0L) {
-                String botEntities = representedBotEntitiesForRoom(roomSlot, 0);
+                String botEntities = Licence.representedBots().entitiesForRoom(roomSlot, 0);
                 for (String botRow : botEntities.split("\r", -1)) {
                     long botEntityId = NumberUtils.parseLong(botRow);
                     if (botEntityId > 0L) {
@@ -6191,7 +6191,7 @@ public final class Handling {
                 return 0L;
             }
             long guideBotId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.bot.guide.id", "0", 0));
-            if (guideBotId <= 0L || isRepresentedBotAllocated(roomSlot, guideBotId)) {
+            if (guideBotId <= 0L || !Licence.representedBots().entitiesForRoom(roomSlot, guideBotId).isEmpty()) {
                 return 0L;
             }
             BotRoomEntryRow guide = bots.botRoomEntry(guideBotId).orElse(null);
@@ -6241,7 +6241,7 @@ public final class Handling {
                 }
             } else {
                 long guideBotId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.bot.guide.id", "0", 0));
-                entityList = representedBotEntitiesForRoom(roomSlot, guideBotId);
+                entityList = Licence.representedBots().entitiesForRoom(roomSlot, guideBotId);
             }
             if (entityList.isEmpty()) {
                 return 0L;
@@ -10511,14 +10511,6 @@ public final class Handling {
         RepresentedBotRegistry representedBots = Licence.representedBots();
         representedBots.removeRecord(botEntityId);
         Licence.setRepresentedBots(representedBots);
-    }
-
-    public static String representedBotEntitiesForRoom(long roomSlot, long onlyBotId) {
-        return Licence.representedBots().entitiesForRoom(roomSlot, onlyBotId);
-    }
-
-    public static boolean isRepresentedBotAllocated(long roomSlot, long botId) {
-        return !representedBotEntitiesForRoom(roomSlot, botId).isEmpty();
     }
 
     public static void storeRepresentedBotPosition(long botEntityId, long positionX, long positionY, String positionZ, long positionR) {

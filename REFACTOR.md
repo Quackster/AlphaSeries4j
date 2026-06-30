@@ -466,6 +466,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the dead `Main.mainRepresentedBotRecordField(...)` compatibility accessor; tests now read represented-bot names through `RepresentedBotRecord`.
 - Removed the dead `Handling.representedBotRecordField(...)` and `Handling.representedBotRecordLong(...)` compatibility accessors; tests now assert represented-bot state through named `RepresentedBotRecord` fields.
 - Removed the dead `Handling.representedBotRecordText(...)` and `Handling.representedBotEntityFromBotId(...)` compatibility accessors; tests now use the represented-bot registry directly.
+- Removed the dead `Handling.representedBotEntitiesForRoom(...)` and `Handling.isRepresentedBotAllocated(...)` compatibility accessors; live handlers and tests now use `RepresentedBotRegistry` directly.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -482,7 +483,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11442 lines
+- `Handling.java`: 11434 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 904 lines
