@@ -2260,7 +2260,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(20L, Licence.messengerSettings().maxFriends(2));
         assertEquals(20L, Handling.messengerMaxFriends(2));
         assertEquals(0L, Handling.messengerMaxFriends(99));
-        assertEquals(30L, MessengerSettings.fromLimits(10, 0, 20, 0, 30).maxFriends(4));
+        assertMessengerSettingsTypedAccessors();
         assertEquals("hello world", Handling.requestTextFromWirePayload("@i@Khello world", "@i", 50));
         assertEquals("abc", Handling.requestTextFromWirePayload("@g@Cabc", "@g", 2_000));
         assertEquals("he", Handling.requestTextFromWirePayload("@g@Khello", "@g", 2));
@@ -5006,6 +5006,15 @@ public final class PortedModuleSmokeTest {
         String[][] copiedPayloads = settings.moderationPayloads();
         copiedPayloads[1][1] = "changed-again";
         assertEquals("HC", settings.moderationPayload(1L, 1L));
+    }
+
+    private static void assertMessengerSettingsTypedAccessors() {
+        MessengerSettings settings = MessengerSettings.fromLimits(10, 0, 20, 0, 30);
+        assertEquals(30L, settings.maxFriends(4));
+        assertEquals(List.of(10L, 0L, 20L, 0L, 30L), settings.friendLimitList());
+        long[] copiedLimits = settings.friendLimits();
+        copiedLimits[4] = 0L;
+        assertEquals(30L, settings.maxFriends(4));
     }
 
     private static void assertProductCacheRows(ProductCache productCache) {

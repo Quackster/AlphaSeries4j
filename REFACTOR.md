@@ -551,6 +551,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `PermissionMatrix` internals from raw legacy permission objects to defensive `String[][]` rows, keeping `String[]` compatibility only at construction.
 - Exposed defensive typed `ChatSettings` filter-word and gesture accessors so chat callers can move away from compatibility row serializers.
 - Migrated `MessengerSettings` internals from raw friend-limit object storage to defensive typed `long[]` settings, leaving legacy `String[]` parsing only at the module boundary.
+- Exposed defensive typed `MessengerSettings` friend-limit list access so messenger callers can move away from primitive-array compatibility views.
 - Migrated `StaffSettings` internals from raw moderation payload object storage to defensive typed `String[][]` settings, leaving legacy matrix parsing only at the module boundary.
 - Exposed defensive typed `StaffSettings` moderation-payload matrix access so moderation callers can move away from single-slot compatibility lookups.
 - Migrated `HelpCenterCache` internals from raw indexed payload objects to typed payload maps for category FAQ and description lookups, leaving legacy array/map parsing only at the module boundary.

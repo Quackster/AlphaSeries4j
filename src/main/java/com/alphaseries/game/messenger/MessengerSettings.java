@@ -1,6 +1,8 @@
 package com.alphaseries.game.messenger;
 
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.alphaseries.util.NumberUtils;
 
@@ -32,6 +34,14 @@ public final class MessengerSettings {
 
     public long[] friendLimits() {
         return Arrays.copyOf(friendLimits, friendLimits.length);
+    }
+
+    public List<Long> friendLimitList() {
+        List<Long> limits = new ArrayList<>();
+        for (long friendLimit : friendLimits) {
+            limits.add(friendLimit);
+        }
+        return List.copyOf(limits);
     }
 
     public long maxFriends(long configIndex) {
