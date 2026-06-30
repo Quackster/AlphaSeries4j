@@ -1196,36 +1196,7 @@ public final class PortedModuleSmokeTest {
             List.of(new RoomDao.SpecialGateRow(12L, 1L)));
         assertRoomPortalSettingsTypedRows(typedRoomPortalSettings);
         assertEquals(true, Functions.global_0082928C.contains("com.mysql.format.time=%H:%i:%s"));
-        Boot.Proc_1_11_6C8D10();
-        assertEquals(true, Licence.global_00829230 instanceof List);
-        assertEquals(Boot.buildRoomCategoryPayload("1\tpublic\t0\t0\t0", 0L, 0L),
-            Boot.buildRoomCategoryPayload(List.of(new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L)), 0L, 0L));
-        RoomCategoryCache typedRoomCategories = RoomCategoryCache.fromRows("defaults",
-            List.of(new RoomDao.RoomCategoryRow(5L, "typed", 1L, 2L, 3L)),
-            new String[][]{{"CATEGORY"}});
-        assertEquals("defaults", typedRoomCategories.privateDefaultCategoryId());
-        assertEquals("", typedRoomCategories.publicDefaultCategoryId());
-        assertEquals("5\ttyped\t1\t2\t3", typedRoomCategories.categoryRows());
-        assertEquals("CATEGORY", typedRoomCategories.payload(0L, 0L));
-        RoomCategoryCache legacyRoomCategories = RoomCategoryCache.fromLegacy("defaults",
-            "6\tlegacy\t0\t1\t2", new String[0][]);
-        assertEquals("6\tlegacy\t0\t1\t2", legacyRoomCategories.categoryRows());
-        assertEquals(List.of(new RoomDao.RoomCategoryRow(6L, "legacy", 0L, 1L, 2L)),
-            legacyRoomCategories.categoryRowList());
-        RoomCategoryCache typedRoomCategoryDefaults = RoomCategoryCache.fromRows(
-            new String[]{"11", "", "22"}, List.of(), new String[][]{{"PAYLOAD"}});
-        String[] defaultCategoryIds = typedRoomCategoryDefaults.defaultCategoryIds();
-        defaultCategoryIds[0] = "changed";
-        assertEquals("11", typedRoomCategoryDefaults.privateDefaultCategoryId());
-        assertEquals("22", typedRoomCategoryDefaults.publicDefaultCategoryId());
-        assertRoomCategoryDefaults(typedRoomCategoryDefaults);
-        Object previousRoomCategoryDefaults = Licence.global_00829224;
-        Licence.global_00829224 = typedRoomCategoryDefaults;
-        assertEquals("PAYLOAD", Licence.roomCategoryCache().payload(0L, 0L));
-        Licence.global_00829224 = previousRoomCategoryDefaults;
-        Boot.Proc_1_12_6C8EF0();
-        assertEquals(true, ((String[][]) Licence.global_00829244)[0][0].contains("public"));
-        assertEquals(true, Licence.roomCategoryCache().payload(0L, 0L).contains("public"));
+        assertRoomCategoryBootCaches();
         Boot.Proc_1_13_6C9820();
         assertEquals(true, Licence.global_00829260.length() > 0);
         assertEquals(true, Licence.giftSettings().containsGiftWrapProduct(10L));
@@ -3025,9 +2996,7 @@ public final class PortedModuleSmokeTest {
         String[] catalogProducts = new String[82];
         catalogProducts[81] = productRow(81, "2", "506", "4", "products", "5", "1", "7", "3", "8", "2", "9", "0", "10", "1", "11", "0");
         Licence.global_008292C0 = catalogProducts;
-        String[][] categoryPayloads = new String[21][3];
-        categoryPayloads[2][1] = "CATEGORY_PAYLOAD";
-        Licence.global_00829244 = categoryPayloads;
+        Licence.global_00829244 = List.of(new RoomCategoryCache.CategoryPayload(2L, 1L, "CATEGORY_PAYLOAD"));
         Licence.global_0082911C = new String[]{"RECOMMENDED"};
         Licence.global_00829128 = 1L;
         Licence.global_00829178 = "GIFTS";
@@ -5152,9 +5121,53 @@ public final class PortedModuleSmokeTest {
         assertEquals("chair", copiedFields.get(2));
     }
 
+    private static void assertRoomCategoryBootCaches() {
+        Boot.Proc_1_11_6C8D10();
+        assertEquals(true, Licence.global_00829230 instanceof List);
+        assertEquals(Boot.buildRoomCategoryPayload("1\tpublic\t0\t0\t0", 0L, 0L),
+            Boot.buildRoomCategoryPayload(List.of(new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L)), 0L, 0L));
+
+        RoomCategoryCache typedRoomCategories = RoomCategoryCache.fromRows("defaults",
+            List.of(new RoomDao.RoomCategoryRow(5L, "typed", 1L, 2L, 3L)),
+            new String[][]{{"CATEGORY"}});
+        assertEquals("defaults", typedRoomCategories.privateDefaultCategoryId());
+        assertEquals("", typedRoomCategories.publicDefaultCategoryId());
+        assertEquals("5\ttyped\t1\t2\t3", typedRoomCategories.categoryRows());
+        assertEquals("CATEGORY", typedRoomCategories.payload(0L, 0L));
+        assertEquals(new RoomCategoryCache.CategoryPayload(0L, 0L, "CATEGORY"),
+            typedRoomCategories.payloadRows().get(0));
+
+        RoomCategoryCache legacyRoomCategories = RoomCategoryCache.fromLegacy("defaults",
+            "6\tlegacy\t0\t1\t2", new String[0][]);
+        assertEquals("6\tlegacy\t0\t1\t2", legacyRoomCategories.categoryRows());
+        assertEquals(List.of(new RoomDao.RoomCategoryRow(6L, "legacy", 0L, 1L, 2L)),
+            legacyRoomCategories.categoryRowList());
+
+        RoomCategoryCache typedRoomCategoryDefaults = RoomCategoryCache.fromRows(
+            new String[]{"11", "", "22"}, List.of(), new String[][]{{"PAYLOAD"}});
+        String[] defaultCategoryIds = typedRoomCategoryDefaults.defaultCategoryIds();
+        defaultCategoryIds[0] = "changed";
+        assertEquals("11", typedRoomCategoryDefaults.privateDefaultCategoryId());
+        assertEquals("22", typedRoomCategoryDefaults.publicDefaultCategoryId());
+        assertRoomCategoryDefaults(typedRoomCategoryDefaults);
+
+        Object previousRoomCategoryDefaults = Licence.global_00829224;
+        Licence.global_00829224 = typedRoomCategoryDefaults;
+        assertEquals("PAYLOAD", Licence.roomCategoryCache().payload(0L, 0L));
+        Licence.global_00829224 = previousRoomCategoryDefaults;
+
+        Boot.Proc_1_12_6C8EF0();
+        assertEquals(true, Licence.global_00829244 instanceof List);
+        RoomCategoryCache.CategoryPayload payload =
+            (RoomCategoryCache.CategoryPayload) ((List<?>) Licence.global_00829244).get(0);
+        assertEquals(true, payload.payload().contains("public"));
+        assertEquals(true, Licence.roomCategoryCache().payload(0L, 0L).contains("public"));
+    }
+
     private static void assertRoomCategoryDefaults(RoomCategoryCache cache) {
         assertEquals(List.of("11", "", "22"), cache.defaultCategoryIdList());
         assertEquals("PAYLOAD", cache.payload(0L, 0L));
+        assertEquals(List.of(new RoomCategoryCache.CategoryPayload(0L, 0L, "PAYLOAD")), cache.payloadRows());
         String[][] copiedPayloads = cache.payloads();
         copiedPayloads[0][0] = "changed";
         assertEquals("PAYLOAD", cache.payload(0L, 0L));

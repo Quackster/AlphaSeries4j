@@ -382,14 +382,15 @@ public final class Boot {
     }
 
     public static void Proc_1_12_6C8EF0(Object... args) {
-        String[][] values = new String[21][3];
+        List<RoomCategoryCache.CategoryPayload> values = new ArrayList<RoomCategoryCache.CategoryPayload>();
         RoomCategoryCache roomCategoryCache = roomCategoryCache();
         List<RoomDao.RoomCategoryRow> categoryRows = roomCategoryCache.categoryRowList();
         for (int rank = 0; rank <= 20; rank++) {
             for (int hc = 0; hc <= 2; hc++) {
-                values[rank][hc] = categoryRows.isEmpty()
+                String payload = categoryRows.isEmpty()
                     ? buildRoomCategoryPayload(roomCategoryCache.categoryRows(), rank, hc)
                     : buildRoomCategoryPayload(categoryRows, rank, hc);
+                values.add(new RoomCategoryCache.CategoryPayload(rank, hc, payload));
             }
         }
         Licence.setRoomCategoryPayloads(values);

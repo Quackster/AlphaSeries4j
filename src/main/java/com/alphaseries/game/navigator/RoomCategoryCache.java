@@ -10,7 +10,7 @@ import java.util.List;
 public final class RoomCategoryCache {
     private final List<String> defaultCategoryIds;
     private final List<RoomDao.RoomCategoryRow> categoryRows;
-    private final String[][] payloads;
+    private final List<CategoryPayload> payloads;
 
     private RoomCategoryCache(Object defaultCategoryIds, Object categoryRows, Object payloads) {
         this.defaultCategoryIds = parseDefaultCategoryIds(defaultCategoryIds);
@@ -18,10 +18,11 @@ public final class RoomCategoryCache {
         this.payloads = parsePayloads(payloads);
     }
 
-    private RoomCategoryCache(Object defaultCategoryIds, List<RoomDao.RoomCategoryRow> categoryRows, String[][] payloads) {
+    private RoomCategoryCache(Object defaultCategoryIds, List<RoomDao.RoomCategoryRow> categoryRows,
+                              List<CategoryPayload> payloads) {
         this.defaultCategoryIds = parseDefaultCategoryIds(defaultCategoryIds);
         this.categoryRows = copyCategoryRows(categoryRows);
-        this.payloads = copyPayloads(payloads);
+        this.payloads = copyPayloadRecords(payloads);
     }
 
     public static RoomCategoryCache fromLegacy(Object defaultCategoryIds, Object categoryRows, Object payloads) {
@@ -37,6 +38,11 @@ public final class RoomCategoryCache {
 
     public static RoomCategoryCache fromRows(Object defaultCategoryIds, List<RoomDao.RoomCategoryRow> categoryRows,
                                              String[][] payloads) {
+        return new RoomCategoryCache(defaultCategoryIds, categoryRows, payloadRecords(payloads));
+    }
+
+    public static RoomCategoryCache fromPayloadRows(Object defaultCategoryIds,
+            List<RoomDao.RoomCategoryRow> categoryRows, List<CategoryPayload> payloads) {
         return new RoomCategoryCache(defaultCategoryIds, categoryRows, payloads);
     }
 
@@ -78,12 +84,26 @@ public final class RoomCategoryCache {
         if (rank < 0 || hc < 0) {
             return "";
         }
-        return rank < payloads.length && payloads[rank] != null && hc < payloads[rank].length
-            ? StringUtils.text(payloads[rank][hc]) : "";
+        for (CategoryPayload payload : payloads) {
+            if (payload.rankIndex() == rank && payload.hcLevel() == hc) {
+                return payload.payload();
+            }
+        }
+        return "";
     }
 
     public String[][] payloads() {
-        return copyPayloads(payloads);
+        return payloadsAsArray(payloads);
+    }
+
+    public List<CategoryPayload> payloadRows() {
+        return List.copyOf(payloads);
+    }
+
+    public record CategoryPayload(long rankIndex, long hcLevel, String payload) {
+        public CategoryPayload {
+            payload = StringUtils.text(payload);
+        }
     }
 
     private static List<RoomDao.RoomCategoryRow> parseCategoryRows(Object categoryRows) {
@@ -116,9 +136,18 @@ public final class RoomCategoryCache {
         return List.of();
     }
 
-    private static String[][] parsePayloads(Object payloads) {
+    private static List<CategoryPayload> parsePayloads(Object payloads) {
+        if (payloads instanceof List<?> values) {
+            List<CategoryPayload> parsedPayloads = new ArrayList<>();
+            for (Object value : values) {
+                if (value instanceof CategoryPayload payload) {
+                    parsedPayloads.add(payload);
+                }
+            }
+            return List.copyOf(parsedPayloads);
+        }
         if (payloads instanceof String[][] values) {
-            return copyPayloads(values);
+            return payloadRecords(values);
         }
         if (payloads instanceof Object[][] values) {
             String[][] parsedPayloads = new String[values.length][];
@@ -131,9 +160,9 @@ public final class RoomCategoryCache {
                     parsedPayloads[rank][hc] = StringUtils.text(values[rank][hc]);
                 }
             }
-            return parsedPayloads;
+            return payloadRecords(parsedPayloads);
         }
-        return new String[0][];
+        return List.of();
     }
 
     private static List<String> parseDefaultCategoryIds(Object defaultCategoryIds) {
@@ -170,21 +199,43 @@ public final class RoomCategoryCache {
         return List.copyOf(copiedValues);
     }
 
-    private static String[][] copyPayloads(String[][] payloads) {
+    private static List<CategoryPayload> copyPayloadRecords(List<CategoryPayload> payloads) {
+        return payloads == null ? List.of() : List.copyOf(payloads);
+    }
+
+    private static List<CategoryPayload> payloadRecords(String[][] payloads) {
         if (payloads == null) {
-            return new String[0][];
+            return List.of();
         }
-        String[][] copiedPayloads = new String[payloads.length][];
+        List<CategoryPayload> records = new ArrayList<>();
         for (int rank = 0; rank < payloads.length; rank++) {
             if (payloads[rank] == null) {
                 continue;
             }
-            copiedPayloads[rank] = new String[payloads[rank].length];
             for (int hc = 0; hc < payloads[rank].length; hc++) {
-                copiedPayloads[rank][hc] = StringUtils.text(payloads[rank][hc]);
+                records.add(new CategoryPayload(rank, hc, payloads[rank][hc]));
             }
         }
-        return copiedPayloads;
+        return List.copyOf(records);
+    }
+
+    private static String[][] payloadsAsArray(List<CategoryPayload> payloads) {
+        long maxRank = -1L;
+        long maxHc = -1L;
+        for (CategoryPayload payload : payloads == null ? List.<CategoryPayload>of() : payloads) {
+            maxRank = Math.max(maxRank, payload.rankIndex());
+            maxHc = Math.max(maxHc, payload.hcLevel());
+        }
+        if (maxRank < 0L || maxHc < 0L) {
+            return new String[0][];
+        }
+        String[][] values = new String[(int) maxRank + 1][(int) maxHc + 1];
+        for (CategoryPayload payload : payloads) {
+            if (payload.rankIndex() >= 0L && payload.hcLevel() >= 0L) {
+                values[(int) payload.rankIndex()][(int) payload.hcLevel()] = payload.payload();
+            }
+        }
+        return values;
     }
 
     private static void appendRow(StringBuilder rows, String rowText) {
