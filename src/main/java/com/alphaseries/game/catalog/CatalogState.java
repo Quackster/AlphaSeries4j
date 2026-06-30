@@ -70,7 +70,7 @@ public final class CatalogState {
     }
 
     public synchronized void setProductSettingsFromLegacy(
-        String counterProductIds,
+        Object counterProductIds,
         long teleportProductId,
         long moodlightProductId,
         Object packageRows,

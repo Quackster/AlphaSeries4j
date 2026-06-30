@@ -18,7 +18,7 @@ public final class CatalogProductSettings {
     private final boolean typedClubProductRows;
 
     private CatalogProductSettings(
-        String counterProductIds,
+        Object counterProductIds,
         long teleportProductId,
         long moodlightProductId,
         Object packageRows,
@@ -35,7 +35,7 @@ public final class CatalogProductSettings {
     }
 
     private CatalogProductSettings(
-        String counterProductIds,
+        Object counterProductIds,
         long teleportProductId,
         long moodlightProductId,
         List<PackageDao.PackageRow> packageRows,
@@ -52,7 +52,7 @@ public final class CatalogProductSettings {
     }
 
     public static CatalogProductSettings fromLegacy(
-        String counterProductIds,
+        Object counterProductIds,
         long teleportProductId,
         long moodlightProductId,
         Object packageRows,
@@ -68,7 +68,7 @@ public final class CatalogProductSettings {
     }
 
     public static CatalogProductSettings fromRows(
-        String counterProductIds,
+        Object counterProductIds,
         long teleportProductId,
         long moodlightProductId,
         List<PackageDao.PackageRow> packageRows,
@@ -87,7 +87,7 @@ public final class CatalogProductSettings {
         List<PackageDao.PetPackageRow> petPackageRows,
         List<ClubDao.ContainedClubProductRow> clubProductRows
     ) {
-        return new CatalogProductSettings(counterProducts(counterProductIds), teleportProductId, moodlightProductId,
+        return new CatalogProductSettings(counterProductIds, teleportProductId, moodlightProductId,
             packageRows, petPackageRows, clubProductRows);
     }
 
@@ -204,7 +204,17 @@ public final class CatalogProductSettings {
         rows.append(rowText);
     }
 
-    private static List<CounterProductSetting> parseCounterProducts(String counterProductIds) {
+    private static List<CounterProductSetting> parseCounterProducts(Object counterProductIds) {
+        if (counterProductIds instanceof Iterable<?> values) {
+            List<CounterProductSetting> parsedRows = new ArrayList<>();
+            for (Object value : values) {
+                long productId = NumberUtils.parseLong(value);
+                if (productId > 0L) {
+                    parsedRows.add(new CounterProductSetting(productId, String.valueOf(productId)));
+                }
+            }
+            return List.copyOf(parsedRows);
+        }
         List<CounterProductSetting> parsedRows = new ArrayList<>();
         for (String idText : StringUtils.text(counterProductIds).split("\t", -1)) {
             if (!idText.isEmpty()) {
@@ -212,21 +222,6 @@ public final class CatalogProductSettings {
             }
         }
         return List.copyOf(parsedRows);
-    }
-
-    private static String counterProducts(List<Long> counterProductIds) {
-        StringBuilder joined = new StringBuilder();
-        if (counterProductIds != null) {
-            for (Long productId : counterProductIds) {
-                if (productId != null) {
-                    if (joined.length() > 0) {
-                        joined.append('\t');
-                    }
-                    joined.append(productId);
-                }
-            }
-        }
-        return joined.toString();
     }
 
     private static List<PackageDao.PackageRow> parsePackageRows(Object packageRows) {

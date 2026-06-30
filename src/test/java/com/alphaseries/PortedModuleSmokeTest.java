@@ -4966,6 +4966,12 @@ public final class PortedModuleSmokeTest {
             List.of(4L, 5L), 0L, 0L, List.of(), List.of(), List.of());
         assertEquals("4\t5", typedCounterProducts.counterProductIds());
         assertEquals(List.of(4L, 5L), typedCounterProducts.counterProducts());
+        Object previousCounterProducts = Licence.global_008290A0;
+        Licence.setCounterProductIds(List.of(6L, 7L));
+        assertEquals(true, Licence.global_008290A0 instanceof List);
+        assertEquals("6\t7", Licence.catalogProductSettings().counterProductIds());
+        assertEquals(List.of(6L, 7L), Licence.catalogProductSettings().counterProducts());
+        Licence.setCounterProductIds(previousCounterProducts);
     }
 
     private static void assertGiftSettingsTypedAccessors(GiftSettings legacyGiftSettings) {

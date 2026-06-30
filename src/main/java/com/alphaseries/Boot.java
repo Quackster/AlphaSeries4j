@@ -114,7 +114,7 @@ public final class Boot {
         if (catalog != null) {
             try {
                 Licence.setRecyclerBoxProductId(catalog.productIdBySprite("ecotron_box"));
-                Licence.setCounterProductIds(joinLongs(catalog.counterProductIds(), "\t"));
+                Licence.setCounterProductIds(catalog.counterProductIds());
                 Licence.setTeleportProductId(catalog.firstProductIdByType(11L));
                 Licence.setMoodlightProductId(catalog.firstProductIdByType(19L));
             } catch (Exception ignored) {
@@ -1907,17 +1907,6 @@ public final class Boot {
         }
         String value = valuesById.get(id);
         return value == null ? "" : value;
-    }
-
-    private static String joinLongs(List<Long> values, String separator) {
-        StringBuilder joined = new StringBuilder();
-        for (Long value : values == null ? List.<Long>of() : values) {
-            if (joined.length() > 0) {
-                joined.append(separator);
-            }
-            joined.append(value == null ? 0L : value.longValue());
-        }
-        return joined.toString();
     }
 
     private static String joinPrivilegeRows(List<String> rows) {

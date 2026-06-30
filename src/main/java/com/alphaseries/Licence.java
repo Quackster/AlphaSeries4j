@@ -78,7 +78,7 @@ public final class Licence {
     public static Object global_0082907C = "";
     public static Object global_00829084 = "";
     public static String global_00829094 = "";
-    public static String global_008290A0 = "";
+    public static Object global_008290A0 = "";
     public static long global_008290A4 = 0L;
     public static long global_008290A8 = 0L;
     public static String global_0082925C = "";
@@ -731,8 +731,8 @@ public final class Licence {
         return CatalogState.instance().productSettings();
     }
 
-    public static void setCounterProductIds(String counterProductIds) {
-        global_008290A0 = StringUtils.text(counterProductIds);
+    public static void setCounterProductIds(Object counterProductIds) {
+        global_008290A0 = counterProductIds == null ? "" : counterProductIds;
         CatalogState.instance().setProductSettingsFromLegacy(global_008290A0, global_008290A4, global_008290A8,
             global_00829078, global_0082907C, global_00829084);
     }
