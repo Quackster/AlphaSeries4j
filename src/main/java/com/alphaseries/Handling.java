@@ -68,11 +68,8 @@ import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.game.messenger.MessengerSearchResult;
 import com.alphaseries.game.messenger.PendingFriendRequest;
-import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.NavigatorRoom;
-import com.alphaseries.game.navigator.NavigatorTagPopularity;
-import com.alphaseries.game.navigator.OfficialNavigatorItem;
 import com.alphaseries.game.moderation.StaffCallForHelpRow;
 import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffModerationPacketHandlers;
@@ -1757,7 +1754,7 @@ public final class Handling {
                 Proc_6_244_801E80(socketIndex,
                     PacketBuilder.message("GF")
                         .appendInt(0)
-                        .appendRaw(singleNavigatorRoomPayload(room))
+                        .appendRaw(NavigatorPayloads.singleRoom(room))
                         .build(), 0);
             } else if (requestMode > 0L) {
                 // VB6 reads a room id from packed session offsets here; those offsets are not represented yet.
@@ -3635,7 +3632,7 @@ public final class Handling {
             if (!roomQueryTail.isEmpty()) {
                 roomRows = rooms == null ? List.of() : rooms.navigatorRoomsByTail(roomQueryTail, false);
             }
-            return navigatorCombinedRoomListPayload(eventRows, roomRows);
+            return NavigatorPayloads.combinedRoomList(eventRows, roomRows);
         } catch (Exception ignored) {
             return "";
         }
@@ -3648,11 +3645,11 @@ public final class Handling {
             }
             String queryTail = StringUtils.text(args[0]);
             if (queryTail.isEmpty()) {
-                return navigatorEventListPayload(List.of());
+                return NavigatorPayloads.eventList(List.of());
             }
             String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
             RoomDao rooms = roomDao();
-            return navigatorEventListPayload(rooms == null ? List.of() : rooms.navigatorEventsByTail(queryTail, timeFormat, false));
+            return NavigatorPayloads.eventList(rooms == null ? List.of() : rooms.navigatorEventsByTail(queryTail, timeFormat, false));
         } catch (Exception ignored) {
             return "";
         }
@@ -3780,7 +3777,7 @@ public final class Handling {
             if (rooms == null) {
                 return;
             }
-            Proc_6_244_801E80(socketIndex, "GB" + officialNavigatorPayload(rooms.officialNavigatorItems(), true), 0);
+            Proc_6_244_801E80(socketIndex, "GB" + NavigatorPayloads.official(rooms.officialNavigatorItems(), true), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3794,7 +3791,7 @@ public final class Handling {
             if (rooms == null) {
                 return;
             }
-            Proc_6_244_801E80(socketIndex, "GD" + navigatorTagPopularityPayload(rooms.navigatorTagPopularities(limitValue)), 0);
+            Proc_6_244_801E80(socketIndex, "GD" + NavigatorPayloads.tagPopularity(rooms.navigatorTagPopularities(limitValue)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -9469,71 +9466,20 @@ public final class Handling {
         return queryText.toString();
     }
 
-    public static String navigatorRoomFragment(LegacyNavigatorRoomRow room) {
-        return NavigatorPayloads.roomFragment(room);
-    }
-
-    public static String navigatorRoomFragment(NavigatorRoom room) {
-        return NavigatorPayloads.roomFragment(room);
-    }
-
-    public static String navigatorLegacyRoomListPayload(List<LegacyNavigatorRoomRow> rows) {
-        return NavigatorPayloads.legacyRoomList(rows);
-    }
-
-    public static String navigatorRoomListPayload(List<NavigatorRoom> rows) {
-        return NavigatorPayloads.roomList(rows);
-    }
-
-    public static String singleNavigatorRoomPayload(NavigatorRoom room) {
-        return NavigatorPayloads.singleRoom(room);
-    }
-
-    public static String navigatorTagPopularityPayload(List<NavigatorTagPopularity> rows) {
-        return NavigatorPayloads.tagPopularity(rows);
-    }
-
     public static String Proc_6_112_74E0C0(Object... args) {
         try {
             if (args == null || args.length == 0) {
-                return navigatorRoomListPayload(List.of());
+                return NavigatorPayloads.roomList(List.of());
             }
             String queryTail = StringUtils.text(args[0]);
             if (queryTail.isEmpty()) {
-                return navigatorRoomListPayload(List.of());
+                return NavigatorPayloads.roomList(List.of());
             }
             RoomDao rooms = roomDao();
-            return navigatorRoomListPayload(rooms == null ? List.of() : rooms.navigatorRoomsByTail(queryTail, true));
+            return NavigatorPayloads.roomList(rooms == null ? List.of() : rooms.navigatorRoomsByTail(queryTail, true));
         } catch (Exception ignored) {
-            return navigatorRoomListPayload(List.of());
+            return NavigatorPayloads.roomList(List.of());
         }
-    }
-
-    public static String navigatorEventFragment(RoomDao.NavigatorEventRow event) {
-        return NavigatorPayloads.eventFragment(event);
-    }
-
-    public static String navigatorEventListPayload(List<RoomDao.NavigatorEventRow> rows) {
-        return NavigatorPayloads.eventList(rows);
-    }
-
-    public static String navigatorCombinedLegacyRoomListPayload(
-        List<RoomDao.NavigatorEventRow> eventRows,
-        List<LegacyNavigatorRoomRow> roomRows
-    ) {
-        return NavigatorPayloads.combinedLegacyRoomList(eventRows, roomRows);
-    }
-
-    public static String navigatorCombinedRoomListPayload(List<RoomDao.NavigatorEventRow> eventRows, List<NavigatorRoom> roomRows) {
-        return NavigatorPayloads.combinedRoomList(eventRows, roomRows);
-    }
-
-    public static String officialNavigatorPayload(List<OfficialNavigatorItem> items, boolean includeCountPrefix) {
-        return NavigatorPayloads.official(items, includeCountPrefix);
-    }
-
-    public static String officialNavigatorItemPayload(OfficialNavigatorItem item) {
-        return NavigatorPayloads.officialItem(item);
     }
 
     public static String Proc_6_138_7678A0(Object... args) {

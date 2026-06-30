@@ -428,6 +428,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed achievement reward/award/list row-text payload wrappers and routed achievement progress/list handlers through typed `Achievement`/`IndexedAchievement` records.
 - Removed no-op messenger payload wrappers from `Handling`; live handlers and tests now call `MessengerPayloads` directly for accepted/remove/request/pending envelopes.
 - Removed no-op pet payload wrappers from `Handling`; live pet package, inventory, placement, validation, and command-list paths now call `PetPayloads` directly.
+- Removed no-op navigator payload wrappers from `Handling`; live navigator handlers and tests now call `NavigatorPayloads` directly.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -444,7 +445,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11739 lines
+- `Handling.java`: 11685 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 889 lines

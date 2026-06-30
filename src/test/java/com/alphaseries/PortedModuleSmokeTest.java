@@ -1723,7 +1723,7 @@ public final class PortedModuleSmokeTest {
         expectedEventFragment = Crypto.Proc_3_0_6D2AF0(4, null, expectedEventFragment);
         expectedEventFragment = Crypto.Proc_3_0_6D2AF0(1, null, expectedEventFragment)
             + " room\2owner\2desc\2open\2tag1\2tag2\2event\2" + "1\2H";
-        assertEquals(expectedEventFragment, Handling.navigatorEventFragment(legacyNavigatorEvent));
+        assertEquals(expectedEventFragment, NavigatorPayloads.eventFragment(legacyNavigatorEvent));
         String expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(10, null, "");
         expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(3, null, expectedRoomFragment);
         expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(25, null, expectedRoomFragment);
@@ -1734,17 +1734,15 @@ public final class PortedModuleSmokeTest {
         expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(0, null, expectedRoomFragment)
             + "room\2owner\2desc\2open\2tag1\2tag2\2event\2H";
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomFragment),
-            Handling.navigatorLegacyRoomListPayload(List.of(legacyNavigatorRoom)));
-        assertEquals(expectedRoomFragment, Handling.navigatorRoomFragment(legacyNavigatorRoom));
+            NavigatorPayloads.legacyRoomList(List.of(legacyNavigatorRoom)));
         assertEquals(expectedRoomFragment, NavigatorPayloads.roomFragment(legacyNavigatorRoom));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, expectedEventFragment),
-            Handling.navigatorEventListPayload(List.of(legacyNavigatorEvent)));
-        assertEquals(expectedEventFragment, NavigatorPayloads.eventFragment(legacyNavigatorEvent));
+            NavigatorPayloads.eventList(List.of(legacyNavigatorEvent)));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, expectedEventFragment + expectedRoomFragment),
-            Handling.navigatorCombinedLegacyRoomListPayload(List.of(legacyNavigatorEvent), List.of(legacyNavigatorRoom)));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.navigatorLegacyRoomListPayload(List.of()));
+            NavigatorPayloads.combinedLegacyRoomList(List.of(legacyNavigatorEvent), List.of(legacyNavigatorRoom)));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), NavigatorPayloads.legacyRoomList(List.of()));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), NavigatorPayloads.roomList(List.of()));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.navigatorEventListPayload(List.of()));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), NavigatorPayloads.eventList(List.of()));
         OfficialNavigatorItem officialItem = new OfficialNavigatorItem(
             1L, 2L, 3L, "caption", "cap2", "cap3", "7", "8", "9", "10",
             "11", "12", "13", "description", "15", "16", "17", "18", "icon",
@@ -1758,12 +1756,11 @@ public final class PortedModuleSmokeTest {
         expectedOfficialRow += Crypto.Proc_3_0_6D2AF0(5, null, "")
             + Crypto.Proc_3_0_6D2AF0(6, null, "")
             + Crypto.Proc_3_0_6D2AF0(7, null, "");
-        assertEquals(expectedOfficialRow, Handling.officialNavigatorItemPayload(officialItem));
         assertEquals(expectedOfficialRow, NavigatorPayloads.officialItem(officialItem));
-        assertEquals(expectedOfficialRow, Handling.officialNavigatorPayload(List.of(officialItem), false));
+        assertEquals(expectedOfficialRow, NavigatorPayloads.official(List.of(officialItem), false));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedOfficialRow,
-            Handling.officialNavigatorPayload(List.of(officialItem), true));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.officialNavigatorPayload(List.of(), true));
+            NavigatorPayloads.official(List.of(officialItem), true));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), NavigatorPayloads.official(List.of(), true));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, Crypto.Proc_3_0_6D2AF0(12, null, "L\u007f")),
             NavigatorPayloads.newFriendRoom(new com.alphaseries.game.navigator.NewFriendRooms.RoomPick(12L, 1L)));
         assertEquals("GCPC7\2" + Crypto.Proc_3_0_6D2AF0(50, null, "") + "ROWS",
