@@ -164,6 +164,14 @@ public final class PortedModuleSmokeTest {
         assertEquals("name", DataManager.Proc_8_11_8069B0("chair", 1));
         DataManager.global_008292BC = "10\tsofa\t5\r11\ttable\t7";
         assertEquals("table", DataManager.Proc_8_12_806C30(11, 1));
+        String[] dataManagerProducts = new String[12];
+        dataManagerProducts[11] = productRow(11, "0", "9", "17", "present_wrap_basic", "18", "post.it.vd", "24", "payload", "27", "502");
+        DataManager.global_008292BC = dataManagerProducts;
+        assertEquals(9L, DataManager.productCache().type(11));
+        assertEquals("present_wrap_basic", DataManager.productCache().primarySprite(11));
+        assertEquals("post.it.vd", DataManager.productCache().alternateSprite(11));
+        assertEquals("payload", DataManager.productCache().itemData(11));
+        assertEquals(502L, DataManager.productCache().wiredCode(11));
         assertEquals("pro", DataManager.extractLicenceSetting("\rrank=7\rmode:pro\r", "mode"));
         assertEquals("rank=7\rmode\nok", DataManager.licenceBlockFromResponse("aFMTbFMTcFMTrank=7--*-mode*-*-ok", "FMT"));
         assertEquals("fallback", DataManager.licenceBlockFromResponse("prefixFMTfallback", "FMT"));

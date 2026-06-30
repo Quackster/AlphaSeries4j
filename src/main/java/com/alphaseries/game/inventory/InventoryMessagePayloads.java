@@ -4,7 +4,6 @@ import com.alphaseries.DataManager;
 import com.alphaseries.Licence;
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.List;
@@ -103,7 +102,7 @@ public final class InventoryMessagePayloads {
                     item.productId(),
                     item.itemData(),
                     item.secondaryValue());
-                if (NumberUtils.parseLong(DataManager.Proc_8_12_806C30(item.productId(), 0, 0)) == 9L) {
+                if (DataManager.productCache().type(item.productId()) == 9L) {
                     iconPayload.append(itemPayload);
                     result.iconCount++;
                 } else {

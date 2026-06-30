@@ -33,6 +33,41 @@ public final class ProductCache {
         return columnIndex >= 0 && columnIndex < columns.length ? columns[(int) columnIndex] : "";
     }
 
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public long type(long productId) {
+        return NumberUtils.parseLong(cell(productId, 0));
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public String primarySprite(long productId) {
+        return cell(productId, 17);
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public String alternateSprite(long productId) {
+        return cell(productId, 18);
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public String itemData(long productId) {
+        return cell(productId, 24);
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public long wiredCode(long productId) {
+        return NumberUtils.parseLong(cell(productId, 27));
+    }
+
     private static Map<Long, String> rowsById(Object cache) {
         Map<Long, String> rows = new LinkedHashMap<>();
         if (cache instanceof Iterable<?> values) {

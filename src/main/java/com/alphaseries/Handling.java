@@ -2009,14 +2009,14 @@ public final class Handling {
             if (boxProductId <= 0L || openedProductId <= 0L) {
                 return;
             }
-            String boxAction = DataManager.Proc_8_12_806C30(boxProductId, 17, 0).toLowerCase();
+            String boxAction = DataManager.productCache().primarySprite(boxProductId).toLowerCase();
             if (!boxAction.contains("present_") || "ecotron_box".equals(boxAction)) {
                 return;
             }
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
             furniture.deleteFurniture(furnitureId);
             furniture.insertInventoryFurniture(openedProductId, NumberUtils.parseLong(callerUserId), openedSign);
-            long openedProductType = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(openedProductId, 0, 0));
+            long openedProductType = DataManager.productCache().type(openedProductId);
             String responseClass = "i";
             if (openedProductType == 2L) {
                 responseClass = "s";
@@ -2025,7 +2025,7 @@ public final class Handling {
                 responseClass = "e";
             }
             String responsePayload = FurniturePayloads.presentOpened(openedProductId, responseClass,
-                DataManager.Proc_8_12_806C30(openedProductId, 24, 0));
+                DataManager.productCache().itemData(openedProductId));
             Proc_6_244_801E80(socketIndex, responsePayload, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -2170,9 +2170,9 @@ public final class Handling {
             if (productId <= 0L) {
                 return;
             }
-            String productSprite = DataManager.Proc_8_12_806C30(productId, 17, 0);
+            String productSprite = DataManager.productCache().primarySprite(productId);
             if (productSprite.isEmpty()) {
-                productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0);
+                productSprite = DataManager.productCache().alternateSprite(productId);
             }
             if (!productSprite.startsWith("CF_") && !productSprite.startsWith("CFC_")) {
                 return;
@@ -3204,7 +3204,7 @@ public final class Handling {
                 return "";
             }
             long productId = item.productId();
-            String productAction = DataManager.Proc_8_12_806C30(productId, 17, 0);
+            String productAction = DataManager.productCache().primarySprite(productId);
             return "habbowheel".equals(productAction) ? String.valueOf(furnitureId) : "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -3936,7 +3936,7 @@ public final class Handling {
             }
             String itemClass = "i";
             if (!"products_deals".equals(typeSecondary)
-                && NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 8L) {
+                && DataManager.productCache().type(productId) == 8L) {
                 itemClass = "I";
             }
             String purchasePayload = CatalogPayloads.purchase(catalogProductId, creditPrice, activityPrice,
@@ -3998,11 +3998,11 @@ public final class Handling {
                     if (firstFurnitureId == 0L) {
                         firstFurnitureId = furnitureId;
                     }
-                    String itemData = DataManager.Proc_8_12_806C30(itemProductId, 24, 0);
+                    String itemData = DataManager.productCache().itemData(itemProductId);
                     if (itemData.isEmpty()) {
                         itemData = DataManager.Proc_8_12_806C30(itemProductId, 4, 0);
                     }
-                    long productType = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(itemProductId, 0, 0));
+                    long productType = DataManager.productCache().type(itemProductId);
                     Proc_6_244_801E80(socketIndex,
                         InventoryMessagePayloads.roomAdd(Proc_6_138_7678A0(furnitureId, itemProductId, itemData, 0)), 0);
                     if ("TROPHY_VAR".equalsIgnoreCase(DataManager.Proc_8_12_806C30(itemProductId, 4, 0))) {
@@ -4128,7 +4128,7 @@ public final class Handling {
             String grantedIds = grantedIdsBuilder.toString();
             long firstGrantedId = NumberUtils.parseLong(grantedIds);
             if (!"products_deals".equals(typeSecondary)
-                && NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 9L && firstGrantedId > 0L) {
+                && DataManager.productCache().type(productId) == 9L && firstGrantedId > 0L) {
                 furniture.insertDefaultDimmerPresets(firstGrantedId);
                 furniture.updateDefaultDimmerSign(firstGrantedId);
             }
@@ -4177,13 +4177,13 @@ public final class Handling {
             if (status.presentsAvailable() <= 0L || status.activeDays() < requiredDays) {
                 return "";
             }
-            String itemData = DataManager.Proc_8_12_806C30(productId, 24, 0);
+            String itemData = DataManager.productCache().itemData(productId);
             FurnitureDao furniture = furnitureDao();
             furniture.insertClubGiftFurniture(productId, catalogProductId, userIdValue, itemData);
             long insertedFurnitureId = furniture.newestFurnitureIdByOwnerAndProduct(userIdValue, productId);
-            String itemClass = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 9L ? "I" : "i";
+            String itemClass = DataManager.productCache().type(productId) == 9L ? "I" : "i";
             String responsePayload = CatalogPayloads.clubGiftClaim(productId,
-                DataManager.Proc_8_12_806C30(productId, 24, 0), itemClass, insertedFurnitureId);
+                DataManager.productCache().itemData(productId), itemClass, insertedFurnitureId);
             Proc_6_244_801E80(socketIndex, responsePayload, 0);
             clubs.decrementPresents(userIdValue);
             Proc_6_140_769400(socketIndex, "FT", "");
@@ -4723,9 +4723,9 @@ public final class Handling {
                 long productId = row.productId();
                 if (furnitureId > 0L && rowRoomId > 0L && productId > 0L) {
                     String productAction = DataManager.Proc_8_12_806C30(productId, 7, 0).toLowerCase();
-                    String productSprite = DataManager.Proc_8_12_806C30(productId, 17, 0).toLowerCase();
+                    String productSprite = DataManager.productCache().primarySprite(productId).toLowerCase();
                     if (productSprite.isEmpty()) {
-                        productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0).toLowerCase();
+                        productSprite = DataManager.productCache().alternateSprite(productId).toLowerCase();
                     }
                     if (productAction.isEmpty() || productAction.contains("switch") || productAction.contains("click")
                         || productAction.contains("score") || productSprite.contains("score") || productSprite.contains("dice")) {
@@ -4817,13 +4817,13 @@ public final class Handling {
             if (productId <= 0L) {
                 return;
             }
-            long productType = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0));
+            long productType = DataManager.productCache().type(productId);
             if (productType == 9L) {
                 return;
             }
-            String productSprite = DataManager.Proc_8_12_806C30(productId, 17, 0).toLowerCase();
+            String productSprite = DataManager.productCache().primarySprite(productId).toLowerCase();
             if (productSprite.isEmpty()) {
-                productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0).toLowerCase();
+                productSprite = DataManager.productCache().alternateSprite(productId).toLowerCase();
             }
             long currentState = NumberUtils.parseLong(signText);
             long maxState = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 12, 0));
@@ -4963,10 +4963,10 @@ public final class Handling {
             if (roomId <= 0L || productId <= 0L) {
                 return "";
             }
-            long productType = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0));
-            String productSprite = DataManager.Proc_8_12_806C30(productId, 17, 0);
+            long productType = DataManager.productCache().type(productId);
+            String productSprite = DataManager.productCache().primarySprite(productId);
             if (productSprite.isEmpty()) {
-                productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0);
+                productSprite = DataManager.productCache().alternateSprite(productId);
             }
             long stateValue = NumberUtils.parseLong(signText);
             String lowerSprite = productSprite.toLowerCase();
@@ -5082,7 +5082,7 @@ public final class Handling {
                     .orElse(null);
                 productId = placementFurniture == null ? 0L : placementFurniture.productId();
             }
-            if (productId <= 0L || NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) != 9L) {
+            if (productId <= 0L || DataManager.productCache().type(productId) != 9L) {
                 return;
             }
             WallPlacement placement = new WallPlacement();
@@ -5257,9 +5257,9 @@ public final class Handling {
             if (furnitureId <= 0L) {
                 return "";
             }
-            String productSprite = DataManager.Proc_8_12_806C30(productId, 17, 0).toLowerCase();
+            String productSprite = DataManager.productCache().primarySprite(productId).toLowerCase();
             if (productSprite.isEmpty()) {
-                productSprite = DataManager.Proc_8_12_806C30(productId, 18, 0).toLowerCase();
+                productSprite = DataManager.productCache().alternateSprite(productId).toLowerCase();
             }
             if (productSprite.startsWith("bb_score_") || productSprite.startsWith("es_score_")) {
                 long stateValue = NumberUtils.parseLong(signText);
@@ -6944,7 +6944,7 @@ public final class Handling {
             if (productId <= 0L) {
                 return "";
             }
-            long wiredCode = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 27, 0));
+            long wiredCode = DataManager.productCache().wiredCode(productId);
             if (wiredCode <= 0L) {
                 return "";
             }
@@ -8936,7 +8936,7 @@ public final class Handling {
             long furnitureX = item.positionX();
             long furnitureY = item.positionY();
             long productId = item.productId();
-            if (productId <= 0L || NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) != 0L) {
+            if (productId <= 0L || DataManager.productCache().type(productId) != 0L) {
                 return "";
             }
             RoomDao rooms = roomDao();
@@ -9087,7 +9087,7 @@ public final class Handling {
     }
 
     public static boolean isPostItProduct(long productId) {
-        return DataManager.Proc_8_12_806C30(productId, 18, 0).toLowerCase().startsWith("post.it");
+        return DataManager.productCache().alternateSprite(productId).toLowerCase().startsWith("post.it");
     }
 
     public static long representedDimmerFurnitureId(long roomId) {
@@ -10647,7 +10647,7 @@ public final class Handling {
             long productId = furnitureDao().roomFurnitureProductById(furnitureId, roomId)
                 .map(FurnitureDao.RoomFurnitureProduct::productId)
                 .orElse(0L);
-            long wiredCode = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 27, 0));
+            long wiredCode = DataManager.productCache().wiredCode(productId);
             if (wiredCode < minimumCode || wiredCode > maximumCode) {
                 return "";
             }
