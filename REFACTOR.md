@@ -479,6 +479,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added typed `UpdaterSettings.UpdateEntry` rows and routed `Updater` rendering/feature state through named accessors, removing root-level tab splitting and the positional update-field helper.
 - Moved movement-step calculation and direction-code mapping into `game.room.MovementStep`, leaving only live root Proc compatibility entry points for callers that still use the old names.
 - Removed dead no-op compatibility wrappers `Functions.Proc_10_13_80AEC0(...)` and `Licence.Proc_9_11_809220(...)`.
+- Added `server.mus.MusConnectionManager` and `server.mus.MusPayloads` for MUS packet dispatch/payload construction, leaving `HandlingMUS` as the legacy Proc compatibility boundary and deleting the dead `Handling_MUS` pass-through class.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -490,7 +491,7 @@ Compared with `main`, the VB helper artifact has been removed:
 
 Measured on 2026-06-30:
 
-- Unique `Proc_*` symbols under `src/main/java`: 364
+- Unique bare `Proc_*` symbols under `src/main/java`: 124
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
@@ -501,13 +502,14 @@ Measured on 2026-06-30:
 - `Main.java`: 820 lines
 - `Updater.java`: 314 lines
 - `Licence.java`: 703 lines
+- `HandlingMUS.java`: 37 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 
 ## Next Targets
 
 - Continue migrating raw `MySQL.Proc_5_*` call clusters into `dao.mysql` classes with typed prepared methods.
 - Replace `Functions` and `Handling` user/account operations with domain services under `game.user` or `runtime.session`.
-- Move MUS handling into a `server.mus` package with compatibility shims for old entry points.
+- Migrate live MUS callers from `HandlingMUS` Proc compatibility methods to `server.mus.MusConnectionManager`.
 - Extract navigator, room, moderation, pet, badge, poll, recycler, jukebox, and wired payload builders from `Handling`.
 - Replace remaining `Crypto.Proc_3_*` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
 - Continue replacing duplicated local string/number helpers in root compatibility classes with `StringUtils` and `NumberUtils`.

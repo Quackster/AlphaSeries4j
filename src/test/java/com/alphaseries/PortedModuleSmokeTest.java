@@ -78,6 +78,8 @@ import com.alphaseries.messages.outgoing.VoucherPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.PacketReader;
 import com.alphaseries.protocol.WireEncoding;
+import com.alphaseries.server.mus.MusConnectionManager;
+import com.alphaseries.server.mus.MusPayloads;
 import com.alphaseries.server.update.UpdaterSettings;
 import com.alphaseries.util.StringUtils;
 
@@ -615,9 +617,10 @@ public final class PortedModuleSmokeTest {
         HandlingMUS.Proc_12_0_8218C0(4);
         assertEquals(Arrays.asList("4:DATA\6" + "4\6payload\7", "4:SHUTDOWN\6" + "4\7"), sent);
         sent.clear();
-        Handling_MUS.Proc_12_1_821AA0(5, "relay");
-        Handling_MUS.Proc_12_0_8218C0(5);
+        MusConnectionManager.instance().sendData(5, "relay");
+        MusConnectionManager.instance().sendShutdown(5);
         assertEquals(Arrays.asList("5:DATA\6" + "5\6relay\7", "5:SHUTDOWN\6" + "5\7"), sent);
+        assertEquals("DATA\6" + "6\6named\7", MusPayloads.data(6, "named"));
 
         Guardian.global_008291A0 = "";
         Guardian.global_0082919C = 0L;

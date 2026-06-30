@@ -1,28 +1,27 @@
 package com.alphaseries;
 
+import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.server.packet.PacketSink;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 public final class HandlingMUS {
-    private static PacketSink musSink = (socketIndex, payload) -> { };
-
     private HandlingMUS() {
     }
 
     public static void configureMusSink(PacketSink sink) {
-        musSink = sink == null ? (socketIndex, payload) -> { } : sink;
+        MusConnectionManager.instance().configureSink(sink);
     }
 
     public static void Proc_12_0_8218C0(Object... args) {
         int socketIndex = musSocketIndex(args);
-        sendMusPayload(socketIndex, "SHUTDOWN" + '\6' + socketIndex + '\7');
+        MusConnectionManager.instance().sendShutdown(socketIndex);
     }
 
     public static void Proc_12_1_821AA0(Object... args) {
         int socketIndex = musSocketIndex(args);
         String messageText = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
-        sendMusPayload(socketIndex, "DATA" + '\6' + socketIndex + '\6' + messageText + '\7');
+        MusConnectionManager.instance().sendData(socketIndex, messageText);
     }
 
     public static int musSocketIndex(Object... args) {
@@ -33,6 +32,6 @@ public final class HandlingMUS {
     }
 
     public static void sendMusPayload(int socketIndex, String payload) {
-        musSink.send(socketIndex, payload);
+        MusConnectionManager.instance().sendPayload(socketIndex, payload);
     }
 }
