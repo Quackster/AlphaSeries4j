@@ -272,6 +272,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed updater SQL execution through `UpdaterDao`, clearing direct `MySQL.Proc_5_*` call sites outside the MySQL compatibility class.
 - Routed club subscription offer/status payload handling through typed `ClubDao` records, replacing tab-delimited DAO row strings and `handlingField(...)` reads in that handler.
 - Routed wardrobe slot payload handling through typed `UserDao.WardrobeSlotRow` records, replacing tab-delimited DAO row strings and `handlingField(...)` reads in that handler.
+- Routed FAQ search payload handling through typed `HelpDao.FaqNameRow` records and fluent `PacketBuilder` construction, replacing tab-delimited DAO row strings and `handlingField(...)` reads in that handler.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -287,7 +288,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12625 lines
+- `Handling.java`: 12621 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines
 - `Main.java`: 957 lines

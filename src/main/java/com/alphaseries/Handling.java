@@ -1113,20 +1113,16 @@ public final class Handling {
             if (helpDao == null) {
                 return;
             }
-            String rows = helpDao.faqSearchRows(searchText);
+            List<HelpDao.FaqNameRow> rows = helpDao.searchFaqs(searchText);
             long resultCount = 0L;
-            String resultPayload = "";
-            for (String row : rows.split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    String[] fields = row.split("\t", -1);
-                    if (fields.length >= 2) {
-                        resultPayload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(fields, 0)), null, resultPayload)
-                            + handlingField(fields, 1) + '\2';
-                        resultCount++;
-                    }
+            PacketBuilder resultPayload = PacketBuilder.create();
+            for (HelpDao.FaqNameRow row : rows) {
+                if (row != null) {
+                    resultPayload.appendInt(row.id()).appendString(row.name());
+                    resultCount++;
                 }
             }
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(resultCount, null, "HI") + resultPayload, 0);
+            Proc_6_244_801E80(socketIndex, PacketBuilder.message("HI").appendInt(resultCount).appendRaw(resultPayload).build(), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
