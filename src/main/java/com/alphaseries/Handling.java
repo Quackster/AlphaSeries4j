@@ -10137,10 +10137,6 @@ public final class Handling {
         return request;
     }
 
-    public static String activityPointBalancePayload(String rowText) {
-        return activityPointBalancePayload(UserDao.ActivityPointBalance.fromLegacy(rowText));
-    }
-
     public static String activityPointBalancePayload(UserDao.ActivityPointBalance balance) {
         if (balance == null) {
             return "";

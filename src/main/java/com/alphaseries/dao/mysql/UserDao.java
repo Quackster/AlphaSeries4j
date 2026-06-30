@@ -651,15 +651,6 @@ public final class UserDao {
     }
 
     public record ActivityPointBalance(long pointTypeOne, long pointTypeTwo, long pointTypeThree, long pointTypeFour) {
-        public static ActivityPointBalance fromLegacy(String rowText) {
-            String[] fields = StringUtils.text(rowText).split("\t", -1);
-            return new ActivityPointBalance(
-                NumberUtils.parseLong(StringUtils.field(fields, 0)),
-                NumberUtils.parseLong(StringUtils.field(fields, 1)),
-                NumberUtils.parseLong(StringUtils.field(fields, 2)),
-                NumberUtils.parseLong(StringUtils.field(fields, 3)));
-        }
-
         public long valueFor(long pointType) {
             if (pointType == 1L) {
                 return pointTypeOne;

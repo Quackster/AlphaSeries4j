@@ -2,6 +2,7 @@ package com.alphaseries;
 
 import com.alphaseries.config.AppDatabaseConfig;
 import com.alphaseries.dao.mysql.RoomDao;
+import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
@@ -1575,7 +1576,8 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(0, null, "")
             + Crypto.Proc_3_0_6D2AF0(4, null, "")
             + Crypto.Proc_3_0_6D2AF0(40, null, "");
-        assertEquals(expectedPointBalance, Handling.activityPointBalancePayload("10\t20\t\t40"));
+        assertEquals(expectedPointBalance, Handling.activityPointBalancePayload(
+            new UserDao.ActivityPointBalance(10L, 20L, 0L, 40L)));
         assertEquals(1L, Handling.pickupFurnitureIdFromPayload("AZA"));
         assertEquals(1L, Handling.pickupFurnitureIdFromPayload("A"));
         Handling.FurnitureCacheState tracked = Handling.trackFurnitureCacheMarker(
