@@ -141,10 +141,10 @@ public final class Boot {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        Proc_1_17_6CCDC0(0, 0, 0);
-        Proc_1_15_6CA000(0, 0, 0);
-        Proc_1_18_6CE9C0(0, 0, 0);
-        Proc_1_13_6C9820(0, 0, 0);
+        loadCatalogPageTreeCache();
+        loadCatalogPagePayloadCache();
+        loadClubGiftCache();
+        loadGiftWrapCache();
         Proc_1_0_6BA9D0(0, 0, 0);
     }
 
@@ -192,7 +192,7 @@ public final class Boot {
     public static void initializeStartupCaches() {
         initializeBootLogFiles();
         runTimed("Empfohlene Räume im Cache gespeichert", Boot::loadRecommendedRoomsCache);
-        runTimed("Mögliche Badgevergabe im Cache gespeichert", () -> Proc_1_16_6CCA60(0, 0, 0));
+        runTimed("Mögliche Badgevergabe im Cache gespeichert", Boot::loadPermissionMatrixCache);
         runTimed("Haustiere im Cache gespeichert", Boot::loadPetLevelAndCommandCache);
         runTimed("Figuredata im Cache gespeichert", Boot::writeFiguredataCache);
         runTimed("Server Einstellungen im Cache gespeichert", Boot::loadServerSettingsCache);
@@ -252,14 +252,14 @@ public final class Boot {
         Licence.setAchievementSettings(achievementCache.questIdPayload, achievementCache.achievements);
         loadServerSettingsCache();
         loadPetLevelAndCommandCache();
-        Proc_1_18_6CE9C0(0, 0, 0);
-        Proc_1_16_6CCA60(0, 0, 0);
+        loadClubGiftCache();
+        loadPermissionMatrixCache();
         loadPetRaceCache();
         loadStaffModerationCache();
         Proc_1_19_6CF190(0, 0, 0);
         Proc_1_20_6CF830(0, 0, 0);
         Proc_1_21_6D08C0(0, 0, 0);
-        Proc_1_13_6C9820(0, 0, 0);
+        loadGiftWrapCache();
         Proc_1_22_6D0F00(0, 0, 0);
         buildChatSettingsCache();
         Licence.setMessengerFriendLimits(MessengerSettings.fromLimits(
@@ -360,7 +360,7 @@ public final class Boot {
             }
         }
         Licence.setRoomPortalSettings(portalSettings);
-        Proc_1_16_6CCA60(0, 0, 0);
+        loadPermissionMatrixCache();
         String systemDate = Functions.settingsCache().valueOrDefault("com.system.format.date", "");
         String systemTime = Functions.settingsCache().valueOrDefault("com.system.format.time", "");
         SettingsDao settings = settingsDao();
@@ -489,7 +489,17 @@ public final class Boot {
         return NavigatorState.instance().roomCategoryCache();
     }
 
+    /**
+     * Original function: Proc_1_13_6C9820.
+     */
     public static void Proc_1_13_6C9820(Object... args) {
+        loadGiftWrapCache();
+    }
+
+    /**
+     * Original function: Proc_1_13_6C9820.
+     */
+    public static void loadGiftWrapCache() {
         List<Long> wrapProductIds = List.of();
         CatalogDao catalog = catalogDao();
         if (catalog != null) {
@@ -507,7 +517,17 @@ public final class Boot {
         Licence.setGiftWrapState(wrapProductIds, buildGiftWrapPayload(wrapProductIds, accessoryCount, colorCount));
     }
 
+    /**
+     * Original function: Proc_1_15_6CA000.
+     */
     public static void Proc_1_15_6CA000(Object... args) {
+        loadCatalogPagePayloadCache();
+    }
+
+    /**
+     * Original function: Proc_1_15_6CA000.
+     */
+    public static void loadCatalogPagePayloadCache() {
         CatalogDao catalog = catalogDao();
         Map<Long, String> pages = new LinkedHashMap<>();
         if (catalog != null) {
@@ -525,7 +545,17 @@ public final class Boot {
         Licence.setCatalogPagePayloads(pages);
     }
 
+    /**
+     * Original function: Proc_1_16_6CCA60.
+     */
     public static void Proc_1_16_6CCA60(Object... args) {
+        loadPermissionMatrixCache();
+    }
+
+    /**
+     * Original function: Proc_1_16_6CCA60.
+     */
+    public static void loadPermissionMatrixCache() {
         String[][] permissions = new String[21][3];
         SettingsDao settings = settingsDao();
         for (int rank = 0; rank <= 20; rank++) {
@@ -544,7 +574,17 @@ public final class Boot {
         Functions.setPermissions(PermissionMatrix.fromRows(permissions));
     }
 
+    /**
+     * Original function: Proc_1_17_6CCDC0.
+     */
     public static void Proc_1_17_6CCDC0(Object... args) {
+        loadCatalogPageTreeCache();
+    }
+
+    /**
+     * Original function: Proc_1_17_6CCDC0.
+     */
+    public static void loadCatalogPageTreeCache() {
         Map<CatalogPages.PageTreeKey, String> trees = new LinkedHashMap<>();
         CatalogDao catalog = catalogDao();
         for (int rank = 0; rank <= 20; rank++) {
@@ -570,7 +610,17 @@ public final class Boot {
         Licence.setCatalogPageTrees(trees);
     }
 
+    /**
+     * Original function: Proc_1_18_6CE9C0.
+     */
     public static void Proc_1_18_6CE9C0(Object... args) {
+        loadClubGiftCache();
+    }
+
+    /**
+     * Original function: Proc_1_18_6CE9C0.
+     */
+    public static void loadClubGiftCache() {
         PacketBuilder payload = PacketBuilder.create();
         StringBuilder lookup = new StringBuilder();
         List<GiftSettings.ClubGift> gifts = new ArrayList<GiftSettings.ClubGift>();
