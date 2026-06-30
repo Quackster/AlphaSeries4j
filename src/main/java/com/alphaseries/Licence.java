@@ -287,13 +287,23 @@ public final class Licence {
     }
 
     public static ChatSettings chatSettings() {
-        ChatState.instance().setSettingsFromLegacy(global_00829290, global_00829294);
+        refreshChatSettings();
         return ChatState.instance().settings();
     }
 
     public static void setChatSettings(List<ChatSettings.FilterWord> filterRows, List<ChatSettings.Gesture> gestureRows) {
         global_00829290 = filterRows == null ? List.of() : List.copyOf(filterRows);
         global_00829294 = gestureRows == null ? List.of() : List.copyOf(gestureRows);
+        refreshChatSettings();
+    }
+
+    private static void refreshChatSettings() {
+        List<ChatSettings.FilterWord> filterRows = typedRows(global_00829290, ChatSettings.FilterWord.class);
+        List<ChatSettings.Gesture> gestureRows = typedRows(global_00829294, ChatSettings.Gesture.class);
+        if (filterRows != null && gestureRows != null) {
+            ChatState.instance().setRows(filterRows, gestureRows);
+            return;
+        }
         ChatState.instance().setSettingsFromLegacy(global_00829290, global_00829294);
     }
 
