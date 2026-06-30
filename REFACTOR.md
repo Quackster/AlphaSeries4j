@@ -277,6 +277,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed accepted messenger friend list handling through typed `MessengerDao.MessengerFriend` records, replacing tab-delimited DAO row strings and `handlingField(...)` reads in that handler.
 - Routed pending messenger request handling through typed `PendingFriendRequest` records and fluent payload aggregation, replacing tab-delimited DAO row strings in that handler.
 - Routed room-right settings payload handling through typed `RoomDao.RoomRight` records and fluent `PacketBuilder` construction, replacing tab-delimited DAO row strings in that helper.
+- Routed room settings read payload handling through typed `RoomDao.RoomSettingsRead` records and fluent `PacketBuilder` construction, replacing the 14-field tab-delimited DAO row and indexed `handlingField(...)` reads in that helper.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -292,7 +293,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12622 lines
+- `Handling.java`: 12626 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines
 - `Main.java`: 957 lines

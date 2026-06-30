@@ -1315,16 +1315,12 @@ public final class Handling {
             if (rooms == null) {
                 return;
             }
-            String roomRow = rooms.settingsRow(roomId);
-            if (roomRow.isEmpty()) {
-                return;
-            }
-            String[] roomFields = roomRow.split("\t", -1);
-            if (roomFields.length < 14) {
+            Optional<RoomDao.RoomSettingsRead> roomSettings = rooms.roomSettings(roomId);
+            if (roomSettings.isEmpty()) {
                 return;
             }
             List<RoomDao.RoomRight> rightsRows = rooms.rightsRows(roomId);
-            String payload = roomSettingsReadPayload(roomFields, rightsRows);
+            String payload = roomSettingsReadPayload(roomSettings.get(), rightsRows);
             if (!payload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -9600,15 +9596,18 @@ public final class Handling {
         return true;
     }
 
-    public static String roomSettingsReadPayload(String[] roomFields, List<RoomDao.RoomRight> rightsRows) {
+    public static String roomSettingsReadPayload(RoomDao.RoomSettingsRead room, List<RoomDao.RoomRight> rightsRows) {
+        if (room == null) {
+            return "";
+        }
         StringBuilder tagPayload = new StringBuilder();
         long tagCount = 0L;
-        if (!handlingField(roomFields, 7).isEmpty()) {
-            tagPayload.append(handlingField(roomFields, 7)).append('\2');
+        if (!room.tagOne().isEmpty()) {
+            tagPayload.append(room.tagOne()).append('\2');
             tagCount++;
         }
-        if (!handlingField(roomFields, 8).isEmpty()) {
-            tagPayload.append(handlingField(roomFields, 8)).append('\2');
+        if (!room.tagTwo().isEmpty()) {
+            tagPayload.append(room.tagTwo()).append('\2');
             tagCount++;
         }
 
@@ -9621,19 +9620,24 @@ public final class Handling {
             }
         }
 
-        String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 0)), null, "GQ");
-        payload = payload + handlingField(roomFields, 1) + '\2';
-        payload = payload + handlingField(roomFields, 2) + '\2';
-        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 3)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 4)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 5)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 6)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(tagCount, null, payload) + tagPayload;
-        payload = Crypto.Proc_3_0_6D2AF0(rightsCount, null, payload) + rightsPayload + "H";
-        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 10)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 11)), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 12)), null, payload);
-        return Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(handlingField(roomFields, 13)), null, payload);
+        return PacketBuilder.message("GQ")
+            .appendInt(room.roomId())
+            .appendString(room.roomName())
+            .appendString(room.description())
+            .appendInt(room.doorStatus())
+            .appendInt(room.categoryId())
+            .appendInt(room.visitorsMax())
+            .appendInt(room.modelVisitorsMax())
+            .appendInt(tagCount)
+            .appendRaw(tagPayload)
+            .appendInt(rightsCount)
+            .appendRaw(rightsPayload)
+            .appendRaw('H')
+            .appendInt(room.allowOthersPets())
+            .appendInt(room.allowFeedPets())
+            .appendInt(room.allowWalkthrough())
+            .appendInt(room.disableWalls())
+            .build();
     }
 
     public static long roomSettingsFlag(long flagValue) {

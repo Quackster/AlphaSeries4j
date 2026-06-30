@@ -677,19 +677,27 @@ public final class RoomDao {
             roomId);
     }
 
-    public String settingsRow(long roomId) throws SQLException {
+    public Optional<RoomSettingsRead> roomSettings(long roomId) throws SQLException {
         return database.queryOne(
             "SELECT rooms.id,rooms.name,rooms.description,rooms.status_door,"
                 + "rooms.id_category,rooms.visitors_max,models.visitors_max,rooms.tag_1,rooms.tag_2,NULL,"
                 + "rooms.allow_otherspets,rooms.allow_feedpets,rooms.allow_walkthrough,rooms.disable_walls "
                 + "FROM rooms,models WHERE rooms.id=? AND models.id=rooms.id_model LIMIT 1",
-            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
-                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5) + "\t" + resultSet.getString(6)
-                + "\t" + resultSet.getString(7) + "\t" + resultSet.getString(8) + "\t" + resultSet.getString(9)
-                + "\t" + resultSet.getString(10) + "\t" + resultSet.getString(11) + "\t" + resultSet.getString(12)
-                + "\t" + resultSet.getString(13) + "\t" + resultSet.getString(14),
-            roomId)
-            .orElse("");
+            resultSet -> new RoomSettingsRead(
+                resultSet.getLong(1),
+                String.valueOf(resultSet.getString(2)),
+                String.valueOf(resultSet.getString(3)),
+                resultSet.getLong(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getLong(7),
+                String.valueOf(resultSet.getString(8)),
+                String.valueOf(resultSet.getString(9)),
+                resultSet.getLong(11),
+                resultSet.getLong(12),
+                resultSet.getLong(13),
+                resultSet.getLong(14)),
+            roomId);
     }
 
     public List<RoomRight> rightsRows(long roomId) throws SQLException {
@@ -1001,6 +1009,23 @@ public final class RoomDao {
     }
 
     public record RoomRight(long userId, String userName) {
+    }
+
+    public record RoomSettingsRead(
+        long roomId,
+        String roomName,
+        String description,
+        long doorStatus,
+        long categoryId,
+        long visitorsMax,
+        long modelVisitorsMax,
+        String tagOne,
+        String tagTwo,
+        long allowOthersPets,
+        long allowFeedPets,
+        long allowWalkthrough,
+        long disableWalls
+    ) {
     }
 
     public record ActiveRoomEffect(long roomUserIndex, long effectId) {
