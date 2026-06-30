@@ -3,6 +3,7 @@ package com.alphaseries;
 import com.alphaseries.game.catalog.CatalogState;
 import com.alphaseries.game.catalog.ProductCache;
 import com.alphaseries.game.room.RoomEventLocales;
+import com.alphaseries.game.room.RoomState;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -54,11 +55,13 @@ public final class DataManager {
     }
 
     public static RoomEventLocales roomEventLocales() {
-        return RoomEventLocales.fromLegacy(global_008291AC);
+        RoomState.instance().setEventLocalesFromLegacy(global_008291AC);
+        return RoomState.instance().eventLocales();
     }
 
     public static void setRoomEventLocaleCache(String cacheText) {
         global_008291AC = cacheText == null ? "" : cacheText;
+        RoomState.instance().setEventLocalesFromLegacy(global_008291AC);
     }
 
     public static ProductCache productCache() {

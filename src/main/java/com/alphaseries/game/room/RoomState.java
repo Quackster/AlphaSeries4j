@@ -6,6 +6,7 @@ public final class RoomState {
     private RepresentedRoomCache representedRooms = RepresentedRoomCache.empty();
     private RepresentedRoomSlots representedRoomSlots = RepresentedRoomSlots.empty();
     private RoomPortalSettings portalSettings = RoomPortalSettings.empty();
+    private RoomEventLocales eventLocales = RoomEventLocales.fromLegacy("");
 
     private RoomState() {
     }
@@ -24,6 +25,18 @@ public final class RoomState {
 
     public synchronized RoomPortalSettings portalSettings() {
         return portalSettings;
+    }
+
+    public synchronized RoomEventLocales eventLocales() {
+        return eventLocales;
+    }
+
+    public synchronized void setEventLocales(RoomEventLocales eventLocales) {
+        this.eventLocales = eventLocales == null ? RoomEventLocales.fromLegacy("") : eventLocales;
+    }
+
+    public synchronized void setEventLocalesFromLegacy(String cacheText) {
+        eventLocales = RoomEventLocales.fromLegacy(cacheText);
     }
 
     public synchronized void setPortalSettings(RoomPortalSettings portalSettings) {
