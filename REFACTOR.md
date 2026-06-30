@@ -460,6 +460,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed `Functions` represented-bot position availability through `RepresentedBotRecord`/`RepresentedBotIdentity`, clearing direct represented-bot cache field reads from `Functions`.
 - Routed `Main.mainRepresentedBotRoomSlot(...)` through `RepresentedBotRecord.roomSlot()` instead of the generic represented-bot field accessor.
 - Routed `Main.botsTimer()` through `RepresentedBotRecord` named movement fields instead of represented-bot cache field indexes.
+- Removed the dead `Main.mainRepresentedBotRecordField(...)` compatibility accessor; tests now read represented-bot names through `RepresentedBotRecord`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -479,7 +480,7 @@ Measured on 2026-06-30:
 - `Handling.java`: 11511 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 177 lines
-- `Main.java`: 910 lines
+- `Main.java`: 906 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 
 ## Next Targets

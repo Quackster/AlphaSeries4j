@@ -656,10 +656,6 @@ public final class Main {
         return Licence.representedBots().recordText(entityIndex);
     }
 
-    public static String mainRepresentedBotRecordField(long entityIndex, long fieldIndex) {
-        return Licence.representedBots().recordField(entityIndex, fieldIndex);
-    }
-
     public static void mainRepresentedRoomOccupantAdd(long roomSlot, long entityIndex, long occupantType) {
         Licence.setRepresentedRooms(Licence.representedRooms().addOccupant(roomSlot, entityIndex, occupantType));
     }
