@@ -534,15 +534,6 @@ public final class Boot {
 
     public static void Proc_1_20_6CF830(Object... args) {
         HelpDao help = helpDao();
-        long maxCategoryId = 0L;
-        if (help != null) {
-            try {
-                maxCategoryId = Math.max(0L, help.maxCategoryId());
-            } catch (Exception ignored) {
-                // Legacy startup cache loading tolerated missing tables or SQL failures.
-            }
-        }
-        String[] categoryFaqs = new String[(int) maxCategoryId + 1];
         List<HelpDao.FaqNameRow> categoryRows = List.of();
         Map<Long, List<HelpDao.FaqNameRow>> faqRows = new LinkedHashMap<Long, List<HelpDao.FaqNameRow>>();
         if (help != null) {
@@ -551,7 +542,7 @@ public final class Boot {
                 categoryRows = categories;
                 for (HelpDao.FaqNameRow category : categories) {
                     long categoryId = category.id();
-                    if (categoryId >= 0L && categoryId < categoryFaqs.length) {
+                    if (categoryId >= 0L) {
                         faqRows.put(categoryId, help.faqRowsByCategory(categoryId));
                     }
                 }
@@ -560,25 +551,11 @@ public final class Boot {
             }
         }
         FaqCategoryCache cache = buildFaqCategoryCacheFromRows(categoryRows, faqRows);
-        for (Map.Entry<Long, String> entry : cache.faqPayloadByCategoryId.entrySet()) {
-            if (entry.getKey() >= 0L && entry.getKey() < categoryFaqs.length) {
-                categoryFaqs[entry.getKey().intValue()] = entry.getValue();
-            }
-        }
-        Licence.setFaqCategoryCache(cache.categoryPayload, categoryFaqs);
+        Licence.setFaqCategoryCache(cache.categoryPayload, cache.faqPayloadByCategoryId);
     }
 
     public static void Proc_1_21_6D08C0(Object... args) {
         HelpDao help = helpDao();
-        long maxFaqId = 0L;
-        if (help != null) {
-            try {
-                maxFaqId = Math.max(0L, help.maxFaqId());
-            } catch (Exception ignored) {
-                // Legacy startup cache loading tolerated missing tables or SQL failures.
-            }
-        }
-        String[] descriptions = new String[(int) maxFaqId + 1];
         Map<Long, String> cache = new LinkedHashMap<Long, String>();
         if (help != null) {
             try {
@@ -587,12 +564,7 @@ public final class Boot {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        for (Map.Entry<Long, String> entry : cache.entrySet()) {
-            if (entry.getKey() >= 0L && entry.getKey() < descriptions.length) {
-                descriptions[entry.getKey().intValue()] = entry.getValue();
-            }
-        }
-        Licence.setFaqDescriptionCache(descriptions);
+        Licence.setFaqDescriptionCache(cache);
     }
 
     public static void Proc_1_22_6D0F00(Object... args) {

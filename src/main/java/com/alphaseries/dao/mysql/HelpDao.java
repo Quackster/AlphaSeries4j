@@ -26,13 +26,6 @@ public final class HelpDao {
             importanceLevel);
     }
 
-    public long maxCategoryId() throws SQLException {
-        return database.queryOne(
-            "SELECT MAX(id) FROM faq_categories",
-            resultSet -> resultSet.getLong(1))
-            .orElse(0L);
-    }
-
     public List<FaqNameRow> categoryRows() throws SQLException {
         return database.query(
             "SELECT id,name FROM faq_categories",
@@ -44,13 +37,6 @@ public final class HelpDao {
             "SELECT id,name FROM faq WHERE id_category=?",
             resultSet -> new FaqNameRow(resultSet.getLong(1), resultSet.getString(2)),
             categoryId);
-    }
-
-    public long maxFaqId() throws SQLException {
-        return database.queryOne(
-            "SELECT MAX(id) FROM faq",
-            resultSet -> resultSet.getLong(1))
-            .orElse(0L);
     }
 
     public List<FaqDescriptionRow> descriptionRows() throws SQLException {

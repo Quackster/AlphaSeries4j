@@ -1237,8 +1237,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829208.contains("cat"));
         assertEquals(true, Licence.helpCenterCache().categoryPayload().contains("cat"));
         Boot.Proc_1_21_6D08C0();
-        assertEquals(true, ((String[]) Licence.global_00829210)[5].contains("line1\rline2"));
         assertEquals(true, Licence.helpCenterCache().descriptionPayload(5L).contains("line1\rline2"));
+        assertHelpCenterMapMirrors();
         Boot.Proc_1_22_6D0F00();
         assertEquals("/ad/4\2/cafe\2", ((String[]) Licence.global_008291D4)[4]);
         assertEquals("/ad/4\2/cafe\2", Licence.visitRoomAds().payload(4L));
@@ -5056,6 +5056,15 @@ public final class PortedModuleSmokeTest {
         assertEquals("RECOMMENDED_MAP", Licence.recommendedRooms().payload(1L));
         Licence.global_0082911C = previousRecommendedRooms;
         Licence.global_00829128 = previousRecommendedRoomCount;
+    }
+
+    private static void assertHelpCenterMapMirrors() {
+        assertEquals(true, Licence.global_0082920C instanceof Map);
+        assertEquals(true, ((Map<?, ?>) Licence.global_0082920C).values().stream()
+            .anyMatch(value -> StringUtils.text(value).contains("faq")));
+        assertEquals(true, Licence.global_00829210 instanceof Map);
+        assertEquals(true, ((Map<?, ?>) Licence.global_00829210).values().stream()
+            .anyMatch(value -> StringUtils.text(value).contains("line1\rline2")));
     }
 
     private static void assertCatalogPagePayloadMapBridge() {
