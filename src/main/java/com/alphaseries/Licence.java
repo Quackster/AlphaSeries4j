@@ -521,15 +521,22 @@ public final class Licence {
     }
 
     public static CatalogPages catalogPages() {
-        return CatalogPages.fromLegacy(global_00829308, global_008292F4);
+        if (global_00829308 instanceof CatalogPages catalogPages) {
+            CatalogState.instance().setCatalogPages(catalogPages);
+        } else {
+            CatalogState.instance().setCatalogPagesFromLegacy(global_00829308, global_008292F4);
+        }
+        return CatalogState.instance().catalogPages();
     }
 
     public static void setCatalogPagePayloads(Object pagePayloads) {
         global_00829308 = pagePayloads == null ? "" : pagePayloads;
+        CatalogState.instance().setCatalogPagesFromLegacy(global_00829308, global_008292F4);
     }
 
     public static void setCatalogPageTrees(Object pageTrees) {
         global_008292F4 = pageTrees == null ? "" : pageTrees;
+        CatalogState.instance().setCatalogPagesFromLegacy(global_00829308, global_008292F4);
     }
 
     public static RoomCategoryCache roomCategoryCache() {

@@ -12,7 +12,14 @@ public final class CatalogPages {
     }
 
     public static CatalogPages fromLegacy(Object pagePayloads, Object pageTrees) {
+        if (pagePayloads instanceof CatalogPages catalogPages) {
+            return catalogPages;
+        }
         return new CatalogPages(pagePayloads, pageTrees);
+    }
+
+    public static CatalogPages empty() {
+        return new CatalogPages("", "");
     }
 
     public String pagePayload(long pageId) {

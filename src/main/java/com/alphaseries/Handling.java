@@ -66,6 +66,7 @@ import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.achievement.AchievementState;
+import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.CatalogState;
 import com.alphaseries.game.catalog.GiftSettings;
@@ -4409,7 +4410,7 @@ public final class Handling {
             if (pageId <= 0L) {
                 pageId = readWireLong(requestPayload, new LongRef(1));
             }
-            String pagePayload = Licence.catalogPages().pagePayload(pageId);
+            String pagePayload = catalogPages().pagePayload(pageId);
             if (!pagePayload.isEmpty()) {
                 Proc_6_244_801E80(socketIndex, CatalogPayloads.page(pageId, pagePayload), 0);
             }
@@ -7980,7 +7981,7 @@ public final class Handling {
 
     private static void dispatchPreReadyCatalogIndex(int socketIndex) {
         try {
-            String pageTree = Licence.catalogPages().defaultPageTree();
+            String pageTree = catalogPages().defaultPageTree();
             Proc_6_244_801E80(socketIndex, "A~IHHM" + '\2' + pageTree, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses dispatcher helper failures.
@@ -9413,6 +9414,11 @@ public final class Handling {
     private static GiftSettings giftSettings() {
         Licence.giftSettings();
         return CatalogState.instance().giftSettings();
+    }
+
+    private static CatalogPages catalogPages() {
+        Licence.catalogPages();
+        return CatalogState.instance().catalogPages();
     }
 
     private static PetSettings petSettings() {

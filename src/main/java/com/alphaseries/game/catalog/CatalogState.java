@@ -4,6 +4,7 @@ public final class CatalogState {
     private static final CatalogState INSTANCE = new CatalogState();
 
     private GiftSettings giftSettings = GiftSettings.empty();
+    private CatalogPages catalogPages = CatalogPages.empty();
 
     private CatalogState() {
     }
@@ -27,5 +28,17 @@ public final class CatalogState {
         String giftWrapPayload
     ) {
         giftSettings = GiftSettings.fromLegacy(clubGiftPayload, clubGiftLookup, giftWrapLookup, giftWrapPayload);
+    }
+
+    public synchronized CatalogPages catalogPages() {
+        return catalogPages;
+    }
+
+    public synchronized void setCatalogPages(CatalogPages catalogPages) {
+        this.catalogPages = catalogPages == null ? CatalogPages.empty() : catalogPages;
+    }
+
+    public synchronized void setCatalogPagesFromLegacy(Object pagePayloads, Object pageTrees) {
+        catalogPages = CatalogPages.fromLegacy(pagePayloads, pageTrees);
     }
 }
