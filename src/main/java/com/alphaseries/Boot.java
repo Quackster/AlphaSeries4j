@@ -502,11 +502,11 @@ public final class Boot {
         }
         for (ClubDao.ClubGiftRow row : giftRows) {
             long catalogProductId = row.catalogProductId();
-            long productId = Licence.Proc_9_2_8075F0(catalogProductId, 2, 0);
+            long productId = Licence.catalogProductFieldLong(catalogProductId, 2);
             if (productId == 0L) {
                 productId = catalogProductId;
             }
-            String giftClass = Licence.Proc_9_0_806F70(productId, 1, 0) == 9L ? "i" : "s";
+            String giftClass = Licence.productType(productId) == 9L ? "i" : "s";
             payload.append(Crypto.Proc_3_0_6D2AF0(catalogProductId, null, ""));
             payload.append(Crypto.Proc_3_0_6D2AF0(productId, null, ""));
             payload.append(DataManager.Proc_8_12_806C30(productId, 14, 0)).append('\2');
@@ -1587,7 +1587,7 @@ public final class Boot {
         }
         long catalogProductId = NumberUtils.parseLong(fields[0]);
         long productId = NumberUtils.parseLong(fields[1]);
-        long productType = Licence.Proc_9_0_806F70(productId, 1, 0);
+        long productType = Licence.productType(productId);
         String productClass = catalogProductClass(productType);
         long amountValue = NumberUtils.parseLong(fields[6]);
         if (amountValue <= 0L) {
@@ -1611,7 +1611,7 @@ public final class Boot {
         if (row == null) {
             return "";
         }
-        long productType = Licence.Proc_9_0_806F70(row.productId(), 1, 0);
+        long productType = Licence.productType(row.productId());
         String productClass = catalogProductClass(productType);
         long amountValue = row.amount();
         if (amountValue <= 0L) {

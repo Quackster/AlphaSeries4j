@@ -2061,7 +2061,7 @@ public final class Handling {
                 return;
             }
             long currentState = NumberUtils.parseLong(wallState.sign());
-            long stateCount = Licence.Proc_9_0_806F70(productId, 5, 0);
+            long stateCount = Licence.productStateCount(productId);
             if (stateCount <= 0L) {
                 stateCount = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 10, 0));
             }
@@ -4325,7 +4325,7 @@ public final class Handling {
                 Proc_6_205_7D9780(socketIndex, 6);
             }
             String purchasePayload = CatalogPayloads.giftPurchase(catalogProductId,
-                Licence.Proc_9_1_8072B0(catalogProductId, 0, 0), creditPrice, activityPrice, activityType,
+                Licence.catalogProductField(catalogProductId, 0), creditPrice, activityPrice, activityType,
                 grantedFurnitureId);
             Proc_6_244_801E80(socketIndex, purchasePayload, 0);
             long recipientSocket = handlingSocketFromUserId(recipientUserId);
@@ -4349,7 +4349,7 @@ public final class Handling {
             if (itemId <= 0L) {
                 itemId = readWireLong(requestPayload, new LongRef(1));
             }
-            long itemType = NumberUtils.parseLong(Licence.Proc_9_1_8072B0(itemId, 9, 0));
+            long itemType = NumberUtils.parseLong(Licence.catalogProductField(itemId, 9));
             long giftEnabled = itemType == 1L ? NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.enabled", 0, 0)) : 0L;
             Proc_6_244_801E80(socketIndex, CatalogPayloads.giftAvailability(itemId, giftEnabled), 0);
         } catch (Exception ignored) {

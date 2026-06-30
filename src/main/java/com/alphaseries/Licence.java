@@ -111,21 +111,21 @@ public final class Licence {
         if (args == null || args.length < 2) {
             return 0L;
         }
-        return NumberUtils.parseLong(catalogRegistry().productCell(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1])));
+        return productFieldLong(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]));
     }
 
     public static String Proc_9_1_8072B0(Object... args) {
         if (args == null || args.length < 2) {
             return "";
         }
-        return catalogRegistry().catalogProductCell(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]));
+        return catalogProductField(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]));
     }
 
     public static long Proc_9_2_8075F0(Object... args) {
         if (args == null || args.length < 2) {
             return 0L;
         }
-        return NumberUtils.parseLong(catalogRegistry().catalogProductCell(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1])));
+        return catalogProductFieldLong(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]));
     }
 
     public static String Proc_9_3_807930(Object... args) {
@@ -139,6 +139,28 @@ public final class Licence {
         return catalogRegistry().product(productId).orElse(null);
     }
 
+    /**
+     * Original function: Proc_9_0_806F70.
+     */
+    public static long productFieldLong(long productId, long columnIndex) {
+        return NumberUtils.parseLong(catalogRegistry().productCell(productId, columnIndex));
+    }
+
+    /**
+     * Original function: Proc_9_0_806F70.
+     */
+    public static long productType(long productId) {
+        CatalogRegistry.Product product = product(productId);
+        return product == null ? 0L : product.type();
+    }
+
+    /**
+     * Original function: Proc_9_0_806F70.
+     */
+    public static long productStateCount(long productId) {
+        return productFieldLong(productId, 5);
+    }
+
     public static String Proc_9_4_807B90(Object... args) {
         if (args == null || args.length == 0) {
             return "";
@@ -148,6 +170,20 @@ public final class Licence {
 
     public static CatalogRegistry.CatalogProduct catalogProduct(long catalogProductId) {
         return catalogRegistry().catalogProduct(catalogProductId).orElse(null);
+    }
+
+    /**
+     * Original function: Proc_9_1_8072B0.
+     */
+    public static String catalogProductField(long catalogProductId, long columnIndex) {
+        return catalogRegistry().catalogProductCell(catalogProductId, columnIndex);
+    }
+
+    /**
+     * Original function: Proc_9_2_8075F0.
+     */
+    public static long catalogProductFieldLong(long catalogProductId, long columnIndex) {
+        return NumberUtils.parseLong(catalogProductField(catalogProductId, columnIndex));
     }
 
     public static String Proc_9_5_807DF0(Object... args) {

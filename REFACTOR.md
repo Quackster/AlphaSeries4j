@@ -11,7 +11,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 
 - Preserve current source compatibility and runtime behavior for every slice; compatibility shims may stay temporarily, but each slice must move the implementation toward typed Java boundaries.
 - Do not add or keep methods that simply wrap another method and add no behavior. A method that only forwards the same arguments, bounces control straight back to another method, or returns another method's result without validation, translation, state management, or protocol compatibility work is dead weight. Do not move these wrappers back into legacy root classes or replace them with equivalent pass-through methods elsewhere. Delete no-op wrappers once call sites can move to the real API; only temporary source-compatibility bridges may remain, and they must be documented as compatibility boundaries scheduled for removal.
-- When renaming legacy `Proc_*`/VB-style methods to proper Java names, keep the original function name in the JavaDoc immediately above the renamed method, for example `Original function: Proc_...`. Every renamed method should carry that source-history note directly above the method declaration. Use this only as source-history documentation, not as a reason to preserve bad names or no-op wrapper methods.
+- When renaming legacy `Proc_*`/VB-style methods to proper Java names, keep the original function name in the Javadocs immediately above the renamed method, for example `Original function: Proc_...`. Every renamed method should carry that source-history note directly above the method declaration. Use this only as source-history documentation, not as a reason to preserve bad names or no-op wrapper methods.
 - Keep tests working throughout the refactor. Run `./gradlew test --no-daemon` before committing behavior-affecting slices, and do not mark a milestone complete unless the suite passes or the failure is explicitly documented.
 - Use prepared DAO methods for database access. Handlers and services should not concatenate SQL strings or call raw `MySQL.Proc_5_*` helpers once a DAO boundary exists.
 - Load database rows into typed classes or records with named fields. Do not map result sets into tab-delimited strings such as `getString(1) + "\t" + getString(2)` except at a deliberate legacy compatibility boundary that is documented and scheduled for removal.
@@ -486,6 +486,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Licence.linkedUserSocketIndex(...)` and `Licence.sessionCacheLong(...)` over `SessionRegistry`, then migrated live `Main`/`Handling` callers away from `Licence.Proc_9_8_8086A0(...)` and `Proc_9_10_808F30(...)`.
 - Added named `Licence.socketUserId(...)` over `SessionRegistry` and migrated `Main.mainUserIdFromSocket(...)` away from `Licence.Proc_9_6_808080(...)`.
 - Added named `Functions.roomPositionAvailable(...)` and `Functions.representedBotPositionAvailable(...)`, then migrated live `Main`/`Handling` movement and roller checks away from the old room-position Proc wrappers.
+- Added named `Licence` catalog/product cache accessors with original Proc names in Javadocs, then migrated live `Boot`/`Handling` callers away from `Licence.Proc_9_0_806F70(...)`, `Proc_9_1_8072B0(...)`, and `Proc_9_2_8075F0(...)`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -507,7 +508,7 @@ Measured on 2026-06-30:
 - `MySQL.java`: 177 lines
 - `Main.java`: 819 lines
 - `Updater.java`: 314 lines
-- `Licence.java`: 731 lines
+- `Licence.java`: 767 lines
 - `HandlingMUS.java`: 37 lines
 - `AlphaSeriesRuntime.java`: 235 lines
 
