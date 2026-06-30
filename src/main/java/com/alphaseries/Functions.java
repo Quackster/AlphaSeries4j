@@ -408,8 +408,14 @@ public final class Functions {
         if (args == null || args.length == 0) {
             return 0L;
         }
+        return sendRoomReadyRefreshes(NumberUtils.parseLong(args[0]));
+    }
+
+    /**
+     * Original function: Proc_10_18_80C9E0.
+     */
+    public static long sendRoomReadyRefreshes(long roomId) {
         try {
-            long roomId = NumberUtils.parseLong(args[0]);
             if (roomId <= 0L) {
                 return 0L;
             }
@@ -594,11 +600,19 @@ public final class Functions {
         if (args == null || args.length < 3) {
             return 0L;
         }
+        long paidDays = args.length >= 4 ? NumberUtils.parseLong(args[3]) : 0L;
+        return applyClubPeriod(
+            NumberUtils.parseLong(args[0]),
+            NumberUtils.parseLong(args[1]),
+            NumberUtils.parseLong(args[2]),
+            paidDays);
+    }
+
+    /**
+     * Original function: Proc_10_23_80E110.
+     */
+    public static long applyClubPeriod(long userId, long hcRank, long currentPeriods, long paidDays) {
         try {
-            long userId = NumberUtils.parseLong(args[0]);
-            long hcRank = NumberUtils.parseLong(args[1]);
-            long currentPeriods = NumberUtils.parseLong(args[2]);
-            long paidDays = args.length >= 4 ? NumberUtils.parseLong(args[3]) : 0L;
             if (userId <= 0L) {
                 return 0L;
             }

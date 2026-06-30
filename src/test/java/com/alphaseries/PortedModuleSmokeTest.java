@@ -434,7 +434,7 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
             }
         });
-        assertEquals(2L, Functions.Proc_10_18_80C9E0(77));
+        assertEquals(2L, Functions.sendRoomReadyRefreshes(77));
         assertEquals("5:DATA\6" + "5\6@R\7", readyPayloads.get(0));
         assertEquals("6:DATA\6" + "6\6@R\7", readyPayloads.get(1));
         assertEquals(0L, Functions.Proc_10_18_80C9E0(0));
@@ -507,9 +507,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(1L, Functions.Proc_10_22_80D460("92"));
         assertEquals("15:DATA\6" + "15\6" + Functions.userIdentityRefreshPayload(92, "motto", "figure", "F") + "\7",
             userStatePayloads.get(1));
-        assertEquals(1L, Functions.Proc_10_23_80E110(93, 1, 0));
+        assertEquals(1L, Functions.applyClubPeriod(93, 1, 0, 0));
         assertEquals("UPDATE users SET hc_startperiod=UNIX_TIMESTAMP(),hc_periods=hc_periods+1,hc_presents=hc_presents+4 WHERE id='93'",
             userStateExecutions.get(1));
+        assertEquals(0L, Functions.Proc_10_23_80E110(0, 1, 0));
         assertEquals(0L, Functions.Proc_10_19_80CCD0(0));
         MySQL.configureDatabaseConnection(null);
         MusConnectionManager.instance().configureSink(null);

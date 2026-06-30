@@ -504,6 +504,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Functions.sendCreditsRefresh(...)` and `sendActivityPointRefreshes(...)` methods with original Proc names in Javadocs, then migrated catalog purchase, gift purchase, and voucher redemption handlers away from `Proc_10_16_80C480(...)`/`Proc_10_17_80C6B0(...)`.
 - Added named `Functions.randomLongInclusive(...)` with the original Proc name in Javadocs, routed `Functions` internals through it, and migrated navigator, pet speech, dice, and recycler random selection callers in `Handling` away from `Proc_10_4_809CA0(...)`.
 - Added named `Functions.normalizeNullBytes(...)` with the original Proc name in Javadocs, migrated ready-packet buffering away from `Proc_10_9_80A680(...)`, and removed a dead `Proc_10_5_809D80(...)` call in `Handling` whose result was ignored.
+- Added named `Functions.sendRoomReadyRefreshes(...)` and `applyClubPeriod(...)` methods with original Proc names in Javadocs, then migrated the remaining `Handling` callers away from `Functions.Proc_10_*`; `Handling` no longer calls `Functions` Proc helpers directly.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -521,7 +522,7 @@ Measured on 2026-06-30:
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
 - `Handling.java`: 11359 lines
-- `Functions.java`: 748 lines
+- `Functions.java`: 762 lines
 - `DataManager.java`: 409 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 819 lines

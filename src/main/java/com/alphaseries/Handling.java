@@ -253,7 +253,7 @@ public final class Handling {
             broadcastToRoomUsers(roomId, StaffPayloads.alert(messageText));
             if (actionType == 1L || actionType == 4L) {
                 moderationDao.deleteRoomEvent(roomId);
-                Functions.Proc_10_18_80C9E0(roomId, 0, 0);
+                Functions.sendRoomReadyRefreshes(roomId);
             }
             if (actionType == 1L) {
                 moderationDao.insertUserCaution(
@@ -2136,7 +2136,7 @@ public final class Handling {
             if (roomId <= 0L || !handlingUserOwnsRoom(callerUserId, roomId)) {
                 return;
             }
-            Functions.Proc_10_18_80C9E0(roomId, 0, 0);
+            Functions.sendRoomReadyRefreshes(roomId);
             RoomDao rooms = roomDao();
             if (rooms != null) {
                 rooms.deleteRoom(roomId);
@@ -4091,7 +4091,7 @@ public final class Handling {
                     if (hcLevel <= 0L) {
                         hcLevel = 1L;
                     }
-                    Functions.Proc_10_23_80E110(userId, hcLevel, hcMonths, hcMonths * 31L);
+                    Functions.applyClubPeriod(NumberUtils.parseLong(userId), hcLevel, hcMonths, hcMonths * 31L);
                 }
                 String badgeId = DataManager.productCache().badgeId(productId).toUpperCase();
                 if (badgeId.isEmpty()) {
