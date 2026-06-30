@@ -284,6 +284,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added typed `AchievementSettings.Achievement` rows and routed achievement reward/award handling through named fields while keeping string payload wrappers for compatibility.
 - Routed active quest progress handling through typed `QuestDao.UserQuestProgressRow` records and a typed `questProgressDecision` overload, avoiding a legacy-row roundtrip in that handler.
 - Routed wall furniture placement through typed `FurnitureDao.InventoryPlacementFurniture` records, replacing the placement handler's temporary string-array roundtrip and indexed `handlingField(...)` reads.
+- Added typed `RepresentedTradeOffer` rows and routed trade-offer store, removal, SQL-id, log-item, and item-payload helpers through named fields while keeping the legacy cache row serialization explicit.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -299,7 +300,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12641 lines
+- `Handling.java`: 12682 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines
 - `Main.java`: 957 lines

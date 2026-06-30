@@ -808,6 +808,35 @@ public final class Handling {
         public String payload = "";
     }
 
+    public record RepresentedTradeOffer(
+        long socketIndex,
+        long furnitureId,
+        long productId,
+        String signText,
+        long secondaryValue,
+        int fieldCount,
+        String cacheRow
+    ) {
+        public static RepresentedTradeOffer stored(
+            long socketIndex,
+            long furnitureId,
+            long productId,
+            String signText,
+            long secondaryValue
+        ) {
+            String rowText = socketIndex + "\t" + furnitureId + "\t" + productId + "\t"
+                + StringUtils.text(signText).replace("\r", "") + "\t" + secondaryValue;
+            return new RepresentedTradeOffer(
+                socketIndex,
+                furnitureId,
+                productId,
+                StringUtils.text(signText).replace("\r", ""),
+                secondaryValue,
+                5,
+                rowText);
+        }
+    }
+
     public static final class MovementPosition {
         public long positionX;
         public long positionY;
@@ -10037,25 +10066,26 @@ public final class Handling {
         if (socketIndex <= 0L || furnitureId <= 0L || productId <= 0L) {
             return StringUtils.text(tradeOffersText);
         }
-        String rowText = socketIndex + "\t" + furnitureId + "\t" + productId + "\t"
-            + StringUtils.text(signText).replace("\r", "") + "\t" + secondaryValue;
+        RepresentedTradeOffer newOffer = RepresentedTradeOffer.stored(
+            socketIndex,
+            furnitureId,
+            productId,
+            signText,
+            secondaryValue);
         StringBuilder rebuiltText = new StringBuilder();
         boolean replacedExisting = false;
-        for (String row : StringUtils.text(tradeOffersText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 2) {
-                    if (NumberUtils.parseLong(handlingField(fields, 0)) == socketIndex && NumberUtils.parseLong(handlingField(fields, 1)) == furnitureId) {
-                        appendRow(rebuiltText, rowText);
-                        replacedExisting = true;
-                    } else {
-                        appendRow(rebuiltText, row);
-                    }
+        for (RepresentedTradeOffer offer : representedTradeOffers(tradeOffersText)) {
+            if (offer.fieldCount() >= 2) {
+                if (offer.socketIndex() == socketIndex && offer.furnitureId() == furnitureId) {
+                    appendRow(rebuiltText, newOffer.cacheRow());
+                    replacedExisting = true;
+                } else {
+                    appendRow(rebuiltText, offer.cacheRow());
                 }
             }
         }
         if (!replacedExisting) {
-            appendRow(rebuiltText, rowText);
+            appendRow(rebuiltText, newOffer.cacheRow());
         }
         return rebuiltText.toString();
     }
@@ -10065,15 +10095,10 @@ public final class Handling {
             return StringUtils.text(tradeOffersText);
         }
         StringBuilder rebuiltText = new StringBuilder();
-        for (String row : StringUtils.text(tradeOffersText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 2) {
-                    long rowSocketIndex = NumberUtils.parseLong(handlingField(fields, 0));
-                    long rowFurnitureId = NumberUtils.parseLong(handlingField(fields, 1));
-                    if (rowSocketIndex != socketIndex || (furnitureId > 0L && rowFurnitureId != furnitureId)) {
-                        appendRow(rebuiltText, row);
-                    }
+        for (RepresentedTradeOffer offer : representedTradeOffers(tradeOffersText)) {
+            if (offer.fieldCount() >= 2) {
+                if (offer.socketIndex() != socketIndex || (furnitureId > 0L && offer.furnitureId() != furnitureId)) {
+                    appendRow(rebuiltText, offer.cacheRow());
                 }
             }
         }
@@ -10085,17 +10110,13 @@ public final class Handling {
             return "";
         }
         StringBuilder sqlIds = new StringBuilder();
-        for (String row : StringUtils.text(tradeOffersText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 2 && NumberUtils.parseLong(handlingField(fields, 0)) == socketIndex) {
-                    long furnitureId = NumberUtils.parseLong(handlingField(fields, 1));
-                    if (furnitureId > 0L) {
-                        if (sqlIds.length() > 0) {
-                            sqlIds.append(',');
-                        }
-                        sqlIds.append('\'').append(furnitureId).append('\'');
+        for (RepresentedTradeOffer offer : representedTradeOffers(tradeOffersText)) {
+            if (offer.fieldCount() >= 2 && offer.socketIndex() == socketIndex) {
+                if (offer.furnitureId() > 0L) {
+                    if (sqlIds.length() > 0) {
+                        sqlIds.append(',');
                     }
+                    sqlIds.append('\'').append(offer.furnitureId()).append('\'');
                 }
             }
         }
@@ -10107,18 +10128,13 @@ public final class Handling {
             return "";
         }
         StringBuilder logItems = new StringBuilder();
-        for (String row : StringUtils.text(tradeOffersText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 3 && NumberUtils.parseLong(handlingField(fields, 0)) == socketIndex) {
-                    long furnitureId = NumberUtils.parseLong(handlingField(fields, 1));
-                    long productId = NumberUtils.parseLong(handlingField(fields, 2));
-                    if (furnitureId > 0L) {
-                        if (logItems.length() > 0) {
-                            logItems.append('\1');
-                        }
-                        logItems.append(furnitureId).append(':').append(productId);
+        for (RepresentedTradeOffer offer : representedTradeOffers(tradeOffersText)) {
+            if (offer.fieldCount() >= 3 && offer.socketIndex() == socketIndex) {
+                if (offer.furnitureId() > 0L) {
+                    if (logItems.length() > 0) {
+                        logItems.append('\1');
                     }
+                    logItems.append(offer.furnitureId()).append(':').append(offer.productId());
                 }
             }
         }
@@ -10131,21 +10147,46 @@ public final class Handling {
             return result;
         }
         StringBuilder payload = new StringBuilder();
-        for (String row : StringUtils.text(tradeOffersText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 5 && NumberUtils.parseLong(handlingField(fields, 0)) == socketIndex) {
-                    payload.append(inventoryItemPayload(
-                        NumberUtils.parseLong(handlingField(fields, 1)),
-                        NumberUtils.parseLong(handlingField(fields, 2)),
-                        handlingField(fields, 3),
-                        NumberUtils.parseLong(handlingField(fields, 4))));
-                    result.itemCount++;
-                }
+        for (RepresentedTradeOffer offer : representedTradeOffers(tradeOffersText)) {
+            if (offer.fieldCount() >= 5 && offer.socketIndex() == socketIndex) {
+                payload.append(inventoryItemPayload(
+                    offer.furnitureId(),
+                    offer.productId(),
+                    offer.signText(),
+                    offer.secondaryValue()));
+                result.itemCount++;
             }
         }
         result.payload = payload.toString();
         return result;
+    }
+
+    public static List<RepresentedTradeOffer> representedTradeOffers(String tradeOffersText) {
+        List<RepresentedTradeOffer> offers = new ArrayList<>();
+        for (String row : StringUtils.text(tradeOffersText).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                RepresentedTradeOffer offer = representedTradeOffer(row);
+                if (offer != null) {
+                    offers.add(offer);
+                }
+            }
+        }
+        return offers;
+    }
+
+    public static RepresentedTradeOffer representedTradeOffer(String rowText) {
+        String[] fields = StringUtils.text(rowText).split("\t", -1);
+        if (fields.length < 2) {
+            return null;
+        }
+        return new RepresentedTradeOffer(
+            NumberUtils.parseLong(StringUtils.field(fields, 0)),
+            NumberUtils.parseLong(StringUtils.field(fields, 1)),
+            NumberUtils.parseLong(StringUtils.field(fields, 2)),
+            StringUtils.field(fields, 3),
+            NumberUtils.parseLong(StringUtils.field(fields, 4)),
+            fields.length,
+            StringUtils.text(rowText));
     }
 
     public static String representedTradeOfferPayload(
