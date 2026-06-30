@@ -32,6 +32,7 @@ import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.room.RoomEventLocales;
 import com.alphaseries.game.room.RoomPortalSettings;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -1249,18 +1250,19 @@ public final class Boot {
 
     public static String buildRoomCategoryPayload(List<RoomDao.RoomCategoryRow> categoryRows, long rankIndex, long hcLevel) {
         long categoryCount = 0L;
-        StringBuilder categoryPayload = new StringBuilder();
+        PacketBuilder categoryPayload = PacketBuilder.create();
         if (categoryRows != null) {
             for (RoomDao.RoomCategoryRow row : categoryRows) {
                 if (row != null && rankIndex >= row.minimumRank() && hcLevel >= row.minimumHcRank()) {
-                    categoryPayload.append(Crypto.encodeVl64(row.categoryId()));
-                    categoryPayload.append(StringUtils.text(row.name())).append('\2');
-                    categoryPayload.append(Crypto.encodeVl64(row.trading()));
+                    categoryPayload
+                        .appendInt(row.categoryId())
+                        .appendString(row.name())
+                        .appendInt(row.trading());
                     categoryCount++;
                 }
             }
         }
-        return Crypto.encodeVl64(categoryCount) + categoryPayload;
+        return PacketBuilder.create().appendInt(categoryCount).appendRaw(categoryPayload.build()).build();
     }
 
     public static String buildImportantFaqPayload(Map<Long, String> faqRowsByImportance) {
