@@ -16,6 +16,7 @@ import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
 import com.alphaseries.game.poll.PollQuestionRow;
+import com.alphaseries.game.moderation.StaffRoomVisitRow;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
@@ -2183,7 +2184,7 @@ public final class PortedModuleSmokeTest {
         expectedVisit = Crypto.Proc_3_0_6D2AF0(7, null, expectedVisit);
         expectedVisit = Crypto.Proc_3_0_6D2AF0(12, null, expectedVisit);
         expectedVisit = Crypto.Proc_3_0_6D2AF0(30, null, expectedVisit) + "Room\2";
-        assertEquals(expectedVisit, Handling.staffRoomVisitPayload("1\t7\tRoom\t12\t30"));
+        assertEquals(expectedVisit, Handling.staffRoomVisitPayload(new StaffRoomVisitRow(1L, 7L, "Room", 12L, 30L)));
         assertEquals(123L, Handling.staffNestedUserIdFromWire("@C123"));
         assertEquals(77L, Handling.staffNestedUserIdFromWire(Crypto.Proc_3_0_6D2AF0(77, null, "")));
         String staffChatRows = "10\t5\t7\tAlice\thello\r11\t6\t8\tBob\thi";

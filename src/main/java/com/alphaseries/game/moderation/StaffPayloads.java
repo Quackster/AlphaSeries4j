@@ -128,17 +128,6 @@ public final class StaffPayloads {
             .build();
     }
 
-    public static String roomVisit(String rowText) {
-        String[] fields = StringUtils.text(rowText).split("\t", -1);
-        return PacketBuilder.create()
-            .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 0)))
-            .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 1)))
-            .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 3)))
-            .appendInt(NumberUtils.parseLong(StringUtils.field(fields, 4)))
-            .appendString(StringUtils.field(fields, 2))
-            .build();
-    }
-
     public static String roomVisit(StaffRoomVisitRow row) {
         return PacketBuilder.create()
             .appendInt(row.modelType())

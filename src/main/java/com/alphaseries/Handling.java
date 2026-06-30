@@ -12146,10 +12146,6 @@ public final class Handling {
         return StaffPayloads.userSummary(rowText, callForHelpCount, pickedCallForHelpCount, cautionCount, banCount);
     }
 
-    public static String staffRoomVisitPayload(String rowText) {
-        return StaffPayloads.roomVisit(rowText);
-    }
-
     public static String staffRoomVisitPayload(StaffRoomVisitRow row) {
         return StaffPayloads.roomVisit(row);
     }

@@ -316,6 +316,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed social badge row-text payload wrappers plus the dead `BadgeRow` tab-delimited parser; badge payload construction now uses typed badge records.
 - Removed Jukebox song-info, playlist, and disk-inventory row-text payload wrappers plus dead tab-delimited Jukebox record parsers.
 - Removed the activity-point balance row-text payload wrapper and dead `ActivityPointBalance.fromLegacy` parser; balance payloads now use typed DAO records only.
+- Removed the staff room-visit row-text payload wrapper; room-visit payloads now use typed `StaffRoomVisitRow` records.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -331,7 +332,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12373 lines
+- `Handling.java`: 12369 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
 - `Main.java`: 894 lines
