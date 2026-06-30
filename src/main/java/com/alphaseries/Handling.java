@@ -10561,17 +10561,18 @@ public final class Handling {
     }
 
     public static String representedBotRoomEntryPayload(long botEntityId) {
-        long botId = representedBotRecordLong(botEntityId, 1);
-        if (botEntityId <= 0L || botId <= 0L) {
+        RepresentedBotRegistry.RepresentedBotRecord bot = Licence.representedBots().record(botEntityId);
+        if (botEntityId <= 0L || bot.botId() <= 0L) {
             return "";
         }
-        String botName = representedBotRecordField(botEntityId, 2);
-        long positionX = representedBotRecordLong(botEntityId, 6);
-        long positionY = representedBotRecordLong(botEntityId, 7);
-        String positionZ = representedBotRecordField(botEntityId, 8);
-        long positionR = representedBotRecordLong(botEntityId, 9);
-        String botFigure = representedBotRecordField(botEntityId, 10);
-        return PetPayloads.representedBotRoomEntry(botEntityId, botName, positionX, positionY, positionZ, positionR, botFigure);
+        return PetPayloads.representedBotRoomEntry(
+            botEntityId,
+            bot.name(),
+            bot.positionX(),
+            bot.positionY(),
+            bot.positionZ(),
+            bot.positionR(),
+            bot.figure());
     }
 
     public static String representedRoomUserProfilePayload(RoomUserProfileRow row) {

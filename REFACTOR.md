@@ -452,6 +452,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `GiftSettings.empty()` and routed null club-gift payload defaults away from `GiftSettings.fromLegacy("", "", "", "")`; legacy gift parsing now remains at the `Licence` bridge.
 - Added `UpdaterSettings.normalizeUpdateSql(...)` and routed updater SQL normalization away from constructing a legacy settings object; legacy updater settings parsing now remains at the `Licence` bridge.
 - Removed the dead `Functions.representedBotRecordField(...)` root wrapper; represented-bot cache field access now stays behind the typed registry/handler compatibility boundaries.
+- Added typed `RepresentedBotRegistry.RepresentedBotRecord` reads and routed represented-bot room-entry payload construction away from numeric cache field indexes.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -468,7 +469,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11522 lines
+- `Handling.java`: 11523 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 908 lines

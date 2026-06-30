@@ -69,6 +69,10 @@ public final class RepresentedBotRegistry {
         return recordCache.substring(recordStart, recordEnd);
     }
 
+    public RepresentedBotRecord record(long botEntityId) {
+        return RepresentedBotRecord.fromFields(recordText(botEntityId).split("\2", -1));
+    }
+
     public String recordField(long botEntityId, long fieldIndex) {
         String[] fields = recordText(botEntityId).split("\2", -1);
         return fieldIndex >= 0L && fieldIndex < fields.length ? fields[(int) fieldIndex] : "";
@@ -173,6 +177,55 @@ public final class RepresentedBotRegistry {
         private Record(long entityId, String[] fields) {
             this.entityId = entityId;
             this.fields = fields;
+        }
+    }
+
+    public record RepresentedBotRecord(
+        long roomSlot,
+        long botId,
+        String name,
+        String motto,
+        String speech,
+        String responses,
+        long positionX,
+        long positionY,
+        String positionZ,
+        long positionR,
+        String figure,
+        long handleId,
+        long handleActionId,
+        String cacheAction,
+        String speechSubmit,
+        long allowWalk,
+        long maxFieldsAway
+    ) {
+        private static RepresentedBotRecord fromFields(String[] fields) {
+            return new RepresentedBotRecord(
+                number(fields, 0),
+                number(fields, 1),
+                field(fields, 2),
+                field(fields, 3),
+                field(fields, 4),
+                field(fields, 5),
+                number(fields, 6),
+                number(fields, 7),
+                field(fields, 8),
+                number(fields, 9),
+                field(fields, 10),
+                number(fields, 11),
+                number(fields, 12),
+                field(fields, 13),
+                field(fields, 14),
+                number(fields, 15),
+                number(fields, 16));
+        }
+
+        private static String field(String[] fields, int index) {
+            return StringUtils.field(fields, index);
+        }
+
+        private static long number(String[] fields, int index) {
+            return NumberUtils.parseLong(field(fields, index));
         }
     }
 }
