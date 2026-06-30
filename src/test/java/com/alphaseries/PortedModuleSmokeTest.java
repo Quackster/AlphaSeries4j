@@ -1231,6 +1231,11 @@ public final class PortedModuleSmokeTest {
         assertEquals("ACH_ONE", ((String[][]) Licence.global_008291E8)[0][1]);
         assertEquals("7\2", Licence.achievementSettings().questIdPayload());
         assertEquals(true, Licence.achievementSettings().rowsAsText().contains("ACH_ONE"));
+        AchievementSettings typedAchievementSettings = AchievementSettings.fromAchievements("42\2",
+            List.of(new AchievementSettings.Achievement(42L, "ACH_TYPED", 1L, 2L, 3L, 4L, 5L)));
+        Licence.global_008291E8 = typedAchievementSettings;
+        assertEquals("42\2", Licence.achievementSettings().questIdPayload());
+        assertEquals("ACH_TYPED", Licence.achievementSettings().achievementByIndex(0L).badgePrefix());
         assertEquals(new ChatSettings.Gesture(":-)", 5L), ((List<?>) Licence.global_00829294).get(0));
         assertEquals(new ChatSettings.FilterWord("badword"), ((List<?>) Licence.global_00829290).get(0));
         assertChatSettingsTypedAccessors(Licence.chatSettings());

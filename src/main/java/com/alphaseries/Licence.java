@@ -329,11 +329,7 @@ public final class Licence {
     }
 
     public static AchievementSettings achievementSettings() {
-        if (global_008291E8 instanceof AchievementSettings achievementSettings) {
-            AchievementState.instance().setSettings(achievementSettings);
-        } else {
-            AchievementState.instance().setSettingsFromLegacy(global_008291E4, global_008291E8);
-        }
+        AchievementState.instance().setSettingsFromLegacy(global_008291E4, global_008291E8);
         return AchievementState.instance().settings();
     }
 
