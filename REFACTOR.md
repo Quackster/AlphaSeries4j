@@ -438,6 +438,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed no-op messenger search-result and represented room-user status payload wrappers from `Handling`; callers and tests now use `MessengerPayloads`/`SocialPayloads` directly.
 - Removed no-op wardrobe, represented-chat, and poll payload wrappers from `Handling`; handlers and tests now call `UserPayloads`/`PollPayloads` directly.
 - Removed no-op staff moderation payload wrappers from `Handling`; live moderation callers and tests now call `StaffPayloads` directly while retaining only the legacy chat-row result adapter.
+- Removed the unused `String[]` jukebox row exporter from `Handling`; live jukebox paths use typed `JukeboxRow` lookups through `jukeboxRowForRoom`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -454,7 +455,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11527 lines
+- `Handling.java`: 11521 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 889 lines

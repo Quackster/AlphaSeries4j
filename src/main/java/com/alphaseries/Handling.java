@@ -11106,12 +11106,6 @@ public final class Handling {
         return request;
     }
 
-    public static String[] jukeboxRow(long roomId) {
-        return jukeboxRowForRoom(roomId)
-            .map(row -> new String[]{String.valueOf(row.id()), String.valueOf(row.productId())})
-            .orElse(new String[0]);
-    }
-
     public static java.util.Optional<JukeboxRow> jukeboxRowForRoom(long roomId) {
         if (roomId <= 0L) {
             return java.util.Optional.empty();
