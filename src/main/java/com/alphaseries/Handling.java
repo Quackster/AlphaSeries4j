@@ -12228,11 +12228,25 @@ public final class Handling {
             return "";
         }
         try {
-            List<String> rows = new ArrayList<>();
+            List<QuestSettings.QuestDefinitionRow> rows = new ArrayList<>();
             for (QuestDao.QuestDefinition quest : quests.questDefinitions()) {
-                rows.add(quest.legacyRow());
+                if (quest != null) {
+                    rows.add(new QuestSettings.QuestDefinitionRow(
+                        quest.questId(),
+                        quest.level(),
+                        quest.name(),
+                        quest.legacyNullSlot(),
+                        quest.reward(),
+                        quest.rewardType(),
+                        quest.requiredAction(),
+                        quest.additionalId(),
+                        quest.campaignId(),
+                        quest.activityAmount(),
+                        quest.waitAmount(),
+                        11));
+                }
             }
-            return String.join("\r", rows);
+            return QuestSettings.fromDefinitions(rows).rows();
         } catch (Exception ignored) {
             return "";
         }

@@ -8,24 +8,45 @@ import java.util.List;
 
 public final class QuestSettings {
     private final String rows;
+    private final List<QuestDefinitionRow> definitions;
 
-    private QuestSettings(String rows) {
+    private QuestSettings(String rows, List<QuestDefinitionRow> definitions) {
         this.rows = StringUtils.text(rows);
+        this.definitions = definitions == null ? List.of() : List.copyOf(definitions);
     }
 
-    public static QuestSettings fromLegacy(String rows) {
-        return new QuestSettings(rows);
+    public static QuestSettings fromLegacy(Object rows) {
+        if (rows instanceof QuestSettings questSettings) {
+            return questSettings;
+        }
+        return new QuestSettings(StringUtils.text(rows), List.of());
+    }
+
+    public static QuestSettings fromDefinitions(List<QuestDefinitionRow> definitions) {
+        return new QuestSettings("", definitions);
     }
 
     public String rows() {
-        return rows;
+        if (!rows.isEmpty()) {
+            return rows;
+        }
+        List<String> rowTexts = new ArrayList<>();
+        for (QuestDefinitionRow definition : definitions) {
+            if (definition != null) {
+                rowTexts.add(definition.toLegacyRow());
+            }
+        }
+        return String.join("\r", rowTexts);
     }
 
     public boolean hasRows() {
-        return !rows.isEmpty();
+        return !rows.isEmpty() || !definitions.isEmpty();
     }
 
     public List<QuestDefinitionRow> definitions() {
+        if (!definitions.isEmpty()) {
+            return definitions;
+        }
         List<QuestDefinitionRow> definitions = new ArrayList<>();
         for (String row : rows.split("\r", -1)) {
             QuestDefinitionRow definition = questDefinition(row);
@@ -133,6 +154,11 @@ public final class QuestSettings {
         long waitAmount,
         int fieldCount
     ) {
+        private String toLegacyRow() {
+            return questId + "\t" + level + "\t" + StringUtils.text(name) + "\t" + StringUtils.text(legacyNullSlot)
+                + "\t" + reward + "\t" + rewardType + "\t" + StringUtils.text(requiredAction) + "\t"
+                + additionalId + "\t" + campaignId + "\t" + activityAmount + "\t" + waitAmount;
+        }
     }
 
     public record UserQuestListRow(

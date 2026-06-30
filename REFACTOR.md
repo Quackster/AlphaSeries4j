@@ -332,6 +332,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed visit-room advertisement startup cache building through typed `AdvertisingDao.VisitRoomAdRow` records, removing the `id\taddress` join/split round trip and the DAO legacy row formatter.
 - Routed FAQ important/category/description startup cache building through typed `HelpDao` FAQ records, removing FAQ row join/split round trips and DAO legacy row formatters from the boot path.
 - Routed settings startup cache building through typed `SettingsDao.SettingRow` records, removing the `variable\tvalue` join/split round trip and DAO legacy row formatter from the boot path.
+- Moved boot-loaded quest definitions into typed `QuestSettings.QuestDefinitionRow` state, removing the quest DAO legacy row formatter and keeping row serialization only at the remaining compatibility accessor.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -346,8 +347,8 @@ Measured on 2026-06-30:
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
-- `Boot.java`: 2038 lines
-- `Handling.java`: 12272 lines
+- `Boot.java`: 2056 lines
+- `Handling.java`: 12286 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 894 lines

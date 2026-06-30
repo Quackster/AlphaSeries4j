@@ -20,9 +20,11 @@ import com.alphaseries.game.pet.PetCommandCacheRow;
 import com.alphaseries.game.pet.PetLevelCacheRow;
 import com.alphaseries.game.pet.PetRaceCacheRow;
 import com.alphaseries.game.pet.PetSettings;
+import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -339,16 +341,16 @@ public final class Boot {
             }
         }
         Functions.setSettingsCache(buildSettingsCache(settingsRows, systemDate, systemTime));
-        String questRows = "";
+        List<QuestSettings.QuestDefinitionRow> questRows = List.of();
         QuestDao quests = questDao();
         if (quests != null) {
             try {
-                questRows = joinQuestRows(quests.questDefinitions());
+                questRows = questDefinitionRows(quests.questDefinitions());
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        Licence.setQuestRows(questRows);
+        Licence.setQuestDefinitions(questRows);
     }
 
     public static void Proc_1_10_6C7690(Object... args) {
@@ -1951,19 +1953,35 @@ public final class Boot {
         return joined.toString();
     }
 
-    private static String joinQuestRows(List<QuestDao.QuestDefinition> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (QuestDao.QuestDefinition row : rows == null ? List.<QuestDao.QuestDefinition>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
-    }
-
     private static void appendLegacyRow(StringBuilder joined, String rowText) {
         if (joined.length() > 0) {
             joined.append('\r');
         }
         joined.append(StringUtils.text(rowText));
+    }
+
+    private static List<QuestSettings.QuestDefinitionRow> questDefinitionRows(List<QuestDao.QuestDefinition> rows) {
+        List<QuestSettings.QuestDefinitionRow> definitions = new ArrayList<>();
+        if (rows != null) {
+            for (QuestDao.QuestDefinition row : rows) {
+                if (row != null) {
+                    definitions.add(new QuestSettings.QuestDefinitionRow(
+                        row.questId(),
+                        row.level(),
+                        row.name(),
+                        row.legacyNullSlot(),
+                        row.reward(),
+                        row.rewardType(),
+                        row.requiredAction(),
+                        row.additionalId(),
+                        row.campaignId(),
+                        row.activityAmount(),
+                        row.waitAmount(),
+                        11));
+                }
+            }
+        }
+        return definitions;
     }
 
     private static CatalogDao catalogDao() {

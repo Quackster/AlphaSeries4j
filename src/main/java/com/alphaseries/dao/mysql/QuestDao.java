@@ -222,14 +222,5 @@ public final class QuestDao {
         long activityAmount,
         long waitAmount
     ) {
-        public String legacyRow() {
-            return questId + "\t" + level + "\t" + text(name) + "\t" + text(legacyNullSlot) + "\t"
-                + reward + "\t" + rewardType + "\t" + text(requiredAction) + "\t" + additionalId + "\t"
-                + campaignId + "\t" + activityAmount + "\t" + waitAmount;
-        }
-
-        private static String text(String value) {
-            return value == null ? "" : value;
-        }
     }
 }

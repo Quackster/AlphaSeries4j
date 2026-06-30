@@ -92,7 +92,7 @@ public final class Licence {
     public static String global_00829040 = "";
     public static String global_00829044 = "";
     public static String global_00829048 = "";
-    public static String global_00829080 = "";
+    public static Object global_00829080 = "";
     public static Object global_0082908C = "";
     public static LocalDateTime global_00829090 = null;
     public static String global_00829098 = "";
@@ -449,7 +449,11 @@ public final class Licence {
     }
 
     public static void setQuestRows(String questRows) {
-        global_00829080 = StringUtils.text(questRows);
+        global_00829080 = QuestSettings.fromLegacy(questRows);
+    }
+
+    public static void setQuestDefinitions(List<QuestSettings.QuestDefinitionRow> questDefinitions) {
+        global_00829080 = QuestSettings.fromDefinitions(questDefinitions);
     }
 
     public static WiredSettings wiredSettings() {

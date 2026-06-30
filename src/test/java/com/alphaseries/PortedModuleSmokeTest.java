@@ -29,6 +29,7 @@ import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
 import com.alphaseries.game.moderation.StaffRoomVisitRow;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
+import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.trade.RepresentedTradeOffer;
 import com.alphaseries.game.user.OwnProfileRow;
@@ -4104,6 +4105,11 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         String liveQuestRows = "10\t1\tFirst\t\t5\t2\tvisit\t0\t7\t3\t30\r11\t2\tSecond\t\t6\t2\tvisit\t0\t7\t4\t0";
         Licence.global_00829080 = liveQuestRows;
+        assertEquals(liveQuestRows, Licence.questSettings().rows());
+        Licence.setQuestDefinitions(List.of(
+            new QuestSettings.QuestDefinitionRow(10L, 1L, "First", "", 5L, 2L, "visit", 0L, 7L, 3L, 30L, 11),
+            new QuestSettings.QuestDefinitionRow(11L, 2L, "Second", "", 6L, 2L, "visit", 0L, 7L, 4L, 0L, 11)));
+        assertEquals(true, Licence.global_00829080 instanceof QuestSettings);
         assertEquals(liveQuestRows, Licence.questSettings().rows());
         String questListPayload = Handling.Proc_6_236_7F8540(4);
         assertEquals(Handling.questListPayload(liveQuestRows, "10\t0\t0\t1\t0\t1\t0"), questListPayload);
