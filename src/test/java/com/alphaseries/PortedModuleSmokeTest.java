@@ -1098,6 +1098,12 @@ public final class PortedModuleSmokeTest {
         assertEquals("7\t8\t9\tffeeaa", typedCatalogProducts.petPackageRows());
         assertEquals("\r33\t2\t1\r", typedCatalogProducts.clubProductRows());
         assertEquals("\r\r", CatalogProductSettings.fromRows("", 0L, 0L, List.of(), List.of(), List.of()).clubProductRows());
+        CatalogProductSettings legacyCatalogProducts = CatalogProductSettings.fromLegacy(
+            "1\t2", 10L, 11L, "10\ti\t20\t", "7\t8\t9\tffeeaa", "33");
+        assertEquals("10\ti\t20\t", legacyCatalogProducts.packageRows());
+        assertEquals("7\t8\t9\tffeeaa", legacyCatalogProducts.petPackageRows());
+        assertEquals(true, legacyCatalogProducts.containsClubProduct(33L));
+        assertEquals("33", legacyCatalogProducts.clubProductRows());
         assertEquals("AD" + Crypto.Proc_3_0_6D2AF0(2, null, ""), CatalogPayloads.purchaseError(2));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, Crypto.Proc_3_0_6D2AF0(81, null, "In")) + '\2',
             CatalogPayloads.giftAvailability(81, 1));

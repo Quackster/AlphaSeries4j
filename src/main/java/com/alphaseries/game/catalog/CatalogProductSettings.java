@@ -12,12 +12,9 @@ public final class CatalogProductSettings {
     private final String counterProductIds;
     private final long teleportProductId;
     private final long moodlightProductId;
-    private final String legacyPackageRows;
-    private final String legacyPetPackageRows;
-    private final String legacyClubProductRows;
     private final List<PackageDao.PackageRow> packageRows;
     private final List<PackageDao.PetPackageRow> petPackageRows;
-    private final List<ClubDao.ContainedClubProductRow> clubProductRows;
+    private final List<ClubProductSetting> clubProductRows;
     private final boolean typedClubProductRows;
 
     private CatalogProductSettings(
@@ -31,9 +28,6 @@ public final class CatalogProductSettings {
         this.counterProductIds = StringUtils.text(counterProductIds);
         this.teleportProductId = Math.max(0L, teleportProductId);
         this.moodlightProductId = Math.max(0L, moodlightProductId);
-        this.legacyPackageRows = packageRows instanceof List<?> ? "" : StringUtils.text(packageRows);
-        this.legacyPetPackageRows = petPackageRows instanceof List<?> ? "" : StringUtils.text(petPackageRows);
-        this.legacyClubProductRows = clubProductRows instanceof List<?> ? "" : StringUtils.text(clubProductRows);
         this.packageRows = parsePackageRows(packageRows);
         this.petPackageRows = parsePetPackageRows(petPackageRows);
         this.clubProductRows = parseClubProductRows(clubProductRows);
@@ -51,12 +45,9 @@ public final class CatalogProductSettings {
         this.counterProductIds = StringUtils.text(counterProductIds);
         this.teleportProductId = Math.max(0L, teleportProductId);
         this.moodlightProductId = Math.max(0L, moodlightProductId);
-        this.legacyPackageRows = "";
-        this.legacyPetPackageRows = "";
-        this.legacyClubProductRows = "";
         this.packageRows = copyRows(packageRows);
         this.petPackageRows = copyRows(petPackageRows);
-        this.clubProductRows = copyRows(clubProductRows);
+        this.clubProductRows = clubProductSettings(clubProductRows);
         this.typedClubProductRows = true;
     }
 
@@ -109,7 +100,7 @@ public final class CatalogProductSettings {
             }
             return joined.toString();
         }
-        return legacyPackageRows;
+        return "";
     }
 
     public String petPackageRows() {
@@ -121,21 +112,25 @@ public final class CatalogProductSettings {
             }
             return joined.toString();
         }
-        return legacyPetPackageRows;
+        return "";
     }
 
     public String clubProductRows() {
         if (typedClubProductRows) {
             StringBuilder joined = new StringBuilder("\r");
-            for (ClubDao.ContainedClubProductRow row : clubProductRows) {
-                joined.append(row.productId()).append('\t').append(row.months()).append('\t').append(row.level()).append('\r');
+            for (ClubProductSetting row : clubProductRows) {
+                joined.append(row.serialized()).append('\r');
             }
             if (joined.length() == 1) {
                 joined.append('\r');
             }
             return joined.toString();
         }
-        return legacyClubProductRows;
+        StringBuilder joined = new StringBuilder();
+        for (ClubProductSetting row : clubProductRows) {
+            appendRow(joined, row.serialized());
+        }
+        return joined.toString();
     }
 
     public boolean containsClubProduct(long productId) {
@@ -143,14 +138,14 @@ public final class CatalogProductSettings {
             return false;
         }
         if (!clubProductRows.isEmpty()) {
-            for (ClubDao.ContainedClubProductRow row : clubProductRows) {
+            for (ClubProductSetting row : clubProductRows) {
                 if (row.productId() == productId) {
                     return true;
                 }
             }
             return false;
         }
-        return legacyClubProductRows.contains("\r" + productId + "\r");
+        return false;
     }
 
     public boolean containsCounterProduct(long productId) {
@@ -180,6 +175,20 @@ public final class CatalogProductSettings {
             }
             return List.copyOf(parsedRows);
         }
+        List<PackageDao.PackageRow> parsedRows = new ArrayList<>();
+        for (String row : StringUtils.text(packageRows).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                parsedRows.add(new PackageDao.PackageRow(
+                    NumberUtils.parseLong(StringUtils.field(fields, 0)),
+                    StringUtils.field(fields, 1),
+                    NumberUtils.parseLong(StringUtils.field(fields, 2)),
+                    StringUtils.field(fields, 3)));
+            }
+        }
+        if (!parsedRows.isEmpty()) {
+            return List.copyOf(parsedRows);
+        }
         return List.of();
     }
 
@@ -193,17 +202,40 @@ public final class CatalogProductSettings {
             }
             return List.copyOf(parsedRows);
         }
+        List<PackageDao.PetPackageRow> parsedRows = new ArrayList<>();
+        for (String row : StringUtils.text(petPackageRows).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                String[] fields = row.split("\t", -1);
+                parsedRows.add(new PackageDao.PetPackageRow(
+                    NumberUtils.parseLong(StringUtils.field(fields, 0)),
+                    NumberUtils.parseLong(StringUtils.field(fields, 1)),
+                    NumberUtils.parseLong(StringUtils.field(fields, 2)),
+                    StringUtils.field(fields, 3)));
+            }
+        }
+        if (!parsedRows.isEmpty()) {
+            return List.copyOf(parsedRows);
+        }
         return List.of();
     }
 
-    private static List<ClubDao.ContainedClubProductRow> parseClubProductRows(Object clubProductRows) {
+    private static List<ClubProductSetting> parseClubProductRows(Object clubProductRows) {
         if (clubProductRows instanceof List<?> rows) {
-            List<ClubDao.ContainedClubProductRow> parsedRows = new ArrayList<>();
+            List<ClubProductSetting> parsedRows = new ArrayList<>();
             for (Object value : rows) {
                 if (value instanceof ClubDao.ContainedClubProductRow row) {
-                    parsedRows.add(row);
+                    parsedRows.add(ClubProductSetting.fromRow(row));
                 }
             }
+            return List.copyOf(parsedRows);
+        }
+        List<ClubProductSetting> parsedRows = new ArrayList<>();
+        for (String row : StringUtils.text(clubProductRows).split("\r", -1)) {
+            if (!row.isEmpty()) {
+                parsedRows.add(ClubProductSetting.fromLegacy(row));
+            }
+        }
+        if (!parsedRows.isEmpty()) {
             return List.copyOf(parsedRows);
         }
         return List.of();
@@ -211,5 +243,41 @@ public final class CatalogProductSettings {
 
     private static <T> List<T> copyRows(List<T> rows) {
         return rows == null ? List.of() : List.copyOf(rows);
+    }
+
+    private static List<ClubProductSetting> clubProductSettings(List<ClubDao.ContainedClubProductRow> rows) {
+        if (rows == null) {
+            return List.of();
+        }
+        List<ClubProductSetting> settings = new ArrayList<>();
+        for (ClubDao.ContainedClubProductRow row : rows) {
+            settings.add(ClubProductSetting.fromRow(row));
+        }
+        return List.copyOf(settings);
+    }
+
+    private record ClubProductSetting(long productId, long months, long level, int fieldCount) {
+        private static ClubProductSetting fromRow(ClubDao.ContainedClubProductRow row) {
+            return new ClubProductSetting(row.productId(), row.months(), row.level(), 3);
+        }
+
+        private static ClubProductSetting fromLegacy(String row) {
+            String[] fields = StringUtils.text(row).split("\t", -1);
+            return new ClubProductSetting(
+                NumberUtils.parseLong(StringUtils.field(fields, 0)),
+                NumberUtils.parseLong(StringUtils.field(fields, 1)),
+                NumberUtils.parseLong(StringUtils.field(fields, 2)),
+                fields.length);
+        }
+
+        private String serialized() {
+            if (fieldCount <= 1) {
+                return String.valueOf(productId);
+            }
+            if (fieldCount == 2) {
+                return productId + "\t" + months;
+            }
+            return productId + "\t" + months + "\t" + level;
+        }
     }
 }

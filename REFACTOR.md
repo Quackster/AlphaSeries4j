@@ -538,6 +538,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `CatalogPages` internals from raw indexed payload and tree objects to typed page-payload maps and defensive page-tree matrices, leaving legacy array/map parsing only at the catalog state boundary.
 - Migrated `RoomCategoryCache` internals from raw row, default-category, and payload objects to typed default arrays, `RoomCategoryRow` lists, and defensive payload matrices, leaving legacy row text and matrix parsing only at the navigator state boundary.
 - Migrated `CatalogProductSettings` internals from raw package/product objects to typed package, pet-package, and contained-club row lists, keeping legacy row text only for compatibility inputs.
+- Migrated `CatalogProductSettings` legacy package, pet-package, and contained-club row text into typed records at construction, removing retained raw row-string storage while preserving compatibility serialization.
 - Migrated `ProductCache` internals from raw legacy-row object storage to a parsed typed row map, keeping legacy row parsing only at the constructor/factory boundary.
 - Migrated `AchievementSettings` internals from raw row objects to indexed typed achievement rows, keeping legacy row parsing only at the achievement state boundary.
 - Migrated `PetSettings` internals from raw level/command row objects to typed pet-level and pet-command row lists, keeping legacy array serialization only at compatibility accessors.
