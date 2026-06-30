@@ -307,7 +307,7 @@ public final class Handling {
             if (socketIndex > 0) {
                 sendToSocket(socketIndex, payload);
             } else {
-                Proc_6_249_802F10(payload, 0, 0);
+                broadcastToStaffModerators(payload);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -4825,7 +4825,7 @@ public final class Handling {
                         || productAction.contains("score") || productSprite.contains("score") || productSprite.contains("dice")) {
                         long stateValue = NumberUtils.parseLong(row.sign());
                         Proc_6_151_78AC20(rowRoomId, furnitureId, stateValue);
-                        Proc_6_246_8024C0(rowRoomId, FurniturePayloads.stateChanged(furnitureId, stateValue), 0);
+                        broadcastToRoomUsers(rowRoomId, FurniturePayloads.stateChanged(furnitureId, stateValue));
                         refreshCount++;
                     }
                 }
@@ -5079,7 +5079,7 @@ public final class Handling {
             }
             Proc_6_151_78AC20(roomId, furnitureId, stateValue);
             String payload = FurniturePayloads.stateChanged(furnitureId, stateValue);
-            Proc_6_246_8024C0(roomId, payload, 0);
+            broadcastToRoomUsers(roomId, payload);
             if (productType == 11L || lowerSprite.contains("soundmachine") || lowerSprite.contains("jukebox")) {
                 Proc_6_224_7EF5A0(0, roomId, furnitureId);
             }
@@ -6149,14 +6149,14 @@ public final class Handling {
             }
             if (!commandAction.action.isEmpty()) {
                 String payload = petCommandActionPayload(botEntityId, commandAction.action, commandId);
-                Proc_6_248_802B80(roomId, payload, 0);
+                broadcastToRoomUsers(roomId, payload);
             }
             if (pet.energy() < 250L || pet.nutrition() < 250L) {
                 String commandSpeech = Functions.randomLongInclusive(0, 2) == 0L
                     ? Functions.settingsCache().valueOrDefault("com.client.bot.pet.sad.speech", "gst thr")
                     : Functions.settingsCache().valueOrDefault("com.client.bot.pet.angry.speech", "gst grr");
                 if (!commandSpeech.isEmpty()) {
-                    Proc_6_248_802B80(roomId, petSpeechPayload(botEntityId, commandSpeech), 0);
+                    broadcastToRoomUsers(roomId, petSpeechPayload(botEntityId, commandSpeech));
                 }
             } else {
                 Proc_6_185_7CC2D0(botEntityId, commandId * 10L, 0);
@@ -6210,13 +6210,13 @@ public final class Handling {
             if (update.leveledUp && petState.roomId() > 0L) {
                 String levelSpeech = Functions.settingsCache().valueOrDefault("com.client.bot.pet.level_up.speech", "gst sml");
                 if (!levelSpeech.isEmpty()) {
-                    Proc_6_248_802B80(petState.roomId(), petSpeechPayload(botEntityId, levelSpeech), 0);
+                    broadcastToRoomUsers(petState.roomId(), petSpeechPayload(botEntityId, levelSpeech));
                 }
             }
             bots.updatePetExperience(botId, update.petLevel, update.petExperience);
             if (petState.roomId() > 0L) {
-                Proc_6_248_802B80(petState.roomId(), update.statusPayload, 0);
-                Proc_6_248_802B80(petState.roomId(), update.experiencePayload, 0);
+                broadcastToRoomUsers(petState.roomId(), update.statusPayload);
+                broadcastToRoomUsers(petState.roomId(), update.experiencePayload);
             }
             return update.petLevel;
         } catch (Exception ignored) {
@@ -6380,7 +6380,7 @@ public final class Handling {
             for (String entityIdText : entityList.split("\r", -1)) {
                 long botEntityId = NumberUtils.parseLong(entityIdText);
                 if (botEntityId > 0L) {
-                    Proc_6_248_802B80(roomId, PetPayloads.removedFromRoom(botEntityId), 0);
+                    broadcastToRoomUsers(roomId, PetPayloads.removedFromRoom(botEntityId));
                     removeRepresentedBotRecord(botEntityId);
                     removedCount++;
                 }
@@ -7319,7 +7319,7 @@ public final class Handling {
                 return "";
             }
             if (roomId > 0L) {
-                Proc_6_246_8024C0(roomId, payload, 0);
+                broadcastToRoomUsers(roomId, payload);
             } else {
                 broadcastToCurrentRoom(socketIndex, payload);
             }
@@ -8174,6 +8174,9 @@ public final class Handling {
         MusConnectionManager.instance().sendData(socketIndex, StringUtils.text(payload) + '\1');
     }
 
+    /**
+     * Original function: Proc_6_245_801FA0.
+     */
     public static long Proc_6_245_801FA0(Object... args) {
         if (args == null || args.length < 2) {
             return 0L;
@@ -8213,6 +8216,9 @@ public final class Handling {
         return broadcastToRoomUsers(roomId, payload);
     }
 
+    /**
+     * Original function: Proc_6_248_802B80.
+     */
     public static long Proc_6_248_802B80(Object... args) {
         if (args == null || args.length < 2) {
             return 0L;
@@ -8220,6 +8226,9 @@ public final class Handling {
         return broadcastToRoomUsers(NumberUtils.parseLong(args[0]), StringUtils.text(args[1]));
     }
 
+    /**
+     * Original function: Proc_6_249_802F10.
+     */
     public static long Proc_6_249_802F10(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
@@ -8557,6 +8566,9 @@ public final class Handling {
         }
     }
 
+    /**
+     * Original function: Proc_6_249_802F10.
+     */
     public static long broadcastToStaffModerators(String payload) {
         if (StringUtils.text(payload).isEmpty()) {
             return 0L;
@@ -8686,7 +8698,7 @@ public final class Handling {
                     sendToSocket(socketIndex, payload);
                 }
             } else {
-                Proc_6_245_801FA0(socketIndex, payload, 0);
+                broadcastToCurrentRoom(socketIndex, payload);
             }
             return payload;
         } catch (Exception ignored) {
@@ -11035,7 +11047,7 @@ public final class Handling {
                 try {
                     furniture.updateSignLimited(furnitureId, stateValue);
                     Proc_6_151_78AC20(roomId, furnitureId, stateValue);
-                    Proc_6_246_8024C0(roomId, FurniturePayloads.stateChanged(furnitureId, stateValue), 0);
+                    broadcastToRoomUsers(roomId, FurniturePayloads.stateChanged(furnitureId, stateValue));
                     appliedCount++;
                 } catch (Exception ignored) {
                     // VB6 source suppresses helper failures.
