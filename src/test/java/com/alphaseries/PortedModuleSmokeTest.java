@@ -4913,6 +4913,10 @@ public final class PortedModuleSmokeTest {
     private static void assertCatalogProductCounterRows(CatalogProductSettings settings) {
         assertEquals("1\t2", settings.counterProductIds());
         assertEquals(List.of(1L, 2L), settings.counterProducts());
+        assertEquals(List.of(new PackageDao.PackageRow(10L, "i", 20L, "")), settings.packages());
+        assertEquals(List.of(new PackageDao.PetPackageRow(7L, 8L, 9L, "ffeeaa")), settings.petPackages());
+        assertEquals(List.of(new CatalogProductSettings.ClubProductSetting(33L, 2L, 1L, 3)),
+            settings.clubProducts());
         assertEquals(true, settings.containsCounterProduct(2L));
         CatalogProductSettings typedCounterProducts = CatalogProductSettings.fromCounterProductIds(
             List.of(4L, 5L), 0L, 0L, List.of(), List.of(), List.of());

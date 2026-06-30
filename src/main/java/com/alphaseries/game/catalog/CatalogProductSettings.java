@@ -118,6 +118,10 @@ public final class CatalogProductSettings {
         return moodlightProductId;
     }
 
+    public List<PackageDao.PackageRow> packages() {
+        return List.copyOf(packageRows);
+    }
+
     public String packageRows() {
         if (!packageRows.isEmpty()) {
             StringBuilder joined = new StringBuilder();
@@ -130,6 +134,10 @@ public final class CatalogProductSettings {
         return "";
     }
 
+    public List<PackageDao.PetPackageRow> petPackages() {
+        return List.copyOf(petPackageRows);
+    }
+
     public String petPackageRows() {
         if (!petPackageRows.isEmpty()) {
             StringBuilder joined = new StringBuilder();
@@ -140,6 +148,10 @@ public final class CatalogProductSettings {
             return joined.toString();
         }
         return "";
+    }
+
+    public List<ClubProductSetting> clubProducts() {
+        return List.copyOf(clubProductRows);
     }
 
     public String clubProductRows() {
@@ -318,7 +330,7 @@ public final class CatalogProductSettings {
         }
     }
 
-    private record ClubProductSetting(long productId, long months, long level, int fieldCount) {
+    public record ClubProductSetting(long productId, long months, long level, int fieldCount) {
         private static ClubProductSetting fromRow(ClubDao.ContainedClubProductRow row) {
             return new ClubProductSetting(row.productId(), row.months(), row.level(), 3);
         }

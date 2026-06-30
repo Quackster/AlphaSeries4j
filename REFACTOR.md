@@ -558,6 +558,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `CatalogProductSettings` internals from raw package/product objects to typed package, pet-package, and contained-club row lists, keeping legacy row text only for compatibility inputs.
 - Migrated `CatalogProductSettings` legacy package, pet-package, and contained-club row text into typed records at construction, removing retained raw row-string storage while preserving compatibility serialization.
 - Migrated `CatalogProductSettings` counter-product storage from a retained tab-delimited string to typed counter-product rows with defensive typed ID access and compatibility serialization.
+- Exposed defensive typed `CatalogProductSettings` package, pet-package, and club-product row accessors so callers can move away from legacy row-text serializers.
 - Migrated `ProductCache` internals from raw legacy-row object storage to a parsed typed row map, keeping legacy row parsing only at the constructor/factory boundary.
 - Migrated `ProductCache` row storage from raw field lists to typed `ProductRow` records with defensive row access for future callers moving off column-index compatibility.
 - Migrated `AchievementSettings` internals from raw row objects to indexed typed achievement rows, keeping legacy row parsing only at the achievement state boundary.
