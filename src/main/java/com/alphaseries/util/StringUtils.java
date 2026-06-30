@@ -38,4 +38,23 @@ public final class StringUtils {
         int end = Math.min(text.length(), start + maxLength);
         return text.substring(start, end);
     }
+
+    public static String removeLineRecord(String cacheText, String markerText) {
+        String cache = text(cacheText);
+        String marker = text(markerText);
+        if (cache.isEmpty() || marker.isEmpty()) {
+            return cache;
+        }
+        cache = cache.replace("\r", "");
+        StringBuilder rebuilt = new StringBuilder();
+        for (String rowText : cache.split("\n", -1)) {
+            if (!rowText.isEmpty() && !rowText.contains(marker)) {
+                if (rebuilt.length() > 0) {
+                    rebuilt.append('\n');
+                }
+                rebuilt.append(rowText);
+            }
+        }
+        return rebuilt.toString();
+    }
 }

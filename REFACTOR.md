@@ -316,6 +316,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed dead `Main` represented-cache compatibility helpers; tests now read represented-bot record text through `RepresentedBotRegistry`.
 - Removed dead `Handling` represented-room record/remove wrappers; tests now use `RepresentedRoomCache` directly.
 - Removed dead `Handling` represented-room movement wrappers; tests now use `RepresentedRoomCache.moveOccupant(...)` and `movementPosition(...)` directly.
+- Moved line-record cache removal into shared `StringUtils.removeLineRecord(...)`, replacing duplicate represented/wired cache helpers.
 - Removed the legacy poll payload row-string wrapper; poll payload construction now accepts typed `PollDefinition` data only.
 - Removed the dead public `Handling.handlingField(...)` compatibility shim after all indexed-field call sites had moved to typed records or explicit helpers.
 - Removed the legacy inventory payload row-string wrapper; inventory list payload construction now accepts typed `InventoryItemRow` data only.
@@ -489,7 +490,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11396 lines
+- `Handling.java`: 11377 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 850 lines

@@ -76,6 +76,7 @@ import com.alphaseries.messages.outgoing.VoucherPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.PacketReader;
 import com.alphaseries.protocol.WireEncoding;
+import com.alphaseries.util.StringUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1531,7 +1532,7 @@ public final class PortedModuleSmokeTest {
         String complexPayload = Handling.Proc_6_29_70D800(1, 2, 3, 4, "four", 5, "six", "seven", 8, "nine", 10, "eleven");
         assertEquals(true, complexPayload.endsWith("eleven\2"));
         assertEquals(true, complexPayload.contains("four\2"));
-        assertEquals("keep\nalso", Handling.removeRepresentedLineRecord("keep\r\nremove-this\nalso", "remove"));
+        assertEquals("keep\nalso", StringUtils.removeLineRecord("keep\r\nremove-this\nalso", "remove"));
         assertEquals("\1" + "1\talpha\2", RepresentedRoomCache.removeRecord("\1" + "1\talpha\2\1" + "2\tbeta\2", "\1" + "2\t"));
         assertEquals("2\tbeta", RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2\1" + "2\tbeta\2").record(2));
         assertEquals("3", RepresentedRoomCache.fromLegacy("\1" + "3\2").record(3));

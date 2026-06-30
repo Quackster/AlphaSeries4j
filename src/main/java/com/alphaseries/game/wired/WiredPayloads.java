@@ -95,7 +95,7 @@ public final class WiredPayloads {
         if (record.isEmpty()) {
             return StringUtils.text(cacheText);
         }
-        String cache = removeLineRecord(cacheText, recordMarker(record));
+        String cache = StringUtils.removeLineRecord(cacheText, recordMarker(record));
         return cache.isEmpty() ? record : record + '\n' + cache;
     }
 
@@ -135,25 +135,6 @@ public final class WiredPayloads {
             }
         }
         return result;
-    }
-
-    private static String removeLineRecord(String cacheText, String markerText) {
-        String cache = StringUtils.text(cacheText);
-        String marker = StringUtils.text(markerText);
-        if (cache.isEmpty() || marker.isEmpty()) {
-            return cache;
-        }
-        cache = cache.replace("\r", "");
-        StringBuilder rebuilt = new StringBuilder();
-        for (String rowText : cache.split("\n", -1)) {
-            if (!rowText.isEmpty() && !rowText.contains(marker)) {
-                if (rebuilt.length() > 0) {
-                    rebuilt.append('\n');
-                }
-                rebuilt.append(rowText);
-            }
-        }
-        return rebuilt.toString();
     }
 
     private static boolean containsDelimitedId(String idText, long wantedId) {

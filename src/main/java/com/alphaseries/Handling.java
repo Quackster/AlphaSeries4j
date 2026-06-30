@@ -8801,25 +8801,6 @@ public final class Handling {
         }
     }
 
-    public static String removeRepresentedLineRecord(String cacheText, String markerText) {
-        String cache = StringUtils.text(cacheText);
-        String marker = StringUtils.text(markerText);
-        if (cache.isEmpty() || marker.isEmpty()) {
-            return cache;
-        }
-        cache = cache.replace("\r", "");
-        StringBuilder rebuilt = new StringBuilder();
-        for (String rowText : cache.split("\n", -1)) {
-            if (!rowText.isEmpty() && !rowText.contains(marker)) {
-                if (rebuilt.length() > 0) {
-                    rebuilt.append('\n');
-                }
-                rebuilt.append(rowText);
-            }
-        }
-        return rebuilt.toString();
-    }
-
     public static String handlingEnsureRoomCacheFile(String cachePath) {
         if (StringUtils.text(cachePath).isEmpty()) {
             return "";
