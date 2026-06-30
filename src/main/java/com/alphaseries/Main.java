@@ -638,7 +638,7 @@ public final class Main {
     }
 
     public static long mainRepresentedSocketRoomSlot(long socketIndex) {
-        long roomSlot = Licence.Proc_9_10_808F30(String.valueOf(socketIndex), 1, 0);
+        long roomSlot = Licence.sessionCacheLong(String.valueOf(socketIndex), 1);
         if (roomSlot > 0L) {
             return roomSlot;
         }
@@ -697,7 +697,7 @@ public final class Main {
         if (socketIndex <= 0L) {
             return 0L;
         }
-        long roomId = NumberUtils.parseLong(Licence.Proc_9_10_808F30(String.valueOf(socketIndex), 1, 0));
+        long roomId = Licence.sessionCacheLong(String.valueOf(socketIndex), 1);
         if (roomId > 0L) {
             return roomId;
         }

@@ -520,7 +520,7 @@ public final class Licence {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return sessionRegistry().linkedLong(StringUtils.text(args[0]), true);
+        return linkedUserSocketIndex(StringUtils.text(args[0]));
     }
 
     public static long Proc_9_9_808AC0(Object... args) {
@@ -534,7 +534,7 @@ public final class Licence {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return sessionRegistry().cacheLong(StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
+        return sessionCacheLong(StringUtils.text(args[0]), optionalColumnIndex(args, 1, 0));
     }
 
     public static int optionalColumnIndex(Object[] args, int argumentIndex, int defaultValue) {
@@ -561,10 +561,24 @@ public final class Licence {
     }
 
     /**
+     * Original function: Proc_9_8_8086A0.
+     */
+    public static long linkedUserSocketIndex(String recordId) {
+        return sessionRegistry().linkedLong(StringUtils.text(recordId), true);
+    }
+
+    /**
      * Original function: Proc_9_9_808AC0.
      */
     public static long linkedSocketIndex(String recordId) {
         return sessionRegistry().linkedLong(StringUtils.text(recordId), false);
+    }
+
+    /**
+     * Original function: Proc_9_10_808F30.
+     */
+    public static long sessionCacheLong(String keyName, long columnIndex) {
+        return sessionRegistry().cacheLong(StringUtils.text(keyName), columnIndex);
     }
 
     public static void storeSocketSession(int socketIndex, String sessionRecord) {

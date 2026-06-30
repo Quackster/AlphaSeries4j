@@ -8115,7 +8115,7 @@ public final class Handling {
         if (idText.isEmpty() || "0".equals(idText)) {
             return 0;
         }
-        long socketIndex = Licence.Proc_9_8_8086A0(idText, 0, 0);
+        long socketIndex = Licence.linkedUserSocketIndex(idText);
         if (socketIndex <= 0L) {
             UserDao users = userDao();
             if (users != null) {
@@ -8130,7 +8130,7 @@ public final class Handling {
     }
 
     public static long handlingCurrentRoomId(int socketIndex, String userId) {
-        long roomId = Licence.Proc_9_10_808F30(String.valueOf(socketIndex), 1, 0);
+        long roomId = Licence.sessionCacheLong(String.valueOf(socketIndex), 1);
         if (roomId > 0L) {
             return roomId;
         }
