@@ -421,6 +421,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the pet inventory row `String[]` payload compatibility wrapper; inventory row payload construction now accepts typed `PetInventoryRow` records only.
 - Removed the represented pet status `String[]` payload compatibility wrapper; pet status payload construction now accepts typed `PetStatusRow` records only.
 - Removed navigator room/event/official `String[]` payload compatibility wrappers and dead `fromLegacyFields` factories; navigator payload construction now uses typed navigator records only.
+- Added typed `RepresentedBotEntry` records for represented-bot allocation and cache serialization, removing represented-bot field-array exporters and `Handling` indexed field helpers.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -437,7 +438,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11863 lines
+- `Handling.java`: 11842 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 889 lines

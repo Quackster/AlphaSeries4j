@@ -33,6 +33,7 @@ import com.alphaseries.game.pet.PetPlacementRow;
 import com.alphaseries.game.pet.PetScratchRow;
 import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.pet.PetStatusRow;
+import com.alphaseries.game.pet.RepresentedBotEntry;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollPrompt;
@@ -5794,7 +5795,9 @@ public final class Handling {
             if (pet == null) {
                 return 0L;
             }
-            long botEntityId = Proc_6_187_7CD700(roomSlot, pet.representedBotFields(positionX, positionY, positionZ, positionR), 0);
+            long botEntityId = allocateRepresentedBot(
+                roomSlot,
+                RepresentedBotEntry.from(pet, positionX, positionY, positionZ, positionR));
             if (botEntityId <= 0L) {
                 return 0L;
             }
@@ -6141,8 +6144,10 @@ public final class Handling {
                 return 0L;
             }
             long roomSlot = NumberUtils.parseLong(args[0]);
-            String[] botFields = RepresentedBotRegistry.fieldsFromLegacy(args[1]);
-            return allocateRepresentedBot(roomSlot, botFields);
+            RepresentedBotEntry botEntry = args[1] instanceof RepresentedBotEntry entry
+                ? entry
+                : RepresentedBotEntry.fromLegacy(args[1]);
+            return allocateRepresentedBot(roomSlot, botEntry);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
@@ -6189,7 +6194,7 @@ public final class Handling {
             if (guide == null) {
                 return 0L;
             }
-            long botEntityId = Proc_6_187_7CD700(roomSlot, guide.representedBotFields(), 0);
+            long botEntityId = allocateRepresentedBot(roomSlot, RepresentedBotEntry.from(guide));
             if (botEntityId > 0L) {
                 Proc_6_244_801E80(socketIndex, "@a" + "YjO", 0);
             }
@@ -8365,7 +8370,7 @@ public final class Handling {
         }
         try {
             for (BotRoomEntryRow row : bots.roomBotEntries(roomId)) {
-                allocateRepresentedBot(roomSlot, row.representedBotFields());
+                allocateRepresentedBot(roomSlot, RepresentedBotEntry.from(row));
             }
         } catch (Exception ignored) {
             // VB6 source suppresses bot loading failures.
@@ -10723,11 +10728,7 @@ public final class Handling {
         return botEntityId;
     }
 
-    public static String representedBotField(String[] botFields, long fieldIndex) {
-        return botFields != null && fieldIndex >= 0 && fieldIndex < botFields.length ? StringUtils.text(botFields[(int) fieldIndex]) : "";
-    }
-
-    public static long allocateRepresentedBot(long roomSlot, String[] botFields) {
+    public static long allocateRepresentedBot(long roomSlot, RepresentedBotEntry botEntry) {
         if (roomSlot <= 0L) {
             return 0L;
         }
@@ -10735,37 +10736,15 @@ public final class Handling {
         if (botEntityId <= 0L) {
             return 0L;
         }
-        storeRepresentedBotRecord(botEntityId, representedBotRecordFromFields(roomSlot, botFields));
+        storeRepresentedBotRecord(botEntityId, representedBotRecord(roomSlot, botEntry));
         return botEntityId;
     }
 
-    public static String representedBotRecordFromFields(long roomSlot, String[] botFields) {
-        long botId = NumberUtils.parseLong(representedBotField(botFields, 0));
-        String botName = representedBotField(botFields, 1);
-        String botMotto = representedBotField(botFields, 2);
-        String botSpeech = representedBotField(botFields, 3);
-        String botResponses = representedBotField(botFields, 4);
-        long positionX = NumberUtils.parseLong(representedBotField(botFields, 5));
-        long positionY = NumberUtils.parseLong(representedBotField(botFields, 6));
-        String positionZ = representedBotField(botFields, 7);
-        long positionR = NumberUtils.parseLong(representedBotField(botFields, 8));
-        String botFigure = representedBotField(botFields, 9);
-        long handleId = NumberUtils.parseLong(representedBotField(botFields, 11));
-        long handleActionId = NumberUtils.parseLong(representedBotField(botFields, 12));
-        String cacheAction = representedBotField(botFields, 13);
-        String speechSubmit = representedBotField(botFields, 14);
-        long allowWalk = NumberUtils.parseLong(representedBotField(botFields, 15));
-        long maxFieldsAway = NumberUtils.parseLong(representedBotField(botFields, 16));
-
-        return roomSlot + "\2" + botId + "\2"
-            + botName + '\2' + botMotto + '\2'
-            + botSpeech + '\2' + botResponses + '\2'
-            + positionX + "\2" + positionY + "\2"
-            + positionZ + '\2' + positionR + '\2'
-            + botFigure + '\2' + handleId + '\2'
-            + handleActionId + '\2' + cacheAction + '\2'
-            + speechSubmit + '\2' + allowWalk + '\2'
-            + maxFieldsAway;
+    public static String representedBotRecord(long roomSlot, RepresentedBotEntry botEntry) {
+        if (botEntry == null) {
+            return "";
+        }
+        return botEntry.recordText(roomSlot);
     }
 
     public static void storeRepresentedBotRecord(long botEntityId, String recordText) {

@@ -18,25 +18,4 @@ public record BotRoomEntryRow(
     long allowWalk,
     long maxFieldsAway
 ) {
-    public String[] representedBotFields() {
-        return new String[]{
-            String.valueOf(botId),
-            name,
-            motto,
-            speech,
-            responses,
-            String.valueOf(positionX),
-            String.valueOf(positionY),
-            positionZ,
-            String.valueOf(positionR),
-            figure,
-            "",
-            String.valueOf(handleId),
-            String.valueOf(handleActionId),
-            cacheAction,
-            speechSubmit,
-            String.valueOf(allowWalk),
-            String.valueOf(maxFieldsAway)
-        };
-    }
 }

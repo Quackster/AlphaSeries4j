@@ -28,6 +28,7 @@ import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.pet.PetStatusRow;
+import com.alphaseries.game.pet.RepresentedBotEntry;
 import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
@@ -2239,14 +2240,13 @@ public final class PortedModuleSmokeTest {
             Handling.petSpeechPayload(50, "gst sml"));
         Licence.global_008292D4 = "";
         Licence.global_00829358 = "";
-        String[] representedBotFields = new String[]{
-            "501", "Guide", "hello", "speech", "responses", "2", "3", "0.5", "4", "1 2 ff",
-            "", "3", "4", "cache", "submit", "1", "6"
-        };
+        RepresentedBotEntry representedBotEntry = new RepresentedBotEntry(
+            501L, "Guide", "hello", "speech", "responses", 2L, 3L, "0.5", 4L, "1 2 ff",
+            3L, 4L, "cache", "submit", 1L, 6L);
         assertEquals("3\2" + "501\2Guide\2hello\2speech\2responses\2" + "2\2" + "3\2" + "0.5\2" + "4\2"
             + "1 2 ff\2" + "3\2" + "4\2cache\2submit\2" + "1\2" + "6",
-            Handling.representedBotRecordFromFields(3, representedBotFields));
-        long botEntityId = Handling.allocateRepresentedBot(3, representedBotFields);
+            Handling.representedBotRecord(3, representedBotEntry));
+        long botEntityId = Handling.allocateRepresentedBot(3, representedBotEntry);
         assertEquals(1L, botEntityId);
         assertEquals("[1]", Licence.global_008292D4);
         assertEquals("501", Handling.representedBotRecordField(botEntityId, 1));

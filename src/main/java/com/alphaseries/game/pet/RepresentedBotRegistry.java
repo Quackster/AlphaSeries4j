@@ -19,13 +19,6 @@ public final class RepresentedBotRegistry {
         return new RepresentedBotRegistry(allocatedEntityMarkers, recordCache);
     }
 
-    public static String[] fieldsFromLegacy(Object fieldSource) {
-        if (fieldSource instanceof String[] fields) {
-            return fields;
-        }
-        return StringUtils.text(fieldSource).split("\t", -1);
-    }
-
     public String allocatedEntityMarkers() {
         return allocatedEntityMarkers;
     }
