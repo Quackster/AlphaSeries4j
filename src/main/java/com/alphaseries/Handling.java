@@ -6784,7 +6784,7 @@ public final class Handling {
             PollDefinition poll = polls.pollDefinition(pollId, roomId).orElse(null);
             String payload = PollPayloads.poll(poll);
             if (!payload.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, payload, 0);
+                sendToSocket(socketIndex, payload);
             }
             return payload;
         } catch (Exception ignored) {
@@ -6838,10 +6838,10 @@ public final class Handling {
             furniture.clearRecyclerItems(userIdValue, selection.selectedItemIds);
             furniture.insertRecyclerLog(userIdValue, selection.selectedItemIds, rewardProductId);
             for (long selectedFurnitureId : selection.selectedItemIds) {
-                Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(selectedFurnitureId), 0);
+                sendToSocket(socketIndex, InventoryMessagePayloads.remove(selectedFurnitureId));
             }
             String payload = RecyclerPayloads.reward(rewardProductId);
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6854,7 +6854,7 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             long enabledValue = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.recycler.enabled", 0));
             String payload = RecyclerPayloads.status(enabledValue, 0L);
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6892,7 +6892,7 @@ public final class Handling {
             users.insertBadge(userIdValue, badgeId);
             long badgeRowId = users.badgeRowId(userIdValue, badgeId);
             String payload = achievementRewardPayload(achievementIndex, achievement, badgeLevel, badgeRowId);
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             String awardPayload = achievementAwardPayload(achievement);
             if (!awardPayload.isEmpty()) {
                 users.addAchievementReward(
@@ -6900,7 +6900,7 @@ public final class Handling {
                     achievement.rewardType(),
                     achievement.rewardIncrease(),
                     achievement.scoreIncrease());
-                Proc_6_244_801E80(socketIndex, awardPayload, 0);
+                sendToSocket(socketIndex, awardPayload);
             }
             return payload;
         } catch (Exception ignored) {
@@ -6958,7 +6958,7 @@ public final class Handling {
                 return "";
             }
             String payload = achievementListPayload(achievements, achievementCurrentLevels(userId, achievements));
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7102,7 +7102,7 @@ public final class Handling {
             String payload = jukebox == null
                 ? JukeboxPayloads.songInfo(List.of())
                 : JukeboxPayloads.songInfo(jukebox.songInfoRows(request.requestedIdList, request.requestedCount));
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7179,7 +7179,7 @@ public final class Handling {
             jukebox.removeDiskFromOwner(userIdValue, request.diskFurnitureId, songDiskProductId);
             jukebox.addPlaylistEntry(jukeboxId, request.diskFurnitureId, request.playlistOrder, destinationId);
             String payload = InventoryMessagePayloads.remove(request.diskFurnitureId);
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             Proc_6_227_7F2400(socketIndex);
             Proc_6_228_7F2AF0(socketIndex);
             return payload;
@@ -7256,7 +7256,7 @@ public final class Handling {
                 playlistLimit = 100L;
             }
             String payload = JukeboxPayloads.playlist(playlistLimit, jukebox.playlistEntries(jukeboxId, playlistLimit));
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7280,7 +7280,7 @@ public final class Handling {
                 return "";
             }
             String payload = JukeboxPayloads.diskInventory(jukebox.songDisks(NumberUtils.parseLong(userId), songDiskProductId));
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7360,7 +7360,7 @@ public final class Handling {
                 genderText = "M";
             }
             String payload = UserPayloads.identityRefresh(numericUserId, mottoText, figureText, genderText);
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7385,7 +7385,7 @@ public final class Handling {
 
     public static String Proc_6_231_7F4510(Object... args) {
         try {
-            Proc_6_244_801E80(handlingSocketIndex(args), "Ic" + "IQA", 0);
+            sendToSocket(handlingSocketIndex(args), "Ic" + "IQA");
             return "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7492,7 +7492,7 @@ public final class Handling {
                 return "";
             }
             quests.resetUserQuests(NumberUtils.parseLong(userId));
-            Proc_6_244_801E80(socketIndex, "Lc", 0);
+            sendToSocket(socketIndex, "Lc");
             Proc_6_236_7F8540(socketIndex, "", "");
             return "";
         } catch (Exception ignored) {
@@ -7550,7 +7550,7 @@ public final class Handling {
             }
             String payload = QuestPayloads.list(questSettingsFromSource(),
                 userQuestRowsWithRemainingWait(quests, quests.listRows(NumberUtils.parseLong(userId))));
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7569,7 +7569,7 @@ public final class Handling {
                 .map(UserPayloads::ownProfile)
                 .orElse("");
             if (!payload.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, payload, 0);
+                sendToSocket(socketIndex, payload);
             }
             return payload;
         } catch (Exception ignored) {
@@ -7619,7 +7619,7 @@ public final class Handling {
                         sessionSeconds, pointType, intervalSeconds, maxPoints, awardAmount, currentPoints);
                     if (award.shouldAward) {
                         users.addActivityPoints(userIdValue, pointType, awardAmount);
-                        Proc_6_244_801E80(socketIndex, award.payload, 0);
+                        sendToSocket(socketIndex, award.payload);
                         sentPayloads.appendRaw(award.payload);
                     }
                 }
@@ -7679,7 +7679,7 @@ public final class Handling {
                     String targetUserIdText = String.valueOf(targetUserId);
                     int targetSocketIndex = handlingSocketFromUserId(targetUserIdText);
                     if (targetSocketIndex > 0) {
-                        Proc_6_244_801E80(targetSocketIndex, payload, 0);
+                        sendToSocket(targetSocketIndex, payload);
                         if (messenger != null) {
                             messenger.insertInviteChatLog(
                                 userIdValue,
@@ -7752,14 +7752,14 @@ public final class Handling {
                     if (targetSocketIndex > 0) {
                         String notifyPayload = MessengerPayloads.friendOnlineNotification(
                             messengerFriendSummaryPayload(userId, 1L));
-                        Proc_6_244_801E80(targetSocketIndex, notifyPayload, 0);
+                        sendToSocket(targetSocketIndex, notifyPayload);
                     }
                     acceptedCount++;
                 }
             }
             if (acceptedCount > 0L) {
                 String callerPayload = MessengerPayloads.acceptedFriends(payloadRows.build(), acceptedCount);
-                Proc_6_244_801E80(socketIndex, callerPayload, 0);
+                sendToSocket(socketIndex, callerPayload);
                 return callerPayload;
             }
             return "";
@@ -7801,7 +7801,7 @@ public final class Handling {
             }
             long targetRoomUserIndex = representedRoomUserIndex(targetSocketIndex, targetUserId);
             String payload = MessengerPayloads.followRoom(targetRoomUserIndex, targetRoomId);
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7880,7 +7880,7 @@ public final class Handling {
                 case "FH": Proc_6_150_777FA0(socketIndex, "FH", packetPayload); break;
                 case "@B": Proc_6_78_7279A0(socketIndex, "@B", packetPayload); break;
                 case "rv": Proc_6_142_76B310(socketIndex, "rv", packetPayload); break;
-                case "pa": Proc_6_244_801E80(socketIndex, "J|H", 0); break;
+                case "pa": sendToSocket(socketIndex, "J|H"); break;
                 case "Ce": dispatchPreReadySoundSetting(socketIndex, packetPayload); break;
                 case "Cy": break;
                 case "pb": Proc_6_234_7F75C0(socketIndex, "pb", packetPayload); break;
@@ -8053,9 +8053,8 @@ public final class Handling {
                 case "AE":
                 case "FS":
                 case "AF":
-                    Proc_6_244_801E80(socketIndex,
-                        StringUtils.text(Functions.settingsCache().valueOrDefault("com.client.park.infobus.theme.title", "AQ")) + '\2',
-                        0);
+                    sendToSocket(socketIndex,
+                        StringUtils.text(Functions.settingsCache().valueOrDefault("com.client.park.infobus.theme.title", "AQ")) + '\2');
                     break;
                 case "oL": Proc_7F44D0(socketIndex, "oL", packetPayload); break;
                 default:
@@ -8091,7 +8090,7 @@ public final class Handling {
     private static void dispatchPreReadyCatalogIndex(int socketIndex) {
         try {
             String pageTree = catalogPages().defaultPageTree();
-            Proc_6_244_801E80(socketIndex, "A~IHHM" + '\2' + pageTree, 0);
+            sendToSocket(socketIndex, "A~IHHM" + '\2' + pageTree);
         } catch (Exception ignored) {
             // VB6 source suppresses dispatcher helper failures.
         }
@@ -8373,7 +8372,7 @@ public final class Handling {
                 || handlingUserHasPermission(targetUserId, "fuse_unkickable")) {
                 return;
             }
-            Proc_6_244_801E80(targetSocketIndex, "@aXjO", 0);
+            sendToSocket(targetSocketIndex, "@aXjO");
             sendRoomReady(targetSocketIndex);
             if (addRoomBan) {
                 RoomDao rooms = roomDao();
@@ -8643,7 +8642,7 @@ public final class Handling {
                     commandPayload = legacyDynamicChatCommandPayload(messageText);
                 }
                 if (!commandPayload.isEmpty()) {
-                    Proc_6_244_801E80(socketIndex, commandPayload, 0);
+                    sendToSocket(socketIndex, commandPayload);
                     return commandPayload;
                 }
             }
@@ -8681,10 +8680,10 @@ public final class Handling {
             if (chatType == 2L) {
                 int targetSocketIndex = handlingSocketIndexForUserName(targetName);
                 if (targetSocketIndex > 0) {
-                    Proc_6_244_801E80(targetSocketIndex, payload, 0);
-                    Proc_6_244_801E80(socketIndex, payload, 0);
+                    sendToSocket(targetSocketIndex, payload);
+                    sendToSocket(socketIndex, payload);
                 } else {
-                    Proc_6_244_801E80(socketIndex, payload, 0);
+                    sendToSocket(socketIndex, payload);
                 }
             } else {
                 Proc_6_245_801FA0(socketIndex, payload, 0);
@@ -8767,7 +8766,7 @@ public final class Handling {
                 messageText,
                 socketIndex);
             if (targetSocketIndex > 0) {
-                Proc_6_244_801E80(targetSocketIndex, StaffPayloads.alert(messageText), 0);
+                sendToSocket(targetSocketIndex, StaffPayloads.alert(messageText));
                 if (kickAfterSend) {
                     sendRoomReady(targetSocketIndex);
                 }
@@ -8849,7 +8848,7 @@ public final class Handling {
                     targetUser,
                     rowCount,
                     rowPayload.build());
-                Proc_6_244_801E80(socketIndex, responsePayload, 0);
+                sendToSocket(socketIndex, responsePayload);
             } else {
                 List<StaffRoomVisitRow> visitRows = moderationDao.recentRoomVisits(targetUserId);
                 rowCount = visitRows.size();
@@ -8861,7 +8860,7 @@ public final class Handling {
                     targetUser,
                     rowCount,
                     rowPayload.build());
-                Proc_6_244_801E80(socketIndex, responsePayload, 0);
+                sendToSocket(socketIndex, responsePayload);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -9193,7 +9192,7 @@ public final class Handling {
                     placement.positionY,
                     positionZ,
                     placement.rotation);
-                Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(placement.furnitureId), 0);
+                sendToSocket(socketIndex, InventoryMessagePayloads.remove(placement.furnitureId));
             } else {
                 furniture.moveFloorFurniture(
                     placement.furnitureId,
@@ -10337,17 +10336,17 @@ public final class Handling {
             long campaignLevelCount = questSettings.campaignLevelCount(campaignId);
             String completionPayload = QuestPayloads.completion(campaignId, questName, campaignLevelCount, questId,
                 userQuestLevel, progressValue, activityCount);
-            Proc_6_244_801E80(socketIndex, "Lb" + completionPayload, 0);
+            sendToSocket(socketIndex, "Lb" + completionPayload);
             if (progressValue < activityCount) {
                 return "";
             }
             if (rewardAmount != 0L && rewardType >= 0L && rewardType <= 20L) {
                 long currentPoints = users.activityPoints(userIdValue, rewardType);
                 users.addActivityPointsLimited(userIdValue, rewardType, rewardAmount);
-                Proc_6_244_801E80(socketIndex, UserPayloads.activityPointAward(rewardType, currentPoints + rewardAmount), 0);
+                sendToSocket(socketIndex, UserPayloads.activityPointAward(rewardType, currentPoints + rewardAmount));
             }
             quests.completeQuest(userIdValue, questId);
-            Proc_6_244_801E80(socketIndex, "La" + completionPayload, 0);
+            sendToSocket(socketIndex, "La" + completionPayload);
             Proc_6_236_7F8540(socketIndex, "", "");
             return "";
         } catch (Exception ignored) {
