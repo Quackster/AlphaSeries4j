@@ -10,9 +10,12 @@ import com.alphaseries.game.room.RoomOccupantRow;
 import com.alphaseries.game.room.RoomUserEntryRow;
 import com.alphaseries.game.room.RoomUserProfileRow;
 import com.alphaseries.game.room.RoomUserTargetRow;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -210,7 +213,7 @@ public final class RoomDao {
                 resultSet.getLong(1),
                 resultSet.getString(2),
                 resultSet.getString(3),
-                resultSet.getLong(4),
+                resultSet.getString(4),
                 resultSet.getLong(5),
                 resultSet.getLong(6),
                 resultSet.getString(7),
@@ -1158,7 +1161,7 @@ public final class RoomDao {
         long roomId,
         String eventName,
         String ownerName,
-        long doorStatus,
+        String doorStatus,
         long visitorsNow,
         long visitorsMax,
         String description,
@@ -1170,6 +1173,45 @@ public final class RoomDao {
         String tagTwo,
         String formattedTime
     ) {
+        public static NavigatorEventRow fromLegacyFields(String[] fields) {
+            return new NavigatorEventRow(
+                number(fields, 0),
+                field(fields, 1),
+                field(fields, 2),
+                field(fields, 3),
+                number(fields, 4),
+                number(fields, 5),
+                field(fields, 6),
+                number(fields, 7),
+                number(fields, 9),
+                number(fields, 10),
+                field(fields, 11),
+                field(fields, 12),
+                field(fields, 13),
+                field(fields, 14));
+        }
+
+        public static NavigatorEventRow fromLegacy(String rowText) {
+            return fromLegacyFields(StringUtils.text(rowText).split("\t", -1));
+        }
+
+        public static List<NavigatorEventRow> listFromLegacy(String rowText) {
+            List<NavigatorEventRow> rows = new ArrayList<>();
+            for (String row : StringUtils.text(rowText).split("\r", -1)) {
+                if (!row.isEmpty()) {
+                    rows.add(fromLegacy(row));
+                }
+            }
+            return rows;
+        }
+
+        private static String field(String[] fields, int index) {
+            return StringUtils.field(fields, index);
+        }
+
+        private static long number(String[] fields, int index) {
+            return NumberUtils.parseLong(field(fields, index));
+        }
     }
 
     public record RoomEventInfo(
