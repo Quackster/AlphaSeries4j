@@ -48,6 +48,13 @@ public final class Filesystems {
         }
         long socketIndex = NumberUtils.parseLong(args[0]);
         String packetBuffer = StringUtils.text(args[1]);
+        processReadyPacketBuffer(socketIndex, packetBuffer);
+    }
+
+    /**
+     * Original function: Proc_7_2_803D60.
+     */
+    public static void processReadyPacketBuffer(long socketIndex, String packetBuffer) {
         if (!Guardian.isSocketConnected(socketIndex)) {
             return;
         }

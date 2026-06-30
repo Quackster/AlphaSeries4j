@@ -4353,7 +4353,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "DAQBHHIIKHJHPAHQA"));
         assertEquals(true, containsSend(handlingSends, "http://www.alpha-series.com/"));
         handlingSends.clear();
-        Filesystems.Proc_7_2_803D60(4, "x@BCN");
+        Filesystems.processReadyPacketBuffer(4, "x@BCN");
         assertEquals(true, containsSend(handlingSends, "DAQBHHIIKHJHPAHQA"));
         handlingSends.clear();
         handlingSql.clear();

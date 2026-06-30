@@ -160,7 +160,7 @@ public final class Main {
                 return;
             }
             if (isGameSessionReady(socketIndex)) {
-                Filesystems.Proc_7_2_803D60(socketIndex, packetData, 0);
+                Filesystems.processReadyPacketBuffer(socketIndex, packetData);
             } else {
                 preSessionPacketSink.send((int) socketIndex, packetData);
             }
