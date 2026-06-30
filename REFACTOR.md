@@ -406,6 +406,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved inventory add and catalog dimension-map send payload construction into typed payload builders, replacing inline string/legacy `Crypto` assembly in `Functions` and `Handling`.
 - Moved trade confirmation payload construction into `TradePayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved staff moderation panel `HS` envelope construction into `StaffPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
+- Moved staff moderation chat-log and room-info `HV`/`HW`/`HZ` response construction into typed `StaffPayloads` builders, removing local packet helper methods from `StaffModerationPacketHandlers`.
 
 ## VB Compatibility Class Removal Checklist
 

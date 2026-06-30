@@ -6,7 +6,6 @@ import com.alphaseries.MySQL;
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
-import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -39,7 +38,7 @@ public final class StaffModerationPacketHandlers {
             List<StaffRoomChatRow> chatRows = moderationDao.recentChatRowsBefore(room.roomId(), room.timestampSent());
             HandlingMUS.Proc_12_1_821AA0(
                 socketIndex,
-                "HV" + callForHelpChatLogPayload(callForHelpId, room, chatRows),
+                StaffPayloads.callForHelpChatLogResponse(callForHelpId, room, chatRows),
                 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -66,7 +65,7 @@ public final class StaffModerationPacketHandlers {
                 return;
             }
             List<StaffRoomChatRow> chatRows = moderationDao.recentChatRows(roomId);
-            HandlingMUS.Proc_12_1_821AA0(socketIndex, "HW" + roomChatLogHeader(room) + roomChatLogRows(chatRows), 0);
+            HandlingMUS.Proc_12_1_821AA0(socketIndex, StaffPayloads.roomChatLogResponse(room, chatRows), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -90,60 +89,10 @@ public final class StaffModerationPacketHandlers {
                 return;
             }
             StaffModerationDao.RoomEvent event = moderationDao.roomEvent(roomId).orElse(null);
-            HandlingMUS.Proc_12_1_821AA0(socketIndex, "HZ" + roomInfoPayload(room, event), 0);
+            HandlingMUS.Proc_12_1_821AA0(socketIndex, StaffPayloads.roomInfoResponse(room, event), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
-    }
-
-    private static String callForHelpChatLogPayload(
-        long callForHelpId,
-        StaffModerationDao.CallForHelpRoom room,
-        List<StaffRoomChatRow> chatRows
-    ) {
-        return PacketBuilder.create()
-            .appendInt(callForHelpId)
-            .appendInt(room.roomId())
-            .appendInt(room.modelType())
-            .appendInt(room.userId())
-            .appendInt(room.partnerId())
-            .appendString(room.roomName())
-            .appendRaw(roomChatLogRows(chatRows))
-            .build();
-    }
-
-    private static String roomChatLogHeader(StaffModerationDao.RoomChatHeader room) {
-        return PacketBuilder.create()
-            .appendInt(room.roomId())
-            .appendInt(room.modelType())
-            .appendString(room.roomName())
-            .build();
-    }
-
-    private static String roomChatLogRows(List<StaffRoomChatRow> chatRows) {
-        return StaffPayloads.roomChatRows(chatRows == null ? List.of() : chatRows).payload;
-    }
-
-    private static String roomInfoPayload(StaffModerationDao.RoomInfo room, StaffModerationDao.RoomEvent event) {
-        PacketBuilder payload = PacketBuilder.create()
-            .appendInt(room.roomId())
-            .appendInt(room.visitorsNow())
-            .appendInt(room.ownerId())
-            .appendString(room.ownerName())
-            .appendString(room.roomName())
-            .appendString(room.description())
-            .appendString(room.tag1())
-            .appendString(room.tag2());
-
-        boolean hasEvent = event != null;
-        payload.appendBoolean(hasEvent);
-        if (hasEvent) {
-            payload.appendString(event.name())
-                .appendString(event.description())
-                .appendString(event.tag1())
-                .appendString(event.tag2());
-        }
-        return payload.build();
     }
 
     private static StaffModerationDao staffModerationDao() {

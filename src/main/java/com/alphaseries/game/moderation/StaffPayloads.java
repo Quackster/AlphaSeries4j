@@ -1,5 +1,6 @@
 package com.alphaseries.game.moderation;
 
+import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.PacketReader;
 import com.alphaseries.util.StringUtils;
@@ -51,6 +52,53 @@ public final class StaffPayloads {
             .appendInt(0L)
             .appendRaw(moderationPayload)
             .build();
+    }
+
+    public static String callForHelpChatLogResponse(
+        long callForHelpId,
+        StaffModerationDao.CallForHelpRoom room,
+        List<StaffRoomChatRow> chatRows
+    ) {
+        return PacketBuilder.message("HV")
+            .appendInt(callForHelpId)
+            .appendInt(room.roomId())
+            .appendInt(room.modelType())
+            .appendInt(room.userId())
+            .appendInt(room.partnerId())
+            .appendString(room.roomName())
+            .appendRaw(roomChatRows(chatRows == null ? List.of() : chatRows).payload)
+            .build();
+    }
+
+    public static String roomChatLogResponse(StaffModerationDao.RoomChatHeader room, List<StaffRoomChatRow> chatRows) {
+        return PacketBuilder.message("HW")
+            .appendInt(room.roomId())
+            .appendInt(room.modelType())
+            .appendString(room.roomName())
+            .appendRaw(roomChatRows(chatRows == null ? List.of() : chatRows).payload)
+            .build();
+    }
+
+    public static String roomInfoResponse(StaffModerationDao.RoomInfo room, StaffModerationDao.RoomEvent event) {
+        PacketBuilder payload = PacketBuilder.message("HZ")
+            .appendInt(room.roomId())
+            .appendInt(room.visitorsNow())
+            .appendInt(room.ownerId())
+            .appendString(room.ownerName())
+            .appendString(room.roomName())
+            .appendString(room.description())
+            .appendString(room.tag1())
+            .appendString(room.tag2());
+
+        boolean hasEvent = event != null;
+        payload.appendBoolean(hasEvent);
+        if (hasEvent) {
+            payload.appendString(event.name())
+                .appendString(event.description())
+                .appendString(event.tag1())
+                .appendString(event.tag2());
+        }
+        return payload.build();
     }
 
     public static String callForHelpRow(StaffCallForHelpRow row, Map<Long, String> userNamesById) {

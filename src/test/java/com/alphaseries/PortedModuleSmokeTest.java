@@ -10,6 +10,7 @@ import com.alphaseries.dao.mysql.PackageDao;
 import com.alphaseries.dao.mysql.QuestDao;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.SettingsDao;
+import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryItemRow;
@@ -2625,6 +2626,28 @@ public final class PortedModuleSmokeTest {
         Handling.StaffChatRowsPayload staffChat = Handling.staffRoomChatRowsPayload(staffChatRows);
         assertEquals(2L, staffChat.chatCount);
         assertEquals(expectedStaffChatRows, staffChat.payload);
+        String expectedCallForHelpChatLogResponse = Crypto.Proc_3_0_6D2AF0(50, null, "HV");
+        expectedCallForHelpChatLogResponse = Crypto.Proc_3_0_6D2AF0(7, null, expectedCallForHelpChatLogResponse);
+        expectedCallForHelpChatLogResponse = Crypto.Proc_3_0_6D2AF0(1, null, expectedCallForHelpChatLogResponse);
+        expectedCallForHelpChatLogResponse = Crypto.Proc_3_0_6D2AF0(5, null, expectedCallForHelpChatLogResponse);
+        expectedCallForHelpChatLogResponse = Crypto.Proc_3_0_6D2AF0(6, null, expectedCallForHelpChatLogResponse);
+        expectedCallForHelpChatLogResponse += "Room\2" + expectedStaffChatRows;
+        assertEquals(expectedCallForHelpChatLogResponse, StaffPayloads.callForHelpChatLogResponse(
+            50L, new StaffModerationDao.CallForHelpRoom(7L, "Room", 1L, 5L, 6L, 1000L), staffChatRows));
+        String expectedRoomChatLogResponse = Crypto.Proc_3_0_6D2AF0(7, null, "HW");
+        expectedRoomChatLogResponse = Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomChatLogResponse);
+        expectedRoomChatLogResponse += "Room\2" + expectedStaffChatRows;
+        assertEquals(expectedRoomChatLogResponse, StaffPayloads.roomChatLogResponse(
+            new StaffModerationDao.RoomChatHeader(7L, "Room", 1L), staffChatRows));
+        String expectedRoomInfoResponse = Crypto.Proc_3_0_6D2AF0(7, null, "HZ");
+        expectedRoomInfoResponse = Crypto.Proc_3_0_6D2AF0(2, null, expectedRoomInfoResponse);
+        expectedRoomInfoResponse = Crypto.Proc_3_0_6D2AF0(5, null, expectedRoomInfoResponse);
+        expectedRoomInfoResponse += "Owner\2Room\2Desc\2tag1\2tag2\2";
+        expectedRoomInfoResponse = Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomInfoResponse);
+        expectedRoomInfoResponse += "Event\2Event desc\2etag1\2etag2\2";
+        assertEquals(expectedRoomInfoResponse, StaffPayloads.roomInfoResponse(
+            new StaffModerationDao.RoomInfo(7L, 2L, 5L, "Owner", "Room", "Desc", "tag1", "tag2"),
+            new StaffModerationDao.RoomEvent("Event", "Event desc", "etag1", "etag2")));
         String expectedStaffChatHistory = Crypto.Proc_3_0_6D2AF0(1, null, "");
         expectedStaffChatHistory = Crypto.Proc_3_0_6D2AF0(7, null, expectedStaffChatHistory);
         expectedStaffChatHistory = Crypto.Proc_3_0_6D2AF0(2, null, expectedStaffChatHistory) + "Room\2" + expectedStaffChatRows;
