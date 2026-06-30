@@ -8311,22 +8311,6 @@ public final class Handling {
         return Licence.staffSettings().moderationPayload(rankIndex, hcLevel);
     }
 
-    public static String indexedPayload(Object cache, long index) {
-        int idx = (int) index;
-        if (idx < 0) {
-            return "";
-        }
-        if (cache instanceof String[]) {
-            String[] values = (String[]) cache;
-            return idx < values.length ? StringUtils.text(values[idx]) : "";
-        }
-        if (cache instanceof Object[]) {
-            Object[] values = (Object[]) cache;
-            return idx < values.length ? StringUtils.text(values[idx]) : "";
-        }
-        return "";
-    }
-
     public static void ensureRepresentedRoomSlotPool() {
         RepresentedRoomSlots representedRoomSlots = Licence.representedRoomSlots();
         representedRoomSlots.ensureInitialized();
