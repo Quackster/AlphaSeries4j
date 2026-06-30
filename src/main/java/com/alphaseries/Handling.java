@@ -53,6 +53,7 @@ import com.alphaseries.game.session.SocketMarkerSet;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.trade.RepresentedInteractionPair;
 import com.alphaseries.game.trade.RepresentedTradeOffer;
+import com.alphaseries.game.trade.TradePayloads;
 import com.alphaseries.game.user.ExpiredUserEffectRow;
 import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.game.user.UserEffectActivationRow;
@@ -9739,10 +9740,13 @@ public final class Handling {
         }
         TradeOfferItemPayload sourceItems = representedTradeOfferItemPayload(tradeOffers, sourceSocketIndex);
         TradeOfferItemPayload targetItems = representedTradeOfferItemPayload(tradeOffers, targetSocketIndex);
-        String payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(sourceUserId), null, "Al");
-        payload = Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(targetUserId), null, payload);
-        payload = Crypto.Proc_3_0_6D2AF0(sourceItems.itemCount, null, payload) + sourceItems.payload;
-        return Crypto.Proc_3_0_6D2AF0(targetItems.itemCount, null, payload) + targetItems.payload;
+        return TradePayloads.confirmation(
+            NumberUtils.parseLong(sourceUserId),
+            NumberUtils.parseLong(targetUserId),
+            sourceItems.itemCount,
+            sourceItems.payload,
+            targetItems.itemCount,
+            targetItems.payload);
     }
 
     public static InventoryPayloads inventoryPayloadsFromInventory(InventoryMessagePayloads.InventoryList inventory) {

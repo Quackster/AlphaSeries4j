@@ -42,6 +42,7 @@ import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.trade.RepresentedTradeOffer;
+import com.alphaseries.game.trade.TradePayloads;
 import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.game.user.UserGroupRow;
@@ -1829,6 +1830,7 @@ public final class PortedModuleSmokeTest {
         expectedTradePayload = Crypto.Proc_3_0_6D2AF0(6, null, expectedTradePayload);
         expectedTradePayload = Crypto.Proc_3_0_6D2AF0(2, null, expectedTradePayload) + expectedSourceTradeItems;
         expectedTradePayload = Crypto.Proc_3_0_6D2AF0(1, null, expectedTradePayload) + expectedTargetTradeItems;
+        assertEquals(expectedTradePayload, TradePayloads.confirmation(5, 6, 2, expectedSourceTradeItems, 1, expectedTargetTradeItems));
         assertEquals(expectedTradePayload, Handling.representedTradeOfferPayload(tradeOffers, 2, 3, "5", "6"));
         List<RepresentedTradeOffer> removedSingleTradeOffer = Handling.representedTradeOfferRemove(tradeOffers, 2, 101);
         assertEquals(2, removedSingleTradeOffer.size());
