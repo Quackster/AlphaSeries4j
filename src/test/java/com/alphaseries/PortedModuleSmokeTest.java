@@ -680,6 +680,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("u5", Licence.Proc_9_6_808080(5, 0));
         assertEquals(6L, Licence.Proc_9_7_808320("bob", 1));
         assertEquals(7L, Licence.Proc_9_10_808F30("room", 0));
+        Licence.global_00829268 = "\2" + "91]14\0";
+        assertEquals(14L, Licence.linkedSocketIndex("91"));
 
         String[] cache = new String[12];
         Boot.cacheRowsById(cache, "10\t100\tchair\r11\t200\ttable");

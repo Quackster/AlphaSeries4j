@@ -482,6 +482,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `server.mus.MusConnectionManager` and `server.mus.MusPayloads` for MUS packet dispatch/payload construction, leaving `HandlingMUS` as the legacy Proc compatibility boundary and deleting the dead `Handling_MUS` pass-through class.
 - Migrated live MUS send callers and runtime sink wiring from `HandlingMUS.Proc_12_*`/`configureMusSink` to `MusConnectionManager`; `HandlingMUS` remains only as a legacy Proc compatibility boundary covered by tests.
 - Migrated live movement callers from `Functions.Proc_10_24_80E790(...)`/`Proc_10_26_81E4E0(...)` to `MovementStep.between(...)` and removed those root compatibility wrappers.
+- Added named `Licence.linkedSocketIndex(...)` over `SessionRegistry` and migrated `Functions` socket lookup callers away from `Licence.Proc_9_9_808AC0(...)`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -503,7 +504,7 @@ Measured on 2026-06-30:
 - `MySQL.java`: 177 lines
 - `Main.java`: 818 lines
 - `Updater.java`: 314 lines
-- `Licence.java`: 703 lines
+- `Licence.java`: 710 lines
 - `HandlingMUS.java`: 37 lines
 - `AlphaSeriesRuntime.java`: 235 lines
 

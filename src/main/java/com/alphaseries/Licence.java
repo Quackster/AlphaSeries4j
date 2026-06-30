@@ -527,7 +527,7 @@ public final class Licence {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        return sessionRegistry().linkedLong(StringUtils.text(args[0]), false);
+        return linkedSocketIndex(StringUtils.text(args[0]));
     }
 
     public static long Proc_9_10_808F30(Object... args) {
@@ -558,6 +558,13 @@ public final class Licence {
 
     public static String getSessionLinkedValue(String recordId, boolean useBracketCount) {
         return sessionRegistry().linkedValue(recordId, useBracketCount);
+    }
+
+    /**
+     * Original function: Proc_9_9_808AC0.
+     */
+    public static long linkedSocketIndex(String recordId) {
+        return sessionRegistry().linkedLong(StringUtils.text(recordId), false);
     }
 
     public static void storeSocketSession(int socketIndex, String sessionRecord) {

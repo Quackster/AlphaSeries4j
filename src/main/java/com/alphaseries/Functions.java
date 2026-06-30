@@ -237,7 +237,7 @@ public final class Functions {
             if (!updatedCache.equals(trimInventoryCache(cacheText))) {
                 Handling.Proc_6_240_7FC2B0(cachePath, updatedCache);
             }
-            long socketIndex = Licence.Proc_9_9_808AC0(ownerId, 0, 0);
+            long socketIndex = Licence.linkedSocketIndex(String.valueOf(ownerId));
             if (socketIndex > 0L) {
                 MusConnectionManager.instance().sendData((int) socketIndex,
                     inventoryAddPayload(furnitureId, productId, itemData, secondaryValue));
@@ -272,7 +272,7 @@ public final class Functions {
             if (!updatedCache.equals(trimInventoryCache(cacheText))) {
                 Handling.Proc_6_240_7FC2B0(cachePath, updatedCache);
             }
-            long socketIndex = Licence.Proc_9_9_808AC0(ownerId, 0, 0);
+            long socketIndex = Licence.linkedSocketIndex(String.valueOf(ownerId));
             if (socketIndex > 0L) {
                 MusConnectionManager.instance().sendData((int) socketIndex, inventoryRemovePayload(furnitureId));
             }
@@ -303,7 +303,7 @@ public final class Functions {
             if (userId.isEmpty()) {
                 return 0L;
             }
-            long socketIndex = Licence.Proc_9_9_808AC0(userId);
+            long socketIndex = Licence.linkedSocketIndex(userId);
             if (socketIndex == 0L) {
                 return 0L;
             }
@@ -324,7 +324,7 @@ public final class Functions {
             if (userId.isEmpty()) {
                 return 0L;
             }
-            long socketIndex = Licence.Proc_9_9_808AC0(userId);
+            long socketIndex = Licence.linkedSocketIndex(userId);
             if (socketIndex == 0L) {
                 return 0L;
             }
@@ -382,7 +382,7 @@ public final class Functions {
             if (userId.isEmpty()) {
                 return 0L;
             }
-            long socketIndex = Licence.Proc_9_9_808AC0(userId);
+            long socketIndex = Licence.linkedSocketIndex(userId);
             if (socketIndex <= 0L) {
                 return 0L;
             }
@@ -437,7 +437,7 @@ public final class Functions {
             long numericUserId = NumberUtils.parseLong(userId);
             UserDao userDao = userDao();
             userDao.markEmailValidated(numericUserId);
-            long socketIndex = Licence.Proc_9_9_808AC0(userId, 0, 0);
+            long socketIndex = Licence.linkedSocketIndex(userId);
             if (socketIndex <= 0L) {
                 return 0L;
             }
@@ -469,7 +469,7 @@ public final class Functions {
             long userId = identity.userId();
             long socketIndex = identity.socketIndex();
             if (socketIndex <= 0L) {
-                socketIndex = Licence.Proc_9_9_808AC0(String.valueOf(userId), 0, 0);
+                socketIndex = Licence.linkedSocketIndex(String.valueOf(userId));
             }
             if (socketIndex <= 0L) {
                 return 0L;
