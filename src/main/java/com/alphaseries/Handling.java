@@ -5195,23 +5195,12 @@ public final class Handling {
             if (wallPayload.startsWith("rv")) {
                 wallPayload = wallPayload.substring(2);
             }
-            String[] itemFields = new String[0];
+            FurnitureDao.InventoryPlacementFurniture placementFurniture = null;
             if (args != null && args.length >= 3) {
-                Object itemArg = args[2];
-                if (itemArg instanceof String[]) {
-                    itemFields = (String[]) itemArg;
-                } else if (itemArg instanceof Object[]) {
-                    Object[] values = (Object[]) itemArg;
-                    itemFields = new String[values.length];
-                    for (int index = 0; index < values.length; index++) {
-                        itemFields[index] = StringUtils.text(values[index]);
-                    }
-                } else {
-                    itemFields = StringUtils.text(itemArg).split("\t", -1);
-                }
+                placementFurniture = wallPlacementFurnitureArg(args[2]);
             }
-            long furnitureId = NumberUtils.parseLong(handlingField(itemFields, 1));
-            long productId = NumberUtils.parseLong(handlingField(itemFields, 0));
+            long furnitureId = placementFurniture == null ? 0L : placementFurniture.furnitureId();
+            long productId = placementFurniture == null ? 0L : placementFurniture.productId();
             if (furnitureId <= 0L) {
                 furnitureId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(wallPayload, 0, 0));
             }
@@ -5232,19 +5221,10 @@ public final class Handling {
                 if (furniture == null) {
                     return;
                 }
-                FurnitureDao.InventoryPlacementFurniture placementFurniture = furniture
+                placementFurniture = furniture
                     .inventoryPlacementFurniture(furnitureId, NumberUtils.parseLong(userId))
                     .orElse(null);
-                if (placementFurniture != null) {
-                    itemFields = new String[]{
-                        String.valueOf(placementFurniture.productId()),
-                        String.valueOf(placementFurniture.furnitureId()),
-                        StringUtils.text(placementFurniture.sign()),
-                        String.valueOf(placementFurniture.secondaryValue()),
-                        String.valueOf(placementFurniture.destinationId())
-                    };
-                }
-                productId = NumberUtils.parseLong(handlingField(itemFields, 0));
+                productId = placementFurniture == null ? 0L : placementFurniture.productId();
             }
             if (productId <= 0L || NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) != 9L) {
                 return;
@@ -5262,7 +5242,8 @@ public final class Handling {
             furniture.placeWallFurniture(furnitureId, NumberUtils.parseLong(userId), roomId, wallPosition);
             Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(furnitureId, null, "Ac"), 0);
             String payload = Proc_6_156_7972B0(furnitureId, productId, wallPosition,
-                handlingField(itemFields, 2), NumberUtils.parseLong(handlingField(itemFields, 3)));
+                placementFurniture == null ? "" : placementFurniture.sign(),
+                placementFurniture == null ? 0L : placementFurniture.secondaryValue());
             if (!payload.isEmpty()) {
                 Proc_6_247_8027E0(socketIndex, "AS" + payload, 0);
             }
@@ -9295,7 +9276,6 @@ public final class Handling {
             if (item == null) {
                 return "";
             }
-            String[] itemFields = floorPlacementFields(item);
             long productId = item.productId();
             String itemData = StringUtils.text(item.sign());
             long secondaryValue = item.secondaryValue();
@@ -9309,7 +9289,7 @@ public final class Handling {
             long productType = product.type();
             if (productType == 9L) {
                 if (fromInventory) {
-                    Proc_6_157_7974B0(socketIndex, requestPayload, itemFields);
+                    Proc_6_157_7974B0(socketIndex, requestPayload, item);
                 }
                 return "";
             }
@@ -9386,17 +9366,27 @@ public final class Handling {
         return placement;
     }
 
-    public static String[] floorPlacementFields(FurnitureDao.InventoryPlacementFurniture item) {
-        if (item == null) {
-            return new String[0];
+    public static FurnitureDao.InventoryPlacementFurniture wallPlacementFurnitureArg(Object itemArg) {
+        if (itemArg instanceof FurnitureDao.InventoryPlacementFurniture item) {
+            return item;
         }
-        return new String[]{
-            String.valueOf(item.productId()),
-            String.valueOf(item.furnitureId()),
-            StringUtils.text(item.sign()),
-            String.valueOf(item.secondaryValue()),
-            String.valueOf(item.destinationId())
-        };
+        String[] fields;
+        if (itemArg instanceof String[] strings) {
+            fields = strings;
+        } else if (itemArg instanceof Object[] values) {
+            fields = new String[values.length];
+            for (int index = 0; index < values.length; index++) {
+                fields[index] = StringUtils.text(values[index]);
+            }
+        } else {
+            fields = StringUtils.text(itemArg).split("\t", -1);
+        }
+        return new FurnitureDao.InventoryPlacementFurniture(
+            NumberUtils.parseLong(StringUtils.field(fields, 0)),
+            NumberUtils.parseLong(StringUtils.field(fields, 1)),
+            StringUtils.field(fields, 2),
+            NumberUtils.parseLong(StringUtils.field(fields, 3)),
+            NumberUtils.parseLong(StringUtils.field(fields, 4)));
     }
 
     public static boolean isPostItProduct(long productId) {

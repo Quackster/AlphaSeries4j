@@ -19,7 +19,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Move raw `Licence.global_*` string caches into typed collection-backed state holders under the appropriate `game.*` package, keeping legacy serialization only at explicit compatibility boundaries.
 - Each domain module should expose a single module-level manager/registry for its live instances and cached state instead of relying on `Licence.java` globals or scattered static ownership. `Licence` accessors are only temporary compatibility bridges while callers migrate to those managers.
 - Keep the refactor branch current with required runtime fixes from `dev`; commit `099dd4d17cd83efeecdb088ac1d94c8ff8404621` (`Fix AlphaSeries boot runtime`) is intentionally merged into this branch.
-- The missing decompiled string literals listed in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` must be inserted as part of this refactor. For each entry, restore the string in the matching Java class and method named by the report, preserving source text unless a deliberate compatibility boundary documents otherwise; the current report lists 1391 unique non-empty literals still absent from Java.
+- The missing decompiled string literals tracked in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` are part of the refactor scope and must be inserted from that report. Treat that file as the source of truth: restore each literal in the matching Java class and method named by the entry, preserving source text unless a deliberate compatibility boundary documents otherwise; the current report lists 1391 unique non-empty literals still absent from Java.
 - Commit only verified milestones with `REFACTOR.md` metrics updated when the legacy surface changes.
 
 ## Completed Slices
@@ -283,6 +283,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added a typed `CatalogRegistry.Product` view and routed furniture decoration, charge, floor-placement, and inventory metadata helpers through named product-cache fields instead of raw product-row splitting.
 - Added typed `AchievementSettings.Achievement` rows and routed achievement reward/award handling through named fields while keeping string payload wrappers for compatibility.
 - Routed active quest progress handling through typed `QuestDao.UserQuestProgressRow` records and a typed `questProgressDecision` overload, avoiding a legacy-row roundtrip in that handler.
+- Routed wall furniture placement through typed `FurnitureDao.InventoryPlacementFurniture` records, replacing the placement handler's temporary string-array roundtrip and indexed `handlingField(...)` reads.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -298,7 +299,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12651 lines
+- `Handling.java`: 12641 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines
 - `Main.java`: 957 lines
@@ -313,7 +314,7 @@ Measured on 2026-06-30:
 - Replace remaining `Crypto.Proc_3_*` usage with `WireEncoding`, `PacketReader`, `PacketBuilder`, and local typed helpers.
 - Continue replacing duplicated local string/number helpers in root compatibility classes with `StringUtils` and `NumberUtils`.
 - Move remaining raw `Licence.global_*` caches into typed state holders under the appropriate `game.*` package.
-- Insert the missing strings tracked in `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into the matching Java classes and methods from the report, and update that report as literals are restored; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
+- Insert the missing strings from `/opt/git/AlphaSeries4j/MISSING_STRINGS.md` into the matching Java classes and methods from the report, then update or remove those entries as literals are restored; the current report lists 1391 unique non-empty decompiled string literals still absent from Java.
 - Delete remaining deprecated compatibility aliases only after their call sites reach zero and tests pass.
 
 ## Verification
