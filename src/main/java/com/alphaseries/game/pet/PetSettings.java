@@ -1,6 +1,10 @@
 package com.alphaseries.game.pet;
 
+import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class PetSettings {
     private final String raceRows;
@@ -37,5 +41,74 @@ public final class PetSettings {
 
     public String commandListPayload(long petLevel) {
         return PetPayloads.commandList(petLevel, commandRows);
+    }
+
+    public static List<PetCommandRow> commandRows(Object rows) {
+        List<PetCommandRow> commands = new ArrayList<>();
+        for (String row : normalizeRows(rows)) {
+            PetCommandRow command = commandRow(row);
+            if (command != null) {
+                commands.add(command);
+            }
+        }
+        return commands;
+    }
+
+    public static PetCommandRow commandRow(String rowText) {
+        if (StringUtils.text(rowText).isEmpty()) {
+            return null;
+        }
+        String[] fields = StringUtils.text(rowText).split("\t", -1);
+        return new PetCommandRow(
+            NumberUtils.parseLong(StringUtils.field(fields, 0)),
+            NumberUtils.parseLong(StringUtils.field(fields, 1)),
+            StringUtils.field(fields, 2),
+            StringUtils.field(fields, 3),
+            fields.length);
+    }
+
+    public static List<PetLevelRow> levelRows(Object rows) {
+        List<PetLevelRow> levels = new ArrayList<>();
+        for (String row : normalizeRows(rows)) {
+            PetLevelRow level = levelRow(row);
+            if (level != null) {
+                levels.add(level);
+            }
+        }
+        return levels;
+    }
+
+    public static PetLevelRow levelRow(String rowText) {
+        if (StringUtils.text(rowText).isEmpty()) {
+            return null;
+        }
+        String[] fields = StringUtils.text(rowText).split("\t", -1);
+        return new PetLevelRow(
+            NumberUtils.parseLong(StringUtils.field(fields, 0)),
+            NumberUtils.parseLong(StringUtils.field(fields, 1)),
+            fields.length);
+    }
+
+    private static String[] normalizeRows(Object rows) {
+        if (rows == null) {
+            return new String[0];
+        }
+        if (rows instanceof String[] rowArray) {
+            return rowArray;
+        }
+        if (rows instanceof String[][] table) {
+            String[] normalized = new String[table.length];
+            for (int index = 0; index < table.length; index++) {
+                normalized[index] = table[index] == null ? "" : String.join("\t", table[index]);
+            }
+            return normalized;
+        }
+        return StringUtils.text(rows).split("\r", -1);
+    }
+
+    public record PetCommandRow(long commandId, long requiredLevel, String command, String action, int fieldCount) {
+    }
+
+    public record PetLevelRow(long level, long maxExperience, int fieldCount) {
     }
 }

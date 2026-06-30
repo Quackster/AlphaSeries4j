@@ -30,6 +30,7 @@ import com.alphaseries.game.pet.PetLevelExperienceRow;
 import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.PetPlacementRow;
 import com.alphaseries.game.pet.PetScratchRow;
+import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.poll.PollDefinition;
@@ -11283,15 +11284,12 @@ public final class Handling {
         if (commandId <= 0L) {
             return result;
         }
-        for (String row : normalizeRows(commandRows)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (NumberUtils.parseLong(handlingField(fields, 0)) == commandId) {
-                    result.requiredLevel = NumberUtils.parseLong(handlingField(fields, 1));
-                    result.action = handlingField(fields, 3);
-                    result.found = true;
-                    return result;
-                }
+        for (PetSettings.PetCommandRow row : PetSettings.commandRows(commandRows)) {
+            if (row.commandId() == commandId) {
+                result.requiredLevel = row.requiredLevel();
+                result.action = row.action();
+                result.found = true;
+                return result;
             }
         }
         BotDao bots = botDao();
@@ -11377,12 +11375,9 @@ public final class Handling {
     }
 
     public static long petLevelMaxExperience(long petLevel, Object levelRows) {
-        for (String row : normalizeRows(levelRows)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (NumberUtils.parseLong(handlingField(fields, 0)) == petLevel) {
-                    return NumberUtils.parseLong(handlingField(fields, 1));
-                }
+        for (PetSettings.PetLevelRow row : PetSettings.levelRows(levelRows)) {
+            if (row.level() == petLevel) {
+                return row.maxExperience();
             }
         }
         BotDao bots = botDao();
@@ -12500,13 +12495,6 @@ public final class Handling {
     private static MessengerDao messengerDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new MessengerDao(database);
-    }
-
-    private static String[] normalizeRows(Object rowSource) {
-        if (rowSource instanceof String[]) {
-            return (String[]) rowSource;
-        }
-        return StringUtils.text(rowSource).split("\r", -1);
     }
 
     private static boolean readRoomEventCommon(String packetPayload, LongRef offset, RoomEventPayload result, boolean requireText) {
