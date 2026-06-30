@@ -7,6 +7,7 @@ public final class NavigatorState {
     private static final NavigatorState INSTANCE = new NavigatorState();
 
     private NewFriendRooms newFriendRooms = NewFriendRooms.empty(null);
+    private RecommendedRooms recommendedRooms = RecommendedRooms.empty();
 
     private NavigatorState() {
     }
@@ -29,5 +30,17 @@ public final class NavigatorState {
 
     public synchronized void setNewFriendRoomsFromLegacy(Object rows, LocalDateTime expiresAt) {
         newFriendRooms = NewFriendRooms.fromLegacy(rows, expiresAt);
+    }
+
+    public synchronized RecommendedRooms recommendedRooms() {
+        return recommendedRooms;
+    }
+
+    public synchronized void setRecommendedRooms(RecommendedRooms rooms) {
+        recommendedRooms = rooms == null ? RecommendedRooms.empty() : rooms;
+    }
+
+    public synchronized void setRecommendedRoomsFromLegacy(Object payloads, long count) {
+        recommendedRooms = RecommendedRooms.fromLegacy(payloads, count);
     }
 }

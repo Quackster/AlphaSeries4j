@@ -722,12 +722,18 @@ public final class Licence {
     }
 
     public static void setRecommendedRooms(Object payloads, long count) {
-        global_0082911C = payloads == null ? "" : payloads;
+        NavigatorState.instance().setRecommendedRoomsFromLegacy(payloads, count);
+        global_0082911C = NavigatorState.instance().recommendedRooms();
         global_00829128 = Math.max(0L, count);
     }
 
     public static RecommendedRooms recommendedRooms() {
-        return RecommendedRooms.fromLegacy(global_0082911C, global_00829128);
+        if (global_0082911C instanceof RecommendedRooms recommendedRooms) {
+            NavigatorState.instance().setRecommendedRooms(recommendedRooms);
+        } else {
+            NavigatorState.instance().setRecommendedRoomsFromLegacy(global_0082911C, global_00829128);
+        }
+        return NavigatorState.instance().recommendedRooms();
     }
 
     private static CatalogRegistry catalogRegistry() {

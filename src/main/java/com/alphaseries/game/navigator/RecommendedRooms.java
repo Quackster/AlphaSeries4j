@@ -12,7 +12,14 @@ public final class RecommendedRooms {
     }
 
     public static RecommendedRooms fromLegacy(Object payloads, long count) {
+        if (payloads instanceof RecommendedRooms recommendedRooms) {
+            return recommendedRooms;
+        }
         return new RecommendedRooms(payloads, count);
+    }
+
+    public static RecommendedRooms empty() {
+        return new RecommendedRooms("", 0L);
     }
 
     public long count() {

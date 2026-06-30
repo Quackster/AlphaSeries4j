@@ -70,6 +70,7 @@ import com.alphaseries.game.messenger.MessengerSearchResult;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.NavigatorState;
+import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.navigator.NavigatorRoom;
 import com.alphaseries.game.moderation.StaffCallForHelpRow;
 import com.alphaseries.game.moderation.StaffPayloads;
@@ -3686,7 +3687,8 @@ public final class Handling {
             String queryTail = "rooms_events,users,rooms,rooms_categories WHERE" + categoryFilter
                 + " rooms.id=rooms_events.id_room AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
                 + "GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
-            long randomTree = Functions.randomLongInclusive(1, Licence.recommendedRooms().count());
+            RecommendedRooms recommendedRooms = recommendedRooms();
+            long randomTree = Functions.randomLongInclusive(1, recommendedRooms.count());
             Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCPC", categoryId, limitValue,
                 Proc_6_112_74E0C0(queryTail, 0, 0) + recommendedRoomPayload(randomTree)), 0);
         } catch (Exception ignored) {
@@ -3703,7 +3705,8 @@ public final class Handling {
             String queryTail = "users,rooms,rooms_categories WHERE" + categoryFilter
                 + " rooms.visitors_now > 0 AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
                 + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            long randomTree = Functions.randomLongInclusive(1, Licence.recommendedRooms().count());
+            RecommendedRooms recommendedRooms = recommendedRooms();
+            long randomTree = Functions.randomLongInclusive(1, recommendedRooms.count());
             Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GC ", categoryId, limitValue,
                 Proc_6_112_74E0C0(queryTail, 0, 0) + recommendedRoomPayload(randomTree)), 0);
         } catch (Exception ignored) {
@@ -9329,10 +9332,15 @@ public final class Handling {
 
     public static String recommendedRoomPayload(long treeIndex) {
         try {
-            return Licence.recommendedRooms().payload(treeIndex);
+            return recommendedRooms().payload(treeIndex);
         } catch (Exception ignored) {
             return "";
         }
+    }
+
+    private static RecommendedRooms recommendedRooms() {
+        Licence.recommendedRooms();
+        return NavigatorState.instance().recommendedRooms();
     }
 
     public static String officialNavigatorQuery() {
