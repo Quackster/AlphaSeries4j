@@ -1159,7 +1159,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_008291EC.contains("pet_dog"));
         assertEquals(true, Licence.petSettings().raceRows().contains("pet_dog"));
         Boot.Proc_1_7_6C5E10();
-        assertEquals("20\t30\t40", ((String[]) Licence.global_008292D0)[2]);
+        assertEquals(true, Licence.global_008292D0 instanceof List);
+        List<?> petLevelMirror = (List<?>) Licence.global_008292D0;
+        assertEquals(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 4),
+            petLevelMirror.get(0));
+        assertEquals("20\t30\t40", ((String[]) Licence.petSettings().levelRows())[2]);
         PetSettings.PetCommandRow cachedCommand = ((PetSettings.PetCommandRow[]) Licence.global_008292CC)[2];
         assertEquals(2L, cachedCommand.commandId());
         assertEquals(3L, cachedCommand.requiredLevel());

@@ -269,14 +269,7 @@ public final class Boot {
             if (bots == null) {
                 return;
             }
-            long maxLevelId = Math.max(0L, bots.maxPetLevelId());
-            String[] levels = new String[(int) maxLevelId + 1];
-            for (Map.Entry<Long, String> entry : buildPetLevelCache(bots.petLevelCacheRows()).entrySet()) {
-                if (entry.getKey() >= 0L && entry.getKey() < levels.length) {
-                    levels[entry.getKey().intValue()] = entry.getValue();
-                }
-            }
-            Licence.setPetLevelRows(levels);
+            Licence.setPetLevelRows(buildPetLevelRows(bots.petLevelCacheRows()));
             long commandCount = bots.petCommandCount();
             long maxCommandId = Math.max(commandCount, bots.maxPetCommandId());
             PetSettings.PetCommandRow[] commands = new PetSettings.PetCommandRow[(int) Math.max(0L, maxCommandId) + 1];
@@ -987,6 +980,23 @@ public final class Boot {
             }
         }
         return cache;
+    }
+
+    public static List<PetSettings.PetLevelRow> buildPetLevelRows(List<PetLevelCacheRow> levelRows) {
+        List<PetSettings.PetLevelRow> rows = new ArrayList<>();
+        if (levelRows != null) {
+            for (PetLevelCacheRow row : levelRows) {
+                if (row != null) {
+                    rows.add(new PetSettings.PetLevelRow(
+                        row.level(),
+                        row.maxEnergy(),
+                        row.maxExperience(),
+                        row.maxNutrition(),
+                        4));
+                }
+            }
+        }
+        return rows;
     }
 
     public static PetCommandCache buildPetCommandCache(String commandRows) {
