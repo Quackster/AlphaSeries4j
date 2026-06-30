@@ -136,6 +136,20 @@ public final class FurniturePayloads {
             .build();
     }
 
+    public static String floorList(long itemCount, String itemPayload) {
+        return PacketBuilder.message("@^")
+            .appendInt(itemCount)
+            .appendRaw(itemPayload)
+            .build();
+    }
+
+    public static String wallList(long itemCount, String itemPayload) {
+        return PacketBuilder.message("@m")
+            .appendInt(itemCount)
+            .appendRaw(itemPayload)
+            .build();
+    }
+
     public record DimmerPresetPayload(long currentPresetId, String payload) {
     }
 }

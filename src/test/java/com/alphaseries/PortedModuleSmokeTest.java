@@ -1934,6 +1934,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(Crypto.Proc_3_0_6D2AF0(88, null,
             Crypto.Proc_3_0_6D2AF0(77, null, "L}package\2")) + "H",
             FurniturePayloads.packageOpened(77, 88, "package"));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "@^") + expectedFloorPlacement,
+            FurniturePayloads.floorList(2, expectedFloorPlacement));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(3, null, "@m") + expectedWallInventory,
+            FurniturePayloads.wallList(3, expectedWallInventory));
         assertEquals("0DAQBHHIIKHJHPAHQA\2SAHPBhttp://www.alpha-series.com/\2QBH", Handling.systemHandshakePayload(""));
         assertEquals("0FMT\2SAHPBhttp://www.alpha-series.com/\2QBH", Handling.systemHandshakePayload("FMT"));
         assertEquals("ticket one", Handling.handlingLoginTicketFromPayload("F_ticket\none"));

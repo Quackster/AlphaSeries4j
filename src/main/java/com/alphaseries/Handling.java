@@ -2713,7 +2713,7 @@ public final class Handling {
                     itemCount++;
                 }
             }
-            String payload = Crypto.Proc_3_0_6D2AF0(itemCount, null, "@^") + itemPayload;
+            String payload = FurniturePayloads.floorList(itemCount, itemPayload.toString());
             if (socketIndex > 0) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -2784,7 +2784,7 @@ public final class Handling {
                     itemCount++;
                 }
             }
-            String payload = Crypto.Proc_3_0_6D2AF0(itemCount, null, "@m") + itemPayload;
+            String payload = FurniturePayloads.wallList(itemCount, itemPayload.toString());
             if (socketIndex > 0) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
