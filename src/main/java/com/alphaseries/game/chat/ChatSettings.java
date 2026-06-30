@@ -3,36 +3,49 @@ package com.alphaseries.game.chat;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class ChatSettings {
-    private final String filterRows;
-    private final String gestureRows;
+    private final List<FilterWord> filterWords;
+    private final List<Gesture> gestures;
 
-    private ChatSettings(String filterRows, String gestureRows) {
-        this.filterRows = StringUtils.text(filterRows);
-        this.gestureRows = StringUtils.text(gestureRows);
+    private ChatSettings(List<FilterWord> filterWords, List<Gesture> gestures) {
+        this.filterWords = filterWords == null ? List.of() : List.copyOf(filterWords);
+        this.gestures = gestures == null ? List.of() : List.copyOf(gestures);
     }
 
-    public static ChatSettings fromLegacy(String filterRows, String gestureRows) {
-        return new ChatSettings(filterRows, gestureRows);
+    public static ChatSettings fromRows(List<FilterWord> filterWords, List<Gesture> gestures) {
+        return new ChatSettings(filterWords, gestures);
     }
 
     public String filterRows() {
-        return filterRows;
+        List<String> rows = new ArrayList<>();
+        for (FilterWord row : filterWords) {
+            if (row != null) {
+                rows.add(StringUtils.text(row.word()));
+            }
+        }
+        return String.join("\r", rows);
     }
 
     public String gestureRows() {
-        return gestureRows;
+        List<String> rows = new ArrayList<>();
+        for (Gesture row : gestures) {
+            if (row != null) {
+                rows.add(StringUtils.text(row.token()) + "\t" + row.gestureId());
+            }
+        }
+        return String.join("\r", rows);
     }
 
     public String filterText(String messageText, boolean filterEnabled, String replacementText) {
         String filteredText = StringUtils.text(messageText);
-        if (filterEnabled && !filterRows.isEmpty()) {
-            for (String row : filterRows.split("\r", -1)) {
-                String[] fields = row.split("\t", -1);
-                String blockedWord = StringUtils.field(fields, 0).trim();
+        if (filterEnabled && !filterWords.isEmpty()) {
+            for (FilterWord row : filterWords) {
+                String blockedWord = row == null ? "" : StringUtils.text(row.word()).trim();
                 if (!blockedWord.isEmpty()) {
                     if (blockedWord.length() > 3) {
                         Pattern pattern = Pattern.compile(Pattern.quote(blockedWord), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -47,23 +60,25 @@ public final class ChatSettings {
     }
 
     public long gestureId(String messageText, boolean gestureEnabled) {
-        if (!gestureEnabled || gestureRows.isEmpty()) {
+        if (!gestureEnabled || gestures.isEmpty()) {
             return 0L;
         }
-        String[] rows = gestureRows.split("\r", -1);
         for (String word : StringUtils.text(messageText).split(" ", -1)) {
             String token = word.trim();
             if (!token.isEmpty()) {
-                for (String row : rows) {
-                    if (!row.isEmpty()) {
-                        String[] fields = row.split("\t", -1);
-                        if (fields.length >= 2 && token.equalsIgnoreCase(fields[0])) {
-                            return NumberUtils.parseLong(fields[1]);
-                        }
+                for (Gesture row : gestures) {
+                    if (row != null && token.equalsIgnoreCase(StringUtils.text(row.token()))) {
+                        return NumberUtils.parseLong(row.gestureId());
                     }
                 }
             }
         }
         return 0L;
+    }
+
+    public record FilterWord(String word) {
+    }
+
+    public record Gesture(String token, long gestureId) {
     }
 }

@@ -950,8 +950,13 @@ public final class Handling {
         return Licence.chatSettings().filterText(StringUtils.text(args[0]), enabled, replacement);
     }
 
-    public static String filterChatText(String messageText, boolean filterEnabled, String replacementText, String filterRows) {
-        return ChatSettings.fromLegacy(filterRows, "").filterText(messageText, filterEnabled, replacementText);
+    public static String filterChatText(
+        String messageText,
+        boolean filterEnabled,
+        String replacementText,
+        List<ChatSettings.FilterWord> filterRows
+    ) {
+        return ChatSettings.fromRows(filterRows, List.of()).filterText(messageText, filterEnabled, replacementText);
     }
 
     public static long Proc_6_23_6E9A90(Object... args) {
@@ -962,8 +967,8 @@ public final class Handling {
         return Licence.chatSettings().gestureId(StringUtils.text(args[0]), enabled);
     }
 
-    public static long findGestureId(String messageText, boolean gestureEnabled, String gestureRows) {
-        return ChatSettings.fromLegacy("", gestureRows).gestureId(messageText, gestureEnabled);
+    public static long findGestureId(String messageText, boolean gestureEnabled, List<ChatSettings.Gesture> gestureRows) {
+        return ChatSettings.fromRows(List.of(), gestureRows).gestureId(messageText, gestureEnabled);
     }
 
     public static String Proc_6_29_70D800(Object... args) {

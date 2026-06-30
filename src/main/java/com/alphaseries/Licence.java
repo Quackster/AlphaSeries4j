@@ -72,8 +72,8 @@ public final class Licence {
     public static String global_00829208 = "";
     public static Object global_0082920C = "";
     public static Object global_00829210 = "";
-    public static String global_00829290 = "";
-    public static String global_00829294 = "";
+    public static Object global_00829290 = "";
+    public static Object global_00829294 = "";
     public static Object global_00829224 = "";
     public static String global_00829230 = "";
     public static Object global_00829244 = "";
@@ -193,12 +193,60 @@ public final class Licence {
     }
 
     public static ChatSettings chatSettings() {
-        return ChatSettings.fromLegacy(global_00829290, global_00829294);
+        return ChatSettings.fromRows(chatFilterWords(), chatGestures());
     }
 
-    public static void setChatSettings(String filterRows, String gestureRows) {
-        global_00829290 = StringUtils.text(filterRows);
-        global_00829294 = StringUtils.text(gestureRows);
+    public static void setChatSettings(List<ChatSettings.FilterWord> filterRows, List<ChatSettings.Gesture> gestureRows) {
+        global_00829290 = filterRows == null ? List.of() : List.copyOf(filterRows);
+        global_00829294 = gestureRows == null ? List.of() : List.copyOf(gestureRows);
+    }
+
+    public static List<ChatSettings.FilterWord> chatFilterWords() {
+        if (global_00829290 instanceof List<?> rows) {
+            List<ChatSettings.FilterWord> result = new java.util.ArrayList<>();
+            for (Object row : rows) {
+                if (row instanceof ChatSettings.FilterWord filterWord) {
+                    result.add(filterWord);
+                }
+            }
+            return result;
+        }
+        String text = StringUtils.text(global_00829290);
+        if (text.isEmpty()) {
+            return List.of();
+        }
+        List<ChatSettings.FilterWord> result = new java.util.ArrayList<>();
+        for (String row : text.split("\r", -1)) {
+            if (!row.isEmpty()) {
+                result.add(new ChatSettings.FilterWord(row));
+            }
+        }
+        return result;
+    }
+
+    public static List<ChatSettings.Gesture> chatGestures() {
+        if (global_00829294 instanceof List<?> rows) {
+            List<ChatSettings.Gesture> result = new java.util.ArrayList<>();
+            for (Object row : rows) {
+                if (row instanceof ChatSettings.Gesture gesture) {
+                    result.add(gesture);
+                }
+            }
+            return result;
+        }
+        String text = StringUtils.text(global_00829294);
+        if (text.isEmpty()) {
+            return List.of();
+        }
+        List<ChatSettings.Gesture> result = new java.util.ArrayList<>();
+        for (String row : text.split("\r", -1)) {
+            String[] fields = row.split("\t", -1);
+            if (fields.length >= 2) {
+                result.add(new ChatSettings.Gesture(StringUtils.field(fields, 0),
+                    com.alphaseries.util.NumberUtils.parseLong(StringUtils.field(fields, 1))));
+            }
+        }
+        return result;
     }
 
     public static VisitRoomAds visitRoomAds() {

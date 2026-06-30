@@ -15,6 +15,7 @@ import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.SettingsDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.pet.PetCommandCacheRow;
 import com.alphaseries.game.pet.PetLevelCacheRow;
 import com.alphaseries.game.pet.PetRaceCacheRow;
@@ -1173,12 +1174,12 @@ public final class Boot {
 
     public static void buildChatSettingsCache() {
         ChatDao chat = chatDao();
-        String filterRows = "";
-        String gestureRows = "";
+        List<ChatSettings.FilterWord> filterRows = List.of();
+        List<ChatSettings.Gesture> gestureRows = List.of();
         if (chat != null) {
             try {
-                filterRows = joinFilterWords(chat.filterWords());
-                gestureRows = joinGestureRows(chat.gestureRows());
+                filterRows = chat.filterWords();
+                gestureRows = chat.gestureRows();
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
@@ -1829,22 +1830,6 @@ public final class Boot {
     private static String joinVisitRoomAdRows(List<AdvertisingDao.VisitRoomAdRow> rows) {
         StringBuilder joined = new StringBuilder();
         for (AdvertisingDao.VisitRoomAdRow row : rows == null ? List.<AdvertisingDao.VisitRoomAdRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
-    }
-
-    private static String joinFilterWords(List<ChatDao.FilterWord> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (ChatDao.FilterWord row : rows == null ? List.<ChatDao.FilterWord>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
-    }
-
-    private static String joinGestureRows(List<ChatDao.GestureRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (ChatDao.GestureRow row : rows == null ? List.<ChatDao.GestureRow>of() : rows) {
             appendLegacyRow(joined, row.legacyRow());
         }
         return joined.toString();

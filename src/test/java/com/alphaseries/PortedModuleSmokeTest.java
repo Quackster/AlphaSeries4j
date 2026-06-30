@@ -20,6 +20,7 @@ import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
 import com.alphaseries.game.poll.PollQuestionRow;
+import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.moderation.StaffCallForHelpRow;
 import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
@@ -946,8 +947,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("ACH_ONE", ((String[][]) Licence.global_008291E8)[0][1]);
         assertEquals("7\2", Licence.achievementSettings().questIdPayload());
         assertEquals(true, Licence.achievementSettings().rowsAsText().contains("ACH_ONE"));
-        assertEquals(":-)\t5", Licence.global_00829294);
-        assertEquals("badword", Licence.global_00829290);
+        assertEquals(new ChatSettings.Gesture(":-)", 5L), ((List<?>) Licence.global_00829294).get(0));
+        assertEquals(new ChatSettings.FilterWord("badword"), ((List<?>) Licence.global_00829290).get(0));
         assertEquals("badword", Licence.chatSettings().filterRows());
         assertEquals(":-)\t5", Licence.chatSettings().gestureRows());
         assertEquals(75, ((int[]) Licence.global_0082927C)[2]);
@@ -1321,11 +1322,17 @@ public final class PortedModuleSmokeTest {
         assertEquals("www.example.com;http://alpha;https://beta;",
             Handling.extractUrlList("see www.example.com and http://alpha or https://beta"));
         assertEquals("", Handling.extractUrlList("www bad example.com"));
-        assertEquals("hello *** and ***", Handling.filterChatText("hello badword and BADWORD", true, "***", "badword\rxx"));
-        assertEquals("***", Handling.filterChatText("xx", true, "***", "badword\rxx"));
-        assertEquals("xx now", Handling.filterChatText("xx now", true, "***", "xx"));
-        assertEquals(5L, Handling.findGestureId("hello :)", true, ":)\t5\r:(\t6"));
-        assertEquals(0L, Handling.findGestureId("hello", false, ":)\t5"));
+        List<ChatSettings.FilterWord> filterWords = List.of(
+            new ChatSettings.FilterWord("badword"),
+            new ChatSettings.FilterWord("xx"));
+        assertEquals("hello *** and ***", Handling.filterChatText("hello badword and BADWORD", true, "***", filterWords));
+        assertEquals("***", Handling.filterChatText("xx", true, "***", filterWords));
+        assertEquals("xx now", Handling.filterChatText("xx now", true, "***", List.of(new ChatSettings.FilterWord("xx"))));
+        List<ChatSettings.Gesture> gestures = List.of(
+            new ChatSettings.Gesture(":)", 5L),
+            new ChatSettings.Gesture(":(", 6L));
+        assertEquals(5L, Handling.findGestureId("hello :)", true, gestures));
+        assertEquals(0L, Handling.findGestureId("hello", false, List.of(new ChatSettings.Gesture(":)", 5L))));
         String complexPayload = Handling.Proc_6_29_70D800(1, 2, 3, 4, "four", 5, "six", "seven", 8, "nine", 10, "eleven");
         assertEquals(true, complexPayload.endsWith("eleven\2"));
         assertEquals(true, complexPayload.contains("four\2"));
