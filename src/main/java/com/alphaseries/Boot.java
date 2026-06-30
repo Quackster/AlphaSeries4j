@@ -198,8 +198,8 @@ public final class Boot {
         runTimed("Server Einstellungen im Cache gespeichert", Boot::loadServerSettingsCache);
         runTimed("Event Kategorien im Cache gespeichert", Boot::loadRoomEventLocalesCache);
         runTimed("Navigator Kategorien im Cache gespeichert", () -> {
-            Proc_1_11_6C8D10(0, 0, 0);
-            Proc_1_12_6C8EF0(0, 0, 0);
+            loadRoomCategoryRowsCache();
+            loadRoomCategoryPayloadCache();
         });
         runTimed("Raumwerbung im Cache gespeichert", () -> Proc_1_22_6D0F00(0, 0, 0));
         runTimed("Bonussystem im Cache gespeichert", () -> Proc_1_5_6C4F80(0, 0, 0));
@@ -234,8 +234,8 @@ public final class Boot {
         Proc_1_20_6CF830(0, 0, 0);
         Proc_1_21_6D08C0(0, 0, 0);
         Proc_1_22_6D0F00(0, 0, 0);
-        Proc_1_11_6C8D10(0, 0, 0);
-        Proc_1_12_6C8EF0(0, 0, 0);
+        loadRoomCategoryRowsCache();
+        loadRoomCategoryPayloadCache();
         loadRecommendedRoomsCache();
     }
 
@@ -255,7 +255,7 @@ public final class Boot {
         Proc_1_18_6CE9C0(0, 0, 0);
         Proc_1_16_6CCA60(0, 0, 0);
         loadPetRaceCache();
-        Proc_1_10_6C7690(0, 0, 0);
+        loadStaffModerationCache();
         Proc_1_19_6CF190(0, 0, 0);
         Proc_1_20_6CF830(0, 0, 0);
         Proc_1_21_6D08C0(0, 0, 0);
@@ -385,7 +385,17 @@ public final class Boot {
         Licence.setQuestDefinitions(questRows);
     }
 
+    /**
+     * Original function: Proc_1_10_6C7690.
+     */
     public static void Proc_1_10_6C7690(Object... args) {
+        loadStaffModerationCache();
+    }
+
+    /**
+     * Original function: Proc_1_10_6C7690.
+     */
+    public static void loadStaffModerationCache() {
         String callForHelpMessages = "";
         String moderatorMessages = "";
         StaffModerationDao moderation = staffModerationDao();
@@ -416,7 +426,17 @@ public final class Boot {
         Licence.setStaffModerationPayloads(values);
     }
 
+    /**
+     * Original function: Proc_1_11_6C8D10.
+     */
     public static void Proc_1_11_6C8D10(Object... args) {
+        loadRoomCategoryRowsCache();
+    }
+
+    /**
+     * Original function: Proc_1_11_6C8D10.
+     */
+    public static void loadRoomCategoryRowsCache() {
         long privateCategoryId = NumberUtils.parseLong(
             Functions.settingsCache().valueOrDefault("com.client.navigator.categories.default.private.id", 0));
         long publicCategoryId = NumberUtils.parseLong(
@@ -439,7 +459,17 @@ public final class Boot {
         Licence.setRoomCategoryRows(categoryRows);
     }
 
+    /**
+     * Original function: Proc_1_12_6C8EF0.
+     */
     public static void Proc_1_12_6C8EF0(Object... args) {
+        loadRoomCategoryPayloadCache();
+    }
+
+    /**
+     * Original function: Proc_1_12_6C8EF0.
+     */
+    public static void loadRoomCategoryPayloadCache() {
         List<RoomCategoryCache.CategoryPayload> values = new ArrayList<RoomCategoryCache.CategoryPayload>();
         RoomCategoryCache roomCategoryCache = roomCategoryCache();
         List<RoomDao.RoomCategoryRow> categoryRows = roomCategoryCache.categoryRowList();

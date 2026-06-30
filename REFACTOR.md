@@ -723,6 +723,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Boot.loadRecommendedRoomsCache(...)` with the original `Proc_1_2_6BE280` noted in Javadocs, then migrated startup cache refresh callers away from the bare Proc-named recommended-room loader.
 - Added named `Boot.loadPetRaceCache(...)` and `loadPetLevelAndCommandCache(...)` with original Proc names in Javadocs, then migrated startup cache refresh callers away from the bare pet cache Proc loaders.
 - Added named `Boot.loadRoomEventLocalesCache(...)` and `loadServerSettingsCache(...)` with original Proc names in Javadocs, then migrated startup cache refresh callers away from the bare event-locale and server-settings Proc loaders.
+- Added named `Boot.loadStaffModerationCache(...)`, `loadRoomCategoryRowsCache(...)`, and `loadRoomCategoryPayloadCache(...)` with original Proc names in Javadocs, then migrated startup cache refresh callers away from the bare moderation and navigator-category Proc loaders.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -738,7 +739,7 @@ Measured on 2026-07-01:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
-- `Boot.java`: 2112 lines
+- `Boot.java`: 2142 lines
 - `Handling.java`: 11591 lines
 - `Functions.java`: 753 lines
 - `DataManager.java`: 528 lines
