@@ -426,19 +426,26 @@ public final class Boot {
     }
 
     public static void Proc_1_15_6CA000(Object... args) {
-        long maxPageId = Math.max(0L, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690("SELECT MAX(id) FROM catalog_pages", 0, 0)));
+        CatalogDao catalog = catalogDao();
+        long maxPageId = 0L;
+        if (catalog != null) {
+            try {
+                maxPageId = Math.max(0L, catalog.maxCatalogPageId());
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         String[] pages = new String[(int) maxPageId + 1];
-        String pageQuery = "SELECT id,name,level_minrequired,hclevel_minrequired,is_clickable,ctlg_template,"
-            + "ctlg_header_img,ctlg_special_img,ctlg_special_template,ctlg_txt1,ctlg_txt2,ctlg_txt3,ctlg_txt4,"
-            + "ctlg_txt5,ctlg_txt6,ctlg_txt7,ctlg_txt8,ctlg_txt9,ctlg_txt10,ctlg_txt11,ctlg_link,is_develop "
-            + "FROM catalog_pages ORDER BY id_order ASC";
-        for (String row : MySQL.Proc_5_2_6D4690(pageQuery, 0, 0).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                long pageId = NumberUtils.parseLong(fields.length > 0 ? fields[0] : "");
-                if (fields.length >= 21 && pageId >= 0L && pageId < pages.length) {
-                    pages[(int) pageId] = buildCatalogPagePayload(fields, MySQL.Proc_5_2_6D4690(buildCatalogProductQuery(pageId), 0, 0));
+        if (catalog != null) {
+            try {
+                for (CatalogDao.CatalogPageRow row : catalog.catalogPageRows()) {
+                    long pageId = row.pageId();
+                    if (pageId >= 0L && pageId < pages.length) {
+                        pages[(int) pageId] = buildCatalogPagePayload(row, catalog.catalogPageProductRows(pageId));
+                    }
                 }
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
         Licence.setCatalogPagePayloads(pages);
@@ -1395,6 +1402,49 @@ public final class Boot {
         return payload.append(buildCatalogProductPayload(pageId, productRows)).toString();
     }
 
+    public static String buildCatalogPagePayload(CatalogDao.CatalogPageRow page, List<CatalogDao.CatalogPageProductRow> productRows) {
+        if (page == null) {
+            return "";
+        }
+        StringBuilder payload = new StringBuilder();
+        payload.append(StringUtils.text(page.name())).append('\2');
+        payload.append(Crypto.Proc_3_0_6D2AF0(page.clickable(), null, ""));
+        payload.append(StringUtils.text(page.template())).append('\2');
+        payload.append(StringUtils.text(page.headerImage())).append('\2');
+        payload.append(StringUtils.text(page.specialImage())).append('\2');
+        payload.append(StringUtils.text(page.specialTemplate())).append('\2');
+
+        String[] textFields = new String[] {
+            page.textOne(),
+            page.textTwo(),
+            page.textThree(),
+            page.textFour(),
+            page.textFive(),
+            page.textSix(),
+            page.textSeven(),
+            page.textEight(),
+            page.textNine(),
+            page.textTen(),
+            page.textEleven()
+        };
+        long textCount = 0L;
+        StringBuilder textPayload = new StringBuilder();
+        for (String textField : textFields) {
+            if (catalogTextFieldPresent(textField)) {
+                textCount++;
+                textPayload.append(textField).append('\2');
+            }
+        }
+        payload.append(Crypto.Proc_3_0_6D2AF0(textCount, null, "")).append(textPayload);
+
+        if (catalogTextFieldPresent(page.link())) {
+            payload.append(Crypto.Proc_3_0_6D2AF0(1, null, "")).append(page.link()).append('\2');
+        } else {
+            payload.append(Crypto.Proc_3_0_6D2AF0(0, null, ""));
+        }
+        return payload.append(buildCatalogProductPayload(page.pageId(), productRows)).toString();
+    }
+
     public static String buildCatalogProductPayload(long pageId, String productRows) {
         long productCount = 0L;
         StringBuilder productPayload = new StringBuilder();
@@ -1403,6 +1453,20 @@ public final class Boot {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 10) {
                     productPayload.append(buildCatalogProductEntry(fields));
+                    productCount++;
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(productCount, null, "") + productPayload;
+    }
+
+    public static String buildCatalogProductPayload(long pageId, List<CatalogDao.CatalogPageProductRow> productRows) {
+        long productCount = 0L;
+        StringBuilder productPayload = new StringBuilder();
+        if (productRows != null) {
+            for (CatalogDao.CatalogPageProductRow row : productRows) {
+                if (row != null) {
+                    productPayload.append(buildCatalogProductEntry(row));
                     productCount++;
                 }
             }
@@ -1434,6 +1498,30 @@ public final class Boot {
             + fields[7] + '\2'
             + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[8]), null, "")
             + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[9]), null, "");
+    }
+
+    public static String buildCatalogProductEntry(CatalogDao.CatalogPageProductRow row) {
+        if (row == null) {
+            return "";
+        }
+        long productType = Licence.Proc_9_0_806F70(row.productId(), 1, 0);
+        String productClass = catalogProductClass(productType);
+        long amountValue = row.amount();
+        if (amountValue <= 0L) {
+            amountValue = 1L;
+        }
+
+        return Crypto.Proc_3_0_6D2AF0(row.catalogProductId(), null, "")
+            + StringUtils.text(row.sprite()) + '\2'
+            + Crypto.Proc_3_0_6D2AF0(row.productId(), null, "")
+            + productClass + '\2'
+            + Crypto.Proc_3_0_6D2AF0(row.creditPrice(), null, "")
+            + Crypto.Proc_3_0_6D2AF0(row.activityPointPrice(), null, "")
+            + Crypto.Proc_3_0_6D2AF0(row.activityPointType(), null, "")
+            + Crypto.Proc_3_0_6D2AF0(amountValue, null, "")
+            + StringUtils.text(row.secondaryType()) + '\2'
+            + Crypto.Proc_3_0_6D2AF0(row.replaceDefaultSign(), null, "")
+            + Crypto.Proc_3_0_6D2AF0(row.minimumHcRank(), null, "");
     }
 
     public static String buildCatalogProductQuery(long pageId) {
