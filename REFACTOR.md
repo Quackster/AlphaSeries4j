@@ -399,6 +399,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved catalog purchase, club-gift claim, and gift-purchase `AC` payload construction into `CatalogPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved voucher invalid/redeemed payload construction into `VoucherPayloads`, replacing repeated inline string assembly in `Handling`.
 - Moved inventory list envelope payload construction into `InventoryMessagePayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
+- Moved present-opened and package-opened furniture payload construction into `FurniturePayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -414,7 +415,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11956 lines
+- `Handling.java`: 11955 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines

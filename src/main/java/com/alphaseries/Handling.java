@@ -2086,8 +2086,8 @@ public final class Handling {
             if (openedProductType == 3L) {
                 responseClass = "e";
             }
-            String responsePayload = Crypto.Proc_3_0_6D2AF0(openedProductId, null, "BA" + responseClass + '\2')
-                + DataManager.Proc_8_12_806C30(openedProductId, 24, 0) + '\2';
+            String responsePayload = FurniturePayloads.presentOpened(openedProductId, responseClass,
+                DataManager.Proc_8_12_806C30(openedProductId, 24, 0));
             Proc_6_244_801E80(socketIndex, responsePayload, 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -4927,8 +4927,7 @@ public final class Handling {
                 if ("packages_pets".equals(packageType) && containedId > 0L) {
                     return Proc_6_86_73B0D0(socketIndex, "FH", requestPayload);
                 } else if (!packageType.isEmpty()) {
-                    Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(furnitureId, null,
-                        Crypto.Proc_3_0_6D2AF0(productId, null, "L}" + packageType + '\2')) + "H", 0);
+                    Proc_6_244_801E80(socketIndex, FurniturePayloads.packageOpened(productId, furnitureId, packageType), 0);
                     return furnitureId;
                 }
             }

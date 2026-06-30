@@ -119,6 +119,23 @@ public final class FurniturePayloads {
             .build();
     }
 
+    public static String presentOpened(long productId, String responseClass, String itemData) {
+        return PacketBuilder.message("BA")
+            .appendString(responseClass)
+            .appendInt(productId)
+            .appendString(itemData)
+            .build();
+    }
+
+    public static String packageOpened(long packageProductId, long furnitureId, String packageType) {
+        return PacketBuilder.message("L}")
+            .appendString(packageType)
+            .appendInt(packageProductId)
+            .appendInt(furnitureId)
+            .appendRaw('H')
+            .build();
+    }
+
     public record DimmerPresetPayload(long currentPresetId, String payload) {
     }
 }
