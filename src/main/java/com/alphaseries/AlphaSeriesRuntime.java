@@ -98,7 +98,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
                 int socketIndex = nextSocketIndex.getAndIncrement();
                 gameSockets.put(socketIndex, socket);
                 Guardian.setSocketConnected(socketIndex, true);
-                Guardian.global_008291A0 += "[" + socketIndex + "]";
+                Guardian.addSocketMarker(socketIndex);
                 executor.execute(() -> readGameClient(socketIndex, socket));
             } catch (IOException ignored) {
                 if (!serverSocket.isClosed()) {

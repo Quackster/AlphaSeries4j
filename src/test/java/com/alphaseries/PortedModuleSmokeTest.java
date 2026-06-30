@@ -700,39 +700,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(Arrays.asList("5:DATA\6" + "5\6relay\7", "5:SHUTDOWN\6" + "5\7"), sent);
         assertEquals("DATA\6" + "6\6named\7", MusPayloads.data(6, "named"));
 
-        Guardian.global_008291A0 = "";
-        Guardian.global_0082919C = 0L;
-        Guardian.setGameServerConnected(false);
-        Guardian.setSocketConnected(8, true);
-        assertEquals(1, Guardian.Proc_11_2_821390(8));
-        Guardian.setSocketConnected(8, false);
-        assertEquals(0, Guardian.Proc_11_2_821390(8));
-        Guardian.setGameServerConnected(true);
-        assertEquals(1, Guardian.Proc_11_2_821390());
-        Guardian.setGameServerConnected(false);
-        SocketMarkerSet typedSocketMarkers = SocketMarkerSet.fromSocketIndexes(List.of(1L, 12L, 0L));
-        assertEquals(Set.of(1L, 12L), typedSocketMarkers.socketIndexes());
-        assertEquals("[1][12]", typedSocketMarkers.toLegacyMarkers());
-        Guardian.SocketMarkerState addedMarkerState = Guardian.toggleSocketMarkerState("[1]", 1, 12);
-        assertEquals("[1][12]", addedMarkerState.markers);
-        assertEquals(12L, addedMarkerState.highestIndex);
-        assertEquals(true, addedMarkerState.accepted);
-        assertEquals(true, addedMarkerState.added);
-        Guardian.SocketMarkerState removedMarkerState = Guardian.toggleSocketMarkerState("[1][12]", 12, 12);
-        assertEquals("[1]", removedMarkerState.markers);
-        assertEquals(12L, removedMarkerState.highestIndex);
-        assertEquals(true, removedMarkerState.accepted);
-        assertEquals(false, removedMarkerState.added);
-        Guardian.SocketMarkerState rejectedMarkerState = Guardian.toggleSocketMarkerState("[1]", 1, 2500);
-        assertEquals("[1]", rejectedMarkerState.markers);
-        assertEquals(1L, rejectedMarkerState.highestIndex);
-        assertEquals(false, rejectedMarkerState.accepted);
-        Guardian.Proc_11_3_821440(12);
-        assertEquals("[12]", Guardian.global_008291A0);
-        assertEquals(12L, Guardian.global_0082919C);
-        Guardian.Proc_11_3_821440(12);
-        assertEquals("", Guardian.global_008291A0);
-        assertEquals(12L, Guardian.global_0082919C);
+        assertGuardianSocketMarkers();
         Guardian.global_008291A0 = "[12]";
         Licence.global_008291A0 = "[4][12]";
         Handling.Proc_6_243_7FFEB0(12);
@@ -5067,6 +5035,47 @@ public final class PortedModuleSmokeTest {
     private static void assertAchievementRows(AchievementSettings settings, AchievementSettings.Achievement achievement) {
         assertEquals(List.of(new AchievementSettings.AchievementRow(
             achievement, "42\tACH_\t10\t5\t3\t7\t2", true)), settings.rows());
+    }
+
+    private static void assertGuardianSocketMarkers() {
+        Guardian.global_008291A0 = "";
+        Guardian.global_0082919C = 0L;
+        Guardian.setGameServerConnected(false);
+        Guardian.setSocketConnected(8, true);
+        assertEquals(1, Guardian.Proc_11_2_821390(8));
+        Guardian.setSocketConnected(8, false);
+        assertEquals(0, Guardian.Proc_11_2_821390(8));
+        Guardian.setGameServerConnected(true);
+        assertEquals(1, Guardian.Proc_11_2_821390());
+        Guardian.setGameServerConnected(false);
+        SocketMarkerSet typedSocketMarkers = SocketMarkerSet.fromSocketIndexes(List.of(1L, 12L, 0L));
+        assertEquals(Set.of(1L, 12L), typedSocketMarkers.socketIndexes());
+        assertEquals("[1][12]", typedSocketMarkers.toLegacyMarkers());
+        Guardian.SocketMarkerState addedMarkerState = Guardian.toggleSocketMarkerState("[1]", 1, 12);
+        assertEquals("[1][12]", addedMarkerState.markers);
+        assertEquals(12L, addedMarkerState.highestIndex);
+        assertEquals(true, addedMarkerState.accepted);
+        assertEquals(true, addedMarkerState.added);
+        Guardian.SocketMarkerState removedMarkerState = Guardian.toggleSocketMarkerState("[1][12]", 12, 12);
+        assertEquals("[1]", removedMarkerState.markers);
+        assertEquals(12L, removedMarkerState.highestIndex);
+        assertEquals(true, removedMarkerState.accepted);
+        assertEquals(false, removedMarkerState.added);
+        Guardian.SocketMarkerState rejectedMarkerState = Guardian.toggleSocketMarkerState("[1]", 1, 2500);
+        assertEquals("[1]", rejectedMarkerState.markers);
+        assertEquals(1L, rejectedMarkerState.highestIndex);
+        assertEquals(false, rejectedMarkerState.accepted);
+        Guardian.global_008291A0 = "[1]";
+        Guardian.addSocketMarker(12);
+        assertEquals("[1][12]", Guardian.global_008291A0);
+        Guardian.global_008291A0 = "";
+        Guardian.global_0082919C = 0L;
+        Guardian.Proc_11_3_821440(12);
+        assertEquals("[12]", Guardian.global_008291A0);
+        assertEquals(12L, Guardian.global_0082919C);
+        Guardian.Proc_11_3_821440(12);
+        assertEquals("", Guardian.global_008291A0);
+        assertEquals(12L, Guardian.global_0082919C);
     }
 
     private static String productRow(long productId, String... columnPairs) {

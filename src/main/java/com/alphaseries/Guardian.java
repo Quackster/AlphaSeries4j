@@ -114,6 +114,12 @@ public final class Guardian {
         global_008291A0 = socketMarkers.toLegacyMarkers();
     }
 
+    public static void addSocketMarker(long socketIndex) {
+        SocketMarkerSet socketMarkers = SocketMarkerSet.fromLegacy(global_008291A0);
+        socketMarkers.add(socketIndex);
+        global_008291A0 = socketMarkers.toLegacyMarkers();
+    }
+
     public static void setGameServerConnected(boolean connected) {
         gameServerConnected = connected;
     }
