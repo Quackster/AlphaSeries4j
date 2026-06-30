@@ -1,6 +1,7 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.messenger.PendingFriendRequest;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -65,14 +66,15 @@ public final class MessengerDao {
             userId);
     }
 
-    public String pendingRequestRows(long userId) throws SQLException {
-        List<String> rows = database.query(
+    public List<PendingFriendRequest> pendingRequests(long userId) throws SQLException {
+        return database.query(
             "SELECT users.id,users.name FROM users,friendships WHERE friendships.has_accept=? AND friendships.id_user=? "
                 + "AND users.id=friendships.id_friend LIMIT 50",
-            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2),
+            resultSet -> new PendingFriendRequest(
+                resultSet.getLong(1),
+                String.valueOf(resultSet.getString(2))),
             0L,
             userId);
-        return String.join("\r", rows);
     }
 
     public List<MessengerFriend> acceptedFriends(long userId, String dateTimeFormat, long limit) throws SQLException {

@@ -55,6 +55,7 @@ import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
+import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.NavigatorRoom;
 import com.alphaseries.game.navigator.NavigatorTagPopularity;
@@ -5850,8 +5851,8 @@ public final class Handling {
             if (messenger == null) {
                 return "";
             }
-            String rowText = messenger.pendingRequestRows(NumberUtils.parseLong(userId));
-            String payload = messengerPendingRequestsPayload(rowText);
+            List<PendingFriendRequest> requests = messenger.pendingRequests(NumberUtils.parseLong(userId));
+            String payload = messengerPendingRequestsPayload(requests);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -11168,6 +11169,10 @@ public final class Handling {
 
     public static String messengerPendingRequestsPayload(String rowText) {
         return MessengerPayloads.pendingRequests(rowText);
+    }
+
+    public static String messengerPendingRequestsPayload(List<PendingFriendRequest> requests) {
+        return MessengerPayloads.pendingRequests(requests);
     }
 
     public static String messengerFriendListPayload(String rowText, long maxFriends0, long maxFriends1, long maxFriends2) {

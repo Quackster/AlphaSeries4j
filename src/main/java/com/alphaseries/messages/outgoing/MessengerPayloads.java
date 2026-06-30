@@ -1,8 +1,12 @@
 package com.alphaseries.messages.outgoing;
 
+import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class MessengerPayloads {
     private MessengerPayloads() {
@@ -117,20 +121,28 @@ public final class MessengerPayloads {
     }
 
     public static String pendingRequests(String rowText) {
-        long requestCount = 0L;
-        PacketBuilder requestPayload = PacketBuilder.create();
+        List<PendingFriendRequest> requests = new ArrayList<>();
         for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] fields = row.split("\t", -1);
-                long requesterId = NumberUtils.parseLong(StringUtils.field(fields, 0));
-                String requesterName = StringUtils.field(fields, 1);
-                if (requesterId > 0L) {
-                    requestPayload.appendRaw('0')
-                        .appendInt(requesterId)
-                        .appendString(requesterName)
-                        .appendString(requesterName);
-                    requestCount++;
-                }
+                requests.add(new PendingFriendRequest(
+                    NumberUtils.parseLong(StringUtils.field(fields, 0)),
+                    StringUtils.field(fields, 1)));
+            }
+        }
+        return pendingRequests(requests);
+    }
+
+    public static String pendingRequests(List<PendingFriendRequest> requests) {
+        long requestCount = 0L;
+        PacketBuilder requestPayload = PacketBuilder.create();
+        for (PendingFriendRequest request : requests == null ? List.<PendingFriendRequest>of() : requests) {
+            if (request != null && request.userId() > 0L) {
+                requestPayload.appendRaw('0')
+                    .appendInt(request.userId())
+                    .appendString(request.userName())
+                    .appendString(request.userName());
+                requestCount++;
             }
         }
         return PacketBuilder.message("Dz")
