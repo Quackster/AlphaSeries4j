@@ -1242,6 +1242,7 @@ public final class PortedModuleSmokeTest {
         defaultCategoryIds[0] = "changed";
         assertEquals("11", typedRoomCategoryDefaults.privateDefaultCategoryId());
         assertEquals("22", typedRoomCategoryDefaults.publicDefaultCategoryId());
+        assertRoomCategoryDefaults(typedRoomCategoryDefaults);
         Boot.Proc_1_12_6C8EF0();
         assertEquals(true, ((String[][]) Licence.global_00829244)[0][0].contains("public"));
         assertEquals(true, Licence.roomCategoryCache().payload(0L, 0L).contains("public"));
@@ -4933,6 +4934,10 @@ public final class PortedModuleSmokeTest {
         assertEquals("41\t21;22", registry.dealRows().get(0).text());
         List<String> copiedFields = registry.productRows().get(0).fields();
         assertEquals("chair", copiedFields.get(2));
+    }
+
+    private static void assertRoomCategoryDefaults(RoomCategoryCache cache) {
+        assertEquals(List.of("11", "", "22"), cache.defaultCategoryIdList());
     }
 
     private static String productRow(long productId, String... columnPairs) {

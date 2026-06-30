@@ -5,11 +5,10 @@ import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public final class RoomCategoryCache {
-    private final String[] defaultCategoryIds;
+    private final List<String> defaultCategoryIds;
     private final List<RoomDao.RoomCategoryRow> categoryRows;
     private final String[][] payloads;
 
@@ -42,7 +41,11 @@ public final class RoomCategoryCache {
     }
 
     public String[] defaultCategoryIds() {
-        return Arrays.copyOf(defaultCategoryIds, defaultCategoryIds.length);
+        return defaultCategoryIds.toArray(String[]::new);
+    }
+
+    public List<String> defaultCategoryIdList() {
+        return List.copyOf(defaultCategoryIds);
     }
 
     public String privateDefaultCategoryId() {
@@ -129,31 +132,38 @@ public final class RoomCategoryCache {
         return new String[0][];
     }
 
-    private static String[] parseDefaultCategoryIds(Object defaultCategoryIds) {
+    private static List<String> parseDefaultCategoryIds(Object defaultCategoryIds) {
         if (defaultCategoryIds instanceof String[] values) {
             return copyTexts(values);
         }
         if (defaultCategoryIds instanceof Object[] values) {
-            String[] parsedValues = new String[values.length];
+            List<String> parsedValues = new ArrayList<>();
             for (int index = 0; index < values.length; index++) {
-                parsedValues[index] = StringUtils.text(values[index]);
+                parsedValues.add(StringUtils.text(values[index]));
             }
-            return parsedValues;
+            return List.copyOf(parsedValues);
         }
         String text = StringUtils.text(defaultCategoryIds);
-        return text.isEmpty() ? new String[0] : text.split("\t", -1);
+        if (text.isEmpty()) {
+            return List.of();
+        }
+        List<String> parsedValues = new ArrayList<>();
+        for (String value : text.split("\t", -1)) {
+            parsedValues.add(StringUtils.text(value));
+        }
+        return List.copyOf(parsedValues);
     }
 
     private static List<RoomDao.RoomCategoryRow> copyCategoryRows(List<RoomDao.RoomCategoryRow> rows) {
         return rows == null ? List.of() : List.copyOf(rows);
     }
 
-    private static String[] copyTexts(String[] values) {
-        String[] copiedValues = new String[values.length];
+    private static List<String> copyTexts(String[] values) {
+        List<String> copiedValues = new ArrayList<>();
         for (int index = 0; index < values.length; index++) {
-            copiedValues[index] = StringUtils.text(values[index]);
+            copiedValues.add(StringUtils.text(values[index]));
         }
-        return copiedValues;
+        return List.copyOf(copiedValues);
     }
 
     private static String[][] copyPayloads(String[][] payloads) {
@@ -181,6 +191,6 @@ public final class RoomCategoryCache {
     }
 
     private String defaultCategoryId(int index) {
-        return index >= 0 && index < defaultCategoryIds.length ? StringUtils.text(defaultCategoryIds[index]) : "";
+        return index >= 0 && index < defaultCategoryIds.size() ? StringUtils.text(defaultCategoryIds.get(index)) : "";
     }
 }
