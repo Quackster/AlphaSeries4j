@@ -11,7 +11,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 
 - Preserve current source compatibility and runtime behavior for every slice; compatibility shims may stay temporarily, but each slice must move the implementation toward typed Java boundaries.
 - Do not add or keep methods that simply wrap another method and add no behavior. A method that only forwards the same arguments, bounces control straight back to another method, or returns another method's result without validation, translation, state management, or protocol compatibility work is dead weight. Do not move these wrappers back into legacy root classes or replace them with equivalent pass-through methods elsewhere. Delete no-op wrappers once call sites can move to the real API; only temporary source-compatibility bridges may remain, and they must be documented as compatibility boundaries scheduled for removal.
-- When renaming legacy `Proc_*`/VB-style methods to proper Java names, keep the original function name in the JavaDoc immediately above the renamed method. Use this only as source-history documentation, not as a reason to preserve bad names or no-op wrapper methods.
+- When renaming legacy `Proc_*`/VB-style methods to proper Java names, keep the original function name in the JavaDoc immediately above the renamed method, for example `Original function: Proc_...`. Every renamed method should carry that source-history note directly above the method declaration. Use this only as source-history documentation, not as a reason to preserve bad names or no-op wrapper methods.
 - Keep tests working throughout the refactor. Run `./gradlew test --no-daemon` before committing behavior-affecting slices, and do not mark a milestone complete unless the suite passes or the failure is explicitly documented.
 - Use prepared DAO methods for database access. Handlers and services should not concatenate SQL strings or call raw `MySQL.Proc_5_*` helpers once a DAO boundary exists.
 - Load database rows into typed classes or records with named fields. Do not map result sets into tab-delimited strings such as `getString(1) + "\t" + getString(2)` except at a deliberate legacy compatibility boundary that is documented and scheduled for removal.
@@ -427,6 +427,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the tag-list row-text payload wrapper; tag payload construction now accepts typed `List<String>` values from `UserDao` only.
 - Removed achievement reward/award/list row-text payload wrappers and routed achievement progress/list handlers through typed `Achievement`/`IndexedAchievement` records.
 - Removed no-op messenger payload wrappers from `Handling`; live handlers and tests now call `MessengerPayloads` directly for accepted/remove/request/pending envelopes.
+- Removed no-op pet payload wrappers from `Handling`; live pet package, inventory, placement, validation, and command-list paths now call `PetPayloads` directly.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -443,7 +444,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11779 lines
+- `Handling.java`: 11739 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 889 lines

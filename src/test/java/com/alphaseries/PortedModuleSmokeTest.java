@@ -2140,10 +2140,10 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(2, null, "")
             + "0ff00aa\2"
             + Crypto.Proc_3_0_6D2AF0(4, null, "");
-        assertEquals(expectedPetRow, Handling.petInventoryRowPayload(new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L)));
-        assertEquals("I[" + expectedPetRow, Handling.petInventoryAddPayload(expectedPetRow));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(10, null, "I\\"), Handling.petPlacedPayload(10L));
-        assertEquals("@]10\2", Handling.petRemovedFromRoomPayload(10L));
+        assertEquals(expectedPetRow, PetPayloads.inventoryRow(new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L)));
+        assertEquals("I[" + expectedPetRow, PetPayloads.inventoryAdd(expectedPetRow));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(10, null, "I\\"), PetPayloads.placed(10L));
+        assertEquals("@]10\2", PetPayloads.removedFromRoom(10L));
         String expectedPetList = Crypto.Proc_3_0_6D2AF0(2, null, "IX")
             + expectedPetRow
             + "0" + Crypto.Proc_3_0_6D2AF0(11, null, "") + "Mia\2"
@@ -2151,21 +2151,21 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(0, null, "")
             + "0\2"
             + Crypto.Proc_3_0_6D2AF0(0, null, "");
-        assertEquals(expectedPetList, Handling.petInventoryListPayload(List.of(
+        assertEquals(expectedPetList, PetPayloads.inventoryList(List.of(
             new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L),
             new PetInventoryRow(11L, "Mia", "3", 0L))));
-        assertEquals(0L, Handling.petNameValidationCode("Rex"));
-        assertEquals(1L, Handling.petNameValidationCode("abcdefghijklmnopqrstuvwxyzabcde"));
-        assertEquals(2L, Handling.petNameValidationCode(""));
-        assertEquals(2L, Handling.petNameValidationCode("Rex1"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "@d"), Handling.petNameValidationPayload("Rex1"));
+        assertEquals(0L, PetPayloads.nameValidationCode("Rex"));
+        assertEquals(1L, PetPayloads.nameValidationCode("abcdefghijklmnopqrstuvwxyzabcde"));
+        assertEquals(2L, PetPayloads.nameValidationCode(""));
+        assertEquals(2L, PetPayloads.nameValidationCode("Rex1"));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "@d"), PetPayloads.nameValidation("Rex1"));
         String expectedPetPreview = Crypto.Proc_3_0_6D2AF0(55, null, "Ly");
         expectedPetPreview = Crypto.Proc_3_0_6D2AF0(1, null, expectedPetPreview);
         expectedPetPreview = Crypto.Proc_3_0_6D2AF0(2, null, expectedPetPreview);
         expectedPetPreview = Crypto.Proc_3_0_6D2AF0(12345, null, expectedPetPreview) + "12345\2";
-        assertEquals(expectedPetPreview, Handling.petPackagePreviewPayload(55L, 1L, 2L, "12345"));
+        assertEquals(expectedPetPreview, PetPayloads.packagePreview(55L, 1L, 2L, "12345"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(55, null, "Lz") + Crypto.Proc_3_0_6D2AF0(2, null, "") + "Rex1\2",
-            Handling.petPackageNameValidationPayload(55L, 2L, "Rex1"));
+            PetPayloads.packageNameValidation(55L, 2L, "Rex1"));
         List<PetSettings.PetCommandRow> commandRows = List.of(
             new PetSettings.PetCommandRow(1L, 0L, "sit", "gst ok", 4),
             new PetSettings.PetCommandRow(2L, 3L, "jump", "gst jump", 4),
@@ -2178,7 +2178,7 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(2, null, "")
             + "0" + Crypto.Proc_3_0_6D2AF0(1, null, "")
             + "0" + Crypto.Proc_3_0_6D2AF0(2, null, "");
-        assertEquals(expectedCommandList, Handling.petCommandListPayload(3, commandRows));
+        assertEquals(expectedCommandList, PetPayloads.commandList(3, commandRows));
         Handling.PetCommandAction commandAction = Handling.petCommandAction(2, commandRows);
         assertEquals(true, commandAction.found);
         assertEquals(3L, commandAction.requiredLevel);
@@ -4229,14 +4229,14 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "L{dog\2"));
         handlingSends.clear();
         String petInventoryPayload = Handling.Proc_6_178_7C6E60(4);
-        assertEquals(Handling.petInventoryListPayload(List.of(new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L))),
+        assertEquals(PetPayloads.inventoryList(List.of(new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L))),
             petInventoryPayload);
         assertEquals(true, containsSend(handlingSends, "IX"));
         assertEquals(true, containsSend(handlingSends, "Rex"));
         handlingSends.clear();
         assertEquals(2L, Handling.Proc_6_181_7CA920("Rex1"));
         String nameCheckPayload = Handling.Proc_6_182_7CAAD0(4, "@c" + wireString("Rex"));
-        assertEquals(Handling.petNameValidationPayload("Rex"), nameCheckPayload);
+        assertEquals(PetPayloads.nameValidation("Rex"), nameCheckPayload);
         assertEquals(true, containsSend(handlingSends, "@d"));
         handlingSends.clear();
         handlingSql.clear();
@@ -4260,12 +4260,12 @@ public final class PortedModuleSmokeTest {
             new PetSettings.PetCommandRow(2L, 3L, "jump", "gst jump", 4)
         };
         String petCommandPayload = Handling.Proc_6_184_7CBDA0(4, 2);
-        assertEquals(Handling.petCommandListPayload(2, Licence.global_008292CC), petCommandPayload);
+        assertEquals(PetPayloads.commandList(2, Licence.global_008292CC), petCommandPayload);
         assertEquals(true, containsSend(handlingSends, "I]"));
         handlingSends.clear();
         handlingSql.clear();
         String routedCommandPayload = Handling.Proc_7CC190(4, "n|" + wireLong(10));
-        assertEquals(Handling.petCommandListPayload(3, Licence.global_008292CC), routedCommandPayload);
+        assertEquals(PetPayloads.commandList(3, Licence.global_008292CC), routedCommandPayload);
         assertEquals(true, containsSend(handlingSends, "I]"));
         handlingSends.clear();
         String originalBotRecordCacheForCommand = Licence.global_00829358;
