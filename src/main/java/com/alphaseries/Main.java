@@ -415,7 +415,7 @@ public final class Main {
                 long currentY = bot.positionY();
                 long targetX = currentX + Functions.randomLongInclusive(-1, 1);
                 long targetY = currentY + Functions.randomLongInclusive(-1, 1);
-                Proc_0_28_6AD850(entityId, currentX, currentY, targetX, targetY);
+                moveRepresentedBot(entityId, currentX, currentY, targetX, targetY);
                 moved++;
             }
         } catch (Exception ignored) {
@@ -434,7 +434,7 @@ public final class Main {
             for (int markerIndex = 0; markerIndex < userParts.length; markerIndex++) {
                 long entityId = mainRepresentedEntityIdAt(userMarkers, markerIndex);
                 if (entityId > 0L) {
-                    Proc_0_29_6B0E10(entityId);
+                    moveRepresentedUser(entityId, 0L, 0L, 0L, 0L);
                     moved++;
                 }
             }
@@ -444,7 +444,7 @@ public final class Main {
             for (int markerIndex = 0; markerIndex < botParts.length; markerIndex++) {
                 long entityId = mainRepresentedEntityIdAt(botMarkers, markerIndex);
                 if (entityId > 0L) {
-                    Proc_0_28_6AD850(entityId);
+                    moveRepresentedBot(entityId, 0L, 0L, 0L, 0L);
                     moved++;
                 }
             }
@@ -593,9 +593,23 @@ public final class Main {
         }
     }
 
+    /**
+     * Original function: Proc_0_28_6AD850.
+     */
     public static void Proc_0_28_6AD850(Object... args) {
+        long entityIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
+        long currentX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[1]) : 0L;
+        long currentY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[2]) : 0L;
+        long targetX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[3]) : 0L;
+        long targetY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
+        moveRepresentedBot(entityIndex, currentX, currentY, targetX, targetY);
+    }
+
+    /**
+     * Original function: Proc_0_28_6AD850.
+     */
+    public static void moveRepresentedBot(long entityIndex, long currentX, long currentY, long targetX, long targetY) {
         try {
-            long entityIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
             if (entityIndex <= 0L) {
                 return;
             }
@@ -604,10 +618,6 @@ public final class Main {
                 return;
             }
             long roomId = mainCurrentRoomIdForSlot(roomSlot);
-            long currentX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[1]) : 0L;
-            long currentY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[2]) : 0L;
-            long targetX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[3]) : 0L;
-            long targetY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
             MovementStep movement = MovementStep.between(currentX, currentY, targetX, targetY);
             if (roomId <= 0L
                 || Functions.representedBotPositionAvailable(entityIndex, movement.positionX(), movement.positionY()) != 0L) {
@@ -619,9 +629,23 @@ public final class Main {
         }
     }
 
+    /**
+     * Original function: Proc_0_29_6B0E10.
+     */
     public static void Proc_0_29_6B0E10(Object... args) {
+        long socketIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
+        long currentX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[1]) : 0L;
+        long currentY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[2]) : 0L;
+        long targetX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[3]) : 0L;
+        long targetY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
+        moveRepresentedUser(socketIndex, currentX, currentY, targetX, targetY);
+    }
+
+    /**
+     * Original function: Proc_0_29_6B0E10.
+     */
+    public static void moveRepresentedUser(long socketIndex, long currentX, long currentY, long targetX, long targetY) {
         try {
-            long socketIndex = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
             if (socketIndex <= 0L || !Guardian.isSocketConnected(socketIndex)) {
                 return;
             }
@@ -630,10 +654,6 @@ public final class Main {
                 roomSlot = socketIndex;
             }
             long roomId = mainCurrentRoomIdForSocket(socketIndex);
-            long currentX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[1]) : 0L;
-            long currentY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[2]) : 0L;
-            long targetX = args != null && args.length >= 5 ? NumberUtils.parseLong(args[3]) : 0L;
-            long targetY = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
             MovementStep movement = MovementStep.between(currentX, currentY, targetX, targetY);
             if (roomId <= 0L || Functions.roomPositionAvailable(roomId, movement.positionX(), movement.positionY()) != 0L) {
                 mainRepresentedRoomOccupantMove(roomSlot, socketIndex, 1,

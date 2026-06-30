@@ -606,6 +606,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named ready-session helpers in `Handling` for room-ready sends, client date settings, login-ticket handling, and the no-op `CD` ready packet with original Proc names in Javadocs; migrated `ReadyPacketRegistry`, room-ready refreshes, and matching internal `Handling` routes away from those Proc-named calls.
 - Added named `Crypto.connectDatabaseFromConfig(...)`, `encodedVl64LengthByteCount(...)`, and Base64/VL64 decode helpers with original Proc names in Javadocs, then migrated app startup, `Functions`, `Handling`, and `Main` away from `Crypto.Proc_3_2_6D30A0(...)`, `Proc_3_3_6D3240(...)`, `Proc_3_4_6D3620(...)`, and `Proc_3_5_6D3880(...)`.
 - Migrated Boot startup payload builders away from `Crypto.Proc_3_0_6D2AF0(...)` to the named `Crypto.encodeVl64(...)` API, leaving class-qualified Proc references only in source-history Javadocs.
+- Added named `Main.moveRepresentedBot(...)` and `moveRepresentedUser(...)` with original Proc names in Javadocs, then migrated bot and walking timers away from the bare `Proc_0_28_6AD850(...)`/`Proc_0_29_6B0E10(...)` movement calls.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -638,6 +639,7 @@ Measured on 2026-06-30:
 - Production `Main` direct calls to `Handling.Proc_6_103_74A510`, `Proc_6_151_78AC20`, and `Proc_6_246_8024C0`: 0
 - Production `Crypto.Proc_3_2_6D30A0`, `Proc_3_3_6D3240`, `Proc_3_4_6D3620`, and `Proc_3_5_6D3880` call sites outside `Crypto.java`: 0
 - Class-qualified production `*.Proc_*` call sites under `src/main/java/com/alphaseries`: 0 outside source-history Javadocs.
+- Production `Main` timer calls to bare movement Proc helpers `Proc_0_28_6AD850`/`Proc_0_29_6B0E10`: 0
 
 ## Next Targets
 
