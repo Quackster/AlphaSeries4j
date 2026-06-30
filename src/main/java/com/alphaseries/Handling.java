@@ -10513,14 +10513,6 @@ public final class Handling {
         Licence.setRepresentedBots(representedBots);
     }
 
-    public static String representedBotRecordText(long botEntityId) {
-        return Licence.representedBots().recordText(botEntityId);
-    }
-
-    public static long representedBotEntityFromBotId(long botId) {
-        return Licence.representedBots().entityFromBotId(botId);
-    }
-
     public static String representedBotEntitiesForRoom(long roomSlot, long onlyBotId) {
         return Licence.representedBots().entitiesForRoom(roomSlot, onlyBotId);
     }

@@ -2241,7 +2241,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(1L, botEntityId);
         assertEquals("[1]", Licence.global_008292D4);
         assertEquals(501L, Licence.representedBots().record(botEntityId).botId());
-        assertEquals(1L, Handling.representedBotEntityFromBotId(501));
+        assertEquals(1L, Licence.representedBots().entityFromBotId(501));
         assertEquals("1", Handling.representedBotEntitiesForRoom(3, 501));
         assertEquals(true, Handling.isRepresentedBotAllocated(3, 501));
         Handling.storeRepresentedBotPosition(botEntityId, 5, 6, "1.0", 7);
@@ -2253,7 +2253,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(expectedBotEntry, PetPayloads.representedBotRoomEntry(
             botEntityId, "Guide", 5L, 6L, "1.0", 7L, "1 2 ff"));
         Handling.removeRepresentedBotRecord(botEntityId);
-        assertEquals("", Handling.representedBotRecordText(botEntityId));
+        assertEquals("", Licence.representedBots().recordText(botEntityId));
         assertEquals("", Licence.global_008292D4);
         String expectedProfile = Crypto.Proc_3_0_6D2AF0(9, null, "Jf")
             + "Alice\2motto\2"
@@ -4309,7 +4309,7 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         handlingSends.clear();
         assertEquals(10L, Handling.Proc_6_180_7C96F0(4, placedPetEntityId));
-        assertEquals("", Handling.representedBotRecordText(placedPetEntityId));
+        assertEquals("", Licence.representedBots().recordText(placedPetEntityId));
         assertEquals(true, containsSql(handlingSql, "UPDATE bots SET id_room=null WHERE id='10'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET id_level=id_level,energy=energy,experience=experience,nutrition=nutrition,scratches=scratches WHERE id_bot='10'"));
         assertEquals(true, containsSend(handlingSends, "@]"));
@@ -4325,7 +4325,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "@aYjO"));
         handlingSends.clear();
         assertEquals(1L, Handling.Proc_6_189_7D0630(4, "Fy" + wireLong(0)));
-        assertEquals("", Handling.representedBotRecordText(guideEntityId));
+        assertEquals("", Licence.representedBots().recordText(guideEntityId));
         assertEquals(true, containsSend(handlingSends, "@]"));
         handlingSends.clear();
         String profilePayload = Handling.Proc_6_190_7D11D0(4, "Cg" + wireLong(61));
