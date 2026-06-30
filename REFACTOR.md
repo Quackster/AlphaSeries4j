@@ -625,6 +625,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed `MovementStep.fromLegacy(...)`; movement code now constructs typed steps via `MovementStep.between(...)`/`zero()` instead of parsing null-delimited legacy movement text.
 - Removed the raw-SQL `Functions.clubPeriodUpdateQuery(...)` formatter; club period updates now stay behind `ClubDao.applyClubPeriod(...)`/`Functions.applyClubPeriod(...)` and the legacy SQL rendering exists only in the test adapter.
 - Added typed `NewFriendRooms` accessors and isolated legacy new-friend room row parsing at the construction boundary, keeping navigator state collection-backed while preserving legacy `Licence` bridge behavior.
+- Routed `Licence` new-friend-room refreshes through the typed `NewFriendRooms` state path when the mirrored global already contains a `NewFriendRooms` instance, leaving raw row parsing as a compatibility fallback.
 - Migrated `RepresentedSocketCache` internals from raw cache-string storage to collection-backed socket records with named room-slot and busy-state accessors, keeping legacy string parsing only at the compatibility constructor.
 - Migrated `RepresentedSocketCache.RepresentedSocketRecord` away from retained split field arrays to named room-slot and busy fields while preserving legacy payload serialization.
 - Exposed defensive typed `RepresentedSocketCache` record maps so session callers can consume socket-index keyed records without legacy cache text.

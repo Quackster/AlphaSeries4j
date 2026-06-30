@@ -686,20 +686,28 @@ public final class Licence {
     }
 
     public static NewFriendRooms newFriendRooms() {
-        NavigatorState.instance().setNewFriendRoomsFromLegacy(global_0082908C, global_00829090);
+        refreshNewFriendRooms();
         return NavigatorState.instance().newFriendRooms();
     }
 
     public static void setNewFriendRooms(String rows, LocalDateTime expiresAt) {
-        NavigatorState.instance().setNewFriendRoomsFromLegacy(rows, expiresAt);
-        global_0082908C = NavigatorState.instance().newFriendRooms();
+        global_0082908C = NewFriendRooms.fromLegacy(rows, expiresAt);
         global_00829090 = expiresAt;
+        refreshNewFriendRooms();
     }
 
     public static void setNewFriendRooms(List<NewFriendRooms.RoomPick> rooms, LocalDateTime expiresAt) {
-        NavigatorState.instance().setNewFriendRooms(rooms, expiresAt);
-        global_0082908C = NavigatorState.instance().newFriendRooms();
+        global_0082908C = NewFriendRooms.fromRoomPicks(rooms, expiresAt);
         global_00829090 = expiresAt;
+        refreshNewFriendRooms();
+    }
+
+    private static void refreshNewFriendRooms() {
+        if (global_0082908C instanceof NewFriendRooms rooms) {
+            NavigatorState.instance().setNewFriendRooms(rooms);
+            return;
+        }
+        NavigatorState.instance().setNewFriendRoomsFromLegacy(global_0082908C, global_00829090);
     }
 
     public static StaffSettings staffSettings() {
