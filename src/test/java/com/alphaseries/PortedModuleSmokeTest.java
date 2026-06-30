@@ -812,6 +812,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("move", jumpCommand.action());
         assertEquals("base" + "\0" + "5\1party\2" + "\0" + "7\1game\2",
             Boot.buildRoomEventLocaleCache("roomevent_type_5\tparty\rroomevent_type_7\tgame", "base"));
+        assertRoomEventLocaleTypedBuilder();
         assertEquals("[site.name=Alpha][com.client.format.date=dd.mm.yyyy][com.client.format.time=hh:nn:ss]"
                 + "[com.mysql.format.date=%d.%m.%Y][com.mysql.format.time=%H:%i:%s]",
             Boot.buildSettingsCache("site.name\tAlpha", "d.m.Y", "h:i:s"));
@@ -5035,6 +5036,14 @@ public final class PortedModuleSmokeTest {
                 + Crypto.Proc_3_0_6D2AF0(12, null, "")
                 + Crypto.Proc_3_0_6D2AF0(13, null, ""),
             recyclerCache.payload);
+    }
+
+    private static void assertRoomEventLocaleTypedBuilder() {
+        com.alphaseries.game.room.RoomEventLocales locales = Boot.buildRoomEventLocales(
+            List.of(new SettingsDao.LocaleRow("roomevent_type_5", "party")),
+            com.alphaseries.game.room.RoomEventLocales.fromLegacy("\0existing\1old"));
+        assertEquals("old", locales.field("existing", 0));
+        assertEquals("party", locales.field("5", 0));
     }
 
     private static void assertCatalogPagesTypedAccessors() {

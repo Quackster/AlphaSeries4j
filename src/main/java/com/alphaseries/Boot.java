@@ -25,6 +25,7 @@ import com.alphaseries.game.pet.PetRaceCacheRow;
 import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.recycler.RecyclerSettings;
+import com.alphaseries.game.room.RoomEventLocales;
 import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -279,15 +280,15 @@ public final class Boot {
 
     public static void Proc_1_8_6C6850(Object... args) {
         SettingsDao settings = settingsDao();
-        String localeCache = DataManager.roomEventLocales().cacheText();
+        RoomEventLocales locales = DataManager.roomEventLocales();
         if (settings != null) {
             try {
-                localeCache = buildRoomEventLocaleCache(settings.roomEventLocaleRows(), localeCache);
+                locales = buildRoomEventLocales(settings.roomEventLocaleRows(), locales);
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        DataManager.setRoomEventLocaleCache(localeCache);
+        DataManager.setRoomEventLocales(locales);
     }
 
     public static void Proc_1_9_6C6DF0(Object... args) {
@@ -1054,19 +1055,29 @@ public final class Boot {
     }
 
     public static String buildRoomEventLocaleCache(List<SettingsDao.LocaleRow> localeRows, String existingCache) {
-        StringBuilder payload = new StringBuilder(StringUtils.text(existingCache));
+        return buildRoomEventLocales(localeRows, RoomEventLocales.fromLegacy(existingCache)).cacheText();
+    }
+
+    public static RoomEventLocales buildRoomEventLocales(List<SettingsDao.LocaleRow> localeRows, RoomEventLocales existingLocales) {
+        return (existingLocales == null ? RoomEventLocales.fromLegacy("") : existingLocales)
+            .withEntries(roomEventLocaleEntries(localeRows));
+    }
+
+    public static List<RoomEventLocales.LocaleEntry> roomEventLocaleEntries(List<SettingsDao.LocaleRow> localeRows) {
+        List<RoomEventLocales.LocaleEntry> entries = new ArrayList<>();
         if (localeRows != null) {
             for (SettingsDao.LocaleRow row : localeRows) {
                 if (row != null) {
                     String cacheKey = StringUtils.text(row.variableName()).replaceFirst("roomevent_type_", "");
                     if (!cacheKey.isEmpty()) {
-                        payload.append('\0').append(NumberUtils.parseLong(cacheKey)).append('\1')
-                            .append(StringUtils.text(row.value())).append('\2');
+                        entries.add(new RoomEventLocales.LocaleEntry(
+                            String.valueOf(NumberUtils.parseLong(cacheKey)),
+                            List.of(StringUtils.text(row.value()), "")));
                     }
                 }
             }
         }
-        return payload.toString();
+        return entries;
     }
 
     public static String buildSettingsCache(String settingsRows, String systemDateFormat, String systemTimeFormat) {

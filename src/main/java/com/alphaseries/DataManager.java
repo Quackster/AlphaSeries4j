@@ -64,6 +64,11 @@ public final class DataManager {
         RoomState.instance().setEventLocalesFromLegacy(global_008291AC);
     }
 
+    public static void setRoomEventLocales(RoomEventLocales eventLocales) {
+        RoomState.instance().setEventLocales(eventLocales);
+        global_008291AC = RoomState.instance().eventLocales().cacheText();
+    }
+
     public static ProductCache productCache() {
         CatalogState.instance().setProductCacheFromLegacy(global_008292BC);
         return CatalogState.instance().productCache();
