@@ -4950,6 +4950,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(List.of(new GiftSettings.ClubGift(83L, 508L, 40L)), typedGiftSettings.clubGifts());
         assertEquals(List.of(601L, 602L), typedGiftSettings.giftWrapProductIds());
         assertEquals(true, typedGiftSettings.containsGiftWrapProduct(602L));
+        Object previousGiftPayload = Licence.global_00829178;
+        Object previousGiftLookup = Licence.global_0082917C;
+        Licence.global_00829178 = typedGiftSettings;
+        assertEquals("TYPED", Licence.giftSettings().clubGiftPayload());
+        assertEquals(508L, Licence.giftSettings().clubGiftByCatalogProductId(83L).productId());
+        Licence.global_00829178 = previousGiftPayload;
+        Licence.global_0082917C = previousGiftLookup;
         Licence.setGiftWrapState(List.of(701L, 0L, 702L), "TYPED-WRAPS");
         assertEquals("\r701\r0\r702\r", Licence.global_0082925C);
         assertEquals("TYPED-WRAPS", Licence.giftSettings().giftWrapPayload());
@@ -5003,6 +5010,10 @@ public final class PortedModuleSmokeTest {
         String[][] copiedPayloads = settings.moderationPayloads();
         copiedPayloads[1][1] = "changed-again";
         assertEquals("HC", settings.moderationPayload(1L, 1L));
+        Object previousStaffPayloads = Licence.global_008292D8;
+        Licence.global_008292D8 = settings;
+        assertEquals("HC", Licence.staffSettings().moderationPayload(1L, 1L));
+        Licence.global_008292D8 = previousStaffPayloads;
     }
 
     private static void assertMessengerSettingsTypedAccessors() {

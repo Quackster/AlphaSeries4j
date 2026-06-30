@@ -214,12 +214,8 @@ public final class Licence {
     }
 
     public static GiftSettings giftSettings() {
-        if (global_00829178 instanceof GiftSettings giftSettings) {
-            CatalogState.instance().setGiftSettings(giftSettings);
-        } else {
-            CatalogState.instance().setGiftSettingsFromLegacy(global_00829178, global_0082917C,
-                global_0082925C, global_00829260);
-        }
+        CatalogState.instance().setGiftSettingsFromLegacy(global_00829178, global_0082917C,
+            global_0082925C, global_00829260);
         return CatalogState.instance().giftSettings();
     }
 
@@ -614,11 +610,7 @@ public final class Licence {
     }
 
     public static StaffSettings staffSettings() {
-        if (global_008292D8 instanceof StaffSettings staffSettings) {
-            ModerationState.instance().setStaffSettings(staffSettings);
-        } else {
-            ModerationState.instance().setStaffModerationPayloads(global_008292D8);
-        }
+        ModerationState.instance().setStaffModerationPayloads(global_008292D8);
         return ModerationState.instance().staffSettings();
     }
 
