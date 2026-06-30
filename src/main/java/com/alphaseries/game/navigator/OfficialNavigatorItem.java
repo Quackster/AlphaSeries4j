@@ -3,7 +3,6 @@ package com.alphaseries.game.navigator;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -72,23 +71,6 @@ public record OfficialNavigatorItem(
             number(fields, 26),
             number(fields, 27),
             fields.length >= 28);
-    }
-
-    public static OfficialNavigatorItem fromLegacy(String rowText) {
-        return fromLegacyFields(StringUtils.text(rowText).split("\t", -1));
-    }
-
-    public static List<OfficialNavigatorItem> listFromLegacy(String rowText) {
-        List<OfficialNavigatorItem> items = new ArrayList<>();
-        for (String row : StringUtils.text(rowText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                OfficialNavigatorItem item = fromLegacy(row);
-                if (item != null) {
-                    items.add(item);
-                }
-            }
-        }
-        return items;
     }
 
     public List<String> textFields() {

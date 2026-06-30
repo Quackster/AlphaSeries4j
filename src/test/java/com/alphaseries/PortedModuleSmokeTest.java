@@ -13,6 +13,7 @@ import com.alphaseries.game.jukebox.SongInfoRow;
 import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
+import com.alphaseries.game.navigator.OfficialNavigatorItem;
 import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
@@ -1502,13 +1503,15 @@ public final class PortedModuleSmokeTest {
         expectedOfficialRow += Crypto.Proc_3_0_6D2AF0(5, null, "")
             + Crypto.Proc_3_0_6D2AF0(6, null, "")
             + Crypto.Proc_3_0_6D2AF0(7, null, "");
-        String officialRow = String.join("\t", officialFields);
+        OfficialNavigatorItem officialItem = new OfficialNavigatorItem(
+            1L, 2L, 3L, "caption", "cap2", "cap3", "7", "8", "9", "10",
+            "11", "12", "13", "description", "15", "16", "17", "18", "icon",
+            "tag1", "tag2", "22", "model", "files", "250", 5L, 6L, 7L, true);
         assertEquals(expectedOfficialRow, Handling.officialNavigatorRowPayload(officialFields));
-        assertEquals(expectedOfficialRow, Handling.officialNavigatorRowsPayload(officialRow, false));
+        assertEquals(expectedOfficialRow, Handling.officialNavigatorPayload(List.of(officialItem), false));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedOfficialRow,
-            Handling.officialNavigatorRowsPayload(officialRow, true));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.officialNavigatorRowsPayload("1\t2", true));
-        assertEquals("", Handling.Proc_6_122_752280("1\t2", false));
+            Handling.officialNavigatorPayload(List.of(officialItem), true));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.officialNavigatorPayload(List.of(), true));
         Licence.global_008292BC = "20\t1\t2\t3\t4\t5\t6\t7\t8\t9\t10\t11\t12\t13\tchair\tseat\t16\t17\tchair_sprite\r"
             + "21\t9\t2\t3\t4\t5\t6\t7\t8\t9\t10\t11\t12\t13\tposter\twall\t16\t17\tposter_sprite";
         String expectedInventoryItem = Crypto.Proc_3_0_6D2AF0(100, null, "0") + "S\2"

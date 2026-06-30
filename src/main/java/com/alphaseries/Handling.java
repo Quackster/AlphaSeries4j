@@ -9888,19 +9888,6 @@ public final class Handling {
         return Crypto.Proc_3_0_6D2AF0(itemCount, null, payload.toString());
     }
 
-    public static String Proc_6_122_752280(Object... args) {
-        if (args == null || args.length == 0) {
-            return "";
-        }
-        boolean includeCountPrefix = args.length >= 2
-            && (args[1] instanceof Boolean ? (Boolean) args[1] : NumberUtils.parseLong(args[1]) != 0L);
-        return officialNavigatorRowsPayload(StringUtils.text(args[0]), includeCountPrefix);
-    }
-
-    public static String officialNavigatorRowsPayload(String rowText, boolean includeCountPrefix) {
-        return officialNavigatorPayload(OfficialNavigatorItem.listFromLegacy(rowText), includeCountPrefix);
-    }
-
     public static String officialNavigatorPayload(List<OfficialNavigatorItem> items, boolean includeCountPrefix) {
         PacketBuilder payload = PacketBuilder.create();
         long itemCount = 0L;
