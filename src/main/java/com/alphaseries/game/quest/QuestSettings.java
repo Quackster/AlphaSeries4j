@@ -7,11 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class QuestSettings {
-    private final String rows;
     private final List<QuestDefinitionRow> definitions;
 
-    private QuestSettings(String rows, List<QuestDefinitionRow> definitions) {
-        this.rows = StringUtils.text(rows);
+    private QuestSettings(List<QuestDefinitionRow> definitions) {
         this.definitions = definitions == null ? List.of() : List.copyOf(definitions);
     }
 
@@ -19,21 +17,18 @@ public final class QuestSettings {
         if (rows instanceof QuestSettings questSettings) {
             return questSettings;
         }
-        return new QuestSettings(StringUtils.text(rows), List.of());
+        return new QuestSettings(parseDefinitions(StringUtils.text(rows)));
     }
 
     public static QuestSettings fromDefinitions(List<QuestDefinitionRow> definitions) {
-        return new QuestSettings("", definitions);
+        return new QuestSettings(definitions);
     }
 
     public static QuestSettings empty() {
-        return new QuestSettings("", List.of());
+        return new QuestSettings(List.of());
     }
 
     public String rows() {
-        if (!rows.isEmpty()) {
-            return rows;
-        }
         List<String> rowTexts = new ArrayList<>();
         for (QuestDefinitionRow definition : definitions) {
             if (definition != null) {
@@ -44,21 +39,22 @@ public final class QuestSettings {
     }
 
     public boolean hasRows() {
-        return !rows.isEmpty() || !definitions.isEmpty();
+        return !definitions.isEmpty();
     }
 
     public List<QuestDefinitionRow> definitions() {
-        if (!definitions.isEmpty()) {
-            return definitions;
-        }
+        return definitions;
+    }
+
+    private static List<QuestDefinitionRow> parseDefinitions(String rows) {
         List<QuestDefinitionRow> definitions = new ArrayList<>();
-        for (String row : rows.split("\r", -1)) {
+        for (String row : StringUtils.text(rows).split("\r", -1)) {
             QuestDefinitionRow definition = questDefinition(row);
             if (definition != null) {
                 definitions.add(definition);
             }
         }
-        return definitions;
+        return List.copyOf(definitions);
     }
 
     public QuestDefinitionRow definitionById(long questId) {
@@ -159,9 +155,20 @@ public final class QuestSettings {
         int fieldCount
     ) {
         private String toLegacyRow() {
-            return questId + "\t" + level + "\t" + StringUtils.text(name) + "\t" + StringUtils.text(legacyNullSlot)
-                + "\t" + reward + "\t" + rewardType + "\t" + StringUtils.text(requiredAction) + "\t"
-                + additionalId + "\t" + campaignId + "\t" + activityAmount + "\t" + waitAmount;
+            List<String> fields = List.of(
+                String.valueOf(questId),
+                String.valueOf(level),
+                StringUtils.text(name),
+                StringUtils.text(legacyNullSlot),
+                String.valueOf(reward),
+                String.valueOf(rewardType),
+                StringUtils.text(requiredAction),
+                String.valueOf(additionalId),
+                String.valueOf(campaignId),
+                String.valueOf(activityAmount),
+                String.valueOf(waitAmount));
+            int count = fieldCount <= 0 ? fields.size() : Math.min(fieldCount, fields.size());
+            return String.join("\t", fields.subList(0, count));
         }
     }
 
