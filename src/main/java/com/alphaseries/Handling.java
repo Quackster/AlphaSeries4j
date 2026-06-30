@@ -1511,7 +1511,7 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "-1" + '\2';
             }
-            String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
+            String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
             RoomDao rooms = roomDao();
             Optional<RoomDao.RoomEventInfo> eventInfo = rooms == null
                 ? Optional.empty()
@@ -3646,7 +3646,7 @@ public final class Handling {
             List<NavigatorRoom> roomRows = List.of();
             RoomDao rooms = roomDao();
             if (!eventQueryTail.isEmpty()) {
-                String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
+                String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
                 eventRows = rooms == null ? List.of() : rooms.navigatorEventsByTail(eventQueryTail, timeFormat, true);
             }
             if (!roomQueryTail.isEmpty()) {
@@ -3667,7 +3667,7 @@ public final class Handling {
             if (queryTail.isEmpty()) {
                 return NavigatorPayloads.eventList(List.of());
             }
-            String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
+            String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
             RoomDao rooms = roomDao();
             return NavigatorPayloads.eventList(rooms == null ? List.of() : rooms.navigatorEventsByTail(queryTail, timeFormat, false));
         } catch (Exception ignored) {
@@ -5529,8 +5529,8 @@ public final class Handling {
             if (searchText.isEmpty()) {
                 return "";
             }
-            String dateFormat = Functions.Proc_10_0_809570("com.mysql.format.date", "%d-%m-%Y", 0);
-            String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
+            String dateFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
+            String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
             MessengerDao messenger = messengerDao();
             if (messenger == null) {
                 return "";
@@ -5693,8 +5693,8 @@ public final class Handling {
             long maxFriends1 = messengerMaxFriends(2L);
             long maxFriends2 = messengerMaxFriends(4L);
             long queryLimit = maxFriends2 > 0L ? maxFriends2 : 200L;
-            String dateFormat = Functions.Proc_10_0_809570("com.mysql.format.date", "%d-%m-%Y", 0);
-            String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
+            String dateFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
+            String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
             MessengerDao messenger = messengerDao();
             if (messenger == null) {
                 return "";
@@ -7039,12 +7039,12 @@ public final class Handling {
             long jukeboxProductId = jukeboxRow.productId();
             String maxOrderText = jukebox.maxPlaylistOrderText(jukeboxId);
             long playlistCount = jukebox.playlistCount(jukeboxId);
-            long playlistLimit = NumberUtils.parseLong(Functions.Proc_10_0_809570(
-                "com.server.socket.game.jukebox." + jukeboxProductId + ".soundsets.max", 0, 0));
+            long playlistLimit = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault(
+                "com.server.socket.game.jukebox." + jukeboxProductId + ".soundsets.max", 0));
             if (!jukeboxCanAddDisk(request.playlistOrder, maxOrderText, playlistCount, playlistLimit)) {
                 return "";
             }
-            long songDiskProductId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.default.songdisk", 0, 0));
+            long songDiskProductId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.default.songdisk", 0));
             if (songDiskProductId <= 0L) {
                 return "";
             }
@@ -7090,7 +7090,7 @@ public final class Handling {
             if (cdFurnitureId <= 0L) {
                 return "";
             }
-            long songDiskProductId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.default.songdisk", 0, 0));
+            long songDiskProductId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.default.songdisk", 0));
             jukebox.returnDiskToOwner(NumberUtils.parseLong(userId), cdFurnitureId, songDiskProductId);
             jukebox.deletePlaylistEntry(jukeboxId, cdFurnitureId);
             jukebox.decrementOrdersAfter(jukeboxId, playlistOrder);
@@ -7124,7 +7124,8 @@ public final class Handling {
             }
             long jukeboxId = jukeboxRow.id();
             long jukeboxProductId = jukeboxRow.productId();
-            long playlistLimit = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.jukebox." + jukeboxProductId + ".soundsets.max", 0, 0));
+            long playlistLimit = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault(
+                "com.server.socket.game.jukebox." + jukeboxProductId + ".soundsets.max", 0));
             if (playlistLimit <= 0L) {
                 playlistLimit = jukebox.playlistLimitFromEntries(jukeboxId);
             }
@@ -7147,7 +7148,7 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            long songDiskProductId = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.default.songdisk", 0, 0));
+            long songDiskProductId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.default.songdisk", 0));
             if (songDiskProductId <= 0L) {
                 return "";
             }
@@ -7476,14 +7477,14 @@ public final class Handling {
             UserDao users = userDao();
             long userIdValue = NumberUtils.parseLong(userId);
             for (long pointType = 0L; pointType <= 4L; pointType++) {
-                long intervalSeconds = NumberUtils.parseLong(Functions.Proc_10_0_809570(
-                    "com.server.socket.game.activitypoints_" + pointType + ".interval", 0, 0));
+                long intervalSeconds = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault(
+                    "com.server.socket.game.activitypoints_" + pointType + ".interval", 0));
                 if (intervalSeconds > 0L && sessionSeconds % intervalSeconds == 0L) {
-                    long maxPoints = NumberUtils.parseLong(Functions.Proc_10_0_809570(
-                        "com.server.socket.game.activitypoints_" + pointType + ".max", 1, 0));
+                    long maxPoints = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault(
+                        "com.server.socket.game.activitypoints_" + pointType + ".max", 1));
                     long currentPoints = users.activityPoints(userIdValue, pointType);
-                    long awardAmount = NumberUtils.parseLong(Functions.Proc_10_0_809570(
-                        "com.server.socket.game.activitypoints_" + pointType + ".amount", 0, 0));
+                    long awardAmount = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault(
+                        "com.server.socket.game.activitypoints_" + pointType + ".amount", 0));
                     ActivityPointAward award = activityPointAwardDecision(
                         sessionSeconds, pointType, intervalSeconds, maxPoints, awardAmount, currentPoints);
                     if (award.shouldAward) {
@@ -7588,8 +7589,8 @@ public final class Handling {
                 return "";
             }
             acceptCount = Math.min(acceptCount, 75L);
-            String dateFormat = Functions.Proc_10_0_809570("com.mysql.format.date", "%d-%m-%Y", 0);
-            String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
+            String dateFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
+            String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
             String dateTimeFormat = Functions.Proc_10_11_80A9C0(dateFormat + " " + timeFormat, 0, 0);
             StringBuilder targetIds = new StringBuilder();
             for (long acceptIndex = 1L; acceptIndex <= acceptCount; acceptIndex++) {
@@ -7924,7 +7925,7 @@ public final class Handling {
                 case "FS":
                 case "AF":
                     Proc_6_244_801E80(socketIndex,
-                        StringUtils.text(Functions.Proc_10_0_809570("com.client.park.infobus.theme.title", "AQ")) + '\2',
+                        StringUtils.text(Functions.settingsCache().valueOrDefault("com.client.park.infobus.theme.title", "AQ")) + '\2',
                         0);
                     break;
                 case "oL": Proc_7F44D0(socketIndex, "oL", packetPayload); break;
@@ -8354,7 +8355,7 @@ public final class Handling {
 
     public static void loadRepresentedRoomBots(long roomSlot, long roomId) {
         if (roomSlot <= 0L || roomId <= 0L
-            || NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.rooms.bots.enabled", "-1", 0)) == 0L) {
+            || NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.rooms.bots.enabled", "-1")) == 0L) {
             return;
         }
         BotDao bots = botDao();
@@ -9296,7 +9297,7 @@ public final class Handling {
     }
 
     public static long navigatorListLimit() {
-        long limit = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.navigator.list.limit", 50));
+        long limit = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.navigator.list.limit", 50));
         return limit <= 0L ? 50L : limit;
     }
 
@@ -10142,8 +10143,8 @@ public final class Handling {
             if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))) {
                 return "";
             }
-            String dateFormat = Functions.Proc_10_0_809570("com.mysql.format.date", "%d-%m-%Y", 0);
-            String timeFormat = Functions.Proc_10_0_809570("com.mysql.format.time", "%H:%i", 0);
+            String dateFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
+            String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
             MessengerDao messenger = messengerDao();
             if (messenger == null) {
                 return "";
@@ -10158,7 +10159,7 @@ public final class Handling {
     }
 
     public static boolean messengerFollowEnabled() {
-        return NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.messenger.follow.enabled", 0)) != 0L;
+        return NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.messenger.follow.enabled", 0)) != 0L;
     }
 
     public static long messengerMaxFriends(long configIndex) {

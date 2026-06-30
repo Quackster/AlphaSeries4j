@@ -497,6 +497,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated chat filter, chat gesture, and moderation-panel permission reads in `Handling` to typed `AppSettingsCache`/`PermissionMatrix` access, and added original Proc-name Javadocs to the renamed chat helper methods touched in that slice.
 - Migrated room ownership limits, staff-picked navigator defaults, favourite-room limits, and catalog gift settings in `Handling` to typed `AppSettingsCache` access instead of legacy `Functions.Proc_10_0_809570(...)` calls.
 - Migrated user-session date/MOTD settings, pet/guide bot toggles and speech defaults, and recycler enabled checks in `Handling` to typed `AppSettingsCache` access instead of legacy settings helper calls.
+- Migrated remaining live `Handling` settings reads for date/time formatting, jukebox limits, songdisk defaults, activity-point awards, infobus titles, room-bot loading, navigator limits, and messenger follow checks to typed `AppSettingsCache` access; production callers no longer use `Functions.Proc_10_0_809570(...)` or `Proc_10_1_809790(...)` directly.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -513,7 +514,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11361 lines
+- `Handling.java`: 11362 lines
 - `Functions.java`: 695 lines
 - `DataManager.java`: 409 lines
 - `MySQL.java`: 177 lines
