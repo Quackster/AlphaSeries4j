@@ -67,6 +67,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.catalog.GiftSettings` as a typed adapter around club-gift and gift-wrap state previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.moderation.StaffPayloads` for call-for-help rows, staff user summaries, room visits, room chat history, and unsafe staff-alert checks.
 - Added `com.alphaseries.game.moderation.StaffSettings` as a typed adapter around staff moderation payloads previously read directly from `Licence` globals.
+- Loaded boot staff message rows through typed `StaffModerationDao.StaffMessageRow` records before building the temporary moderation payload.
 - Routed boot staff moderation rank/HC payload loading through typed `StaffSettings.ModerationPayload` records instead of storing `String[][]` payload mirrors in the live `Licence` cache.
 - Added `com.alphaseries.game.messenger.MessengerSettings` as a typed adapter around messenger friend-limit state previously decoded directly from `Licence` globals.
 - Routed boot messenger friend-limit loading through typed `MessengerSettings` storage instead of keeping an `int[]` mirror in the live `Licence` cache.

@@ -748,12 +748,12 @@ public final class Boot {
         return payload.toString();
     }
 
-    public static String buildStaffMessageList(List<String> rows) {
+    public static String buildStaffMessageList(List<StaffModerationDao.StaffMessageRow> rows) {
         StringBuilder payload = new StringBuilder();
         if (rows != null) {
-            for (String row : rows) {
-                if (!StringUtils.text(row).isEmpty()) {
-                    payload.append(row).append('\2');
+            for (StaffModerationDao.StaffMessageRow row : rows) {
+                if (row != null && !StringUtils.text(row.message()).isEmpty()) {
+                    payload.append(row.message()).append('\2');
                 }
             }
         }

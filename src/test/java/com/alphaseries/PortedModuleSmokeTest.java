@@ -864,6 +864,9 @@ public final class PortedModuleSmokeTest {
             clubGiftCache.giftPayload);
         assertEquals("[100\0" + "200\1" + "30][300\0" + "300\1" + "5]", clubGiftCache.giftLookup);
         assertEquals("one\2two\2", Boot.buildStaffMessageList("one\rtwo"));
+        assertEquals("one\2two\2", Boot.buildStaffMessageList(List.of(
+            new StaffModerationDao.StaffMessageRow("one"),
+            new StaffModerationDao.StaffMessageRow("two"))));
         Map<Long, String> staffCategoryChildren = new HashMap<>();
         staffCategoryChildren.put(10L, "11\tchild-a\r12\tchild-b");
         assertEquals(

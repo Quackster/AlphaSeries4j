@@ -19,10 +19,10 @@ public final class StaffModerationDao {
         this.database = database;
     }
 
-    public List<String> staffMessages(long type) throws SQLException {
+    public List<StaffMessageRow> staffMessages(long type) throws SQLException {
         return database.query(
             "SELECT message FROM staff_messages WHERE type=? ORDER BY id ASC",
-            resultSet -> resultSet.getString(1),
+            resultSet -> new StaffMessageRow(resultSet.getString(1)),
             type);
     }
 
@@ -497,6 +497,9 @@ public final class StaffModerationDao {
     }
 
     public record CallForHelpRoom(long roomId, String roomName, long modelType, long userId, long partnerId, long timestampSent) {
+    }
+
+    public record StaffMessageRow(String message) {
     }
 
     public record OpenCallForHelpReviewRow(
