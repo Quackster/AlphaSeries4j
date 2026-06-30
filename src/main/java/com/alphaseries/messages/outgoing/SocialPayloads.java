@@ -2,7 +2,6 @@ package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.List;
@@ -31,24 +30,7 @@ public final class SocialPayloads {
     }
 
     public static String badgeInventory(String inventoryRows, String equippedPayload) {
-        long inventoryCount = 0L;
-        PacketBuilder inventoryPayload = PacketBuilder.create();
-        for (String row : StringUtils.text(inventoryRows).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                String badgeId = StringUtils.field(fields, 0);
-                long badgeRowId = NumberUtils.parseLong(StringUtils.field(fields, 2));
-                if (!badgeId.isEmpty()) {
-                    inventoryPayload.appendRaw('0').appendInt(badgeRowId).appendString(badgeId);
-                    inventoryCount++;
-                }
-            }
-        }
-        return PacketBuilder.message("Ce")
-            .appendInt(inventoryCount)
-            .appendRaw(inventoryPayload)
-            .appendRaw(equippedPayload)
-            .build();
+        return badgeInventory(BadgeRow.listFromLegacy(inventoryRows), equippedPayload);
     }
 
     public static String badgeInventory(List<BadgeRow> inventoryRows, String equippedPayload) {
@@ -70,23 +52,7 @@ public final class SocialPayloads {
     }
 
     public static String equippedBadges(String badgeRows) {
-        long equippedCount = 0L;
-        PacketBuilder equippedPayload = PacketBuilder.create();
-        for (String row : StringUtils.text(badgeRows).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                String badgeId = StringUtils.field(fields, 0);
-                long badgeSlot = NumberUtils.parseLong(StringUtils.field(fields, 1));
-                if (!badgeId.isEmpty()) {
-                    equippedPayload.appendRaw('0').appendInt(badgeSlot).appendString(badgeId);
-                    equippedCount++;
-                }
-            }
-        }
-        return PacketBuilder.create()
-            .appendInt(equippedCount)
-            .appendRaw(equippedPayload)
-            .build();
+        return equippedBadges(BadgeRow.listFromLegacy(badgeRows));
     }
 
     public static String equippedBadges(List<BadgeRow> badgeRows) {

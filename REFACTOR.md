@@ -294,6 +294,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved wall-placement, own-profile, and favourite-group legacy row parsing out of `Handling` and into typed `FurnitureDao.InventoryPlacementFurniture`, `OwnProfileRow`, and `UserGroupRow` compatibility factories.
 - Added `com.alphaseries.game.trade` represented trade-offer and interaction-pair row records, moving those live cache row shapes out of `Handling` while keeping legacy serialization at the compatibility boundary.
 - Routed MySQL room chat-log payload rows through typed `StaffRoomChatRow` records and the existing `StaffPayloads.roomChatRows(List<StaffRoomChatRow>)` builder, leaving string rows as a compatibility parser only.
+- Routed badge inventory/equipped-badge payload string wrappers through typed `BadgeRow` lists, leaving tab-delimited badge rows as a compatibility parser only.
 
 ## VB Compatibility Class Removal Checklist
 
