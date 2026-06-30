@@ -3016,8 +3016,8 @@ public final class Handling {
             long roomId = handlingCurrentRoomId(socketIndex, userId);
             String sessionId = handlingUserSessionId(userId);
             trades.insertTradeLog(numericUserId, numericTargetUserId, sourceLogItems, targetLogItems, roomId, sessionId);
-            Proc_6_244_801E80(socketIndex, "Ap", 0);
-            Proc_6_244_801E80(targetSocketIndex, "Ap", 0);
+            sendToSocket(socketIndex, "Ap");
+            sendToSocket(targetSocketIndex, "Ap");
             Proc_6_140_769400(socketIndex, "FT", "");
             Proc_6_140_769400(targetSocketIndex, "FT", "");
             removeRepresentedInteractionPair(socketIndex);
@@ -3059,11 +3059,11 @@ public final class Handling {
             }
             String sourcePayload = SocialPayloads.interactionStateForSource(sourceRoomUserIndex, interactionState);
             String targetPayload = SocialPayloads.interactionStateForTarget(sourceRoomUserIndex, interactionState);
-            Proc_6_244_801E80(socketIndex, sourcePayload, 0);
-            Proc_6_244_801E80(targetSocketIndex, targetPayload, 0);
+            sendToSocket(socketIndex, sourcePayload);
+            sendToSocket(targetSocketIndex, targetPayload);
             if (interactionState == 1L) {
-                Proc_6_244_801E80(socketIndex, "Ao", 0);
-                Proc_6_244_801E80(targetSocketIndex, "Ao", 0);
+                sendToSocket(socketIndex, "Ao");
+                sendToSocket(targetSocketIndex, "Ao");
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -3109,10 +3109,10 @@ public final class Handling {
             String sourcePayload = representedTradeOfferPayload(representedTradeOffers, socketIndex, targetSocketIndex, userId, targetUserId);
             String targetPayload = representedTradeOfferPayload(representedTradeOffers, targetSocketIndex, socketIndex, targetUserId, userId);
             if (!sourcePayload.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, sourcePayload, 0);
+                sendToSocket(socketIndex, sourcePayload);
             }
             if (!targetPayload.isEmpty()) {
-                Proc_6_244_801E80(targetSocketIndex, targetPayload, 0);
+                sendToSocket(targetSocketIndex, targetPayload);
             }
             return sourcePayload;
         } catch (Exception ignored) {
@@ -3151,10 +3151,10 @@ public final class Handling {
             String sourcePayload = representedTradeOfferPayload(representedTradeOffers, socketIndex, targetSocketIndex, userId, targetUserId);
             String targetPayload = representedTradeOfferPayload(representedTradeOffers, targetSocketIndex, socketIndex, targetUserId, userId);
             if (!sourcePayload.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, sourcePayload, 0);
+                sendToSocket(socketIndex, sourcePayload);
             }
             if (!targetPayload.isEmpty()) {
-                Proc_6_244_801E80(targetSocketIndex, targetPayload, 0);
+                sendToSocket(targetSocketIndex, targetPayload);
             }
             return sourcePayload;
         } catch (Exception ignored) {
@@ -3205,8 +3205,8 @@ public final class Handling {
                 NumberUtils.parseLong(callerUserId), NumberUtils.parseLong(targetUserId));
             String targetPayload = SocialPayloads.interactionRequest(
                 NumberUtils.parseLong(targetUserId), NumberUtils.parseLong(callerUserId));
-            Proc_6_244_801E80(socketIndex, callerPayload, 0);
-            Proc_6_244_801E80(targetSocketIndex, targetPayload, 0);
+            sendToSocket(socketIndex, callerPayload);
+            sendToSocket(targetSocketIndex, targetPayload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3242,8 +3242,8 @@ public final class Handling {
                 return;
             }
             String payload = SocialPayloads.interactionClosed(sourceRoomUserIndex);
-            Proc_6_244_801E80(socketIndex, payload, 0);
-            Proc_6_244_801E80(targetSocketIndex, payload, 0);
+            sendToSocket(socketIndex, payload);
+            sendToSocket(targetSocketIndex, payload);
             removeRepresentedInteractionPair(socketIndex);
             removeRepresentedInteractionPair(targetSocketIndex);
         } catch (Exception ignored) {
@@ -3308,7 +3308,7 @@ public final class Handling {
             FurniturePayloads.DimmerPresetPayload dimmerPayload =
                 FurniturePayloads.dimmerPresets(furniture.dimmerPresets(dimmerFurnitureId));
             currentPresetId = dimmerPayload.currentPresetId();
-            Proc_6_244_801E80(socketIndex, dimmerPayload.payload(), 0);
+            sendToSocket(socketIndex, dimmerPayload.payload());
             return currentPresetId;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -3423,7 +3423,7 @@ public final class Handling {
             UserPayloads.EffectListPayload effectPayload =
                 UserPayloads.effectList(users.userEffectSummaries(NumberUtils.parseLong(userId)));
             listedEffects = effectPayload.listedEffects();
-            Proc_6_244_801E80(socketIndex, effectPayload.payload(), 0);
+            sendToSocket(socketIndex, effectPayload.payload());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3462,7 +3462,7 @@ public final class Handling {
                 return 0L;
             }
             users.activateUserEffect(effectRowId);
-            Proc_6_244_801E80(socketIndex, UserPayloads.effectActivated(effectId, rentSeconds), 0);
+            sendToSocket(socketIndex, UserPayloads.effectActivated(effectId, rentSeconds));
             String broadcastPayload = SocialPayloads.roomUserEffect(socketIndex, effectId) + "H";
             broadcastToCurrentRoom(socketIndex, broadcastPayload);
             return effectId;
@@ -3493,7 +3493,7 @@ public final class Handling {
                 int socketIndex = (int) effect.socketIndex();
                 if (socketIndex > 0 && effectId > 0L) {
                     broadcastToCurrentRoom(socketIndex, SocialPayloads.roomUserEffectCleared(socketIndex));
-                    Proc_6_244_801E80(socketIndex, UserPayloads.effectExpired(effectId), 0);
+                    sendToSocket(socketIndex, UserPayloads.effectExpired(effectId));
                     expiredCount++;
                 }
             }
@@ -3511,7 +3511,7 @@ public final class Handling {
             long maxOwnedRooms = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.rooms.own.max", 0));
             RoomDao rooms = roomDao();
             long ownedRoomCount = rooms == null ? 0L : rooms.ownedRoomCount(NumberUtils.parseLong(userId));
-            Proc_6_244_801E80(socketIndex, RoomPayloads.creatableRoomCount(maxOwnedRooms, ownedRoomCount), 0);
+            sendToSocket(socketIndex, RoomPayloads.creatableRoomCount(maxOwnedRooms, ownedRoomCount));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3560,7 +3560,7 @@ public final class Handling {
             }
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
-            Proc_6_244_801E80(socketIndex, RoomPayloads.createdRoom(roomId, roomName), 0);
+            sendToSocket(socketIndex, RoomPayloads.createdRoom(roomId, roomName));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3646,10 +3646,9 @@ public final class Handling {
             if (rooms == null) {
                 return;
             }
-            Proc_6_244_801E80(socketIndex,
+            sendToSocket(socketIndex,
                 NavigatorPayloads.favouriteRoomIds(rooms.favouriteRoomIds(NumberUtils.parseLong(userId), maxFavorites),
-                    maxFavorites).payload(),
-                0);
+                    maxFavorites).payload());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3668,7 +3667,7 @@ public final class Handling {
             if (rooms != null) {
                 rooms.deleteFavouriteRoom(NumberUtils.parseLong(userId), roomId);
             }
-            Proc_6_244_801E80(socketIndex, RoomPayloads.favouriteRemoved(roomId), 0);
+            sendToSocket(socketIndex, RoomPayloads.favouriteRemoved(roomId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3687,7 +3686,7 @@ public final class Handling {
             if (rooms != null) {
                 rooms.insertFavouriteRoom(NumberUtils.parseLong(userId), roomId);
             }
-            Proc_6_244_801E80(socketIndex, RoomPayloads.favouriteAdded(roomId), 0);
+            sendToSocket(socketIndex, RoomPayloads.favouriteAdded(roomId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3711,7 +3710,7 @@ public final class Handling {
                 hcLevel = 2L;
             }
             String responsePayload = roomCategoryCache().payload(rankIndex, hcLevel);
-            Proc_6_244_801E80(socketIndex, "C]" + responsePayload, 0);
+            sendToSocket(socketIndex, "C]" + responsePayload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3768,8 +3767,8 @@ public final class Handling {
                 + "GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
             RecommendedRooms recommendedRooms = recommendedRooms();
             long randomTree = Functions.randomLongInclusive(1, recommendedRooms.count());
-            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCPC", categoryId, limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0) + recommendedRoomPayload(randomTree)), 0);
+            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCPC", categoryId, limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0) + recommendedRoomPayload(randomTree)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3786,8 +3785,8 @@ public final class Handling {
                 + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
             RecommendedRooms recommendedRooms = recommendedRooms();
             long randomTree = Functions.randomLongInclusive(1, recommendedRooms.count());
-            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GC ", categoryId, limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0) + recommendedRoomPayload(randomTree)), 0);
+            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GC ", categoryId, limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0) + recommendedRoomPayload(randomTree)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3803,8 +3802,8 @@ public final class Handling {
                 + "' AND logs_visitedrooms.id_user=friendships.id_friend AND logs_visitedrooms.timestamp_left IS NULL "
                 + "AND rooms.id=logs_visitedrooms.id_room AND rooms_categories.id=rooms.id_category "
                 + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.id DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCQA", "", limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0)), 0);
+            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCQA", "", limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3819,8 +3818,8 @@ public final class Handling {
                 + Functions.sqlEscapedText(userId)
                 + "' AND users.id=friendships.id_friend AND rooms_categories.id=rooms.id_category "
                 + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GC", "\0", limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0)), 0);
+            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GC", "\0", limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3835,8 +3834,8 @@ public final class Handling {
                 + Functions.sqlEscapedText(userId)
                 + "' AND rooms.id=rooms_favourites.id_room AND rooms_categories.id=rooms.id_category "
                 + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCRA", "", limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0)), 0);
+            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCRA", "", limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3851,8 +3850,8 @@ public final class Handling {
                 + Functions.sqlEscapedText(userId)
                 + "' AND rooms.id=logs_visitedrooms.id_room AND rooms_categories.id=rooms.id_category "
                 + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.id DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCSA", "", limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0)), 0);
+            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCSA", "", limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3867,8 +3866,8 @@ public final class Handling {
                 + Functions.sqlEscapedText(userId)
                 + "' AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
                 + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCQA", "", limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0)), 0);
+            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCQA", "", limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3881,7 +3880,7 @@ public final class Handling {
             if (rooms == null) {
                 return;
             }
-            Proc_6_244_801E80(socketIndex, "GB" + NavigatorPayloads.official(rooms.officialNavigatorItems(), true), 0);
+            sendToSocket(socketIndex, "GB" + NavigatorPayloads.official(rooms.officialNavigatorItems(), true));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3895,7 +3894,7 @@ public final class Handling {
             if (rooms == null) {
                 return;
             }
-            Proc_6_244_801E80(socketIndex, "GD" + NavigatorPayloads.tagPopularity(rooms.navigatorTagPopularities(limitValue)), 0);
+            sendToSocket(socketIndex, "GD" + NavigatorPayloads.tagPopularity(rooms.navigatorTagPopularities(limitValue)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3913,8 +3912,8 @@ public final class Handling {
             String roomQueryTail = "users,rooms,rooms_categories WHERE (rooms.tag_1 = '" + tagText + "' OR rooms.tag_2 = '"
                 + tagText + "') AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
                 + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCSA", tagText, limitValue,
-                Proc_6_113_74EE70(eventQueryTail, roomQueryTail, 0)), 0);
+            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCSA", tagText, limitValue,
+                Proc_6_113_74EE70(eventQueryTail, roomQueryTail, 0)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3926,8 +3925,8 @@ public final class Handling {
             long limitValue = navigatorListLimit();
             String queryTail = "users,rooms,rooms_categories WHERE rooms.rate > 0 AND users.id=rooms.id_owner "
                 + "AND rooms_categories.id=rooms.id_category GROUP BY rooms.id ORDER BY rooms.rate DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GC", "\b", limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0)), 0);
+            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GC", "\b", limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3948,8 +3947,8 @@ public final class Handling {
                 + "' AND rooms_events.id_user=users.id OR rooms_events.name LIKE '" + searchText
                 + "%' AND users.id=rooms.id_owner) AND rooms.id=rooms_events.id_room "
                 + "AND rooms_categories.id=rooms.id_category GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCSA", searchText, limitValue,
-                Proc_6_113_74EE70(eventQueryTail, roomQueryTail, 0)), 0);
+            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCSA", searchText, limitValue,
+                Proc_6_113_74EE70(eventQueryTail, roomQueryTail, 0)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -4000,15 +3999,15 @@ public final class Handling {
                 return "";
             }
             if (minClubLevel > 0L && balance.clubLevel() < minClubLevel) {
-                Proc_6_244_801E80(socketIndex, CatalogPayloads.purchaseError(3), 0);
+                sendToSocket(socketIndex, CatalogPayloads.purchaseError(3));
                 return "";
             }
             if (balance.credits() < creditPrice) {
-                Proc_6_244_801E80(socketIndex, CatalogPayloads.purchaseError(1), 0);
+                sendToSocket(socketIndex, CatalogPayloads.purchaseError(1));
                 return "";
             }
             if (balance.activityPoints() < activityPrice) {
-                Proc_6_244_801E80(socketIndex, CatalogPayloads.purchaseError(2), 0);
+                sendToSocket(socketIndex, CatalogPayloads.purchaseError(2));
                 return "";
             }
             long grantedFurnitureId = NumberUtils.parseLong(Proc_6_129_7583C0(socketIndex, catalogProductId, signText));
@@ -4031,7 +4030,7 @@ public final class Handling {
             }
             String purchasePayload = CatalogPayloads.purchase(catalogProductId, creditPrice, activityPrice,
                 activityType, grantedFurnitureId, itemClass);
-            Proc_6_244_801E80(socketIndex, purchasePayload, 0);
+            sendToSocket(socketIndex, purchasePayload);
             Proc_6_140_769400(socketIndex, "FT", "");
             return purchasePayload;
         } catch (Exception ignored) {
