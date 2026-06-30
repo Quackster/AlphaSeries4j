@@ -9463,18 +9463,6 @@ public final class Handling {
         return queryText.toString();
     }
 
-    public static String navigatorField(String[] fields, long fieldIndex) {
-        return fields != null && fieldIndex >= 0 && fieldIndex < fields.length ? StringUtils.text(fields[(int) fieldIndex]) : "";
-    }
-
-    public static String navigatorEventFragment(String[] fields) {
-        return navigatorEventFragment(RoomDao.NavigatorEventRow.fromLegacyFields(fields));
-    }
-
-    public static String navigatorRoomFragment(String[] fields) {
-        return navigatorRoomFragment(LegacyNavigatorRoomRow.fromLegacyFields(fields));
-    }
-
     public static String navigatorRoomFragment(LegacyNavigatorRoomRow room) {
         return NavigatorPayloads.roomFragment(room);
     }
@@ -9540,10 +9528,6 @@ public final class Handling {
 
     public static String officialNavigatorItemPayload(OfficialNavigatorItem item) {
         return NavigatorPayloads.officialItem(item);
-    }
-
-    public static String officialNavigatorRowPayload(String[] fields) {
-        return officialNavigatorItemPayload(OfficialNavigatorItem.fromLegacyFields(fields));
     }
 
     public static String Proc_6_138_7678A0(Object... args) {

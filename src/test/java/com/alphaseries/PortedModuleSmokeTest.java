@@ -1709,12 +1709,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, officialNavigatorQuery.contains("rooms_official.id_type='3'"));
         assertEquals(true, officialNavigatorQuery.contains("rooms_official.id_type='4'"));
         assertEquals(true, officialNavigatorQuery.endsWith("ORDER BY 27 ASC LIMIT 255"));
-        String[] navigatorFields = new String[]{
-            "10", "room", "owner", "desc", "3", "25", "open", "1",
-            "unused", "9", "4", "tag1", "tag2", "event", "1", "0"
-        };
-        assertEquals("room", Handling.navigatorField(navigatorFields, 1));
-        assertEquals("", Handling.navigatorField(navigatorFields, 99));
+        LegacyNavigatorRoomRow legacyNavigatorRoom = new LegacyNavigatorRoomRow(
+            10L, "room", "owner", "desc", 3L, 25L, "open", 1L, 9L, 4L, "tag1", "tag2", "event", 1L, 0L);
+        RoomDao.NavigatorEventRow legacyNavigatorEvent = new RoomDao.NavigatorEventRow(
+            10L, "room", "owner", "desc", 3L, 25L, "open", 1L, 9L, 4L, "tag1", "tag2", "event", "1");
         String expectedEventFragment = Crypto.Proc_3_0_6D2AF0(10, null, "");
         expectedEventFragment = Crypto.Proc_3_0_6D2AF0(3, null, expectedEventFragment);
         expectedEventFragment = Crypto.Proc_3_0_6D2AF0(25, null, expectedEventFragment);
@@ -1722,7 +1720,7 @@ public final class PortedModuleSmokeTest {
         expectedEventFragment = Crypto.Proc_3_0_6D2AF0(4, null, expectedEventFragment);
         expectedEventFragment = Crypto.Proc_3_0_6D2AF0(1, null, expectedEventFragment)
             + " room\2owner\2desc\2open\2tag1\2tag2\2event\2" + "1\2H";
-        assertEquals(expectedEventFragment, Handling.navigatorEventFragment(navigatorFields));
+        assertEquals(expectedEventFragment, Handling.navigatorEventFragment(legacyNavigatorEvent));
         String expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(10, null, "");
         expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(3, null, expectedRoomFragment);
         expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(25, null, expectedRoomFragment);
@@ -1732,11 +1730,6 @@ public final class PortedModuleSmokeTest {
         expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomFragment);
         expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(0, null, expectedRoomFragment)
             + "room\2owner\2desc\2open\2tag1\2tag2\2event\2H";
-        assertEquals(expectedRoomFragment, Handling.navigatorRoomFragment(navigatorFields));
-        LegacyNavigatorRoomRow legacyNavigatorRoom = new LegacyNavigatorRoomRow(
-            10L, "room", "owner", "desc", 3L, 25L, "open", 1L, 9L, 4L, "tag1", "tag2", "event", 1L, 0L);
-        RoomDao.NavigatorEventRow legacyNavigatorEvent = new RoomDao.NavigatorEventRow(
-            10L, "room", "owner", "desc", 3L, 25L, "open", 1L, 9L, 4L, "tag1", "tag2", "event", "1");
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomFragment),
             Handling.navigatorLegacyRoomListPayload(List.of(legacyNavigatorRoom)));
         assertEquals(expectedRoomFragment, Handling.navigatorRoomFragment(legacyNavigatorRoom));
@@ -1749,25 +1742,20 @@ public final class PortedModuleSmokeTest {
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.navigatorLegacyRoomListPayload(List.of()));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), NavigatorPayloads.roomList(List.of()));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.navigatorEventListPayload(List.of()));
-        String[] officialFields = new String[]{
-            "1", "2", "3", "caption", "cap2", "cap3", "7", "8", "9", "10",
-            "11", "12", "13", "description", "15", "16", "17", "18", "icon",
-            "tag1", "tag2", "22", "model", "files", "250", "5", "6", "7"
-        };
-        String expectedOfficialRow = Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(3, null, "");
-        for (int fieldIndex = 3; fieldIndex <= 24; fieldIndex++) {
-            expectedOfficialRow += officialFields[fieldIndex] + '\2';
-        }
-        expectedOfficialRow += Crypto.Proc_3_0_6D2AF0(5, null, "")
-            + Crypto.Proc_3_0_6D2AF0(6, null, "")
-            + Crypto.Proc_3_0_6D2AF0(7, null, "");
         OfficialNavigatorItem officialItem = new OfficialNavigatorItem(
             1L, 2L, 3L, "caption", "cap2", "cap3", "7", "8", "9", "10",
             "11", "12", "13", "description", "15", "16", "17", "18", "icon",
             "tag1", "tag2", "22", "model", "files", "250", 5L, 6L, 7L, true);
-        assertEquals(expectedOfficialRow, Handling.officialNavigatorRowPayload(officialFields));
+        String expectedOfficialRow = Crypto.Proc_3_0_6D2AF0(1, null, "")
+            + Crypto.Proc_3_0_6D2AF0(2, null, "")
+            + Crypto.Proc_3_0_6D2AF0(3, null, "");
+        for (String textField : officialItem.textFields()) {
+            expectedOfficialRow += textField + '\2';
+        }
+        expectedOfficialRow += Crypto.Proc_3_0_6D2AF0(5, null, "")
+            + Crypto.Proc_3_0_6D2AF0(6, null, "")
+            + Crypto.Proc_3_0_6D2AF0(7, null, "");
+        assertEquals(expectedOfficialRow, Handling.officialNavigatorItemPayload(officialItem));
         assertEquals(expectedOfficialRow, NavigatorPayloads.officialItem(officialItem));
         assertEquals(expectedOfficialRow, Handling.officialNavigatorPayload(List.of(officialItem), false));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedOfficialRow,

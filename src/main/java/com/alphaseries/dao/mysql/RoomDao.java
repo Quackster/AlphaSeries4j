@@ -1164,31 +1164,6 @@ public final class RoomDao {
         String tagTwo,
         String formattedTime
     ) {
-        public static NavigatorEventRow fromLegacyFields(String[] fields) {
-            return new NavigatorEventRow(
-                number(fields, 0),
-                field(fields, 1),
-                field(fields, 2),
-                field(fields, 3),
-                number(fields, 4),
-                number(fields, 5),
-                field(fields, 6),
-                number(fields, 7),
-                number(fields, 9),
-                number(fields, 10),
-                field(fields, 11),
-                field(fields, 12),
-                field(fields, 13),
-                field(fields, 14));
-        }
-
-        private static String field(String[] fields, int index) {
-            return StringUtils.field(fields, index);
-        }
-
-        private static long number(String[] fields, int index) {
-            return NumberUtils.parseLong(field(fields, index));
-        }
     }
 
     public record RoomEventInfo(
