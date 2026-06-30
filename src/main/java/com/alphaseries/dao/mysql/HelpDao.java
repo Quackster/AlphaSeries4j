@@ -60,14 +60,8 @@ public final class HelpDao {
     }
 
     public record FaqNameRow(long id, String name) {
-        public String legacyRow() {
-            return id + "\t" + (name == null ? "" : name);
-        }
     }
 
     public record FaqDescriptionRow(long id, String description) {
-        public String legacyRow() {
-            return id + "\t" + (description == null ? "" : description);
-        }
     }
 }

@@ -531,17 +531,17 @@ public final class Boot {
     }
 
     public static void Proc_1_19_6CF190(Object... args) {
-        Map<Long, String> rows = new LinkedHashMap<Long, String>();
+        Map<Long, List<HelpDao.FaqNameRow>> rows = new LinkedHashMap<Long, List<HelpDao.FaqNameRow>>();
         HelpDao help = helpDao();
         if (help != null) {
             try {
-                rows.put(1L, joinFaqNameRows(help.importantFaqRows(1L)));
-                rows.put(2L, joinFaqNameRows(help.importantFaqRows(2L)));
+                rows.put(1L, help.importantFaqRows(1L));
+                rows.put(2L, help.importantFaqRows(2L));
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        Licence.setImportantFaqPayload(buildImportantFaqPayload(rows));
+        Licence.setImportantFaqPayload(buildImportantFaqPayloadFromRows(rows));
     }
 
     public static void Proc_1_20_6CF830(Object... args) {
@@ -555,23 +555,23 @@ public final class Boot {
             }
         }
         String[] categoryFaqs = new String[(int) maxCategoryId + 1];
-        String categoryRows = "";
-        Map<Long, String> faqRows = new LinkedHashMap<Long, String>();
+        List<HelpDao.FaqNameRow> categoryRows = List.of();
+        Map<Long, List<HelpDao.FaqNameRow>> faqRows = new LinkedHashMap<Long, List<HelpDao.FaqNameRow>>();
         if (help != null) {
             try {
                 List<HelpDao.FaqNameRow> categories = help.categoryRows();
-                categoryRows = joinFaqNameRows(categories);
+                categoryRows = categories;
                 for (HelpDao.FaqNameRow category : categories) {
                     long categoryId = category.id();
                     if (categoryId >= 0L && categoryId < categoryFaqs.length) {
-                        faqRows.put(categoryId, joinFaqNameRows(help.faqRowsByCategory(categoryId)));
+                        faqRows.put(categoryId, help.faqRowsByCategory(categoryId));
                     }
                 }
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        FaqCategoryCache cache = buildFaqCategoryCache(categoryRows, faqRows);
+        FaqCategoryCache cache = buildFaqCategoryCacheFromRows(categoryRows, faqRows);
         for (Map.Entry<Long, String> entry : cache.faqPayloadByCategoryId.entrySet()) {
             if (entry.getKey() >= 0L && entry.getKey() < categoryFaqs.length) {
                 categoryFaqs[entry.getKey().intValue()] = entry.getValue();
@@ -594,7 +594,7 @@ public final class Boot {
         Map<Long, String> cache = new LinkedHashMap<Long, String>();
         if (help != null) {
             try {
-                cache = buildFaqDescriptionCache(joinFaqDescriptionRows(help.descriptionRows()));
+                cache = buildFaqDescriptionCache(help.descriptionRows());
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
@@ -1232,6 +1232,16 @@ public final class Boot {
         return Crypto.Proc_3_0_6D2AF0(2, null, "") + payload;
     }
 
+    public static String buildImportantFaqPayloadFromRows(Map<Long, List<HelpDao.FaqNameRow>> faqRowsByImportance) {
+        StringBuilder payload = new StringBuilder();
+        for (long importanceLevel = 1L; importanceLevel <= 2L; importanceLevel++) {
+            List<HelpDao.FaqNameRow> rows = faqRowsByImportance == null ? List.of() : faqRowsByImportance.get(importanceLevel);
+            payload.append(Crypto.Proc_3_0_6D2AF0(countFaqNameRows(rows), null, ""));
+            payload.append(buildFaqNamePayloadFromRows(rows));
+        }
+        return Crypto.Proc_3_0_6D2AF0(2, null, "") + payload;
+    }
+
     public static FaqCategoryCache buildFaqCategoryCache(String categoryRows, Map<Long, String> faqRowsByCategoryId) {
         FaqCategoryCache cache = new FaqCategoryCache();
         long categoryCount = 0L;
@@ -1255,6 +1265,28 @@ public final class Boot {
         return cache;
     }
 
+    public static FaqCategoryCache buildFaqCategoryCacheFromRows(List<HelpDao.FaqNameRow> categoryRows,
+            Map<Long, List<HelpDao.FaqNameRow>> faqRowsByCategoryId) {
+        FaqCategoryCache cache = new FaqCategoryCache();
+        long categoryCount = 0L;
+        StringBuilder categoryPayload = new StringBuilder();
+        if (categoryRows != null) {
+            for (HelpDao.FaqNameRow category : categoryRows) {
+                if (category != null) {
+                    long categoryId = category.id();
+                    List<HelpDao.FaqNameRow> faqRows = faqRowsByCategoryId == null ? List.of() : faqRowsByCategoryId.get(categoryId);
+                    cache.faqPayloadByCategoryId.put(categoryId,
+                        Crypto.Proc_3_0_6D2AF0(countFaqNameRows(faqRows), null, "") + buildFaqNamePayloadFromRows(faqRows));
+                    categoryPayload.append(Crypto.Proc_3_0_6D2AF0(categoryId, null, ""));
+                    categoryPayload.append(StringUtils.text(category.name())).append('\2');
+                    categoryCount++;
+                }
+            }
+        }
+        cache.categoryPayload = Crypto.Proc_3_0_6D2AF0(categoryCount, null, "") + categoryPayload;
+        return cache;
+    }
+
     public static Map<Long, String> buildFaqDescriptionCache(String faqRows) {
         Map<Long, String> cache = new LinkedHashMap<Long, String>();
         for (String row : StringUtils.text(faqRows).split("\r", -1)) {
@@ -1263,6 +1295,20 @@ public final class Boot {
                 if (fields.length >= 2) {
                     long faqId = NumberUtils.parseLong(fields[0]);
                     String descriptionText = fields[1].replace('\n', '\r');
+                    cache.put(faqId, Crypto.Proc_3_0_6D2AF0(faqId, null, "") + descriptionText + '\2');
+                }
+            }
+        }
+        return cache;
+    }
+
+    public static Map<Long, String> buildFaqDescriptionCache(List<HelpDao.FaqDescriptionRow> faqRows) {
+        Map<Long, String> cache = new LinkedHashMap<Long, String>();
+        if (faqRows != null) {
+            for (HelpDao.FaqDescriptionRow row : faqRows) {
+                if (row != null) {
+                    long faqId = row.id();
+                    String descriptionText = StringUtils.text(row.description()).replace('\n', '\r');
                     cache.put(faqId, Crypto.Proc_3_0_6D2AF0(faqId, null, "") + descriptionText + '\2');
                 }
             }
@@ -1712,6 +1758,31 @@ public final class Boot {
         return payload.toString();
     }
 
+    private static String buildFaqNamePayloadFromRows(List<HelpDao.FaqNameRow> faqRows) {
+        StringBuilder payload = new StringBuilder();
+        if (faqRows != null) {
+            for (HelpDao.FaqNameRow row : faqRows) {
+                if (row != null) {
+                    payload.append(Crypto.Proc_3_0_6D2AF0(row.id(), null, ""));
+                    payload.append(StringUtils.text(row.name())).append('\2');
+                }
+            }
+        }
+        return payload.toString();
+    }
+
+    private static long countFaqNameRows(List<HelpDao.FaqNameRow> rows) {
+        long count = 0L;
+        if (rows != null) {
+            for (HelpDao.FaqNameRow row : rows) {
+                if (row != null) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
     private static long countRowsWithFields(String rowText, int minimumFieldCount) {
         long count = 0L;
         for (String row : StringUtils.text(rowText).split("\r", -1)) {
@@ -1822,22 +1893,6 @@ public final class Boot {
     private static String joinContainedClubProductRows(List<ClubDao.ContainedClubProductRow> rows) {
         StringBuilder joined = new StringBuilder();
         for (ClubDao.ContainedClubProductRow row : rows == null ? List.<ClubDao.ContainedClubProductRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
-    }
-
-    private static String joinFaqNameRows(List<HelpDao.FaqNameRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (HelpDao.FaqNameRow row : rows == null ? List.<HelpDao.FaqNameRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
-    }
-
-    private static String joinFaqDescriptionRows(List<HelpDao.FaqDescriptionRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (HelpDao.FaqDescriptionRow row : rows == null ? List.<HelpDao.FaqDescriptionRow>of() : rows) {
             appendLegacyRow(joined, row.legacyRow());
         }
         return joined.toString();
