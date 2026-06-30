@@ -428,22 +428,10 @@ public final class Handling {
             }
             long maxSlots = handlingUserHasPermission(userId, "fuse_larger_wardrobe") ? 10L : 5L;
             UserDao users = userDao();
-            long slotCount = 0L;
-            StringBuilder wardrobePayload = new StringBuilder();
             List<UserDao.WardrobeSlotRow> wardrobeRows = users == null
                 ? List.<UserDao.WardrobeSlotRow>of()
                 : users.wardrobeRows(NumberUtils.parseLong(userId));
-            for (UserDao.WardrobeSlotRow row : wardrobeRows) {
-                if (row != null && row.slotId() >= 1L && row.slotId() <= maxSlots) {
-                    String genderText = StringUtils.left(StringUtils.text(row.gender()).toUpperCase(), 1);
-                    if (!"M".equals(genderText) && !"F".equals(genderText)) {
-                        genderText = "M";
-                    }
-                    wardrobePayload.append(wardrobeSlotPayload(row.slotId(), row.figure(), genderText));
-                    slotCount++;
-                }
-            }
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(slotCount, null, "DK") + wardrobePayload, 0);
+            Proc_6_244_801E80(socketIndex, UserPayloads.wardrobeSlots(wardrobeRows, maxSlots).payload(), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

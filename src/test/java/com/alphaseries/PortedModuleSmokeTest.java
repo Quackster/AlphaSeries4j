@@ -1394,6 +1394,13 @@ public final class PortedModuleSmokeTest {
 
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "hd-180-1\2M\2",
             Handling.wardrobeSlotPayload(2, "hd-180-1", "M"));
+        UserPayloads.WardrobePayload wardrobePayload = UserPayloads.wardrobeSlots(List.of(
+            new UserDao.WardrobeSlotRow(1L, "hd-180-1", "m"),
+            new UserDao.WardrobeSlotRow(6L, "ch-255-66", "x")), 5L);
+        assertEquals(1L, wardrobePayload.slotCount());
+        assertEquals("DK" + Crypto.Proc_3_0_6D2AF0(1, null, "")
+                + Crypto.Proc_3_0_6D2AF0(1, null, "") + "hd-180-1\2M\2",
+            wardrobePayload.payload());
         assertEquals(true, Handling.isValidWardrobeFigure("hd-180-1.ch-255-66", "M"));
         assertEquals(false, Handling.isValidWardrobeFigure("bad-1", "M"));
         assertEquals(false, Handling.isValidWardrobeFigure("hd-'1", "M"));

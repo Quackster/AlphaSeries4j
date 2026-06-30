@@ -1,5 +1,6 @@
 package com.alphaseries.messages.outgoing;
 
+import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.protocol.PacketBuilder;
@@ -83,6 +84,21 @@ public final class UserPayloads {
             .build();
     }
 
+    public static WardrobePayload wardrobeSlots(List<UserDao.WardrobeSlotRow> rows, long maxSlots) {
+        long slotCount = 0L;
+        PacketBuilder slotPayload = PacketBuilder.create();
+        for (UserDao.WardrobeSlotRow row : rows == null ? List.<UserDao.WardrobeSlotRow>of() : rows) {
+            if (row != null && row.slotId() >= 1L && row.slotId() <= maxSlots) {
+                slotPayload.appendRaw(wardrobeSlot(row.slotId(), row.figure(), normalizedGender(row.gender())));
+                slotCount++;
+            }
+        }
+        return new WardrobePayload(slotCount, PacketBuilder.message("DK")
+            .appendInt(slotCount)
+            .appendRaw(slotPayload)
+            .build());
+    }
+
     public static String representedChat(long roomUserIndex, String filteredText, long gestureId, long chatType) {
         String prefix = chatType == 1L ? "@Y" : "@X";
         return PacketBuilder.message(prefix)
@@ -135,6 +151,9 @@ public final class UserPayloads {
     }
 
     public record EffectListPayload(long listedEffects, String payload) {
+    }
+
+    public record WardrobePayload(long slotCount, String payload) {
     }
 
     private static String normalizedGender(String genderText) {
