@@ -4994,13 +4994,25 @@ public final class Handling {
         }
     }
 
+    /**
+     * Original function: Proc_6_150_777FA0.
+     */
     public static Object Proc_6_150_777FA0(Object... args) {
+        return openFloorFurniturePackageOrToggleState(handlingSocketIndex(args), handlingRequestPayload(args, "FH"));
+    }
+
+    /**
+     * Original function: Proc_6_150_777FA0.
+     */
+    public static Object openFloorFurniturePackageOrToggleState(int socketIndex, String packagePayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return "";
             }
-            String requestPayload = handlingRequestPayload(args, "FH");
+            String requestPayload = StringUtils.text(packagePayload);
+            if (requestPayload.startsWith("FH")) {
+                requestPayload = requestPayload.substring(2);
+            }
             LongRef offset = new LongRef(1);
             long furnitureId = readWireLong(requestPayload, offset);
             if (furnitureId <= 0L) {
@@ -7937,7 +7949,7 @@ public final class Handling {
                 case "A[": Proc_6_141_76A670(socketIndex, "A[", packetPayload); break;
                 case "AI": Proc_6_159_79FCD0(socketIndex, "AI", packetPayload); break;
                 case "Ch": toggleFloorFurnitureState(socketIndex, packetPayload); break;
-                case "FH": Proc_6_150_777FA0(socketIndex, "FH", packetPayload); break;
+                case "FH": openFloorFurniturePackageOrToggleState(socketIndex, packetPayload); break;
                 case "@B": Proc_6_78_7279A0(socketIndex, "@B", packetPayload); break;
                 case "rv": Proc_6_142_76B310(socketIndex, "rv", packetPayload); break;
                 case "pa": sendToSocket(socketIndex, "J|H"); break;
