@@ -43,6 +43,62 @@ public final class ProductCache {
     /**
      * Original function: DataManager.Proc_8_12_806C30.
      */
+    public String defaultSign(long productId) {
+        return cell(productId, 4);
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public String fallbackDefaultSign(long productId) {
+        return cell(productId, 5);
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public String interactionAction(long productId) {
+        return cell(productId, 7);
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public long stateCount(long productId) {
+        return NumberUtils.parseLong(cell(productId, 10));
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public long maxState(long productId) {
+        return NumberUtils.parseLong(cell(productId, 12));
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public String tradeName(long productId) {
+        return cell(productId, 13);
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public String displayName(long productId) {
+        return cell(productId, 14);
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public String description(long productId) {
+        return cell(productId, 15);
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
     public String primarySprite(long productId) {
         return cell(productId, 17);
     }
@@ -57,6 +113,13 @@ public final class ProductCache {
     /**
      * Original function: DataManager.Proc_8_12_806C30.
      */
+    public long dimensionMapId(long productId) {
+        return NumberUtils.parseLong(cell(productId, 20));
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
     public String itemData(long productId) {
         return cell(productId, 24);
     }
@@ -64,8 +127,29 @@ public final class ProductCache {
     /**
      * Original function: DataManager.Proc_8_12_806C30.
      */
+    public String badgeId(long productId) {
+        return cell(productId, 26);
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public String fallbackBadgeId(long productId) {
+        return cell(productId, 27);
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
     public long wiredCode(long productId) {
         return NumberUtils.parseLong(cell(productId, 27));
+    }
+
+    /**
+     * Original function: DataManager.Proc_8_12_806C30.
+     */
+    public boolean hasCharges(long productId) {
+        return NumberUtils.parseLong(cell(productId, 34)) != 0L;
     }
 
     private static Map<Long, String> rowsById(Object cache) {

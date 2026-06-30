@@ -509,8 +509,8 @@ public final class Boot {
             String giftClass = Licence.productType(productId) == 9L ? "i" : "s";
             payload.append(Crypto.Proc_3_0_6D2AF0(catalogProductId, null, ""));
             payload.append(Crypto.Proc_3_0_6D2AF0(productId, null, ""));
-            payload.append(DataManager.Proc_8_12_806C30(productId, 14, 0)).append('\2');
-            payload.append(DataManager.Proc_8_12_806C30(productId, 15, 0)).append('\2');
+            payload.append(DataManager.productCache().displayName(productId)).append('\2');
+            payload.append(DataManager.productCache().description(productId)).append('\2');
             payload.append("IHHI").append(giftClass).append('\2');
             payload.append(Crypto.Proc_3_0_6D2AF0(row.vipOnly(), null, ""));
             payload.append(Crypto.Proc_3_0_6D2AF0(row.requiredDays(), null, ""));

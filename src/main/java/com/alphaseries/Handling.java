@@ -2063,7 +2063,7 @@ public final class Handling {
             long currentState = NumberUtils.parseLong(wallState.sign());
             long stateCount = Licence.productStateCount(productId);
             if (stateCount <= 0L) {
-                stateCount = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 10, 0));
+                stateCount = DataManager.productCache().stateCount(productId);
             }
             if (stateCount <= 0L) {
                 stateCount = 1L;
@@ -4000,19 +4000,19 @@ public final class Handling {
                     }
                     String itemData = DataManager.productCache().itemData(itemProductId);
                     if (itemData.isEmpty()) {
-                        itemData = DataManager.Proc_8_12_806C30(itemProductId, 4, 0);
+                        itemData = DataManager.productCache().defaultSign(itemProductId);
                     }
                     long productType = DataManager.productCache().type(itemProductId);
                     Proc_6_244_801E80(socketIndex,
                         InventoryMessagePayloads.roomAdd(Proc_6_138_7678A0(furnitureId, itemProductId, itemData, 0)), 0);
-                    if ("TROPHY_VAR".equalsIgnoreCase(DataManager.Proc_8_12_806C30(itemProductId, 4, 0))) {
+                    if ("TROPHY_VAR".equalsIgnoreCase(DataManager.productCache().defaultSign(itemProductId))) {
                         String trophySign = handlingUserName(handlingUserIdFromSocket(socketIndex)) + '\b'
                             + recyclerRewardSign() + '\b' + signText;
                         furnitureDao().updateSignText(furnitureId, Functions.Proc_10_10_80A7F0(trophySign, 1, 1));
                     }
                     if (productType == 8L) {
                         Proc_6_244_801E80(socketIndex, CatalogPayloads.dimensionMap(furnitureId,
-                            NumberUtils.parseLong(DataManager.Proc_8_12_806C30(itemProductId, 20, 0))), 0);
+                            DataManager.productCache().dimensionMapId(itemProductId)), 0);
                     }
                 }
             }
@@ -4062,9 +4062,9 @@ public final class Handling {
                 }
                 for (Long dealProductId : deal.itemProductIds()) {
                     if (dealProductId != null && dealProductId > 0L) {
-                        String defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(dealProductId, 4, 0), 0, 0);
+                        String defaultSign = Functions.Proc_10_10_80A7F0(DataManager.productCache().defaultSign(dealProductId), 0, 0);
                         if (defaultSign.isEmpty()) {
-                            defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(dealProductId, 5, 0), 0, 0);
+                            defaultSign = Functions.Proc_10_10_80A7F0(DataManager.productCache().fallbackDefaultSign(dealProductId), 0, 0);
                         }
                         furniture.insertCatalogFurniture(dealProductId, userIdValue, defaultSign, catalogProductId);
                         grantedCount++;
@@ -4087,9 +4087,9 @@ public final class Handling {
                     }
                     Functions.Proc_10_23_80E110(userId, hcLevel, hcMonths, hcMonths * 31L);
                 }
-                String badgeId = DataManager.Proc_8_12_806C30(productId, 26, 0).toUpperCase();
+                String badgeId = DataManager.productCache().badgeId(productId).toUpperCase();
                 if (badgeId.isEmpty()) {
-                    badgeId = DataManager.Proc_8_12_806C30(productId, 27, 0).toUpperCase();
+                    badgeId = DataManager.productCache().fallbackBadgeId(productId).toUpperCase();
                 }
                 if (badgeId.length() > 2) {
                     String existingBadge = StringUtils.text(users.badgeId(userIdValue, badgeId)).toUpperCase();
@@ -4105,10 +4105,10 @@ public final class Handling {
                 }
                 String defaultSign = signText;
                 if (defaultSign.isEmpty()) {
-                    defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(productId, 4, 0), 0, 0);
+                    defaultSign = Functions.Proc_10_10_80A7F0(DataManager.productCache().defaultSign(productId), 0, 0);
                 }
                 if (defaultSign.isEmpty()) {
-                    defaultSign = Functions.Proc_10_10_80A7F0(DataManager.Proc_8_12_806C30(productId, 5, 0), 0, 0);
+                    defaultSign = Functions.Proc_10_10_80A7F0(DataManager.productCache().fallbackDefaultSign(productId), 0, 0);
                 }
                 for (long itemIndex = 1L; itemIndex <= amount; itemIndex++) {
                     furniture.insertCatalogFurniture(productId, userIdValue, defaultSign, catalogProductId);
@@ -4298,7 +4298,7 @@ public final class Handling {
             if (grantedFurnitureId <= 0L) {
                 return "";
             }
-            String productSign = DataManager.Proc_8_12_806C30(productId, 4, 0);
+            String productSign = DataManager.productCache().defaultSign(productId);
             if ("TROPHY_VAR".equalsIgnoreCase(productSign)) {
                 productSign = handlingUserName(senderUserId) + '\b' + recyclerRewardSign() + '\b' + giftMessage;
             }
@@ -4420,8 +4420,8 @@ public final class Handling {
             if (productSprite.length() > 2) {
                 long productId = vouchers.catalogProductProductIdBySprite(productSprite);
                 if (productId != 0L) {
-                    rewardPayload = DataManager.Proc_8_12_806C30(productId, 13, 0) + '\2'
-                        + DataManager.Proc_8_12_806C30(productId, 14, 0) + '\2';
+                    rewardPayload = DataManager.productCache().tradeName(productId) + '\2'
+                        + DataManager.productCache().displayName(productId) + '\2';
                 }
             }
             UserDao users = userDao();
@@ -4722,7 +4722,7 @@ public final class Handling {
                 long rowRoomId = roomId > 0L ? roomId : row.roomId();
                 long productId = row.productId();
                 if (furnitureId > 0L && rowRoomId > 0L && productId > 0L) {
-                    String productAction = DataManager.Proc_8_12_806C30(productId, 7, 0).toLowerCase();
+                    String productAction = DataManager.productCache().interactionAction(productId).toLowerCase();
                     String productSprite = DataManager.productCache().primarySprite(productId).toLowerCase();
                     if (productSprite.isEmpty()) {
                         productSprite = DataManager.productCache().alternateSprite(productId).toLowerCase();
@@ -4826,13 +4826,13 @@ public final class Handling {
                 productSprite = DataManager.productCache().alternateSprite(productId).toLowerCase();
             }
             long currentState = NumberUtils.parseLong(signText);
-            long maxState = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 12, 0));
+            long maxState = DataManager.productCache().maxState(productId);
             long nextState = nextFurnitureState(productSprite, currentState, maxState);
             furniture.updateRoomFurnitureState(furnitureId, roomId, NumberUtils.parseLong(userId), nextState);
             Proc_6_151_78AC20(roomId, furnitureId, nextState);
             String payload = FurniturePayloads.stateChanged(furnitureId, nextState);
             Proc_6_247_8027E0(socketIndex, payload, 0);
-            if (NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 34, 0)) != 0L) {
+            if (DataManager.productCache().hasCharges(productId)) {
                 Proc_6_148_7756D0(socketIndex, productId, furnitureId);
             }
         } catch (Exception ignored) {
@@ -5263,7 +5263,7 @@ public final class Handling {
             }
             if (productSprite.startsWith("bb_score_") || productSprite.startsWith("es_score_")) {
                 long stateValue = NumberUtils.parseLong(signText);
-                long maxState = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 12, 0));
+                long maxState = DataManager.productCache().maxState(productId);
                 if (maxState <= 0L) {
                     maxState = 99L;
                 }

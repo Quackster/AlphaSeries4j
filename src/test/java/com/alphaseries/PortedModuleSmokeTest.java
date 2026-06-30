@@ -165,13 +165,28 @@ public final class PortedModuleSmokeTest {
         DataManager.global_008292BC = "10\tsofa\t5\r11\ttable\t7";
         assertEquals("table", DataManager.Proc_8_12_806C30(11, 1));
         String[] dataManagerProducts = new String[12];
-        dataManagerProducts[11] = productRow(11, "0", "9", "17", "present_wrap_basic", "18", "post.it.vd", "24", "payload", "27", "502");
+        dataManagerProducts[11] = productRow(11, "0", "9", "4", "default", "5", "fallback", "7", "switch",
+            "10", "6", "12", "4", "13", "Trade", "14", "Name", "15", "Description",
+            "17", "present_wrap_basic", "18", "post.it.vd", "20", "77", "24", "payload",
+            "26", "ACH", "27", "502", "34", "1");
         DataManager.global_008292BC = dataManagerProducts;
         assertEquals(9L, DataManager.productCache().type(11));
+        assertEquals("default", DataManager.productCache().defaultSign(11));
+        assertEquals("fallback", DataManager.productCache().fallbackDefaultSign(11));
+        assertEquals("switch", DataManager.productCache().interactionAction(11));
+        assertEquals(6L, DataManager.productCache().stateCount(11));
+        assertEquals(4L, DataManager.productCache().maxState(11));
+        assertEquals("Trade", DataManager.productCache().tradeName(11));
+        assertEquals("Name", DataManager.productCache().displayName(11));
+        assertEquals("Description", DataManager.productCache().description(11));
         assertEquals("present_wrap_basic", DataManager.productCache().primarySprite(11));
         assertEquals("post.it.vd", DataManager.productCache().alternateSprite(11));
+        assertEquals(77L, DataManager.productCache().dimensionMapId(11));
         assertEquals("payload", DataManager.productCache().itemData(11));
+        assertEquals("ACH", DataManager.productCache().badgeId(11));
+        assertEquals("502", DataManager.productCache().fallbackBadgeId(11));
         assertEquals(502L, DataManager.productCache().wiredCode(11));
+        assertEquals(true, DataManager.productCache().hasCharges(11));
         assertEquals("pro", DataManager.extractLicenceSetting("\rrank=7\rmode:pro\r", "mode"));
         assertEquals("rank=7\rmode\nok", DataManager.licenceBlockFromResponse("aFMTbFMTcFMTrank=7--*-mode*-*-ok", "FMT"));
         assertEquals("fallback", DataManager.licenceBlockFromResponse("prefixFMTfallback", "FMT"));
