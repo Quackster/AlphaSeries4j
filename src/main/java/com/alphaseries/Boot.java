@@ -58,7 +58,17 @@ public final class Boot {
     private Boot() {
     }
 
+    /**
+     * Original function: Proc_1_0_6BA9D0.
+     */
     public static void Proc_1_0_6BA9D0(Object... args) {
+        loadRecyclerRewardsCache();
+    }
+
+    /**
+     * Original function: Proc_1_0_6BA9D0.
+     */
+    public static void loadRecyclerRewardsCache() {
         List<RecyclerSettings.RewardGroup> rewardGroups = List.of();
         RecyclerDao recycler = recyclerDao();
         if (recycler != null) {
@@ -82,7 +92,17 @@ public final class Boot {
         Licence.setRecyclerRewards(cache.rewardGroups);
     }
 
+    /**
+     * Original function: Proc_1_1_6BB340.
+     */
     public static void Proc_1_1_6BB340(Object... args) {
+        loadCatalogStartupCache();
+    }
+
+    /**
+     * Original function: Proc_1_1_6BB340.
+     */
+    public static void loadCatalogStartupCache() {
         CatalogDao catalog = catalogDao();
         Object products = "";
         if (catalog != null) {
@@ -145,7 +165,7 @@ public final class Boot {
         loadCatalogPagePayloadCache();
         loadClubGiftCache();
         loadGiftWrapCache();
-        Proc_1_0_6BA9D0(0, 0, 0);
+        loadRecyclerRewardsCache();
     }
 
     /**
@@ -202,8 +222,8 @@ public final class Boot {
             loadRoomCategoryPayloadCache();
         });
         runTimed("Raumwerbung im Cache gespeichert", Boot::loadVisitRoomAdsCache);
-        runTimed("Bonussystem im Cache gespeichert", () -> Proc_1_5_6C4F80(0, 0, 0));
-        runTimed("Katalog im Cache gespeichert", () -> Proc_1_1_6BB340(0, 0, 0));
+        runTimed("Bonussystem im Cache gespeichert", Boot::loadBonusSystemCache);
+        runTimed("Katalog im Cache gespeichert", Boot::loadCatalogStartupCache);
         runTimed("Chat Einstellungen im Cache gespeichert", Boot::buildChatSettingsCache);
         runTimed("Haustierrassen im Cache gespeichert", Boot::loadPetRaceCache);
         runTimed("FAQ im Cache gespeichert", () -> {
@@ -227,7 +247,17 @@ public final class Boot {
         });
     }
 
+    /**
+     * Original function: Proc_1_4_6C4F00.
+     */
     public static void Proc_1_4_6C4F00(Object... args) {
+        refreshDynamicStartupCaches();
+    }
+
+    /**
+     * Original function: Proc_1_4_6C4F00.
+     */
+    public static void refreshDynamicStartupCaches() {
         loadRoomEventLocalesCache();
         loadServerSettingsCache();
         loadImportantFaqCache();
@@ -239,7 +269,17 @@ public final class Boot {
         loadRecommendedRoomsCache();
     }
 
+    /**
+     * Original function: Proc_1_5_6C4F80.
+     */
     public static void Proc_1_5_6C4F80(Object... args) {
+        loadBonusSystemCache();
+    }
+
+    /**
+     * Original function: Proc_1_5_6C4F80.
+     */
+    public static void loadBonusSystemCache() {
         AchievementSettingsCache achievementCache = new AchievementSettingsCache();
         AchievementDao achievements = achievementDao();
         if (achievements != null) {

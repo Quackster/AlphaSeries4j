@@ -726,6 +726,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Boot.loadStaffModerationCache(...)`, `loadRoomCategoryRowsCache(...)`, and `loadRoomCategoryPayloadCache(...)` with original Proc names in Javadocs, then migrated startup cache refresh callers away from the bare moderation and navigator-category Proc loaders.
 - Added named `Boot.loadGiftWrapCache(...)`, `loadCatalogPagePayloadCache(...)`, `loadPermissionMatrixCache(...)`, `loadCatalogPageTreeCache(...)`, and `loadClubGiftCache(...)` with original Proc names in Javadocs, then migrated startup cache refresh callers away from the bare catalog/gift/permission Proc loaders.
 - Added named `Boot.loadImportantFaqCache(...)`, `loadFaqCategoryCache(...)`, `loadFaqDescriptionCache(...)`, and `loadVisitRoomAdsCache(...)` with original Proc names in Javadocs, then migrated startup cache refresh callers away from the bare FAQ and visit-room advertisement Proc loaders.
+- Added named `Boot.loadRecyclerRewardsCache(...)`, `loadCatalogStartupCache(...)`, `refreshDynamicStartupCaches(...)`, and `loadBonusSystemCache(...)` with original Proc names in Javadocs, then migrated aggregate startup cache callers away from the bare recycler, catalog, refresh, and bonus-system Proc loaders.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -741,7 +742,7 @@ Measured on 2026-07-01:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
-- `Boot.java`: 2232 lines
+- `Boot.java`: 2272 lines
 - `Handling.java`: 11591 lines
 - `Functions.java`: 753 lines
 - `DataManager.java`: 528 lines
