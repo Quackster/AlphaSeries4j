@@ -2549,8 +2549,8 @@ public final class Handling {
                 return;
             }
             long roomSlot = rooms.roomSlot(roomId);
-            StringBuilder occupantPayload = new StringBuilder();
-            StringBuilder statusPayload = new StringBuilder();
+            PacketBuilder occupantPayload = PacketBuilder.create();
+            PacketBuilder statusPayload = PacketBuilder.create();
             long occupantCount = 0L;
             long statusCount = 0L;
             for (RoomOccupantRow occupant : rooms.activeRoomOccupants(roomId)) {
@@ -2573,7 +2573,7 @@ public final class Handling {
                     }
                     String positionZ = "0.0";
                     long directionValue = 0L;
-                    occupantPayload.append(SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
+                    occupantPayload.appendRaw(SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
                         String.valueOf(occupant.userId()),
                         occupant.name(),
                         occupant.figure(),
@@ -2585,7 +2585,7 @@ public final class Handling {
                         positionZ,
                         "0",
                         "0")));
-                    statusPayload.append(SocialPayloads.roomOccupantStatus(
+                    statusPayload.appendRaw(SocialPayloads.roomOccupantStatus(
                         roomUserIndex, positionX, positionY, positionZ, directionValue));
                     occupantCount++;
                     statusCount++;
@@ -2617,8 +2617,8 @@ public final class Handling {
                             positionZ,
                             "2"));
                         if (!botEntry.isEmpty()) {
-                            occupantPayload.append(botEntry);
-                            statusPayload.append(SocialPayloads.roomOccupantStatus(
+                            occupantPayload.appendRaw(botEntry);
+                            statusPayload.appendRaw(SocialPayloads.roomOccupantStatus(
                                 botEntityId, positionX, positionY, positionZ, directionValue));
                             occupantCount++;
                             statusCount++;
@@ -2626,8 +2626,8 @@ public final class Handling {
                     }
                 }
             }
-            Proc_6_244_801E80(socketIndex, RoomPayloads.occupantEntries(occupantCount, occupantPayload.toString()), -1);
-            Proc_6_244_801E80(socketIndex, RoomPayloads.occupantStatuses(statusCount, statusPayload.toString()), 0);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.occupantEntries(occupantCount, occupantPayload.build()), -1);
+            Proc_6_244_801E80(socketIndex, RoomPayloads.occupantStatuses(statusCount, statusPayload.build()), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

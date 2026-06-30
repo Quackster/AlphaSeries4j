@@ -221,6 +221,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.dao.mysql.ServerMaintenanceDao` and routed boot/query-unload reset SQL plus `Main` socket-user fallback through typed DAO boundaries.
 - Expanded `ServerMaintenanceDao` with ping-timer setting updates, clearing remaining direct `MySQL.Proc_5_*` usage from `Main`.
 - Expanded `RoomDao` with typed active room occupant rows and routed room occupant/status payload setup through prepared DAO reads instead of tab-delimited handler parsing.
+- Built active room occupant and status response payloads with `PacketBuilder.appendRaw(...)` over typed occupant rows instead of handler-local `StringBuilder` accumulation.
 - Expanded `RoomDao` with typed model furniture rows and routed room model furniture payload setup through prepared DAO reads instead of tab-delimited handler parsing.
 - Expanded `UserDao` with typed user-effect summary, activation, and expiry rows, replacing raw effect SQL and tab-delimited effect parsing in `Handling`.
 - Expanded `RoomDao` with favourite-room list/add/remove methods, replacing raw favourite-room SQL and row parsing in `Handling`.
