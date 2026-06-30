@@ -2549,7 +2549,7 @@ public final class Handling {
                 String.valueOf(directionValue),
                 "0"));
             if (!entryPayload.isEmpty()) {
-                Proc_6_247_8027E0(socketIndex, RoomPayloads.occupantEntries(1, entryPayload), 0);
+                broadcastToCurrentRoom(socketIndex, RoomPayloads.occupantEntries(1, entryPayload));
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -2950,7 +2950,7 @@ public final class Handling {
                 Proc_6_244_801E80(socketIndex, PetPayloads.inventoryAdd(inventoryRow), 0);
             }
             Proc_6_146_76D300(socketIndex, furnitureId, productId);
-            Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
+            broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2');
             furniture.deleteFurniture(furnitureId);
             Proc_6_244_801E80(socketIndex, PetPayloads.packageNameValidation(furnitureId, validationCode, petName), 0);
             return String.valueOf(botId);
@@ -3351,8 +3351,8 @@ public final class Handling {
             String signText = nextState + "," + dimmer.presetId() + "," + dimmer.backgroundId()
                 + "," + dimmer.colour() + "," + dimmer.lightLevel();
             furniture.updateSignText(dimmerFurnitureId, signText);
-            Proc_6_247_8027E0(socketIndex,
-                FurniturePayloads.wallState(dimmerFurnitureId, dimmer.productId(), dimmer.wallPosition(), signText), 0);
+            broadcastToCurrentRoom(socketIndex,
+                FurniturePayloads.wallState(dimmerFurnitureId, dimmer.productId(), dimmer.wallPosition(), signText));
             return nextState;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -3395,12 +3395,12 @@ public final class Handling {
             furniture.updateSignText(dimmerFurnitureId, signText);
             FurnitureDao.WallProductPosition wallPosition = furniture.wallProductPosition(dimmerFurnitureId).orElse(null);
             if (wallPosition != null) {
-                Proc_6_247_8027E0(socketIndex,
+                broadcastToCurrentRoom(socketIndex,
                     FurniturePayloads.wallState(
                         dimmerFurnitureId,
                         wallPosition.productId(),
                         wallPosition.wallPosition(),
-                        signText), 0);
+                        signText));
             }
             return dimmerFurnitureId;
         } catch (Exception ignored) {
@@ -3464,7 +3464,7 @@ public final class Handling {
             users.activateUserEffect(effectRowId);
             Proc_6_244_801E80(socketIndex, UserPayloads.effectActivated(effectId, rentSeconds), 0);
             String broadcastPayload = SocialPayloads.roomUserEffect(socketIndex, effectId) + "H";
-            Proc_6_247_8027E0(socketIndex, broadcastPayload, 0);
+            broadcastToCurrentRoom(socketIndex, broadcastPayload);
             return effectId;
         } catch (Exception ignored) {
             return 0L;
@@ -3492,7 +3492,7 @@ public final class Handling {
                 long effectId = effect.effectId();
                 int socketIndex = (int) effect.socketIndex();
                 if (socketIndex > 0 && effectId > 0L) {
-                    Proc_6_247_8027E0(socketIndex, SocialPayloads.roomUserEffectCleared(socketIndex), 0);
+                    broadcastToCurrentRoom(socketIndex, SocialPayloads.roomUserEffectCleared(socketIndex));
                     Proc_6_244_801E80(socketIndex, UserPayloads.effectExpired(effectId), 0);
                     expiredCount++;
                 }
@@ -3627,8 +3627,8 @@ public final class Handling {
             rooms.updateStaffPickedState(roomId, newPicked);
             String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                 + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
-            Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
-            Proc_6_247_8027E0(socketIndex, RoomPayloads.entryUpdated(roomId), 0);
+            broadcastToCurrentRoom(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0));
+            broadcastToCurrentRoom(socketIndex, RoomPayloads.entryUpdated(roomId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
