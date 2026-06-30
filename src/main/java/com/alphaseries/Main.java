@@ -647,7 +647,7 @@ public final class Main {
     }
 
     public static long mainRepresentedBotRoomSlot(long entityIndex) {
-        return NumberUtils.parseLong(mainRepresentedBotRecordField(entityIndex, 0));
+        return Licence.representedBots().record(entityIndex).roomSlot();
     }
 
     public static String mainRepresentedBotRecordText(long entityIndex) {

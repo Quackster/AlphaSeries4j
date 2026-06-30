@@ -458,6 +458,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `RepresentedBotIdentity` resolution for request ids that may be represented entity ids or bot ids, replacing duplicated represented-bot field-index probes in pet status, command-list, command, experience, and scratch handlers.
 - Added `RepresentedBotRegistry.isEntityInRoom(...)` and cleared live `Handling` represented-bot call sites that passed literal cache field indexes; only compatibility accessors remain.
 - Routed `Functions` represented-bot position availability through `RepresentedBotRecord`/`RepresentedBotIdentity`, clearing direct represented-bot cache field reads from `Functions`.
+- Routed `Main.mainRepresentedBotRoomSlot(...)` through `RepresentedBotRecord.roomSlot()` instead of the generic represented-bot field accessor.
 
 ## VB Compatibility Class Removal Checklist
 
