@@ -18,6 +18,14 @@ public final class SettingsDao {
             resultSet -> new SettingRow(resultSet.getString(1), resultSet.getString(2)));
     }
 
+    public List<LocaleRow> roomEventLocaleRows() throws SQLException {
+        return database.query(
+            "SELECT variable,value FROM locales WHERE category=? AND variable LIKE ?",
+            resultSet -> new LocaleRow(resultSet.getString(1), resultSet.getString(2)),
+            2L,
+            "roomevent_type_%");
+    }
+
     public String value(String variableName) throws SQLException {
         return database.queryOne(
             "SELECT value FROM settings WHERE variable=?",
@@ -30,5 +38,8 @@ public final class SettingsDao {
         public String legacyRow() {
             return (variableName == null ? "" : variableName) + "\t" + (value == null ? "" : value);
         }
+    }
+
+    public record LocaleRow(String variableName, String value) {
     }
 }

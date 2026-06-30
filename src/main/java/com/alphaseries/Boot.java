@@ -8,7 +8,9 @@ import com.alphaseries.dao.mysql.ChatDao;
 import com.alphaseries.dao.mysql.ClubDao;
 import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.PackageDao;
+import com.alphaseries.dao.mysql.QuestDao;
 import com.alphaseries.dao.mysql.RecyclerDao;
+import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.dao.mysql.SettingsDao;
 import com.alphaseries.db.Database;
@@ -289,16 +291,31 @@ public final class Boot {
     }
 
     public static void Proc_1_8_6C6850(Object... args) {
-        DataManager.setRoomEventLocaleCache(buildRoomEventLocaleCache(MySQL.Proc_5_2_6D4690(
-            "SELECT variable,value FROM locales WHERE category='2' AND variable LIKE 'roomevent_type_%'", 0, 0),
-            DataManager.roomEventLocales().cacheText()));
+        SettingsDao settings = settingsDao();
+        String localeCache = DataManager.roomEventLocales().cacheText();
+        if (settings != null) {
+            try {
+                localeCache = buildRoomEventLocaleCache(settings.roomEventLocaleRows(), localeCache);
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
+        DataManager.setRoomEventLocaleCache(localeCache);
     }
 
     public static void Proc_1_9_6C6DF0(Object... args) {
-        Licence.setRoomPortalSettings(
-            "0" + MySQL.Proc_5_2_6D4690(
-                "SELECT id_room,position_x,position_y,id_warp_room,warp_x,warp_y,is_special FROM rooms_warpspaces", "\r", 0) + "\r",
-            MySQL.Proc_5_2_6D4690("SELECT  id_room,is_open FROM  rooms_specialgates", "\r", 0) + "\r");
+        RoomDao rooms = roomDao();
+        String warpSpaceRows = "0\r";
+        String specialGateRows = "\r";
+        if (rooms != null) {
+            try {
+                warpSpaceRows = "0" + joinWarpSpaceRows(rooms.warpSpaceRows()) + "\r";
+                specialGateRows = joinSpecialGateRows(rooms.specialGateRows()) + "\r";
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
+        Licence.setRoomPortalSettings(warpSpaceRows, specialGateRows);
         Proc_1_16_6CCA60(0, 0, 0);
         String systemDate = Functions.Proc_10_0_809570("com.system.format.date", "", 0);
         String systemTime = Functions.Proc_10_0_809570("com.system.format.time", "", 0);
@@ -312,8 +329,16 @@ public final class Boot {
             }
         }
         Functions.setSettingsCache(buildSettingsCache(settingsRows, systemDate, systemTime));
-        Licence.setQuestRows(MySQL.Proc_5_2_6D4690(
-            "SELECT id,level,name,NULL,reward,reward_type,require_action,id_additional,id_campaign,amount_activities,waitamount FROM quests ORDER BY id_campaign DESC,level ASC", 0, 0));
+        String questRows = "";
+        QuestDao quests = questDao();
+        if (quests != null) {
+            try {
+                questRows = joinQuestRows(quests.questDefinitions());
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
+        Licence.setQuestRows(questRows);
     }
 
     public static void Proc_1_10_6C7690(Object... args) {
@@ -909,6 +934,22 @@ public final class Boot {
                     String cacheKey = fields[0].replaceFirst("roomevent_type_", "");
                     if (!cacheKey.isEmpty()) {
                         payload.append('\0').append(NumberUtils.parseLong(cacheKey)).append('\1').append(fields[1]).append('\2');
+                    }
+                }
+            }
+        }
+        return payload.toString();
+    }
+
+    public static String buildRoomEventLocaleCache(List<SettingsDao.LocaleRow> localeRows, String existingCache) {
+        StringBuilder payload = new StringBuilder(StringUtils.text(existingCache));
+        if (localeRows != null) {
+            for (SettingsDao.LocaleRow row : localeRows) {
+                if (row != null) {
+                    String cacheKey = StringUtils.text(row.variableName()).replaceFirst("roomevent_type_", "");
+                    if (!cacheKey.isEmpty()) {
+                        payload.append('\0').append(NumberUtils.parseLong(cacheKey)).append('\1')
+                            .append(StringUtils.text(row.value())).append('\2');
                     }
                 }
             }
@@ -1597,6 +1638,30 @@ public final class Boot {
         return joined.toString();
     }
 
+    private static String joinWarpSpaceRows(List<RoomDao.WarpSpaceRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (RoomDao.WarpSpaceRow row : rows == null ? List.<RoomDao.WarpSpaceRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
+    private static String joinSpecialGateRows(List<RoomDao.SpecialGateRow> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (RoomDao.SpecialGateRow row : rows == null ? List.<RoomDao.SpecialGateRow>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
+    private static String joinQuestRows(List<QuestDao.QuestDefinition> rows) {
+        StringBuilder joined = new StringBuilder();
+        for (QuestDao.QuestDefinition row : rows == null ? List.<QuestDao.QuestDefinition>of() : rows) {
+            appendLegacyRow(joined, row.legacyRow());
+        }
+        return joined.toString();
+    }
+
     private static void appendLegacyRow(StringBuilder joined, String rowText) {
         if (joined.length() > 0) {
             joined.append('\r');
@@ -1622,6 +1687,16 @@ public final class Boot {
     private static HelpDao helpDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new HelpDao(database);
+    }
+
+    private static RoomDao roomDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new RoomDao(database);
+    }
+
+    private static QuestDao questDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new QuestDao(database);
     }
 
     private static AdvertisingDao advertisingDao() {

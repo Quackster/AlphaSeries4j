@@ -61,6 +61,25 @@ public final class RoomDao {
             .orElse(0L);
     }
 
+    public List<WarpSpaceRow> warpSpaceRows() throws SQLException {
+        return database.query(
+            "SELECT id_room,position_x,position_y,id_warp_room,warp_x,warp_y,is_special FROM rooms_warpspaces",
+            resultSet -> new WarpSpaceRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getLong(7)));
+    }
+
+    public List<SpecialGateRow> specialGateRows() throws SQLException {
+        return database.query(
+            "SELECT id_room,is_open FROM rooms_specialgates",
+            resultSet -> new SpecialGateRow(resultSet.getLong(1), resultSet.getLong(2)));
+    }
+
     public List<NewFriendRooms.RoomPick> newFriendRoomPicks() throws SQLException {
         return database.query(
             "SELECT rooms.id,models.type FROM rooms_categories,rooms,models "
@@ -905,6 +924,27 @@ public final class RoomDao {
     }
 
     public record RoomPlacementState(String modelMap, long allowWalkthrough, long roomSlot) {
+    }
+
+    public record WarpSpaceRow(
+        long roomId,
+        long positionX,
+        long positionY,
+        long warpRoomId,
+        long warpX,
+        long warpY,
+        long special
+    ) {
+        public String legacyRow() {
+            return roomId + "\t" + positionX + "\t" + positionY + "\t" + warpRoomId + "\t"
+                + warpX + "\t" + warpY + "\t" + special;
+        }
+    }
+
+    public record SpecialGateRow(long roomId, long open) {
+        public String legacyRow() {
+            return roomId + "\t" + open;
+        }
     }
 
     public enum RoomDecoration {
