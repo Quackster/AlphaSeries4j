@@ -173,6 +173,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.dao.mysql.MessengerDao` and routed accepted-friend socket notifications plus pending friend-request deletion through prepared DAO methods.
 - Expanded `MessengerDao` for accepted-friendship existence checks and accepted-friend removal, replacing raw friend-removal SQL in `Handling`.
 - Expanded `MessengerDao` for pending-request rows and accepted-friend list rows, replacing raw messenger list SQL in `Handling` while keeping row-text payload compatibility at the DAO boundary.
+- Moved accepted-friend list row-limit defaulting into `MessengerDao`, keeping `Handling` on typed messenger settings and leaving the rendered `LIMIT` fragment owned by the DAO boundary.
 - Expanded `MessengerDao` for friend-request target lookup, existing friendship checks, accept-friends reads, and request inserts, replacing raw friend-request creation SQL in `Handling`.
 - Routed pending-request and accepted-friend delete targets through typed `List<Long>` parser results and prepared `MessengerDao` `IN` placeholders, leaving comma-delimited target text only as a compatibility view.
 - Routed accepted friend-request handling through typed target id lists and `PacketBuilder` row aggregation instead of comma-delimited target strings and raw `StringBuilder` payload rows.

@@ -5821,7 +5821,6 @@ public final class Handling {
             long maxFriends0 = messengerMaxFriends(0L);
             long maxFriends1 = messengerMaxFriends(2L);
             long maxFriends2 = messengerMaxFriends(4L);
-            long queryLimit = maxFriends2 > 0L ? maxFriends2 : 200L;
             String dateFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
             String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
             MessengerDao messenger = messengerDao();
@@ -5831,7 +5830,7 @@ public final class Handling {
             List<MessengerFriend> friends = messenger.acceptedFriends(
                 NumberUtils.parseLong(userId),
                 dateFormat + " " + timeFormat,
-                queryLimit);
+                maxFriends2);
             String callerSummary = messengerFriendSummaryPayload(userId, 1L);
             List<Long> onlineFriendIds = new ArrayList<>();
             for (MessengerFriend friend : friends) {

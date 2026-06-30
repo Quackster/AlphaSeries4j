@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 public final class MessengerDao {
+    private static final long DEFAULT_ACCEPTED_FRIEND_LIMIT = 200L;
+
     private final Database database;
 
     public MessengerDao(Database database) {
@@ -118,7 +120,7 @@ public final class MessengerDao {
     }
 
     public List<MessengerFriend> acceptedFriends(long userId, String dateTimeFormat, long limit) throws SQLException {
-        long queryLimit = limit > 0L ? limit : 200L;
+        long queryLimit = acceptedFriendLimit(limit);
         return database.query(
             "SELECT users.id,users.name,users.id_socket,users.figure,users.motto,users.level,"
                 + "DATE_FORMAT(FROM_UNIXTIME(users.lastonline_time), ?) FROM friendships,users "
@@ -135,6 +137,10 @@ public final class MessengerDao {
             dateTimeFormat,
             1L,
             userId);
+    }
+
+    private static long acceptedFriendLimit(long limit) {
+        return limit > 0L ? limit : DEFAULT_ACCEPTED_FRIEND_LIMIT;
     }
 
     public long userIdByName(String userName) throws SQLException {
