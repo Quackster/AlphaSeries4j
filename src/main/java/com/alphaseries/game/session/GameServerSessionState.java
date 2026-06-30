@@ -38,20 +38,12 @@ public final class GameServerSessionState {
         return markers.toString();
     }
 
-    public void appendPacketData(long socketIndex, String[] fields) {
-        if (fields == null || fields.length <= 2) {
+    public void appendPacketPayload(long socketIndex, String packetPayload) {
+        String payload = StringUtils.text(packetPayload);
+        if (socketIndex <= 0L || payload.isEmpty()) {
             return;
         }
-        StringBuilder payload = new StringBuilder();
-        for (int fieldIndex = 2; fieldIndex < fields.length; fieldIndex++) {
-            if (payload.length() > 0) {
-                payload.append('\2');
-            }
-            payload.append(StringUtils.text(fields[fieldIndex]));
-        }
-        if (payload.length() > 0) {
-            queuedPackets.add(new QueuedPacket(socketIndex, payload.toString()));
-        }
+        queuedPackets.add(new QueuedPacket(socketIndex, payload));
     }
 
     public String popPacketData(long socketIndex) {

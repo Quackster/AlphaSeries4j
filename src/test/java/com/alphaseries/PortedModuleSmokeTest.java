@@ -1127,6 +1127,7 @@ public final class PortedModuleSmokeTest {
         MySQL.configureDatabaseConnection(null);
 
         Licence.global_00829350 = "";
+        assertEquals("A\2B\2C", Main.gameServerPacketPayload(new String[]{"ignored", "ignored", "A", "B", "C"}));
         Main.appendGameServerPacketData(7, new String[]{"ignored", "ignored", "A", "B", "C"});
         assertEquals("A\2B\2C", Main.popGameServerPacketData(7));
         assertEquals("", Licence.global_00829350);

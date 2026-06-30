@@ -518,8 +518,22 @@ public final class Main {
 
     public static void appendGameServerPacketData(long socketIndex, String[] fields) {
         GameServerSessionState sessionState = Licence.gameServerSessionState();
-        sessionState.appendPacketData(socketIndex, fields);
+        sessionState.appendPacketPayload(socketIndex, gameServerPacketPayload(fields));
         Licence.setGameServerSessionState(sessionState);
+    }
+
+    public static String gameServerPacketPayload(String[] fields) {
+        if (fields == null || fields.length <= 2) {
+            return "";
+        }
+        StringBuilder payload = new StringBuilder();
+        for (int fieldIndex = 2; fieldIndex < fields.length; fieldIndex++) {
+            if (payload.length() > 0) {
+                payload.append('\2');
+            }
+            payload.append(StringUtils.text(fields[fieldIndex]));
+        }
+        return payload.toString();
     }
 
     public static String popGameServerPacketData(long socketIndex) {

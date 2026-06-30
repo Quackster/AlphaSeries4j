@@ -442,6 +442,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the no-op unsafe staff-alert wrapper from `Handling`; callers and tests now use `StaffPayloads.containsUnsafeAlert` directly.
 - Removed the no-op room settings payload wrapper from `Handling`; room settings handlers and tests now call `RoomPayloads.settingsRead` directly.
 - Removed the no-op room-user profile string payload wrapper from `Handling`; tests use `SocialPayloads` directly while the typed `RoomUserProfileRow` adapter remains.
+- Moved queued game-server packet assembly out of `GameServerSessionState`; the session manager now accepts a named payload string, leaving `Main` as the temporary legacy `String[]` adapter.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -461,7 +462,7 @@ Measured on 2026-06-30:
 - `Handling.java`: 11503 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
-- `Main.java`: 889 lines
+- `Main.java`: 903 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 
 ## Next Targets
