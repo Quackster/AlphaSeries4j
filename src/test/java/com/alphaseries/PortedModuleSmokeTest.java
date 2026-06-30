@@ -14,6 +14,7 @@ import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
+import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.jukebox.SongDiskRow;
 import com.alphaseries.game.jukebox.SongInfoRow;
 import com.alphaseries.game.messenger.MessengerFriend;
@@ -952,6 +953,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829084 instanceof List);
         assertEquals(true, Licence.catalogProductSettings().containsClubProduct(33L));
         assertEquals("\r33\t2\t1\r", Licence.catalogProductSettings().clubProductRows());
+        Licence.setClubGiftState(new GiftSettings.ClubGiftState(
+            "GIFTS",
+            "[81\0" + "506\1" + "20]",
+            List.of(new GiftSettings.ClubGift(81L, 506L, 20L))));
+        assertEquals(true, Licence.global_00829178 instanceof GiftSettings.ClubGiftState);
+        assertEquals("GIFTS", Licence.giftSettings().clubGiftPayload());
+        assertEquals(506L, Licence.giftSettings().clubGiftByCatalogProductId(81L).productId());
         Boot.Proc_1_6_6C5830();
         assertEquals(true, Licence.global_008291EC.contains("pet_dog"));
         assertEquals(true, Licence.petSettings().raceRows().contains("pet_dog"));
@@ -2349,8 +2357,8 @@ public final class PortedModuleSmokeTest {
         Object originalRoomCategoryPayloads = Licence.global_00829244;
         Object originalRecommendedRooms = Licence.global_0082911C;
         long originalRecommendedRoomCount = Licence.global_00829128;
-        String originalHcGiftPayload = Licence.global_00829178;
-        String originalHcGiftLookup = Licence.global_0082917C;
+        Object originalHcGiftPayload = Licence.global_00829178;
+        Object originalHcGiftLookup = Licence.global_0082917C;
         String originalGiftWrapLookup = Licence.global_0082925C;
         String originalGiftWrapPayload = Licence.global_00829260;
         Object originalCatalogPagePayloads = Licence.global_00829308;

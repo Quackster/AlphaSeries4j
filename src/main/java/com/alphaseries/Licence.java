@@ -51,8 +51,8 @@ public final class Licence {
     public static Object global_00829140 = "";
     public static Object global_0082915C = "";
     public static long global_00829168 = 0L;
-    public static String global_00829178 = "";
-    public static String global_0082917C = "";
+    public static Object global_00829178 = "";
+    public static Object global_0082917C = "";
     public static Object global_00829258 = "";
     public static long global_0082916C = 0L;
     public static String global_008291EC = "";
@@ -168,6 +168,11 @@ public final class Licence {
     public static void setClubGiftState(String payload, String lookup) {
         global_00829178 = StringUtils.text(payload);
         global_0082917C = StringUtils.text(lookup);
+    }
+
+    public static void setClubGiftState(GiftSettings.ClubGiftState state) {
+        global_00829178 = state == null ? "" : state;
+        global_0082917C = "";
     }
 
     public static void setGiftWrapState(String lookup, String payload) {

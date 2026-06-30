@@ -15,6 +15,7 @@ import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.SettingsDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.pet.PetCommandCacheRow;
 import com.alphaseries.game.pet.PetLevelCacheRow;
@@ -488,6 +489,7 @@ public final class Boot {
     public static void Proc_1_18_6CE9C0(Object... args) {
         StringBuilder payload = new StringBuilder();
         StringBuilder lookup = new StringBuilder();
+        List<GiftSettings.ClubGift> gifts = new ArrayList<GiftSettings.ClubGift>();
         long count = 0L;
         ClubDao clubs = clubDao();
         List<ClubDao.ClubGiftRow> giftRows = List.of();
@@ -513,9 +515,13 @@ public final class Boot {
             payload.append(Crypto.Proc_3_0_6D2AF0(row.vipOnly(), null, ""));
             payload.append(Crypto.Proc_3_0_6D2AF0(row.requiredDays(), null, ""));
             lookup.append('[').append(catalogProductId).append('\0').append(productId).append('\1').append(row.requiredDays()).append(']');
+            gifts.add(new GiftSettings.ClubGift(catalogProductId, productId, row.requiredDays()));
             count++;
         }
-        Licence.setClubGiftState(Crypto.Proc_3_0_6D2AF0(count, null, "") + payload, lookup.toString());
+        Licence.setClubGiftState(new GiftSettings.ClubGiftState(
+            Crypto.Proc_3_0_6D2AF0(count, null, "") + payload,
+            lookup.toString(),
+            gifts));
     }
 
     public static void Proc_1_19_6CF190(Object... args) {

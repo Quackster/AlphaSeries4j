@@ -137,9 +137,6 @@ public final class ClubDao {
     }
 
     public record ClubGiftRow(long catalogProductId, long vipOnly, long requiredDays) {
-        public String legacyRow() {
-            return catalogProductId + "\t" + vipOnly + "\t" + requiredDays;
-        }
     }
 
     public record ClubGiftStatus(long hcLevel, long hcDays, long vipDays, long presentsAvailable, long daysSinceStart) {

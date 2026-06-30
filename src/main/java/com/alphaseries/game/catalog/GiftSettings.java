@@ -14,15 +14,16 @@ public final class GiftSettings {
     private final String giftWrapPayload;
     private final List<ClubGift> clubGifts;
 
-    private GiftSettings(String clubGiftPayload, String clubGiftLookup, String giftWrapLookup, String giftWrapPayload) {
-        this.clubGiftPayload = StringUtils.text(clubGiftPayload);
-        this.clubGiftLookup = StringUtils.text(clubGiftLookup);
+    private GiftSettings(Object clubGiftPayload, Object clubGiftLookup, String giftWrapLookup, String giftWrapPayload) {
+        ClubGiftState typedState = clubGiftPayload instanceof ClubGiftState state ? state : null;
+        this.clubGiftPayload = typedState == null ? StringUtils.text(clubGiftPayload) : typedState.payload();
+        this.clubGiftLookup = typedState == null ? StringUtils.text(clubGiftLookup) : typedState.lookup();
         this.giftWrapLookup = StringUtils.text(giftWrapLookup);
         this.giftWrapPayload = StringUtils.text(giftWrapPayload);
-        this.clubGifts = parseClubGifts(this.clubGiftLookup);
+        this.clubGifts = typedState == null ? parseClubGifts(this.clubGiftLookup) : typedState.gifts();
     }
 
-    public static GiftSettings fromLegacy(String clubGiftPayload, String clubGiftLookup, String giftWrapLookup, String giftWrapPayload) {
+    public static GiftSettings fromLegacy(Object clubGiftPayload, Object clubGiftLookup, String giftWrapLookup, String giftWrapPayload) {
         return new GiftSettings(clubGiftPayload, clubGiftLookup, giftWrapLookup, giftWrapPayload);
     }
 
@@ -70,6 +71,14 @@ public final class GiftSettings {
     public record ClubGift(long catalogProductId, long productId, long requiredDays) {
         private static ClubGift empty() {
             return new ClubGift(0L, 0L, 0L);
+        }
+    }
+
+    public record ClubGiftState(String payload, String lookup, List<ClubGift> gifts) {
+        public ClubGiftState {
+            payload = StringUtils.text(payload);
+            lookup = StringUtils.text(lookup);
+            gifts = gifts == null ? List.of() : List.copyOf(gifts);
         }
     }
 }
