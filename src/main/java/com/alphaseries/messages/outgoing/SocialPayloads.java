@@ -241,21 +241,6 @@ public final class SocialPayloads {
             .build();
     }
 
-    public static String tags(String tagRows) {
-        long tagCount = 0L;
-        PacketBuilder tagPayload = PacketBuilder.create();
-        for (String row : StringUtils.text(tagRows).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                tagPayload.appendString(row);
-                tagCount++;
-            }
-        }
-        return PacketBuilder.create()
-            .appendInt(tagCount)
-            .appendRaw(tagPayload)
-            .build();
-    }
-
     public static String tags(List<String> tagRows) {
         long tagCount = 0L;
         PacketBuilder tagPayload = PacketBuilder.create();

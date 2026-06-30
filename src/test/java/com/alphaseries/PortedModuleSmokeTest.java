@@ -2307,10 +2307,10 @@ public final class PortedModuleSmokeTest {
             Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges));
         assertEquals("Cd" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges,
             SocialPayloads.badgeDisplay(5, Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2", Handling.tagListPayload("one\rtwo"));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2", Handling.tagListPayload(List.of("one", "two")));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), SocialPayloads.tags(List.of()));
         assertEquals("E^" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2",
-            SocialPayloads.tagDisplay(5, Handling.tagListPayload("one\rtwo")));
+            SocialPayloads.tagDisplay(5, Handling.tagListPayload(List.of("one", "two"))));
         String badgeWire = "A@CONEA@CTWO";
         String[] badgeSlots = Handling.badgeUpdateSelectionsFromWire("B^" + badgeWire);
         assertEquals("ONE", badgeSlots[0]);
@@ -4357,9 +4357,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "Cd"));
         handlingSends.clear();
         assertEquals(Handling.equippedBadgePayload(List.of(new BadgeRow("VIP", 1L, 203L))), Handling.Proc_6_195_7D38D0("77"));
-        assertEquals(Handling.tagListPayload("alpha\rbeta"), Handling.Proc_6_196_7D3ED0("77"));
+        assertEquals(Handling.tagListPayload(List.of("alpha", "beta")), Handling.Proc_6_196_7D3ED0("77"));
         String tagDisplay = Handling.Proc_6_191_7D18B0(4, "DG" + wireLong(88));
-        assertEquals(SocialPayloads.tagDisplay(88, Handling.tagListPayload("target")), tagDisplay);
+        assertEquals(SocialPayloads.tagDisplay(88, Handling.tagListPayload(List.of("target"))), tagDisplay);
         assertEquals(true, containsSend(handlingSends, "E^"));
         assertEquals(true, containsSend(handlingSends, "target"));
         handlingSends.clear();

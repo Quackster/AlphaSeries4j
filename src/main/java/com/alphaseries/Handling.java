@@ -10815,10 +10815,6 @@ public final class Handling {
         return SocialPayloads.equippedBadges(badgeRows);
     }
 
-    public static String tagListPayload(String tagRows) {
-        return SocialPayloads.tags(tagRows);
-    }
-
     public static String tagListPayload(List<String> tagRows) {
         return SocialPayloads.tags(tagRows);
     }
