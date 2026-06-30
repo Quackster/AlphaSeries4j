@@ -43,7 +43,7 @@ public final class ClubPayloads {
         ClubDao.ClubGiftStatus resolvedStatus = status == null
             ? new ClubDao.ClubGiftStatus(0L, 0L, 0L, 0L, 0L)
             : status;
-        GiftSettings resolvedSettings = giftSettings == null ? GiftSettings.fromLegacy("", "", "", "") : giftSettings;
+        GiftSettings resolvedSettings = giftSettings == null ? GiftSettings.empty() : giftSettings;
         long presentsAvailable = resolvedStatus.presentsAvailable();
         long activeDays = resolvedStatus.activeDays();
         PacketBuilder statusRows = PacketBuilder.create();

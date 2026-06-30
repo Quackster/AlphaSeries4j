@@ -27,6 +27,10 @@ public final class GiftSettings {
         return new GiftSettings(clubGiftPayload, clubGiftLookup, giftWrapLookup, giftWrapPayload);
     }
 
+    public static GiftSettings empty() {
+        return new GiftSettings("", "", "", "");
+    }
+
     public String clubGiftPayload() {
         return clubGiftPayload;
     }
