@@ -728,6 +728,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Boot.loadImportantFaqCache(...)`, `loadFaqCategoryCache(...)`, `loadFaqDescriptionCache(...)`, and `loadVisitRoomAdsCache(...)` with original Proc names in Javadocs, then migrated startup cache refresh callers away from the bare FAQ and visit-room advertisement Proc loaders.
 - Added named `Boot.loadRecyclerRewardsCache(...)`, `loadCatalogStartupCache(...)`, `refreshDynamicStartupCaches(...)`, and `loadBonusSystemCache(...)` with original Proc names in Javadocs, then migrated aggregate startup cache callers away from the bare recycler, catalog, refresh, and bonus-system Proc loaders.
 - Added named `Boot.buildCatalogPageTreeEntryPayload(...)` with the original `Proc_1_14_6C9DD0` noted in Javadocs, then migrated catalog page-tree entry formatting away from the Proc-named formatter and onto fluent `PacketBuilder`.
+- Added named `Handling.sendToSocket(...)` with the original `Proc_6_244_801E80` noted in Javadocs, then migrated named room/staff broadcast and poll prompt helpers away from the Proc-named direct-send path.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -744,7 +745,7 @@ Measured on 2026-07-01:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 2284 lines
-- `Handling.java`: 11591 lines
+- `Handling.java`: 11600 lines
 - `Functions.java`: 753 lines
 - `DataManager.java`: 528 lines
 - `MySQL.java`: 204 lines

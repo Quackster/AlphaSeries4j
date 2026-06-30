@@ -8155,16 +8155,25 @@ public final class Handling {
         Licence.setGameServerSessionState(sessionState);
     }
 
+    /**
+     * Original function: Proc_6_244_801E80.
+     */
     public static void Proc_6_244_801E80(Object... args) {
         if (args == null || args.length < 2) {
             return;
         }
-        int socketIndex = (int) NumberUtils.parseLong(args[0]);
+        sendToSocket((int) NumberUtils.parseLong(args[0]), StringUtils.text(args[1]));
+    }
+
+    /**
+     * Original function: Proc_6_244_801E80.
+     */
+    public static void sendToSocket(int socketIndex, String payload) {
         if (socketIndex <= 0 || !Guardian.isSocketConnected(socketIndex)
             || Licence.representedSockets().isBusy(socketIndex)) {
             return;
         }
-        MusConnectionManager.instance().sendData(socketIndex, StringUtils.text(args[1]) + '\1');
+        MusConnectionManager.instance().sendData(socketIndex, StringUtils.text(payload) + '\1');
     }
 
     public static long Proc_6_245_801FA0(Object... args) {
@@ -8530,7 +8539,7 @@ public final class Handling {
                 int socketIndex = activeSocketIndex == null ? 0 : activeSocketIndex.intValue();
                 String marker = "[" + socketIndex + "]";
                 if (socketIndex > 0 && !sentMarkers.contains(marker)) {
-                    Proc_6_244_801E80(socketIndex, payload, 0);
+                    sendToSocket(socketIndex, payload);
                     sentMarkers += marker;
                     sentCount++;
                 }
@@ -8555,7 +8564,7 @@ public final class Handling {
             }
             String marker = "[" + candidateSocket + "]";
             if (candidateSocket > 0 && !sentMarkers.contains(marker) && handlingUserHasPermission(candidateUserId, "fuse_mod")) {
-                Proc_6_244_801E80(candidateSocket, payload, 0);
+                sendToSocket(candidateSocket, payload);
                 sentMarkers += marker;
                 sentCount++;
             }
@@ -8569,7 +8578,7 @@ public final class Handling {
                     String marker = "[" + candidateSocket + "]";
                     if (candidateSocket > 0 && !sentMarkers.contains(marker)
                         && handlingUserHasPermission(candidateUserId, "fuse_mod")) {
-                        Proc_6_244_801E80(candidateSocket, payload, 0);
+                        sendToSocket(candidateSocket, payload);
                         sentMarkers += marker;
                         sentCount++;
                     }
@@ -10024,7 +10033,7 @@ public final class Handling {
             if (polls.hasAnswered(userIdValue, pollPrompt.id())) {
                 return;
             }
-            Proc_6_244_801E80(socketIndex, PollPayloads.prompt(pollPrompt), 0);
+            sendToSocket(socketIndex, PollPayloads.prompt(pollPrompt));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return;
