@@ -785,8 +785,8 @@ public final class PortedModuleSmokeTest {
         Boot.AchievementSettingsCache achievementSettings = Boot.buildAchievementSettingsCache(
             "7\tACH_ONE\t10\t2\t3\t4\t1\r8\tACH_TWO\t20\t5\t6\t7\t2");
         assertEquals("7\2" + "8\2", achievementSettings.questIdPayload);
-        assertEquals("ACH_TWO", achievementSettings.rowsByIndex.get(1L)[1]);
-        assertEquals("20", achievementSettings.rowsByIndex.get(1L)[2]);
+        assertEquals("ACH_TWO", achievementSettings.achievements.get(1).badgePrefix());
+        assertEquals(20L, achievementSettings.achievements.get(1).progressRequired());
         int[] messengerFriendLimits = Boot.buildMessengerFriendLimitCache(50, 75, 100);
         assertEquals(50, messengerFriendLimits[0]);
         assertEquals(0, messengerFriendLimits[1]);
@@ -1251,7 +1251,8 @@ public final class PortedModuleSmokeTest {
         Boot.Proc_1_23_6D1480("booted", "DEBUG");
         Boot.Proc_1_5_6C4F80();
         assertEquals("7\2", Licence.global_008291E4);
-        assertEquals("ACH_ONE", ((String[][]) Licence.global_008291E8)[0][1]);
+        assertEquals("ACH_ONE",
+            ((AchievementSettings.Achievement) ((List<?>) Licence.global_008291E8).get(0)).badgePrefix());
         assertEquals("7\2", Licence.achievementSettings().questIdPayload());
         assertEquals(true, Licence.achievementSettings().rowsAsText().contains("ACH_ONE"));
         AchievementSettings typedAchievementSettings = AchievementSettings.fromAchievements("42\2",

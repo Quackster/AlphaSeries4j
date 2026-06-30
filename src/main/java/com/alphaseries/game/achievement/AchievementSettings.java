@@ -187,6 +187,19 @@ public final class AchievementSettings {
             }
             return parsedRows;
         }
+        if (rows instanceof Iterable<?> values) {
+            Map<Long, AchievementRow> parsedRows = new LinkedHashMap<>();
+            long achievementIndex = 0L;
+            for (Object value : values) {
+                if (value instanceof Achievement achievement) {
+                    parsedRows.put(achievementIndex, new AchievementRow(achievement, rowText(achievement), true));
+                } else {
+                    putRow(parsedRows, achievementIndex, StringUtils.text(value), true);
+                }
+                achievementIndex++;
+            }
+            return parsedRows;
+        }
         return parseRowText(StringUtils.text(rows));
     }
 

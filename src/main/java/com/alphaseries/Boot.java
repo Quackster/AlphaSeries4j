@@ -15,6 +15,7 @@ import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.SettingsDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
@@ -234,7 +235,7 @@ public final class Boot {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        Licence.setAchievementSettings(achievementCache.questIdPayload, achievementRowsByIndex(achievementCache));
+        Licence.setAchievementSettings(achievementCache.questIdPayload, achievementCache.achievements);
         Proc_1_9_6C6DF0(0, 0, 0);
         Proc_1_7_6C5E10(0, 0, 0);
         Proc_1_18_6CE9C0(0, 0, 0);
@@ -807,7 +808,7 @@ public final class Boot {
 
     public static final class AchievementSettingsCache {
         public String questIdPayload = "";
-        public Map<Long, String[]> rowsByIndex = new LinkedHashMap<Long, String[]>();
+        public List<AchievementSettings.Achievement> achievements = List.of();
     }
 
     public static final class RecyclerCache {
@@ -1150,28 +1151,22 @@ public final class Boot {
         AchievementSettingsCache cache = new AchievementSettingsCache();
         long achievementIndex = 0L;
         StringBuilder questIds = new StringBuilder();
+        List<AchievementSettings.Achievement> achievements = new ArrayList<AchievementSettings.Achievement>();
         for (String row : StringUtils.text(achievementRows).split("\r", -1)) {
             if (achievementIndex > 100L) {
                 break;
             }
             if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                if (fields.length >= 7) {
-                    questIds.append(NumberUtils.parseLong(fields[0])).append('\2');
-                    cache.rowsByIndex.put(achievementIndex, new String[] {
-                        String.valueOf(NumberUtils.parseLong(fields[0])),
-                        fields[1],
-                        String.valueOf(NumberUtils.parseLong(fields[2])),
-                        String.valueOf(NumberUtils.parseLong(fields[3])),
-                        String.valueOf(NumberUtils.parseLong(fields[4])),
-                        String.valueOf(NumberUtils.parseLong(fields[5])),
-                        String.valueOf(NumberUtils.parseLong(fields[6]))
-                    });
+                AchievementSettings.Achievement achievement = AchievementSettings.achievement(row);
+                if (achievement != null) {
+                    questIds.append(achievement.achievementId()).append('\2');
+                    achievements.add(achievement);
                     achievementIndex++;
                 }
             }
         }
         cache.questIdPayload = questIds.toString();
+        cache.achievements = List.copyOf(achievements);
         return cache;
     }
 
@@ -1179,6 +1174,7 @@ public final class Boot {
         AchievementSettingsCache cache = new AchievementSettingsCache();
         long achievementIndex = 0L;
         StringBuilder questIds = new StringBuilder();
+        List<AchievementSettings.Achievement> achievements = new ArrayList<AchievementSettings.Achievement>();
         if (achievementRows != null) {
             for (AchievementDao.AchievementSettingsRow row : achievementRows) {
                 if (achievementIndex > 100L) {
@@ -1186,20 +1182,14 @@ public final class Boot {
                 }
                 if (row != null) {
                     questIds.append(row.questId()).append('\2');
-                    cache.rowsByIndex.put(achievementIndex, new String[] {
-                        String.valueOf(row.questId()),
-                        StringUtils.text(row.badgeId()),
-                        String.valueOf(row.progress()),
-                        String.valueOf(row.rewardIncrease()),
-                        String.valueOf(row.levelTotal()),
-                        String.valueOf(row.scoreIncrease()),
-                        String.valueOf(row.rewardType())
-                    });
+                    achievements.add(new AchievementSettings.Achievement(row.questId(), StringUtils.text(row.badgeId()),
+                        row.progress(), row.rewardIncrease(), row.levelTotal(), row.scoreIncrease(), row.rewardType()));
                     achievementIndex++;
                 }
             }
         }
         cache.questIdPayload = questIds.toString();
+        cache.achievements = List.copyOf(achievements);
         return cache;
     }
 
@@ -1224,17 +1214,6 @@ public final class Boot {
             }
         }
         Licence.setChatSettings(filterRows, gestureRows);
-    }
-
-    private static String[][] achievementRowsByIndex(AchievementSettingsCache cache) {
-        String[][] rows = new String[cache.rowsByIndex.size()][];
-        for (Map.Entry<Long, String[]> entry : cache.rowsByIndex.entrySet()) {
-            int index = entry.getKey().intValue();
-            if (index >= 0 && index < rows.length) {
-                rows[index] = entry.getValue();
-            }
-        }
-        return rows;
     }
 
     public static String buildRoomCategoryPayload(String categoryRows, long rankIndex, long hcLevel) {
