@@ -3,6 +3,7 @@ package com.alphaseries.messages.outgoing;
 import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
+import com.alphaseries.game.poll.PollPrompt;
 import com.alphaseries.game.poll.PollQuestionRow;
 import com.alphaseries.protocol.PacketBuilder;
 
@@ -48,4 +49,13 @@ public final class PollPayloads {
             .build();
     }
 
+    public static String prompt(PollPrompt pollPrompt) {
+        if (pollPrompt == null || pollPrompt.id() <= 0L) {
+            return "";
+        }
+        return PacketBuilder.message("D|")
+            .appendInt(pollPrompt.id())
+            .appendString(pollPrompt.title())
+            .build();
+    }
 }

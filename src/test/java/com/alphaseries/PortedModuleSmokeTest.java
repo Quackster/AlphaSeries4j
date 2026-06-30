@@ -28,6 +28,7 @@ import com.alphaseries.game.pet.PetSettings;
 import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
+import com.alphaseries.game.poll.PollPrompt;
 import com.alphaseries.game.poll.PollQuestionRow;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.moderation.StaffCallForHelpRow;
@@ -51,6 +52,7 @@ import com.alphaseries.messages.outgoing.FurniturePayloads;
 import com.alphaseries.messages.outgoing.HelpPayloads;
 import com.alphaseries.messages.outgoing.MessengerPayloads;
 import com.alphaseries.messages.outgoing.NavigatorPayloads;
+import com.alphaseries.messages.outgoing.PollPayloads;
 import com.alphaseries.messages.outgoing.QuestPayloads;
 import com.alphaseries.messages.outgoing.RoomPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
@@ -2230,6 +2232,8 @@ public final class PortedModuleSmokeTest {
         String expectedPollPayload = Crypto.Proc_3_0_6D2AF0(7, null, "D}") + "Title\2Thanks\2";
         expectedPollPayload = Crypto.Proc_3_0_6D2AF0(1, null, expectedPollPayload) + expectedQuestionPayload;
         assertEquals(expectedPollPayload, Handling.pollPayload(testPoll));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "D|") + "Title\2",
+            PollPayloads.prompt(new PollPrompt(7L, "Title")));
         String recyclerWire = "F^" + Crypto.Proc_3_0_6D2AF0(5, null, "")
             + Crypto.Proc_3_0_6D2AF0(10, null, "")
             + Crypto.Proc_3_0_6D2AF0(11, null, "")

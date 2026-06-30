@@ -10088,10 +10088,7 @@ public final class Handling {
             if (polls.hasAnswered(userIdValue, pollPrompt.id())) {
                 return;
             }
-            Proc_6_244_801E80(socketIndex, PacketBuilder.message("D|")
-                .appendInt(pollPrompt.id())
-                .appendString(pollPrompt.title())
-                .build(), 0);
+            Proc_6_244_801E80(socketIndex, PollPayloads.prompt(pollPrompt), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return;
