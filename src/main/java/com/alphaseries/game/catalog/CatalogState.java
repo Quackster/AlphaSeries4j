@@ -5,6 +5,7 @@ public final class CatalogState {
 
     private GiftSettings giftSettings = GiftSettings.empty();
     private CatalogPages catalogPages = CatalogPages.empty();
+    private CatalogProductSettings productSettings = CatalogProductSettings.empty();
 
     private CatalogState() {
     }
@@ -32,6 +33,31 @@ public final class CatalogState {
 
     public synchronized CatalogPages catalogPages() {
         return catalogPages;
+    }
+
+    public synchronized CatalogProductSettings productSettings() {
+        return productSettings;
+    }
+
+    public synchronized void setProductSettings(CatalogProductSettings productSettings) {
+        this.productSettings = productSettings == null ? CatalogProductSettings.empty() : productSettings;
+    }
+
+    public synchronized void setProductSettingsFromLegacy(
+        String counterProductIds,
+        long teleportProductId,
+        long moodlightProductId,
+        Object packageRows,
+        Object petPackageRows,
+        Object clubProductRows
+    ) {
+        productSettings = CatalogProductSettings.fromLegacy(
+            counterProductIds,
+            teleportProductId,
+            moodlightProductId,
+            packageRows,
+            petPackageRows,
+            clubProductRows);
     }
 
     public synchronized void setCatalogPages(CatalogPages catalogPages) {

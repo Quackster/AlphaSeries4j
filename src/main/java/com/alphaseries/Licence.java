@@ -783,44 +783,63 @@ public final class Licence {
     }
 
     public static CatalogProductSettings catalogProductSettings() {
-        return CatalogProductSettings.fromLegacy(global_008290A0, global_008290A4, global_008290A8,
+        CatalogState.instance().setProductSettingsFromLegacy(global_008290A0, global_008290A4, global_008290A8,
             global_00829078, global_0082907C, global_00829084);
+        return CatalogState.instance().productSettings();
     }
 
     public static void setCounterProductIds(String counterProductIds) {
         global_008290A0 = StringUtils.text(counterProductIds);
+        CatalogState.instance().setProductSettingsFromLegacy(global_008290A0, global_008290A4, global_008290A8,
+            global_00829078, global_0082907C, global_00829084);
     }
 
     public static void setTeleportProductId(long productId) {
         global_008290A4 = Math.max(0L, productId);
+        CatalogState.instance().setProductSettingsFromLegacy(global_008290A0, global_008290A4, global_008290A8,
+            global_00829078, global_0082907C, global_00829084);
     }
 
     public static void setMoodlightProductId(long productId) {
         global_008290A8 = Math.max(0L, productId);
+        CatalogState.instance().setProductSettingsFromLegacy(global_008290A0, global_008290A4, global_008290A8,
+            global_00829078, global_0082907C, global_00829084);
     }
 
     public static void setPackageRows(String packageRows) {
         global_00829078 = StringUtils.text(packageRows);
+        CatalogState.instance().setProductSettingsFromLegacy(global_008290A0, global_008290A4, global_008290A8,
+            global_00829078, global_0082907C, global_00829084);
     }
 
     public static void setPackageRows(Object packageRows) {
         global_00829078 = packageRows == null ? "" : packageRows;
+        CatalogState.instance().setProductSettingsFromLegacy(global_008290A0, global_008290A4, global_008290A8,
+            global_00829078, global_0082907C, global_00829084);
     }
 
     public static void setPetPackageRows(String petPackageRows) {
         global_0082907C = StringUtils.text(petPackageRows);
+        CatalogState.instance().setProductSettingsFromLegacy(global_008290A0, global_008290A4, global_008290A8,
+            global_00829078, global_0082907C, global_00829084);
     }
 
     public static void setPetPackageRows(Object petPackageRows) {
         global_0082907C = petPackageRows == null ? "" : petPackageRows;
+        CatalogState.instance().setProductSettingsFromLegacy(global_008290A0, global_008290A4, global_008290A8,
+            global_00829078, global_0082907C, global_00829084);
     }
 
     public static void setClubProductRows(String clubProductRows) {
         global_00829084 = StringUtils.text(clubProductRows);
+        CatalogState.instance().setProductSettingsFromLegacy(global_008290A0, global_008290A4, global_008290A8,
+            global_00829078, global_0082907C, global_00829084);
     }
 
     public static void setClubProductRows(Object clubProductRows) {
         global_00829084 = clubProductRows == null ? "" : clubProductRows;
+        CatalogState.instance().setProductSettingsFromLegacy(global_008290A0, global_008290A4, global_008290A8,
+            global_00829078, global_0082907C, global_00829084);
     }
 
     public static void setRecyclerRewards(Object productLists, Object chances, long groupCount) {

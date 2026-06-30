@@ -42,6 +42,10 @@ public final class CatalogProductSettings {
             packageRows, petPackageRows, clubProductRows);
     }
 
+    public static CatalogProductSettings empty() {
+        return new CatalogProductSettings("", 0L, 0L, "", "", "");
+    }
+
     public String counterProductIds() {
         return counterProductIds;
     }
