@@ -2048,7 +2048,7 @@ public final class PortedModuleSmokeTest {
             Handling.messengerFriendSummaryPayload(new MessengerFriend(5L, "Alice", "motto", "fig", 3L, 22L, "today"), 1));
         String expectedSearch = Crypto.Proc_3_0_6D2AF0(8, null, "") + "Carol\2hi\2";
         expectedSearch = "1" + Crypto.Proc_3_0_6D2AF0(1, null, expectedSearch) + "H\2nick\2fig\2now\2";
-        assertEquals(expectedSearch, Handling.messengerSearchResultPayload("8", "Carol", "fig", "hi", "nick", "now", 1));
+        assertEquals(expectedSearch, MessengerPayloads.searchResult("8", "Carol", "fig", "hi", "nick", "now", 1));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "Fs") + expectedSearch
             + Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedSearch,
             MessengerPayloads.searchResults(List.of(

@@ -6352,8 +6352,8 @@ public final class Handling {
                 Proc_6_195_7D38D0(targetUserId, 0, 0));
             Proc_6_244_801E80(socketIndex, targetBadgePayload, 0);
             if (callerRoomUserIndex > 0L && callerRoomUserIndex != targetRoomUserIndex) {
-                String callerStatusPayload = representedRoomUserStatusPayload(callerRoomUserIndex, 0L);
-                String targetStatusPayload = representedRoomUserStatusPayload(targetRoomUserIndex, 0L);
+                String callerStatusPayload = SocialPayloads.roomUserStatus(callerRoomUserIndex, 0L);
+                String targetStatusPayload = SocialPayloads.roomUserStatus(targetRoomUserIndex, 0L);
                 if (!callerStatusPayload.isEmpty()) {
                     Proc_6_247_8027E0(socketIndex, callerStatusPayload, 0);
                 }
@@ -10244,18 +10244,6 @@ public final class Handling {
         }
     }
 
-    public static String messengerSearchResultPayload(
-        String userId,
-        String userName,
-        String figureText,
-        String mottoText,
-        String nicknameText,
-        String lastOnlineText,
-        long isOnline
-    ) {
-        return MessengerPayloads.searchResult(userId, userName, figureText, mottoText, nicknameText, lastOnlineText, isOnline);
-    }
-
     public static boolean messengerFollowEnabled() {
         return NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.messenger.follow.enabled", 0)) != 0L;
     }
@@ -10612,10 +10600,6 @@ public final class Handling {
             target = rooms.activeRoomUserTargetByUserId(roomId, requestedRoomUserIndex);
         }
         return target.orElse(null);
-    }
-
-    public static String representedRoomUserStatusPayload(long roomUserIndex, long statusCode) {
-        return SocialPayloads.roomUserStatus(roomUserIndex, statusCode);
     }
 
     public static long pollIdFromWire(String packetPayload, String prefix) {
