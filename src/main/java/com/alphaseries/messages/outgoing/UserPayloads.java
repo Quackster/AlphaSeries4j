@@ -34,6 +34,14 @@ public final class UserPayloads {
             .build();
     }
 
+    public static String activityPointAward(long pointType, long pointsValue) {
+        return PacketBuilder.message("Fv")
+            .appendInt(pointsValue)
+            .appendInt(pointType)
+            .appendRaw('H')
+            .build();
+    }
+
     public static String activityPointRefreshes(long... pointValues) {
         PacketBuilder payload = PacketBuilder.create();
         for (long pointType = 0L; pointType <= 4L; pointType++) {

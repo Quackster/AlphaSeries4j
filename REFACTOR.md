@@ -383,6 +383,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed live badge/tag display sends through `SocialPayloads` and removed the no-op `Handling` display payload wrappers.
 - Moved respect-received `Fx` payload construction into `UserPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved official-room model, current-room, and created-room notification payloads into `RoomPayloads`, replacing more inline legacy `Crypto` packet assembly in `Handling`.
+- Moved activity-point refresh/award payload construction into `UserPayloads` and removed the no-op `Handling` packet wrappers.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -398,7 +399,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11984 lines
+- `Handling.java`: 11974 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines

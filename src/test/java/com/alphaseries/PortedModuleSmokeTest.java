@@ -1892,13 +1892,13 @@ public final class PortedModuleSmokeTest {
         assertEquals("ticket one", Handling.handlingLoginTicketFromPayload("F_ticket\none"));
         assertEquals("ticket two", Handling.handlingLoginTicketFromPayload(" F_ticket two "));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, Crypto.Proc_3_0_6D2AF0(300, null, "Fv") + "H"),
-            Handling.handlingLoginActivityPointPayload(2, 300));
+            UserPayloads.activityPointRefresh(2, 300));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, Crypto.Proc_3_0_6D2AF0(300, null, "Fv")) + "H",
-            Handling.representedActivityPointAwardPayload(2, 300));
+            UserPayloads.activityPointAward(2, 300));
         Handling.ActivityPointAward pointAward = Handling.activityPointAwardDecision(120, 2, 60, 500, 25, 300);
         assertEquals(true, pointAward.shouldAward);
         assertEquals(325L, pointAward.newPoints);
-        assertEquals(Handling.representedActivityPointAwardPayload(2, 325), pointAward.payload);
+        assertEquals(UserPayloads.activityPointAward(2, 325), pointAward.payload);
         assertEquals(false, Handling.activityPointAwardDecision(121, 2, 60, 500, 25, 300).shouldAward);
         String busyCache = "[4]a\2b\2c\2d\2e\2" + "1[5]a\2b\2c\2d\2e\2" + "0";
         assertEquals(true, Handling.isSocketMarkedBusy(busyCache, 4));
@@ -4436,7 +4436,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "@E77"));
         handlingSends.clear();
         String pointAwardPayload = Handling.Proc_6_238_7FA670(4);
-        assertEquals(Handling.representedActivityPointAwardPayload(0, 75), pointAwardPayload);
+        assertEquals(UserPayloads.activityPointAward(0, 75), pointAwardPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_0=activitypoints_0+5 WHERE id='77'"));
         assertEquals(true, containsSend(handlingSends, "Fv"));
         handlingSends.clear();

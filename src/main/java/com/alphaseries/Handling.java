@@ -5411,7 +5411,7 @@ public final class Handling {
             Proc_6_20_6E88E0(socketIndex, 0, 0);
             Proc_6_244_801E80(socketIndex, "@F" + creditsValue + ".0" + '\2', 0);
             for (int pointIndex = 0; pointIndex <= 4; pointIndex++) {
-                Proc_6_244_801E80(socketIndex, handlingLoginActivityPointPayload(pointIndex, pointValues[pointIndex]), 0);
+                Proc_6_244_801E80(socketIndex, UserPayloads.activityPointRefresh(pointIndex, pointValues[pointIndex]), 0);
             }
             if (homeRoomId > 0L) {
                 Proc_6_244_801E80(socketIndex, RoomPayloads.homeRoom(homeRoomId), 0);
@@ -10083,16 +10083,6 @@ public final class Handling {
         }
     }
 
-    public static String handlingLoginActivityPointPayload(long pointType, long pointsValue) {
-        return Crypto.Proc_3_0_6D2AF0(pointType, null,
-            Crypto.Proc_3_0_6D2AF0(pointsValue, null, "Fv") + "H");
-    }
-
-    public static String representedActivityPointAwardPayload(long pointType, long pointsValue) {
-        return Crypto.Proc_3_0_6D2AF0(pointType, null,
-            Crypto.Proc_3_0_6D2AF0(pointsValue, null, "Fv")) + "H";
-    }
-
     public static long representedActivityPointSessionSeconds(long socketIndex, String userId) {
         if (socketIndex <= 0L || StringUtils.text(userId).isEmpty()) {
             return 0L;
@@ -10130,7 +10120,7 @@ public final class Handling {
             return result;
         }
         result.newPoints = currentPoints + awardAmount;
-        result.payload = representedActivityPointAwardPayload(pointType, result.newPoints);
+        result.payload = UserPayloads.activityPointAward(pointType, result.newPoints);
         result.shouldAward = true;
         return result;
     }
@@ -10433,7 +10423,7 @@ public final class Handling {
             if (rewardAmount != 0L && rewardType >= 0L && rewardType <= 20L) {
                 long currentPoints = users.activityPoints(userIdValue, rewardType);
                 users.addActivityPointsLimited(userIdValue, rewardType, rewardAmount);
-                Proc_6_244_801E80(socketIndex, representedActivityPointAwardPayload(rewardType, currentPoints + rewardAmount), 0);
+                Proc_6_244_801E80(socketIndex, UserPayloads.activityPointAward(rewardType, currentPoints + rewardAmount), 0);
             }
             quests.completeQuest(userIdValue, questId);
             Proc_6_244_801E80(socketIndex, "La" + completionPayload, 0);
