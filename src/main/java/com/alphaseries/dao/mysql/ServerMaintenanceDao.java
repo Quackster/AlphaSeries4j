@@ -35,6 +35,14 @@ public final class ServerMaintenanceDao {
         database.execute("UPDATE settings SET value=UNIX_TIMESTAMP() WHERE variable='com.server.socket.check.time'");
     }
 
+    public int markSocketStartupTimes() throws SQLException {
+        return database.execute(
+            "UPDATE settings SET value=UNIX_TIMESTAMP() "
+                + "WHERE variable=? OR variable=? LIMIT 2",
+            "com.server.socket.check.time",
+            "com.server.socket.listen.time");
+    }
+
     public int updateMostActiveSockets(long activeCount) throws SQLException {
         return database.execute(
             "UPDATE settings SET value=? WHERE variable='com.server.socket.mostactive'",

@@ -1,5 +1,7 @@
 package com.alphaseries;
 
+import com.alphaseries.dao.mysql.ServerMaintenanceDao;
+import com.alphaseries.db.Database;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -34,8 +36,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
         runtime.configureProtocolLogging();
         runtime.startMusServer(configuredPort("com.server.socket.mus.port"));
         runtime.startGameServer(configuredPort("com.server.socket.game.port"));
-        MySQL.Proc_5_0_6D3CD0("UPDATE settings SET value=UNIX_TIMESTAMP() "
-            + "WHERE variable='com.server.socket.check.time' OR variable='com.server.socket.listen.time' LIMIT 2");
+        markSocketStartupTimes();
         runtime.startTimers();
         Console.Proc_2_0_6D1510("Server wurde erfolgreich gestartet.", "INITIALIZE", "16776960");
         return runtime;
@@ -194,6 +195,18 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
             throw new IllegalStateException("Invalid port for " + settingName + ": " + value);
         }
         return (int) value;
+    }
+
+    private static void markSocketStartupTimes() {
+        Database database = MySQL.configuredDatabase();
+        if (database == null) {
+            return;
+        }
+        try {
+            new ServerMaintenanceDao(database).markSocketStartupTimes();
+        } catch (Exception ignored) {
+            // The original startup SQL path suppresses failures.
+        }
     }
 
     private static void logTimed(String messageText, long startedAt) {
