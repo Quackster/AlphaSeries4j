@@ -1124,7 +1124,7 @@ public final class Boot {
             Map<Long, String> descriptionByProductId) {
         ClubGiftCache cache = new ClubGiftCache();
         long giftCount = 0L;
-        StringBuilder giftPayload = new StringBuilder();
+        PacketBuilder giftPayload = PacketBuilder.create();
         StringBuilder giftLookup = new StringBuilder();
         for (String row : StringUtils.text(giftRows).split("\r", -1)) {
             if (!row.isEmpty()) {
@@ -1141,12 +1141,15 @@ public final class Boot {
                     String giftName = mapString(nameByProductId, productId);
                     String giftDescription = mapString(descriptionByProductId, productId);
 
-                    giftPayload.append(Crypto.encodeVl64(catalogProductId));
-                    giftPayload.append(Crypto.encodeVl64(productId));
-                    giftPayload.append(giftName).append('\2').append(giftDescription).append('\2');
-                    giftPayload.append("IHHI").append(giftClass).append('\2');
-                    giftPayload.append(Crypto.encodeVl64(isVip));
-                    giftPayload.append(Crypto.encodeVl64(requiredDays));
+                    giftPayload
+                        .appendInt(catalogProductId)
+                        .appendInt(productId)
+                        .appendString(giftName)
+                        .appendString(giftDescription)
+                        .appendRaw("IHHI")
+                        .appendString(giftClass)
+                        .appendInt(isVip)
+                        .appendInt(requiredDays);
 
                     giftLookup.append('[').append(catalogProductId).append('\0').append(productId)
                         .append('\1').append(requiredDays).append(']');
@@ -1154,7 +1157,7 @@ public final class Boot {
                 }
             }
         }
-        cache.giftPayload = Crypto.encodeVl64(giftCount) + giftPayload;
+        cache.giftPayload = PacketBuilder.create().appendInt(giftCount).appendRaw(giftPayload.build()).build();
         cache.giftLookup = giftLookup.toString();
         return cache;
     }

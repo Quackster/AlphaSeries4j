@@ -66,6 +66,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed `DataManager.productCache()` through the module-level `CatalogState` singleton product-cache owner, keeping `DataManager.global_008292BC` as the temporary compatibility source for legacy callers.
 - Routed catalog grant club entitlement, badge, inventory furniture, newest-id, and dimmer setup operations through typed DAO methods.
 - Added `com.alphaseries.game.catalog.GiftSettings` as a typed adapter around club-gift and gift-wrap state previously read directly from `Licence` globals.
+- Built club gift boot payloads with fluent `PacketBuilder` calls, leaving the bracketed gift lookup text as an explicit legacy compatibility cache.
 - Added `com.alphaseries.game.moderation.StaffPayloads` for call-for-help rows, staff user summaries, room visits, room chat history, and unsafe staff-alert checks.
 - Added `com.alphaseries.game.moderation.StaffSettings` as a typed adapter around staff moderation payloads previously read directly from `Licence` globals.
 - Loaded boot staff message rows through typed `StaffModerationDao.StaffMessageRow` records before building the temporary moderation payload.
