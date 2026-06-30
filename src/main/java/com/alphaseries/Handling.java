@@ -52,6 +52,7 @@ import com.alphaseries.game.user.UserEffectActivationRow;
 import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.game.user.UserGroupRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
+import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.help.HelpCenterCache;
@@ -3999,17 +4000,16 @@ public final class Handling {
             if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String catalogRow = Licence.Proc_9_4_807B90(catalogProductId, 0, 0);
-            if (catalogRow.isEmpty()) {
+            CatalogRegistry.CatalogProduct catalogProduct = Licence.catalogProduct(catalogProductId);
+            if (catalogProduct == null) {
                 return "";
             }
-            String[] catalogFields = catalogRow.split("\t", -1);
-            long productId = NumberUtils.parseLong(handlingField(catalogFields, 2));
-            String typeSecondary = handlingField(catalogFields, 4).toLowerCase();
-            long creditPrice = NumberUtils.parseLong(handlingField(catalogFields, 7));
-            long activityPrice = NumberUtils.parseLong(handlingField(catalogFields, 8));
-            long activityType = NumberUtils.parseLong(handlingField(catalogFields, 9));
-            long minClubLevel = NumberUtils.parseLong(handlingField(catalogFields, 11));
+            long productId = catalogProduct.productId();
+            String typeSecondary = catalogProduct.typeSecondary().toLowerCase();
+            long creditPrice = catalogProduct.creditPrice();
+            long activityPrice = catalogProduct.activityPrice();
+            long activityType = catalogProduct.activityType();
+            long minClubLevel = catalogProduct.minClubLevel();
             if (productId <= 0L) {
                 return "";
             }
@@ -4077,13 +4077,12 @@ public final class Handling {
             if (socketIndex <= 0 || catalogProductId <= 0L) {
                 return "";
             }
-            String catalogRow = Licence.Proc_9_4_807B90(catalogProductId, 0, 0);
-            if (catalogRow.isEmpty()) {
+            CatalogRegistry.CatalogProduct catalogProduct = Licence.catalogProduct(catalogProductId);
+            if (catalogProduct == null) {
                 return "";
             }
-            String[] catalogFields = catalogRow.split("\t", -1);
-            long productId = NumberUtils.parseLong(handlingField(catalogFields, 2));
-            String typeSecondary = handlingField(catalogFields, 4).toLowerCase();
+            long productId = catalogProduct.productId();
+            String typeSecondary = catalogProduct.typeSecondary().toLowerCase();
             if (productId <= 0L) {
                 return "";
             }
@@ -4162,14 +4161,13 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String catalogRow = Licence.Proc_9_4_807B90(catalogProductId, 0, 0);
-            if (catalogRow.isEmpty()) {
+            CatalogRegistry.CatalogProduct catalogProduct = Licence.catalogProduct(catalogProductId);
+            if (catalogProduct == null) {
                 return "";
             }
-            String[] catalogFields = catalogRow.split("\t", -1);
-            long productId = NumberUtils.parseLong(handlingField(catalogFields, 2));
-            String typeSecondary = handlingField(catalogFields, 4).toLowerCase();
-            long amount = NumberUtils.parseLong(handlingField(catalogFields, 5));
+            long productId = catalogProduct.productId();
+            String typeSecondary = catalogProduct.typeSecondary().toLowerCase();
+            long amount = catalogProduct.amount();
             if (amount <= 0L) {
                 amount = 1L;
             }
@@ -4390,17 +4388,16 @@ public final class Handling {
             if (socketIndex <= 0 || senderUserId.isEmpty() || "0".equals(senderUserId)) {
                 return "";
             }
-            String catalogRow = Licence.Proc_9_4_807B90(catalogProductId, 0, 0);
-            if (catalogRow.isEmpty()) {
+            CatalogRegistry.CatalogProduct catalogProduct = Licence.catalogProduct(catalogProductId);
+            if (catalogProduct == null) {
                 return "";
             }
-            String[] catalogFields = catalogRow.split("\t", -1);
-            long productId = NumberUtils.parseLong(handlingField(catalogFields, 2));
-            long creditPrice = NumberUtils.parseLong(handlingField(catalogFields, 7));
-            long activityPrice = NumberUtils.parseLong(handlingField(catalogFields, 8));
-            long activityType = NumberUtils.parseLong(handlingField(catalogFields, 9));
-            long allowGifts = NumberUtils.parseLong(handlingField(catalogFields, 10));
-            long minClubLevel = NumberUtils.parseLong(handlingField(catalogFields, 11));
+            long productId = catalogProduct.productId();
+            long creditPrice = catalogProduct.creditPrice();
+            long activityPrice = catalogProduct.activityPrice();
+            long activityType = catalogProduct.activityType();
+            long allowGifts = catalogProduct.allowGifts();
+            long minClubLevel = catalogProduct.minClubLevel();
             if (productId <= 0L || allowGifts == 0L || expectedProductId > 0L && expectedProductId != productId) {
                 return "";
             }

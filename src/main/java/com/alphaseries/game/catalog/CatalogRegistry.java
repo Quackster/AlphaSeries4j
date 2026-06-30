@@ -5,6 +5,7 @@ import com.alphaseries.util.StringUtils;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public final class CatalogRegistry {
     private final Map<Long, String> products;
@@ -37,8 +38,50 @@ public final class CatalogRegistry {
         return StringUtils.text(catalogProducts.get(catalogProductId));
     }
 
+    public Optional<CatalogProduct> catalogProduct(long catalogProductId) {
+        String row = StringUtils.text(catalogProducts.get(catalogProductId));
+        if (row.isEmpty()) {
+            return Optional.empty();
+        }
+        String[] fields = row.split("\t", -1);
+        return Optional.of(new CatalogProduct(
+            NumberUtils.parseLong(StringUtils.field(fields, 0)),
+            StringUtils.field(fields, 1),
+            NumberUtils.parseLong(StringUtils.field(fields, 2)),
+            NumberUtils.parseLong(StringUtils.field(fields, 3)),
+            StringUtils.field(fields, 4),
+            NumberUtils.parseLong(StringUtils.field(fields, 5)),
+            StringUtils.field(fields, 6),
+            NumberUtils.parseLong(StringUtils.field(fields, 7)),
+            NumberUtils.parseLong(StringUtils.field(fields, 8)),
+            NumberUtils.parseLong(StringUtils.field(fields, 9)),
+            NumberUtils.parseLong(StringUtils.field(fields, 10)),
+            NumberUtils.parseLong(StringUtils.field(fields, 11)),
+            NumberUtils.parseLong(StringUtils.field(fields, 12))));
+    }
+
     public String dealRow(long productId) {
         return StringUtils.text(deals.get(productId));
+    }
+
+    public record CatalogProduct(
+        long catalogProductId,
+        String sprite,
+        long productId,
+        long pageId,
+        String typeSecondary,
+        long amount,
+        String receiveBadge,
+        long creditPrice,
+        long activityPrice,
+        long activityType,
+        long allowGifts,
+        long minClubLevel,
+        long replaceDefaultSign
+    ) {
+        public boolean isDeal() {
+            return "products_deals".equalsIgnoreCase(typeSecondary);
+        }
     }
 
     private static String cell(Map<Long, String> rows, long rowId, long columnIndex) {

@@ -142,6 +142,10 @@ public final class Licence {
         return catalogRegistry().catalogProductRow(NumberUtils.parseLong(args[0]));
     }
 
+    public static CatalogRegistry.CatalogProduct catalogProduct(long catalogProductId) {
+        return catalogRegistry().catalogProduct(catalogProductId).orElse(null);
+    }
+
     public static String Proc_9_5_807DF0(Object... args) {
         if (args == null || args.length == 0) {
             return "";
