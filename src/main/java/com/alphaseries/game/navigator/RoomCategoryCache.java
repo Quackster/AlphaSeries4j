@@ -82,6 +82,10 @@ public final class RoomCategoryCache {
             ? StringUtils.text(payloads[rank][hc]) : "";
     }
 
+    public String[][] payloads() {
+        return copyPayloads(payloads);
+    }
+
     private static List<RoomDao.RoomCategoryRow> parseCategoryRows(Object categoryRows) {
         if (categoryRows instanceof List<?> rows) {
             List<RoomDao.RoomCategoryRow> parsedRows = new ArrayList<>();

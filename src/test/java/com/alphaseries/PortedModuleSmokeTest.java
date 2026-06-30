@@ -1221,7 +1221,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(List.of(new RoomDao.RoomCategoryRow(6L, "legacy", 0L, 1L, 2L)),
             legacyRoomCategories.categoryRowList());
         RoomCategoryCache typedRoomCategoryDefaults = RoomCategoryCache.fromRows(
-            new String[]{"11", "", "22"}, List.of(), new String[0][]);
+            new String[]{"11", "", "22"}, List.of(), new String[][]{{"PAYLOAD"}});
         String[] defaultCategoryIds = typedRoomCategoryDefaults.defaultCategoryIds();
         defaultCategoryIds[0] = "changed";
         assertEquals("11", typedRoomCategoryDefaults.privateDefaultCategoryId());
@@ -5030,6 +5030,10 @@ public final class PortedModuleSmokeTest {
 
     private static void assertRoomCategoryDefaults(RoomCategoryCache cache) {
         assertEquals(List.of("11", "", "22"), cache.defaultCategoryIdList());
+        assertEquals("PAYLOAD", cache.payload(0L, 0L));
+        String[][] copiedPayloads = cache.payloads();
+        copiedPayloads[0][0] = "changed";
+        assertEquals("PAYLOAD", cache.payload(0L, 0L));
     }
 
     private static void assertAchievementRows(AchievementSettings settings, AchievementSettings.Achievement achievement) {
