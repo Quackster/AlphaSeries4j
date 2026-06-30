@@ -927,11 +927,14 @@ public final class Handling {
         if (args == null || args.length == 0) {
             return "";
         }
-        boolean enabled = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.chat.filter.enabled", 0)) != 0L;
-        String replacement = Functions.Proc_10_0_809570("com.client.chat.filter.replacement", "");
+        boolean enabled = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.chat.filter.enabled", 0)) != 0L;
+        String replacement = Functions.settingsCache().valueOrDefault("com.client.chat.filter.replacement", "");
         return Licence.chatSettings().filterText(StringUtils.text(args[0]), enabled, replacement);
     }
 
+    /**
+     * Original function: Proc_6_22_6E9300.
+     */
     public static String filterChatText(
         String messageText,
         boolean filterEnabled,
@@ -945,10 +948,13 @@ public final class Handling {
         if (args == null || args.length == 0) {
             return 0L;
         }
-        boolean enabled = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.chat.gesture.enabled", 0)) != 0L;
+        boolean enabled = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.chat.gesture.enabled", 0)) != 0L;
         return Licence.chatSettings().gestureId(StringUtils.text(args[0]), enabled);
     }
 
+    /**
+     * Original function: Proc_6_23_6E9A90.
+     */
     public static long findGestureId(String messageText, boolean gestureEnabled, List<ChatSettings.Gesture> gestureRows) {
         return ChatSettings.fromRows(List.of(), gestureRows).gestureId(messageText, gestureEnabled);
     }
@@ -1002,7 +1008,7 @@ public final class Handling {
             }
             long rankIndex = handlingUserRank(userId);
             long hcLevel = handlingUserHcLevel(userId);
-            if (!Functions.Proc_10_1_809790(rankIndex, "", "fuse_mod", hcLevel)) {
+            if (!Functions.permissionMatrix().allows(rankIndex, "", "fuse_mod", hcLevel)) {
                 return;
             }
             String payload = StaffPayloads.moderationPanel(staffModerationPayload(rankIndex, hcLevel));

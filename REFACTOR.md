@@ -494,6 +494,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated live license startup checks and room-event locale lookup away from `DataManager.Proc_8_7_8051C0(...)` and `Proc_8_11_8069B0(...)`; production no longer calls `DataManager.Proc_8_*` methods directly.
 - Migrated runtime protocol logging, configured ports, boot messenger-friend limits, catalog-page permission checks, staff moderation permission checks, and the legacy MySQL permission helper to typed `AppSettingsCache`/`PermissionMatrix` access instead of `Functions.Proc_10_0_809570(...)` and `Proc_10_1_809790(...)`.
 - Migrated remaining boot startup setting reads plus selected `Handling` permission checks to typed `AppSettingsCache`/`PermissionMatrix` access, reducing live `Functions.Proc_10_0/1` usage to larger handler workflows.
+- Migrated chat filter, chat gesture, and moderation-panel permission reads in `Handling` to typed `AppSettingsCache`/`PermissionMatrix` access, and added original Proc-name Javadocs to the renamed chat helper methods touched in that slice.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -510,7 +511,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11355 lines
+- `Handling.java`: 11361 lines
 - `Functions.java`: 695 lines
 - `DataManager.java`: 409 lines
 - `MySQL.java`: 177 lines
