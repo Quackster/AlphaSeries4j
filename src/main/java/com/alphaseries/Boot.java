@@ -1896,10 +1896,12 @@ public final class Boot {
         return value == null ? "" : value;
     }
 
-    private static String joinPrivilegeRows(List<String> rows) {
+    private static String joinPrivilegeRows(List<SettingsDao.PrivilegeRow> rows) {
         StringBuilder joined = new StringBuilder();
-        for (String row : rows == null ? List.<String>of() : rows) {
-            appendLegacyRow(joined, row);
+        for (SettingsDao.PrivilegeRow row : rows == null ? List.<SettingsDao.PrivilegeRow>of() : rows) {
+            if (row != null) {
+                appendLegacyRow(joined, row.privilege());
+            }
         }
         return joined.toString();
     }

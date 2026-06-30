@@ -32,6 +32,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.config.AppSettingsCache` and `PermissionMatrix` as typed adapters around settings and rank/HC permission caches previously parsed inline in `Functions`.
 - Added `com.alphaseries.config.AppConfigState` as the module-level singleton owner for app settings and permission matrices, keeping `Functions.global_0082928C`/`global_008292A8` as temporary compatibility sources.
 - Routed boot rank/HC permission loading through typed `PermissionMatrix` storage instead of keeping a raw `String[][]` mirror in `Functions.global_008292A8`.
+- Loaded level privilege rows through typed `SettingsDao.PrivilegeRow` records before building the temporary permission compatibility payload.
 - Added `com.alphaseries.db` with `Database`, `JdbcDatabase`, and `RowMapper`.
 - Switched `JdbcDatabase` to `PreparedStatement` for query and execute paths.
 - Added typed prepared-query defaults for legacy `Database` test doubles while preserving JDBC prepared statements.
