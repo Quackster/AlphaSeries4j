@@ -45,6 +45,14 @@ public final class StaffPayloads {
             .build();
     }
 
+    public static String moderationPanel(String moderationPayload) {
+        return PacketBuilder.message("HS")
+            .appendInt(0L)
+            .appendInt(0L)
+            .appendRaw(moderationPayload)
+            .build();
+    }
+
     public static String callForHelpRow(StaffCallForHelpRow row, Map<Long, String> userNamesById) {
         long callForHelpId = row.callForHelpId();
         long callerId = row.callerUserId();

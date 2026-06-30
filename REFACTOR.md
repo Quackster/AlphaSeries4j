@@ -405,6 +405,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved furniture floor/wall list envelope construction into `FurniturePayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved inventory add and catalog dimension-map send payload construction into typed payload builders, replacing inline string/legacy `Crypto` assembly in `Functions` and `Handling`.
 - Moved trade confirmation payload construction into `TradePayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
+- Moved staff moderation panel `HS` envelope construction into `StaffPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -420,7 +421,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11957 lines
+- `Handling.java`: 11955 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines

@@ -997,9 +997,7 @@ public final class Handling {
             if (!Functions.Proc_10_1_809790(rankIndex, "", "fuse_mod", hcLevel)) {
                 return;
             }
-            String payload = Crypto.Proc_3_0_6D2AF0(0, null, "HS")
-                + Crypto.Proc_3_0_6D2AF0(0, null, "")
-                + staffModerationPayload(rankIndex, hcLevel);
+            String payload = StaffPayloads.moderationPanel(staffModerationPayload(rankIndex, hcLevel));
             Proc_6_244_801E80(socketIndex, payload, 0);
 
             StaffModerationDao moderationDao = staffModerationDao();
