@@ -13,6 +13,7 @@ import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.help.HelpCenterState;
 import com.alphaseries.game.messenger.MessengerSettings;
 import com.alphaseries.game.messenger.MessengerState;
+import com.alphaseries.game.moderation.ModerationState;
 import com.alphaseries.game.moderation.StaffSettings;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.NavigatorState;
@@ -573,10 +574,16 @@ public final class Licence {
     }
 
     public static StaffSettings staffSettings() {
-        return StaffSettings.fromLegacy(global_008292D8);
+        if (global_008292D8 instanceof StaffSettings staffSettings) {
+            ModerationState.instance().setStaffSettings(staffSettings);
+        } else {
+            ModerationState.instance().setStaffModerationPayloads(global_008292D8);
+        }
+        return ModerationState.instance().staffSettings();
     }
 
     public static void setStaffModerationPayloads(Object moderationPayloads) {
+        ModerationState.instance().setStaffModerationPayloads(moderationPayloads);
         global_008292D8 = moderationPayloads == null ? "" : moderationPayloads;
     }
 

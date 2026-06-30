@@ -10,7 +10,14 @@ public final class StaffSettings {
     }
 
     public static StaffSettings fromLegacy(Object moderationPayloads) {
+        if (moderationPayloads instanceof StaffSettings staffSettings) {
+            return staffSettings;
+        }
         return new StaffSettings(moderationPayloads);
+    }
+
+    public static StaffSettings empty() {
+        return new StaffSettings("");
     }
 
     public String moderationPayload(long rankIndex, long hcLevel) {

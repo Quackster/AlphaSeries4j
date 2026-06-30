@@ -80,8 +80,10 @@ import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.navigator.NavigatorRoom;
 import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.moderation.StaffCallForHelpRow;
+import com.alphaseries.game.moderation.ModerationState;
 import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffModerationPacketHandlers;
+import com.alphaseries.game.moderation.StaffSettings;
 import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
 import com.alphaseries.game.moderation.StaffRoomVisitRow;
@@ -8343,7 +8345,7 @@ public final class Handling {
     }
 
     public static String staffModerationPayload(long rankIndex, long hcLevel) {
-        return Licence.staffSettings().moderationPayload(rankIndex, hcLevel);
+        return staffSettings().moderationPayload(rankIndex, hcLevel);
     }
 
     public static void ensureRepresentedRoomSlotPool() {
@@ -9381,6 +9383,11 @@ public final class Handling {
     private static ChatSettings chatSettings() {
         Licence.chatSettings();
         return ChatState.instance().settings();
+    }
+
+    private static StaffSettings staffSettings() {
+        Licence.staffSettings();
+        return ModerationState.instance().staffSettings();
     }
 
     public static String officialNavigatorQuery() {
