@@ -418,21 +418,13 @@ public final class Boot {
 
     public static void Proc_1_15_6CA000(Object... args) {
         CatalogDao catalog = catalogDao();
-        long maxPageId = 0L;
-        if (catalog != null) {
-            try {
-                maxPageId = Math.max(0L, catalog.maxCatalogPageId());
-            } catch (Exception ignored) {
-                // Legacy startup cache loading tolerated missing tables or SQL failures.
-            }
-        }
-        String[] pages = new String[(int) maxPageId + 1];
+        Map<Long, String> pages = new LinkedHashMap<>();
         if (catalog != null) {
             try {
                 for (CatalogDao.CatalogPageRow row : catalog.catalogPageRows()) {
                     long pageId = row.pageId();
-                    if (pageId >= 0L && pageId < pages.length) {
-                        pages[(int) pageId] = buildCatalogPagePayload(row, catalog.catalogPageProductRows(pageId));
+                    if (pageId >= 0L) {
+                        pages.put(pageId, buildCatalogPagePayload(row, catalog.catalogPageProductRows(pageId)));
                     }
                 }
             } catch (Exception ignored) {

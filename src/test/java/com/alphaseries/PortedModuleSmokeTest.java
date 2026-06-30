@@ -952,6 +952,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("i", Boot.catalogProductClass(9));
         assertEquals("s", Boot.catalogProductClass(0));
         assertEquals(false, Boot.catalogTextFieldPresent("NULL"));
+        assertCatalogPagePayloadMapBridge();
         assertEquals(true, Boot.catalogPageVisible(new String[]{"1", "name", "1", "2", "0", "1"}, 0, 0));
         Functions.global_008292A8 = new String[][]{{}, {"\2fuse_developer\2"}};
         assertEquals(true, Boot.catalogPageVisible(new String[]{"1", "name", "1", "2", "1", "1"}, 1, 0));
@@ -5044,6 +5045,16 @@ public final class PortedModuleSmokeTest {
             com.alphaseries.game.room.RoomEventLocales.fromLegacy("\0existing\1old"));
         assertEquals("old", locales.field("existing", 0));
         assertEquals("party", locales.field("5", 0));
+    }
+
+    private static void assertCatalogPagePayloadMapBridge() {
+        Object previousPagePayloads = Licence.global_00829308;
+        Object previousPageTrees = Licence.global_008292F4;
+        Licence.global_00829308 = Map.of(8L, "CATALOG_PAGE_MAP");
+        Licence.global_008292F4 = new String[][]{{"TREE"}};
+        assertEquals("CATALOG_PAGE_MAP", Licence.catalogPages().pagePayload(8L));
+        Licence.global_00829308 = previousPagePayloads;
+        Licence.global_008292F4 = previousPageTrees;
     }
 
     private static void assertCatalogPagesTypedAccessors() {

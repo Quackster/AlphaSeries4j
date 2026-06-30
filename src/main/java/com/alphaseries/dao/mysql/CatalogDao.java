@@ -106,13 +106,6 @@ public final class CatalogDao {
             resultSet -> new ProductDealRow(resultSet.getLong(1), resultSet.getString(2)));
     }
 
-    public long maxCatalogPageId() throws SQLException {
-        return database.queryOne(
-            "SELECT MAX(id) FROM catalog_pages",
-            resultSet -> resultSet.getLong(1))
-            .orElse(0L);
-    }
-
     public List<CatalogPageRow> catalogPageRows() throws SQLException {
         return database.query(
             "SELECT id,name,level_minrequired,hclevel_minrequired,is_clickable,ctlg_template,"
