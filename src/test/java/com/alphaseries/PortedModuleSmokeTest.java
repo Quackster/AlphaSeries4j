@@ -306,9 +306,12 @@ public final class PortedModuleSmokeTest {
         assertEquals("1\talice\r2\tbob", MySQL.formatSqlRows(rows));
         Functions.global_0082928C = "[server.port=1234]\nname=alpha";
         assertEquals("1234", Functions.Proc_10_0_809570("server.port", "0"));
+        assertEquals("1234", Functions.settingsCache().valueOrDefault("server.port", "0"));
         assertEquals("fallback", Functions.Proc_10_0_809570("missing", "fallback"));
+        assertEquals("fallback", Functions.settingsCache().valueOrDefault("missing", "fallback"));
         Functions.global_008292A8 = new String[][]{{"\2base\2"}, {"\2fuse_mod\2"}};
         assertEquals(true, Functions.Proc_10_1_809790(1, "", "fuse_mod", 0));
+        assertEquals(true, Functions.permissionMatrix().allows(1, "", "fuse_mod", 0));
         assertEquals("bcd", Functions.Proc_10_5_809D80("abcdef", 2, 3));
         assertEquals("O''Reilly test ", Functions.Proc_10_11_80A9C0("O'Reilly\\rtest\""));
         assertEquals("\1" + "123\t45\tdata\t6\2", Functions.inventoryCacheRecord(123, 45, "data", 6));

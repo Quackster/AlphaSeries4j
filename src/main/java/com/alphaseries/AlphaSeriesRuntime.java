@@ -63,9 +63,9 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
     }
 
     private void configureProtocolLogging() {
-        long musLog = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.mus.log", 0, 0));
+        long musLog = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.mus.log", 0));
         Boot.runTimed("MUS Server Protokollierer " + (musLog == 0L ? "deaktiviert" : "aktiviert"), () -> { });
-        boolean gameLog = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.game.log", 0, 0)) != 0L;
+        boolean gameLog = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.log", 0)) != 0L;
         Licence.global_00829190 = gameLog;
         Filesystems.global_00829190 = gameLog;
         Boot.runTimed("Game Server Protokollierer aktiviert", () -> { });
@@ -143,7 +143,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
             int read;
             while ((read = input.read(buffer)) != -1) {
                 String packetBuffer = new String(buffer, 0, read, StandardCharsets.ISO_8859_1);
-                if (NumberUtils.parseLong(Functions.Proc_10_0_809570("com.server.socket.mus.log", 0, 0)) != 0L) {
+                if (NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.mus.log", 0)) != 0L) {
                     Console.Proc_2_0_6D1510(packetBuffer, "MUS", "16711680");
                 }
                 Main.processGameServerData(packetBuffer);
@@ -191,7 +191,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
     }
 
     public static int configuredPort(String settingName) {
-        long value = NumberUtils.parseLong(Functions.Proc_10_0_809570(settingName, 0, 0));
+        long value = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault(settingName, 0));
         if (value <= 0L || value > 65535L) {
             throw new IllegalStateException("Invalid port for " + settingName + ": " + value);
         }

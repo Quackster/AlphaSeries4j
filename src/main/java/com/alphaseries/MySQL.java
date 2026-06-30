@@ -124,7 +124,7 @@ public final class MySQL {
             UserDao users = userDao();
             long rankIndex = users.rankLevel(numericUserId);
             long hcLevel = users.hcLevel(numericUserId);
-            return Functions.Proc_10_1_809790(rankIndex, "", permissionName, hcLevel);
+            return Functions.permissionMatrix().allows(rankIndex, "", permissionName, hcLevel);
         } catch (SQLException ex) {
             return false;
         }

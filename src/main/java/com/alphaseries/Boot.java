@@ -242,9 +242,9 @@ public final class Boot {
         Proc_1_22_6D0F00(0, 0, 0);
         buildChatSettingsCache();
         Licence.setMessengerFriendLimits(buildMessengerFriendLimitCache(
-            NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel0", 0, 0)),
-            NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel1", 0, 0)),
-            NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.messenger.maxfriends.hclevel2", 0, 0))));
+            NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.messenger.maxfriends.hclevel0", 0)),
+            NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.messenger.maxfriends.hclevel1", 0)),
+            NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.messenger.maxfriends.hclevel2", 0))));
     }
 
     public static void Proc_1_6_6C5830(Object... args) {
@@ -1752,7 +1752,7 @@ public final class Boot {
         }
         boolean visible = NumberUtils.parseLong(fields[5]) != 0L;
         if (NumberUtils.parseLong(fields[4]) != 0L) {
-            visible = Functions.Proc_10_1_809790(rankIndex, "", "fuse_developer", hcLevel);
+            visible = Functions.permissionMatrix().allows(rankIndex, "", "fuse_developer", hcLevel);
         }
         return visible;
     }
@@ -1763,13 +1763,13 @@ public final class Boot {
         }
         boolean visible = row.visible() != 0L;
         if (row.develop() != 0L) {
-            visible = Functions.Proc_10_1_809790(rankIndex, "", "fuse_developer", hcLevel);
+            visible = Functions.permissionMatrix().allows(rankIndex, "", "fuse_developer", hcLevel);
         }
         return visible;
     }
 
     public static String appendPermissionPayload(long rankIndex, long hcLevel, String permissionName, String payload) {
-        if (Functions.Proc_10_1_809790(rankIndex, "", permissionName, hcLevel)) {
+        if (Functions.permissionMatrix().allows(rankIndex, "", permissionName, hcLevel)) {
             return permissionName + '\2' + StringUtils.text(payload);
         }
         return "";
