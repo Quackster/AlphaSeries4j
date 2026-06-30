@@ -93,8 +93,8 @@ public final class InventoryMessagePayloads {
         if (items == null) {
             return result;
         }
-        StringBuilder regularPayload = new StringBuilder();
-        StringBuilder iconPayload = new StringBuilder();
+        PacketBuilder regularPayload = PacketBuilder.create();
+        PacketBuilder iconPayload = PacketBuilder.create();
         for (InventoryItemRow item : items) {
             if (item != null) {
                 String itemPayload = item(
@@ -103,16 +103,16 @@ public final class InventoryMessagePayloads {
                     item.itemData(),
                     item.secondaryValue());
                 if (DataManager.productCache().type(item.productId()) == 9L) {
-                    iconPayload.append(itemPayload);
+                    iconPayload.appendRaw(itemPayload);
                     result.iconCount++;
                 } else {
-                    regularPayload.append(itemPayload);
+                    regularPayload.appendRaw(itemPayload);
                     result.regularCount++;
                 }
             }
         }
-        result.regularPayload = regularPayload.toString();
-        result.iconPayload = iconPayload.toString();
+        result.regularPayload = regularPayload.build();
+        result.iconPayload = iconPayload.build();
         return result;
     }
 

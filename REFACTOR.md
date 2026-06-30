@@ -59,6 +59,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.game.chat.ChatSettings` for chat word filtering and gesture lookup state previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.help.HelpCenterCache` as a typed adapter around important FAQ, FAQ category, and FAQ description payload caches previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.inventory.InventoryMessagePayloads` for inventory item/list payload building.
+- Built typed inventory item-list payload fragments with `PacketBuilder.appendRaw(...)` over `InventoryItemRow` records instead of raw `StringBuilder` accumulation.
 - Added `com.alphaseries.game.catalog.CatalogPages` as a typed adapter around catalog page payload and page-tree caches previously read directly from `Licence` globals.
 - Added `com.alphaseries.game.catalog.CatalogProductSettings` as a typed adapter around catalog package, pet package, club product, counter product, teleport, and moodlight state previously written through raw `Licence` globals.
 - Added `com.alphaseries.game.catalog.CatalogRegistry` as a typed adapter around product, catalog-product, and deal row caches previously parsed directly from `Licence` globals.
