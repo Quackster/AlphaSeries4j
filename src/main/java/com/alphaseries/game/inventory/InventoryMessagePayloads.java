@@ -47,6 +47,34 @@ public final class InventoryMessagePayloads {
             .build();
     }
 
+    public static String regularList(long itemCount, String itemPayload) {
+        return PacketBuilder.create()
+            .appendRaw('\2')
+            .appendRaw(PacketBuilder.message("BLS").appendRaw('\2').appendRaw("II").appendInt(itemCount))
+            .appendRaw(itemPayload)
+            .build();
+    }
+
+    public static String iconList(long itemCount, String itemPayload) {
+        return PacketBuilder.message("BL")
+            .appendRaw('\2')
+            .appendRaw("II")
+            .appendInt(itemCount)
+            .appendRaw(itemPayload)
+            .build();
+    }
+
+    public static String emptyRentalList() {
+        return PacketBuilder.message("Id")
+            .appendInt(0)
+            .appendRaw("HHH")
+            .appendInt(0)
+            .appendInt(0)
+            .appendInt(0)
+            .appendRaw("H")
+            .build();
+    }
+
     public static InventoryList listFromItems(List<InventoryItemRow> items) {
         InventoryList result = new InventoryList();
         if (items == null) {

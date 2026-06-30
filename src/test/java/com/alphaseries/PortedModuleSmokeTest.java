@@ -1779,6 +1779,15 @@ public final class PortedModuleSmokeTest {
         assertEquals(1L, inventoryPayloads.iconCount);
         assertEquals(expectedInventoryItem, inventoryPayloads.regularPayload);
         assertEquals(iconInventoryItem, inventoryPayloads.iconPayload);
+        assertEquals('\2' + Crypto.Proc_3_0_6D2AF0(1, null, "BLS" + '\2' + "II") + expectedInventoryItem,
+            InventoryMessagePayloads.regularList(1, expectedInventoryItem));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "BL" + '\2' + "II") + iconInventoryItem,
+            InventoryMessagePayloads.iconList(1, iconInventoryItem));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null,
+            Crypto.Proc_3_0_6D2AF0(0, null,
+                Crypto.Proc_3_0_6D2AF0(0, null,
+                    Crypto.Proc_3_0_6D2AF0(0, null, "Id") + "HHH"))) + "H",
+            InventoryMessagePayloads.emptyRentalList());
         List<RepresentedTradeOffer> tradeOffers = Handling.representedTradeOfferStore(List.of(), 2, 100, 20, "a\rb", 4);
         assertEquals(1, tradeOffers.size());
         assertEquals(2L, tradeOffers.get(0).socketIndex());

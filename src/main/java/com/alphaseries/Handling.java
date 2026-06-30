@@ -4561,15 +4561,11 @@ public final class Handling {
             InventoryPayloads payloads = inventoryPayloadsFromInventory(
                 InventoryMessagePayloads.listFromItems(
                     furniture.inventoryFurnitureForOwner(NumberUtils.parseLong(userId))));
-            Proc_6_244_801E80(socketIndex, '\2' + Crypto.Proc_3_0_6D2AF0(payloads.regularCount, null, "BLS" + '\2' + "II")
-                + payloads.regularPayload, 0);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(payloads.iconCount, null, "BL" + '\2' + "II")
-                + payloads.iconPayload, 0);
-            String payload = Crypto.Proc_3_0_6D2AF0(0, null,
-                Crypto.Proc_3_0_6D2AF0(0, null,
-                    Crypto.Proc_3_0_6D2AF0(0, null,
-                        Crypto.Proc_3_0_6D2AF0(0, null, "Id") + "HHH"))) + "H";
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            Proc_6_244_801E80(socketIndex,
+                InventoryMessagePayloads.regularList(payloads.regularCount, payloads.regularPayload), 0);
+            Proc_6_244_801E80(socketIndex,
+                InventoryMessagePayloads.iconList(payloads.iconCount, payloads.iconPayload), 0);
+            Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.emptyRentalList(), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
