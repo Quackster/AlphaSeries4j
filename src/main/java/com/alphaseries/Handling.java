@@ -34,6 +34,7 @@ import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollPrompt;
+import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.game.room.RoomOccupantRow;
@@ -7503,13 +7504,14 @@ public final class Handling {
             if (requestedQuestId <= 0L) {
                 return "";
             }
-            String[] questFields = questFieldsById(questRowsFromSource(), requestedQuestId);
-            if (questFields.length < 11) {
+            QuestSettings.QuestDefinitionRow questDefinition = QuestSettings.fromLegacy(questRowsFromSource())
+                .definitionById(requestedQuestId);
+            if (questDefinition == null || questDefinition.fieldCount() < 11) {
                 return "";
             }
-            long questId = NumberUtils.parseLong(handlingField(questFields, 0));
-            long activityCount = NumberUtils.parseLong(handlingField(questFields, 9));
-            long waitAmount = NumberUtils.parseLong(handlingField(questFields, 10));
+            long questId = questDefinition.questId();
+            long activityCount = questDefinition.activityAmount();
+            long waitAmount = questDefinition.waitAmount();
             if (activityCount <= 0L) {
                 activityCount = 1L;
             }
@@ -10809,8 +10811,8 @@ public final class Handling {
         long currentLevel = 0L;
         if (!StringUtils.text(activeRow).isEmpty()) {
             String[] activeFields = StringUtils.text(activeRow).split("\t", -1);
-            currentQuestId = NumberUtils.parseLong(handlingField(activeFields, 0));
-            currentLevel = NumberUtils.parseLong(handlingField(activeFields, 1));
+            currentQuestId = NumberUtils.parseLong(StringUtils.field(activeFields, 0));
+            currentLevel = NumberUtils.parseLong(StringUtils.field(activeFields, 1));
         }
 
         long currentCampaignId = 0L;
@@ -10818,24 +10820,17 @@ public final class Handling {
         long fallbackCampaignId = 0L;
         long fallbackLevel = Integer.MAX_VALUE;
         boolean foundCurrent = false;
-        for (String row : StringUtils.text(questRows).split("\r", -1)) {
-            String rowValue = row.trim();
-            if (!rowValue.isEmpty()) {
-                String[] fields = rowValue.split("\t", -1);
-                if (fields.length >= 9) {
-                    long rowQuestId = NumberUtils.parseLong(handlingField(fields, 0));
-                    long rowLevel = NumberUtils.parseLong(handlingField(fields, 1));
-                    long rowCampaignId = NumberUtils.parseLong(handlingField(fields, 8));
-                    if (fallbackQuestId <= 0L || rowLevel < fallbackLevel) {
-                        fallbackQuestId = rowQuestId;
-                        fallbackCampaignId = rowCampaignId;
-                        fallbackLevel = rowLevel;
-                    }
-                    if (rowQuestId == currentQuestId) {
-                        currentCampaignId = rowCampaignId;
-                        currentLevel = rowLevel;
-                        foundCurrent = true;
-                    }
+        for (QuestSettings.QuestDefinitionRow definition : QuestSettings.fromLegacy(questRows).definitions()) {
+            if (definition.fieldCount() >= 9) {
+                if (fallbackQuestId <= 0L || definition.level() < fallbackLevel) {
+                    fallbackQuestId = definition.questId();
+                    fallbackCampaignId = definition.campaignId();
+                    fallbackLevel = definition.level();
+                }
+                if (definition.questId() == currentQuestId) {
+                    currentCampaignId = definition.campaignId();
+                    currentLevel = definition.level();
+                    foundCurrent = true;
                 }
             }
         }
@@ -10846,18 +10841,12 @@ public final class Handling {
 
         long requestedQuestId = 0L;
         long bestLevel = Integer.MAX_VALUE;
-        for (String row : StringUtils.text(questRows).split("\r", -1)) {
-            String rowValue = row.trim();
-            if (!rowValue.isEmpty()) {
-                String[] fields = rowValue.split("\t", -1);
-                if (fields.length >= 9) {
-                    long rowQuestId = NumberUtils.parseLong(handlingField(fields, 0));
-                    long rowLevel = NumberUtils.parseLong(handlingField(fields, 1));
-                    long rowCampaignId = NumberUtils.parseLong(handlingField(fields, 8));
-                    if (rowCampaignId == currentCampaignId && rowLevel > currentLevel && rowLevel < bestLevel) {
-                        requestedQuestId = rowQuestId;
-                        bestLevel = rowLevel;
-                    }
+        for (QuestSettings.QuestDefinitionRow definition : QuestSettings.fromLegacy(questRows).definitions()) {
+            if (definition.fieldCount() >= 9) {
+                if (definition.campaignId() == currentCampaignId && definition.level() > currentLevel
+                    && definition.level() < bestLevel) {
+                    requestedQuestId = definition.questId();
+                    bestLevel = definition.level();
                 }
             }
         }
@@ -10895,17 +10884,11 @@ public final class Handling {
         }
 
         boolean matchedQuest = false;
-        for (String row : StringUtils.text(questRows).split("\r", -1)) {
-            String rowValue = row.trim();
-            if (!rowValue.isEmpty()) {
-                String[] fields = rowValue.split("\t", -1);
-                if (fields.length >= 11 && NumberUtils.parseLong(handlingField(fields, 0)) == decision.questId) {
-                    decision.amountRequired = NumberUtils.parseLong(handlingField(fields, 9));
-                    decision.waitAmount = NumberUtils.parseLong(handlingField(fields, 10));
-                    matchedQuest = true;
-                    break;
-                }
-            }
+        QuestSettings.QuestDefinitionRow questDefinition = QuestSettings.fromLegacy(questRows).definitionById(decision.questId);
+        if (questDefinition != null && questDefinition.fieldCount() >= 11) {
+            decision.amountRequired = questDefinition.activityAmount();
+            decision.waitAmount = questDefinition.waitAmount();
+            matchedQuest = true;
         }
         if (!matchedQuest) {
             return decision;
@@ -10935,65 +10918,55 @@ public final class Handling {
     }
 
     public static String questListPayload(String questRows, String userQuestRows) {
-        String userQuestText = "\r" + StringUtils.text(userQuestRows) + "\r";
         long lastCampaignId = -1L;
         long campaignLevelCount = 0L;
         long questCount = 0L;
         StringBuilder questPayload = new StringBuilder();
-        for (String row : StringUtils.text(questRows).split("\r", -1)) {
-            String questRow = row.trim();
-            if (!questRow.isEmpty()) {
-                String[] questFields = questRow.split("\t", -1);
-                if (questFields.length >= 11) {
-                    long questId = NumberUtils.parseLong(handlingField(questFields, 0));
-                    long questLevel = NumberUtils.parseLong(handlingField(questFields, 1));
-                    String questName = handlingField(questFields, 2);
-                    long rewardAmount = NumberUtils.parseLong(handlingField(questFields, 4));
-                    long rewardType = NumberUtils.parseLong(handlingField(questFields, 5));
-                    long campaignId = NumberUtils.parseLong(handlingField(questFields, 8));
-                    long activityCount = NumberUtils.parseLong(handlingField(questFields, 9));
-                    long waitSeconds = NumberUtils.parseLong(handlingField(questFields, 10));
+        for (QuestSettings.QuestDefinitionRow quest : QuestSettings.fromLegacy(questRows).definitions()) {
+            if (quest.fieldCount() >= 11) {
+                long waitSeconds = quest.waitAmount();
 
-                    if (campaignId != lastCampaignId) {
-                        lastCampaignId = campaignId;
-                        campaignLevelCount = 0L;
-                    }
-                    campaignLevelCount++;
-
-                    String[] userQuestFields = userQuestFields(userQuestText, questId);
-                    long userLevel = NumberUtils.parseLong(handlingField(userQuestFields, 1));
-                    String timestampDone = handlingField(userQuestFields, 2);
-                    String timestampAccepted = handlingField(userQuestFields, 3);
-                    String timeNextText = handlingField(userQuestFields, 4);
-                    long progressValue = NumberUtils.parseLong(handlingField(userQuestFields, 5));
-                    long remainingWait = NumberUtils.parseLong(handlingField(userQuestFields, 6));
-
-                    long stateCode = 0L;
-                    if (!timestampDone.isEmpty() && !"0".equals(timestampDone)) {
-                        stateCode = 2L;
-                    } else if (!timestampAccepted.isEmpty() && !"0".equals(timestampAccepted)) {
-                        stateCode = 1L;
-                    }
-                    if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
-                        waitSeconds = remainingWait;
-                    }
-
-                    String rowPayload = Crypto.Proc_3_0_6D2AF0(campaignId, null, "") + questName + '\2';
-                    rowPayload += Crypto.Proc_3_0_6D2AF0(questId, null, "");
-                    rowPayload += Crypto.Proc_3_0_6D2AF0(questLevel, null, "");
-                    rowPayload += Crypto.Proc_3_0_6D2AF0(campaignLevelCount, null, "");
-                    rowPayload += Crypto.Proc_3_0_6D2AF0(stateCode, null, "");
-                    rowPayload += Crypto.Proc_3_0_6D2AF0(userLevel, null, "");
-                    rowPayload += Crypto.Proc_3_0_6D2AF0(progressValue, null, "");
-                    rowPayload += Crypto.Proc_3_0_6D2AF0(activityCount, null, "");
-                    rowPayload += Crypto.Proc_3_0_6D2AF0(rewardType, null, "");
-                    rowPayload += Crypto.Proc_3_0_6D2AF0(rewardAmount, null, "");
-                    rowPayload += "HHH\2\2H\2HHH";
-                    rowPayload += Crypto.Proc_3_0_6D2AF0(waitSeconds, null, "");
-
-                    questPayload.append(rowPayload);
-                    questCount++;
+                if (quest.campaignId() != lastCampaignId) {
+                    lastCampaignId = quest.campaignId();
+                    campaignLevelCount = 0L;
                 }
+                campaignLevelCount++;
+
+                QuestSettings.UserQuestListRow userQuest = QuestSettings.userQuestListRowByQuestId(
+                    userQuestRows,
+                    quest.questId());
+                long userLevel = userQuest == null ? 0L : userQuest.level();
+                String timestampDone = userQuest == null ? "" : StringUtils.text(userQuest.timestampDone());
+                String timestampAccepted = userQuest == null ? "" : StringUtils.text(userQuest.timestampAccepted());
+                String timeNextText = userQuest == null ? "" : StringUtils.text(userQuest.timeNext());
+                long progressValue = userQuest == null ? 0L : userQuest.progress();
+                long remainingWait = userQuest == null ? 0L : userQuest.remainingWait();
+
+                long stateCode = 0L;
+                if (!timestampDone.isEmpty() && !"0".equals(timestampDone)) {
+                    stateCode = 2L;
+                } else if (!timestampAccepted.isEmpty() && !"0".equals(timestampAccepted)) {
+                    stateCode = 1L;
+                }
+                if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
+                    waitSeconds = remainingWait;
+                }
+
+                String rowPayload = Crypto.Proc_3_0_6D2AF0(quest.campaignId(), null, "") + quest.name() + '\2';
+                rowPayload += Crypto.Proc_3_0_6D2AF0(quest.questId(), null, "");
+                rowPayload += Crypto.Proc_3_0_6D2AF0(quest.level(), null, "");
+                rowPayload += Crypto.Proc_3_0_6D2AF0(campaignLevelCount, null, "");
+                rowPayload += Crypto.Proc_3_0_6D2AF0(stateCode, null, "");
+                rowPayload += Crypto.Proc_3_0_6D2AF0(userLevel, null, "");
+                rowPayload += Crypto.Proc_3_0_6D2AF0(progressValue, null, "");
+                rowPayload += Crypto.Proc_3_0_6D2AF0(quest.activityAmount(), null, "");
+                rowPayload += Crypto.Proc_3_0_6D2AF0(quest.rewardType(), null, "");
+                rowPayload += Crypto.Proc_3_0_6D2AF0(quest.reward(), null, "");
+                rowPayload += "HHH\2\2H\2HHH";
+                rowPayload += Crypto.Proc_3_0_6D2AF0(waitSeconds, null, "");
+
+                questPayload.append(rowPayload);
+                questCount++;
             }
         }
         return Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(questCount, null, "L`"))
@@ -11042,28 +11015,19 @@ public final class Handling {
                 return "";
             }
             String questRows = questRowsFromSource();
-            String[] questFields = questFieldsById(questRows, questId);
-            if (questFields.length < 11) {
+            QuestSettings.QuestDefinitionRow questDefinition = QuestSettings.fromLegacy(questRows).definitionById(questId);
+            if (questDefinition == null || questDefinition.fieldCount() < 11) {
                 return "";
             }
-            String questName = handlingField(questFields, 2);
-            long rewardAmount = NumberUtils.parseLong(handlingField(questFields, 4));
-            long rewardType = NumberUtils.parseLong(handlingField(questFields, 5));
-            long campaignId = NumberUtils.parseLong(handlingField(questFields, 8));
-            long activityCount = NumberUtils.parseLong(handlingField(questFields, 9));
+            String questName = questDefinition.name();
+            long rewardAmount = questDefinition.reward();
+            long rewardType = questDefinition.rewardType();
+            long campaignId = questDefinition.campaignId();
+            long activityCount = questDefinition.activityAmount();
             if (activityCount <= 0L) {
                 activityCount = 1L;
             }
-            long campaignLevelCount = 0L;
-            for (String row : StringUtils.text(questRows).split("\r", -1)) {
-                String rowText = row.trim();
-                if (!rowText.isEmpty()) {
-                    String[] fields = rowText.split("\t", -1);
-                    if (fields.length >= 9 && NumberUtils.parseLong(handlingField(fields, 8)) == campaignId) {
-                        campaignLevelCount++;
-                    }
-                }
-            }
+            long campaignLevelCount = QuestSettings.fromLegacy(questRows).campaignLevelCount(campaignId);
             String completionPayload = questCompletionPayload(campaignId, questName, campaignLevelCount, questId,
                 userQuestLevel, progressValue, activityCount);
             Proc_6_244_801E80(socketIndex, "Lb" + completionPayload, 0);
@@ -12592,24 +12556,6 @@ public final class Handling {
         rows.append(rowText);
     }
 
-    private static String[] userQuestFields(String userQuestText, long questId) {
-        if (questId <= 0L) {
-            return new String[0];
-        }
-        String marker = "\r" + questId + '\t';
-        String text = StringUtils.text(userQuestText);
-        int start = text.indexOf(marker);
-        if (start < 0) {
-            return new String[0];
-        }
-        int rowStart = start + marker.length();
-        int rowEnd = text.indexOf('\r', rowStart);
-        if (rowEnd < 0) {
-            rowEnd = text.length();
-        }
-        return (questId + "\t" + text.substring(rowStart, rowEnd)).split("\t", -1);
-    }
-
     private static String questRowsFromSource() {
         if (Licence.questSettings().hasRows()) {
             return Licence.questSettings().rows();
@@ -12627,22 +12573,6 @@ public final class Handling {
         } catch (Exception ignored) {
             return "";
         }
-    }
-
-    private static String[] questFieldsById(String questRows, long questId) {
-        if (questId <= 0L) {
-            return new String[0];
-        }
-        for (String row : StringUtils.text(questRows).split("\r", -1)) {
-            String rowText = row.trim();
-            if (!rowText.isEmpty()) {
-                String[] fields = rowText.split("\t", -1);
-                if (fields.length >= 1 && NumberUtils.parseLong(handlingField(fields, 0)) == questId) {
-                    return fields;
-                }
-            }
-        }
-        return new String[0];
     }
 
     private static String userQuestRowsWithRemainingWait(QuestDao quests, List<QuestDao.UserQuestListRow> userQuestRows)
