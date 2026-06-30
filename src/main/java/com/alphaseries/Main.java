@@ -513,10 +513,6 @@ public final class Main {
         return moved;
     }
 
-    public static void appendGameServerPacketData(long socketIndex, String[] fields) {
-        appendGameServerPacketPayload(socketIndex, gameServerPacketPayload(fields));
-    }
-
     public static void appendGameServerPacketPayload(long socketIndex, String packetPayload) {
         GameServerSessionState sessionState = Licence.gameServerSessionState();
         sessionState.appendPacketPayload(socketIndex, packetPayload);
@@ -531,7 +527,7 @@ public final class Main {
         return new GameServerPacket(commandName, socketIndex, payload);
     }
 
-    public static String gameServerPacketPayload(String[] fields) {
+    private static String gameServerPacketPayload(String[] fields) {
         if (fields == null || fields.length <= 2) {
             return "";
         }

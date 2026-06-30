@@ -442,10 +442,11 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the no-op unsafe staff-alert wrapper from `Handling`; callers and tests now use `StaffPayloads.containsUnsafeAlert` directly.
 - Removed the no-op room settings payload wrapper from `Handling`; room settings handlers and tests now call `RoomPayloads.settingsRead` directly.
 - Removed the no-op room-user profile string payload wrapper from `Handling`; tests use `SocialPayloads` directly while the typed `RoomUserProfileRow` adapter remains.
-- Moved queued game-server packet assembly out of `GameServerSessionState`; the session manager now accepts a named payload string, leaving `Main` as the temporary legacy `String[]` adapter.
+- Moved queued game-server packet assembly out of `GameServerSessionState`; the session manager now accepts a named payload string.
 - Removed the no-op user identity payload wrapper from `Handling`; identity refresh handlers and tests now call `UserPayloads.identityRefresh` directly.
 - Removed the unused root `indexedPayload` array helper from `Handling`; indexed cache lookups now remain encapsulated in typed cache classes.
-- Added a typed `Main.GameServerPacket` parser and routed live game-server `DATA` processing through a named packet payload append path; the old `String[]` entry point remains only as a compatibility adapter.
+- Added a typed `Main.GameServerPacket` parser and routed live game-server `DATA` processing through a named packet payload append path.
+- Removed the game-server queued-packet `String[]` compatibility entry point from `Main`; packet field arrays are now private parser internals only.
 - Replaced badge update selection array exports with typed `BadgeUpdateSelections` slot accessors, keeping positional wire parsing inside the adapter.
 
 ## VB Compatibility Class Removal Checklist
@@ -466,7 +467,7 @@ Measured on 2026-06-30:
 - `Handling.java`: 11522 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
-- `Main.java`: 912 lines
+- `Main.java`: 908 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 
 ## Next Targets

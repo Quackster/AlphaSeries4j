@@ -1127,11 +1127,10 @@ public final class PortedModuleSmokeTest {
         MySQL.configureDatabaseConnection(null);
 
         Licence.global_00829350 = "";
-        assertEquals("A\2B\2C", Main.gameServerPacketPayload(new String[]{"ignored", "ignored", "A", "B", "C"}));
         assertEquals(new Main.GameServerPacket("DATA", 7L, "A\2B\2C"), Main.gameServerPacket("DATA\2" + "7\2A\2B\2C"));
         Main.appendGameServerPacketPayload(8, "direct");
         assertEquals("direct", Main.popGameServerPacketData(8));
-        Main.appendGameServerPacketData(7, new String[]{"ignored", "ignored", "A", "B", "C"});
+        Main.appendGameServerPacketPayload(7, "A\2B\2C");
         assertEquals("A\2B\2C", Main.popGameServerPacketData(7));
         assertEquals("", Licence.global_00829350);
         Guardian.global_008291A0 = "";
@@ -1159,7 +1158,7 @@ public final class PortedModuleSmokeTest {
         List<String> preSessionPackets = new ArrayList<>();
         Main.configurePreSessionPacketSink((socketIndex, payload) -> preSessionPackets.add(socketIndex + ":" + payload));
         Licence.global_00829354 = "";
-        Main.appendGameServerPacketData(7, new String[]{"ignored", "ignored", "login-data"});
+        Main.appendGameServerPacketPayload(7, "login-data");
         assertEquals(true, Main.dataProcessTimer(7));
         assertEquals(Arrays.asList("7:login-data"), preSessionPackets);
         List<String> readyPacketsSent = new ArrayList<>();
