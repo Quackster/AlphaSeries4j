@@ -629,9 +629,19 @@ public final class Boot {
         Licence.setVisitRoomAds(visitRooms, cache.count);
     }
 
+    /**
+     * Original function: Proc_1_23_6D1480.
+     */
     public static void Proc_1_23_6D1480(Object... args) {
         String messageText = args != null && args.length >= 1 ? StringUtils.text(args[0]) : "";
         String logChannel = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
+        logBootLine(messageText, logChannel);
+    }
+
+    /**
+     * Original function: Proc_1_23_6D1480.
+     */
+    public static void logBootLine(String messageText, String logChannel) {
         Console.logSourceLine(messageText, logChannel, 65280L);
     }
 
@@ -702,7 +712,7 @@ public final class Boot {
             action.run();
         }
         long elapsedMillis = Math.max(0L, (System.nanoTime() - startedAt) / 1_000_000L);
-        Proc_1_23_6D1480(messageText, "DEBUG, time: " + elapsedMillis + " ms");
+        logBootLine(messageText, "DEBUG, time: " + elapsedMillis + " ms");
     }
 
     public static void runTimed(String messageText, BooleanSupplier action) {
@@ -712,7 +722,7 @@ public final class Boot {
             return;
         }
         long elapsedMillis = Math.max(0L, (System.nanoTime() - startedAt) / 1_000_000L);
-        Proc_1_23_6D1480(messageText, "DEBUG, time: " + elapsedMillis + " ms");
+        logBootLine(messageText, "DEBUG, time: " + elapsedMillis + " ms");
     }
 
     public static boolean writeFiguredataCache() {

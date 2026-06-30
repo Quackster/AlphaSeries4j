@@ -212,7 +212,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
 
     private static void logTimed(String messageText, long startedAt) {
         long elapsedMillis = Math.max(0L, (System.nanoTime() - startedAt) / 1_000_000L);
-        Boot.Proc_1_23_6D1480(messageText, "DEBUG, time: " + elapsedMillis + " ms");
+        Boot.logBootLine(messageText, "DEBUG, time: " + elapsedMillis + " ms");
     }
 
     private static void closeQuietly(ServerSocket socket) {

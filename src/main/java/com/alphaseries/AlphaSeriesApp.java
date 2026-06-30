@@ -16,7 +16,7 @@ public final class AlphaSeriesApp {
             System.err.println("AlphaSeries database connection failed");
             System.exit(1);
         }
-        Boot.Proc_1_23_6D1480("Verbindung zum MySQL Server hergestellt",
+        Boot.logBootLine("Verbindung zum MySQL Server hergestellt",
             "DEBUG, time: " + elapsedMillis(databaseStartedAt) + " ms");
         Main.LifecycleResult lifecycle = Main.formInitialize(Main.INITIALIZING_CAPTION_TEMPLATE);
         System.setProperty("alphaseries.consoleTitle", lifecycle.consoleTitle);
