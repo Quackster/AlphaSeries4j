@@ -182,9 +182,9 @@ public final class Main {
                 result.shouldExit = true;
                 return result;
             }
-            Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "ROOMS").toString(), 0, 0);
-            Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER").toString(), 0, 0);
-            Guardian.Proc_11_1_821240(Path.of(Functions.applicationPath, "CACHE", "USERS").toString(), 0, 0);
+            Guardian.deleteDirectory(Path.of(Functions.applicationPath, "CACHE", "ROOMS"));
+            Guardian.deleteDirectory(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER"));
+            Guardian.deleteDirectory(Path.of(Functions.applicationPath, "CACHE", "USERS"));
             result.consoleTitle = StringUtils.text(captionTemplate).replace("%%", Licence.runtimeState().productName());
             result.caption = javaCaptionFromConsoleTitle(result.consoleTitle);
             result.productKey = productKeyFromConfig(Handling.Proc_6_239_7FC170(

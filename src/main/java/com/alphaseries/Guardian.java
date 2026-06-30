@@ -45,7 +45,14 @@ public final class Guardian {
         if (args == null || args.length == 0) {
             return;
         }
-        deleteRecursively(Path.of(StringUtils.text(args[0])));
+        deleteDirectory(Path.of(StringUtils.text(args[0])));
+    }
+
+    /**
+     * Original function: Proc_11_1_821240.
+     */
+    public static void deleteDirectory(Path path) {
+        deleteRecursively(path);
     }
 
     public static int Proc_11_2_821390(Object... args) {
