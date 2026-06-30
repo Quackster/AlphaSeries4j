@@ -767,6 +767,7 @@ public final class Handling {
     public static final class RecyclerSelection {
         public long requestedCount;
         public String selectedItems = "";
+        public List<Long> selectedItemIds = List.of();
         public boolean valid;
     }
 
@@ -6789,7 +6790,7 @@ public final class Handling {
                 return "";
             }
             long userIdValue = NumberUtils.parseLong(userId);
-            long validCount = furniture.recyclableInventoryCount(userIdValue, selection.selectedItems);
+            long validCount = furniture.recyclableInventoryCount(userIdValue, selection.selectedItemIds);
             if (validCount != selection.requestedCount) {
                 return "";
             }
@@ -6808,13 +6809,10 @@ public final class Handling {
                 recyclerSettings().boxProductId(),
                 rewardSign,
                 rewardDestinationId);
-            furniture.clearRecyclerItems(userIdValue, selection.selectedItems);
-            furniture.insertRecyclerLog(userIdValue, selection.selectedItems, rewardProductId);
-            for (String furnitureId : selection.selectedItems.split(",", -1)) {
-                long selectedFurnitureId = NumberUtils.parseLong(furnitureId);
-                if (selectedFurnitureId > 0L) {
-                    Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(selectedFurnitureId), 0);
-                }
+            furniture.clearRecyclerItems(userIdValue, selection.selectedItemIds);
+            furniture.insertRecyclerLog(userIdValue, selection.selectedItemIds, rewardProductId);
+            for (long selectedFurnitureId : selection.selectedItemIds) {
+                Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(selectedFurnitureId), 0);
             }
             String payload = RecyclerPayloads.reward(rewardProductId);
             Proc_6_244_801E80(socketIndex, payload, 0);
@@ -11230,22 +11228,22 @@ public final class Handling {
         if (selection.requestedCount != 5L) {
             return selection;
         }
-        String selectedItems = "";
+        List<Long> selectedItemIds = new ArrayList<>();
+        List<String> selectedItemTokens = new ArrayList<>();
         for (long itemIndex = 0L; itemIndex < selection.requestedCount; itemIndex++) {
             long furnitureId = readWireLong(requestPayload, offset);
             if (furnitureId <= 0L) {
                 return selection;
             }
             String token = String.valueOf(furnitureId);
-            if (("," + selectedItems + ",").contains("," + token + ",")) {
+            if (selectedItemIds.contains(furnitureId)) {
                 return selection;
             }
-            if (!selectedItems.isEmpty()) {
-                selectedItems += ",";
-            }
-            selectedItems += token;
+            selectedItemIds.add(furnitureId);
+            selectedItemTokens.add(token);
         }
-        selection.selectedItems = selectedItems;
+        selection.selectedItemIds = List.copyOf(selectedItemIds);
+        selection.selectedItems = String.join(",", selectedItemTokens);
         selection.valid = true;
         return selection;
     }

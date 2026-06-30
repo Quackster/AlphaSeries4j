@@ -2583,6 +2583,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, recyclerSelection.valid);
         assertEquals(5L, recyclerSelection.requestedCount);
         assertEquals("10,11,12,13,14", recyclerSelection.selectedItems);
+        assertEquals(List.of(10L, 11L, 12L, 13L, 14L), recyclerSelection.selectedItemIds);
         Handling.RecyclerSelection duplicateRecyclerSelection = Handling.recyclerSelectionFromWire("F^"
             + Crypto.Proc_3_0_6D2AF0(5, null, "")
             + Crypto.Proc_3_0_6D2AF0(10, null, "")
@@ -3231,8 +3232,7 @@ public final class PortedModuleSmokeTest {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(4, 50), Arrays.<Object>asList(5, 51));
                 }
                 if (sqlText.contains("SELECT COUNT(*) FROM furnitures,products WHERE")
-                    && sqlText.contains("furnitures.id='1'")
-                    && sqlText.contains("furnitures.id='5'")
+                    && sqlText.contains("furnitures.id IN ('1','2','3','4','5')")
                     && sqlText.contains("products.is_recycleable='1'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(5));
                 }
@@ -4682,7 +4682,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(RecyclerPayloads.reward(506), recyclerSubmitPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='"));
         assertEquals(true, containsSql(handlingSql, "id_owner='77',id_destination='81' WHERE id_owner='77' AND id_product='508'"));
-        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner=NULL WHERE id_owner='77' AND id_room IS NULL AND id IN (1,2,3,4,5)"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner=NULL WHERE id_owner='77' AND id_room IS NULL AND id IN ('1','2','3','4','5')"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO logs_recycler(id_user,timestamp,items,id_reward,id_session) VALUES('77',UNIX_TIMESTAMP(),'1,2,3,4,5','506','0')"));
         assertEquals(true, containsSend(handlingSends, "Ac"));
         assertEquals(true, containsSend(handlingSends, "G|"));

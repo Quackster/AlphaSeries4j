@@ -6,6 +6,8 @@ import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -435,52 +437,87 @@ public final class FurnitureDao {
     }
 
     public long recyclableInventoryCount(long ownerId, String selectedFurnitureIds) throws SQLException {
-        String whereClause = recyclableInventoryWhereClause(ownerId, selectedFurnitureIds);
-        if (whereClause.isEmpty()) {
+        return recyclableInventoryCount(ownerId, parseNumericIds(selectedFurnitureIds));
+    }
+
+    public long recyclableInventoryCount(long ownerId, List<Long> selectedFurnitureIds) throws SQLException {
+        if (selectedFurnitureIds == null || selectedFurnitureIds.isEmpty()) {
             return 0L;
         }
+        String placeholders = placeholders(selectedFurnitureIds.size());
+        List<Object> parameters = new ArrayList<>();
+        parameters.add(ownerId);
+        parameters.addAll(selectedFurnitureIds);
+        parameters.add(1L);
         return database.queryOne(
-            "SELECT COUNT(*) FROM furnitures,products WHERE " + whereClause,
-            resultSet -> resultSet.getLong(1))
+            "SELECT COUNT(*) FROM furnitures,products WHERE furnitures.id_owner=? AND furnitures.id_room IS NULL "
+                + "AND furnitures.id IN (" + placeholders + ") AND products.id=furnitures.id_product "
+                + "AND products.is_recycleable=?",
+            resultSet -> resultSet.getLong(1),
+            parameters.toArray())
             .orElse(0L);
     }
 
     public int clearRecyclerItems(long ownerId, String selectedFurnitureIds) throws SQLException {
-        if (!isNumericIdList(selectedFurnitureIds)) {
+        return clearRecyclerItems(ownerId, parseNumericIds(selectedFurnitureIds));
+    }
+
+    public int clearRecyclerItems(long ownerId, List<Long> selectedFurnitureIds) throws SQLException {
+        if (selectedFurnitureIds == null || selectedFurnitureIds.isEmpty()) {
             return 0;
         }
+        String placeholders = placeholders(selectedFurnitureIds.size());
+        List<Object> parameters = new ArrayList<>();
+        parameters.add(ownerId);
+        parameters.addAll(selectedFurnitureIds);
         return database.execute(
             "UPDATE furnitures SET id_owner=NULL WHERE id_owner=? AND id_room IS NULL AND id IN ("
-                + selectedFurnitureIds + ")",
-            ownerId);
+                + placeholders + ")",
+            parameters.toArray());
     }
 
     public int insertRecyclerLog(long userId, String selectedFurnitureIds, long rewardProductId) throws SQLException {
-        if (!isNumericIdList(selectedFurnitureIds)) {
+        return insertRecyclerLog(userId, parseNumericIds(selectedFurnitureIds), rewardProductId);
+    }
+
+    public int insertRecyclerLog(long userId, List<Long> selectedFurnitureIds, long rewardProductId) throws SQLException {
+        if (selectedFurnitureIds == null || selectedFurnitureIds.isEmpty()) {
             return 0;
         }
         return database.execute(
             "INSERT INTO logs_recycler(id_user,timestamp,items,id_reward,id_session) VALUES(?,UNIX_TIMESTAMP(),?,?,?)",
             userId,
-            selectedFurnitureIds,
+            joinIds(selectedFurnitureIds),
             rewardProductId,
             0L);
     }
 
-    private static String recyclableInventoryWhereClause(long ownerId, String selectedFurnitureIds) {
+    private static List<Long> parseNumericIds(String selectedFurnitureIds) {
         if (!isNumericIdList(selectedFurnitureIds)) {
-            return "";
+            return List.of();
         }
-        StringBuilder whereClause = new StringBuilder();
+        List<Long> ids = new ArrayList<>();
         for (String selectedFurnitureId : selectedFurnitureIds.split(",", -1)) {
-            if (whereClause.length() > 0) {
-                whereClause.append(" OR ");
+            long id = NumberUtils.parseLong(selectedFurnitureId);
+            if (id > 0L) {
+                ids.add(id);
             }
-            whereClause.append("furnitures.id_owner='").append(ownerId).append("' AND furnitures.id_room IS NULL")
-                .append(" AND furnitures.id='").append(selectedFurnitureId).append("' AND products.id=furnitures.id_product")
-                .append(" AND products.is_recycleable='1'");
         }
-        return whereClause.toString();
+        return List.copyOf(ids);
+    }
+
+    private static String placeholders(int count) {
+        return String.join(",", Collections.nCopies(count, "?"));
+    }
+
+    private static String joinIds(List<Long> selectedFurnitureIds) {
+        List<String> idTexts = new ArrayList<>();
+        for (Long selectedFurnitureId : selectedFurnitureIds) {
+            if (selectedFurnitureId != null && selectedFurnitureId > 0L) {
+                idTexts.add(String.valueOf(selectedFurnitureId));
+            }
+        }
+        return String.join(",", idTexts);
     }
 
     private static boolean isNumericIdList(String selectedFurnitureIds) {
