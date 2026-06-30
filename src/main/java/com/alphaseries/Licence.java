@@ -216,30 +216,26 @@ public final class Licence {
     }
 
     public static GiftSettings giftSettings() {
-        CatalogState.instance().setGiftSettingsFromLegacy(global_00829178, global_0082917C,
-            global_0082925C, global_00829260);
+        refreshGiftSettings();
         return CatalogState.instance().giftSettings();
     }
 
     public static void setClubGiftState(String payload, String lookup) {
         global_00829178 = StringUtils.text(payload);
         global_0082917C = StringUtils.text(lookup);
-        CatalogState.instance().setGiftSettingsFromLegacy(global_00829178, global_0082917C,
-            global_0082925C, global_00829260);
+        refreshGiftSettings();
     }
 
     public static void setClubGiftState(GiftSettings.ClubGiftState state) {
         global_00829178 = state == null ? "" : state;
         global_0082917C = "";
-        CatalogState.instance().setGiftSettingsFromLegacy(global_00829178, global_0082917C,
-            global_0082925C, global_00829260);
+        refreshGiftSettings();
     }
 
     public static void setGiftWrapState(String lookup, String payload) {
         global_0082925C = StringUtils.text(lookup);
         global_00829260 = StringUtils.text(payload);
-        CatalogState.instance().setGiftSettingsFromLegacy(global_00829178, global_0082917C,
-            global_0082925C, global_00829260);
+        refreshGiftSettings();
     }
 
     public static void setGiftWrapState(List<Long> productIds, String payload) {
@@ -252,6 +248,15 @@ public final class Licence {
             currentSettings.clubGifts(),
             typedProductIds,
             global_00829260));
+    }
+
+    private static void refreshGiftSettings() {
+        if (global_00829178 instanceof GiftSettings settings) {
+            CatalogState.instance().setGiftSettings(settings);
+            return;
+        }
+        CatalogState.instance().setGiftSettingsFromLegacy(global_00829178, global_0082917C,
+            global_0082925C, global_00829260);
     }
 
     private static List<Long> copyGiftWrapProductIds(List<Long> productIds) {

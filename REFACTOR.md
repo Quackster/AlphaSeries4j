@@ -615,6 +615,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Built `CatalogRegistry.CatalogRow` entries directly from typed `CatalogDao` cache row values instead of joining typed rows into tab text and reparsing them.
 - Added explicit `CatalogRegistry.fromRows(...)`/`CatalogState.setRegistryFromRows(...)` typed construction and routed `Licence` registry refreshes through it when all catalog caches are typed DAO row collections.
 - Added typed `GiftSettings.fromRows(...)` construction and defensive gift-wrap product ID access so gift settings can move through typed club-gift rows and product IDs instead of legacy lookup strings.
+- Routed `Licence` gift-settings refreshes through the typed `GiftSettings` state path when the club-gift mirror already contains a `GiftSettings` instance, leaving club-gift/gift-wrap lookup parsing as a compatibility fallback.
 - Routed boot gift-wrap cache loading through typed product ID lists and a typed `Licence.setGiftWrapState(...)` bridge, storing live gift-wrap product ids as typed `List<Long>` state while preserving legacy lookup parsing only for compatibility.
 - Built typed gift-wrap payloads with fluent `PacketBuilder` integer appends instead of separate raw `StringBuilder`/`Crypto.encodeVl64(...)` concatenation.
 - Added typed `RecyclerSettings.fromRewardGroups(...)` construction and immutable `RewardGroup` records so recycler reward state can be passed as typed product id collections instead of legacy product-list strings.
