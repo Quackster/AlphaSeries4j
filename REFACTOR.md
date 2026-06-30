@@ -454,6 +454,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the dead `Functions.representedBotRecordField(...)` root wrapper; represented-bot cache field access now stays behind the typed registry/handler compatibility boundaries.
 - Added typed `RepresentedBotRegistry.RepresentedBotRecord` reads and routed represented-bot room-entry payload construction away from numeric cache field indexes.
 - Routed represented-bot occupant list/status assembly through `RepresentedBotRecord` named accessors instead of numeric cache field indexes.
+- Routed represented-pet pickup inventory payload construction through `RepresentedBotRecord` named accessors instead of numeric cache field indexes.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -470,7 +471,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11524 lines
+- `Handling.java`: 11525 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 908 lines

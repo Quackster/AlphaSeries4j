@@ -5844,7 +5844,8 @@ public final class Handling {
             if (botEntityId <= 0L) {
                 return 0L;
             }
-            long botId = representedBotRecordLong(botEntityId, 1);
+            RepresentedBotRegistry.RepresentedBotRecord bot = Licence.representedBots().record(botEntityId);
+            long botId = bot.botId();
             if (botId <= 0L) {
                 return 0L;
             }
@@ -5855,8 +5856,8 @@ public final class Handling {
             bots.clearBotRoom(botId);
             bots.touchPetData(botId);
             Proc_6_247_8027E0(socketIndex, PetPayloads.removedFromRoom(botEntityId), 0);
-            String petName = representedBotRecordField(botEntityId, 2);
-            String petFigure = representedBotRecordField(botEntityId, 10).toLowerCase();
+            String petName = bot.name();
+            String petFigure = bot.figure().toLowerCase();
             long scratches = bots.petScratches(botId);
             String pickupPayload = PetPayloads.inventoryRow(new PetInventoryRow(botId, petName, petFigure, scratches));
             if (!pickupPayload.isEmpty()) {
