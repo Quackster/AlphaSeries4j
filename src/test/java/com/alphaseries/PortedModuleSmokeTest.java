@@ -5051,8 +5051,9 @@ public final class PortedModuleSmokeTest {
         Object previousPagePayloads = Licence.global_00829308;
         Object previousPageTrees = Licence.global_008292F4;
         Licence.global_00829308 = Map.of(8L, "CATALOG_PAGE_MAP");
-        Licence.global_008292F4 = new String[][]{{"TREE"}};
+        Licence.global_008292F4 = Map.of(new CatalogPages.PageTreeKey(0L, 0L), "TREE");
         assertEquals("CATALOG_PAGE_MAP", Licence.catalogPages().pagePayload(8L));
+        assertEquals("TREE", Licence.catalogPages().defaultPageTree());
         Licence.global_00829308 = previousPagePayloads;
         Licence.global_008292F4 = previousPageTrees;
     }
@@ -5067,6 +5068,11 @@ public final class PortedModuleSmokeTest {
         String[][] copiedPageTrees = typedCatalogPages.pageTrees();
         copiedPageTrees[0][0] = "changed-again";
         assertEquals("TREE0", typedCatalogPages.defaultPageTree());
+        CatalogPages mapCatalogPages = CatalogPages.fromPayloadMaps(
+            Map.of(5L, "PAGE5"), Map.of(new CatalogPages.PageTreeKey(1L, 2L), "TREE12"));
+        assertEquals("PAGE5", mapCatalogPages.pagePayload(5L));
+        assertEquals("TREE12", mapCatalogPages.pageTree(1L, 2L));
+        assertEquals("TREE12", mapCatalogPages.pageTrees()[1][2]);
         Object previousPagePayloads = Licence.global_00829308;
         Object previousPageTrees = Licence.global_008292F4;
         Licence.global_00829308 = typedCatalogPages;

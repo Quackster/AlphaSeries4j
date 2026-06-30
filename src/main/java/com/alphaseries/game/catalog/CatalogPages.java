@@ -8,7 +8,7 @@ import com.alphaseries.util.StringUtils;
 
 public final class CatalogPages {
     private final Map<Long, String> pagePayloads;
-    private final String[][] pageTrees;
+    private final Map<PageTreeKey, String> pageTrees;
 
     private CatalogPages(Object pagePayloads, Object pageTrees) {
         this.pagePayloads = parsePayloads(pagePayloads);
@@ -16,6 +16,11 @@ public final class CatalogPages {
     }
 
     private CatalogPages(Map<Long, String> pagePayloads, String[][] pageTrees) {
+        this.pagePayloads = copyPayloads(pagePayloads);
+        this.pageTrees = parsePageTrees(pageTrees);
+    }
+
+    private CatalogPages(Map<Long, String> pagePayloads, Map<PageTreeKey, String> pageTrees) {
         this.pagePayloads = copyPayloads(pagePayloads);
         this.pageTrees = copyPageTrees(pageTrees);
     }
@@ -32,6 +37,10 @@ public final class CatalogPages {
     }
 
     public static CatalogPages fromPayloads(Map<Long, String> pagePayloads, String[][] pageTrees) {
+        return new CatalogPages(pagePayloads, pageTrees);
+    }
+
+    public static CatalogPages fromPayloadMaps(Map<Long, String> pagePayloads, Map<PageTreeKey, String> pageTrees) {
         return new CatalogPages(pagePayloads, pageTrees);
     }
 
@@ -52,12 +61,11 @@ public final class CatalogPages {
         if (rank < 0 || hc < 0) {
             return "";
         }
-        return rank < pageTrees.length && pageTrees[rank] != null && hc < pageTrees[rank].length
-            ? StringUtils.text(pageTrees[rank][hc]) : "";
+        return StringUtils.text(pageTrees.get(new PageTreeKey(rank, hc)));
     }
 
     public String[][] pageTrees() {
-        return copyPageTrees(pageTrees);
+        return pageTreeArray(pageTrees);
     }
 
     public String defaultPageTree() {
@@ -85,24 +93,33 @@ public final class CatalogPages {
         return Map.of();
     }
 
-    private static String[][] parsePageTrees(Object pageTrees) {
-        if (pageTrees instanceof String[][] values) {
-            return copyPageTrees(values);
-        }
-        if (pageTrees instanceof Object[][] values) {
-            String[][] parsedTrees = new String[values.length][];
-            for (int rank = 0; rank < values.length; rank++) {
-                if (values[rank] == null) {
-                    continue;
-                }
-                parsedTrees[rank] = new String[values[rank].length];
-                for (int hc = 0; hc < values[rank].length; hc++) {
-                    parsedTrees[rank][hc] = StringUtils.text(values[rank][hc]);
+    private static Map<PageTreeKey, String> parsePageTrees(Object pageTrees) {
+        if (pageTrees instanceof Map<?, ?> values) {
+            Map<PageTreeKey, String> parsedTrees = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> entry : values.entrySet()) {
+                PageTreeKey key = pageTreeKey(entry.getKey());
+                if (key != null) {
+                    parsedTrees.put(key, StringUtils.text(entry.getValue()));
                 }
             }
             return parsedTrees;
         }
-        return new String[0][];
+        if (pageTrees instanceof String[][] values) {
+            return copyPageTrees(values);
+        }
+        if (pageTrees instanceof Object[][] values) {
+            Map<PageTreeKey, String> parsedTrees = new LinkedHashMap<>();
+            for (int rank = 0; rank < values.length; rank++) {
+                if (values[rank] == null) {
+                    continue;
+                }
+                for (int hc = 0; hc < values[rank].length; hc++) {
+                    parsedTrees.put(new PageTreeKey(rank, hc), StringUtils.text(values[rank][hc]));
+                }
+            }
+            return parsedTrees;
+        }
+        return Map.of();
     }
 
     private static Map<Long, String> copyPayloads(Map<Long, String> pagePayloads) {
@@ -117,20 +134,68 @@ public final class CatalogPages {
         return copiedPayloads;
     }
 
-    private static String[][] copyPageTrees(String[][] pageTrees) {
+    private static Map<PageTreeKey, String> copyPageTrees(String[][] pageTrees) {
+        Map<PageTreeKey, String> copiedTrees = new LinkedHashMap<>();
         if (pageTrees == null) {
-            return new String[0][];
+            return copiedTrees;
         }
-        String[][] copiedTrees = new String[pageTrees.length][];
         for (int rank = 0; rank < pageTrees.length; rank++) {
             if (pageTrees[rank] == null) {
                 continue;
             }
-            copiedTrees[rank] = new String[pageTrees[rank].length];
             for (int hc = 0; hc < pageTrees[rank].length; hc++) {
-                copiedTrees[rank][hc] = StringUtils.text(pageTrees[rank][hc]);
+                copiedTrees.put(new PageTreeKey(rank, hc), StringUtils.text(pageTrees[rank][hc]));
             }
         }
         return copiedTrees;
+    }
+
+    private static Map<PageTreeKey, String> copyPageTrees(Map<PageTreeKey, String> pageTrees) {
+        Map<PageTreeKey, String> copiedTrees = new LinkedHashMap<>();
+        if (pageTrees != null) {
+            for (Map.Entry<PageTreeKey, String> entry : pageTrees.entrySet()) {
+                if (entry.getKey() != null) {
+                    copiedTrees.put(entry.getKey(), StringUtils.text(entry.getValue()));
+                }
+            }
+        }
+        return copiedTrees;
+    }
+
+    private static String[][] pageTreeArray(Map<PageTreeKey, String> pageTrees) {
+        long maxRank = -1L;
+        long maxHc = -1L;
+        for (PageTreeKey key : pageTrees.keySet()) {
+            maxRank = Math.max(maxRank, key.rankIndex());
+            maxHc = Math.max(maxHc, key.hcLevel());
+        }
+        if (maxRank < 0L || maxHc < 0L) {
+            return new String[0][];
+        }
+        String[][] values = new String[(int) maxRank + 1][(int) maxHc + 1];
+        for (Map.Entry<PageTreeKey, String> entry : pageTrees.entrySet()) {
+            values[(int) entry.getKey().rankIndex()][(int) entry.getKey().hcLevel()] = StringUtils.text(entry.getValue());
+        }
+        return values;
+    }
+
+    private static PageTreeKey pageTreeKey(Object key) {
+        if (key instanceof PageTreeKey pageTreeKey) {
+            return pageTreeKey;
+        }
+        if (key instanceof String text) {
+            String[] fields = text.split(":", -1);
+            if (fields.length >= 2) {
+                return new PageTreeKey(NumberUtils.parseLong(fields[0]), NumberUtils.parseLong(fields[1]));
+            }
+        }
+        return null;
+    }
+
+    public record PageTreeKey(long rankIndex, long hcLevel) {
+        public PageTreeKey {
+            rankIndex = Math.max(0L, rankIndex);
+            hcLevel = Math.max(0L, hcLevel);
+        }
     }
 }

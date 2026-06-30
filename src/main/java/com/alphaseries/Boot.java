@@ -15,6 +15,7 @@ import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.SettingsDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.navigator.NavigatorState;
@@ -454,7 +455,7 @@ public final class Boot {
     }
 
     public static void Proc_1_17_6CCDC0(Object... args) {
-        String[][] trees = new String[21][3];
+        Map<CatalogPages.PageTreeKey, String> trees = new LinkedHashMap<>();
         CatalogDao catalog = catalogDao();
         for (int rank = 0; rank <= 20; rank++) {
             for (int hc = 0; hc <= 2; hc++) {
@@ -468,7 +469,8 @@ public final class Boot {
                             childCounts.put(pageId, catalog.catalogPageChildCount(pageId, rank, hc));
                             children.put(pageId, catalog.catalogPageTreeRows(pageId, rank, hc));
                         }
-                        trees[rank][hc] = buildCatalogPageTreePayload(rootRows, childCounts, children, rank, hc);
+                        trees.put(new CatalogPages.PageTreeKey(rank, hc),
+                            buildCatalogPageTreePayload(rootRows, childCounts, children, rank, hc));
                     } catch (Exception ignored) {
                         // Legacy startup cache loading tolerated missing tables or SQL failures.
                     }

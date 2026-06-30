@@ -543,6 +543,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Extended `game.catalog.CatalogState` to own catalog page payload/tree caches, routed live catalog page reads through it, and kept `Licence.global_00829308`/`global_008292F4` as compatibility mirrors.
 - Moved catalog-page compatibility conversion fully into `CatalogPages.fromLegacy(...)` and simplified `Licence.catalogPages()` to delegate directly to `CatalogState`.
 - Routed boot catalog-page payload loading through page-id keyed payload maps instead of sparse legacy arrays for the `Licence` mirror; legacy array parsing remains only as an explicit `CatalogPages.fromLegacy(...)` compatibility input.
+- Migrated catalog page-tree storage inside `CatalogPages` to `PageTreeKey` keyed maps and routed boot page-tree loading through that map shape instead of a legacy rank/HC array mirror.
 - Routed game-server packet trace configuration through typed `LicenceRuntimeState` updates instead of writing `Licence.global_00829190` directly from runtime startup.
 - Added `game.session.SessionState` as the module-level singleton for represented socket cache reads, keeping `Licence.global_0082934C` as the compatibility mirror.
 - Moved represented-socket compatibility conversion fully into `RepresentedSocketCache.fromLegacy(...)` and simplified `Licence.representedSockets()` to delegate directly to `SessionState`.
