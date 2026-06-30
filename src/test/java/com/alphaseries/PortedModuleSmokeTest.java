@@ -64,6 +64,7 @@ import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
+import com.alphaseries.game.room.RoomEventLocales;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.room.RoomRollers;
@@ -1195,7 +1196,8 @@ public final class PortedModuleSmokeTest {
         Licence.global_008292D0 = typedPetSettings;
         assertPetSettingsTypedAccessors(Licence.petSettings(), cachedCommand);
         Boot.Proc_1_8_6C6850();
-        assertEquals(true, DataManager.global_008291AC.contains("party"));
+        assertEquals(true, DataManager.global_008291AC instanceof RoomEventLocales);
+        assertEquals("party", DataManager.roomEventLocales().field("5", 0));
         Boot.Proc_1_9_6C6DF0();
         assertEquals(true, Licence.global_00829098 instanceof RoomPortalSettings);
         assertEquals(true, Licence.global_0082909C instanceof RoomPortalSettings);

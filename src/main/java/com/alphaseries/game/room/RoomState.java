@@ -35,7 +35,7 @@ public final class RoomState {
         this.eventLocales = eventLocales == null ? RoomEventLocales.fromLegacy("") : eventLocales;
     }
 
-    public synchronized void setEventLocalesFromLegacy(String cacheText) {
+    public synchronized void setEventLocalesFromLegacy(Object cacheText) {
         eventLocales = RoomEventLocales.fromLegacy(cacheText);
     }
 

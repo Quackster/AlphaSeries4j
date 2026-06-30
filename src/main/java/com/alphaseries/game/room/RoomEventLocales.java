@@ -9,7 +9,7 @@ import java.util.Map;
 public final class RoomEventLocales {
     private final Map<String, List<String>> fieldsByKey;
 
-    private RoomEventLocales(String cacheText) {
+    private RoomEventLocales(Object cacheText) {
         this.fieldsByKey = parseFields(cacheText);
     }
 
@@ -17,7 +17,10 @@ public final class RoomEventLocales {
         this.fieldsByKey = copyFields(fieldsByKey);
     }
 
-    public static RoomEventLocales fromLegacy(String cacheText) {
+    public static RoomEventLocales fromLegacy(Object cacheText) {
+        if (cacheText instanceof RoomEventLocales locales) {
+            return locales;
+        }
         return new RoomEventLocales(cacheText);
     }
 
@@ -60,7 +63,7 @@ public final class RoomEventLocales {
             .toList();
     }
 
-    private static Map<String, List<String>> parseFields(String cacheText) {
+    private static Map<String, List<String>> parseFields(Object cacheText) {
         Map<String, List<String>> fieldsByKey = new LinkedHashMap<>();
         for (String record : StringUtils.text(cacheText).split("\0", -1)) {
             int separatorAt = record.indexOf('\1');

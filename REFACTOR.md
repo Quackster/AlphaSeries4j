@@ -91,6 +91,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `RepresentedRoomSlots` internals from raw marker-string mutation to collection-backed available slot storage, keeping legacy serialization only at the compatibility boundary.
 - Added `com.alphaseries.game.room.RoomEventLocales` as a typed adapter around DataManager room-event locale cache lookups, and routed `Boot` cache refreshes through named DataManager setters.
 - Routed `DataManager.roomEventLocales()` through the module-level `RoomState` singleton event-locale owner, keeping `DataManager.global_008291AC` as the temporary compatibility source for legacy callers.
+- Routed boot room-event locale loading into typed `RoomEventLocales` live storage in `DataManager.global_008291AC`, leaving serialized marker text only as a compatibility input.
 - Added `com.alphaseries.game.session.GameServerSessionState` as a typed adapter around queued game-server packet data and ready-session markers previously manipulated as raw `Licence` strings.
 - Migrated `GameServerSessionState` internals from raw string mutation to collection-backed queued packets and ready socket marker storage, keeping legacy serialization only at the compatibility boundary.
 - Added typed `GameServerSessionState.fromState(...)`, queued-packet records, and defensive queued/ready accessors so session callers can construct and read game-server session state without marker-string parsing.

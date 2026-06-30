@@ -19,7 +19,7 @@ public final class DataManager {
     public static final String LICENCE_TIME_FORMAT = "yyyy-mm-dd_h-mm-ss";
     public static final String LICENCE_ENDPOINT_ENV = "ALPHASERIES_LICENCE_ENDPOINT";
     public static final String DEFAULT_LICENCE_ENDPOINT = "http://www.alpha-series.com/check_product_sep11";
-    public static String global_008291AC = "";
+    public static Object global_008291AC = "";
     public static String global_00829050 = "";
     public static int global_00829054 = 0;
     public static final int[] global_00829068 = new int[5001];
@@ -66,7 +66,7 @@ public final class DataManager {
 
     public static void setRoomEventLocales(RoomEventLocales eventLocales) {
         RoomState.instance().setEventLocales(eventLocales);
-        global_008291AC = RoomState.instance().eventLocales().cacheText();
+        global_008291AC = RoomState.instance().eventLocales();
     }
 
     public static ProductCache productCache() {
