@@ -1,5 +1,6 @@
 package com.alphaseries;
 
+import com.alphaseries.config.PermissionMatrix;
 import com.alphaseries.dao.mysql.AdvertisingDao;
 import com.alphaseries.dao.mysql.AchievementDao;
 import com.alphaseries.dao.mysql.BotDao;
@@ -459,7 +460,7 @@ public final class Boot {
                 permissions[rank][hc] = permissionPayload(rows);
             }
         }
-        Functions.setPermissions(permissions);
+        Functions.setPermissions(PermissionMatrix.fromRows(permissions));
     }
 
     public static void Proc_1_17_6CCDC0(Object... args) {

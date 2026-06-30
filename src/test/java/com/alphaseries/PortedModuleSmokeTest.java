@@ -1210,7 +1210,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829260.length() > 0);
         assertEquals(true, Licence.giftSettings().containsGiftWrapProduct(10L));
         Boot.Proc_1_16_6CCA60();
-        assertEquals(true, ((String[][]) Functions.global_008292A8)[1][0].contains("fuse_mod"));
+        assertEquals(true, Functions.global_008292A8 instanceof PermissionMatrix);
+        assertEquals(true, Functions.permissionMatrix().allows(1, "", "fuse_mod", 0));
         Boot.Proc_1_19_6CF190();
         assertEquals(true, Licence.global_00829204.contains("important"));
         Boot.Proc_1_20_6CF830();

@@ -11,6 +11,9 @@ public final class PermissionMatrix {
     }
 
     public static PermissionMatrix fromLegacy(Object permissions) {
+        if (permissions instanceof PermissionMatrix permissionMatrix) {
+            return permissionMatrix;
+        }
         if (permissions instanceof String[][] matrix) {
             return new PermissionMatrix(matrix);
         }
