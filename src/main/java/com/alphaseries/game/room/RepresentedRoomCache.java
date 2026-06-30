@@ -51,20 +51,25 @@ public final class RepresentedRoomCache {
     }
 
     public String record(long roomSlot) {
+        RoomRecord record = roomRecord(roomSlot);
+        return record == null ? "" : record.recordText();
+    }
+
+    private RoomRecord roomRecord(long roomSlot) {
         if (roomSlot <= 0L) {
-            return "";
+            return null;
         }
         for (RoomRecord record : records) {
             if (record.roomSlot() == roomSlot) {
-                return record.recordText();
+                return record;
             }
         }
-        return "";
+        return null;
     }
 
     private String recordField(long roomSlot, long fieldIndex) {
-        String[] fields = record(roomSlot).split("\t", -1);
-        return fieldIndex >= 0 && fieldIndex < fields.length ? fields[(int) fieldIndex] : "";
+        RoomRecord record = roomRecord(roomSlot);
+        return record == null ? "" : record.field(fieldIndex);
     }
 
     public long roomSlot(long roomSlot) {
@@ -301,19 +306,28 @@ public final class RepresentedRoomCache {
     private record ParseResult(String leadingText, List<RoomRecord> records) {
     }
 
-    public record RoomRecord(long roomSlot, String recordText) {
+    public record RoomRecord(long roomSlot, String recordText, List<String> fields) {
+        public RoomRecord(long roomSlot, String recordText) {
+            this(roomSlot, StringUtils.text(recordText), splitFields(recordText));
+        }
+
         public RoomRecord {
             recordText = StringUtils.text(recordText);
+            fields = fields == null ? List.of() : List.copyOf(fields);
+        }
+
+        private String field(long fieldIndex) {
+            return fieldIndex >= 0 && fieldIndex < fields.size() ? fields.get((int) fieldIndex) : "";
         }
 
         private static RoomRecord fromLegacy(String recordText) {
             String text = StringUtils.text(recordText);
-            String slotText = text;
-            int fieldAt = text.indexOf('\t');
-            if (fieldAt >= 0) {
-                slotText = text.substring(0, fieldAt);
-            }
-            return new RoomRecord(NumberUtils.parseLong(slotText), text);
+            List<String> fields = splitFields(text);
+            return new RoomRecord(NumberUtils.parseLong(fields.isEmpty() ? text : fields.get(0)), text, fields);
+        }
+
+        private static List<String> splitFields(String recordText) {
+            return List.of(StringUtils.text(recordText).split("\t", -1));
         }
     }
 
