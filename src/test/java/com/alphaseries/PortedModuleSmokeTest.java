@@ -745,6 +745,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("1\talpha\t7", Licence.Proc_9_4_807B90(1));
         Licence.global_00829258 = List.of(new CatalogDao.ProductDealRow(6L, "10;11"));
         assertEquals("6\t10;11", Licence.Proc_9_5_807DF0(6));
+        assertEquals(10L, Licence.product(10).productId());
+        assertEquals(1L, Licence.catalogProduct(1).catalogProductId());
         assertEquals(2, Licence.productDeal(6L).itemProductIds().size());
         Licence.global_00829268 = "[0:5\1u5\2sock5][1:bob\1bob\2" + "6][room\1" + "7\2" + "8]";
         assertEquals("u5", Licence.Proc_9_6_808080(5, 0));
