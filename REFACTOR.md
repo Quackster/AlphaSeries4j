@@ -262,6 +262,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed gift-wrap and club-gift startup cache reads through typed `CatalogDao`/`ClubDao` methods, keeping legacy gift cache serialization explicit in `Boot`.
 - Added `AchievementDao` and routed achievement settings startup cache reads through typed records, keeping legacy achievement row arrays explicit at the `Licence` cache bridge.
 - Routed room-event locale, room portal, special-gate, and quest-definition startup cache reads through typed `SettingsDao`/`RoomDao`/`QuestDao` methods, keeping legacy cache serialization explicit in `Boot`.
+- Routed staff moderation message startup cache reads through `StaffModerationDao`, keeping legacy permission payload serialization explicit in `Boot`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -275,8 +276,8 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 17
-- `Boot.java`: 1736 lines
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 15
+- `Boot.java`: 1761 lines
 - `Handling.java`: 12596 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines

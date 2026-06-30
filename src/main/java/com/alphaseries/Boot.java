@@ -12,6 +12,7 @@ import com.alphaseries.dao.mysql.QuestDao;
 import com.alphaseries.dao.mysql.RecyclerDao;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.ServerMaintenanceDao;
+import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.SettingsDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.pet.PetCommandCacheRow;
@@ -342,10 +343,17 @@ public final class Boot {
     }
 
     public static void Proc_1_10_6C7690(Object... args) {
-        String callForHelpMessages = buildStaffMessageList(MySQL.Proc_5_2_6D4690(
-            "SELECT message FROM staff_messages WHERE type='1' ORDER BY id ASC", 0, 0));
-        String moderatorMessages = buildStaffMessageList(MySQL.Proc_5_2_6D4690(
-            "SELECT message FROM staff_messages WHERE type='2' ORDER BY id ASC", 0, 0));
+        String callForHelpMessages = "";
+        String moderatorMessages = "";
+        StaffModerationDao moderation = staffModerationDao();
+        if (moderation != null) {
+            try {
+                callForHelpMessages = buildStaffMessageList(moderation.staffMessages(1L));
+                moderatorMessages = buildStaffMessageList(moderation.staffMessages(2L));
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
+            }
+        }
         String categoryPayload = "";
         String[][] values = new String[21][3];
         for (int rank = 0; rank <= 20; rank++) {
@@ -729,6 +737,18 @@ public final class Boot {
         for (String row : StringUtils.text(rowText).split("\r", -1)) {
             if (!row.isEmpty()) {
                 payload.append(row).append('\2');
+            }
+        }
+        return payload.toString();
+    }
+
+    public static String buildStaffMessageList(List<String> rows) {
+        StringBuilder payload = new StringBuilder();
+        if (rows != null) {
+            for (String row : rows) {
+                if (!StringUtils.text(row).isEmpty()) {
+                    payload.append(row).append('\2');
+                }
             }
         }
         return payload.toString();
@@ -1697,6 +1717,11 @@ public final class Boot {
     private static QuestDao questDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new QuestDao(database);
+    }
+
+    private static StaffModerationDao staffModerationDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new StaffModerationDao(database);
     }
 
     private static AdvertisingDao advertisingDao() {

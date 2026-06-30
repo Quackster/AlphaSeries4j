@@ -17,6 +17,13 @@ public final class StaffModerationDao {
         this.database = database;
     }
 
+    public List<String> staffMessages(long type) throws SQLException {
+        return database.query(
+            "SELECT message FROM staff_messages WHERE type=? ORDER BY id ASC",
+            resultSet -> resultSet.getString(1),
+            type);
+    }
+
     public Optional<CallForHelpRoom> callForHelpRoom(long callForHelpId) throws SQLException {
         return database.queryOne(
             "SELECT rooms.id,rooms.name,models.type,staff_cfh.id_user,staff_cfh.id_partner,staff_cfh.timestamp_sent "
