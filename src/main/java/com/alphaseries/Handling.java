@@ -10905,11 +10905,7 @@ public final class Handling {
     }
 
     public static String representedRoomUserStatusPayload(long roomUserIndex, long statusCode) {
-        if (roomUserIndex <= 0L) {
-            return "";
-        }
-        return "0" + Crypto.Proc_3_0_6D2AF0(Math.max(0L, statusCode), null,
-            Crypto.Proc_3_0_6D2AF0(roomUserIndex, null, "Ge"));
+        return SocialPayloads.roomUserStatus(roomUserIndex, statusCode);
     }
 
     public static long pollIdFromWire(String packetPayload, String prefix) {

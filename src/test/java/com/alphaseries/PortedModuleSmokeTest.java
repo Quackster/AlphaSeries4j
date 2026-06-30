@@ -2277,6 +2277,9 @@ public final class PortedModuleSmokeTest {
         assertEquals("Ge" + Crypto.Proc_3_0_6D2AF0(9, null, "") + Crypto.Proc_3_0_6D2AF0(12, null, ""),
             SocialPayloads.roomUserEffect(9L, 12L));
         assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "Ge") + "H", SocialPayloads.roomUserEffectCleared(9L));
+        assertEquals("0" + Crypto.Proc_3_0_6D2AF0(4, null, Crypto.Proc_3_0_6D2AF0(9, null, "Ge")),
+            SocialPayloads.roomUserStatus(9L, 4L));
+        assertEquals("", SocialPayloads.roomUserStatus(0L, 4L));
         assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "Ga"), SocialPayloads.roomUserWave(9L));
         assertEquals(Crypto.Proc_3_0_6D2AF0(3, null,
             Crypto.Proc_3_0_6D2AF0(9, null, "G`")), SocialPayloads.roomUserDance(9L, 3L));

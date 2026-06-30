@@ -46,6 +46,18 @@ public final class SocialPayloads {
             .build();
     }
 
+    public static String roomUserStatus(long roomUserIndex, long statusCode) {
+        if (roomUserIndex <= 0L) {
+            return "";
+        }
+        return PacketBuilder.create()
+            .appendRaw('0')
+            .appendRaw("Ge")
+            .appendInt(roomUserIndex)
+            .appendInt(Math.max(0L, statusCode))
+            .build();
+    }
+
     public static String roomUserWave(long roomUserIndex) {
         return PacketBuilder.message("Ga")
             .appendInt(roomUserIndex)
