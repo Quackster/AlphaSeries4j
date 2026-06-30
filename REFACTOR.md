@@ -505,6 +505,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Functions.randomLongInclusive(...)` with the original Proc name in Javadocs, routed `Functions` internals through it, and migrated navigator, pet speech, dice, and recycler random selection callers in `Handling` away from `Proc_10_4_809CA0(...)`.
 - Added named `Functions.normalizeNullBytes(...)` with the original Proc name in Javadocs, migrated ready-packet buffering away from `Proc_10_9_80A680(...)`, and removed a dead `Proc_10_5_809D80(...)` call in `Handling` whose result was ignored.
 - Added named `Functions.sendRoomReadyRefreshes(...)` and `applyClubPeriod(...)` methods with original Proc names in Javadocs, then migrated the remaining `Handling` callers away from `Functions.Proc_10_*`; `Handling` no longer calls `Functions` Proc helpers directly.
+- Migrated `StaffModerationPacketHandlers` packet ID parsing from `Functions.Proc_10_6_809F10(...)` to the named `Functions.readVl64LengthString(...)` helper; production no longer calls that legacy Proc directly.
 
 ## VB Compatibility Class Removal Checklist
 

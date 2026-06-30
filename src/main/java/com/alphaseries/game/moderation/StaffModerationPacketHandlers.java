@@ -26,7 +26,7 @@ public final class StaffModerationPacketHandlers {
                 || !userHasPermission(userId, "fuse_receive_calls_for_help")) {
                 return;
             }
-            long callForHelpId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long callForHelpId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             if (callForHelpId <= 0L) {
                 return;
             }
@@ -54,7 +54,7 @@ public final class StaffModerationPacketHandlers {
                 || !userHasPermission(userId, "fuse_chatlog")) {
                 return;
             }
-            long roomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long roomId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             if (roomId <= 0L) {
                 return;
             }
@@ -78,7 +78,7 @@ public final class StaffModerationPacketHandlers {
             if (userId.isEmpty() || "0".equals(userId) || !userHasPermission(userId, "fuse_mod")) {
                 return;
             }
-            long roomId = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
+            long roomId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
             if (roomId <= 0L) {
                 return;
             }
