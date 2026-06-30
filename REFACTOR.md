@@ -326,6 +326,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the dead `StaffRoomChatRow.fromLegacy` tab-delimited parser after all staff chat-log callers moved to typed rows.
 - Removed own-profile and login-group row-text wrappers plus dead `OwnProfileRow.fromLegacy` and `UserGroupRow.fromLegacy` parsers; those payloads now use typed user records only.
 - Moved represented trade offers and interaction pairs from raw tab-delimited `String` caches into typed `RepresentedTradeOffer`/`RepresentedInteractionPair` lists, removing their legacy row parsers and row metadata.
+- Moved represented activity-point tick tracking from marker-packed `String` storage into a typed socket-to-seconds map.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -341,7 +342,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12277 lines
+- `Handling.java`: 12267 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 894 lines

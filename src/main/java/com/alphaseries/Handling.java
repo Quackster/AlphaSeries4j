@@ -108,7 +108,7 @@ import java.util.regex.Pattern;
 public final class Handling {
     private static List<RepresentedInteractionPair> representedInteractionPairs = new ArrayList<>();
     private static List<RepresentedTradeOffer> representedTradeOffers = new ArrayList<>();
-    private static String representedActivityPointTicks = "";
+    private static Map<Long, Long> representedActivityPointTicks = new HashMap<>();
 
     private Handling() {
     }
@@ -10396,19 +10396,9 @@ public final class Handling {
         if (socketIndex <= 0L || StringUtils.text(userId).isEmpty()) {
             return 0L;
         }
-        String marker = "[" + socketIndex + "]";
-        long tickValue = 0L;
-        int startAt = representedActivityPointTicks.indexOf(marker);
-        if (startAt >= 0) {
-            int valueStart = startAt + marker.length();
-            int endAt = representedActivityPointTicks.indexOf('[', valueStart);
-            if (endAt < 0) {
-                endAt = representedActivityPointTicks.length();
-            }
-            tickValue = NumberUtils.parseLong(representedActivityPointTicks.substring(valueStart, endAt));
-            representedActivityPointTicks = representedActivityPointTicks.substring(0, startAt)
-                + representedActivityPointTicks.substring(endAt);
-        } else {
+        Long cachedTickValue = representedActivityPointTicks.get(socketIndex);
+        long tickValue = cachedTickValue == null ? 0L : cachedTickValue;
+        if (cachedTickValue == null) {
             try {
                 tickValue = userDao().onlineTime(NumberUtils.parseLong(userId));
             } catch (Exception ignored) {
@@ -10416,7 +10406,7 @@ public final class Handling {
             }
         }
         tickValue += 60L;
-        representedActivityPointTicks += marker + tickValue;
+        representedActivityPointTicks.put(socketIndex, tickValue);
         return tickValue;
     }
 
