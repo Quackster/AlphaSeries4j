@@ -873,6 +873,8 @@ public final class PortedModuleSmokeTest {
                 + Crypto.Proc_3_0_6D2AF0(2, null, "")
                 + Crypto.Proc_3_0_6D2AF0(3, null, ""),
             Boot.buildGiftWrapPayload("10\r0\r12", 2, 3));
+        assertEquals(Boot.buildGiftWrapPayload("10\r0\r12", 2, 3),
+            Boot.buildGiftWrapPayload(List.of(10L, 0L, 12L), 2, 3));
         Map<Long, Long> giftProductIds = new HashMap<>();
         giftProductIds.put(100L, 200L);
         Map<Long, Long> giftProductTypes = new HashMap<>();
@@ -4936,6 +4938,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(List.of(new GiftSettings.ClubGift(83L, 508L, 40L)), typedGiftSettings.clubGifts());
         assertEquals(List.of(601L, 602L), typedGiftSettings.giftWrapProductIds());
         assertEquals(true, typedGiftSettings.containsGiftWrapProduct(602L));
+        Licence.setGiftWrapState(List.of(701L, 0L, 702L), "TYPED-WRAPS");
+        assertEquals("\r701\r0\r702\r", Licence.global_0082925C);
+        assertEquals("TYPED-WRAPS", Licence.giftSettings().giftWrapPayload());
+        assertEquals(List.of(701L, 702L), Licence.giftSettings().giftWrapProductIds());
     }
 
     private static void assertProductCacheRows(ProductCache productCache) {

@@ -244,6 +244,29 @@ public final class Licence {
             global_0082925C, global_00829260);
     }
 
+    public static void setGiftWrapState(List<Long> productIds, String payload) {
+        GiftSettings currentSettings = giftSettings();
+        global_0082925C = giftWrapLookup(productIds);
+        global_00829260 = StringUtils.text(payload);
+        CatalogState.instance().setGiftSettings(GiftSettings.fromRows(
+            currentSettings.clubGiftPayload(),
+            currentSettings.clubGifts(),
+            productIds,
+            global_00829260));
+    }
+
+    private static String giftWrapLookup(List<Long> productIds) {
+        StringBuilder lookup = new StringBuilder("\r");
+        if (productIds == null || productIds.isEmpty()) {
+            lookup.append('\r');
+        } else {
+            for (Long productId : productIds) {
+                lookup.append(NumberUtils.parseLong(productId)).append('\r');
+            }
+        }
+        return lookup.toString();
+    }
+
     public static HelpCenterCache helpCenterCache() {
         HelpCenterState.instance().setCacheFromLegacy(global_00829204, global_00829208, global_0082920C, global_00829210);
         return HelpCenterState.instance().cache();

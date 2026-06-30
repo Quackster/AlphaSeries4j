@@ -411,21 +411,21 @@ public final class Boot {
     }
 
     public static void Proc_1_13_6C9820(Object... args) {
-        String wrapRows = "";
+        List<Long> wrapProductIds = List.of();
         CatalogDao catalog = catalogDao();
         if (catalog != null) {
             try {
-                wrapRows = joinLongRows(catalog.giftWrapProductIds());
+                wrapProductIds = catalog.giftWrapProductIds();
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        long wrapCount = countNonZeroRows(wrapRows);
+        long wrapCount = countNonZeroRows(wrapProductIds);
         long accessoryCount = NumberUtils.parseLong(
             Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.count.accessories", wrapCount));
         long colorCount = NumberUtils.parseLong(
             Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.count.colors", 0));
-        Licence.setGiftWrapState("\r" + wrapRows + "\r", buildGiftWrapPayload(wrapRows, accessoryCount, colorCount));
+        Licence.setGiftWrapState(wrapProductIds, buildGiftWrapPayload(wrapProductIds, accessoryCount, colorCount));
     }
 
     public static void Proc_1_15_6CA000(Object... args) {
@@ -1066,10 +1066,14 @@ public final class Boot {
     }
 
     public static String buildGiftWrapPayload(String wrapRows, long accessoryCount, long colorCount) {
+        return buildGiftWrapPayload(giftWrapProductIds(wrapRows), accessoryCount, colorCount);
+    }
+
+    public static String buildGiftWrapPayload(List<Long> wrapProductIds, long accessoryCount, long colorCount) {
         long wrapCount = 0L;
         StringBuilder wrapPayload = new StringBuilder();
-        for (String row : StringUtils.text(wrapRows).split("\r", -1)) {
-            long wrapId = NumberUtils.parseLong(row);
+        for (Long productId : wrapProductIds == null ? List.<Long>of() : wrapProductIds) {
+            long wrapId = NumberUtils.parseLong(productId);
             if (wrapId != 0L) {
                 wrapCount++;
                 wrapPayload.append(Crypto.Proc_3_0_6D2AF0(wrapId, null, ""));
@@ -1836,14 +1840,22 @@ public final class Boot {
         return count;
     }
 
-    private static long countNonZeroRows(String rowText) {
+    private static long countNonZeroRows(List<Long> values) {
         long count = 0L;
-        for (String row : StringUtils.text(rowText).split("\r", -1)) {
-            if (NumberUtils.parseLong(row) != 0L) {
+        for (Long value : values == null ? List.<Long>of() : values) {
+            if (NumberUtils.parseLong(value) != 0L) {
                 count++;
             }
         }
         return count;
+    }
+
+    private static List<Long> giftWrapProductIds(String wrapRows) {
+        List<Long> productIds = new ArrayList<Long>();
+        for (String row : StringUtils.text(wrapRows).split("\r", -1)) {
+            productIds.add(NumberUtils.parseLong(row));
+        }
+        return List.copyOf(productIds);
     }
 
     private static String clientDateFormat(String formatText) {
