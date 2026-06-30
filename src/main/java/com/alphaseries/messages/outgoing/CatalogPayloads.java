@@ -19,4 +19,18 @@ public final class CatalogPayloads {
             .appendRaw('\2')
             .build();
     }
+
+    public static String giftWrapOptions(long giftWrapPrice, String giftWrapPayload) {
+        return PacketBuilder.create()
+            .appendInt(giftWrapPrice)
+            .appendRaw(giftWrapPayload)
+            .build();
+    }
+
+    public static String page(long pageId, String pagePayload) {
+        return PacketBuilder.message("A\u007f")
+            .appendInt(pageId)
+            .appendRaw(pagePayload)
+            .build();
+    }
 }

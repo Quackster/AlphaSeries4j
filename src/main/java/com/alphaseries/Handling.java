@@ -4420,7 +4420,7 @@ public final class Handling {
                 NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.enabled", 0, 0)), null, "Il");
             long giftWrapPrice = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.price", defaultPayload, 0));
             Proc_6_244_801E80(socketIndex,
-                Crypto.Proc_3_0_6D2AF0(giftWrapPrice, null, "") + Licence.giftSettings().giftWrapPayload(), 0);
+                CatalogPayloads.giftWrapOptions(giftWrapPrice, Licence.giftSettings().giftWrapPayload()), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -4439,7 +4439,7 @@ public final class Handling {
             }
             String pagePayload = Licence.catalogPages().pagePayload(pageId);
             if (!pagePayload.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, "A\u007f" + Crypto.Proc_3_0_6D2AF0(pageId, null, "") + pagePayload, 0);
+                Proc_6_244_801E80(socketIndex, CatalogPayloads.page(pageId, pagePayload), 0);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
