@@ -4,12 +4,14 @@ import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class ProductCache {
     private final Object legacyRows;
-    private final Map<Long, String> rows;
+    private final Map<Long, List<String>> rows;
 
     private ProductCache(Object legacyRows) {
         this.legacyRows = legacyRows == null ? "" : legacyRows;
@@ -25,12 +27,11 @@ public final class ProductCache {
     }
 
     public String cell(long productId, long columnIndex) {
-        String row = StringUtils.text(rows.get(productId));
-        if (row.isEmpty()) {
+        List<String> fields = rows.get(productId);
+        if (fields == null) {
             return "";
         }
-        String[] columns = row.split("\t", -1);
-        return columnIndex >= 0 && columnIndex < columns.length ? columns[(int) columnIndex] : "";
+        return field(fields, (int) columnIndex);
     }
 
     /**
@@ -152,13 +153,12 @@ public final class ProductCache {
         return NumberUtils.parseLong(cell(productId, 34)) != 0L;
     }
 
-    private static Map<Long, String> rowsById(Object cache) {
-        Map<Long, String> rows = new LinkedHashMap<>();
+    private static Map<Long, List<String>> rowsById(Object cache) {
+        Map<Long, List<String>> rows = new LinkedHashMap<>();
         if (cache instanceof Iterable<?> values) {
             for (Object value : values) {
                 if (value instanceof CatalogDao.ProductCacheRow row) {
-                    String rowText = String.join("\t", row.values());
-                    rows.put(NumberUtils.parseLong(field(row.values(), 0)), rowText);
+                    rows.put(NumberUtils.parseLong(field(row.values(), 0)), List.copyOf(row.values()));
                 }
             }
             return rows;
@@ -167,7 +167,7 @@ public final class ProductCache {
             for (int index = 0; index < rowArray.length; index++) {
                 String row = StringUtils.text(rowArray[index]);
                 if (!row.isEmpty()) {
-                    rows.put((long) index, row);
+                    rows.put((long) index, Arrays.asList(row.split("\t", -1)));
                 }
             }
             return rows;
@@ -175,13 +175,13 @@ public final class ProductCache {
         for (String row : StringUtils.text(cache).split("\r", -1)) {
             if (!row.isEmpty()) {
                 String[] columns = row.split("\t", -1);
-                rows.put(NumberUtils.parseLong(StringUtils.field(columns, 0)), row);
+                rows.put(NumberUtils.parseLong(StringUtils.field(columns, 0)), Arrays.asList(columns));
             }
         }
         return rows;
     }
 
-    private static String field(java.util.List<String> fields, int index) {
+    private static String field(List<String> fields, int index) {
         return fields != null && index >= 0 && index < fields.size() ? StringUtils.text(fields.get(index)) : "";
     }
 }
