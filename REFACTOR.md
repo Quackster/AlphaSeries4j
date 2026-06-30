@@ -280,6 +280,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed room settings read payload handling through typed `RoomDao.RoomSettingsRead` records and fluent `PacketBuilder` construction, replacing the 14-field tab-delimited DAO row and indexed `handlingField(...)` reads in that helper.
 - Added a typed `CatalogRegistry.CatalogProduct` view and routed catalog purchase, grant, and gift handlers through named catalog-product fields instead of tab-delimited cache rows and indexed `handlingField(...)` reads.
 - Added a typed `CatalogRegistry.ProductDeal` view and routed catalog deal grant/display handling through parsed product-id lists instead of raw deal-row splitting in `Handling`.
+- Added a typed `CatalogRegistry.Product` view and routed furniture decoration, charge, floor-placement, and inventory metadata helpers through named product-cache fields instead of raw product-row splitting.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -295,7 +296,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12613 lines
+- `Handling.java`: 12622 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 249 lines
 - `Main.java`: 957 lines

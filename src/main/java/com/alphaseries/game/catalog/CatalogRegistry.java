@@ -36,6 +36,26 @@ public final class CatalogRegistry {
         return StringUtils.text(products.get(productId));
     }
 
+    public Optional<Product> product(long productId) {
+        String row = StringUtils.text(products.get(productId));
+        if (row.isEmpty()) {
+            return Optional.empty();
+        }
+        String[] fields = row.split("\t", -1);
+        return Optional.of(new Product(
+            NumberUtils.parseLong(StringUtils.field(fields, 0)),
+            NumberUtils.parseLong(StringUtils.field(fields, 1)),
+            StringUtils.field(fields, 14),
+            StringUtils.field(fields, 15),
+            StringUtils.field(fields, 18),
+            StringUtils.field(fields, 20),
+            NumberUtils.parseLong(StringUtils.field(fields, 24)),
+            NumberUtils.parseLong(StringUtils.field(fields, 34)),
+            NumberUtils.parseLong(StringUtils.field(fields, 35)),
+            NumberUtils.parseLong(StringUtils.field(fields, 36)),
+            NumberUtils.parseLong(StringUtils.field(fields, 37))));
+    }
+
     public String catalogProductRow(long catalogProductId) {
         return StringUtils.text(catalogProducts.get(catalogProductId));
     }
@@ -104,6 +124,21 @@ public final class CatalogRegistry {
     }
 
     public record ProductDeal(long productId, List<Long> itemProductIds) {
+    }
+
+    public record Product(
+        long productId,
+        long type,
+        String name,
+        String description,
+        String sprite,
+        String defaultDecoration,
+        long squareZ,
+        long chargeSize,
+        long chargePriceCredits,
+        long chargePriceActivityPoints,
+        long chargePriceActivityPointsType
+    ) {
     }
 
     private static String cell(Map<Long, String> rows, long rowId, long columnIndex) {

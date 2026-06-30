@@ -2,6 +2,7 @@ package com.alphaseries.game.inventory;
 
 import com.alphaseries.DataManager;
 import com.alphaseries.Licence;
+import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -104,11 +105,11 @@ public final class InventoryMessagePayloads {
         }
 
         private static ProductMetadata lookup(long productId) {
-            String[] fields = StringUtils.text(Licence.Proc_9_3_807930(productId, 0, 0)).split("\t", -1);
-            if (fields.length < 19) {
+            CatalogRegistry.Product product = Licence.product(productId);
+            if (product == null) {
                 return new ProductMetadata(0L, "", "", "");
             }
-            return new ProductMetadata(NumberUtils.parseLong(fields[1]), fields[14], fields[15], fields[18]);
+            return new ProductMetadata(product.type(), product.name(), product.description(), product.sprite());
         }
     }
 }

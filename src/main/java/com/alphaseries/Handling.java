@@ -4614,17 +4614,20 @@ public final class Handling {
             }
             long productId = decorationFurniture.productId();
             String decoValue = StringUtils.text(decorationFurniture.sign());
-            String[] productFields = Licence.Proc_9_3_807930(productId, 0, 0).split("\t", -1);
-            long productType = NumberUtils.parseLong(navigatorField(productFields, 1));
+            CatalogRegistry.Product product = Licence.product(productId);
+            if (product == null) {
+                return;
+            }
+            long productType = product.type();
             RoomDao.RoomDecoration decoration = RoomDao.RoomDecoration.fromProductType(productType);
             if (decoration == null) {
                 return;
             }
             if (decoValue.isEmpty() || "0".equals(decoValue)) {
-                decoValue = navigatorField(productFields, 20);
+                decoValue = product.defaultDecoration();
             }
             if (decoValue.isEmpty()) {
-                decoValue = navigatorField(productFields, 18);
+                decoValue = product.sprite();
             }
             if (decoValue.isEmpty()) {
                 return;
@@ -4894,15 +4897,18 @@ public final class Handling {
             if (socketIndex <= 0 || productId <= 0L || furnitureId <= 0L) {
                 return;
             }
-            String[] productFields = Licence.Proc_9_3_807930(productId, 0, 0).split("\t", -1);
-            long hasCharge = NumberUtils.parseLong(navigatorField(productFields, 34));
+            CatalogRegistry.Product product = Licence.product(productId);
+            if (product == null) {
+                return;
+            }
+            long hasCharge = product.chargeSize();
             if (hasCharge == 0L) {
                 return;
             }
-            long chargeSize = NumberUtils.parseLong(navigatorField(productFields, 34));
-            long chargePriceCredits = NumberUtils.parseLong(navigatorField(productFields, 35));
-            long chargePricePoints = NumberUtils.parseLong(navigatorField(productFields, 36));
-            long chargePointType = NumberUtils.parseLong(navigatorField(productFields, 37));
+            long chargeSize = product.chargeSize();
+            long chargePriceCredits = product.chargePriceCredits();
+            long chargePricePoints = product.chargePriceActivityPoints();
+            long chargePointType = product.chargePriceActivityPointsType();
             Path chargePath = Path.of(Functions.applicationPath, "cache", "items_charges", furnitureId + ".cache");
             long currentCharges = NumberUtils.parseLong(Proc_6_239_7FC170(chargePath.toString(), 0, 0));
             if (currentCharges < 1L) {
@@ -9300,15 +9306,18 @@ public final class Handling {
             if (productId <= 0L) {
                 return "";
             }
-            String[] productFields = Licence.Proc_9_3_807930(productId, 0, 0).split("\t", -1);
-            long productType = NumberUtils.parseLong(navigatorField(productFields, 1));
+            CatalogRegistry.Product product = Licence.product(productId);
+            if (product == null) {
+                return "";
+            }
+            long productType = product.type();
             if (productType == 9L) {
                 if (fromInventory) {
                     Proc_6_157_7974B0(socketIndex, requestPayload, itemFields);
                 }
                 return "";
             }
-            String positionZ = String.valueOf((long) NumberUtils.parseLong(navigatorField(productFields, 24)));
+            String positionZ = String.valueOf(product.squareZ());
             if (fromInventory) {
                 furniture.placeFloorFurniture(
                     placement.furnitureId,
