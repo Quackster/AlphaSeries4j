@@ -166,6 +166,13 @@ public final class RoomCategoryCache {
     }
 
     private static List<String> parseDefaultCategoryIds(Object defaultCategoryIds) {
+        if (defaultCategoryIds instanceof Iterable<?> values) {
+            List<String> parsedValues = new ArrayList<>();
+            for (Object value : values) {
+                parsedValues.add(StringUtils.text(value));
+            }
+            return List.copyOf(parsedValues);
+        }
         if (defaultCategoryIds instanceof String[] values) {
             return copyTexts(values);
         }

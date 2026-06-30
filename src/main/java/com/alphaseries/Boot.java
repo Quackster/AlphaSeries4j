@@ -366,9 +366,10 @@ public final class Boot {
             Functions.settingsCache().valueOrDefault("com.client.navigator.categories.default.private.id", 0));
         long publicCategoryId = NumberUtils.parseLong(
             Functions.settingsCache().valueOrDefault("com.client.navigator.categories.default.public.id", 0));
-        String[] defaults = new String[3];
-        defaults[0] = String.valueOf(privateCategoryId);
-        defaults[2] = String.valueOf(publicCategoryId);
+        List<String> defaults = new ArrayList<String>();
+        defaults.add(String.valueOf(privateCategoryId));
+        defaults.add("");
+        defaults.add(String.valueOf(publicCategoryId));
         Licence.setRoomCategoryDefaults(defaults);
         long parentCategoryId = privateCategoryId == 0L ? 1L : privateCategoryId;
         List<RoomDao.RoomCategoryRow> categoryRows = List.of();

@@ -5135,6 +5135,8 @@ public final class PortedModuleSmokeTest {
 
     private static void assertRoomCategoryBootCaches() {
         Boot.Proc_1_11_6C8D10();
+        assertEquals(true, Licence.global_00829224 instanceof List);
+        assertEquals(List.of("0", "", "0"), Licence.roomCategoryCache().defaultCategoryIdList());
         assertEquals(true, Licence.global_00829230 instanceof List);
         assertEquals(Boot.buildRoomCategoryPayload("1\tpublic\t0\t0\t0", 0L, 0L),
             Boot.buildRoomCategoryPayload(List.of(new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L)), 0L, 0L));
@@ -5156,7 +5158,7 @@ public final class PortedModuleSmokeTest {
             legacyRoomCategories.categoryRowList());
 
         RoomCategoryCache typedRoomCategoryDefaults = RoomCategoryCache.fromRows(
-            new String[]{"11", "", "22"}, List.of(), new String[][]{{"PAYLOAD"}});
+            List.of("11", "", "22"), List.of(), new String[][]{{"PAYLOAD"}});
         String[] defaultCategoryIds = typedRoomCategoryDefaults.defaultCategoryIds();
         defaultCategoryIds[0] = "changed";
         assertEquals("11", typedRoomCategoryDefaults.privateDefaultCategoryId());
