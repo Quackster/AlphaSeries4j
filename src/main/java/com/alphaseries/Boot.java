@@ -1457,42 +1457,43 @@ public final class Boot {
 
     public static String buildRecommendedRoomsPayload(List<RoomDao.RecommendedRoomRow> roomRows) {
         long roomCount = 0L;
-        StringBuilder payload = new StringBuilder();
+        PacketBuilder payload = PacketBuilder.create();
         if (roomRows != null) {
             for (RoomDao.RecommendedRoomRow row : roomRows) {
                 if (row != null) {
                     roomCount++;
-                    payload.append(Crypto.encodeVl64(row.type()));
-                    payload.append(Crypto.encodeVl64(row.style()));
-                    payload.append(Crypto.encodeVl64(row.icon()));
-                    payload.append(StringUtils.text(row.caption())).append('\2');
-                    payload.append(StringUtils.text(row.captionTwo())).append('\2');
-                    payload.append(StringUtils.text(row.captionThree())).append('\2');
-                    payload.append(StringUtils.text(row.legacyNullSlot())).append('\2');
-                    payload.append(row.roomId()).append('\2');
-                    payload.append(StringUtils.text(row.roomName())).append('\2');
-                    payload.append(StringUtils.text(row.ownerName())).append('\2');
-                    payload.append(row.doorStatus()).append('\2');
-                    payload.append(row.visitorsNow()).append('\2');
-                    payload.append(row.visitorsMax()).append('\2');
-                    payload.append(StringUtils.text(row.description())).append('\2');
-                    payload.append(row.trading()).append('\2');
-                    payload.append(StringUtils.text(row.legacySecondNullSlot())).append('\2');
-                    payload.append(row.rating()).append('\2');
-                    payload.append(row.categoryId()).append('\2');
-                    payload.append(StringUtils.text(row.roomIcon())).append('\2');
-                    payload.append(StringUtils.text(row.tagOne())).append('\2');
-                    payload.append(StringUtils.text(row.tagTwo())).append('\2');
-                    payload.append(row.allowOtherPets()).append('\2');
-                    payload.append(StringUtils.text(row.modelName())).append('\2');
-                    payload.append(StringUtils.text(row.requiredFiles())).append('\2');
-                    payload.append(StringUtils.text(row.modelVisitorsMax())).append('\2');
-                    payload.append(Crypto.encodeVl64(row.treeId()));
-                    payload.append(Crypto.encodeVl64(row.recommendedId()));
+                    payload
+                        .appendInt(row.type())
+                        .appendInt(row.style())
+                        .appendInt(row.icon())
+                        .appendString(row.caption())
+                        .appendString(row.captionTwo())
+                        .appendString(row.captionThree())
+                        .appendString(row.legacyNullSlot())
+                        .appendString(row.roomId())
+                        .appendString(row.roomName())
+                        .appendString(row.ownerName())
+                        .appendString(row.doorStatus())
+                        .appendString(row.visitorsNow())
+                        .appendString(row.visitorsMax())
+                        .appendString(row.description())
+                        .appendString(row.trading())
+                        .appendString(row.legacySecondNullSlot())
+                        .appendString(row.rating())
+                        .appendString(row.categoryId())
+                        .appendString(row.roomIcon())
+                        .appendString(row.tagOne())
+                        .appendString(row.tagTwo())
+                        .appendString(row.allowOtherPets())
+                        .appendString(row.modelName())
+                        .appendString(row.requiredFiles())
+                        .appendString(row.modelVisitorsMax())
+                        .appendInt(row.treeId())
+                        .appendInt(row.recommendedId());
                 }
             }
         }
-        return Crypto.encodeVl64(roomCount) + payload;
+        return PacketBuilder.create().appendInt(roomCount).appendRaw(payload.build()).build();
     }
 
     public static String Proc_1_14_6C9DD0(Object... args) {

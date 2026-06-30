@@ -300,6 +300,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Built typed room-category boot payloads with fluent `PacketBuilder` calls over named `RoomDao.RoomCategoryRow` fields.
 - Routed recommended-room startup cache reads through typed `RoomDao` rows, keeping legacy navigator payload serialization explicit in `Boot`.
 - Built recommended-room boot payloads from named `RoomDao.RecommendedRoomRow` fields and removed the positional `legacyTextFields()` compatibility view.
+- Built typed recommended-room boot payload rows with fluent `PacketBuilder` field appends instead of raw `StringBuilder`/`Crypto.encodeVl64(...)` concatenation.
 - Routed startup permission matrix reads through prepared `SettingsDao` privilege lookups, keeping legacy permission-string serialization explicit in `Boot`.
 - Routed catalog page and catalog page-product startup payload reads through typed `CatalogDao` rows, keeping legacy catalog page payload serialization explicit in `Boot`.
 - Routed catalog page tree startup cache reads through typed `CatalogDao` rows and prepared child-count lookups, keeping legacy catalog tree payload serialization explicit in `Boot`.
