@@ -10759,7 +10759,7 @@ public final class Handling {
             if (recordText.isEmpty()) {
                 return "";
             }
-            String selectedIds = wiredRecordField(recordText, 2);
+            String selectedIds = WiredPayloads.record(recordText).selectedIds();
             if (!selectedIds.isEmpty() && !handlingRepresentedWiredSelectedItemsExist(roomId, selectedIds)) {
                 return "";
             }
@@ -10822,7 +10822,7 @@ public final class Handling {
         for (String row : readWiredCache("wired_trigger", roomId).replace("\r", "").split("\n", -1)) {
             String recordText = row.trim();
             if (!recordText.isEmpty()) {
-                long recordCode = NumberUtils.parseLong(wiredRecordField(recordText, 0));
+                long recordCode = NumberUtils.parseLong(WiredPayloads.record(recordText).code());
                 if ((triggerCode <= 0L || recordCode == triggerCode) && handlingRepresentedWiredConditionsPass(roomId)) {
                     executedCount += handlingRepresentedWiredAction(roomId, 0L, 0L, socketIndex);
                 }
@@ -10838,7 +10838,7 @@ public final class Handling {
         for (String row : readWiredCache("wired_condition", roomId).replace("\r", "").split("\n", -1)) {
             String recordText = row.trim();
             if (!recordText.isEmpty()) {
-                String selectedIds = wiredRecordField(recordText, 2);
+                String selectedIds = WiredPayloads.record(recordText).selectedIds();
                 if (!selectedIds.isEmpty() && !handlingRepresentedWiredSelectedItemsExist(roomId, selectedIds)) {
                     return false;
                 }
@@ -10855,10 +10855,11 @@ public final class Handling {
         for (String row : readWiredCache("wired_action", roomId).replace("\r", "").split("\n", -1)) {
             String recordText = row.trim();
             if (!recordText.isEmpty()) {
-                long recordCode = NumberUtils.parseLong(wiredRecordField(recordText, 0));
+                WiredPayloads.WiredRecord record = WiredPayloads.record(recordText);
+                long recordCode = NumberUtils.parseLong(record.code());
                 if (actionCode <= 0L || recordCode == actionCode) {
                     actionCount += handlingRepresentedWiredApplySelected(
-                        roomId, wiredRecordField(recordText, 2), wiredRecordField(recordText, 3), selectedFurnitureId);
+                        roomId, record.selectedIds(), record.parameterText(), selectedFurnitureId);
                 }
             }
         }
@@ -11005,10 +11006,6 @@ public final class Handling {
 
     public static String wiredCacheWithRecord(String cacheText, String recordText) {
         return WiredPayloads.cacheWithRecord(cacheText, recordText);
-    }
-
-    public static String wiredRecordField(String recordText, long fieldIndex) {
-        return WiredPayloads.recordField(recordText, fieldIndex);
     }
 
     public static boolean wiredSelectedItemsExist(String selectedIds, String existingIds) {

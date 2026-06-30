@@ -456,6 +456,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added typed `RepresentedBotRegistry.RepresentedBotRecord` reads and routed represented-bot room-entry payload construction away from numeric cache field indexes.
 - Routed represented-bot occupant list/status assembly through `RepresentedBotRecord` named accessors instead of numeric cache field indexes.
 - Routed represented-pet pickup inventory payload construction through `RepresentedBotRecord` named accessors instead of numeric cache field indexes.
+- Added typed `WiredPayloads.WiredRecord` parsing and routed wired trigger/action handling away from numeric wired record fields.
 - Added `RepresentedBotIdentity` resolution for request ids that may be represented entity ids or bot ids, replacing duplicated represented-bot field-index probes in pet status, command-list, command, experience, and scratch handlers.
 - Added `RepresentedBotRegistry.isEntityInRoom(...)` and cleared live `Handling` represented-bot call sites that passed literal cache field indexes; only compatibility accessors remain.
 - Routed `Functions` represented-bot position availability through `RepresentedBotRecord`/`RepresentedBotIdentity`, clearing direct represented-bot cache field reads from `Functions`.
@@ -479,7 +480,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11503 lines
+- `Handling.java`: 11500 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 904 lines

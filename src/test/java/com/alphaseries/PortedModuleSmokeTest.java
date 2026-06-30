@@ -54,6 +54,7 @@ import com.alphaseries.game.trade.TradePayloads;
 import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.game.user.UserGroupRow;
+import com.alphaseries.game.wired.WiredPayloads;
 import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
 import com.alphaseries.messages.outgoing.CatalogPayloads;
@@ -2400,12 +2401,13 @@ public final class PortedModuleSmokeTest {
         assertEquals("", Handling.wiredSpecialStatePayload(1));
         String wiredRecord = Handling.wiredRecordText(502, 44, "100;101", "7;8", "txt", "9");
         assertEquals("\1" + "502\2" + "44\3" + "100;101\4" + "7;8\5" + "txt\6" + "9", wiredRecord);
-        assertEquals("502", Handling.wiredRecordField(wiredRecord, 0));
-        assertEquals("44", Handling.wiredRecordField(wiredRecord, 1));
-        assertEquals("100;101", Handling.wiredRecordField(wiredRecord, 2));
-        assertEquals("7;8", Handling.wiredRecordField(wiredRecord, 3));
-        assertEquals("txt", Handling.wiredRecordField(wiredRecord, 4));
-        assertEquals("9", Handling.wiredRecordField(wiredRecord, 5));
+        WiredPayloads.WiredRecord parsedWiredRecord = WiredPayloads.record(wiredRecord);
+        assertEquals("502", parsedWiredRecord.code());
+        assertEquals("44", parsedWiredRecord.furnitureId());
+        assertEquals("100;101", parsedWiredRecord.selectedIds());
+        assertEquals("7;8", parsedWiredRecord.parameterText());
+        assertEquals("txt", parsedWiredRecord.textValue());
+        assertEquals("9", parsedWiredRecord.extraValue());
         String wiredWire = "ok" + Crypto.Proc_3_0_6D2AF0(44, null, "")
             + Crypto.Proc_3_0_6D2AF0(2, null, "")
             + Crypto.Proc_3_0_6D2AF0(7, null, "")

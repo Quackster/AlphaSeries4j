@@ -14,6 +14,16 @@ public final class WiredPayloads {
         public String statePayloads = "";
     }
 
+    public record WiredRecord(
+        String code,
+        String furnitureId,
+        String selectedIds,
+        String parameterText,
+        String textValue,
+        String extraValue
+    ) {
+    }
+
     public static String specialState(long itemState) {
         return itemState == 1507L ? "5;1;7;1;5;0;" : "";
     }
@@ -37,60 +47,47 @@ public final class WiredPayloads {
         return recordText;
     }
 
-    public static String recordField(String recordText, long fieldIndex) {
+    public static WiredRecord record(String recordText) {
         String bodyText = StringUtils.text(recordText);
         if (bodyText.startsWith("\1")) {
             bodyText = bodyText.substring(1);
         }
         String[] parts = bodyText.split("\2", 2);
-        if (fieldIndex == 0L) {
-            return parts.length >= 1 ? parts[0] : "";
-        }
+        String code = parts.length >= 1 ? parts[0] : "";
         if (parts.length < 2) {
-            return "";
+            return new WiredRecord(code, "", "", "", "", "");
         }
         String restText = parts[1];
         parts = restText.split("\3", 2);
-        if (fieldIndex == 1L) {
-            return parts.length >= 1 ? parts[0] : "";
-        }
+        String furnitureId = parts.length >= 1 ? parts[0] : "";
         if (parts.length < 2) {
-            return "";
+            return new WiredRecord(code, furnitureId, "", "", "", "");
         }
         restText = parts[1];
         parts = restText.split("\4", 2);
-        if (fieldIndex == 2L) {
-            return parts.length >= 1 ? parts[0] : "";
-        }
+        String selectedIds = parts.length >= 1 ? parts[0] : "";
         if (parts.length < 2) {
-            return "";
+            return new WiredRecord(code, furnitureId, selectedIds, "", "", "");
         }
         restText = parts[1];
         parts = restText.split("\5", 2);
-        if (fieldIndex == 3L) {
-            return parts.length >= 1 ? parts[0] : "";
-        }
+        String parameterText = parts.length >= 1 ? parts[0] : "";
         if (parts.length < 2) {
-            return "";
+            return new WiredRecord(code, furnitureId, selectedIds, parameterText, "", "");
         }
         restText = parts[1];
         parts = restText.split("\6", 2);
-        if (fieldIndex == 4L) {
-            return parts.length >= 1 ? parts[0] : "";
-        }
-        if (fieldIndex == 5L && parts.length >= 2) {
-            return parts[1];
-        }
-        return "";
+        String textValue = parts.length >= 1 ? parts[0] : "";
+        String extraValue = parts.length >= 2 ? parts[1] : "";
+        return new WiredRecord(code, furnitureId, selectedIds, parameterText, textValue, extraValue);
     }
 
     public static String recordMarker(String recordText) {
-        String code = recordField(recordText, 0);
-        String furnitureId = recordField(recordText, 1);
-        if (code.isEmpty() || furnitureId.isEmpty()) {
+        WiredRecord record = record(recordText);
+        if (record.code().isEmpty() || record.furnitureId().isEmpty()) {
             return "";
         }
-        return "\1" + code + '\2' + furnitureId + '\3';
+        return "\1" + record.code() + '\2' + record.furnitureId() + '\3';
     }
 
     public static String cacheWithRecord(String cacheText, String recordText) {
