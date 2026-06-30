@@ -36,6 +36,9 @@ public final class Main {
     private Main() {
     }
 
+    public record GameServerPacket(String commandName, long socketIndex, String payload) {
+    }
+
     public static void configurePreSessionPacketSink(PacketSink sink) {
         preSessionPacketSink = sink == null ? (socketIndex, payload) -> { } : sink;
     }
@@ -326,27 +329,21 @@ public final class Main {
                 if (packet.isEmpty()) {
                     continue;
                 }
-                String[] fields = packet.split("\2", -1);
-                String commandName = fields.length > 0 ? StringUtils.text(fields[0]).toUpperCase(Locale.ROOT) : "";
-                long socketIndex;
-                if ("SHUTDOWN".equals(commandName)) {
-                    if (fields.length >= 2) {
-                        socketIndex = NumberUtils.parseLong(fields[1]);
-                        Handling.Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                GameServerPacket gamePacket = gameServerPacket(packet);
+                if ("SHUTDOWN".equals(gamePacket.commandName())) {
+                    if (gamePacket.socketIndex() > 0L) {
+                        Handling.Proc_6_243_7FFEB0(gamePacket.socketIndex(), 0, 0);
                     }
-                } else if ("LISTEN".equals(commandName)) {
-                    if (fields.length >= 2) {
-                        socketIndex = NumberUtils.parseLong(fields[1]);
-                        Guardian.Proc_11_3_821440(socketIndex, 0, 0);
+                } else if ("LISTEN".equals(gamePacket.commandName())) {
+                    if (gamePacket.socketIndex() > 0L) {
+                        Guardian.Proc_11_3_821440(gamePacket.socketIndex(), 0, 0);
                     }
-                } else if ("DATA".equals(commandName)) {
-                    if (fields.length >= 3) {
-                        socketIndex = NumberUtils.parseLong(fields[1]);
-                        appendGameServerPacketData(socketIndex, fields);
+                } else if ("DATA".equals(gamePacket.commandName())) {
+                    if (gamePacket.socketIndex() > 0L && !gamePacket.payload().isEmpty()) {
+                        appendGameServerPacketPayload(gamePacket.socketIndex(), gamePacket.payload());
                     }
-                } else if (fields.length >= 1) {
-                    socketIndex = NumberUtils.parseLong(fields[0]);
-                    Handling.Proc_6_243_7FFEB0(socketIndex, 0, 0);
+                } else if (gamePacket.socketIndex() > 0L) {
+                    Handling.Proc_6_243_7FFEB0(gamePacket.socketIndex(), 0, 0);
                 }
             }
         } catch (Exception ignored) {
@@ -517,9 +514,21 @@ public final class Main {
     }
 
     public static void appendGameServerPacketData(long socketIndex, String[] fields) {
+        appendGameServerPacketPayload(socketIndex, gameServerPacketPayload(fields));
+    }
+
+    public static void appendGameServerPacketPayload(long socketIndex, String packetPayload) {
         GameServerSessionState sessionState = Licence.gameServerSessionState();
-        sessionState.appendPacketPayload(socketIndex, gameServerPacketPayload(fields));
+        sessionState.appendPacketPayload(socketIndex, packetPayload);
         Licence.setGameServerSessionState(sessionState);
+    }
+
+    public static GameServerPacket gameServerPacket(String packetText) {
+        String[] fields = StringUtils.text(packetText).split("\2", -1);
+        String commandName = fields.length > 0 ? StringUtils.text(fields[0]).toUpperCase(Locale.ROOT) : "";
+        long socketIndex = fields.length >= 2 ? NumberUtils.parseLong(fields[1]) : NumberUtils.parseLong(commandName);
+        String payload = "DATA".equals(commandName) ? gameServerPacketPayload(fields) : "";
+        return new GameServerPacket(commandName, socketIndex, payload);
     }
 
     public static String gameServerPacketPayload(String[] fields) {

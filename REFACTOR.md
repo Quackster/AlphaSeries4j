@@ -445,6 +445,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved queued game-server packet assembly out of `GameServerSessionState`; the session manager now accepts a named payload string, leaving `Main` as the temporary legacy `String[]` adapter.
 - Removed the no-op user identity payload wrapper from `Handling`; identity refresh handlers and tests now call `UserPayloads.identityRefresh` directly.
 - Removed the unused root `indexedPayload` array helper from `Handling`; indexed cache lookups now remain encapsulated in typed cache classes.
+- Added a typed `Main.GameServerPacket` parser and routed live game-server `DATA` processing through a named packet payload append path; the old `String[]` entry point remains only as a compatibility adapter.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -464,7 +465,7 @@ Measured on 2026-06-30:
 - `Handling.java`: 11483 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
-- `Main.java`: 903 lines
+- `Main.java`: 912 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 
 ## Next Targets

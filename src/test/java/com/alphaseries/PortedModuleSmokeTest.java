@@ -1128,6 +1128,9 @@ public final class PortedModuleSmokeTest {
 
         Licence.global_00829350 = "";
         assertEquals("A\2B\2C", Main.gameServerPacketPayload(new String[]{"ignored", "ignored", "A", "B", "C"}));
+        assertEquals(new Main.GameServerPacket("DATA", 7L, "A\2B\2C"), Main.gameServerPacket("DATA\2" + "7\2A\2B\2C"));
+        Main.appendGameServerPacketPayload(8, "direct");
+        assertEquals("direct", Main.popGameServerPacketData(8));
         Main.appendGameServerPacketData(7, new String[]{"ignored", "ignored", "A", "B", "C"});
         assertEquals("A\2B\2C", Main.popGameServerPacketData(7));
         assertEquals("", Licence.global_00829350);
