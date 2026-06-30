@@ -160,12 +160,19 @@ public final class Boot {
     public static void Proc_1_2_6BE280(Object... args) {
         String[] recommended = new String[100];
         long count = 0L;
-        for (String row : MySQL.Proc_5_2_6D4690("SELECT id_tree FROM rooms_recommented GROUP BY id_tree", 0, 0).split("\r", -1)) {
-            long treeId = NumberUtils.parseLong(row);
-            if (treeId != 0L && count < recommended.length) {
-                String roomRows = MySQL.Proc_5_2_6D4690(buildRecommendedRoomsQuery(treeId), 0, 0);
-                recommended[(int) count] = Crypto.Proc_3_0_6D2AF0(treeId, null, "") + buildRecommendedRoomsPayload(roomRows);
-                count++;
+        RoomDao rooms = roomDao();
+        if (rooms != null) {
+            try {
+                for (Long treeIdValue : rooms.recommendedRoomTreeIds()) {
+                    long treeId = treeIdValue == null ? 0L : treeIdValue.longValue();
+                    if (treeId != 0L && count < recommended.length) {
+                        recommended[(int) count] = Crypto.Proc_3_0_6D2AF0(treeId, null, "")
+                            + buildRecommendedRoomsPayload(rooms.recommendedRoomRows(treeId));
+                        count++;
+                    }
+                }
+            } catch (Exception ignored) {
+                // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
         Licence.setRecommendedRooms(count == 0L ? Crypto.Proc_3_0_6D2AF0(0, null, "") : recommended, count);
@@ -1302,6 +1309,27 @@ public final class Boot {
                     }
                     payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[25]), null, ""));
                     payload.append(Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(fields[26]), null, ""));
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(roomCount, null, "") + payload;
+    }
+
+    public static String buildRecommendedRoomsPayload(List<RoomDao.RecommendedRoomRow> roomRows) {
+        long roomCount = 0L;
+        StringBuilder payload = new StringBuilder();
+        if (roomRows != null) {
+            for (RoomDao.RecommendedRoomRow row : roomRows) {
+                if (row != null) {
+                    roomCount++;
+                    payload.append(Crypto.Proc_3_0_6D2AF0(row.type(), null, ""));
+                    payload.append(Crypto.Proc_3_0_6D2AF0(row.style(), null, ""));
+                    payload.append(Crypto.Proc_3_0_6D2AF0(row.icon(), null, ""));
+                    for (String field : row.legacyTextFields()) {
+                        payload.append(StringUtils.text(field)).append('\2');
+                    }
+                    payload.append(Crypto.Proc_3_0_6D2AF0(row.treeId(), null, ""));
+                    payload.append(Crypto.Proc_3_0_6D2AF0(row.recommendedId(), null, ""));
                 }
             }
         }

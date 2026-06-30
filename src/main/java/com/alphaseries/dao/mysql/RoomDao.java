@@ -93,6 +93,47 @@ public final class RoomDao {
             parentCategoryId);
     }
 
+    public List<Long> recommendedRoomTreeIds() throws SQLException {
+        return database.query(
+            "SELECT id_tree FROM rooms_recommented GROUP BY id_tree",
+            resultSet -> resultSet.getLong(1));
+    }
+
+    public List<RecommendedRoomRow> recommendedRoomRows(long treeId) throws SQLException {
+        return database.query(recommendedRoomQuery(), resultSet -> new RecommendedRoomRow(
+            resultSet.getLong(1),
+            resultSet.getLong(2),
+            resultSet.getLong(3),
+            resultSet.getString(4),
+            resultSet.getString(5),
+            resultSet.getString(6),
+            resultSet.getString(7),
+            resultSet.getLong(8),
+            resultSet.getString(9),
+            resultSet.getString(10),
+            resultSet.getLong(11),
+            resultSet.getLong(12),
+            resultSet.getLong(13),
+            resultSet.getString(14),
+            resultSet.getLong(15),
+            resultSet.getString(16),
+            resultSet.getLong(17),
+            resultSet.getLong(18),
+            resultSet.getString(19),
+            resultSet.getString(20),
+            resultSet.getString(21),
+            resultSet.getLong(22),
+            resultSet.getString(23),
+            resultSet.getString(24),
+            resultSet.getString(25),
+            resultSet.getLong(26),
+            resultSet.getLong(27)),
+            treeId,
+            treeId,
+            treeId,
+            treeId);
+    }
+
     public List<NewFriendRooms.RoomPick> newFriendRoomPicks() throws SQLException {
         return database.query(
             "SELECT rooms.id,models.type FROM rooms_categories,rooms,models "
@@ -966,6 +1007,66 @@ public final class RoomDao {
         }
     }
 
+    public record RecommendedRoomRow(
+        long type,
+        long style,
+        long icon,
+        String caption,
+        String captionTwo,
+        String captionThree,
+        String legacyNullSlot,
+        long roomId,
+        String roomName,
+        String ownerName,
+        long doorStatus,
+        long visitorsNow,
+        long visitorsMax,
+        String description,
+        long trading,
+        String legacySecondNullSlot,
+        long rating,
+        long categoryId,
+        String roomIcon,
+        String tagOne,
+        String tagTwo,
+        long allowOtherPets,
+        String modelName,
+        String requiredFiles,
+        String modelVisitorsMax,
+        long treeId,
+        long recommendedId
+    ) {
+        public List<String> legacyTextFields() {
+            return List.of(
+                text(caption),
+                text(captionTwo),
+                text(captionThree),
+                text(legacyNullSlot),
+                String.valueOf(roomId),
+                text(roomName),
+                text(ownerName),
+                String.valueOf(doorStatus),
+                String.valueOf(visitorsNow),
+                String.valueOf(visitorsMax),
+                text(description),
+                String.valueOf(trading),
+                text(legacySecondNullSlot),
+                String.valueOf(rating),
+                String.valueOf(categoryId),
+                text(roomIcon),
+                text(tagOne),
+                text(tagTwo),
+                String.valueOf(allowOtherPets),
+                text(modelName),
+                text(requiredFiles),
+                text(modelVisitorsMax));
+        }
+
+        private static String text(String value) {
+            return value == null ? "" : value;
+        }
+    }
+
     public enum RoomDecoration {
         WALLPAPER("wallpaper", "id_wallpaper"),
         FLOOR("floor", "id_floor"),
@@ -1047,6 +1148,45 @@ public final class RoomDao {
         queryText.append("rooms_official.id,rooms_official.requires_level_in FROM rooms_official ");
         queryText.append("WHERE rooms_official.id_type='4' GROUP BY rooms_official.id ");
         queryText.append("ORDER BY 27 ASC LIMIT 255");
+        return queryText.toString();
+    }
+
+    private static String recommendedRoomQuery() {
+        String separator = " UNION ALL ";
+        StringBuilder queryText = new StringBuilder();
+
+        queryText.append("SELECT rooms_recommented.id_type,rooms_recommented.id_style,rooms_recommented.icon,");
+        queryText.append("rooms_recommented.caption,rooms_recommented.caption_2,rooms_recommented.caption_3,");
+        queryText.append("NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
+        queryText.append("rooms_recommented.id_tree,rooms_recommented.id FROM rooms_recommented WHERE id_tree=? ");
+        queryText.append("AND rooms_recommented.id_type='1' GROUP BY rooms_recommented.id");
+
+        queryText.append(separator).append("SELECT rooms_recommented.id_type,rooms_recommented.id_style,rooms_recommented.icon,");
+        queryText.append("rooms_recommented.caption,rooms_recommented.caption_2,rooms_recommented.caption_3,NULL,");
+        queryText.append("rooms.id,rooms.name,users.name,rooms.status_door,rooms.visitors_now,rooms.visitors_max,");
+        queryText.append("rooms.description,rooms_categories.has_trading,NULL,rooms.rate,rooms.id_category,rooms.icon,");
+        queryText.append("rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,NULL,NULL,NULL,");
+        queryText.append("rooms_recommented.id_tree,rooms_recommented.id FROM users,rooms,rooms_categories,rooms_recommented ");
+        queryText.append("WHERE id_tree=? AND rooms_recommented.id_type='2' ");
+        queryText.append("AND rooms_recommented.id_room IS NOT NULL AND rooms.id=rooms_recommented.id_room ");
+        queryText.append("AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category GROUP BY rooms_recommented.id");
+
+        queryText.append(separator).append("SELECT rooms_recommented.id_type,rooms_recommented.id_style,rooms_recommented.icon,");
+        queryText.append("rooms_recommented.caption,rooms_recommented.caption_2,rooms_recommented.caption_3,NULL,");
+        queryText.append("rooms.id,rooms.name,NULL,rooms.status_door,rooms.visitors_now,rooms.visitors_max,");
+        queryText.append("rooms.description,rooms_categories.has_trading,NULL,rooms.rate,rooms.id_category,rooms.icon,");
+        queryText.append("rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,models.name,models.required_files,models.visitors_max,");
+        queryText.append("rooms_recommented.id_tree,rooms_recommented.id FROM models,rooms,rooms_categories,rooms_recommented ");
+        queryText.append("WHERE id_tree=? AND rooms_recommented.id_type='3' ");
+        queryText.append("AND rooms_recommented.id_room IS NOT NULL AND rooms.id=rooms_recommented.id_room ");
+        queryText.append("AND models.id=rooms.id_model AND rooms_categories.id=rooms.id_category GROUP BY rooms_recommented.id");
+
+        queryText.append(separator).append("SELECT rooms_recommented.id_type,rooms_recommented.id_style,rooms_recommented.icon,");
+        queryText.append("rooms_recommented.caption,rooms_recommented.caption_2,rooms_recommented.caption_3,");
+        queryText.append("NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
+        queryText.append("rooms_recommented.id_tree,rooms_recommented.id FROM rooms_recommented WHERE id_tree=? ");
+        queryText.append("AND rooms_recommented.id_type='4' GROUP BY rooms_recommented.id ORDER BY 27 ASC LIMIT 255");
+
         return queryText.toString();
     }
 }
