@@ -19,6 +19,7 @@ import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
+import com.alphaseries.game.moderation.StaffSettings;
 import com.alphaseries.game.navigator.NavigatorState;
 import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.pet.PetCommandCacheRow;
@@ -342,10 +343,10 @@ public final class Boot {
             }
         }
         String categoryPayload = "";
-        String[][] values = new String[21][3];
+        List<StaffSettings.ModerationPayload> values = new ArrayList<StaffSettings.ModerationPayload>();
         for (int rank = 0; rank <= 20; rank++) {
             for (int hc = 0; hc <= 2; hc++) {
-                values[rank][hc] = appendPermissionPayload(rank, hc, "fuse_mod", callForHelpMessages + categoryPayload)
+                String payload = appendPermissionPayload(rank, hc, "fuse_mod", callForHelpMessages + categoryPayload)
                     + appendPermissionPayload(rank, hc, "fuse_receive_calls_for_help", callForHelpMessages)
                     + appendPermissionPayload(rank, hc, "fuse_chatlog", "")
                     + appendPermissionPayload(rank, hc, "fuse_alert", "")
@@ -354,6 +355,7 @@ public final class Boot {
                     + appendPermissionPayload(rank, hc, "fuse_room_alert", "")
                     + appendPermissionPayload(rank, hc, "fuse_room_kick", "")
                     + appendPermissionPayload(rank, hc, "fuse_edit_localizations", moderatorMessages);
+                values.add(new StaffSettings.ModerationPayload(rank, hc, payload));
             }
         }
         Licence.setStaffModerationPayloads(values);

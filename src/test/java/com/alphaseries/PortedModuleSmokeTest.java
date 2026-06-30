@@ -5083,13 +5083,25 @@ public final class PortedModuleSmokeTest {
         StaffSettings settings = StaffSettings.fromPayloads(payloads);
         payloads[1][1] = "changed";
         assertEquals("HC", settings.moderationPayload(1L, 1L));
+        assertEquals(new StaffSettings.ModerationPayload(1L, 1L, "HC"),
+            settings.moderationPayloadRows().get(2));
         String[][] copiedPayloads = settings.moderationPayloads();
         copiedPayloads[1][1] = "changed-again";
         assertEquals("HC", settings.moderationPayload(1L, 1L));
         Object previousStaffPayloads = Licence.global_008292D8;
         Licence.global_008292D8 = settings;
         assertEquals("HC", Licence.staffSettings().moderationPayload(1L, 1L));
+
+        Boot.Proc_1_16_6CCA60();
+        Boot.Proc_1_10_6C7690();
+        assertEquals(true, Licence.global_008292D8 instanceof List);
+        StaffSettings.ModerationPayload bootPayload =
+            (StaffSettings.ModerationPayload) ((List<?>) Licence.global_008292D8).get(3);
+        assertEquals(1L, bootPayload.rankIndex());
+        assertEquals(0L, bootPayload.hcLevel());
+        assertEquals(bootPayload.payload(), Licence.staffSettings().moderationPayload(1L, 0L));
         Licence.global_008292D8 = previousStaffPayloads;
+        Licence.staffSettings();
     }
 
     private static void assertMessengerSettingsTypedAccessors() {
