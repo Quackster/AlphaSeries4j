@@ -5,6 +5,7 @@ import com.alphaseries.dao.mysql.AdvertisingDao;
 import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.dao.mysql.QuestDao;
 import com.alphaseries.dao.mysql.RoomDao;
+import com.alphaseries.dao.mysql.SettingsDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryItemRow;
@@ -698,6 +699,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("[site.name=Alpha][com.client.format.date=dd.mm.yyyy][com.client.format.time=hh:nn:ss]"
                 + "[com.mysql.format.date=%d.%m.%Y][com.mysql.format.time=%H:%i:%s]",
             Boot.buildSettingsCache("site.name\tAlpha", "d.m.Y", "h:i:s"));
+        assertEquals(Boot.buildSettingsCache("site.name\tAlpha", "d.m.Y", "h:i:s"),
+            Boot.buildSettingsCache(List.of(new SettingsDao.SettingRow("site.name", "Alpha")), "d.m.Y", "h:i:s"));
         assertEquals(
             Crypto.Proc_3_0_6D2AF0(2, null, "")
                 + Crypto.Proc_3_0_6D2AF0(1, null, "")

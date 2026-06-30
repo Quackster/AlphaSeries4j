@@ -43,9 +43,6 @@ public final class SettingsDao {
     }
 
     public record SettingRow(String variableName, String value) {
-        public String legacyRow() {
-            return (variableName == null ? "" : variableName) + "\t" + (value == null ? "" : value);
-        }
     }
 
     public record LocaleRow(String variableName, String value) {

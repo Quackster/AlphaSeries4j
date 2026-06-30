@@ -330,10 +330,10 @@ public final class Boot {
         String systemDate = Functions.Proc_10_0_809570("com.system.format.date", "", 0);
         String systemTime = Functions.Proc_10_0_809570("com.system.format.time", "", 0);
         SettingsDao settings = settingsDao();
-        String settingsRows = "";
+        List<SettingsDao.SettingRow> settingsRows = List.of();
         if (settings != null) {
             try {
-                settingsRows = joinSettingRows(settings.allSettings());
+                settingsRows = settings.allSettings();
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
@@ -1029,6 +1029,27 @@ public final class Boot {
         for (String row : StringUtils.text(settingsRows).split("\r", -1)) {
             if (!row.isEmpty()) {
                 payload.append('[').append(row.replace('\t', '=')).append(']');
+            }
+        }
+        payload.append("[com.client.format.date=").append(clientDateFormat(systemDateFormat)).append(']');
+        payload.append("[com.client.format.time=").append(clientTimeFormat(systemTimeFormat)).append(']');
+        payload.append("[com.mysql.format.date=").append(mysqlDateFormat(systemDateFormat)).append(']');
+        payload.append("[com.mysql.format.time=").append(mysqlTimeFormat(systemTimeFormat)).append(']');
+        return payload.toString();
+    }
+
+    public static String buildSettingsCache(List<SettingsDao.SettingRow> settingsRows, String systemDateFormat,
+            String systemTimeFormat) {
+        StringBuilder payload = new StringBuilder();
+        if (settingsRows != null) {
+            for (SettingsDao.SettingRow row : settingsRows) {
+                if (row != null) {
+                    payload.append('[')
+                        .append(StringUtils.text(row.variableName()))
+                        .append('=')
+                        .append(StringUtils.text(row.value()))
+                        .append(']');
+                }
             }
         }
         payload.append("[com.client.format.date=").append(clientDateFormat(systemDateFormat)).append(']');
@@ -1893,14 +1914,6 @@ public final class Boot {
     private static String joinContainedClubProductRows(List<ClubDao.ContainedClubProductRow> rows) {
         StringBuilder joined = new StringBuilder();
         for (ClubDao.ContainedClubProductRow row : rows == null ? List.<ClubDao.ContainedClubProductRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
-    }
-
-    private static String joinSettingRows(List<SettingsDao.SettingRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (SettingsDao.SettingRow row : rows == null ? List.<SettingsDao.SettingRow>of() : rows) {
             appendLegacyRow(joined, row.legacyRow());
         }
         return joined.toString();
