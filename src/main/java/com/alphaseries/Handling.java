@@ -38,10 +38,12 @@ import com.alphaseries.game.poll.PollPrompt;
 import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.room.RoomModelFurnitureRow;
+import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomOccupantRow;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
 import com.alphaseries.game.room.RoomUserEntryRow;
+import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
 import com.alphaseries.game.room.RoomUserProfileRow;
 import com.alphaseries.game.room.RoomUserTargetRow;
 import com.alphaseries.game.session.GameServerSessionState;
@@ -1234,18 +1236,18 @@ public final class Handling {
         if (args == null || args.length == 0) {
             return "";
         }
-        String[] values = normalizeUserEntryArgs(args);
-        long userId = NumberUtils.parseLong(values[0]);
-        String userName = values[1];
-        String figureText = values[2];
-        String mottoText = values[3];
-        String genderText = values[4];
-        long roomUserIndex = NumberUtils.parseLong(values[5]);
-        long xValue = NumberUtils.parseLong(values[6]);
-        long yValue = NumberUtils.parseLong(values[7]);
-        String zValue = values[8];
-        long firstState = NumberUtils.parseLong(values[9]);
-        long secondState = NumberUtils.parseLong(values[10]);
+        RoomUserEntryPayloadArgs values = RoomUserEntryPayloadArgs.fromLegacyArgs(args);
+        long userId = NumberUtils.parseLong(values.userId());
+        String userName = values.userName();
+        String figureText = values.figure();
+        String mottoText = values.motto();
+        String genderText = values.gender();
+        long roomUserIndex = NumberUtils.parseLong(values.roomUserIndex());
+        long xValue = NumberUtils.parseLong(values.positionX());
+        long yValue = NumberUtils.parseLong(values.positionY());
+        String zValue = values.positionZ();
+        long firstState = NumberUtils.parseLong(values.firstState());
+        long secondState = NumberUtils.parseLong(values.secondState());
         if (roomUserIndex <= 0L) {
             roomUserIndex = userId;
         }
@@ -1263,16 +1265,16 @@ public final class Handling {
         if (args == null || args.length == 0) {
             return "";
         }
-        String[] values = normalizeObjectEntryArgs(args);
-        long entityId = NumberUtils.parseLong(values[0]);
-        String displayName = values[1];
-        String figureText = values[2];
-        String genderText = values[3];
-        long roomUserIndex = NumberUtils.parseLong(values[4]);
-        long xValue = NumberUtils.parseLong(values[5]);
-        long yValue = NumberUtils.parseLong(values[6]);
-        String zValue = values[7];
-        long objectType = NumberUtils.parseLong(values[8]);
+        RoomObjectEntryPayloadArgs values = RoomObjectEntryPayloadArgs.fromLegacyArgs(args);
+        long entityId = NumberUtils.parseLong(values.entityId());
+        String displayName = values.displayName();
+        String figureText = values.figure();
+        String genderText = values.gender();
+        long roomUserIndex = NumberUtils.parseLong(values.roomUserIndex());
+        long xValue = NumberUtils.parseLong(values.positionX());
+        long yValue = NumberUtils.parseLong(values.positionY());
+        String zValue = values.positionZ();
+        long objectType = NumberUtils.parseLong(values.objectType());
         if (roomUserIndex <= 0L) {
             roomUserIndex = entityId;
         }
@@ -12426,51 +12428,4 @@ public final class Handling {
         return result;
     }
 
-    private static String[] normalizeUserEntryArgs(Object... args) {
-        String[] values = new String[11];
-        for (int i = 0; i < values.length; i++) {
-            values[i] = "";
-        }
-        if (args.length == 1) {
-            String recordText = StringUtils.text(args[0]);
-            if (recordText.indexOf('\t') >= 0) {
-                String[] fields = recordText.split("\t", -1);
-                for (int i = 0; i < values.length; i++) {
-                    values[i] = StringUtils.field(fields, i);
-                }
-            } else {
-                values[0] = recordText;
-                values[5] = recordText;
-            }
-        } else {
-            for (int i = 0; i < values.length && i < args.length; i++) {
-                values[i] = StringUtils.text(args[i]);
-            }
-        }
-        return values;
-    }
-
-    private static String[] normalizeObjectEntryArgs(Object... args) {
-        String[] values = new String[9];
-        for (int i = 0; i < values.length; i++) {
-            values[i] = "";
-        }
-        if (args.length == 1) {
-            String recordText = StringUtils.text(args[0]);
-            if (recordText.indexOf('\t') >= 0) {
-                String[] fields = recordText.split("\t", -1);
-                for (int i = 0; i < values.length; i++) {
-                    values[i] = StringUtils.field(fields, i);
-                }
-            } else {
-                values[0] = recordText;
-                values[4] = recordText;
-            }
-        } else {
-            for (int i = 0; i < values.length && i < args.length; i++) {
-                values[i] = StringUtils.text(args[i]);
-            }
-        }
-        return values;
-    }
 }

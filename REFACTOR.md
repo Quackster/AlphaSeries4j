@@ -304,6 +304,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed activity-point balance row wrappers through typed `UserDao.ActivityPointBalance` factories, removing another tab-delimited payload parser from `Handling`.
 - Routed achievement current-level, progress-decision, and list payload paths through typed `AchievementSettings.Achievement` iteration, centralizing legacy achievement row parsing outside `Handling`.
 - Moved represented-bot tab-field normalization into `RepresentedBotRegistry.fieldsFromLegacy`, leaving bot allocation in `Handling` on typed field arrays.
+- Moved room user/object entry payload argument normalization into typed `RoomUserEntryPayloadArgs` and `RoomObjectEntryPayloadArgs`, removing the remaining tab-delimited entry normalizers from `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -319,7 +320,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
-- `Handling.java`: 12476 lines
+- `Handling.java`: 12431 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 251 lines
 - `Main.java`: 957 lines
