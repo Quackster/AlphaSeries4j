@@ -1,8 +1,11 @@
 package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.game.user.OwnProfileRow;
+import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.StringUtils;
+
+import java.util.List;
 
 public final class UserPayloads {
     private UserPayloads() {
@@ -105,6 +108,33 @@ public final class UserPayloads {
             .appendInt(row.respectAmount())
             .appendInt(row.scratchAmount())
             .build();
+    }
+
+    public static EffectListPayload effectList(List<UserEffectSummaryRow> effects) {
+        long listedEffects = 0L;
+        PacketBuilder effectRows = PacketBuilder.create();
+        for (UserEffectSummaryRow effect : effects == null ? List.<UserEffectSummaryRow>of() : effects) {
+            if (effect != null && effect.effectId() > 0L) {
+                long remainingSeconds = effect.expireTimestamp() - effect.currentTimestamp();
+                effectRows
+                    .appendInt(effect.effectId())
+                    .appendInt(effect.rentSeconds())
+                    .appendInt(effect.effectCount());
+                if (effect.expireTimestamp() > 0L && remainingSeconds > 0L) {
+                    effectRows.appendInt(remainingSeconds);
+                } else {
+                    effectRows.appendRaw('M');
+                }
+                listedEffects++;
+            }
+        }
+        return new EffectListPayload(listedEffects, PacketBuilder.message("GL")
+            .appendInt(listedEffects)
+            .appendRaw(effectRows)
+            .build());
+    }
+
+    public record EffectListPayload(long listedEffects, String payload) {
     }
 
     private static String normalizedGender(String genderText) {

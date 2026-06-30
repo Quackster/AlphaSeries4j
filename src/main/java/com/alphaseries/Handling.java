@@ -56,7 +56,6 @@ import com.alphaseries.game.trade.RepresentedTradeOffer;
 import com.alphaseries.game.user.ExpiredUserEffectRow;
 import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.game.user.UserEffectActivationRow;
-import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.game.user.UserGroupRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.achievement.AchievementSettings;
@@ -3432,21 +3431,10 @@ public final class Handling {
             if (users == null) {
                 return 0L;
             }
-            StringBuilder effectsPayload = new StringBuilder();
-            for (UserEffectSummaryRow effect : users.userEffectSummaries(NumberUtils.parseLong(userId))) {
-                long effectId = effect.effectId();
-                if (effectId > 0L) {
-                    effectsPayload.append(Crypto.Proc_3_0_6D2AF0(effectId, null, ""));
-                    effectsPayload.append(Crypto.Proc_3_0_6D2AF0(effect.rentSeconds(), null, ""));
-                    effectsPayload.append(Crypto.Proc_3_0_6D2AF0(effect.effectCount(), null, ""));
-                    long remainingSeconds = effect.expireTimestamp() - effect.currentTimestamp();
-                    effectsPayload.append(effect.expireTimestamp() > 0L && remainingSeconds > 0L
-                        ? Crypto.Proc_3_0_6D2AF0(remainingSeconds, null, "")
-                        : "M");
-                    listedEffects++;
-                }
-            }
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(listedEffects, null, "GL") + effectsPayload, 0);
+            UserPayloads.EffectListPayload effectPayload =
+                UserPayloads.effectList(users.userEffectSummaries(NumberUtils.parseLong(userId)));
+            listedEffects = effectPayload.listedEffects();
+            Proc_6_244_801E80(socketIndex, effectPayload.payload(), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }

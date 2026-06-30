@@ -39,11 +39,13 @@ import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.trade.RepresentedTradeOffer;
 import com.alphaseries.game.user.OwnProfileRow;
+import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.game.user.UserGroupRow;
 import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
 import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
+import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.PacketReader;
 import com.alphaseries.protocol.WireEncoding;
@@ -1507,6 +1509,20 @@ public final class PortedModuleSmokeTest {
                 + Crypto.Proc_3_0_6D2AF0(1, null, "")
                 + Crypto.Proc_3_0_6D2AF0(100, null, "") + "#82F349\2",
             dimmerPresetPayload.payload());
+        UserPayloads.EffectListPayload effectListPayload = UserPayloads.effectList(List.of(
+            new UserEffectSummaryRow(12L, 3600L, 2L, 1000L, 900L),
+            new UserEffectSummaryRow(13L, 120L, 1L, 0L, 900L)));
+        assertEquals(2L, effectListPayload.listedEffects());
+        assertEquals("GL" + Crypto.Proc_3_0_6D2AF0(2, null, "")
+                + Crypto.Proc_3_0_6D2AF0(12, null, "")
+                + Crypto.Proc_3_0_6D2AF0(3600, null, "")
+                + Crypto.Proc_3_0_6D2AF0(2, null, "")
+                + Crypto.Proc_3_0_6D2AF0(100, null, "")
+                + Crypto.Proc_3_0_6D2AF0(13, null, "")
+                + Crypto.Proc_3_0_6D2AF0(120, null, "")
+                + Crypto.Proc_3_0_6D2AF0(1, null, "")
+                + "M",
+            effectListPayload.payload());
         Handling.WallPlacement placement = new Handling.WallPlacement();
         assertEquals(true, Handling.wallPlacementFromPayload(":w= 10,20 l= 3,4", placement));
         assertEquals(10L, placement.wallX);

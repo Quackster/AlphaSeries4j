@@ -344,6 +344,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added `com.alphaseries.messages.outgoing.ClubPayloads` and routed club subscription offer/status payload construction through fluent `PacketBuilder` instead of inline `Crypto` string concatenation in `Handling`.
 - Routed club-gift status payload construction through `ClubPayloads` and fluent `PacketBuilder`, leaving `Handling` responsible only for DAO/status lookup and send dispatch.
 - Added `com.alphaseries.messages.outgoing.FurniturePayloads` and routed dimmer preset payload construction through fluent `PacketBuilder` using typed `FurnitureDao.DimmerPreset` rows.
+- Routed user effect-list payload construction through `UserPayloads.effectList(...)` and fluent `PacketBuilder` using typed `UserEffectSummaryRow` records.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -359,7 +360,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 12278 lines
+- `Handling.java`: 12266 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 894 lines
