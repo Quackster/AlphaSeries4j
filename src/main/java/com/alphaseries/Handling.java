@@ -5877,32 +5877,31 @@ public final class Handling {
             if (messenger == null) {
                 return "";
             }
-            String rowText = messenger.acceptedFriendRows(NumberUtils.parseLong(userId), dateFormat + " " + timeFormat, queryLimit);
+            List<MessengerDao.MessengerFriend> friends = messenger.acceptedFriends(
+                NumberUtils.parseLong(userId),
+                dateFormat + " " + timeFormat,
+                queryLimit);
             String callerSummary = messengerFriendSummaryPayload(userId, 1L);
             long friendCount = 0L;
             StringBuilder friendPayload = new StringBuilder();
-            for (String row : rowText.split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    String[] fields = row.split("\t", -1);
-                    if (fields.length >= 7) {
-                        String friendUserId = handlingField(fields, 0);
-                        int friendSocketIndex = (int) NumberUtils.parseLong(handlingField(fields, 2));
-                        long friendOnline = friendSocketIndex > 0
-                            && Guardian.Proc_11_2_821390(friendSocketIndex, 0, 0) == 1L ? 1L : 0L;
-                        friendPayload.append(messengerFriendPayload(
-                            NumberUtils.parseLong(friendUserId),
-                            handlingField(fields, 1),
-                            handlingField(fields, 4),
-                            handlingField(fields, 3),
-                            NumberUtils.parseLong(handlingField(fields, 5)),
-                            friendOnline == 1L ? 2L : 0L,
-                            friendOnline,
-                            handlingField(fields, 6),
-                            1L));
-                        friendCount++;
-                        if (friendOnline == 1L && !callerSummary.isEmpty()) {
-                            Proc_6_244_801E80(friendSocketIndex, "@MHIH" + callerSummary, 0);
-                        }
+            for (MessengerDao.MessengerFriend friend : friends) {
+                if (friend != null) {
+                    int friendSocketIndex = (int) friend.socketIndex();
+                    long friendOnline = friendSocketIndex > 0
+                        && Guardian.Proc_11_2_821390(friendSocketIndex, 0, 0) == 1L ? 1L : 0L;
+                    friendPayload.append(messengerFriendPayload(
+                        friend.userId(),
+                        friend.userName(),
+                        friend.motto(),
+                        friend.figure(),
+                        friend.level(),
+                        friendOnline == 1L ? 2L : 0L,
+                        friendOnline,
+                        friend.lastOnline(),
+                        1L));
+                    friendCount++;
+                    if (friendOnline == 1L && !callerSummary.isEmpty()) {
+                        Proc_6_244_801E80(friendSocketIndex, "@MHIH" + callerSummary, 0);
                     }
                 }
             }
