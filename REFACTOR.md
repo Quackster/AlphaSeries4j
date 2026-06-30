@@ -307,7 +307,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed activity-point balance row wrappers through typed `UserDao.ActivityPointBalance` factories, removing another tab-delimited payload parser from `Handling`.
 - Routed achievement current-level, progress-decision, and list payload paths through typed `AchievementSettings.Achievement` iteration, centralizing legacy achievement row parsing outside `Handling`.
 - Moved represented-bot tab-field normalization into `RepresentedBotRegistry.fieldsFromLegacy`, leaving bot allocation in `Handling` on typed field arrays.
-- Moved room user/object entry payload argument normalization into typed `RoomUserEntryPayloadArgs` and `RoomObjectEntryPayloadArgs`, removing the remaining tab-delimited entry normalizers from `Handling`.
+- Removed the legacy room user/object entry payload `Proc` adapters and `fromLegacyArgs` factories; room entry payloads now require typed `RoomUserEntryPayloadArgs`/`RoomObjectEntryPayloadArgs` records.
 - Moved represented-room occupant add/move/field mutations from `Main` into `RepresentedRoomCache`, keeping `Main` as a compatibility caller over the typed cache manager.
 - Moved represented-room movement scanning from `Main` into `RepresentedRoomCache.moveOccupantsAt`, clearing the remaining tab-delimited movement parser from `Main`.
 - Removed the legacy poll payload row-string wrapper; poll payload construction now accepts typed `PollDefinition` data only.
@@ -458,12 +458,12 @@ Compared with `main`, the VB helper artifact has been removed:
 
 Measured on 2026-06-30:
 
-- Unique `Proc_*` symbols under `src/main/java`: 363
+- Unique `Proc_*` symbols under `src/main/java`: 364
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11520 lines
+- `Handling.java`: 11522 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 912 lines

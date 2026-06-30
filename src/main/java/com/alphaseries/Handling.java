@@ -1219,22 +1219,6 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_41_712730(Object... args) {
-        if (args == null || args.length == 0) {
-            return "";
-        }
-        RoomUserEntryPayloadArgs values = RoomUserEntryPayloadArgs.fromLegacyArgs(args);
-        return SocialPayloads.roomUserEntry(values);
-    }
-
-    public static String Proc_6_42_712FB0(Object... args) {
-        if (args == null || args.length == 0) {
-            return "";
-        }
-        RoomObjectEntryPayloadArgs values = RoomObjectEntryPayloadArgs.fromLegacyArgs(args);
-        return SocialPayloads.roomObjectEntry(values);
-    }
-
     public static void Proc_6_43_713680(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
@@ -2496,18 +2480,18 @@ public final class Handling {
             long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
             String positionZ = "0.0";
             long directionValue = 0L;
-            String entryPayload = Proc_6_41_712730(
-                entry.userId(),
+            String entryPayload = SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
+                String.valueOf(entry.userId()),
                 entry.name(),
                 entry.figure(),
                 entry.motto(),
                 entry.gender(),
-                roomUserIndex,
-                entry.positionX(),
-                entry.positionY(),
+                String.valueOf(roomUserIndex),
+                String.valueOf(entry.positionX()),
+                String.valueOf(entry.positionY()),
                 positionZ,
-                directionValue,
-                0);
+                String.valueOf(directionValue),
+                "0"));
             if (!entryPayload.isEmpty()) {
                 Proc_6_247_8027E0(socketIndex, RoomPayloads.occupantEntries(1, entryPayload), 0);
             }
@@ -2557,8 +2541,18 @@ public final class Handling {
                     }
                     String positionZ = "0.0";
                     long directionValue = 0L;
-                    occupantPayload.append(Proc_6_41_712730(occupant.userId(), occupant.name(), occupant.figure(),
-                        occupant.motto(), genderText, roomUserIndex, positionX, positionY, positionZ, 0, 0));
+                    occupantPayload.append(SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
+                        String.valueOf(occupant.userId()),
+                        occupant.name(),
+                        occupant.figure(),
+                        occupant.motto(),
+                        genderText,
+                        String.valueOf(roomUserIndex),
+                        String.valueOf(positionX),
+                        String.valueOf(positionY),
+                        positionZ,
+                        "0",
+                        "0")));
                     statusPayload.append(SocialPayloads.roomOccupantStatus(
                         roomUserIndex, positionX, positionY, positionZ, directionValue));
                     occupantCount++;
@@ -2579,8 +2573,16 @@ public final class Handling {
                         if (positionZ.isEmpty()) {
                             positionZ = "0.0";
                         }
-                        String botEntry = Proc_6_42_712FB0(botEntityId, botName, botFigure, "M", botEntityId,
-                            positionX, positionY, positionZ, 2);
+                        String botEntry = SocialPayloads.roomObjectEntry(new RoomObjectEntryPayloadArgs(
+                            String.valueOf(botEntityId),
+                            botName,
+                            botFigure,
+                            "M",
+                            String.valueOf(botEntityId),
+                            String.valueOf(positionX),
+                            String.valueOf(positionY),
+                            positionZ,
+                            "2"));
                         if (!botEntry.isEmpty()) {
                             occupantPayload.append(botEntry);
                             statusPayload.append(SocialPayloads.roomOccupantStatus(
