@@ -9,7 +9,7 @@ import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.game.room.RepresentedRoomCache;
-import com.alphaseries.messages.outgoing.RoomPayloads;
+import com.alphaseries.game.room.RoomRollers;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.server.packet.PacketSink;
 import com.alphaseries.util.NumberUtils;
@@ -491,8 +491,8 @@ public final class Main {
                 long rollerY = roller.positionY();
                 String rollerZ = StringUtils.text(roller.positionZ());
                 long rollerR = roller.rotation();
-                long targetX = rollerX + mainRollerDeltaX(rollerR);
-                long targetY = rollerY + mainRollerDeltaY(rollerR);
+                long targetX = rollerX + RoomRollers.deltaX(rollerR);
+                long targetY = rollerY + RoomRollers.deltaY(rollerR);
                 if (rollerId <= 0L || (targetX == rollerX && targetY == rollerY)
                     || Functions.Proc_10_25_80F5D0(roomId, targetX, targetY) == 0L) {
                     continue;
@@ -502,7 +502,7 @@ public final class Main {
                     String movedZ = mainRollerTargetHeight(roomId, targetX, targetY, rollerZ);
                     furniture.updateRoomPosition(movedId, roomId, targetX, targetY, movedZ);
                     Handling.Proc_6_151_78AC20(roomId, movedId, 0);
-                    String payload = mainRollerMovePayload(movedId, targetX, targetY, movedZ);
+                    String payload = RoomRollers.movePayload(movedId, targetX, targetY, movedZ);
                     if (!payload.isEmpty()) {
                         Handling.Proc_6_246_8024C0(roomId, payload, 0);
                     }
@@ -668,32 +668,6 @@ public final class Main {
             .moveOccupant(roomSlot, entityIndex, occupantType, positionX, positionY, directionValue, movingValue));
     }
 
-    public static long mainRollerDeltaX(long rotationValue) {
-        if (rotationValue == 2L) {
-            return 1L;
-        }
-        if (rotationValue == 6L) {
-            return -1L;
-        }
-        return 0L;
-    }
-
-    public static long mainRollerDeltaY(long rotationValue) {
-        if (rotationValue == 0L) {
-            return -1L;
-        }
-        if (rotationValue == 4L) {
-            return 1L;
-        }
-        return 0L;
-    }
-
-    public static String mainRollerTargetHeight(String heightText, String fallbackHeight) {
-        return !StringUtils.text(heightText).isEmpty()
-            ? String.valueOf(NumberUtils.parseLong(heightText))
-            : String.valueOf(NumberUtils.parseLong(fallbackHeight));
-    }
-
     public static long mainRollerFurnitureOnTile(long roomId, long rollerId, long positionX, long positionY) {
         try {
             return roomDao().furnitureIdAtExcluding(roomId, rollerId, positionX, positionY);
@@ -704,9 +678,9 @@ public final class Main {
 
     public static String mainRollerTargetHeight(long roomId, long positionX, long positionY, String fallbackHeight) {
         try {
-            return mainRollerTargetHeight(roomDao().topFurnitureHeightAt(roomId, positionX, positionY), fallbackHeight);
+            return RoomRollers.targetHeight(roomDao().topFurnitureHeightAt(roomId, positionX, positionY), fallbackHeight);
         } catch (SQLException ignored) {
-            return mainRollerTargetHeight("", fallbackHeight);
+            return RoomRollers.targetHeight("", fallbackHeight);
         }
     }
 
@@ -751,10 +725,6 @@ public final class Main {
             }
         }
         return userId;
-    }
-
-    public static String mainRollerMovePayload(long furnitureId, long positionX, long positionY, String positionZ) {
-        return RoomPayloads.rollerMove(furnitureId, positionX, positionY, positionZ);
     }
 
     public static void mainRollerMoveOccupants(long roomSlot, long fromX, long fromY, long toX, long toY, long directionValue) {

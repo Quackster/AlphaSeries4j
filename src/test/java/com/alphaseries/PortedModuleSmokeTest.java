@@ -49,6 +49,7 @@ import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomPortalSettings;
+import com.alphaseries.game.room.RoomRollers;
 import com.alphaseries.game.room.RoomUserPosition;
 import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
 import com.alphaseries.game.social.BadgeRow;
@@ -1183,12 +1184,12 @@ public final class PortedModuleSmokeTest {
         assertEquals("\1" + "9", Licence.representedRooms().activeUserMarkers(4));
         Main.mainRepresentedRoomOccupantMove(4, 9, 1, 2, 3, 4, 1);
         assertEquals(true, Licence.global_00829310.contains("\1" + "9\t2\t3\t4\t1\2"));
-        assertEquals(1L, Main.mainRollerDeltaX(2));
-        assertEquals(-1L, Main.mainRollerDeltaX(6));
-        assertEquals(-1L, Main.mainRollerDeltaY(0));
-        assertEquals(1L, Main.mainRollerDeltaY(4));
-        assertEquals("12", Main.mainRollerTargetHeight("12.5", "7"));
-        assertEquals("7", Main.mainRollerTargetHeight("", "7.9"));
+        assertEquals(1L, RoomRollers.deltaX(2));
+        assertEquals(-1L, RoomRollers.deltaX(6));
+        assertEquals(-1L, RoomRollers.deltaY(0));
+        assertEquals(1L, RoomRollers.deltaY(4));
+        assertEquals("12", RoomRollers.targetHeight("12.5", "7"));
+        assertEquals("7", RoomRollers.targetHeight("", "7.9"));
         final List<String> mainSql = new ArrayList<>();
         MySQL.configureDatabaseConnection(new Database() {
             @Override
@@ -1339,7 +1340,7 @@ public final class PortedModuleSmokeTest {
                     Crypto.Proc_3_0_6D2AF0(99, null, "AZ")))),
             RoomPayloads.rollerMove(99, 1, 2, "3"));
         assertEquals(RoomPayloads.rollerMove(99, 1, 2, "3"),
-            Main.mainRollerMovePayload(99, 1, 2, "3"));
+            RoomRollers.movePayload(99, 1, 2, "3"));
         assertEquals("[9][10]", Main.mainRepresentedEntityIds("\1" + "9\tdata\2\1" + "10\2\1" + "9\2"));
         assertEquals(10L, Main.mainRepresentedEntityIdAt("[9][10]", 1));
 

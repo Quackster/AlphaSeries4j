@@ -475,6 +475,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the dead `Handling.representedBotRecordText(...)` and `Handling.representedBotEntityFromBotId(...)` compatibility accessors; tests now use the represented-bot registry directly.
 - Removed the dead `Handling.representedBotEntitiesForRoom(...)` and `Handling.isRepresentedBotAllocated(...)` compatibility accessors; live handlers and tests now use `RepresentedBotRegistry` directly.
 - Removed the generic `RepresentedBotRegistry.recordField(...)`/`recordLong(...)` API after all callers moved to named `RepresentedBotRecord` accessors.
+- Moved pure roller direction, target-height, and movement-payload helpers from `Main` into `game.room.RoomRollers`, with original function names documented in JavaDoc above the renamed methods; DAO-backed roller lookups remain in `Main` for a later service extraction.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -494,7 +495,7 @@ Measured on 2026-06-30:
 - `Handling.java`: 11355 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 177 lines
-- `Main.java`: 850 lines
+- `Main.java`: 820 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 
 ## Next Targets
