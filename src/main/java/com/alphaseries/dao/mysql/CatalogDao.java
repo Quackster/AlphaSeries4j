@@ -163,6 +163,32 @@ public final class CatalogDao {
             pageId);
     }
 
+    public List<CatalogPageTreeRow> catalogPageTreeRows(long parentId, long rank, long hcLevel) throws SQLException {
+        return database.query(
+            "SELECT id,name,ctlg_color,ctlg_icon,is_develop,is_visible FROM catalog_pages "
+                + "WHERE id_parent=? AND level_minrequired <= ? AND hclevel_minrequired <= ? ORDER BY id_order ASC",
+            resultSet -> new CatalogPageTreeRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6)),
+            parentId,
+            rank,
+            hcLevel);
+    }
+
+    public long catalogPageChildCount(long parentId, long rank, long hcLevel) throws SQLException {
+        return database.queryOne(
+            "SELECT COUNT(id) FROM catalog_pages WHERE id_parent=? AND level_minrequired <= ? AND hclevel_minrequired <= ?",
+            resultSet -> resultSet.getLong(1),
+            parentId,
+            rank,
+            hcLevel)
+            .orElse(0L);
+    }
+
     public record ProductCacheRow(List<String> values) {
         public String legacyRow() {
             return String.join("\t", values);
@@ -245,6 +271,19 @@ public final class CatalogDao {
         long replaceDefaultSign,
         long minimumHcRank
     ) {
+    }
+
+    public record CatalogPageTreeRow(long pageId, String name, long color, long icon, long develop, long visible) {
+        public String[] legacyFields() {
+            return new String[] {
+                String.valueOf(pageId),
+                text(name),
+                String.valueOf(color),
+                String.valueOf(icon),
+                String.valueOf(develop),
+                String.valueOf(visible)
+            };
+        }
     }
 
     private static List<String> rowValues(ResultSet resultSet, int columnCount) throws SQLException {

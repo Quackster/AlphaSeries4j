@@ -472,20 +472,24 @@ public final class Boot {
 
     public static void Proc_1_17_6CCDC0(Object... args) {
         String[][] trees = new String[21][3];
+        CatalogDao catalog = catalogDao();
         for (int rank = 0; rank <= 20; rank++) {
             for (int hc = 0; hc <= 2; hc++) {
-                String rootRows = MySQL.Proc_5_2_6D4690(buildCatalogPageTreeQuery(0, rank, hc), 0, 0);
-                Map<Long, Long> childCounts = new LinkedHashMap<Long, Long>();
-                Map<Long, String> children = new LinkedHashMap<Long, String>();
-                for (String row : rootRows.split("\r", -1)) {
-                    if (!row.isEmpty()) {
-                        String[] fields = row.split("\t", -1);
-                        long pageId = NumberUtils.parseLong(fields.length > 0 ? fields[0] : "");
-                        childCounts.put(pageId, NumberUtils.parseLong(MySQL.Proc_5_2_6D4690(buildCatalogPageChildCountQuery(pageId, rank, hc), 0, 0)));
-                        children.put(pageId, MySQL.Proc_5_2_6D4690(buildCatalogPageTreeQuery(pageId, rank, hc), 0, 0));
+                if (catalog != null) {
+                    try {
+                        List<CatalogDao.CatalogPageTreeRow> rootRows = catalog.catalogPageTreeRows(0L, rank, hc);
+                        Map<Long, Long> childCounts = new LinkedHashMap<Long, Long>();
+                        Map<Long, List<CatalogDao.CatalogPageTreeRow>> children = new LinkedHashMap<Long, List<CatalogDao.CatalogPageTreeRow>>();
+                        for (CatalogDao.CatalogPageTreeRow row : rootRows) {
+                            long pageId = row.pageId();
+                            childCounts.put(pageId, catalog.catalogPageChildCount(pageId, rank, hc));
+                            children.put(pageId, catalog.catalogPageTreeRows(pageId, rank, hc));
+                        }
+                        trees[rank][hc] = buildCatalogPageTreePayload(rootRows, childCounts, children, rank, hc);
+                    } catch (Exception ignored) {
+                        // Legacy startup cache loading tolerated missing tables or SQL failures.
                     }
                 }
-                trees[rank][hc] = buildCatalogPageTreePayload(rootRows, childCounts, children, rank, hc);
             }
         }
         Licence.setCatalogPageTrees(trees);
@@ -1559,6 +1563,28 @@ public final class Boot {
         return Crypto.Proc_3_0_6D2AF0(rootCount, null, "") + payload;
     }
 
+    public static String buildCatalogPageTreePayload(List<CatalogDao.CatalogPageTreeRow> rootRows,
+            Map<Long, Long> childCountByPageId, Map<Long, List<CatalogDao.CatalogPageTreeRow>> childRowsByParentId,
+            long rankIndex, long hcLevel) {
+        long rootCount = 0L;
+        StringBuilder payload = new StringBuilder();
+        if (rootRows != null) {
+            for (CatalogDao.CatalogPageTreeRow row : rootRows) {
+                if (row != null && catalogPageVisible(row, rankIndex, hcLevel)) {
+                    long pageId = row.pageId();
+                    long childCount = mapLong(childCountByPageId, pageId);
+                    payload.append(buildCatalogPageTreeEntry(row, childCount));
+                    payload.append(buildCatalogPageChildPayload(
+                        childRowsByParentId == null ? null : childRowsByParentId.get(pageId),
+                        rankIndex,
+                        hcLevel));
+                    rootCount++;
+                }
+            }
+        }
+        return Crypto.Proc_3_0_6D2AF0(rootCount, null, "") + payload;
+    }
+
     public static String buildCatalogPageChildPayload(String childRows, long rankIndex, long hcLevel) {
         StringBuilder payload = new StringBuilder();
         for (String row : StringUtils.text(childRows).split("\r", -1)) {
@@ -1566,6 +1592,18 @@ public final class Boot {
                 String[] fields = row.split("\t", -1);
                 if (fields.length >= 6 && catalogPageVisible(fields, rankIndex, hcLevel)) {
                     payload.append(buildCatalogPageTreeEntry(fields, 0));
+                }
+            }
+        }
+        return payload.toString();
+    }
+
+    public static String buildCatalogPageChildPayload(List<CatalogDao.CatalogPageTreeRow> childRows, long rankIndex, long hcLevel) {
+        StringBuilder payload = new StringBuilder();
+        if (childRows != null) {
+            for (CatalogDao.CatalogPageTreeRow row : childRows) {
+                if (row != null && catalogPageVisible(row, rankIndex, hcLevel)) {
+                    payload.append(buildCatalogPageTreeEntry(row, 0));
                 }
             }
         }
@@ -1582,6 +1620,13 @@ public final class Boot {
         long iconId = NumberUtils.parseLong(fields[3]);
         long visibleState = NumberUtils.parseLong(fields[5]);
         return Proc_1_14_6C9DD0(pageId, colorId, pageName, visibleState, iconId, childCount);
+    }
+
+    public static String buildCatalogPageTreeEntry(CatalogDao.CatalogPageTreeRow row, long childCount) {
+        if (row == null) {
+            return "";
+        }
+        return Proc_1_14_6C9DD0(row.pageId(), row.color(), StringUtils.text(row.name()), row.visible(), row.icon(), childCount);
     }
 
     public static String buildCatalogPageTreeQuery(long parentId, long rankIndex, long hcLevel) {
@@ -1604,6 +1649,17 @@ public final class Boot {
         }
         boolean visible = NumberUtils.parseLong(fields[5]) != 0L;
         if (NumberUtils.parseLong(fields[4]) != 0L) {
+            visible = Functions.Proc_10_1_809790(rankIndex, "", "fuse_developer", hcLevel);
+        }
+        return visible;
+    }
+
+    public static boolean catalogPageVisible(CatalogDao.CatalogPageTreeRow row, long rankIndex, long hcLevel) {
+        if (row == null) {
+            return false;
+        }
+        boolean visible = row.visible() != 0L;
+        if (row.develop() != 0L) {
             visible = Functions.Proc_10_1_809790(rankIndex, "", "fuse_developer", hcLevel);
         }
         return visible;
