@@ -142,8 +142,8 @@ public final class Boot {
         }
         if (packages != null) {
             try {
-                Licence.setPackageRows(joinPackageRows(packages.packageRows()));
-                Licence.setPetPackageRows(joinPetPackageRows(packages.petPackageRows()));
+                Licence.setPackageRows(packages.packageRows());
+                Licence.setPetPackageRows(packages.petPackageRows());
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
@@ -1872,14 +1872,6 @@ public final class Boot {
         return joinLongs(values, "\r");
     }
 
-    private static String joinPackageRows(List<PackageDao.PackageRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (PackageDao.PackageRow row : rows == null ? List.<PackageDao.PackageRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
-    }
-
     private static String joinProductCacheRows(List<CatalogDao.ProductCacheRow> rows) {
         StringBuilder joined = new StringBuilder();
         for (CatalogDao.ProductCacheRow row : rows == null ? List.<CatalogDao.ProductCacheRow>of() : rows) {
@@ -1899,14 +1891,6 @@ public final class Boot {
     private static String joinProductDealRows(List<CatalogDao.ProductDealRow> rows) {
         StringBuilder joined = new StringBuilder();
         for (CatalogDao.ProductDealRow row : rows == null ? List.<CatalogDao.ProductDealRow>of() : rows) {
-            appendLegacyRow(joined, row.legacyRow());
-        }
-        return joined.toString();
-    }
-
-    private static String joinPetPackageRows(List<PackageDao.PetPackageRow> rows) {
-        StringBuilder joined = new StringBuilder();
-        for (PackageDao.PetPackageRow row : rows == null ? List.<PackageDao.PetPackageRow>of() : rows) {
             appendLegacyRow(joined, row.legacyRow());
         }
         return joined.toString();

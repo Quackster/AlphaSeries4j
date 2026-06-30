@@ -55,21 +55,11 @@ public final class PackageDao {
     }
 
     public record PackageRow(long productId, String secondaryType, long containedId, String checkType) {
-        public String legacyRow() {
-            return productId + "\t" + text(secondaryType) + "\t" + containedId + "\t" + text(checkType);
-        }
-
-        private static String text(String value) {
-            return value == null ? "" : value;
-        }
     }
 
     public record PetPackage(long petType, long race, String color) {
     }
 
     public record PetPackageRow(long packageId, long petType, long race, String color) {
-        public String legacyRow() {
-            return packageId + "\t" + petType + "\t" + race + "\t" + (color == null ? "" : color);
-        }
     }
 }

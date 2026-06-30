@@ -58,8 +58,8 @@ public final class Licence {
     public static String global_008291EC = "";
     public static String global_008291F8 = "";
     public static String global_008291FC = "";
-    public static String global_00829078 = "";
-    public static String global_0082907C = "";
+    public static Object global_00829078 = "";
+    public static Object global_0082907C = "";
     public static String global_00829084 = "";
     public static String global_00829094 = "";
     public static String global_008290A0 = "";
@@ -602,8 +602,16 @@ public final class Licence {
         global_00829078 = StringUtils.text(packageRows);
     }
 
+    public static void setPackageRows(Object packageRows) {
+        global_00829078 = packageRows == null ? "" : packageRows;
+    }
+
     public static void setPetPackageRows(String petPackageRows) {
         global_0082907C = StringUtils.text(petPackageRows);
+    }
+
+    public static void setPetPackageRows(Object petPackageRows) {
+        global_0082907C = petPackageRows == null ? "" : petPackageRows;
     }
 
     public static void setClubProductRows(String clubProductRows) {

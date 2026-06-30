@@ -334,6 +334,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed settings startup cache building through typed `SettingsDao.SettingRow` records, removing the `variable\tvalue` join/split round trip and DAO legacy row formatter from the boot path.
 - Moved boot-loaded quest definitions into typed `QuestSettings.QuestDefinitionRow` state, removing the quest DAO legacy row formatter and keeping row serialization only at the remaining compatibility accessor.
 - Moved room portal startup cache state into typed `RoomPortalSettings` warp-space and special-gate rows, removing the room portal join helpers and DAO legacy row formatters from the boot path.
+- Moved package and pet-package startup caches into typed `PackageDao` row lists, removing the package join helpers and DAO legacy row formatters from the boot path.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -348,7 +349,7 @@ Measured on 2026-06-30:
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
-- `Boot.java`: 2039 lines
+- `Boot.java`: 2023 lines
 - `Handling.java`: 12286 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
