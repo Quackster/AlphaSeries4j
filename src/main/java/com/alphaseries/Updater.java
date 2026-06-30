@@ -1,5 +1,7 @@
 package com.alphaseries;
 
+import com.alphaseries.dao.mysql.UpdaterDao;
+import com.alphaseries.db.Database;
 import com.alphaseries.server.update.UpdaterSettings;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -190,9 +192,13 @@ public final class Updater {
                     return false;
                 }
                 String sqlText = settings.normalizedUpdateSql();
+                UpdaterDao updaterDao = updaterDao();
+                if (updaterDao == null) {
+                    return false;
+                }
                 for (String line : sqlText.split("\n", -1)) {
                     if (line.trim().length() > 5) {
-                        MySQL.Proc_5_1_6D4110(line.trim(), 0, 0);
+                        updaterDao.executeUpdateSql(line.trim());
                     }
                 }
             }
@@ -305,6 +311,11 @@ public final class Updater {
             lines[index] = rawLines[index];
         }
         return lines;
+    }
+
+    private static UpdaterDao updaterDao() {
+        Database database = MySQL.configuredDatabase();
+        return database == null ? null : new UpdaterDao(database);
     }
 
     public static final class FeatureState {

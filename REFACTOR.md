@@ -269,6 +269,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed catalog page and catalog page-product startup payload reads through typed `CatalogDao` rows, keeping legacy catalog page payload serialization explicit in `Boot`.
 - Routed catalog page tree startup cache reads through typed `CatalogDao` rows and prepared child-count lookups, keeping legacy catalog tree payload serialization explicit in `Boot`.
 - Routed dynamic navigator room/event list handlers through typed `RoomDao` rows and fluent payload builders, keeping query-tail compatibility isolated at the DAO boundary.
+- Routed updater SQL execution through `UpdaterDao`, clearing direct `MySQL.Proc_5_*` call sites outside the MySQL compatibility class.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -282,7 +283,7 @@ Measured on 2026-06-30:
 
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
-- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 1
+- `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1968 lines
 - `Handling.java`: 12650 lines
 - `Functions.java`: 746 lines
