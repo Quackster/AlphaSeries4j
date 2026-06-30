@@ -594,6 +594,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added defensive typed `PetSettings` level and command accessors so pet callers can consume `PetLevelRow`/`PetCommandRow` collections instead of legacy arrays.
 - Migrated `VisitRoomAds` internals from raw indexed payload objects to typed payload maps, leaving legacy array/map parsing only at the advertising state boundary.
 - Exposed defensive typed payload-map accessors for `VisitRoomAds` and `RecommendedRooms` so callers can consume cached payload maps without legacy indexed-array views.
+- Routed boot visit-room advertisement loading through ID-keyed payload maps instead of sparse legacy arrays, and removed the max-id DAO query that only existed to size the array.
 - Migrated `RecommendedRooms` internals from raw indexed payload objects to typed payload maps, leaving legacy array/map parsing only at the navigator state boundary.
 - Migrated `CatalogPages` internals from raw indexed payload and tree objects to typed page-payload maps and defensive page-tree matrices, leaving legacy array/map parsing only at the catalog state boundary.
 - Exposed defensive typed `CatalogPages` page-payload map and page-tree matrix accessors so catalog callers can move away from single-value compatibility lookups.

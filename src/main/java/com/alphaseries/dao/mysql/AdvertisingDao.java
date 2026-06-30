@@ -12,13 +12,6 @@ public final class AdvertisingDao {
         this.database = database;
     }
 
-    public long maxVisitRoomId() throws SQLException {
-        return database.queryOne(
-            "SELECT MAX(id) FROM advertisement_visitrooms",
-            resultSet -> resultSet.getLong(1))
-            .orElse(0L);
-    }
-
     public List<VisitRoomAdRow> visitRoomAds() throws SQLException {
         return database.query(
             "SELECT id,address FROM advertisement_visitrooms",

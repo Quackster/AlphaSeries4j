@@ -569,26 +569,18 @@ public final class Boot {
 
     public static void Proc_1_22_6D0F00(Object... args) {
         AdvertisingDao advertising = advertisingDao();
-        long maxId = 0L;
         List<AdvertisingDao.VisitRoomAdRow> visitRoomRows = List.of();
         if (advertising != null) {
             try {
-                maxId = Math.max(0L, advertising.maxVisitRoomId());
                 visitRoomRows = advertising.visitRoomAds();
             } catch (Exception ignored) {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        String[] visitRooms = new String[(int) maxId + 1];
         VisitRoomCache cache = buildAdvertisementVisitRoomCache(
             visitRoomRows,
             Functions.settingsCache().valueOrDefault("com.server.socket.game.advertisement.visitrooms.path", ""));
-        for (Map.Entry<Long, String> entry : cache.payloadByVisitRoomId.entrySet()) {
-            if (entry.getKey() >= 0L && entry.getKey() < visitRooms.length) {
-                visitRooms[entry.getKey().intValue()] = entry.getValue();
-            }
-        }
-        Licence.setVisitRoomAds(visitRooms, cache.count);
+        Licence.setVisitRoomAds(cache.payloadByVisitRoomId, cache.count);
     }
 
     /**

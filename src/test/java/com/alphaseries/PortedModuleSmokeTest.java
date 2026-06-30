@@ -1240,7 +1240,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.helpCenterCache().descriptionPayload(5L).contains("line1\rline2"));
         assertHelpCenterMapMirrors();
         Boot.Proc_1_22_6D0F00();
-        assertEquals("/ad/4\2/cafe\2", ((String[]) Licence.global_008291D4)[4]);
+        assertEquals(true, Licence.global_008291D4 instanceof Map);
+        assertEquals("/ad/4\2/cafe\2", ((Map<?, ?>) Licence.global_008291D4).get(4L));
         assertEquals("/ad/4\2/cafe\2", Licence.visitRoomAds().payload(4L));
         VisitRoomAds typedVisitRoomAds = VisitRoomAds.fromPayloads(Map.of(8L, "/ad/8\2/lounge\2"), 1L);
         assertEquals("/ad/8\2/lounge\2", typedVisitRoomAds.payload(8L));
