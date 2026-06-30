@@ -139,18 +139,12 @@ public final class RepresentedRoomCache {
             movementText.append(fields.get(fieldIndex));
         }
         for (String part : movementText.toString().split("\1", -1)) {
-            String movementRecord = part;
-            if (!movementRecord.isEmpty()) {
-                if (movementRecord.endsWith("\2")) {
-                    movementRecord = movementRecord.substring(0, movementRecord.length() - 1);
-                }
-                String[] movementFields = movementRecord.split("\t", -1);
-                if (movementFields.length >= 3 && NumberUtils.parseLong(StringUtils.field(movementFields, 0)) == entityIndex) {
-                    result.positionX = NumberUtils.parseLong(StringUtils.field(movementFields, 1));
-                    result.positionY = NumberUtils.parseLong(StringUtils.field(movementFields, 2));
-                    result.found = true;
-                    return result;
-                }
+            MovementRecord movementRecord = MovementRecord.fromLegacy(part);
+            if (movementRecord.isValid() && movementRecord.entityIndex == entityIndex) {
+                result.positionX = movementRecord.positionX;
+                result.positionY = movementRecord.positionY;
+                result.found = true;
+                return result;
             }
         }
         return result;
@@ -337,11 +331,17 @@ public final class RepresentedRoomCache {
         private final long entityIndex;
         private final long positionX;
         private final long positionY;
+        private final boolean valid;
 
-        private MovementRecord(long entityIndex, long positionX, long positionY) {
+        private MovementRecord(long entityIndex, long positionX, long positionY, boolean valid) {
             this.entityIndex = entityIndex;
             this.positionX = positionX;
             this.positionY = positionY;
+            this.valid = valid;
+        }
+
+        private boolean isValid() {
+            return valid;
         }
 
         private static MovementRecord fromLegacy(String recordText) {
@@ -349,7 +349,8 @@ public final class RepresentedRoomCache {
             return new MovementRecord(
                 NumberUtils.parseLong(StringUtils.field(fields, 0)),
                 NumberUtils.parseLong(StringUtils.field(fields, 1)),
-                NumberUtils.parseLong(StringUtils.field(fields, 2)));
+                NumberUtils.parseLong(StringUtils.field(fields, 2)),
+                fields.length >= 3);
         }
     }
 }

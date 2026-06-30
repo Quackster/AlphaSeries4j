@@ -633,6 +633,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed represented-room cache updates into typed `RepresentedRoomCache` live storage in `Licence.global_00829310`, leaving raw cache text only at furniture compatibility inputs and legacy direct assignments.
 - Migrated `RepresentedRoomCache.RoomRecord` to carry parsed field values beside its compatibility text, so room-cache accessors read named record state instead of splitting tab-delimited text on every lookup.
 - Routed represented-room occupant and movement mutations through `RoomRecord` parsed fields, keeping tab-delimited parsing isolated to legacy cache construction and movement-record compatibility text.
+- Routed represented-room movement-position lookups through the typed `MovementRecord` parser instead of splitting movement rows inline.
 - Exposed defensive typed `RoomPortalSettings` warp-space and special-gate row accessors so room portal callers can move away from compatibility row strings.
 - Migrated `RepresentedBotRegistry` internals from raw allocated-marker and record-cache strings to typed entity-id sets and record maps, preserving per-record legacy serialization only for the `Licence` compatibility bridge.
 - Exposed defensive typed `RepresentedBotRegistry` record maps so represented-bot callers can consume entity-id keyed records without legacy cache text.
