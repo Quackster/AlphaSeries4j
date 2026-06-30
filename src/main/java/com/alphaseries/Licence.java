@@ -31,6 +31,7 @@ import com.alphaseries.game.session.SocketMarkerSet;
 import com.alphaseries.server.lifecycle.LicenceRuntimeState;
 import com.alphaseries.server.update.UpdaterSettings;
 import com.alphaseries.game.wired.WiredSettings;
+import com.alphaseries.game.wired.WiredState;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -531,11 +532,13 @@ public final class Licence {
     }
 
     public static WiredSettings wiredSettings() {
-        return WiredSettings.fromLegacy(global_00829094);
+        WiredState.instance().setStatePayload(global_00829094);
+        return WiredState.instance().settings();
     }
 
     public static void setWiredStatePayload(String statePayload) {
         global_00829094 = StringUtils.text(statePayload);
+        WiredState.instance().setStatePayload(global_00829094);
     }
 
     public static NewFriendRooms newFriendRooms() {

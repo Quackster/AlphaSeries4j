@@ -86,6 +86,8 @@ import com.alphaseries.game.moderation.StaffUserLookup;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.wired.WiredPayloads;
+import com.alphaseries.game.wired.WiredSettings;
+import com.alphaseries.game.wired.WiredState;
 import com.alphaseries.messages.outgoing.AchievementPayloads;
 import com.alphaseries.messages.outgoing.CatalogPayloads;
 import com.alphaseries.messages.outgoing.ClubPayloads;
@@ -2693,7 +2695,7 @@ public final class Handling {
     }
 
     public static String Proc_6_84_733600(Object... args) {
-        String payload = "Di" + Licence.wiredSettings().statePayload();
+        String payload = "Di" + wiredSettings().statePayload();
         try {
             int socketIndex = args != null && args.length >= 1 ? handlingSocketIndex(args) : 0;
             long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
@@ -9361,6 +9363,11 @@ public final class Handling {
     private static HelpCenterCache helpCenterCache() {
         Licence.helpCenterCache();
         return HelpCenterState.instance().cache();
+    }
+
+    private static WiredSettings wiredSettings() {
+        Licence.wiredSettings();
+        return WiredState.instance().settings();
     }
 
     public static String officialNavigatorQuery() {

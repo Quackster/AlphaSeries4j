@@ -13,6 +13,10 @@ public final class WiredSettings {
         return new WiredSettings(statePayload);
     }
 
+    public static WiredSettings empty() {
+        return new WiredSettings("");
+    }
+
     public String statePayload() {
         return statePayload;
     }
