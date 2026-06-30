@@ -727,13 +727,21 @@ public final class Licence {
     }
 
     public static StaffSettings staffSettings() {
-        ModerationState.instance().setStaffModerationPayloads(global_008292D8);
+        refreshStaffSettings();
         return ModerationState.instance().staffSettings();
     }
 
     public static void setStaffModerationPayloads(Object moderationPayloads) {
-        ModerationState.instance().setStaffModerationPayloads(moderationPayloads);
         global_008292D8 = moderationPayloads == null ? "" : moderationPayloads;
+        refreshStaffSettings();
+    }
+
+    private static void refreshStaffSettings() {
+        if (global_008292D8 instanceof StaffSettings settings) {
+            ModerationState.instance().setStaffSettings(settings);
+            return;
+        }
+        ModerationState.instance().setStaffModerationPayloads(global_008292D8);
     }
 
     public static String Proc_9_6_808080(Object... args) {

@@ -659,6 +659,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed `Licence` messenger settings refreshes through the typed `MessengerSettings` state path when the mirrored global already contains a `MessengerSettings` instance, leaving array/string parsing as a compatibility fallback.
 - Migrated `StaffSettings` internals from raw moderation payload object storage to defensive typed `String[][]` settings, leaving legacy matrix parsing only at the module boundary.
 - Exposed defensive typed `StaffSettings` moderation-payload matrix access so moderation callers can move away from single-slot compatibility lookups.
+- Routed `Licence` staff-settings refreshes through the typed `StaffSettings` state path when the moderation-payload mirror already contains a `StaffSettings` instance, leaving typed-list/matrix parsing as a compatibility fallback.
 - Migrated `HelpCenterCache` internals from raw indexed payload objects to typed payload maps for category FAQ and description lookups, leaving legacy array/map parsing only at the module boundary.
 - Exposed defensive typed `HelpCenterCache` category-FAQ and description payload map accessors so help callers can move away from single-id compatibility lookups.
 - Routed boot FAQ category and description cache loading through ID-keyed payload maps instead of sparse legacy arrays, and removed the max-id DAO queries that only existed to size those arrays.
