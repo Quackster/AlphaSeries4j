@@ -961,6 +961,17 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_00829178 instanceof GiftSettings.ClubGiftState);
         assertEquals("GIFTS", Licence.giftSettings().clubGiftPayload());
         assertEquals(506L, Licence.giftSettings().clubGiftByCatalogProductId(81L).productId());
+        assertEquals("IoM" + Crypto.Proc_3_0_6D2AF0(4, null, "")
+                + "GIFTS"
+                + Crypto.Proc_3_0_6D2AF0(1, null, "")
+                + Crypto.Proc_3_0_6D2AF0(81, null, "")
+                + Crypto.Proc_3_0_6D2AF0(506, null, "")
+                + Crypto.Proc_3_0_6D2AF0(20, null, "")
+                + Crypto.Proc_3_0_6D2AF0(1, null, "")
+                + "H",
+            ClubPayloads.clubGiftStatus(
+                Licence.giftSettings(),
+                new ClubDao.ClubGiftStatus(2L, 10L, 70L, 4L, 8L)));
         assertEquals("Iq" + Crypto.Proc_3_0_6D2AF0(1, null, "")
                 + Crypto.Proc_3_0_6D2AF0(2, null, "") + "club_vip\2"
                 + Crypto.Proc_3_0_6D2AF0(3, null, "")

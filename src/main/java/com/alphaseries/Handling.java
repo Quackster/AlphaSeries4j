@@ -4320,24 +4320,7 @@ public final class Handling {
                 ? new ClubDao.ClubGiftStatus(0L, 0L, 0L, 0L, 0L)
                 : clubs.clubGiftStatus(NumberUtils.parseLong(userId))
                     .orElse(new ClubDao.ClubGiftStatus(0L, 0L, 0L, 0L, 0L));
-            long presentsAvailable = status.presentsAvailable();
-            long activeDays = status.activeDays();
-            long statusCount = 0L;
-            StringBuilder statusPayload = new StringBuilder();
-            GiftSettings giftSettings = Licence.giftSettings();
-            for (GiftSettings.ClubGift gift : giftSettings.clubGifts()) {
-                long canClaim = presentsAvailable > 0L && activeDays >= gift.requiredDays() ? 1L : 0L;
-                statusPayload.append(Crypto.Proc_3_0_6D2AF0(gift.catalogProductId(), null, ""));
-                statusPayload.append(Crypto.Proc_3_0_6D2AF0(gift.productId(), null, ""));
-                statusPayload.append(Crypto.Proc_3_0_6D2AF0(gift.requiredDays(), null, ""));
-                statusPayload.append(Crypto.Proc_3_0_6D2AF0(canClaim, null, ""));
-                statusPayload.append('H');
-                statusCount++;
-            }
-            String payload = Crypto.Proc_3_0_6D2AF0(presentsAvailable, null, "IoM")
-                + giftSettings.clubGiftPayload()
-                + Crypto.Proc_3_0_6D2AF0(statusCount, null, "") + statusPayload;
-            Proc_6_244_801E80(socketIndex, payload, 0);
+            Proc_6_244_801E80(socketIndex, ClubPayloads.clubGiftStatus(Licence.giftSettings(), status), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
