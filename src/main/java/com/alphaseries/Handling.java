@@ -2939,7 +2939,7 @@ public final class Handling {
             bots.insertPetData(botId, numericUserId);
             String inventoryRow = petInventoryRowPayload(new PetInventoryRow(botId, petName, petFigure, 0L));
             if (!inventoryRow.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, "I[" + inventoryRow, 0);
+                Proc_6_244_801E80(socketIndex, petInventoryAddPayload(inventoryRow), 0);
             }
             Proc_6_146_76D300(socketIndex, furnitureId, productId);
             Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
@@ -5896,7 +5896,7 @@ public final class Handling {
             if (!placementPayload.isEmpty()) {
                 Proc_6_247_8027E0(socketIndex, placementPayload, 0);
             }
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(petId, null, "I\\"), 0);
+            Proc_6_244_801E80(socketIndex, petPlacedPayload(petId), 0);
             return botEntityId;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -5921,13 +5921,13 @@ public final class Handling {
             }
             bots.clearBotRoom(botId);
             bots.touchPetData(botId);
-            Proc_6_247_8027E0(socketIndex, "@]" + botEntityId + '\2', 0);
+            Proc_6_247_8027E0(socketIndex, petRemovedFromRoomPayload(botEntityId), 0);
             String petName = representedBotRecordField(botEntityId, 2);
             String petFigure = representedBotRecordField(botEntityId, 10).toLowerCase();
             long scratches = bots.petScratches(botId);
             String pickupPayload = petInventoryRowPayload(new PetInventoryRow(botId, petName, petFigure, scratches));
             if (!pickupPayload.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, "I[" + pickupPayload, 0);
+                Proc_6_244_801E80(socketIndex, petInventoryAddPayload(pickupPayload), 0);
             }
             removeRepresentedBotRecord(botEntityId);
             return botId;
@@ -6333,7 +6333,7 @@ public final class Handling {
             for (String entityIdText : entityList.split("\r", -1)) {
                 long botEntityId = NumberUtils.parseLong(entityIdText);
                 if (botEntityId > 0L) {
-                    Proc_6_248_802B80(roomId, "@]" + botEntityId + '\2', 0);
+                    Proc_6_248_802B80(roomId, petRemovedFromRoomPayload(botEntityId), 0);
                     removeRepresentedBotRecord(botEntityId);
                     removedCount++;
                 }
@@ -10850,6 +10850,18 @@ public final class Handling {
 
     public static String petInventoryRowPayload(PetInventoryRow row) {
         return PetPayloads.inventoryRow(row);
+    }
+
+    public static String petInventoryAddPayload(String inventoryRowPayload) {
+        return PetPayloads.inventoryAdd(inventoryRowPayload);
+    }
+
+    public static String petPlacedPayload(long petId) {
+        return PetPayloads.placed(petId);
+    }
+
+    public static String petRemovedFromRoomPayload(long botEntityId) {
+        return PetPayloads.removedFromRoom(botEntityId);
     }
 
     public static long petNameValidationCode(String candidateName) {

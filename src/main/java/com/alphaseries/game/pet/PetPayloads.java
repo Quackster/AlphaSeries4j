@@ -72,6 +72,27 @@ public final class PetPayloads {
             .build();
     }
 
+    public static String inventoryAdd(String inventoryRowPayload) {
+        if (StringUtils.text(inventoryRowPayload).isEmpty()) {
+            return "";
+        }
+        return PacketBuilder.message("I[")
+            .appendRaw(inventoryRowPayload)
+            .build();
+    }
+
+    public static String placed(long petId) {
+        return PacketBuilder.message("I\\")
+            .appendInt(petId)
+            .build();
+    }
+
+    public static String removedFromRoom(long botEntityId) {
+        return PacketBuilder.message("@]")
+            .appendString(botEntityId)
+            .build();
+    }
+
     public static String inventoryRow(PetInventoryRow row) {
         if (row == null || row.petId() <= 0L) {
             return "";
