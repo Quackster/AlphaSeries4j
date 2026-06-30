@@ -4199,7 +4199,7 @@ public final class Handling {
                     Proc_6_195_7D38D0(userId, 0, 0);
                     Proc_6_193_7D2BB0(socketIndex, "Ce", "");
                     if (badgeRowId > 0L) {
-                        Proc_6_143_76BB80(socketIndex, 0, 0);
+                        sendActivityPointBalanceToSocket(socketIndex);
                     }
                 }
             }
@@ -4634,9 +4634,18 @@ public final class Handling {
         return handlingFloorFurnitureMove(args, "rv", true);
     }
 
+    /**
+     * Original function: Proc_6_143_76BB80.
+     */
     public static void Proc_6_143_76BB80(Object... args) {
+        sendActivityPointBalanceToSocket(handlingSocketIndex(args));
+    }
+
+    /**
+     * Original function: Proc_6_143_76BB80.
+     */
+    public static void sendActivityPointBalanceToSocket(int socketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty()) {
                 return;
