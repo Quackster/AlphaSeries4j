@@ -1252,7 +1252,7 @@ public final class Handling {
             users.gender(numericUserId);
             long existingCount = users.countByName(candidateName);
             long validationCode = avatarNameValidationCode(candidateName, oldName, existingCount);
-            Proc_6_244_801E80(socketIndex, UserPayloads.avatarNameValidation(validationCode, candidateName), 0);
+            sendToSocket(socketIndex, UserPayloads.avatarNameValidation(validationCode, candidateName));
             if (checkOnly || validationCode != 0L) {
                 return validationCode;
             }
@@ -1304,7 +1304,7 @@ public final class Handling {
             List<RoomDao.RoomRight> rightsRows = rooms.rightsRows(roomId);
             String payload = RoomPayloads.settingsRead(roomSettings.get(), rightsRows);
             if (!payload.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, payload, 0);
+                sendToSocket(socketIndex, payload);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -1334,8 +1334,8 @@ public final class Handling {
             String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                 + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
             broadcastToCurrentRoom(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0));
-            Proc_6_244_801E80(socketIndex, RoomPayloads.iconUpdated(roomId), 0);
-            Proc_6_244_801E80(socketIndex, RoomPayloads.entryUpdated(roomId), 0);
+            sendToSocket(socketIndex, RoomPayloads.iconUpdated(roomId));
+            sendToSocket(socketIndex, RoomPayloads.entryUpdated(roomId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1356,7 +1356,7 @@ public final class Handling {
             if (rooms != null) {
                 rooms.deleteRoomEvents(roomId);
             }
-            Proc_6_244_801E80(socketIndex, "Er-1" + '\2', 0);
+            sendToSocket(socketIndex, "Er-1" + '\2');
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1375,7 +1375,7 @@ public final class Handling {
             }
             RoomDao rooms = roomDao();
             long doorStatus = rooms == null ? 0L : rooms.doorStatus(roomId);
-            Proc_6_244_801E80(socketIndex, doorStatus != 0L ? "EoHK" : "EoIH", 0);
+            sendToSocket(socketIndex, doorStatus != 0L ? "EoHK" : "EoIH");
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1400,7 +1400,7 @@ public final class Handling {
             if (users != null) {
                 users.updateHomeRoom(NumberUtils.parseLong(userId), roomId);
             }
-            Proc_6_244_801E80(socketIndex, RoomPayloads.homeRoom(roomId), 0);
+            sendToSocket(socketIndex, RoomPayloads.homeRoom(roomId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1421,7 +1421,7 @@ public final class Handling {
             RoomDao rooms = roomDao();
             long doorStatus = rooms == null ? 0L : rooms.doorStatus(roomId);
             if (doorStatus != 0L) {
-                Proc_6_244_801E80(socketIndex, "EoHK", 0);
+                sendToSocket(socketIndex, "EoHK");
                 return;
             }
             RoomEventPayload event = new RoomEventPayload();
@@ -1486,13 +1486,13 @@ public final class Handling {
                 targetName = requestPayload.trim();
             }
             if (targetName.isEmpty()) {
-                Proc_6_244_801E80(socketIndex, "BC", 0);
+                sendToSocket(socketIndex, "BC");
                 return;
             }
             UserDao users = userDao();
             UserDao.ActiveUserLocation target = users == null ? null : users.activeLocationByName(targetName).orElse(null);
             if (target == null || target.userId() <= 0L || target.socketIndex() <= 0L || target.roomId() <= 0L) {
-                Proc_6_244_801E80(socketIndex, "BC", 0);
+                sendToSocket(socketIndex, "BC");
                 return;
             }
             Proc_6_57_71E8F0(socketIndex, target.roomId(), "");
@@ -1550,10 +1550,10 @@ public final class Handling {
             String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                 + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
             broadcastToCurrentRoom(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0));
-            Proc_6_244_801E80(socketIndex, RoomPayloads.settingsUpdated(roomId), 0);
-            Proc_6_244_801E80(socketIndex, RoomPayloads.entryUpdated(roomId), 0);
-            Proc_6_244_801E80(socketIndex,
-                RoomPayloads.wallOptions(settings.disableWalls, settings.thicknessFloor, settings.thicknessWallpaper), 0);
+            sendToSocket(socketIndex, RoomPayloads.settingsUpdated(roomId));
+            sendToSocket(socketIndex, RoomPayloads.entryUpdated(roomId));
+            sendToSocket(socketIndex,
+                RoomPayloads.wallOptions(settings.disableWalls, settings.thicknessFloor, settings.thicknessWallpaper));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1610,7 +1610,7 @@ public final class Handling {
             }
             reservedSlot = reserveRepresentedRoomSlot(preferredSlot);
             if (reservedSlot <= 0L) {
-                Proc_6_244_801E80(socketIndex, UserPayloads.errorCode(1, 0), 0);
+                sendToSocket(socketIndex, UserPayloads.errorCode(1, 0));
                 return 0L;
             }
             loadRepresentedRoomBots(reservedSlot, roomId);
@@ -1647,13 +1647,13 @@ public final class Handling {
             }
             RoomDao rooms = roomDao();
             if (rooms == null) {
-                Proc_6_244_801E80(socketIndex, "J|H", 0);
+                sendToSocket(socketIndex, "J|H");
                 return 0L;
             }
             long userIdValue = NumberUtils.parseLong(userId);
             RoomDao.ActiveRoomVisit visit = rooms.activeVisitWithRoomSlot(userIdValue).orElse(null);
             if (visit == null) {
-                Proc_6_244_801E80(socketIndex, "J|H", 0);
+                sendToSocket(socketIndex, "J|H");
                 return 0L;
             }
             long visitId = visit.visitId();
@@ -1676,7 +1676,7 @@ public final class Handling {
                 releaseRepresentedRoomSlot(slotId);
                 rooms.clearRoomSlot(roomId, slotId);
             }
-            Proc_6_244_801E80(socketIndex, "J|H", 0);
+            sendToSocket(socketIndex, "J|H");
             return roomId;
         } catch (Exception ignored) {
             return 0L;
@@ -1687,9 +1687,9 @@ public final class Handling {
         try {
             int socketIndex = handlingSocketIndex(args);
             long roomMode = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            Proc_6_244_801E80(socketIndex, "@S", 0);
-            Proc_6_244_801E80(socketIndex, "Bf/client.php" + '\2', 0);
-            Proc_6_244_801E80(socketIndex, roomMode == 0L ? "@i" : "@{", 0);
+            sendToSocket(socketIndex, "@S");
+            sendToSocket(socketIndex, "Bf/client.php" + '\2');
+            sendToSocket(socketIndex, roomMode == 0L ? "@i" : "@{");
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1701,7 +1701,7 @@ public final class Handling {
             long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             String suppliedPassword = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
             if (roomId <= 0L) {
-                Proc_6_244_801E80(socketIndex, "C`H", 0);
+                sendToSocket(socketIndex, "C`H");
                 return 0L;
             }
             String userId = handlingUserIdFromSocket(socketIndex);
@@ -1710,12 +1710,12 @@ public final class Handling {
             }
             RoomDao rooms = roomDao();
             if (rooms == null) {
-                Proc_6_244_801E80(socketIndex, "C`H", 0);
+                sendToSocket(socketIndex, "C`H");
                 return 0L;
             }
             RoomDao.RoomEntryState entryState = rooms.roomEntryState(roomId).orElse(null);
             if (entryState == null) {
-                Proc_6_244_801E80(socketIndex, "C`H", 0);
+                sendToSocket(socketIndex, "C`H");
                 return 0L;
             }
             long userIdValue = NumberUtils.parseLong(userId);
@@ -1723,23 +1723,23 @@ public final class Handling {
             if (!isOwner) {
                 if (rooms.userBannedFromRoom(userIdValue, roomId)) {
                     sendRoomReady(socketIndex);
-                    Proc_6_244_801E80(socketIndex, "C`PA", 0);
+                    sendToSocket(socketIndex, "C`PA");
                     return 0L;
                 }
                 if (entryState.visitorsMax() > 0L && entryState.visitorsNow() >= entryState.visitorsMax()
                     && !handlingUserHasPermission(userId, "fuse_enter_full_rooms")) {
                     sendRoomReady(socketIndex);
-                    Proc_6_244_801E80(socketIndex, "C`I", 0);
+                    sendToSocket(socketIndex, "C`I");
                     return 0L;
                 }
                 if (entryState.doorStatus() == 1L && !handlingUserHasPermission(userId, "fuse_enter_locked_rooms")) {
                     sendRoomReady(socketIndex);
-                    Proc_6_244_801E80(socketIndex, "C`H", 0);
+                    sendToSocket(socketIndex, "C`H");
                     return 0L;
                 }
                 if (entryState.doorStatus() == 2L && !StringUtils.text(entryState.password()).equals(suppliedPassword)) {
                     sendRoomReady(socketIndex);
-                    Proc_6_244_801E80(socketIndex, "@afhFF", 0);
+                    sendToSocket(socketIndex, "@afhFF");
                     return 0L;
                 }
             }
@@ -1755,7 +1755,7 @@ public final class Handling {
             String packetPayload = handlingRequestPayload(args, "FG");
             ensureRepresentedRoomSlotPool();
             if (Licence.representedRoomSlots().isEmpty()) {
-                Proc_6_244_801E80(socketIndex, UserPayloads.errorCode(1, 0), 0);
+                sendToSocket(socketIndex, UserPayloads.errorCode(1, 0));
                 return 0L;
             }
             String roomIdText = Functions.readBase64LengthString(packetPayload);
@@ -1786,7 +1786,7 @@ public final class Handling {
                     advertisementPayload = candidate;
                 }
             }
-            Proc_6_244_801E80(socketIndex, "DB" + advertisementPayload, 0);
+            sendToSocket(socketIndex, "DB" + advertisementPayload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1809,11 +1809,11 @@ public final class Handling {
                     return;
                 }
                 NavigatorRoom room = rooms.navigatorRoom(roomId).orElse(null);
-                Proc_6_244_801E80(socketIndex,
+                sendToSocket(socketIndex,
                     PacketBuilder.message("GF")
                         .appendInt(0)
                         .appendRaw(NavigatorPayloads.singleRoom(room))
-                        .build(), 0);
+                        .build());
             } else if (requestMode > 0L) {
                 // VB6 reads a room id from packed session offsets here; those offsets are not represented yet.
             }
