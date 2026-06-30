@@ -10,7 +10,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 ## Refactor Rules
 
 - Preserve current source compatibility and runtime behavior for every slice; compatibility shims may stay temporarily, but each slice must move the implementation toward typed Java boundaries.
-- Do not add or keep methods that simply wrap another method and add no behavior. Delete these no-op wrappers once call sites can move to the real API; only temporary source-compatibility bridges may remain, and they must be documented as compatibility boundaries scheduled for removal.
+- Do not add or keep methods that simply wrap another method and add no behavior. A method that only forwards the same arguments, bounces control straight back to another method, or returns another method's result without validation, translation, state management, or protocol compatibility work is dead weight. Delete these no-op wrappers once call sites can move to the real API; only temporary source-compatibility bridges may remain, and they must be documented as compatibility boundaries scheduled for removal.
 - Keep tests working throughout the refactor. Run `./gradlew test --no-daemon` before committing behavior-affecting slices, and do not mark a milestone complete unless the suite passes or the failure is explicitly documented.
 - Use prepared DAO methods for database access. Handlers and services should not concatenate SQL strings or call raw `MySQL.Proc_5_*` helpers once a DAO boundary exists.
 - Load database rows into typed classes or records with named fields. Do not map result sets into tab-delimited strings such as `getString(1) + "\t" + getString(2)` except at a deliberate legacy compatibility boundary that is documented and scheduled for removal.
@@ -380,6 +380,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved user effect activation/expiry payloads into `UserPayloads` and room-user effect-clear broadcasts into `SocialPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved wall-furniture and dimmer `AU` state payload construction into `FurniturePayloads.wallState`, replacing duplicated inline packet assembly in `Handling`.
 - Moved wall-inventory and floor-item placement payload construction into `FurniturePayloads`, leaving the old `Handling` methods as compatibility bridges.
+- Routed live badge/tag display sends through `SocialPayloads` and removed the no-op `Handling` display payload wrappers.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -395,7 +396,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11996 lines
+- `Handling.java`: 11987 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines

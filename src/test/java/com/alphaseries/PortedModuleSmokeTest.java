@@ -2222,10 +2222,10 @@ public final class PortedModuleSmokeTest {
                 new BadgeRow("MOD", 0L, 21L)),
             Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges));
         assertEquals("Cd" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges,
-            Handling.badgeDisplayPayload(5, Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges));
+            SocialPayloads.badgeDisplay(5, Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2", Handling.tagListPayload("one\rtwo"));
         assertEquals("E^" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2",
-            Handling.tagDisplayPayload(5, Handling.tagListPayload("one\rtwo")));
+            SocialPayloads.tagDisplay(5, Handling.tagListPayload("one\rtwo")));
         String badgeWire = "A@CONEA@CTWO";
         String[] badgeSlots = Handling.badgeUpdateSelectionsFromWire("B^" + badgeWire);
         assertEquals("ONE", badgeSlots[0]);
@@ -4234,12 +4234,12 @@ public final class PortedModuleSmokeTest {
         assertEquals(Handling.equippedBadgePayload(List.of(new BadgeRow("VIP", 1L, 203L))), Handling.Proc_6_195_7D38D0("77"));
         assertEquals(Handling.tagListPayload("alpha\rbeta"), Handling.Proc_6_196_7D3ED0("77"));
         String tagDisplay = Handling.Proc_6_191_7D18B0(4, "DG" + wireLong(88));
-        assertEquals(Handling.tagDisplayPayload(88, Handling.tagListPayload("target")), tagDisplay);
+        assertEquals(SocialPayloads.tagDisplay(88, Handling.tagListPayload("target")), tagDisplay);
         assertEquals(true, containsSend(handlingSends, "E^"));
         assertEquals(true, containsSend(handlingSends, "target"));
         handlingSends.clear();
         String lookToBadgePayload = Handling.Proc_6_192_7D1B80(4, "B_" + wireLong(61));
-        assertEquals(Handling.badgeDisplayPayload(88, Handling.equippedBadgePayload(List.of())), lookToBadgePayload);
+        assertEquals(SocialPayloads.badgeDisplay(88, Handling.equippedBadgePayload(List.of())), lookToBadgePayload);
         assertEquals(true, containsSend(handlingSends, "Cd"));
         handlingSends.clear();
         Licence.global_00829310 = Handling.representedRoomOccupantMove("", 4, 4, 1, 1, 0, 0);

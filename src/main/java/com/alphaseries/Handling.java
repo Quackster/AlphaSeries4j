@@ -5430,10 +5430,8 @@ public final class Handling {
                         + " " + motdMessage + '\2', 0);
                 }
             }
-            Proc_6_244_801E80(socketIndex, "Cd" + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(userId), null, "")
-                + Proc_6_195_7D38D0(userId, 0, 0), 0);
-            Proc_6_244_801E80(socketIndex, "E^" + Crypto.Proc_3_0_6D2AF0(NumberUtils.parseLong(userId), null, "")
-                + Proc_6_196_7D3ED0(userId, 0, 0), 0);
+            Proc_6_244_801E80(socketIndex, SocialPayloads.badgeDisplay(userIdValue, Proc_6_195_7D38D0(userId, 0, 0)), 0);
+            Proc_6_244_801E80(socketIndex, SocialPayloads.tagDisplay(userIdValue, Proc_6_196_7D3ED0(userId, 0, 0)), 0);
             long favouriteGroupId = loginUser.favouriteGroupId();
             if (favouriteGroupId > 0L) {
                 UserGroupRow groupRow = users.userGroup(favouriteGroupId).orElse(null);
@@ -6393,7 +6391,7 @@ public final class Handling {
             if (targetSocketIndex <= 0 && handlingCurrentRoomId(socketIndex, callerUserId) <= 0L) {
                 return "";
             }
-            String payload = tagDisplayPayload(requestedUserId, Proc_6_196_7D3ED0(requestedUserId, 0, 0));
+            String payload = SocialPayloads.tagDisplay(requestedUserId, Proc_6_196_7D3ED0(requestedUserId, 0, 0));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -6428,7 +6426,8 @@ public final class Handling {
             if (targetRoomUserIndex <= 0L || targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
             }
-            String targetBadgePayload = badgeDisplayPayload(NumberUtils.parseLong(targetUserId), Proc_6_195_7D38D0(targetUserId, 0, 0));
+            String targetBadgePayload = SocialPayloads.badgeDisplay(NumberUtils.parseLong(targetUserId),
+                Proc_6_195_7D38D0(targetUserId, 0, 0));
             Proc_6_244_801E80(socketIndex, targetBadgePayload, 0);
             if (callerRoomUserIndex > 0L && callerRoomUserIndex != targetRoomUserIndex) {
                 String callerStatusPayload = representedRoomUserStatusPayload(callerRoomUserIndex, 0L);
@@ -6465,7 +6464,7 @@ public final class Handling {
             String equippedPayload = Proc_6_195_7D38D0(userId, 0, 0);
             String payload = badgeInventoryPayload(inventoryRows, equippedPayload);
             Proc_6_244_801E80(socketIndex, payload, 0);
-            Proc_6_244_801E80(socketIndex, badgeDisplayPayload(NumberUtils.parseLong(userId), equippedPayload), 0);
+            Proc_6_244_801E80(socketIndex, SocialPayloads.badgeDisplay(NumberUtils.parseLong(userId), equippedPayload), 0);
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6498,7 +6497,7 @@ public final class Handling {
                 }
             }
             String equippedPayload = Proc_6_195_7D38D0(userId, 0, 0);
-            String displayPayload = badgeDisplayPayload(NumberUtils.parseLong(userId), equippedPayload);
+            String displayPayload = SocialPayloads.badgeDisplay(NumberUtils.parseLong(userId), equippedPayload);
             Proc_6_244_801E80(socketIndex, displayPayload, 0);
             if (handlingCurrentRoomId(socketIndex, userId) > 0L) {
                 Proc_6_247_8027E0(socketIndex, displayPayload, 0);
@@ -10984,20 +10983,12 @@ public final class Handling {
         return SocialPayloads.equippedBadges(badgeRows);
     }
 
-    public static String badgeDisplayPayload(long userId, String equippedPayload) {
-        return SocialPayloads.badgeDisplay(userId, equippedPayload);
-    }
-
     public static String tagListPayload(String tagRows) {
         return SocialPayloads.tags(tagRows);
     }
 
     public static String tagListPayload(List<String> tagRows) {
         return SocialPayloads.tags(tagRows);
-    }
-
-    public static String tagDisplayPayload(long userId, String tagPayload) {
-        return SocialPayloads.tagDisplay(userId, tagPayload);
     }
 
     public static String representedRoomUserStatusPayload(long roomUserIndex, long statusCode) {
