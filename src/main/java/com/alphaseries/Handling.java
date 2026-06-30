@@ -3986,12 +3986,8 @@ public final class Handling {
                 && NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 8L) {
                 itemClass = "I";
             }
-            String purchasePayload = Crypto.Proc_3_0_6D2AF0(catalogProductId, null, "AC");
-            purchasePayload = Crypto.Proc_3_0_6D2AF0(creditPrice, null, purchasePayload);
-            purchasePayload = Crypto.Proc_3_0_6D2AF0(activityPrice, null, purchasePayload);
-            purchasePayload = Crypto.Proc_3_0_6D2AF0(activityType, null, purchasePayload);
-            purchasePayload = Crypto.Proc_3_0_6D2AF0(grantedFurnitureId, null, purchasePayload) + '\2'
-                + itemClass + '\2' + "IHH";
+            String purchasePayload = CatalogPayloads.purchase(catalogProductId, creditPrice, activityPrice,
+                activityType, grantedFurnitureId, itemClass);
             Proc_6_244_801E80(socketIndex, purchasePayload, 0);
             Proc_6_140_769400(socketIndex, "FT", "");
             return purchasePayload;
@@ -4233,10 +4229,8 @@ public final class Handling {
             furniture.insertClubGiftFurniture(productId, catalogProductId, userIdValue, itemData);
             long insertedFurnitureId = furniture.newestFurnitureIdByOwnerAndProduct(userIdValue, productId);
             String itemClass = NumberUtils.parseLong(DataManager.Proc_8_12_806C30(productId, 0, 0)) == 9L ? "I" : "i";
-            String responsePayload = Crypto.Proc_3_0_6D2AF0(productId, null, "AC")
-                + DataManager.Proc_8_12_806C30(productId, 24, 0) + '\2'
-                + "HHHI" + itemClass + '\2';
-            responsePayload = Crypto.Proc_3_0_6D2AF0(insertedFurnitureId, null, responsePayload) + '\2' + "IH";
+            String responsePayload = CatalogPayloads.clubGiftClaim(productId,
+                DataManager.Proc_8_12_806C30(productId, 24, 0), itemClass, insertedFurnitureId);
             Proc_6_244_801E80(socketIndex, responsePayload, 0);
             clubs.decrementPresents(userIdValue);
             Proc_6_140_769400(socketIndex, "FT", "");
@@ -4377,12 +4371,9 @@ public final class Handling {
                 users.incrementGiftsReceived(NumberUtils.parseLong(recipientUserId));
                 Proc_6_205_7D9780(socketIndex, 6);
             }
-            String purchasePayload = Crypto.Proc_3_0_6D2AF0(catalogProductId, null, "AC")
-                + Licence.Proc_9_1_8072B0(catalogProductId, 0, 0) + '\2';
-            purchasePayload = Crypto.Proc_3_0_6D2AF0(creditPrice, null, purchasePayload);
-            purchasePayload = Crypto.Proc_3_0_6D2AF0(activityPrice, null, purchasePayload);
-            purchasePayload = Crypto.Proc_3_0_6D2AF0(activityType, null, purchasePayload);
-            purchasePayload = Crypto.Proc_3_0_6D2AF0(grantedFurnitureId, null, purchasePayload) + '\2' + "i" + '\2' + "IH";
+            String purchasePayload = CatalogPayloads.giftPurchase(catalogProductId,
+                Licence.Proc_9_1_8072B0(catalogProductId, 0, 0), creditPrice, activityPrice, activityType,
+                grantedFurnitureId);
             Proc_6_244_801E80(socketIndex, purchasePayload, 0);
             long recipientSocket = handlingSocketFromUserId(recipientUserId);
             if (recipientSocket > 0L) {

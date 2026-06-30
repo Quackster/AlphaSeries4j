@@ -33,4 +33,45 @@ public final class CatalogPayloads {
             .appendRaw(pagePayload)
             .build();
     }
+
+    public static String purchase(long catalogProductId, long creditPrice, long activityPrice, long activityType,
+                                  long furnitureId, String itemClass) {
+        return PacketBuilder.message("AC")
+            .appendInt(catalogProductId)
+            .appendInt(creditPrice)
+            .appendInt(activityPrice)
+            .appendInt(activityType)
+            .appendInt(furnitureId)
+            .appendRaw('\2')
+            .appendString(itemClass)
+            .appendRaw("IHH")
+            .build();
+    }
+
+    public static String clubGiftClaim(long productId, String itemData, String itemClass, long furnitureId) {
+        return PacketBuilder.message("AC")
+            .appendInt(productId)
+            .appendString(itemData)
+            .appendRaw("HHHI")
+            .appendString(itemClass)
+            .appendInt(furnitureId)
+            .appendRaw('\2')
+            .appendRaw("IH")
+            .build();
+    }
+
+    public static String giftPurchase(long catalogProductId, String productPayload, long creditPrice,
+                                      long activityPrice, long activityType, long furnitureId) {
+        return PacketBuilder.message("AC")
+            .appendInt(catalogProductId)
+            .appendString(productPayload)
+            .appendInt(creditPrice)
+            .appendInt(activityPrice)
+            .appendInt(activityType)
+            .appendInt(furnitureId)
+            .appendRaw('\2')
+            .appendString("i")
+            .appendRaw("IH")
+            .build();
+    }
 }

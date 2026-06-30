@@ -999,6 +999,21 @@ public final class PortedModuleSmokeTest {
             CatalogPayloads.giftAvailability(81, 1));
         assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "") + "WRAP", CatalogPayloads.giftWrapOptions(7, "WRAP"));
         assertEquals("A\u007f" + Crypto.Proc_3_0_6D2AF0(2, null, "") + "PAGE", CatalogPayloads.page(2, "PAGE"));
+        String expectedCatalogPurchase = Crypto.Proc_3_0_6D2AF0(81, null, "AC");
+        expectedCatalogPurchase = Crypto.Proc_3_0_6D2AF0(3, null, expectedCatalogPurchase);
+        expectedCatalogPurchase = Crypto.Proc_3_0_6D2AF0(2, null, expectedCatalogPurchase);
+        expectedCatalogPurchase = Crypto.Proc_3_0_6D2AF0(0, null, expectedCatalogPurchase);
+        expectedCatalogPurchase = Crypto.Proc_3_0_6D2AF0(97, null, expectedCatalogPurchase) + '\2' + "i" + '\2' + "IHH";
+        assertEquals(expectedCatalogPurchase, CatalogPayloads.purchase(81, 3, 2, 0, 97, "i"));
+        String expectedClubGiftClaim = Crypto.Proc_3_0_6D2AF0(506, null, "AC") + "DATA" + '\2' + "HHHII" + '\2';
+        expectedClubGiftClaim = Crypto.Proc_3_0_6D2AF0(97, null, expectedClubGiftClaim) + '\2' + "IH";
+        assertEquals(expectedClubGiftClaim, CatalogPayloads.clubGiftClaim(506, "DATA", "I", 97));
+        String expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(81, null, "AC") + "chair" + '\2';
+        expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(10, null, expectedGiftPurchase);
+        expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(2, null, expectedGiftPurchase);
+        expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(0, null, expectedGiftPurchase);
+        expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(97, null, expectedGiftPurchase) + '\2' + "i" + '\2' + "IH";
+        assertEquals(expectedGiftPurchase, CatalogPayloads.giftPurchase(81, "chair", 10, 2, 0, 97));
         Licence.setClubGiftState(new GiftSettings.ClubGiftState(
             "GIFTS",
             "[81\0" + "506\1" + "20]",
