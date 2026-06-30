@@ -39,6 +39,10 @@ public final class RecommendedRooms {
         return count;
     }
 
+    public Map<Long, String> payloadsByIndex() {
+        return Map.copyOf(payloadsByIndex);
+    }
+
     public String payload(long oneBasedTreeIndex) {
         long normalizedIndex = oneBasedTreeIndex > 0L ? oneBasedTreeIndex - 1L : oneBasedTreeIndex;
         if (normalizedIndex < 0L) {

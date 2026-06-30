@@ -555,6 +555,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `HelpCenterCache` internals from raw indexed payload objects to typed payload maps for category FAQ and description lookups, leaving legacy array/map parsing only at the module boundary.
 - Added defensive typed `PetSettings` level and command accessors so pet callers can consume `PetLevelRow`/`PetCommandRow` collections instead of legacy arrays.
 - Migrated `VisitRoomAds` internals from raw indexed payload objects to typed payload maps, leaving legacy array/map parsing only at the advertising state boundary.
+- Exposed defensive typed payload-map accessors for `VisitRoomAds` and `RecommendedRooms` so callers can consume cached payload maps without legacy indexed-array views.
 - Migrated `RecommendedRooms` internals from raw indexed payload objects to typed payload maps, leaving legacy array/map parsing only at the navigator state boundary.
 - Migrated `CatalogPages` internals from raw indexed payload and tree objects to typed page-payload maps and defensive page-tree matrices, leaving legacy array/map parsing only at the catalog state boundary.
 - Migrated `RoomCategoryCache` internals from raw row, default-category, and payload objects to typed default arrays, `RoomCategoryRow` lists, and defensive payload matrices, leaving legacy row text and matrix parsing only at the navigator state boundary.

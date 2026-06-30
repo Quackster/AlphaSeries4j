@@ -40,6 +40,10 @@ public final class VisitRoomAds {
         return count;
     }
 
+    public Map<Long, String> payloadsById() {
+        return Map.copyOf(payloadsById);
+    }
+
     public String payload(long visitRoomId) {
         if (visitRoomId < 0L) {
             return "";

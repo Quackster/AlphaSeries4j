@@ -955,7 +955,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(1L, typedVisitRoomCache.count);
         assertEquals("/ad/4\2/cafe\2", typedVisitRoomCache.payloadByVisitRoomId.get(4L));
         assertEquals(true, Boot.buildRecommendedRoomsQuery(3).contains("id_tree='3'"));
-        assertEquals("REC", RecommendedRooms.fromPayloads(Map.of(0L, "REC"), 1L).payload(1L));
+        RecommendedRooms typedRecommendedRooms = RecommendedRooms.fromPayloads(Map.of(0L, "REC"), 1L);
+        assertEquals("REC", typedRecommendedRooms.payload(1L));
+        assertEquals(Map.of(0L, "REC"), typedRecommendedRooms.payloadsByIndex());
         String roomRow = "1\t2\t3\tc1\tc2\tc3\tc4\tc5\tc6\tc7\tc8\tc9\tc10\tc11\tc12\tc13\tc14\tc15\tc16\tc17\tc18\tc19\tc20\tc21\tc22\t4\t5";
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "")
             + Crypto.Proc_3_0_6D2AF0(1, null, "")
@@ -1244,7 +1246,9 @@ public final class PortedModuleSmokeTest {
         Boot.Proc_1_22_6D0F00();
         assertEquals("/ad/4\2/cafe\2", ((String[]) Licence.global_008291D4)[4]);
         assertEquals("/ad/4\2/cafe\2", Licence.visitRoomAds().payload(4L));
-        assertEquals("/ad/8\2/lounge\2", VisitRoomAds.fromPayloads(Map.of(8L, "/ad/8\2/lounge\2"), 1L).payload(8L));
+        VisitRoomAds typedVisitRoomAds = VisitRoomAds.fromPayloads(Map.of(8L, "/ad/8\2/lounge\2"), 1L);
+        assertEquals("/ad/8\2/lounge\2", typedVisitRoomAds.payload(8L));
+        assertEquals(Map.of(8L, "/ad/8\2/lounge\2"), typedVisitRoomAds.payloadsById());
         Boot.Proc_1_23_6D1480("booted", "DEBUG");
         Boot.Proc_1_5_6C4F80();
         assertEquals("7\2", Licence.global_008291E4);
