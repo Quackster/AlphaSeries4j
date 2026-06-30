@@ -18,6 +18,10 @@ public final class RepresentedRoomSlots {
         return new RepresentedRoomSlots(availableSlotMarkers);
     }
 
+    public static RepresentedRoomSlots empty() {
+        return new RepresentedRoomSlots("");
+    }
+
     public String availableSlotMarkers() {
         StringBuilder markers = new StringBuilder();
         for (Long slotId : availableSlots) {

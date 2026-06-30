@@ -406,10 +406,12 @@ public final class Licence {
     }
 
     public static RepresentedRoomSlots representedRoomSlots() {
-        return RepresentedRoomSlots.fromLegacy(global_0082930C);
+        RoomState.instance().setRepresentedRoomSlotsFromLegacy(global_0082930C);
+        return RoomState.instance().representedRoomSlots();
     }
 
     public static void setRepresentedRoomSlots(RepresentedRoomSlots representedRoomSlots) {
+        RoomState.instance().setRepresentedRoomSlots(representedRoomSlots);
         global_0082930C = representedRoomSlots == null ? "" : representedRoomSlots.availableSlotMarkers();
     }
 
