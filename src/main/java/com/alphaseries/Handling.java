@@ -140,7 +140,7 @@ public final class Handling {
             if (summary == null) {
                 return;
             }
-            String payload = staffUserSummaryPayload(summary.userRow(),
+            String payload = StaffPayloads.userSummary(summary.userRow(),
                 summary.callForHelpCount(),
                 summary.pickedCallForHelpCount(),
                 summary.cautionCount(),
@@ -280,7 +280,7 @@ public final class Handling {
             if (reviewRow == null) {
                 return;
             }
-            String payload = StaffPayloads.callForHelpNotification(callForHelpRowPayload(reviewRow.toPayloadRow(), null));
+            String payload = StaffPayloads.callForHelpNotification(StaffPayloads.callForHelpRow(reviewRow.toPayloadRow(), null));
             if (socketIndex > 0) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             } else {
@@ -993,7 +993,7 @@ public final class Handling {
             }
             for (StaffCallForHelpRow row : moderationDao.openStaffCallRows()) {
                 Proc_6_244_801E80(socketIndex,
-                    StaffPayloads.callForHelpNotification(callForHelpRowPayload(row, null)), 0);
+                    StaffPayloads.callForHelpNotification(StaffPayloads.callForHelpRow(row, null)), 0);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -8679,7 +8679,7 @@ public final class Handling {
                         targetUserId,
                         row.timestampEnter(),
                         row.timestampLeft());
-                    rowPayload.append(staffRoomChatHistoryPayload(row, chatRows));
+                    rowPayload.append(StaffPayloads.roomChatHistory(row, chatRows));
                 }
                 String responsePayload = StaffPayloads.roomChatHistoryResponse(
                     targetUser,
@@ -8691,7 +8691,7 @@ public final class Handling {
                 rowCount = visitRows.size();
                 StringBuilder rowPayload = new StringBuilder();
                 for (StaffRoomVisitRow row : visitRows) {
-                    rowPayload.append(staffRoomVisitPayload(row));
+                    rowPayload.append(StaffPayloads.roomVisit(row));
                 }
                 String responsePayload = StaffPayloads.roomVisitHistoryResponse(
                     targetUser,
@@ -11286,28 +11286,6 @@ public final class Handling {
         return LocalDateTime.now().toString().replace('T', ' ');
     }
 
-    public static String callForHelpRowPayload(StaffCallForHelpRow row, Map<Long, String> userNamesById) {
-        return StaffPayloads.callForHelpRow(row, userNamesById);
-    }
-
-    public static String staffCallForHelpWhereClause(String packetPayload) {
-        return StaffPayloads.callForHelpWhereClause(packetPayload);
-    }
-
-    public static String staffUserSummaryPayload(
-        StaffUserSummaryRow row,
-        long callForHelpCount,
-        long pickedCallForHelpCount,
-        long cautionCount,
-        long banCount
-    ) {
-        return StaffPayloads.userSummary(row, callForHelpCount, pickedCallForHelpCount, cautionCount, banCount);
-    }
-
-    public static String staffRoomVisitPayload(StaffRoomVisitRow row) {
-        return StaffPayloads.roomVisit(row);
-    }
-
     public static long staffNestedUserIdFromWire(String packetPayload) {
         String requestPayload = StringUtils.text(packetPayload);
         long directValue = NumberUtils.parseLong(Functions.Proc_10_6_809F10(requestPayload, 0, 0));
@@ -11333,10 +11311,6 @@ public final class Handling {
         result.chatCount = chatRowsPayload.chatCount;
         result.payload = chatRowsPayload.payload;
         return result;
-    }
-
-    public static String staffRoomChatHistoryPayload(StaffRoomChatVisitRow visitRow, List<StaffRoomChatRow> chatRows) {
-        return StaffPayloads.roomChatHistory(visitRow, chatRows);
     }
 
     public static boolean containsUnsafeStaffAlert(String messageText) {

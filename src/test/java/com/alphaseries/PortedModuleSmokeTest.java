@@ -2595,7 +2595,7 @@ public final class PortedModuleSmokeTest {
         staffNames.put(9L, "Picker");
         String expectedCallForHelp = Handling.Proc_6_29_70D800(0, 0, 8, 5, "Caller", 6, "Partner",
             "Need help", 7, "Room", 50, "Picker");
-        assertEquals(expectedCallForHelp, Handling.callForHelpRowPayload(
+        assertEquals(expectedCallForHelp, StaffPayloads.callForHelpRow(
             new StaffCallForHelpRow(50L, 2L, 5L, "Caller", 6L, 7L, 8L, "Need help", 7L, "Room", 9L),
             staffNames));
         assertEquals("HR" + expectedCallForHelp, StaffPayloads.callForHelpNotification(expectedCallForHelp));
@@ -2608,8 +2608,8 @@ public final class PortedModuleSmokeTest {
         String staffWhereWire = Crypto.Proc_3_0_6D2AF0(2, null, "")
             + Crypto.Proc_3_0_6D2AF0(50, null, "")
             + Crypto.Proc_3_0_6D2AF0(51, null, "");
-        assertEquals("id='50' OR id='51'", Handling.staffCallForHelpWhereClause(staffWhereWire));
-        assertEquals("", Handling.staffCallForHelpWhereClause(Crypto.Proc_3_0_6D2AF0(0, null, "")));
+        assertEquals("id='50' OR id='51'", StaffPayloads.callForHelpWhereClause(staffWhereWire));
+        assertEquals("", StaffPayloads.callForHelpWhereClause(Crypto.Proc_3_0_6D2AF0(0, null, "")));
         String expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(5, null, "HU") + "Alice\2";
         expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(60, null, expectedStaffSummary);
         expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(10, null, expectedStaffSummary);
@@ -2619,12 +2619,12 @@ public final class PortedModuleSmokeTest {
         expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(4, null, expectedStaffSummary);
         expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(0, null, expectedStaffSummary);
         assertEquals(expectedStaffSummary,
-            Handling.staffUserSummaryPayload(new StaffUserSummaryRow(5L, "Alice", 60L, 10L, 3L), 2, 1, 4, 0));
+            StaffPayloads.userSummary(new StaffUserSummaryRow(5L, "Alice", 60L, 10L, 3L), 2, 1, 4, 0));
         String expectedVisit = Crypto.Proc_3_0_6D2AF0(1, null, "");
         expectedVisit = Crypto.Proc_3_0_6D2AF0(7, null, expectedVisit);
         expectedVisit = Crypto.Proc_3_0_6D2AF0(12, null, expectedVisit);
         expectedVisit = Crypto.Proc_3_0_6D2AF0(30, null, expectedVisit) + "Room\2";
-        assertEquals(expectedVisit, Handling.staffRoomVisitPayload(new StaffRoomVisitRow(1L, 7L, "Room", 12L, 30L)));
+        assertEquals(expectedVisit, StaffPayloads.roomVisit(new StaffRoomVisitRow(1L, 7L, "Room", 12L, 30L)));
         assertEquals(123L, Handling.staffNestedUserIdFromWire("@C123"));
         assertEquals(77L, Handling.staffNestedUserIdFromWire(Crypto.Proc_3_0_6D2AF0(77, null, "")));
         List<StaffRoomChatRow> staffChatRows = List.of(
@@ -2667,7 +2667,7 @@ public final class PortedModuleSmokeTest {
         expectedStaffChatHistory = Crypto.Proc_3_0_6D2AF0(7, null, expectedStaffChatHistory);
         expectedStaffChatHistory = Crypto.Proc_3_0_6D2AF0(2, null, expectedStaffChatHistory) + "Room\2" + expectedStaffChatRows;
         assertEquals(expectedStaffChatHistory,
-            Handling.staffRoomChatHistoryPayload(new StaffRoomChatVisitRow(1L, 7L, "Room", 100L, 200L), staffChatRows));
+            StaffPayloads.roomChatHistory(new StaffRoomChatVisitRow(1L, 7L, "Room", 100L, 200L), staffChatRows));
         StaffUserLookup staffTarget = new StaffUserLookup(88L, "Target");
         String expectedRoomChatHistoryResponse = Crypto.Proc_3_0_6D2AF0(88, null, "HX")
             + "Target\2" + Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedStaffChatHistory;
