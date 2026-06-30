@@ -768,18 +768,22 @@ public final class Licence {
 
     public static void setProductRows(Object productRows) {
         global_008292BC = productRows == null ? "" : productRows;
+        CatalogState.instance().setRegistryFromLegacy(global_008292BC, global_008292C0, global_00829258);
     }
 
     public static void setCatalogProductRows(Object catalogProductRows) {
         global_008292C0 = catalogProductRows == null ? "" : catalogProductRows;
+        CatalogState.instance().setRegistryFromLegacy(global_008292BC, global_008292C0, global_00829258);
     }
 
     public static void setDealRows(String dealRows) {
         global_00829258 = StringUtils.text(dealRows);
+        CatalogState.instance().setRegistryFromLegacy(global_008292BC, global_008292C0, global_00829258);
     }
 
     public static void setDealRows(Object dealRows) {
         global_00829258 = dealRows == null ? "" : dealRows;
+        CatalogState.instance().setRegistryFromLegacy(global_008292BC, global_008292C0, global_00829258);
     }
 
     public static CatalogProductSettings catalogProductSettings() {
@@ -888,7 +892,8 @@ public final class Licence {
     }
 
     private static CatalogRegistry catalogRegistry() {
-        return CatalogRegistry.fromLegacyCaches(global_008292BC, global_008292C0, global_00829258);
+        CatalogState.instance().setRegistryFromLegacy(global_008292BC, global_008292C0, global_00829258);
+        return CatalogState.instance().registry();
     }
 
     public static String getTableCell(Object tableCache, long rowId, long columnIndex) {

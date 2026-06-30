@@ -6,6 +6,7 @@ public final class CatalogState {
     private GiftSettings giftSettings = GiftSettings.empty();
     private CatalogPages catalogPages = CatalogPages.empty();
     private CatalogProductSettings productSettings = CatalogProductSettings.empty();
+    private CatalogRegistry registry = CatalogRegistry.empty();
 
     private CatalogState() {
     }
@@ -37,6 +38,18 @@ public final class CatalogState {
 
     public synchronized CatalogProductSettings productSettings() {
         return productSettings;
+    }
+
+    public synchronized CatalogRegistry registry() {
+        return registry;
+    }
+
+    public synchronized void setRegistry(CatalogRegistry registry) {
+        this.registry = registry == null ? CatalogRegistry.empty() : registry;
+    }
+
+    public synchronized void setRegistryFromLegacy(Object products, Object catalogProducts, Object deals) {
+        registry = CatalogRegistry.fromLegacyCaches(products, catalogProducts, deals);
     }
 
     public synchronized void setProductSettings(CatalogProductSettings productSettings) {

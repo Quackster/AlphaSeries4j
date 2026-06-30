@@ -25,6 +25,10 @@ public final class CatalogRegistry {
         return new CatalogRegistry(products, catalogProducts, deals);
     }
 
+    public static CatalogRegistry empty() {
+        return new CatalogRegistry("", "", "");
+    }
+
     public String productCell(long productId, long columnIndex) {
         return cell(products, productId, columnIndex);
     }
