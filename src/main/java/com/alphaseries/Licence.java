@@ -115,7 +115,7 @@ public final class Licence {
     public static Object global_00829098 = "";
     public static Object global_0082909C = "";
     public static Object global_0082934C = "";
-    public static String global_00829310 = "";
+    public static Object global_00829310 = "";
     public static Object global_0082930C = "";
     public static String global_00829350 = "";
     public static Object global_00829354 = "";
@@ -389,8 +389,14 @@ public final class Licence {
     }
 
     public static void setRepresentedRooms(RepresentedRoomCache representedRooms) {
-        RoomState.instance().setRepresentedRooms(representedRooms);
-        global_00829310 = representedRooms == null ? "" : representedRooms.cacheText();
+        if (representedRooms == null) {
+            RoomState.instance().setRepresentedRooms(RepresentedRoomCache.empty());
+            global_00829310 = "";
+            return;
+        }
+        RepresentedRoomCache normalizedRooms = RepresentedRoomCache.fromLegacy(representedRooms.cacheText());
+        RoomState.instance().setRepresentedRooms(normalizedRooms);
+        global_00829310 = normalizedRooms;
     }
 
     public static FurnitureRoomCache.State furnitureRoomCache() {
@@ -407,8 +413,8 @@ public final class Licence {
         }
         global_008291F8 = StringUtils.text(state.pendingRoomCache);
         global_008291FC = StringUtils.text(state.pendingFurnitureCache);
-        global_00829310 = StringUtils.text(state.representedRoomCache);
-        RoomState.instance().setRepresentedRoomsFromLegacy(global_00829310);
+        RoomState.instance().setRepresentedRoomsFromLegacy(state.representedRoomCache);
+        global_00829310 = RoomState.instance().representedRooms();
     }
 
     public static RoomPortalSettings roomPortalSettings() {

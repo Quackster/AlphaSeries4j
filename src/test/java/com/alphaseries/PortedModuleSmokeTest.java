@@ -1329,11 +1329,11 @@ public final class PortedModuleSmokeTest {
         assertEquals("[1][3][2]", representedBots.allocatedEntityMarkers());
         Licence.global_00829310 = "";
         Main.mainRepresentedRoomOccupantAdd(4, 9, 1);
-        assertEquals("\1" + "4\t\1" + "9\2\t\t1\2", Licence.global_00829310);
+        assertEquals("\1" + "4\t\1" + "9\2", Licence.representedRooms().cacheText());
         assertEquals(4L, Licence.representedRooms().roomSlot(4));
         assertEquals("\1" + "9", Licence.representedRooms().activeUserMarkers(4));
         Main.mainRepresentedRoomOccupantMove(4, 9, 1, 2, 3, 4, 1);
-        assertEquals(true, Licence.global_00829310.contains("\1" + "9\t2\t3\t4\t1\2"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "9\t2\t3\t4\t1\2"));
         assertEquals(1L, RoomRollers.deltaX(2));
         assertEquals(-1L, RoomRollers.deltaX(6));
         assertEquals(-1L, RoomRollers.deltaY(0));
@@ -1391,14 +1391,14 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829310 = "";
         Guardian.setSocketConnected(8, true);
         Main.Proc_0_26_6ACF30(8);
-        assertEquals(true, Licence.global_00829310.contains("\1" + "4\t\1" + "8\2"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "4\t\1" + "8\2"));
         Licence.global_00829358 = "[70:4\2bot-id\2name]";
         Main.Proc_0_27_6AD400(70);
-        assertEquals(true, Licence.global_00829310.contains("\1" + "70"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "70"));
         Main.Proc_0_28_6AD850(70, 1, 1, 2, 1);
-        assertEquals(true, Licence.global_00829310.contains("\1" + "70\t2\t1"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "70\t2\t1"));
         Main.Proc_0_29_6B0E10(8, 1, 1, 1, 2);
-        assertEquals(true, Licence.global_00829310.contains("\1" + "8\t1\t2"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "8\t1\t2"));
         Licence.global_008291FC = "\1" + "101\2";
         assertEquals(1L, Main.signerTimer());
         assertEquals(true, containsSql(mainSql, "UPDATE furnitures SET sign='0' WHERE id='101' LIMIT 1"));
@@ -4282,13 +4282,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.global_008291F8.contains("\1" + "9\2"));
         assertEquals(true, Licence.global_008291FC.contains("\1" + "81\2"));
         Handling.Proc_6_151_78AC20(9, 82, 3);
-        assertEquals(true, Licence.global_00829310.contains("\1" + "9\t82\t3\2"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "9\t82\t3\2"));
         handlingSends.clear();
         assertEquals("93", Handling.Proc_6_95_746CD0(4, "Cw" + wireLong(93)));
         String simpleUsePayload = Handling.Proc_6_96_747000(4, "AM" + wireLong(93));
         assertEquals(true, simpleUsePayload.contains("AZ"));
         assertEquals(true, containsSend(handlingSends, "AZ"));
-        assertEquals(true, Licence.global_00829310.contains("\1" + "9\t93\t0\2"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "9\t93\t0\2"));
         handlingSends.clear();
         String simpleResetPayload = Handling.Proc_6_97_747640(4, "AL" + wireLong(93));
         assertEquals(true, simpleResetPayload.contains("AZ"));
@@ -4317,19 +4317,19 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         Handling.Proc_6_146_76D300(4, 82, 506);
         assertEquals(false, Licence.global_008291FC.contains("\1" + "82\2"));
-        assertEquals(true, Licence.global_00829310.contains("\1" + "9\t82\t3\2"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "9\t82\t3\2"));
         Licence.global_008291F8 = "";
         Licence.global_008291FC = "";
         Licence.global_00829310 = "";
         Handling.Proc_6_152_78C2F0(9, 83, "on");
-        assertEquals(true, Licence.global_00829310.contains("\1" + "83\t9\ton\2"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "83\t9\ton\2"));
         Handling.Proc_6_153_78D980(83, "off");
-        assertEquals(true, Licence.global_00829310.contains("\1" + "83\t9\toff\2"));
-        assertEquals(false, Licence.global_00829310.contains("\1" + "83\t9\ton\2"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "83\t9\toff\2"));
+        assertEquals(false, Licence.representedRooms().cacheText().contains("\1" + "83\t9\ton\2"));
         handlingSends.clear();
         String refreshPayload = Handling.Proc_6_154_78F040(84);
         assertEquals("AX84\2" + "5\2", refreshPayload);
-        assertEquals(true, Licence.global_00829310.contains("\1" + "9\t84\t5\2"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "9\t84\t5\2"));
         assertEquals(true, containsSend(handlingSends, "AX84\2" + "5\2"));
         handlingSql.clear();
         handlingSends.clear();
@@ -4357,7 +4357,7 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         Licence.global_00829310 = "";
         assertEquals(1L, Handling.Proc_6_147_76E910(9, 2, 3));
-        assertEquals(true, Licence.global_00829310.contains("\1" + "9\t88\t4\2"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "9\t88\t4\2"));
         assertEquals(true, containsSend(handlingSends, "AX88\2" + "4\2"));
         assertEquals(false, containsSend(handlingSends, "AX89\2" + "7\2"));
         handlingSql.clear();
@@ -4633,19 +4633,19 @@ public final class PortedModuleSmokeTest {
         Licence.global_00829310 = RepresentedRoomCache.fromLegacy("")
             .moveOccupant(4, 4, 1, 1, 0, 0).cacheText();
         Handling.Proc_6_197_7D43C0(4, "AK" + wireLong(3) + wireLong(3));
-        RepresentedRoomCache.Position lookPosition = RepresentedRoomCache.fromLegacy(Licence.global_00829310)
+        RepresentedRoomCache.Position lookPosition = RepresentedRoomCache.fromLegacy(Licence.representedRooms())
             .movementPosition(4, 4);
         assertEquals(true, lookPosition.found);
         assertEquals(1L, lookPosition.positionX);
         assertEquals(1L, lookPosition.positionY);
-        assertEquals(true, Licence.global_00829310.contains("\1" + "4\t1\t1\t3\t0\2"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "4\t1\t1\t3\t0\2"));
         Handling.Proc_6_198_7D4B70(4, "AO" + wireLong(4) + wireLong(4));
-        RepresentedRoomCache.Position walkPosition = RepresentedRoomCache.fromLegacy(Licence.global_00829310)
+        RepresentedRoomCache.Position walkPosition = RepresentedRoomCache.fromLegacy(Licence.representedRooms())
             .movementPosition(4, 4);
         assertEquals(true, walkPosition.found);
         assertEquals(2L, walkPosition.positionX);
         assertEquals(2L, walkPosition.positionY);
-        assertEquals(true, Licence.global_00829310.contains("\1" + "4\t2\t2\t3\t1\2"));
+        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "4\t2\t2\t3\t1\2"));
         Licence.global_00829310 = "";
         handlingSql.clear();
         Handling.Proc_6_199_7D54E0(4, "Ck" + wireLong(7));

@@ -10,7 +10,7 @@ public final class RepresentedRoomCache {
     private final String leadingText;
     private final List<RoomRecord> records;
 
-    private RepresentedRoomCache(String cacheText) {
+    private RepresentedRoomCache(Object cacheText) {
         this(parse(cacheText));
     }
 
@@ -27,7 +27,10 @@ public final class RepresentedRoomCache {
         this(parseResult.leadingText(), parseResult.records());
     }
 
-    public static RepresentedRoomCache fromLegacy(String cacheText) {
+    public static RepresentedRoomCache fromLegacy(Object cacheText) {
+        if (cacheText instanceof RepresentedRoomCache representedRoomCache) {
+            return representedRoomCache;
+        }
         return new RepresentedRoomCache(cacheText);
     }
 
@@ -280,7 +283,7 @@ public final class RepresentedRoomCache {
         return expanded;
     }
 
-    private static ParseResult parse(String cacheText) {
+    private static ParseResult parse(Object cacheText) {
         List<RoomRecord> parsedRecords = new ArrayList<>();
         String cache = StringUtils.text(cacheText);
         int recordStart = cache.indexOf('\1');

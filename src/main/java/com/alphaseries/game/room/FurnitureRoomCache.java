@@ -9,7 +9,7 @@ public final class FurnitureRoomCache {
     public static State trackMarker(
         String pendingRoomCache,
         String pendingFurnitureCache,
-        String representedRoomCache,
+        Object representedRoomCache,
         long roomId,
         long furnitureId
     ) {
@@ -39,7 +39,7 @@ public final class FurnitureRoomCache {
     public static State removeMarker(
         String pendingRoomCache,
         String pendingFurnitureCache,
-        String representedRoomCache,
+        Object representedRoomCache,
         long furnitureId
     ) {
         State state = State.from(pendingRoomCache, pendingFurnitureCache, representedRoomCache);
@@ -63,7 +63,7 @@ public final class FurnitureRoomCache {
     public static State stateCache(
         String pendingRoomCache,
         String pendingFurnitureCache,
-        String representedRoomCache,
+        Object representedRoomCache,
         long roomId,
         long furnitureId,
         long stateValue
@@ -92,7 +92,7 @@ public final class FurnitureRoomCache {
     public static State stateWrite(
         String pendingRoomCache,
         String pendingFurnitureCache,
-        String representedRoomCache,
+        Object representedRoomCache,
         long roomId,
         long furnitureId,
         String stateText
@@ -140,11 +140,13 @@ public final class FurnitureRoomCache {
         public String pendingFurnitureCache = "";
         public String representedRoomCache = "";
 
-        public static State from(String pendingRoomCache, String pendingFurnitureCache, String representedRoomCache) {
+        public static State from(String pendingRoomCache, String pendingFurnitureCache, Object representedRoomCache) {
             State state = new State();
             state.pendingRoomCache = StringUtils.text(pendingRoomCache);
             state.pendingFurnitureCache = StringUtils.text(pendingFurnitureCache);
-            state.representedRoomCache = StringUtils.text(representedRoomCache);
+            state.representedRoomCache = representedRoomCache instanceof RepresentedRoomCache cache
+                ? cache.cacheText()
+                : StringUtils.text(representedRoomCache);
             return state;
         }
     }

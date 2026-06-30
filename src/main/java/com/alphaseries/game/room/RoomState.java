@@ -59,7 +59,7 @@ public final class RoomState {
         this.representedRooms = representedRooms == null ? RepresentedRoomCache.empty() : representedRooms;
     }
 
-    public synchronized void setRepresentedRoomsFromLegacy(String cacheText) {
+    public synchronized void setRepresentedRoomsFromLegacy(Object cacheText) {
         representedRooms = RepresentedRoomCache.fromLegacy(cacheText);
     }
 }
