@@ -948,15 +948,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("REC", Licence.recommendedRooms().payload(1L));
         Licence.global_0082911C = previousRecommendedRooms;
         Licence.global_00829128 = previousRecommendedRoomCount;
-        String roomRow = "1\t2\t3\tc1\tc2\tc3\tc4\tc5\tc6\tc7\tc8\tc9\tc10\tc11\tc12\tc13\tc14\tc15\tc16\tc17\tc18\tc19\tc20\tc21\tc22\t4\t5";
-        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(3, null, "")
-            + "c1\2c2\2c3\2c4\2c5\2c6\2c7\2c8\2c9\2c10\2c11\2c12\2c13\2c14\2c15\2c16\2c17\2c18\2c19\2c20\2c21\2c22\2"
-            + Crypto.Proc_3_0_6D2AF0(4, null, "")
-            + Crypto.Proc_3_0_6D2AF0(5, null, ""),
-            Boot.buildRecommendedRoomsPayload(roomRow));
+        assertRecommendedRoomsPayloadBuilders();
         assertEquals("i", Boot.catalogProductClass(9));
         assertEquals("s", Boot.catalogProductClass(0));
         assertEquals(false, Boot.catalogTextFieldPresent("NULL"));
@@ -5083,6 +5075,27 @@ public final class PortedModuleSmokeTest {
         assertEquals("RECOMMENDED_MAP", Licence.recommendedRooms().payload(1L));
         Licence.global_0082911C = previousRecommendedRooms;
         Licence.global_00829128 = previousRecommendedRoomCount;
+    }
+
+    private static void assertRecommendedRoomsPayloadBuilders() {
+        RoomDao.RecommendedRoomRow row = new RoomDao.RecommendedRoomRow(
+            1, 2, 3, "c1", "c2", "c3", "c4", 10, "c6", "c7", 11, 12, 13,
+            "c10", 14, "c12", 15, 16, "c15", "c16", "c17", 17, "c19", "c20",
+            "c21", 4, 5);
+        String expected = Crypto.Proc_3_0_6D2AF0(1, null, "")
+            + Crypto.Proc_3_0_6D2AF0(1, null, "")
+            + Crypto.Proc_3_0_6D2AF0(2, null, "")
+            + Crypto.Proc_3_0_6D2AF0(3, null, "")
+            + String.join("\2", List.of(
+                "c1", "c2", "c3", "c4", "10", "c6", "c7", "11", "12", "13",
+                "c10", "14", "c12", "15", "16", "c15", "c16", "c17", "17",
+                "c19", "c20", "c21"))
+            + "\2"
+            + Crypto.Proc_3_0_6D2AF0(4, null, "")
+            + Crypto.Proc_3_0_6D2AF0(5, null, "");
+        String rowText = "1\t2\t3\tc1\tc2\tc3\tc4\t10\tc6\tc7\t11\t12\t13\tc10\t14\tc12\t15\t16\tc15\tc16\tc17\t17\tc19\tc20\tc21\t4\t5";
+        assertEquals(expected, Boot.buildRecommendedRoomsPayload(rowText));
+        assertEquals(expected, Boot.buildRecommendedRoomsPayload(List.of(row)));
     }
 
     private static void assertHelpCenterMapMirrors() {

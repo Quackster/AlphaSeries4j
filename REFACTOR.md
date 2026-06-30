@@ -296,6 +296,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Routed staff moderation message startup cache reads through `StaffModerationDao`, keeping legacy permission payload serialization explicit in `Boot`.
 - Routed navigator room-category startup cache reads through typed `RoomDao` rows, keeping legacy category row serialization explicit in `Boot`.
 - Routed recommended-room startup cache reads through typed `RoomDao` rows, keeping legacy navigator payload serialization explicit in `Boot`.
+- Built recommended-room boot payloads from named `RoomDao.RecommendedRoomRow` fields and removed the positional `legacyTextFields()` compatibility view.
 - Routed startup permission matrix reads through prepared `SettingsDao` privilege lookups, keeping legacy permission-string serialization explicit in `Boot`.
 - Routed catalog page and catalog page-product startup payload reads through typed `CatalogDao` rows, keeping legacy catalog page payload serialization explicit in `Boot`.
 - Routed catalog page tree startup cache reads through typed `CatalogDao` rows and prepared child-count lookups, keeping legacy catalog tree payload serialization explicit in `Boot`.

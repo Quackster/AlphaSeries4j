@@ -1461,9 +1461,28 @@ public final class Boot {
                     payload.append(Crypto.encodeVl64(row.type()));
                     payload.append(Crypto.encodeVl64(row.style()));
                     payload.append(Crypto.encodeVl64(row.icon()));
-                    for (String field : row.legacyTextFields()) {
-                        payload.append(StringUtils.text(field)).append('\2');
-                    }
+                    payload.append(StringUtils.text(row.caption())).append('\2');
+                    payload.append(StringUtils.text(row.captionTwo())).append('\2');
+                    payload.append(StringUtils.text(row.captionThree())).append('\2');
+                    payload.append(StringUtils.text(row.legacyNullSlot())).append('\2');
+                    payload.append(row.roomId()).append('\2');
+                    payload.append(StringUtils.text(row.roomName())).append('\2');
+                    payload.append(StringUtils.text(row.ownerName())).append('\2');
+                    payload.append(row.doorStatus()).append('\2');
+                    payload.append(row.visitorsNow()).append('\2');
+                    payload.append(row.visitorsMax()).append('\2');
+                    payload.append(StringUtils.text(row.description())).append('\2');
+                    payload.append(row.trading()).append('\2');
+                    payload.append(StringUtils.text(row.legacySecondNullSlot())).append('\2');
+                    payload.append(row.rating()).append('\2');
+                    payload.append(row.categoryId()).append('\2');
+                    payload.append(StringUtils.text(row.roomIcon())).append('\2');
+                    payload.append(StringUtils.text(row.tagOne())).append('\2');
+                    payload.append(StringUtils.text(row.tagTwo())).append('\2');
+                    payload.append(row.allowOtherPets()).append('\2');
+                    payload.append(StringUtils.text(row.modelName())).append('\2');
+                    payload.append(StringUtils.text(row.requiredFiles())).append('\2');
+                    payload.append(StringUtils.text(row.modelVisitorsMax())).append('\2');
                     payload.append(Crypto.encodeVl64(row.treeId()));
                     payload.append(Crypto.encodeVl64(row.recommendedId()));
                 }

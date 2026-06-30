@@ -1117,35 +1117,6 @@ public final class RoomDao {
         long treeId,
         long recommendedId
     ) {
-        public List<String> legacyTextFields() {
-            return List.of(
-                text(caption),
-                text(captionTwo),
-                text(captionThree),
-                text(legacyNullSlot),
-                String.valueOf(roomId),
-                text(roomName),
-                text(ownerName),
-                String.valueOf(doorStatus),
-                String.valueOf(visitorsNow),
-                String.valueOf(visitorsMax),
-                text(description),
-                String.valueOf(trading),
-                text(legacySecondNullSlot),
-                String.valueOf(rating),
-                String.valueOf(categoryId),
-                text(roomIcon),
-                text(tagOne),
-                text(tagTwo),
-                String.valueOf(allowOtherPets),
-                text(modelName),
-                text(requiredFiles),
-                text(modelVisitorsMax));
-        }
-
-        private static String text(String value) {
-            return value == null ? "" : value;
-        }
     }
 
     public record NavigatorEventRow(
