@@ -20,7 +20,9 @@ import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
 import com.alphaseries.game.poll.PollQuestionRow;
+import com.alphaseries.game.moderation.StaffCallForHelpRow;
 import com.alphaseries.game.moderation.StaffRoomVisitRow;
+import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
@@ -2185,7 +2187,8 @@ public final class PortedModuleSmokeTest {
         staffNames.put(9L, "Picker");
         String expectedCallForHelp = Handling.Proc_6_29_70D800(0, 0, 8, 5, "Caller", 6, "Partner",
             "Need help", 7, "Room", 50, "Picker");
-        assertEquals(expectedCallForHelp, Handling.callForHelpRowPayload("50\t2\t5\tCaller\t6\t7\t8\tNeed help\t7\tRoom\t9",
+        assertEquals(expectedCallForHelp, Handling.callForHelpRowPayload(
+            new StaffCallForHelpRow(50L, 2L, 5L, "Caller", 6L, 7L, 8L, "Need help", 7L, "Room", 9L),
             staffNames));
         String staffWhereWire = Crypto.Proc_3_0_6D2AF0(2, null, "")
             + Crypto.Proc_3_0_6D2AF0(50, null, "")
@@ -2200,7 +2203,8 @@ public final class PortedModuleSmokeTest {
         expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(1, null, expectedStaffSummary);
         expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(4, null, expectedStaffSummary);
         expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(0, null, expectedStaffSummary);
-        assertEquals(expectedStaffSummary, Handling.staffUserSummaryPayload("5\tAlice\t60\t10\t3", 2, 1, 4, 0));
+        assertEquals(expectedStaffSummary,
+            Handling.staffUserSummaryPayload(new StaffUserSummaryRow(5L, "Alice", 60L, 10L, 3L), 2, 1, 4, 0));
         String expectedVisit = Crypto.Proc_3_0_6D2AF0(1, null, "");
         expectedVisit = Crypto.Proc_3_0_6D2AF0(7, null, expectedVisit);
         expectedVisit = Crypto.Proc_3_0_6D2AF0(12, null, expectedVisit);

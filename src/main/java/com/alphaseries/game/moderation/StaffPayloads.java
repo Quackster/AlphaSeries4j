@@ -18,17 +18,16 @@ public final class StaffPayloads {
         public String payload = "";
     }
 
-    public static String callForHelpRow(String rowText, Map<Long, String> userNamesById) {
-        String[] fields = StringUtils.text(rowText).split("\t", -1);
-        long callForHelpId = NumberUtils.parseLong(StringUtils.field(fields, 0));
-        long callerId = NumberUtils.parseLong(StringUtils.field(fields, 2));
-        String callerName = StringUtils.field(fields, 3);
-        long partnerId = NumberUtils.parseLong(StringUtils.field(fields, 4));
-        long roomId = NumberUtils.parseLong(StringUtils.field(fields, 5));
-        long categoryId = NumberUtils.parseLong(StringUtils.field(fields, 6));
-        String descriptionText = StringUtils.field(fields, 7);
-        String roomName = StringUtils.field(fields, 9);
-        long pickerId = NumberUtils.parseLong(StringUtils.field(fields, 10));
+    public static String callForHelpRow(StaffCallForHelpRow row, Map<Long, String> userNamesById) {
+        long callForHelpId = row.callForHelpId();
+        long callerId = row.callerUserId();
+        String callerName = row.callerName();
+        long partnerId = row.partnerUserId();
+        long roomId = row.roomId();
+        long categoryId = row.categoryId();
+        String descriptionText = row.description();
+        String roomName = row.roomName();
+        long pickerId = row.pickerUserId();
         String partnerName = userNamesById != null && partnerId > 0L ? StringUtils.text(userNamesById.get(partnerId)) : "";
         String pickerName = userNamesById != null && pickerId > 0L ? StringUtils.text(userNamesById.get(pickerId)) : "";
         return callForHelp(0, 0, categoryId, callerId, callerName, partnerId, partnerName,
@@ -103,24 +102,18 @@ public final class StaffPayloads {
     }
 
     public static String userSummary(
-        String rowText,
+        StaffUserSummaryRow row,
         long callForHelpCount,
         long pickedCallForHelpCount,
         long cautionCount,
         long banCount
     ) {
-        String[] fields = StringUtils.text(rowText).split("\t", -1);
-        long userId = NumberUtils.parseLong(StringUtils.field(fields, 0));
-        String userName = StringUtils.field(fields, 1);
-        long createdMinutes = NumberUtils.parseLong(StringUtils.field(fields, 2));
-        long lastOnlineMinutes = NumberUtils.parseLong(StringUtils.field(fields, 3));
-        long socketIndex = NumberUtils.parseLong(StringUtils.field(fields, 4));
         return PacketBuilder.message("HU")
-            .appendInt(userId)
-            .appendString(userName)
-            .appendInt(createdMinutes)
-            .appendInt(lastOnlineMinutes)
-            .appendBoolean(socketIndex > 0L)
+            .appendInt(row.userId())
+            .appendString(row.userName())
+            .appendInt(row.createdMinutes())
+            .appendInt(row.lastOnlineMinutes())
+            .appendBoolean(row.socketIndex() > 0L)
             .appendInt(callForHelpCount)
             .appendInt(pickedCallForHelpCount)
             .appendInt(cautionCount)

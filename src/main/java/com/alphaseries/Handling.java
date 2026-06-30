@@ -71,12 +71,14 @@ import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.NavigatorRoom;
 import com.alphaseries.game.navigator.NavigatorTagPopularity;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
+import com.alphaseries.game.moderation.StaffCallForHelpRow;
 import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffModerationPacketHandlers;
 import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
 import com.alphaseries.game.moderation.StaffRoomVisitRow;
 import com.alphaseries.game.moderation.StaffUserLookup;
+import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.wired.WiredPayloads;
 import com.alphaseries.messages.outgoing.AchievementPayloads;
@@ -274,7 +276,7 @@ public final class Handling {
             if (reviewRow == null) {
                 return;
             }
-            String payload = "HR" + callForHelpRowPayload(reviewRow.reviewPayloadRow(), null);
+            String payload = "HR" + callForHelpRowPayload(reviewRow.toPayloadRow(), null);
             if (socketIndex > 0) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             } else {
@@ -1025,11 +1027,8 @@ public final class Handling {
             if (moderationDao == null) {
                 return;
             }
-            String rowText = moderationDao.openStaffCallRows();
-            for (String row : rowText.split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    Proc_6_244_801E80(socketIndex, "HR" + callForHelpRowPayload(row, null), 0);
-                }
+            for (StaffCallForHelpRow row : moderationDao.openStaffCallRows()) {
+                Proc_6_244_801E80(socketIndex, "HR" + callForHelpRowPayload(row, null), 0);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -12107,8 +12106,8 @@ public final class Handling {
         return LocalDateTime.now().toString().replace('T', ' ');
     }
 
-    public static String callForHelpRowPayload(String rowText, Map<Long, String> userNamesById) {
-        return StaffPayloads.callForHelpRow(rowText, userNamesById);
+    public static String callForHelpRowPayload(StaffCallForHelpRow row, Map<Long, String> userNamesById) {
+        return StaffPayloads.callForHelpRow(row, userNamesById);
     }
 
     public static String staffCallForHelpWhereClause(String packetPayload) {
@@ -12116,13 +12115,13 @@ public final class Handling {
     }
 
     public static String staffUserSummaryPayload(
-        String rowText,
+        StaffUserSummaryRow row,
         long callForHelpCount,
         long pickedCallForHelpCount,
         long cautionCount,
         long banCount
     ) {
-        return StaffPayloads.userSummary(rowText, callForHelpCount, pickedCallForHelpCount, cautionCount, banCount);
+        return StaffPayloads.userSummary(row, callForHelpCount, pickedCallForHelpCount, cautionCount, banCount);
     }
 
     public static String staffRoomVisitPayload(StaffRoomVisitRow row) {

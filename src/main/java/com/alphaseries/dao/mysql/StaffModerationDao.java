@@ -1,10 +1,12 @@
 package com.alphaseries.dao.mysql;
 
 import com.alphaseries.db.Database;
+import com.alphaseries.game.moderation.StaffCallForHelpRow;
 import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
 import com.alphaseries.game.moderation.StaffRoomVisitRow;
 import com.alphaseries.game.moderation.StaffUserLookup;
+import com.alphaseries.game.moderation.StaffUserSummaryRow;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -98,11 +100,15 @@ public final class StaffModerationDao {
     }
 
     public Optional<UserModerationSummary> userModerationSummary(long userId) throws SQLException {
-        Optional<String> userRow = database.queryOne(
+        Optional<StaffUserSummaryRow> userRow = database.queryOne(
             "SELECT users.id,users.name,ROUND((UNIX_TIMESTAMP()-users.create_time)/60,0),"
                 + "ROUND((UNIX_TIMESTAMP()-users.lastonline_time)/60,0),users.id_socket FROM users WHERE users.id=? LIMIT 1",
-            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
-                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5),
+            resultSet -> new StaffUserSummaryRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getLong(3),
+                resultSet.getLong(4),
+                resultSet.getLong(5)),
             userId);
         if (userRow.isEmpty()) {
             return Optional.empty();
@@ -259,12 +265,6 @@ public final class StaffModerationDao {
             callForHelpId);
     }
 
-    public String openCallForHelpReviewRow(long callForHelpId) throws SQLException {
-        return openCallForHelpReview(callForHelpId)
-            .map(OpenCallForHelpReviewRow::legacyRow)
-            .orElse("");
-    }
-
     public long callForHelpReporterUserId(long callForHelpId) throws SQLException {
         return database.queryOne(
             "SELECT id_user FROM staff_cfh WHERE id=? LIMIT 1",
@@ -405,18 +405,25 @@ public final class StaffModerationDao {
         return database.execute("DELETE FROM staff_cfh WHERE id=?", callForHelpId);
     }
 
-    public String openStaffCallRows() throws SQLException {
-        List<String> rows = database.query(
+    public List<StaffCallForHelpRow> openStaffCallRows() throws SQLException {
+        return database.query(
             "SELECT staff_cfh.id,staff_cfh.id_tab,users.id,users.name,"
                 + "staff_cfh.id_partner,staff_cfh.id_room,staff_cfh.id_category,staff_cfh.description,rooms.id,rooms.name,"
                 + "staff_cfh.id_picker FROM staff_cfh,users,rooms WHERE staff_cfh.id_closed!='3' "
                 + "AND staff_cfh.timestamp_sent > UNIX_TIMESTAMP()-43200 AND users.id=staff_cfh.id_user "
                 + "AND users.id_socket IS NOT NULL AND rooms.id=staff_cfh.id_room LIMIT 1000",
-            resultSet -> resultSet.getString(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getString(3)
-                + "\t" + resultSet.getString(4) + "\t" + resultSet.getString(5) + "\t" + resultSet.getString(6)
-                + "\t" + resultSet.getString(7) + "\t" + resultSet.getString(8) + "\t" + resultSet.getString(9)
-                + "\t" + resultSet.getString(10) + "\t" + resultSet.getString(11));
-        return String.join("\r", rows);
+            resultSet -> new StaffCallForHelpRow(
+                resultSet.getLong(1),
+                resultSet.getLong(2),
+                resultSet.getLong(3),
+                resultSet.getString(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getLong(7),
+                resultSet.getString(8),
+                resultSet.getLong(9),
+                resultSet.getString(10),
+                resultSet.getLong(11)));
     }
 
     public Optional<Long> recentCallForHelpClosedState(long userId) throws SQLException {
@@ -507,20 +514,19 @@ public final class StaffModerationDao {
         long duplicateRoomId,
         String roomName
     ) {
-        public String legacyRow() {
-            return callForHelpId + "\t" + callerUserId + "\t" + text(callerName) + "\t" + partnerUserId
-                + "\t" + roomId + "\t" + categoryId + "\t" + text(description) + "\t" + duplicateRoomId
-                + "\t" + text(roomName);
-        }
-
-        public String reviewPayloadRow() {
-            return callForHelpId + "\t\t" + callerUserId + "\t" + text(callerName) + "\t" + partnerUserId
-                + "\t" + roomId + "\t" + categoryId + "\t" + text(description) + "\t" + duplicateRoomId
-                + "\t" + text(roomName) + "\t";
-        }
-
-        private static String text(String value) {
-            return value == null ? "" : value;
+        public StaffCallForHelpRow toPayloadRow() {
+            return new StaffCallForHelpRow(
+                callForHelpId,
+                0L,
+                callerUserId,
+                callerName,
+                partnerUserId,
+                roomId,
+                categoryId,
+                description,
+                duplicateRoomId,
+                roomName,
+                0L);
         }
     }
 
@@ -552,7 +558,7 @@ public final class StaffModerationDao {
         }
     }
 
-    public record UserModerationSummary(String userRow, long callForHelpCount, long pickedCallForHelpCount,
+    public record UserModerationSummary(StaffUserSummaryRow userRow, long callForHelpCount, long pickedCallForHelpCount,
                                         long cautionCount, long banCount) {
     }
 
