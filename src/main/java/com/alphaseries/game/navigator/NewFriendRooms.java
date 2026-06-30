@@ -17,7 +17,10 @@ public final class NewFriendRooms {
         this.expiresAt = expiresAt;
     }
 
-    public static NewFriendRooms fromLegacy(String rows, LocalDateTime expiresAt) {
+    public static NewFriendRooms fromLegacy(Object rows, LocalDateTime expiresAt) {
+        if (rows instanceof NewFriendRooms newFriendRooms) {
+            return newFriendRooms;
+        }
         List<RoomPick> rooms = new ArrayList<>();
         String rowText = StringUtils.text(rows);
         if (rowText.isEmpty()) {
@@ -55,18 +58,6 @@ public final class NewFriendRooms {
             return RoomPick.empty();
         }
         return rooms.get(rowIndex);
-    }
-
-    public String toLegacyRows() {
-        List<String> rowTexts = new ArrayList<>();
-        for (RoomPick room : rooms) {
-            if (room.roomId() <= 0L && room.modelType() <= 0L) {
-                rowTexts.add("");
-                continue;
-            }
-            rowTexts.add(room.roomId() + "\t" + room.modelType());
-        }
-        return String.join("\r", rowTexts);
     }
 
     public record RoomPick(long roomId, long modelType) {

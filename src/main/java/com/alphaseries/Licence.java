@@ -93,7 +93,7 @@ public final class Licence {
     public static String global_00829044 = "";
     public static String global_00829048 = "";
     public static String global_00829080 = "";
-    public static String global_0082908C = "";
+    public static Object global_0082908C = "";
     public static LocalDateTime global_00829090 = null;
     public static String global_00829098 = "";
     public static String global_0082909C = "";
@@ -465,12 +465,13 @@ public final class Licence {
     }
 
     public static void setNewFriendRooms(String rows, LocalDateTime expiresAt) {
-        global_0082908C = StringUtils.text(rows);
+        global_0082908C = NewFriendRooms.fromLegacy(rows, expiresAt);
         global_00829090 = expiresAt;
     }
 
     public static void setNewFriendRooms(List<NewFriendRooms.RoomPick> rooms, LocalDateTime expiresAt) {
-        setNewFriendRooms(NewFriendRooms.fromRoomPicks(rooms, expiresAt).toLegacyRows(), expiresAt);
+        global_0082908C = NewFriendRooms.fromRoomPicks(rooms, expiresAt);
+        global_00829090 = expiresAt;
     }
 
     public static StaffSettings staffSettings() {

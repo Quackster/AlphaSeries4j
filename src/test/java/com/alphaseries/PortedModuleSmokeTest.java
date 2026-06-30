@@ -2280,6 +2280,9 @@ public final class PortedModuleSmokeTest {
         Licence.global_0082908C = "12\t1";
         Licence.global_00829090 = java.time.LocalDateTime.now().plusSeconds(90L);
         assertEquals(false, Licence.newFriendRooms().shouldRefresh(java.time.LocalDateTime.now()));
+        Licence.setNewFriendRooms(java.util.List.of(new com.alphaseries.game.navigator.NewFriendRooms.RoomPick(12L, 1L)),
+                java.time.LocalDateTime.now().plusSeconds(90L));
+        assertEquals(true, Licence.global_0082908C instanceof com.alphaseries.game.navigator.NewFriendRooms);
         DataManager.global_008291AC = "\0" + "1\1events\2";
         Path originalApplicationPath = Path.of(Functions.applicationPath);
         Object originalProductCache = DataManager.global_008292BC;
