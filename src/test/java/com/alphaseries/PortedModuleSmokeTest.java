@@ -2100,8 +2100,12 @@ public final class PortedModuleSmokeTest {
         assertEquals(false, Handling.isSocketMarkedBusy(busyCache, 5));
         assertEquals(false, Handling.isSocketMarkedBusy("[6]a\2b", 6));
         assertEquals(false, Handling.isSocketMarkedBusy(busyCache, 9));
+        RepresentedSocketCache.RepresentedSocketRecord socketRecord =
+            RepresentedSocketCache.RepresentedSocketRecord.fromPayload("a\2" + "7\2c\2d\2e\2" + "1");
+        assertEquals(7L, socketRecord.roomSlot());
+        assertEquals(true, socketRecord.busy());
         RepresentedSocketCache socketCache = RepresentedSocketCache.fromRecords(Map.of(
-            4L, RepresentedSocketCache.RepresentedSocketRecord.fromPayload("a\2" + "7\2c\2d\2e\2" + "1")
+            4L, socketRecord
         ));
         assertEquals("a\2" + "7\2c\2d\2e\2" + "1", socketCache.record(4));
         assertEquals(7L, socketCache.roomSlot(4));

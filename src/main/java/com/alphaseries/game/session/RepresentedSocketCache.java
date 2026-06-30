@@ -44,7 +44,7 @@ public final class RepresentedSocketCache {
 
     public boolean isBusy(long socketIndex) {
         RepresentedSocketRecord record = records.get(socketIndex);
-        return record != null && record.isBusy();
+        return record != null && record.busy();
     }
 
     private static Map<Long, RepresentedSocketRecord> parseRecords(String cacheText) {
@@ -67,18 +67,13 @@ public final class RepresentedSocketCache {
         return parsedRecords;
     }
 
-    public record RepresentedSocketRecord(String payload, String[] fields) {
+    public record RepresentedSocketRecord(String payload, long roomSlot, boolean busy) {
         public static RepresentedSocketRecord fromPayload(String payload) {
             String payloadText = StringUtils.text(payload);
-            return new RepresentedSocketRecord(payloadText, payloadText.split("\2", -1));
-        }
-
-        public long roomSlot() {
-            return fields.length >= 2 ? NumberUtils.parseLong(fields[1]) : 0L;
-        }
-
-        public boolean isBusy() {
-            return fields.length >= 6 && NumberUtils.parseLong(fields[5]) != 0L;
+            String[] fields = payloadText.split("\2", -1);
+            long roomSlot = fields.length >= 2 ? NumberUtils.parseLong(fields[1]) : 0L;
+            boolean busy = fields.length >= 6 && NumberUtils.parseLong(fields[5]) != 0L;
+            return new RepresentedSocketRecord(payloadText, roomSlot, busy);
         }
     }
 }
