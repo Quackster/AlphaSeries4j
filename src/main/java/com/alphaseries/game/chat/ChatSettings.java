@@ -25,6 +25,10 @@ public final class ChatSettings {
         return new ChatSettings(List.of(), List.of());
     }
 
+    public List<FilterWord> filterWords() {
+        return List.copyOf(filterWords);
+    }
+
     public String filterRows() {
         List<String> rows = new ArrayList<>();
         for (FilterWord row : filterWords) {
@@ -33,6 +37,10 @@ public final class ChatSettings {
             }
         }
         return String.join("\r", rows);
+    }
+
+    public List<Gesture> gestures() {
+        return List.copyOf(gestures);
     }
 
     public String gestureRows() {

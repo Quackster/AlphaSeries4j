@@ -1253,8 +1253,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Licence.achievementSettings().rowsAsText().contains("ACH_ONE"));
         assertEquals(new ChatSettings.Gesture(":-)", 5L), ((List<?>) Licence.global_00829294).get(0));
         assertEquals(new ChatSettings.FilterWord("badword"), ((List<?>) Licence.global_00829290).get(0));
-        assertEquals("badword", Licence.chatSettings().filterRows());
-        assertEquals(":-)\t5", Licence.chatSettings().gestureRows());
+        assertChatSettingsTypedAccessors(Licence.chatSettings());
         assertEquals(75, ((int[]) Licence.global_0082927C)[2]);
         MySQL.configureDatabaseConnection(null);
 
@@ -4900,6 +4899,13 @@ public final class PortedModuleSmokeTest {
     private static void assertPetSettingsTypedAccessors(PetSettings settings, PetSettings.PetCommandRow command) {
         assertEquals(List.of(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 3)), settings.levels());
         assertEquals(List.of(command), settings.commands());
+    }
+
+    private static void assertChatSettingsTypedAccessors(ChatSettings settings) {
+        assertEquals("badword", settings.filterRows());
+        assertEquals(":-)\t5", settings.gestureRows());
+        assertEquals(List.of(new ChatSettings.FilterWord("badword")), settings.filterWords());
+        assertEquals(List.of(new ChatSettings.Gesture(":-)", 5L)), settings.gestures());
     }
 
     private static void assertRoomPortalSettingsBootRows(RoomPortalSettings settings) {
