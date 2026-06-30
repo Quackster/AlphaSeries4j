@@ -1664,7 +1664,7 @@ public final class Handling {
             }
             long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
             if (roomUserIndex > 0L) {
-                Proc_6_247_8027E0(socketIndex, SocialPayloads.roomUserRemoved(roomUserIndex), 0);
+                broadcastToCurrentRoom(socketIndex, SocialPayloads.roomUserRemoved(roomUserIndex));
             }
             if (visitId > 0L) {
                 rooms.closeVisitById(visitId);
@@ -1963,7 +1963,7 @@ public final class Handling {
             }
             furniture.updatePostIt(note.furnitureId, note.noteColor, note.noteCaption);
             String broadcastPayload = FurniturePayloads.stickyNoteUpdated(note.furnitureId, productId, note.noteColor);
-            Proc_6_247_8027E0(socketIndex, broadcastPayload, 0);
+            broadcastToCurrentRoom(socketIndex, broadcastPayload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -2037,7 +2037,7 @@ public final class Handling {
                 return;
             }
             furniture.deleteFurniture(furnitureId);
-            Proc_6_247_8027E0(socketIndex, "AT" + furnitureId, 0);
+            broadcastToCurrentRoom(socketIndex, "AT" + furnitureId);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -2077,7 +2077,7 @@ public final class Handling {
             if (!boxAction.contains("present_") || "ecotron_box".equals(boxAction)) {
                 return;
             }
-            Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
+            broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2');
             furniture.deleteFurniture(furnitureId);
             furniture.insertInventoryFurniture(openedProductId, NumberUtils.parseLong(callerUserId), openedSign);
             long openedProductType = DataManager.productCache().type(openedProductId);
@@ -2141,7 +2141,7 @@ public final class Handling {
             }
             furniture.updateSign(furnitureId, nextState);
             String payload = FurniturePayloads.wallState(furnitureId, productId, String.valueOf(nextState), "0");
-            Proc_6_247_8027E0(socketIndex, payload, 0);
+            broadcastToCurrentRoom(socketIndex, payload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -2257,7 +2257,7 @@ public final class Handling {
             users.addCredits(numericUserId, creditValue);
             long updatedCredits = users.credits(numericUserId);
             Proc_6_244_801E80(socketIndex, "@F" + updatedCredits + ".0" + '\2', 0);
-            Proc_6_247_8027E0(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2', 0);
+            broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2');
             furniture.deleteFurniture(furnitureId);
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
             deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
@@ -2368,7 +2368,7 @@ public final class Handling {
             Proc_6_205_7D9780(targetSocketIndex, 2);
             long respectReceived = users.respectReceived(targetUserIdValue);
             String payload = UserPayloads.respectReceived(targetUserIdValue, respectReceived);
-            Proc_6_247_8027E0(socketIndex, payload, 0);
+            broadcastToCurrentRoom(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
