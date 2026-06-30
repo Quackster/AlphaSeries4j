@@ -7,6 +7,7 @@ import com.alphaseries.game.achievement.AchievementState;
 import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.catalog.CatalogProductSettings;
 import com.alphaseries.game.catalog.CatalogRegistry;
+import com.alphaseries.game.catalog.CatalogState;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.chat.ChatState;
@@ -208,22 +209,34 @@ public final class Licence {
     }
 
     public static GiftSettings giftSettings() {
-        return GiftSettings.fromLegacy(global_00829178, global_0082917C, global_0082925C, global_00829260);
+        if (global_00829178 instanceof GiftSettings giftSettings) {
+            CatalogState.instance().setGiftSettings(giftSettings);
+        } else {
+            CatalogState.instance().setGiftSettingsFromLegacy(global_00829178, global_0082917C,
+                global_0082925C, global_00829260);
+        }
+        return CatalogState.instance().giftSettings();
     }
 
     public static void setClubGiftState(String payload, String lookup) {
         global_00829178 = StringUtils.text(payload);
         global_0082917C = StringUtils.text(lookup);
+        CatalogState.instance().setGiftSettingsFromLegacy(global_00829178, global_0082917C,
+            global_0082925C, global_00829260);
     }
 
     public static void setClubGiftState(GiftSettings.ClubGiftState state) {
         global_00829178 = state == null ? "" : state;
         global_0082917C = "";
+        CatalogState.instance().setGiftSettingsFromLegacy(global_00829178, global_0082917C,
+            global_0082925C, global_00829260);
     }
 
     public static void setGiftWrapState(String lookup, String payload) {
         global_0082925C = StringUtils.text(lookup);
         global_00829260 = StringUtils.text(payload);
+        CatalogState.instance().setGiftSettingsFromLegacy(global_00829178, global_0082917C,
+            global_0082925C, global_00829260);
     }
 
     public static HelpCenterCache helpCenterCache() {

@@ -24,6 +24,9 @@ public final class GiftSettings {
     }
 
     public static GiftSettings fromLegacy(Object clubGiftPayload, Object clubGiftLookup, String giftWrapLookup, String giftWrapPayload) {
+        if (clubGiftPayload instanceof GiftSettings giftSettings) {
+            return giftSettings;
+        }
         return new GiftSettings(clubGiftPayload, clubGiftLookup, giftWrapLookup, giftWrapPayload);
     }
 

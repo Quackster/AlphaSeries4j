@@ -66,6 +66,7 @@ import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.achievement.AchievementState;
 import com.alphaseries.game.catalog.CatalogRegistry;
+import com.alphaseries.game.catalog.CatalogState;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatSettings;
 import com.alphaseries.game.chat.ChatState;
@@ -4188,7 +4189,7 @@ public final class Handling {
             if (catalogProductId <= 0L) {
                 return "";
             }
-            GiftSettings.ClubGift gift = Licence.giftSettings().clubGiftByCatalogProductId(catalogProductId);
+            GiftSettings.ClubGift gift = giftSettings().clubGiftByCatalogProductId(catalogProductId);
             long productId = gift.productId();
             long requiredDays = gift.requiredDays();
             if (productId <= 0L) {
@@ -4232,7 +4233,7 @@ public final class Handling {
                 ? new ClubDao.ClubGiftStatus(0L, 0L, 0L, 0L, 0L)
                 : clubs.clubGiftStatus(NumberUtils.parseLong(userId))
                     .orElse(new ClubDao.ClubGiftStatus(0L, 0L, 0L, 0L, 0L));
-            Proc_6_244_801E80(socketIndex, ClubPayloads.clubGiftStatus(Licence.giftSettings(), status), 0);
+            Proc_6_244_801E80(socketIndex, ClubPayloads.clubGiftStatus(giftSettings(), status), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -4291,7 +4292,7 @@ public final class Handling {
                     }
                     wrapProductId = catalog.firstGiftWrapProductId();
                 }
-                if (wrapProductId > 0L && !Licence.giftSettings().containsGiftWrapProduct(wrapProductId)) {
+                if (wrapProductId > 0L && !giftSettings().containsGiftWrapProduct(wrapProductId)) {
                     return "";
                 }
                 creditPrice += wrapPrice;
@@ -4390,7 +4391,7 @@ public final class Handling {
                 NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.enabled", 0)));
             long giftWrapPrice = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.price", defaultPayload));
             Proc_6_244_801E80(socketIndex,
-                CatalogPayloads.giftWrapOptions(giftWrapPrice, Licence.giftSettings().giftWrapPayload()), 0);
+                CatalogPayloads.giftWrapOptions(giftWrapPrice, giftSettings().giftWrapPayload()), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -9406,6 +9407,11 @@ public final class Handling {
     private static QuestSettings questSettings() {
         Licence.questSettings();
         return QuestState.instance().settings();
+    }
+
+    private static GiftSettings giftSettings() {
+        Licence.giftSettings();
+        return CatalogState.instance().giftSettings();
     }
 
     public static String officialNavigatorQuery() {
