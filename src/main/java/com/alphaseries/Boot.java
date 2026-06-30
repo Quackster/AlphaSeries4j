@@ -750,15 +750,15 @@ public final class Boot {
     }
 
     public static String buildStaffMessageList(List<StaffModerationDao.StaffMessageRow> rows) {
-        StringBuilder payload = new StringBuilder();
+        PacketBuilder payload = PacketBuilder.create();
         if (rows != null) {
             for (StaffModerationDao.StaffMessageRow row : rows) {
                 if (row != null && !StringUtils.text(row.message()).isEmpty()) {
-                    payload.append(row.message()).append('\2');
+                    payload.appendString(row.message());
                 }
             }
         }
-        return payload.toString();
+        return payload.build();
     }
 
     public static String permissionPayload(String rows) {
