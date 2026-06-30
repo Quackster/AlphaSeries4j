@@ -116,7 +116,7 @@ public final class Licence {
     public static Object global_0082909C = "";
     public static Object global_0082934C = "";
     public static String global_00829310 = "";
-    public static String global_0082930C = "";
+    public static Object global_0082930C = "";
     public static String global_00829350 = "";
     public static String global_00829354 = "";
     public static String global_00829358 = "";
@@ -380,7 +380,7 @@ public final class Licence {
 
     public static void setRepresentedRoomSlots(RepresentedRoomSlots representedRoomSlots) {
         RoomState.instance().setRepresentedRoomSlots(representedRoomSlots);
-        global_0082930C = representedRoomSlots == null ? "" : representedRoomSlots.availableSlotMarkers();
+        global_0082930C = representedRoomSlots == null ? "" : representedRoomSlots;
     }
 
     public static RepresentedRoomCache representedRooms() {

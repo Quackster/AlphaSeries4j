@@ -583,6 +583,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Exposed defensive typed `RepresentedSocketCache` record maps so session callers can consume socket-index keyed records without legacy cache text.
 - Migrated `SessionRegistry` internals away from retained raw cache strings and split field arrays, using typed record/linked-section storage while preserving legacy cache serialization and lookup behavior.
 - Added typed `RepresentedRoomSlots.fromSlots(...)` construction and defensive slot-id access so room slot state can move through collections instead of legacy marker strings.
+- Routed represented-room slot updates into typed `RepresentedRoomSlots` live storage in `Licence.global_0082930C`, leaving marker-string parsing only as a compatibility input.
 - Migrated `RepresentedRoomCache` outer cache storage from one raw marker string to typed room-record lists, preserving legacy cache serialization and replacement behavior at the compatibility boundary.
 - Exposed defensive typed `RoomPortalSettings` warp-space and special-gate row accessors so room portal callers can move away from compatibility row strings.
 - Migrated `RepresentedBotRegistry` internals from raw allocated-marker and record-cache strings to typed entity-id sets and record maps, preserving per-record legacy serialization only for the `Licence` compatibility bridge.

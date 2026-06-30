@@ -12,7 +12,7 @@ import java.util.Set;
 public final class RepresentedRoomSlots {
     private final Set<Long> availableSlots;
 
-    private RepresentedRoomSlots(String availableSlotMarkers) {
+    private RepresentedRoomSlots(Object availableSlotMarkers) {
         this(parse(StringUtils.text(availableSlotMarkers)));
     }
 
@@ -25,7 +25,10 @@ public final class RepresentedRoomSlots {
         }
     }
 
-    public static RepresentedRoomSlots fromLegacy(String availableSlotMarkers) {
+    public static RepresentedRoomSlots fromLegacy(Object availableSlotMarkers) {
+        if (availableSlotMarkers instanceof RepresentedRoomSlots representedRoomSlots) {
+            return representedRoomSlots;
+        }
         return new RepresentedRoomSlots(availableSlotMarkers);
     }
 

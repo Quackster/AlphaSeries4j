@@ -1721,6 +1721,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(List.of(5L, 7L), typedRoomSlots.availableSlots());
         assertEquals("[5][7]", typedRoomSlots.availableSlotMarkers());
         assertEquals(List.of(5L, 7L), RepresentedRoomSlots.fromLegacy("[5][7]").availableSlots());
+        Object previousRoomSlots = Licence.global_0082930C;
+        Licence.setRepresentedRoomSlots(typedRoomSlots);
+        assertEquals(true, Licence.global_0082930C instanceof RepresentedRoomSlots);
+        assertEquals(List.of(5L, 7L), Licence.representedRoomSlots().availableSlots());
+        Licence.global_0082930C = previousRoomSlots;
         String roomRecordCache = RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2\1" + "2\told\2")
             .setRecord(2, "2\tnew").cacheText();
         assertEquals("\1" + "1\talpha\2\1" + "2\tnew\2", roomRecordCache);

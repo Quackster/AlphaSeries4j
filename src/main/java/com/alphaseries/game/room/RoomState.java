@@ -51,7 +51,7 @@ public final class RoomState {
         this.representedRoomSlots = representedRoomSlots == null ? RepresentedRoomSlots.empty() : representedRoomSlots;
     }
 
-    public synchronized void setRepresentedRoomSlotsFromLegacy(String availableSlotMarkers) {
+    public synchronized void setRepresentedRoomSlotsFromLegacy(Object availableSlotMarkers) {
         representedRoomSlots = RepresentedRoomSlots.fromLegacy(availableSlotMarkers);
     }
 
