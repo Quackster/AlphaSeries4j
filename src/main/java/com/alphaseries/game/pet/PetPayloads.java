@@ -34,7 +34,7 @@ public final class PetPayloads {
             .build();
     }
 
-    public static String raceListFromRows(String productPet, List<PetRaceRow> rows, long rankIndex, long hcLevel) {
+    public static String raceList(String productPet, List<PetRaceRow> rows, long rankIndex, long hcLevel) {
         long raceCount = 0L;
         PacketBuilder racePayload = PacketBuilder.create();
         if (rows != null) {
@@ -73,7 +73,7 @@ public final class PetPayloads {
             .build();
     }
 
-    public static String inventoryListFromRows(List<PetInventoryRow> rows) {
+    public static String inventoryList(List<PetInventoryRow> rows) {
         long petCount = 0L;
         PacketBuilder petPayload = PacketBuilder.create();
         if (rows != null) {

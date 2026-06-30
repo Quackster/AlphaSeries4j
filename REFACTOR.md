@@ -311,6 +311,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the dead public `Handling.handlingField(...)` compatibility shim after all indexed-field call sites had moved to typed records or explicit helpers.
 - Removed the legacy inventory payload row-string wrapper; inventory list payload construction now accepts typed `InventoryItemRow` data only.
 - Removed the legacy navigator room/event payload row-string wrappers and dead navigator row-text parsers, leaving navigator payload list construction on typed row records.
+- Renamed pet race and inventory payload methods away from `FromRows` naming now that their production paths accept typed DAO row lists.
 
 ## VB Compatibility Class Removal Checklist
 

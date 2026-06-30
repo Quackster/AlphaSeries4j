@@ -5915,7 +5915,7 @@ public final class Handling {
             if (bots == null) {
                 return "";
             }
-            String payload = PetPayloads.raceListFromRows(productPet, bots.petRaces(productPet), rankIndex, hcLevel);
+            String payload = PetPayloads.raceList(productPet, bots.petRaces(productPet), rankIndex, hcLevel);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -5935,7 +5935,7 @@ public final class Handling {
             if (bots == null) {
                 return "";
             }
-            String payload = PetPayloads.inventoryListFromRows(bots.inventoryPets(NumberUtils.parseLong(userId)));
+            String payload = PetPayloads.inventoryList(bots.inventoryPets(NumberUtils.parseLong(userId)));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
