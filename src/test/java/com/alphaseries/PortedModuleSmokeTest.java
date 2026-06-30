@@ -1193,8 +1193,16 @@ public final class PortedModuleSmokeTest {
         RoomCategoryCache typedRoomCategories = RoomCategoryCache.fromRows("defaults",
             List.of(new RoomDao.RoomCategoryRow(5L, "typed", 1L, 2L, 3L)),
             new String[][]{{"CATEGORY"}});
+        assertEquals("defaults", typedRoomCategories.privateDefaultCategoryId());
+        assertEquals("", typedRoomCategories.publicDefaultCategoryId());
         assertEquals("5\ttyped\t1\t2\t3", typedRoomCategories.categoryRows());
         assertEquals("CATEGORY", typedRoomCategories.payload(0L, 0L));
+        RoomCategoryCache typedRoomCategoryDefaults = RoomCategoryCache.fromRows(
+            new String[]{"11", "", "22"}, List.of(), new String[0][]);
+        String[] defaultCategoryIds = typedRoomCategoryDefaults.defaultCategoryIds();
+        defaultCategoryIds[0] = "changed";
+        assertEquals("11", typedRoomCategoryDefaults.privateDefaultCategoryId());
+        assertEquals("22", typedRoomCategoryDefaults.publicDefaultCategoryId());
         Boot.Proc_1_12_6C8EF0();
         assertEquals(true, ((String[][]) Licence.global_00829244)[0][0].contains("public"));
         assertEquals(true, Licence.roomCategoryCache().payload(0L, 0L).contains("public"));
