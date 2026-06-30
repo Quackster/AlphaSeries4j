@@ -323,6 +323,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved the pet command cache from tab-delimited string rows into typed `PetSettings.PetCommandRow` arrays; pet command payload/action paths now consume typed command rows.
 - Moved staff call-for-help rows and staff user summaries from tab-delimited row strings into typed moderation records; the DAO now maps those result sets directly into `StaffCallForHelpRow` and `StaffUserSummaryRow`.
 - Moved staff room chat-log queries and payload wrappers from tab-delimited row strings into typed `StaffRoomChatRow` lists and removed dead `MySQL` chat-log string wrappers.
+- Removed the dead `StaffRoomChatRow.fromLegacy` tab-delimited parser after all staff chat-log callers moved to typed rows.
 
 ## VB Compatibility Class Removal Checklist
 
