@@ -1529,13 +1529,13 @@ public final class PortedModuleSmokeTest {
         updater.currentUpdateIndex = 0;
         updater.advanceUpdateProgress(4);
         assertEquals(5766L, updater.pendingProgressWidth);
-        updater.applyFeatureState(UpdaterSettings.UpdateEntry.fromLegacyRow("id\ttitle\tbody\t0\t99"));
+        updater.applyFeatureState(UpdaterSettings.UpdateEntry.fromFields("id", "title", "body", 0L, 99L));
         assertEquals(true, updater.freeFeature.visible);
         assertEquals("Kostenlose Funktion", updater.freeFeature.caption);
-        updater.applyFeatureState(UpdaterSettings.UpdateEntry.fromLegacyRow("id\ttitle\tbody\t2\t99"));
+        updater.applyFeatureState(UpdaterSettings.UpdateEntry.fromFields("id", "title", "body", 2L, 99L));
         assertEquals(true, updater.unfreeFeature.visible);
         assertEquals("Kostet 99 Punkte", updater.unfreeFeature.caption);
-        updater.applyFeatureState(UpdaterSettings.UpdateEntry.fromLegacyRow("id\ttitle\tbody\t1\t0"));
+        updater.applyFeatureState(UpdaterSettings.UpdateEntry.fromFields("id", "title", "body", 1L, 0L));
         assertEquals(true, updater.downloadFeature.visible);
         UpdaterSettings.UpdateEntry updateEntry = UpdaterSettings.UpdateEntry.fromLegacyRow("x\t42\tbody\t3\t7");
         assertEquals("42", updateEntry.title());
@@ -1549,7 +1549,7 @@ public final class PortedModuleSmokeTest {
         List<UpdaterSettings.UpdateEntry> typedUpdateEntries = new ArrayList<>();
         typedUpdateEntries.add(updateEntry);
         UpdaterSettings typedUpdaterSettings = UpdaterSettings.fromEntries("typed-updater", typedUpdateEntries, "");
-        typedUpdateEntries.add(UpdaterSettings.UpdateEntry.fromLegacyRow("y\ttitle\tbody\t1\t2"));
+        typedUpdateEntries.add(UpdaterSettings.UpdateEntry.fromFields("y", "title", "body", 1L, 2L));
         assertEquals("typed-updater", typedUpdaterSettings.executableName());
         assertEquals(1, typedUpdaterSettings.entries().length);
         assertEquals("x\t42\tbody\t3\t7", typedUpdaterSettings.updateEntries()[0]);
@@ -4904,7 +4904,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("alpha", parsedSettings.value("name"));
         AppSettingsCache typedSettings = AppSettingsCache.fromSettings(Map.of("Server.Port", "4321"));
         assertEquals("4321", typedSettings.value("server.port"));
-        UpdaterSettings.UpdateEntry entry = UpdaterSettings.UpdateEntry.fromLegacyRow("x\t42\tbody\t3\t7");
+        UpdaterSettings.UpdateEntry entry = UpdaterSettings.UpdateEntry.fromFields("x", "42", "body", 3L, 7L);
         UpdaterSettings updaterSettings = UpdaterSettings.fromEntries("typed-updater", List.of(entry), "");
         assertEquals(List.of(entry), updaterSettings.entryList());
     }

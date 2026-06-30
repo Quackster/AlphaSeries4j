@@ -638,6 +638,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Exposed defensive typed `RepresentedBotRegistry` record maps so represented-bot callers can consume entity-id keyed records without legacy cache text.
 - Routed represented-bot updates into typed `RepresentedBotRegistry` live storage in `Licence.global_008292D4`/`global_00829358`, leaving allocated-marker and record-cache parsing only as compatibility inputs.
 - Migrated `UpdaterSettings` internals from retained newline/tab-delimited update-row text to typed `UpdateEntry` lists, leaving legacy row parsing only at the settings construction boundary.
+- Added typed `UpdaterSettings.UpdateEntry.fromFields(...)` construction and moved updater feature-state tests away from tab-delimited row strings, keeping `fromLegacyRow(...)` only for compatibility parsing coverage.
 - Routed live updater rendering through `UpdaterSettings.entryList()` typed access, leaving the `entries()` array only as a compatibility view.
 - Migrated `AppSettingsCache` internals from retained raw settings text to parsed case-insensitive setting maps, with typed map construction available for callers that no longer need legacy text.
 - Migrated `PermissionMatrix` internals from raw legacy permission objects to defensive `String[][]` rows, keeping `String[]` compatibility only at construction.

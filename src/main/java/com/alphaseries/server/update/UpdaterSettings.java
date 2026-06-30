@@ -87,6 +87,26 @@ public final class UpdaterSettings {
             bodyText = StringUtils.text(bodyText);
         }
 
+        public static UpdateEntry fromFields(
+            String id,
+            String title,
+            String bodyText,
+            long featureMode,
+            long featureCost
+        ) {
+            String normalizedId = StringUtils.text(id);
+            String normalizedTitle = StringUtils.text(title);
+            String normalizedBodyText = StringUtils.text(bodyText);
+            return new UpdateEntry(
+                normalizedId + "\t" + normalizedTitle + "\t" + normalizedBodyText + "\t" + featureMode + "\t" + featureCost,
+                normalizedId,
+                normalizedTitle,
+                normalizedBodyText,
+                featureMode,
+                featureCost,
+                true);
+        }
+
         public static UpdateEntry fromLegacyRow(String rowText) {
             String row = StringUtils.text(rowText);
             String[] fields = row.split("\t", -1);
