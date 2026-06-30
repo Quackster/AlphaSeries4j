@@ -36,6 +36,13 @@ public final class SocialPayloads {
             .build();
     }
 
+    public static String roomUserEffectCleared(long roomUserIndex) {
+        return PacketBuilder.message("Ge")
+            .appendInt(roomUserIndex)
+            .appendRaw('H')
+            .build();
+    }
+
     public static String roomUserWave(long roomUserIndex) {
         return PacketBuilder.message("Ga")
             .appendInt(roomUserIndex)

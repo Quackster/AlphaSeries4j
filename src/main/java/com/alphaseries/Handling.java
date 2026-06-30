@@ -3444,10 +3444,8 @@ public final class Handling {
                 return 0L;
             }
             users.activateUserEffect(effectRowId);
-            Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(rentSeconds, null,
-                Crypto.Proc_3_0_6D2AF0(effectId, null, "GN")), 0);
-            String broadcastPayload = Crypto.Proc_3_0_6D2AF0(socketIndex, null, "Ge");
-            broadcastPayload = Crypto.Proc_3_0_6D2AF0(effectId, null, broadcastPayload) + "H";
+            Proc_6_244_801E80(socketIndex, UserPayloads.effectActivated(effectId, rentSeconds), 0);
+            String broadcastPayload = SocialPayloads.roomUserEffect(socketIndex, effectId) + "H";
             Proc_6_247_8027E0(socketIndex, broadcastPayload, 0);
             return effectId;
         } catch (Exception ignored) {
@@ -3466,8 +3464,8 @@ public final class Handling {
                 long effectId = effect.effectId();
                 int socketIndex = (int) effect.socketIndex();
                 if (socketIndex > 0 && effectId > 0L) {
-                    Proc_6_247_8027E0(socketIndex, Crypto.Proc_3_0_6D2AF0(socketIndex, null, "Ge") + "H", 0);
-                    Proc_6_244_801E80(socketIndex, Crypto.Proc_3_0_6D2AF0(effectId, null, "GO"), 0);
+                    Proc_6_247_8027E0(socketIndex, SocialPayloads.roomUserEffectCleared(socketIndex), 0);
+                    Proc_6_244_801E80(socketIndex, UserPayloads.effectExpired(effectId), 0);
                     expiredCount++;
                 }
             }

@@ -1576,6 +1576,9 @@ public final class PortedModuleSmokeTest {
                 + Crypto.Proc_3_0_6D2AF0(1, null, "")
                 + "M",
             effectListPayload.payload());
+        assertEquals(Crypto.Proc_3_0_6D2AF0(3600, null,
+            Crypto.Proc_3_0_6D2AF0(12, null, "GN")), UserPayloads.effectActivated(12, 3600));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(12, null, "GO"), UserPayloads.effectExpired(12));
         Handling.WallPlacement placement = new Handling.WallPlacement();
         assertEquals(true, Handling.wallPlacementFromPayload(":w= 10,20 l= 3,4", placement));
         assertEquals(10L, placement.wallX);
@@ -2191,6 +2194,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(expectedProfile, Handling.representedRoomUserProfilePayload(9, "Alice", "motto", 123, "fig"));
         assertEquals("Ge" + Crypto.Proc_3_0_6D2AF0(9, null, "") + Crypto.Proc_3_0_6D2AF0(12, null, ""),
             SocialPayloads.roomUserEffect(9L, 12L));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "Ge") + "H", SocialPayloads.roomUserEffectCleared(9L));
         assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "Ga"), SocialPayloads.roomUserWave(9L));
         assertEquals(Crypto.Proc_3_0_6D2AF0(3, null,
             Crypto.Proc_3_0_6D2AF0(9, null, "G`")), SocialPayloads.roomUserDance(9L, 3L));

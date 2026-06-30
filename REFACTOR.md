@@ -377,6 +377,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved room-user wave `Ga` and dance payload construction into `SocialPayloads`, replacing chained legacy `Crypto` packet assembly in `Handling`.
 - Moved common room update, rating, wall-option, and favourite-toggle payloads into `RoomPayloads`, replacing repeated legacy `Crypto` packet assembly in `Handling`.
 - Moved avatar-name validation, room-user name-change, and login email-status payloads into `UserPayloads`, and reused `RoomPayloads.homeRoom` for login home-room packets.
+- Moved user effect activation/expiry payloads into `UserPayloads` and room-user effect-clear broadcasts into `SocialPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -392,7 +393,7 @@ Measured on 2026-06-30:
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11997 lines
+- `Handling.java`: 11995 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 220 lines
 - `Main.java`: 889 lines

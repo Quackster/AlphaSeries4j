@@ -90,6 +90,19 @@ public final class UserPayloads {
             .build();
     }
 
+    public static String effectActivated(long effectId, long rentSeconds) {
+        return PacketBuilder.message("GN")
+            .appendInt(effectId)
+            .appendInt(rentSeconds)
+            .build();
+    }
+
+    public static String effectExpired(long effectId) {
+        return PacketBuilder.message("GO")
+            .appendInt(effectId)
+            .build();
+    }
+
     public static String identityRefresh(long userId, String mottoText, String figureText, String genderText) {
         return PacketBuilder.message("DJ")
             .appendInt(userId)
