@@ -183,7 +183,7 @@ public final class Handling {
                 || callerUserId.isEmpty() || "0".equals(callerUserId)
                 || !handlingUserHasPermission(callerUserId, "fuse_mod")
                 || !handlingUserHasPermission(callerUserId, "fuse_alert")
-                || containsUnsafeStaffAlert(banMessage)) {
+                || StaffPayloads.containsUnsafeAlert(banMessage)) {
                 return;
             }
             long currentRoomId = handlingCurrentRoomId(socketIndex, callerUserId);
@@ -234,7 +234,7 @@ public final class Handling {
                 return 0L;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            if (roomId <= 0L || actionType <= 0L || messageText.isEmpty() || containsUnsafeStaffAlert(messageText)) {
+            if (roomId <= 0L || actionType <= 0L || messageText.isEmpty() || StaffPayloads.containsUnsafeAlert(messageText)) {
                 return 0L;
             }
             StaffModerationDao moderationDao = staffModerationDao();
@@ -8582,7 +8582,7 @@ public final class Handling {
                 || callerUserId.isEmpty() || "0".equals(callerUserId)
                 || !handlingUserHasPermission(callerUserId, "fuse_mod")
                 || !handlingUserHasPermission(callerUserId, requiredPermission)
-                || containsUnsafeStaffAlert(messageText)) {
+                || StaffPayloads.containsUnsafeAlert(messageText)) {
                 return;
             }
             long callerUserIdValue = NumberUtils.parseLong(callerUserId);
@@ -11305,10 +11305,6 @@ public final class Handling {
         result.chatCount = chatRowsPayload.chatCount;
         result.payload = chatRowsPayload.payload;
         return result;
-    }
-
-    public static boolean containsUnsafeStaffAlert(String messageText) {
-        return StaffPayloads.containsUnsafeAlert(messageText);
     }
 
     private static StaffModerationDao staffModerationDao() {

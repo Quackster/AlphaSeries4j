@@ -2677,8 +2677,8 @@ public final class PortedModuleSmokeTest {
             + "Target\2" + Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedVisit;
         assertEquals(expectedRoomVisitHistoryResponse,
             StaffPayloads.roomVisitHistoryResponse(staffTarget, 1L, expectedVisit));
-        assertEquals(true, Handling.containsUnsafeStaffAlert("cookie plus javascript:"));
-        assertEquals(false, Handling.containsUnsafeStaffAlert("cookie only"));
+        assertEquals(true, StaffPayloads.containsUnsafeAlert("cookie plus javascript:"));
+        assertEquals(false, StaffPayloads.containsUnsafeAlert("cookie only"));
 
         final List<String> handlingSends = new ArrayList<>();
         final List<String> handlingSql = new ArrayList<>();
