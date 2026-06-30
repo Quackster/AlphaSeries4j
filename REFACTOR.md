@@ -581,6 +581,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Migrated `GiftSettings` internals from raw club-gift and gift-wrap lookup strings to typed `ClubGift` lists and gift-wrap product id sets, keeping raw lookup text only in the `Licence` compatibility mirror.
 - Migrated `CatalogRegistry` row storage from raw row strings to parsed typed row wrappers, preserving legacy row text accessors while avoiding repeated tab splitting in typed lookups.
 - Exposed defensive typed `CatalogRegistry.CatalogRow` lists for product, catalog-product, and deal caches so callers can move off row-text and positional-cell compatibility APIs.
+- Built `CatalogRegistry.CatalogRow` entries directly from typed `CatalogDao` cache row values instead of joining typed rows into tab text and reparsing them.
 - Added typed `GiftSettings.fromRows(...)` construction and defensive gift-wrap product ID access so gift settings can move through typed club-gift rows and product IDs instead of legacy lookup strings.
 - Routed boot gift-wrap cache loading through typed product ID lists and a typed `Licence.setGiftWrapState(...)` bridge, storing live gift-wrap product ids as typed `List<Long>` state while preserving legacy lookup parsing only for compatibility.
 - Added typed `RecyclerSettings.fromRewardGroups(...)` construction and immutable `RewardGroup` records so recycler reward state can be passed as typed product id collections instead of legacy product-list strings.

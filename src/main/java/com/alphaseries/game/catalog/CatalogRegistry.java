@@ -171,13 +171,15 @@ public final class CatalogRegistry {
         if (cache instanceof Iterable<?> values) {
             for (Object value : values) {
                 if (value instanceof CatalogDao.ProductCacheRow row) {
-                    String rowText = String.join("\t", row.values());
-                    rows.put(NumberUtils.parseLong(field(row.values(), 0)), CatalogRow.fromText(rowText));
+                    CatalogRow catalogRow = CatalogRow.fromFields(row.values());
+                    rows.put(NumberUtils.parseLong(catalogRow.field(0)), catalogRow);
                 } else if (value instanceof CatalogDao.CatalogProductCacheRow row) {
-                    String rowText = String.join("\t", row.values());
-                    rows.put(NumberUtils.parseLong(field(row.values(), 0)), CatalogRow.fromText(rowText));
+                    CatalogRow catalogRow = CatalogRow.fromFields(row.values());
+                    rows.put(NumberUtils.parseLong(catalogRow.field(0)), catalogRow);
                 } else if (value instanceof CatalogDao.ProductDealRow row) {
-                    rows.put(row.dealId(), CatalogRow.fromText(row.dealId() + "\t" + StringUtils.text(row.items())));
+                    rows.put(row.dealId(), CatalogRow.fromFields(List.of(
+                        String.valueOf(row.dealId()),
+                        StringUtils.text(row.items()))));
                 }
             }
             return rows;
@@ -201,14 +203,17 @@ public final class CatalogRegistry {
         return rows;
     }
 
-    private static String field(List<String> fields, int index) {
-        return fields != null && index >= 0 && index < fields.size() ? StringUtils.text(fields.get(index)) : "";
-    }
-
     public record CatalogRow(String text, List<String> fields) {
         public CatalogRow {
             text = StringUtils.text(text);
             fields = fields == null ? List.of() : List.copyOf(fields);
+        }
+
+        private static CatalogRow fromFields(List<String> fields) {
+            List<String> copiedFields = fields == null
+                ? List.of()
+                : fields.stream().map(StringUtils::text).toList();
+            return new CatalogRow(String.join("\t", copiedFields), copiedFields);
         }
 
         private static CatalogRow fromText(String rowText) {
