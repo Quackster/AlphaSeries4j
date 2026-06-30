@@ -45,6 +45,9 @@ public final class Filesystems {
         return broadcastToActiveSessions(StringUtils.text(args[0]), "");
     }
 
+    /**
+     * Original function: Proc_7_2_803D60.
+     */
     public static void Proc_7_2_803D60(Object... args) {
         if (args == null || args.length < 2) {
             return;

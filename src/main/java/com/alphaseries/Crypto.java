@@ -20,6 +20,9 @@ public final class Crypto {
         databaseConnector = connector == null ? connectionString -> null : connector;
     }
 
+    /**
+     * Original function: Proc_3_0_6D2AF0.
+     */
     public static String Proc_3_0_6D2AF0(Object... args) {
         if (args == null || args.length == 0) {
             return "";
@@ -29,6 +32,9 @@ public final class Crypto {
         return prefix + WireEncoding.encodeVl64(value);
     }
 
+    /**
+     * Original function: Proc_3_1_6D2E00.
+     */
     public static long Proc_3_1_6D2E00(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
@@ -41,6 +47,9 @@ public final class Crypto {
         return WireEncoding.parseLeadingLong(valueText) + 1L;
     }
 
+    /**
+     * Original function: Proc_3_2_6D30A0.
+     */
     public static long Proc_3_2_6D30A0(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
@@ -60,6 +69,9 @@ public final class Crypto {
         return (firstByte / 8L) + 1L;
     }
 
+    /**
+     * Original function: Proc_3_3_6D3240.
+     */
     public static long Proc_3_3_6D3240(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
@@ -67,6 +79,9 @@ public final class Crypto {
         return decodeVl64(text(args[0]));
     }
 
+    /**
+     * Original function: Proc_3_4_6D3620.
+     */
     public static long Proc_3_4_6D3620(Object... args) {
         if (args == null || args.length == 0) {
             return 0L;
