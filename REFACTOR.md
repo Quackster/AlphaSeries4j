@@ -415,6 +415,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved room icon payload construction into `RoomPayloads` with typed `RoomIconItem` records, leaving `Handling.roomIconPayloadFromWire` as a wire parser only.
 - Replaced raw zero-count `Crypto` fallback payloads for navigator room/event lists, equipped badges, and tag lists with the existing typed payload builders.
 - Moved sticky-note update broadcast payload construction into `FurniturePayloads`, replacing inline legacy `Crypto` assembly in `Handling`.
+- Moved catalog gift-wrap price fallback construction into `CatalogPayloads`, bringing direct `Crypto.Proc_3_0_6D2AF0` calls in `Handling` to zero.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -429,6 +430,7 @@ Measured on 2026-06-30:
 - Unique `Proc_*` symbols under `src/main/java`: 363
 - `Vb.` call sites under `src/main/java/com/alphaseries`: 0
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
+- `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
 - `Handling.java`: 11887 lines
 - `Functions.java`: 746 lines

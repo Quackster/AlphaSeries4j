@@ -4348,8 +4348,8 @@ public final class Handling {
     public static void Proc_6_135_765D80(Object... args) {
         try {
             int socketIndex = handlingSocketIndex(args);
-            String defaultPayload = "0" + Crypto.Proc_3_0_6D2AF0(
-                NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.enabled", 0, 0)), null, "Il");
+            String defaultPayload = CatalogPayloads.giftWrapPriceFallback(
+                NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.enabled", 0, 0)));
             long giftWrapPrice = NumberUtils.parseLong(Functions.Proc_10_0_809570("com.client.catalog.gifts.wrap.price", defaultPayload, 0));
             Proc_6_244_801E80(socketIndex,
                 CatalogPayloads.giftWrapOptions(giftWrapPrice, Licence.giftSettings().giftWrapPayload()), 0);

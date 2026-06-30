@@ -1008,6 +1008,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, Crypto.Proc_3_0_6D2AF0(81, null, "In")) + '\2',
             CatalogPayloads.giftAvailability(81, 1));
         assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "") + "WRAP", CatalogPayloads.giftWrapOptions(7, "WRAP"));
+        assertEquals("0" + Crypto.Proc_3_0_6D2AF0(1, null, "Il"), CatalogPayloads.giftWrapPriceFallback(1));
         assertEquals("A\u007f" + Crypto.Proc_3_0_6D2AF0(2, null, "") + "PAGE", CatalogPayloads.page(2, "PAGE"));
         String expectedCatalogPurchase = Crypto.Proc_3_0_6D2AF0(81, null, "AC");
         expectedCatalogPurchase = Crypto.Proc_3_0_6D2AF0(3, null, expectedCatalogPurchase);

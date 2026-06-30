@@ -27,6 +27,14 @@ public final class CatalogPayloads {
             .build();
     }
 
+    public static String giftWrapPriceFallback(long giftWrapEnabled) {
+        return PacketBuilder.create()
+            .appendRaw('0')
+            .appendRaw("Il")
+            .appendInt(giftWrapEnabled)
+            .build();
+    }
+
     public static String page(long pageId, String pagePayload) {
         return PacketBuilder.message("A\u007f")
             .appendInt(pageId)
