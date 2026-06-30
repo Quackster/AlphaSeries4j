@@ -52,6 +52,7 @@ import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.room.RoomRollers;
 import com.alphaseries.game.room.RoomUserPosition;
 import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
+import com.alphaseries.game.session.RepresentedSocketCache;
 import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.trade.RepresentedTradeOffer;
 import com.alphaseries.game.trade.TradePayloads;
@@ -2036,6 +2037,12 @@ public final class PortedModuleSmokeTest {
         assertEquals(false, Handling.isSocketMarkedBusy(busyCache, 5));
         assertEquals(false, Handling.isSocketMarkedBusy("[6]a\2b", 6));
         assertEquals(false, Handling.isSocketMarkedBusy(busyCache, 9));
+        RepresentedSocketCache socketCache = RepresentedSocketCache.fromRecords(Map.of(
+            4L, RepresentedSocketCache.RepresentedSocketRecord.fromPayload("a\2" + "7\2c\2d\2e\2" + "1")
+        ));
+        assertEquals("a\2" + "7\2c\2d\2e\2" + "1", socketCache.record(4));
+        assertEquals(7L, socketCache.roomSlot(4));
+        assertEquals(true, socketCache.isBusy(4));
         String expectedOwnProfile = "@E7\2Alice\2hello\2F\2\2\2H\2HIH";
         expectedOwnProfile = Crypto.Proc_3_0_6D2AF0(4, null, expectedOwnProfile);
         expectedOwnProfile = Crypto.Proc_3_0_6D2AF0(2, null, expectedOwnProfile);
