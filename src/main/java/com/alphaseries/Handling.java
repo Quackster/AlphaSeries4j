@@ -6795,14 +6795,15 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String achievementRows = achievementRowsFromGlobal();
-            if (achievementRows.isEmpty()) {
+            AchievementSettings achievementSettings = Licence.achievementSettings();
+            List<AchievementSettings.Achievement> achievements = achievementSettings.achievements();
+            if (achievements.isEmpty()) {
                 return "";
             }
             AchievementProgressDecision decision = achievementProgressDecision(
-                achievementRows,
+                achievementSettings.indexedAchievements(),
                 achievementQuestId,
-                achievementCurrentLevels(userId, achievementRows),
+                achievementCurrentLevels(userId, achievements),
                 representedAchievementProgress(userId, achievementQuestId));
             if (decision.shouldReward) {
                 Proc_6_204_7D82E0(socketIndex, decision.achievementIndex, decision.nextLevel);
@@ -6821,11 +6822,11 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String achievementRows = achievementRowsFromGlobal();
-            if (achievementRows.isEmpty()) {
+            List<AchievementSettings.Achievement> achievements = Licence.achievementSettings().achievements();
+            if (achievements.isEmpty()) {
                 return "";
             }
-            String payload = achievementListPayload(achievementRows, achievementCurrentLevels(userId, achievementRows));
+            String payload = achievementListPayload(achievements, achievementCurrentLevels(userId, achievements));
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {
@@ -10852,10 +10853,6 @@ public final class Handling {
         return PollPayloads.poll(poll);
     }
 
-    public static String achievementRowsFromGlobal() {
-        return Licence.achievementSettings().rowsAsText();
-    }
-
     public static String achievementRowByIndex(long achievementIndex) {
         return Licence.achievementSettings().rowByIndex(achievementIndex);
     }
@@ -10864,11 +10861,13 @@ public final class Handling {
         return Licence.achievementSettings().achievementByIndex(achievementIndex);
     }
 
-    public static Map<String, Long> achievementCurrentLevels(String userId, String achievementRows) {
+    public static Map<String, Long> achievementCurrentLevels(String userId, Iterable<AchievementSettings.Achievement> achievements) {
         Map<String, Long> result = new HashMap<>();
         UserDao users = userDao();
         long userIdValue = NumberUtils.parseLong(userId);
-        for (AchievementSettings.Achievement achievement : AchievementSettings.achievements(achievementRows)) {
+        Iterable<AchievementSettings.Achievement> rows = achievements == null
+            ? List.<AchievementSettings.Achievement>of() : achievements;
+        for (AchievementSettings.Achievement achievement : rows) {
             String badgePrefix = achievement.badgePrefix();
             if (!badgePrefix.isEmpty() && !result.containsKey(badgePrefix)) {
                 long currentLevel = 0L;
@@ -10922,10 +10921,6 @@ public final class Handling {
         }
     }
 
-    public static String achievementRewardPayload(long achievementIndex, String achievementRow, long badgeLevel, long badgeRowId) {
-        return AchievementPayloads.reward(achievementIndex, achievementRow, badgeLevel, badgeRowId);
-    }
-
     public static String achievementRewardPayload(
         long achievementIndex,
         AchievementSettings.Achievement achievement,
@@ -10935,22 +10930,20 @@ public final class Handling {
         return AchievementPayloads.reward(achievementIndex, achievement, badgeLevel, badgeRowId);
     }
 
-    public static String achievementAwardPayload(String achievementRow) {
-        return AchievementPayloads.award(achievementRow);
-    }
-
     public static String achievementAwardPayload(AchievementSettings.Achievement achievement) {
         return AchievementPayloads.award(achievement);
     }
 
     public static AchievementProgressDecision achievementProgressDecision(
-        String achievementRows,
+        Iterable<AchievementSettings.IndexedAchievement> indexedAchievements,
         long achievementQuestId,
         Map<String, Long> currentLevelsByBadgePrefix,
         long currentProgress
     ) {
         AchievementProgressDecision decision = new AchievementProgressDecision();
-        for (AchievementSettings.IndexedAchievement indexedAchievement : AchievementSettings.indexedAchievements(achievementRows)) {
+        Iterable<AchievementSettings.IndexedAchievement> rows = indexedAchievements == null
+            ? List.<AchievementSettings.IndexedAchievement>of() : indexedAchievements;
+        for (AchievementSettings.IndexedAchievement indexedAchievement : rows) {
             AchievementSettings.Achievement achievement = indexedAchievement.achievement();
             if (achievement.achievementId() == achievementQuestId) {
                 long levelTotal = achievement.levelTotal();
@@ -10973,8 +10966,11 @@ public final class Handling {
         return decision;
     }
 
-    public static String achievementListPayload(String achievementRows, Map<String, Long> currentLevelsByBadgePrefix) {
-        return AchievementPayloads.list(achievementRows, currentLevelsByBadgePrefix);
+    public static String achievementListPayload(
+        Iterable<AchievementSettings.Achievement> achievements,
+        Map<String, Long> currentLevelsByBadgePrefix
+    ) {
+        return AchievementPayloads.list(achievements, currentLevelsByBadgePrefix);
     }
 
     public static String wiredSpecialStatePayload(long itemState) {

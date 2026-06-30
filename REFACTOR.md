@@ -425,6 +425,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Removed the pet race-list tab-delimited payload wrapper; race-list payload construction now accepts typed `PetRaceRow` records only.
 - Removed quest list/next/progress row-text compatibility overloads; quest payload and decision paths now accept typed `QuestSettings` and `UserQuestListRow` records.
 - Removed the tag-list row-text payload wrapper; tag payload construction now accepts typed `List<String>` values from `UserDao` only.
+- Removed achievement reward/award/list row-text payload wrappers and routed achievement progress/list handlers through typed `Achievement`/`IndexedAchievement` records.
 
 ## VB Compatibility Class Removal Checklist
 
@@ -441,7 +442,7 @@ Measured on 2026-06-30:
 - `MySQL.Proc_5_*` call sites under `src/main/java/com/alphaseries`: 0
 - `Crypto.Proc_3_0_6D2AF0` call sites in `Handling.java`: 0
 - `Boot.java`: 1992 lines
-- `Handling.java`: 11811 lines
+- `Handling.java`: 11807 lines
 - `Functions.java`: 746 lines
 - `MySQL.java`: 177 lines
 - `Main.java`: 889 lines

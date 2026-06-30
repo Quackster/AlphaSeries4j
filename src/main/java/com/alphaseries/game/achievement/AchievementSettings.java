@@ -62,6 +62,10 @@ public final class AchievementSettings {
         return achievements(rowsAsText());
     }
 
+    public List<IndexedAchievement> indexedAchievements() {
+        return indexedAchievements(achievements());
+    }
+
     public static List<Achievement> achievements(String rowsText) {
         List<Achievement> achievements = new ArrayList<>();
         for (String row : StringUtils.text(rowsText).split("\r", -1)) {
@@ -73,6 +77,20 @@ public final class AchievementSettings {
             }
         }
         return achievements;
+    }
+
+    public static List<IndexedAchievement> indexedAchievements(Iterable<Achievement> achievements) {
+        List<IndexedAchievement> indexedAchievements = new ArrayList<>();
+        long achievementIndex = 0L;
+        if (achievements != null) {
+            for (Achievement achievement : achievements) {
+                if (achievement != null) {
+                    indexedAchievements.add(new IndexedAchievement(achievementIndex, achievement));
+                }
+                achievementIndex++;
+            }
+        }
+        return indexedAchievements;
     }
 
     public static List<IndexedAchievement> indexedAchievements(String rowsText) {

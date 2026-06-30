@@ -13,6 +13,7 @@ import com.alphaseries.dao.mysql.SettingsDao;
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
@@ -2377,16 +2378,18 @@ public final class PortedModuleSmokeTest {
             + Crypto.Proc_3_0_6D2AF0(13, null, "")
             + Crypto.Proc_3_0_6D2AF0(14, null, ""));
         assertEquals(false, duplicateRecyclerSelection.valid);
-        String achievementRow = "42\tACH_\t10\t5\t3\t7\t2";
+        AchievementSettings.Achievement achievement = new AchievementSettings.Achievement(42L, "ACH_", 10L, 5L, 3L, 7L, 2L);
+        List<AchievementSettings.Achievement> achievements = List.of(achievement);
+        List<AchievementSettings.IndexedAchievement> indexedAchievements = AchievementSettings.indexedAchievements(achievements);
         String expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(1, null, "Fu");
         expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(42, null, expectedAchievementReward);
         expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(99, null, expectedAchievementReward) + "ACH_2\2";
         expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(5, null,
             Crypto.Proc_3_0_6D2AF0(7, null, expectedAchievementReward)) + "HHH\2" + "3\2";
-        assertEquals(expectedAchievementReward, Handling.achievementRewardPayload(1, achievementRow, 2, 99));
+        assertEquals(expectedAchievementReward, Handling.achievementRewardPayload(1, achievement, 2, 99));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null,
             Crypto.Proc_3_0_6D2AF0(5, null, Crypto.Proc_3_0_6D2AF0(7, null, "Fv"))),
-            Handling.achievementAwardPayload(achievementRow));
+            Handling.achievementAwardPayload(achievement));
         Map<String, Long> achievementLevels = new HashMap<>();
         achievementLevels.put("ACH_", 2L);
         String expectedAchievementEntry = Crypto.Proc_3_0_6D2AF0(42, null, "");
@@ -2398,9 +2401,9 @@ public final class PortedModuleSmokeTest {
         expectedAchievementEntry = Crypto.Proc_3_0_6D2AF0(2, null, expectedAchievementEntry);
         expectedAchievementEntry = Crypto.Proc_3_0_6D2AF0(3, null, expectedAchievementEntry) + "ACH_\2" + "2\2";
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "Ft") + expectedAchievementEntry,
-            Handling.achievementListPayload(achievementRow, achievementLevels));
+            Handling.achievementListPayload(achievements, achievementLevels));
         Handling.AchievementProgressDecision achievementDecision = Handling.achievementProgressDecision(
-            achievementRow, 42, achievementLevels, 30);
+            indexedAchievements, 42, achievementLevels, 30);
         assertEquals(0L, achievementDecision.achievementIndex);
         assertEquals(3L, achievementDecision.nextLevel);
         assertEquals(30L, achievementDecision.requiredProgress);
@@ -4420,7 +4423,9 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         String achievementReward = Handling.Proc_6_204_7D82E0(4, 0, 3);
-        assertEquals(Handling.achievementRewardPayload(0, "2\tACH_\t10\t5\t3\t7\t2", 3, 204), achievementReward);
+        AchievementSettings.Achievement liveAchievement = new AchievementSettings.Achievement(
+            2L, "ACH_", 10L, 5L, 3L, 7L, 2L);
+        assertEquals(Handling.achievementRewardPayload(0, liveAchievement, 3, 204), achievementReward);
         assertEquals(true, containsSql(handlingSql, "DELETE FROM users_badges WHERE id_user='77' AND id_badge LIKE 'ACH_%' LIMIT 1"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO users_badges(id_user,id_badge) VALUES('77','ACH_3')"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_2=activitypoints_2+5,achievement_score=achievement_score+7 WHERE id='77'"));
@@ -4441,7 +4446,7 @@ public final class PortedModuleSmokeTest {
         String achievementListPayload = Handling.Proc_6_206_7DA450(4);
         Map<String, Long> liveAchievementLevels = new HashMap<>();
         liveAchievementLevels.put("ACH_", 2L);
-        assertEquals(Handling.achievementListPayload("2\tACH_\t10\t5\t3\t7\t2", liveAchievementLevels), achievementListPayload);
+        assertEquals(Handling.achievementListPayload(List.of(liveAchievement), liveAchievementLevels), achievementListPayload);
         assertEquals(true, containsSend(handlingSends, "Ft"));
         handlingSends.clear();
         assertEquals("", Handling.Proc_6_210_7E1DC0(4));

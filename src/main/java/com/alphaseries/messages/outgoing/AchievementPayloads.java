@@ -9,10 +9,6 @@ public final class AchievementPayloads {
     private AchievementPayloads() {
     }
 
-    public static String reward(long achievementIndex, String achievementRow, long badgeLevel, long badgeRowId) {
-        return reward(achievementIndex, AchievementSettings.achievement(achievementRow), badgeLevel, badgeRowId);
-    }
-
     public static String reward(
         long achievementIndex,
         AchievementSettings.Achievement achievement,
@@ -39,10 +35,6 @@ public final class AchievementPayloads {
             .build();
     }
 
-    public static String award(String achievementRow) {
-        return award(AchievementSettings.achievement(achievementRow));
-    }
-
     public static String award(AchievementSettings.Achievement achievement) {
         if (achievement == null) {
             return "";
@@ -55,10 +47,6 @@ public final class AchievementPayloads {
             .appendInt(achievement.rewardIncrease())
             .appendInt(achievement.rewardType())
             .build();
-    }
-
-    public static String list(String achievementRows, Map<String, Long> currentLevelsByBadgePrefix) {
-        return list(AchievementSettings.achievements(achievementRows), currentLevelsByBadgePrefix);
     }
 
     public static String list(
