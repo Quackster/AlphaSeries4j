@@ -1,6 +1,7 @@
 package com.alphaseries;
 
 import com.alphaseries.config.AppDatabaseConfig;
+import com.alphaseries.dao.mysql.QuestDao;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
@@ -1681,14 +1682,16 @@ public final class PortedModuleSmokeTest {
         assertEquals(expectedQuestPayload, Handling.questCompletionPayload(7, "Quest", 3, 44, 2, 5, 0));
         String questRows = "10\t1\tFirst\t\t5\t2\tvisit\t0\t7\t3\t30\r11\t2\tSecond\t\t6\t2\tvisit\t0\t7\t4\t0";
         assertEquals(10L, Handling.questRequestIdFromWire("p^" + Crypto.Proc_3_0_6D2AF0(10, null, ""), "p^"));
-        assertEquals(11L, Handling.nextQuestId(questRows, "10\t1"));
-        assertEquals(10L, Handling.nextQuestId(questRows, ""));
-        Handling.QuestProgressDecision waitDecision = Handling.questProgressDecision("10\t10\t1\t0\t\t1", questRows, 0);
+        assertEquals(11L, Handling.nextQuestId(questRows, new QuestDao.UserQuestLevelRow(10L, 1L)));
+        assertEquals(10L, Handling.nextQuestId(questRows, null));
+        Handling.QuestProgressDecision waitDecision = Handling.questProgressDecision(
+            new QuestDao.UserQuestProgressRow(10L, 10L, 1L, 0L, ""), questRows, 0);
         assertEquals(10L, waitDecision.questId);
         assertEquals(3L, waitDecision.amountRequired);
         assertEquals(true, waitDecision.shouldScheduleWait);
         assertEquals(true, waitDecision.shouldSendList);
-        Handling.QuestProgressDecision completeDecision = Handling.questProgressDecision("10\t10\t3\t0\t0\t3", questRows, 0);
+        Handling.QuestProgressDecision completeDecision = Handling.questProgressDecision(
+            new QuestDao.UserQuestProgressRow(10L, 10L, 3L, 0L, "0"), questRows, 0);
         assertEquals(true, completeDecision.shouldComplete);
         String expectedQuestListRow = Crypto.Proc_3_0_6D2AF0(7, null, "") + "First\2"
             + Crypto.Proc_3_0_6D2AF0(10, null, "")

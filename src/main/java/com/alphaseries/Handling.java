@@ -7514,7 +7514,7 @@ public final class Handling {
                 return "";
             }
             long userIdValue = NumberUtils.parseLong(userId);
-            String activeRow = quests.activeLevelRow(userIdValue)
+            QuestDao.UserQuestLevelRow activeRow = quests.activeLevelRow(userIdValue)
                 .or(() -> {
                     try {
                         return quests.latestLevelRow(userIdValue);
@@ -7522,8 +7522,7 @@ public final class Handling {
                         return java.util.Optional.empty();
                     }
                 })
-                .map(QuestDao.UserQuestLevelRow::legacyRow)
-                .orElse("");
+                .orElse(null);
             long requestedQuestId = nextQuestId(questRowsFromSource(), activeRow);
             if (requestedQuestId > 0L) {
                 Proc_6_232_7F45A0(socketIndex, "p^" + Crypto.Proc_3_0_6D2AF0(requestedQuestId, null, ""));
@@ -10639,11 +10638,10 @@ public final class Handling {
         return idRequestFromWire(packetPayload, prefix);
     }
 
-    public static long nextQuestId(String questRows, String activeRow) {
+    public static long nextQuestId(String questRows, QuestDao.UserQuestLevelRow activeQuest) {
         long currentQuestId = 0L;
         long currentLevel = 0L;
-        if (!StringUtils.text(activeRow).isEmpty()) {
-            QuestDao.UserQuestLevelRow activeQuest = QuestDao.UserQuestLevelRow.fromLegacy(activeRow);
+        if (activeQuest != null) {
             currentQuestId = activeQuest.questId();
             currentLevel = activeQuest.level();
         }
@@ -10684,13 +10682,6 @@ public final class Handling {
             }
         }
         return requestedQuestId > 0L ? requestedQuestId : fallbackQuestId;
-    }
-
-    public static QuestProgressDecision questProgressDecision(String activeRow, String questRows, long remainingWait) {
-        if (StringUtils.text(activeRow).isEmpty()) {
-            return new QuestProgressDecision();
-        }
-        return questProgressDecision(QuestDao.UserQuestProgressRow.fromLegacy(activeRow), questRows, remainingWait);
     }
 
     public static QuestProgressDecision questProgressDecision(
