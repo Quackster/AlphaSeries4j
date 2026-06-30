@@ -44,6 +44,14 @@ public final class NavigatorPayloads {
             .build();
     }
 
+    public static String queryResult(String header, Object selector, long limitValue, String resultPayload) {
+        return PacketBuilder.message(header)
+            .appendString(selector)
+            .appendInt(limitValue)
+            .appendRaw(resultPayload)
+            .build();
+    }
+
     public static String roomFragment(LegacyNavigatorRoomRow room) {
         if (room == null) {
             return "";

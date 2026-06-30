@@ -3725,9 +3725,8 @@ public final class Handling {
                 + " rooms.id=rooms_events.id_room AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
                 + "GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
             long randomTree = Functions.Proc_10_4_809CA0(1, Licence.recommendedRooms().count(), 0);
-            Proc_6_244_801E80(socketIndex, "GCPC" + categoryId + '\2'
-                + Crypto.Proc_3_0_6D2AF0(limitValue, null, "") + Proc_6_112_74E0C0(queryTail, 0, 0)
-                + recommendedRoomPayload(randomTree), 0);
+            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCPC", categoryId, limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0) + recommendedRoomPayload(randomTree)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3743,9 +3742,8 @@ public final class Handling {
                 + " rooms.visitors_now > 0 AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
                 + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
             long randomTree = Functions.Proc_10_4_809CA0(1, Licence.recommendedRooms().count(), 0);
-            Proc_6_244_801E80(socketIndex, "GC " + categoryId + '\2'
-                + Crypto.Proc_3_0_6D2AF0(limitValue, null, "") + Proc_6_112_74E0C0(queryTail, 0, 0)
-                + recommendedRoomPayload(randomTree), 0);
+            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GC ", categoryId, limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0) + recommendedRoomPayload(randomTree)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3761,8 +3759,8 @@ public final class Handling {
                 + "' AND logs_visitedrooms.id_user=friendships.id_friend AND logs_visitedrooms.timestamp_left IS NULL "
                 + "AND rooms.id=logs_visitedrooms.id_room AND rooms_categories.id=rooms.id_category "
                 + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.id DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, "GCQA" + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
-                + Proc_6_112_74E0C0(queryTail, 0, 0), 0);
+            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCQA", "", limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3777,8 +3775,8 @@ public final class Handling {
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0)
                 + "' AND users.id=friendships.id_friend AND rooms_categories.id=rooms.id_category "
                 + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, "GC" + '\0' + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
-                + Proc_6_112_74E0C0(queryTail, 0, 0), 0);
+            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GC", "\0", limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3793,8 +3791,8 @@ public final class Handling {
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0)
                 + "' AND rooms.id=rooms_favourites.id_room AND rooms_categories.id=rooms.id_category "
                 + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, "GCRA" + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
-                + Proc_6_112_74E0C0(queryTail, 0, 0), 0);
+            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCRA", "", limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3809,8 +3807,8 @@ public final class Handling {
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0)
                 + "' AND rooms.id=logs_visitedrooms.id_room AND rooms_categories.id=rooms.id_category "
                 + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.id DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, "GCSA" + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
-                + Proc_6_112_74E0C0(queryTail, 0, 0), 0);
+            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCSA", "", limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3825,8 +3823,8 @@ public final class Handling {
                 + Functions.Proc_10_11_80A9C0(userId, 0, 0)
                 + "' AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
                 + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, "GCQA" + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
-                + Proc_6_112_74E0C0(queryTail, 0, 0), 0);
+            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCQA", "", limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3871,8 +3869,8 @@ public final class Handling {
             String roomQueryTail = "users,rooms,rooms_categories WHERE (rooms.tag_1 = '" + tagText + "' OR rooms.tag_2 = '"
                 + tagText + "') AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
                 + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, "GCSA" + tagText + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
-                + Proc_6_113_74EE70(eventQueryTail, roomQueryTail, 0), 0);
+            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCSA", tagText, limitValue,
+                Proc_6_113_74EE70(eventQueryTail, roomQueryTail, 0)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3884,8 +3882,8 @@ public final class Handling {
             long limitValue = navigatorListLimit();
             String queryTail = "users,rooms,rooms_categories WHERE rooms.rate > 0 AND users.id=rooms.id_owner "
                 + "AND rooms_categories.id=rooms.id_category GROUP BY rooms.id ORDER BY rooms.rate DESC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, "GC" + '\b' + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
-                + Proc_6_112_74E0C0(queryTail, 0, 0), 0);
+            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GC", "\b", limitValue,
+                Proc_6_112_74E0C0(queryTail, 0, 0)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -3906,8 +3904,8 @@ public final class Handling {
                 + "' AND rooms_events.id_user=users.id OR rooms_events.name LIKE '" + searchText
                 + "%' AND users.id=rooms.id_owner) AND rooms.id=rooms_events.id_room "
                 + "AND rooms_categories.id=rooms.id_category GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
-            Proc_6_244_801E80(socketIndex, "GCSA" + searchText + '\2' + Crypto.Proc_3_0_6D2AF0(limitValue, null, "")
-                + Proc_6_113_74EE70(eventQueryTail, roomQueryTail, 0), 0);
+            Proc_6_244_801E80(socketIndex, NavigatorPayloads.queryResult("GCSA", searchText, limitValue,
+                Proc_6_113_74EE70(eventQueryTail, roomQueryTail, 0)), 0);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
