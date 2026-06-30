@@ -20,7 +20,14 @@ public final class PetSettings {
     }
 
     public static PetSettings fromLegacy(String raceRows, Object levelRows, Object commandRows, long commandCount) {
+        if (levelRows instanceof PetSettings settings) {
+            return settings;
+        }
         return new PetSettings(raceRows, levelRows, commandRows, commandCount);
+    }
+
+    public static PetSettings empty() {
+        return new PetSettings("", "", "", 0L);
     }
 
     public String raceRows() {

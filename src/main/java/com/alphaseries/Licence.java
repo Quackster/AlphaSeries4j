@@ -22,6 +22,7 @@ import com.alphaseries.game.navigator.NavigatorState;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.pet.PetSettings;
+import com.alphaseries.game.pet.PetState;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.quest.QuestState;
@@ -364,20 +365,28 @@ public final class Licence {
     }
 
     public static PetSettings petSettings() {
-        return PetSettings.fromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
+        if (global_008292D0 instanceof PetSettings petSettings) {
+            PetState.instance().setSettings(petSettings);
+        } else {
+            PetState.instance().setSettingsFromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
+        }
+        return PetState.instance().settings();
     }
 
     public static void setPetRaceRows(String raceRows) {
         global_008291EC = StringUtils.text(raceRows);
+        PetState.instance().setSettingsFromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
     }
 
     public static void setPetLevelRows(Object levelRows) {
         global_008292D0 = levelRows == null ? "" : levelRows;
+        PetState.instance().setSettingsFromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
     }
 
     public static void setPetCommandRows(Object commandRows, long commandCount) {
         global_008292CC = commandRows == null ? "" : commandRows;
         global_008292C8 = commandCount;
+        PetState.instance().setSettingsFromLegacy(global_008291EC, global_008292D0, global_008292CC, global_008292C8);
     }
 
     public static RepresentedBotRegistry representedBots() {

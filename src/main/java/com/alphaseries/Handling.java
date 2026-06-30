@@ -31,6 +31,7 @@ import com.alphaseries.game.pet.PetPayloads;
 import com.alphaseries.game.pet.PetPlacementRow;
 import com.alphaseries.game.pet.PetScratchRow;
 import com.alphaseries.game.pet.PetSettings;
+import com.alphaseries.game.pet.PetState;
 import com.alphaseries.game.pet.PetStatusRow;
 import com.alphaseries.game.pet.RepresentedBotEntry;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
@@ -5971,7 +5972,7 @@ public final class Handling {
             } else if (args != null && args.length >= 1) {
                 petLevel = NumberUtils.parseLong(args[0]);
             }
-            String payload = Licence.petSettings().commandListPayload(petLevel);
+            String payload = petSettings().commandListPayload(petLevel);
             if (socketIndex > 0) {
                 Proc_6_244_801E80(socketIndex, payload, 0);
             }
@@ -6038,7 +6039,7 @@ public final class Handling {
             if (pet == null) {
                 return 0L;
             }
-            PetCommandAction commandAction = petCommandAction(commandId, Licence.petSettings().commandRows());
+            PetCommandAction commandAction = petCommandAction(commandId, petSettings().commandRows());
             if (!commandAction.found || commandAction.requiredLevel > pet.level()) {
                 return 0L;
             }
@@ -9412,6 +9413,11 @@ public final class Handling {
     private static GiftSettings giftSettings() {
         Licence.giftSettings();
         return CatalogState.instance().giftSettings();
+    }
+
+    private static PetSettings petSettings() {
+        Licence.petSettings();
+        return PetState.instance().settings();
     }
 
     public static String officialNavigatorQuery() {
