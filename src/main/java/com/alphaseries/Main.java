@@ -5,6 +5,7 @@ import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.messages.outgoing.RoomPayloads;
 import com.alphaseries.game.session.GameServerSessionState;
@@ -398,11 +399,12 @@ public final class Main {
         long moved = 0L;
         try {
             for (long entityId : Licence.representedBots().allocatedEntityIds()) {
-                if (entityId <= 0L || NumberUtils.parseLong(mainRepresentedBotRecordField(entityId, 15)) == 0L) {
+                RepresentedBotRegistry.RepresentedBotRecord bot = Licence.representedBots().record(entityId);
+                if (entityId <= 0L || bot.allowWalk() == 0L) {
                     continue;
                 }
-                long currentX = NumberUtils.parseLong(mainRepresentedBotRecordField(entityId, 6));
-                long currentY = NumberUtils.parseLong(mainRepresentedBotRecordField(entityId, 7));
+                long currentX = bot.positionX();
+                long currentY = bot.positionY();
                 long targetX = currentX + Functions.Proc_10_4_809CA0(-1, 1, 0);
                 long targetY = currentY + Functions.Proc_10_4_809CA0(-1, 1, 0);
                 Proc_0_28_6AD850(entityId, currentX, currentY, targetX, targetY);
