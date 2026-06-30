@@ -308,11 +308,7 @@ public final class Licence {
     }
 
     public static VisitRoomAds visitRoomAds() {
-        if (global_008291D4 instanceof VisitRoomAds visitRoomAds) {
-            AdvertisingState.instance().setVisitRoomAds(visitRoomAds);
-        } else {
-            AdvertisingState.instance().setVisitRoomAdsFromLegacy(global_008291D4, global_008291D8);
-        }
+        AdvertisingState.instance().setVisitRoomAdsFromLegacy(global_008291D4, global_008291D8);
         return AdvertisingState.instance().visitRoomAds();
     }
 

@@ -1223,6 +1223,8 @@ public final class PortedModuleSmokeTest {
         VisitRoomAds typedVisitRoomAds = VisitRoomAds.fromPayloads(Map.of(8L, "/ad/8\2/lounge\2"), 1L);
         assertEquals("/ad/8\2/lounge\2", typedVisitRoomAds.payload(8L));
         assertEquals(Map.of(8L, "/ad/8\2/lounge\2"), typedVisitRoomAds.payloadsById());
+        Licence.global_008291D4 = typedVisitRoomAds;
+        assertEquals("/ad/8\2/lounge\2", Licence.visitRoomAds().payload(8L));
         Boot.Proc_1_23_6D1480("booted", "DEBUG");
         Boot.Proc_1_5_6C4F80();
         assertEquals("7\2", Licence.global_008291E4);
