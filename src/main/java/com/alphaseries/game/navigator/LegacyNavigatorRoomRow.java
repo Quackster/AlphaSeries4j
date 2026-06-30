@@ -3,9 +3,6 @@ package com.alphaseries.game.navigator;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public record LegacyNavigatorRoomRow(
     long roomId,
     String roomName,
@@ -40,20 +37,6 @@ public record LegacyNavigatorRoomRow(
             field(fields, 13),
             number(fields, 14),
             number(fields, 15));
-    }
-
-    public static LegacyNavigatorRoomRow fromLegacy(String rowText) {
-        return fromLegacyFields(StringUtils.text(rowText).split("\t", -1));
-    }
-
-    public static List<LegacyNavigatorRoomRow> listFromLegacy(String rowText) {
-        List<LegacyNavigatorRoomRow> rows = new ArrayList<>();
-        for (String row : StringUtils.text(rowText).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                rows.add(fromLegacy(row));
-            }
-        }
-        return rows;
     }
 
     private static String field(String[] fields, int index) {

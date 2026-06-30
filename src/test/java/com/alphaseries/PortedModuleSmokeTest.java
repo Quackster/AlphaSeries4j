@@ -1,9 +1,11 @@
 package com.alphaseries;
 
 import com.alphaseries.config.AppDatabaseConfig;
+import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
+import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.poll.PollAnswerRow;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
@@ -1464,17 +1466,19 @@ public final class PortedModuleSmokeTest {
         expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(0, null, expectedRoomFragment)
             + "room\2owner\2desc\2open\2tag1\2tag2\2event\2H";
         assertEquals(expectedRoomFragment, Handling.navigatorRoomFragment(navigatorFields));
-        String navigatorRow = String.join("\t", navigatorFields);
+        LegacyNavigatorRoomRow legacyNavigatorRoom = new LegacyNavigatorRoomRow(
+            10L, "room", "owner", "desc", 3L, 25L, "open", 1L, 9L, 4L, "tag1", "tag2", "event", 1L, 0L);
+        RoomDao.NavigatorEventRow legacyNavigatorEvent = new RoomDao.NavigatorEventRow(
+            10L, "room", "owner", "desc", 3L, 25L, "open", 1L, 9L, 4L, "tag1", "tag2", "event", "1");
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomFragment),
-            Handling.navigatorRoomListPayloadFromRows(navigatorRow));
-        assertEquals(expectedRoomFragment, Handling.singleNavigatorRoomPayloadFromRows(navigatorRow));
-        assertEquals("", Handling.singleNavigatorRoomPayloadFromRows(navigatorRow + "\r" + navigatorRow));
+            Handling.navigatorLegacyRoomListPayload(List.of(legacyNavigatorRoom)));
+        assertEquals(expectedRoomFragment, Handling.navigatorRoomFragment(legacyNavigatorRoom));
         assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, expectedEventFragment),
-            Handling.navigatorEventListPayloadFromRows(navigatorRow));
+            Handling.navigatorEventListPayload(List.of(legacyNavigatorEvent)));
         assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, expectedEventFragment + expectedRoomFragment),
-            Handling.navigatorCombinedRoomListPayloadFromRows(navigatorRow, navigatorRow));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.navigatorRoomListPayloadFromRows(""));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.navigatorEventListPayloadFromRows(""));
+            Handling.navigatorCombinedLegacyRoomListPayload(List.of(legacyNavigatorEvent), List.of(legacyNavigatorRoom)));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.navigatorLegacyRoomListPayload(List.of()));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), Handling.navigatorEventListPayload(List.of()));
         String[] officialFields = new String[]{
             "1", "2", "3", "caption", "cap2", "cap3", "7", "8", "9", "10",
             "11", "12", "13", "description", "15", "16", "17", "18", "icon",

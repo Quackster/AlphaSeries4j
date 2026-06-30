@@ -1192,20 +1192,6 @@ public final class RoomDao {
                 field(fields, 14));
         }
 
-        public static NavigatorEventRow fromLegacy(String rowText) {
-            return fromLegacyFields(StringUtils.text(rowText).split("\t", -1));
-        }
-
-        public static List<NavigatorEventRow> listFromLegacy(String rowText) {
-            List<NavigatorEventRow> rows = new ArrayList<>();
-            for (String row : StringUtils.text(rowText).split("\r", -1)) {
-                if (!row.isEmpty()) {
-                    rows.add(fromLegacy(row));
-                }
-            }
-            return rows;
-        }
-
         private static String field(String[] fields, int index) {
             return StringUtils.field(fields, index);
         }

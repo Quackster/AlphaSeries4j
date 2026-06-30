@@ -9762,10 +9762,6 @@ public final class Handling {
             .build();
     }
 
-    public static String navigatorRoomListPayloadFromRows(String rowText) {
-        return navigatorLegacyRoomListPayload(LegacyNavigatorRoomRow.listFromLegacy(rowText));
-    }
-
     public static String navigatorLegacyRoomListPayload(List<LegacyNavigatorRoomRow> rows) {
         long roomCount = 0L;
         StringBuilder payload = new StringBuilder();
@@ -9794,11 +9790,6 @@ public final class Handling {
         return room == null ? "" : navigatorRoomFragment(room);
     }
 
-    public static String singleNavigatorRoomPayloadFromRows(String rowText) {
-        List<LegacyNavigatorRoomRow> rows = LegacyNavigatorRoomRow.listFromLegacy(rowText);
-        return rows.size() == 1 ? navigatorRoomFragment(rows.get(0)) : "";
-    }
-
     public static String navigatorTagPopularityPayload(List<NavigatorTagPopularity> rows) {
         PacketBuilder payload = PacketBuilder.create();
         for (NavigatorTagPopularity row : rows == null ? List.<NavigatorTagPopularity>of() : rows) {
@@ -9821,10 +9812,6 @@ public final class Handling {
         } catch (Exception ignored) {
             return Crypto.Proc_3_0_6D2AF0(0, null, "");
         }
-    }
-
-    public static String navigatorEventListPayloadFromRows(String rowText) {
-        return navigatorEventListPayload(RoomDao.NavigatorEventRow.listFromLegacy(rowText));
     }
 
     public static String navigatorEventFragment(RoomDao.NavigatorEventRow event) {
@@ -9861,12 +9848,6 @@ public final class Handling {
             }
         }
         return Crypto.Proc_3_0_6D2AF0(eventCount, null, payload.toString());
-    }
-
-    public static String navigatorCombinedRoomListPayloadFromRows(String eventRows, String roomRows) {
-        return navigatorCombinedLegacyRoomListPayload(
-            RoomDao.NavigatorEventRow.listFromLegacy(eventRows),
-            LegacyNavigatorRoomRow.listFromLegacy(roomRows));
     }
 
     public static String navigatorCombinedLegacyRoomListPayload(
