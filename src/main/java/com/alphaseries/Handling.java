@@ -5151,8 +5151,8 @@ public final class Handling {
             int socketIndex = handlingSocketIndex(args);
             String wallPayload = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
             FurnitureDao.InventoryPlacementFurniture placementFurniture = null;
-            if (args != null && args.length >= 3) {
-                placementFurniture = FurnitureDao.InventoryPlacementFurniture.fromLegacyArg(args[2]);
+            if (args != null && args.length >= 3 && args[2] instanceof FurnitureDao.InventoryPlacementFurniture item) {
+                placementFurniture = item;
             }
             placeWallFurnitureFromInventory(socketIndex, wallPayload, placementFurniture);
         } catch (Exception ignored) {

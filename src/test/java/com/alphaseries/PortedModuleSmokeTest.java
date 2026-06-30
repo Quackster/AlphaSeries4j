@@ -4369,7 +4369,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(false, containsSend(handlingSends, "AX89\2" + "7\2"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_157_7974B0(4, "rv:w=1,2 l=3,4", "9\t90\twall-state\t6\t0");
+        Handling.placeWallFurnitureFromInventory(4, "rv:w=1,2 l=3,4",
+            new FurnitureDao.InventoryPlacementFurniture(9L, 90L, "wall-state", 6L, 0L));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET position_wall=':w=1,2 l=3,4'"));
         assertEquals(true, containsSql(handlingSql, "WHERE id='90' AND id_owner='77' AND id_room IS NULL LIMIT 1"));
         assertEquals(true, containsSend(handlingSends, "Ac"));
