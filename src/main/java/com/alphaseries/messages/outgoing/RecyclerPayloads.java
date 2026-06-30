@@ -13,4 +13,10 @@ public final class RecyclerPayloads {
             .appendInt(remainingBlockTime)
             .build();
     }
+
+    public static String reward(long rewardProductId) {
+        return PacketBuilder.message("G|")
+            .appendInt(rewardProductId)
+            .build();
+    }
 }

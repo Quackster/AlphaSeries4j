@@ -6780,7 +6780,7 @@ public final class Handling {
                     Proc_6_244_801E80(socketIndex, InventoryMessagePayloads.remove(selectedFurnitureId), 0);
                 }
             }
-            String payload = Crypto.Proc_3_0_6D2AF0(rewardProductId, null, "G|");
+            String payload = RecyclerPayloads.reward(rewardProductId);
             Proc_6_244_801E80(socketIndex, payload, 0);
             return payload;
         } catch (Exception ignored) {

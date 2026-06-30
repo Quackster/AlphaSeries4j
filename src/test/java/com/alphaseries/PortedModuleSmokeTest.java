@@ -54,6 +54,7 @@ import com.alphaseries.messages.outgoing.MessengerPayloads;
 import com.alphaseries.messages.outgoing.NavigatorPayloads;
 import com.alphaseries.messages.outgoing.PollPayloads;
 import com.alphaseries.messages.outgoing.QuestPayloads;
+import com.alphaseries.messages.outgoing.RecyclerPayloads;
 import com.alphaseries.messages.outgoing.RoomPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
 import com.alphaseries.messages.outgoing.UserPayloads;
@@ -2241,6 +2242,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(1L, Handling.idRequestFromWire("CkA", "Ck"));
         assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(1, null, "G{")),
             Handling.recyclerStatusPayload(42, 0));
+        assertEquals(Crypto.Proc_3_0_6D2AF0(506, null, "G|"), RecyclerPayloads.reward(506));
         assertEquals(7L, Handling.pollIdFromWire("Ck" + Crypto.Proc_3_0_6D2AF0(7, null, ""), "Ck"));
         Handling.PollAnswerSubmission pollAnswer = Handling.pollAnswerFromWire("Cl"
             + Crypto.Proc_3_0_6D2AF0(7, null, "")
@@ -4299,7 +4301,7 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         String recyclerSubmitPayload = Handling.Proc_6_202_7D6760(4,
             "F^" + wireLong(5) + wireLong(1) + wireLong(2) + wireLong(3) + wireLong(4) + wireLong(5));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(506, null, "G|"), recyclerSubmitPayload);
+        assertEquals(RecyclerPayloads.reward(506), recyclerSubmitPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='"));
         assertEquals(true, containsSql(handlingSql, "id_owner='77',id_destination='81' WHERE id_owner='77' AND id_product='508'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner=NULL WHERE id_owner='77' AND id_room IS NULL AND id IN (1,2,3,4,5)"));

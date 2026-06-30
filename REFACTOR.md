@@ -387,6 +387,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved room-user removal `@\\` payload construction into `SocialPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved messenger follow-room `D^` payload construction into `MessengerPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 - Moved creatable-room count `H@` payload construction into `RoomPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
+- Moved recycler reward `G|` payload construction into `RecyclerPayloads`, replacing inline legacy `Crypto` packet assembly in `Handling`.
 
 ## VB Compatibility Class Removal Checklist
 
