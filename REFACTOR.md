@@ -730,6 +730,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added named `Boot.buildCatalogPageTreeEntryPayload(...)` with the original `Proc_1_14_6C9DD0` noted in Javadocs, then migrated catalog page-tree entry formatting away from the Proc-named formatter and onto fluent `PacketBuilder`.
 - Added named `Handling.sendToSocket(...)` with the original `Proc_6_244_801E80` noted in Javadocs, then migrated named room/staff broadcast and poll prompt helpers away from the Proc-named direct-send path.
 - Added named `Handling.broadcastToCurrentRoom(...)` with the original `Proc_6_247_8027E0` noted in Javadocs, then migrated wave, dance, and identity-refresh handlers away from the Proc-named current-room broadcast path.
+- Migrated avatar-name, room-icon, room-event create/edit, and room-settings refresh broadcasts through `Handling.broadcastToCurrentRoom(...)` instead of the Proc-named current-room broadcast path.
 
 ## VB Compatibility Class Removal Checklist
 

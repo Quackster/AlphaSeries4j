@@ -1261,12 +1261,12 @@ public final class Handling {
             long roomId = handlingCurrentRoomId(socketIndex, userId);
             if (roomId > 0L) {
                 long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
-                Proc_6_247_8027E0(socketIndex,
-                    UserPayloads.roomUserNameChanged(NumberUtils.parseLong(userId), roomUserIndex, candidateName), 0);
+                broadcastToCurrentRoom(socketIndex,
+                    UserPayloads.roomUserNameChanged(NumberUtils.parseLong(userId), roomUserIndex, candidateName));
                 String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                     + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
-                Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
-                Proc_6_247_8027E0(socketIndex, RoomPayloads.entryUpdated(roomId), 0);
+                broadcastToCurrentRoom(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0));
+                broadcastToCurrentRoom(socketIndex, RoomPayloads.entryUpdated(roomId));
             }
             return 0L;
         } catch (Exception ignored) {
@@ -1333,7 +1333,7 @@ public final class Handling {
             }
             String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                 + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
-            Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
+            broadcastToCurrentRoom(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0));
             Proc_6_244_801E80(socketIndex, RoomPayloads.iconUpdated(roomId), 0);
             Proc_6_244_801E80(socketIndex, RoomPayloads.entryUpdated(roomId), 0);
         } catch (Exception ignored) {
@@ -1439,7 +1439,7 @@ public final class Handling {
                     event.tagTwo,
                     event.categoryName);
             }
-            Proc_6_247_8027E0(socketIndex, "Er" + Proc_6_51_716AC0(roomId), 0);
+            broadcastToCurrentRoom(socketIndex, "Er" + Proc_6_51_716AC0(roomId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1471,7 +1471,7 @@ public final class Handling {
                     event.tagOne,
                     event.tagTwo);
             }
-            Proc_6_247_8027E0(socketIndex, "Er" + Proc_6_51_716AC0(roomId), 0);
+            broadcastToCurrentRoom(socketIndex, "Er" + Proc_6_51_716AC0(roomId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -1549,7 +1549,7 @@ public final class Handling {
                 settings.disableWalls);
             String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
                 + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
-            Proc_6_247_8027E0(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0), 0);
+            broadcastToCurrentRoom(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0));
             Proc_6_244_801E80(socketIndex, RoomPayloads.settingsUpdated(roomId), 0);
             Proc_6_244_801E80(socketIndex, RoomPayloads.entryUpdated(roomId), 0);
             Proc_6_244_801E80(socketIndex,
