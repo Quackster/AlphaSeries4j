@@ -7588,24 +7588,19 @@ public final class Handling {
             }
             long userIdValue = NumberUtils.parseLong(userId);
             QuestDao.UserQuestProgressRow activeQuest = quests.activeProgressRow(userIdValue).orElse(null);
-            String activeRow = activeQuest == null ? "" : activeQuest.legacyRow();
-            if (activeRow.isEmpty()) {
+            if (activeQuest == null) {
                 return "";
             }
-            String[] fields = activeRow.split("\t", -1);
-            long questId = NumberUtils.parseLong(handlingField(fields, 0));
-            long numericQuestId = NumberUtils.parseLong(handlingField(fields, 1));
-            String timeNextText = handlingField(fields, 4);
             long remainingWait = 0L;
-            if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
-                remainingWait = quests.remainingWait(timeNextText);
+            if (!StringUtils.text(activeQuest.timeNext()).isEmpty() && !"0".equals(StringUtils.text(activeQuest.timeNext()))) {
+                remainingWait = quests.remainingWait(activeQuest.timeNext());
             }
-            QuestProgressDecision decision = questProgressDecision(activeRow, questRowsFromSource(), remainingWait);
+            QuestProgressDecision decision = questProgressDecision(activeQuest, questRowsFromSource(), remainingWait);
             if (decision.shouldScheduleWait) {
-                quests.scheduleNextTime(userIdValue, questId, decision.waitAmount);
+                quests.scheduleNextTime(userIdValue, activeQuest.questId(), decision.waitAmount);
             }
             if (decision.shouldComplete) {
-                Proc_6_164_7BC820(socketIndex, questId, numericQuestId);
+                Proc_6_164_7BC820(socketIndex, activeQuest.questId(), activeQuest.numericQuestId());
             } else if (decision.shouldSendList) {
                 Proc_6_236_7F8540(socketIndex, "", "");
             }
@@ -10795,15 +10790,31 @@ public final class Handling {
     }
 
     public static QuestProgressDecision questProgressDecision(String activeRow, String questRows, long remainingWait) {
-        QuestProgressDecision decision = new QuestProgressDecision();
         if (StringUtils.text(activeRow).isEmpty()) {
-            return decision;
+            return new QuestProgressDecision();
         }
         String[] activeFields = StringUtils.text(activeRow).split("\t", -1);
-        decision.questId = NumberUtils.parseLong(handlingField(activeFields, 0));
-        decision.numericQuestId = NumberUtils.parseLong(handlingField(activeFields, 1));
-        decision.progressValue = NumberUtils.parseLong(handlingField(activeFields, 2));
-        String timeNextText = handlingField(activeFields, 4);
+        return questProgressDecision(new QuestDao.UserQuestProgressRow(
+            NumberUtils.parseLong(StringUtils.field(activeFields, 0)),
+            NumberUtils.parseLong(StringUtils.field(activeFields, 1)),
+            NumberUtils.parseLong(StringUtils.field(activeFields, 2)),
+            NumberUtils.parseLong(StringUtils.field(activeFields, 3)),
+            StringUtils.field(activeFields, 4)), questRows, remainingWait);
+    }
+
+    public static QuestProgressDecision questProgressDecision(
+        QuestDao.UserQuestProgressRow activeQuest,
+        String questRows,
+        long remainingWait
+    ) {
+        QuestProgressDecision decision = new QuestProgressDecision();
+        if (activeQuest == null) {
+            return decision;
+        }
+        decision.questId = activeQuest.questId();
+        decision.numericQuestId = activeQuest.numericQuestId();
+        decision.progressValue = activeQuest.progress();
+        String timeNextText = StringUtils.text(activeQuest.timeNext());
         if (decision.questId <= 0L) {
             return decision;
         }
