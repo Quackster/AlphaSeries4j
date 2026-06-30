@@ -2162,6 +2162,8 @@ public final class PortedModuleSmokeTest {
         RepresentedSocketCache socketCache = RepresentedSocketCache.fromRecords(Map.of(
             4L, socketRecord
         ));
+        assertEquals(1, socketCache.recordsBySocketIndex().size());
+        assertEquals(socketRecord, socketCache.recordsBySocketIndex().get(4L));
         assertEquals("a\2" + "7\2c\2d\2e\2" + "1", socketCache.record(4));
         assertEquals(7L, socketCache.roomSlot(4));
         assertEquals(true, socketCache.isBusy(4));

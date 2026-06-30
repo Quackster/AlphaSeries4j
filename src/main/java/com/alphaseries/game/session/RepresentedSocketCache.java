@@ -1,5 +1,6 @@
 package com.alphaseries.game.session;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -30,6 +31,10 @@ public final class RepresentedSocketCache {
 
     public static RepresentedSocketCache fromRecords(Map<Long, RepresentedSocketRecord> records) {
         return new RepresentedSocketCache(records == null ? Map.of() : records);
+    }
+
+    public Map<Long, RepresentedSocketRecord> recordsBySocketIndex() {
+        return Collections.unmodifiableMap(new LinkedHashMap<>(records));
     }
 
     public String record(long socketIndex) {

@@ -540,6 +540,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Added typed `NewFriendRooms` accessors and isolated legacy new-friend room row parsing at the construction boundary, keeping navigator state collection-backed while preserving legacy `Licence` bridge behavior.
 - Migrated `RepresentedSocketCache` internals from raw cache-string storage to collection-backed socket records with named room-slot and busy-state accessors, keeping legacy string parsing only at the compatibility constructor.
 - Migrated `RepresentedSocketCache.RepresentedSocketRecord` away from retained split field arrays to named room-slot and busy fields while preserving legacy payload serialization.
+- Exposed defensive typed `RepresentedSocketCache` record maps so session callers can consume socket-index keyed records without legacy cache text.
 - Migrated `SessionRegistry` internals away from retained raw cache strings and split field arrays, using typed record/linked-section storage while preserving legacy cache serialization and lookup behavior.
 - Added typed `RepresentedRoomSlots.fromSlots(...)` construction and defensive slot-id access so room slot state can move through collections instead of legacy marker strings.
 - Migrated `RepresentedRoomCache` outer cache storage from one raw marker string to typed room-record lists, preserving legacy cache serialization and replacement behavior at the compatibility boundary.
