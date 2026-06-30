@@ -2477,6 +2477,9 @@ public final class PortedModuleSmokeTest {
         AchievementSettings.Achievement achievement = new AchievementSettings.Achievement(42L, "ACH_", 10L, 5L, 3L, 7L, 2L);
         List<AchievementSettings.Achievement> achievements = List.of(achievement);
         List<AchievementSettings.IndexedAchievement> indexedAchievements = AchievementSettings.indexedAchievements(achievements);
+        AchievementSettings typedAchievements = AchievementSettings.fromAchievements("42\2", achievements);
+        assertEquals("42\tACH_\t10\t5\t3\t7\t2", typedAchievements.rowByIndex(0L));
+        assertEquals(achievement, typedAchievements.achievementByIndex(0L));
         String expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(1, null, "Fu");
         expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(42, null, expectedAchievementReward);
         expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(99, null, expectedAchievementReward) + "ACH_2\2";
