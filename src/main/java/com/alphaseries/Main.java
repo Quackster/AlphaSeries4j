@@ -651,10 +651,6 @@ public final class Main {
         return Licence.representedBots().record(entityIndex).roomSlot();
     }
 
-    public static String mainRepresentedBotRecordText(long entityIndex) {
-        return Licence.representedBots().recordText(entityIndex);
-    }
-
     public static void mainRepresentedRoomOccupantAdd(long roomSlot, long entityIndex, long occupantType) {
         Licence.setRepresentedRooms(Licence.representedRooms().addOccupant(roomSlot, entityIndex, occupantType));
     }
@@ -816,36 +812,6 @@ public final class Main {
             endAt = cacheText.length();
         }
         return cacheText.substring(startAt, endAt);
-    }
-
-    public static String mainRepresentedRoomRecord(long roomSlot) {
-        return Licence.representedRooms().record(roomSlot);
-    }
-
-    public static void mainRepresentedRoomRecordSet(long roomSlot, String roomRecord) {
-        if (roomSlot <= 0L) {
-            return;
-        }
-        Licence.setRepresentedRooms(Licence.representedRooms().setRecord(roomSlot, roomRecord));
-    }
-
-    public static String mainRepresentedCacheRemove(String cacheText, String markerText) {
-        String cache = StringUtils.text(cacheText);
-        String marker = StringUtils.text(markerText);
-        if (cache.isEmpty() || marker.isEmpty()) {
-            return cache;
-        }
-        int startAt = cache.indexOf(marker);
-        while (startAt >= 0) {
-            int endAt = cache.indexOf('\2', startAt + marker.length());
-            if (endAt < 0) {
-                cache = cache.substring(0, startAt);
-            } else {
-                cache = cache.substring(0, startAt) + cache.substring(endAt + 1);
-            }
-            startAt = cache.indexOf(marker);
-        }
-        return cache;
     }
 
     public static String mainRepresentedEntityIds(String markerText) {

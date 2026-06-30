@@ -312,6 +312,7 @@ Keep common string/number helpers in shared utility classes, and move raw `Licen
 - Moved represented-room movement scanning from `Main` into `RepresentedRoomCache.moveOccupantsAt`, clearing the remaining tab-delimited movement parser from `Main`.
 - Routed `Main.walkingTimer(...)` through named `RepresentedRoomCache` marker accessors and removed the dead `Main.mainRepresentedRoomRecordField(...)` compatibility accessor.
 - Added typed `MovementStep` parsing for legacy movement results and removed the indexed `Main.mainMovementField(...)`/`Handling.handlingMovementField(...)` helpers.
+- Removed dead `Main` represented-cache compatibility helpers; tests now read represented-bot record text through `RepresentedBotRegistry`.
 - Removed the legacy poll payload row-string wrapper; poll payload construction now accepts typed `PollDefinition` data only.
 - Removed the dead public `Handling.handlingField(...)` compatibility shim after all indexed-field call sites had moved to typed records or explicit helpers.
 - Removed the legacy inventory payload row-string wrapper; inventory list payload construction now accepts typed `InventoryItemRow` data only.
@@ -487,7 +488,7 @@ Measured on 2026-06-30:
 - `Handling.java`: 11431 lines
 - `Functions.java`: 741 lines
 - `MySQL.java`: 177 lines
-- `Main.java`: 896 lines
+- `Main.java`: 862 lines
 - `AlphaSeriesRuntime.java`: 234 lines
 
 ## Next Targets

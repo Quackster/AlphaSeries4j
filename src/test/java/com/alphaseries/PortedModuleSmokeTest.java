@@ -1171,7 +1171,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("payload", Main.mainRepresentedRecordByBracket("[5]payload[6]other", 5));
         assertEquals("11\talpha", Main.mainRepresentedRecordByKey("\1" + "11\talpha\2\1" + "12\tbeta\2", 11));
         Licence.global_00829358 = "[50:2\2bot-id\2name]";
-        assertEquals("2\2bot-id\2name", Main.mainRepresentedBotRecordText(50));
+        assertEquals("2\2bot-id\2name", Licence.representedBots().recordText(50));
         assertEquals("name", Licence.representedBots().record(50).name());
         Licence.global_00829310 = "";
         Main.mainRepresentedRoomOccupantAdd(4, 9, 1);
