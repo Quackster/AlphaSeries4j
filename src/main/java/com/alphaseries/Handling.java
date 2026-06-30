@@ -5910,12 +5910,9 @@ public final class Handling {
             if (socketIndex <= 0 || requestedId <= 0L) {
                 return "";
             }
-            long botEntityId = requestedId;
-            long botId = representedBotRecordLong(botEntityId, 1);
-            if (botId <= 0L) {
-                botId = requestedId;
-                botEntityId = representedBotEntityFromBotId(botId);
-            }
+            RepresentedBotRegistry.RepresentedBotIdentity identity = Licence.representedBots().identityFromEntityOrBotId(requestedId);
+            long botEntityId = identity.entityId();
+            long botId = identity.botId();
             if (botId <= 0L) {
                 return "";
             }
@@ -6002,12 +5999,9 @@ public final class Handling {
             if (requestedId <= 0L || commandId <= 0L) {
                 return 0L;
             }
-            long botEntityId = requestedId;
-            long botId = representedBotRecordLong(botEntityId, 1);
-            if (botId <= 0L) {
-                botId = requestedId;
-                botEntityId = representedBotEntityFromBotId(botId);
-            }
+            RepresentedBotRegistry.RepresentedBotIdentity identity = Licence.representedBots().identityFromEntityOrBotId(requestedId);
+            long botEntityId = identity.entityId();
+            long botId = identity.botId();
             if (botId <= 0L) {
                 return 0L;
             }

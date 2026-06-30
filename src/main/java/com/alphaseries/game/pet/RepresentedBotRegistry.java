@@ -82,6 +82,15 @@ public final class RepresentedBotRegistry {
         return NumberUtils.parseLong(recordField(botEntityId, fieldIndex));
     }
 
+    public RepresentedBotIdentity identityFromEntityOrBotId(long requestedId) {
+        RepresentedBotRecord bot = record(requestedId);
+        if (bot.botId() > 0L) {
+            return new RepresentedBotIdentity(requestedId, bot.botId());
+        }
+        long entityId = entityFromBotId(requestedId);
+        return new RepresentedBotIdentity(entityId, requestedId);
+    }
+
     public long entityFromBotId(long botId) {
         if (botId <= 0L || recordCache.isEmpty()) {
             return 0L;
@@ -227,5 +236,8 @@ public final class RepresentedBotRegistry {
         private static long number(String[] fields, int index) {
             return NumberUtils.parseLong(field(fields, index));
         }
+    }
+
+    public record RepresentedBotIdentity(long entityId, long botId) {
     }
 }
