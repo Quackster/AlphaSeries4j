@@ -66,7 +66,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
         long musLog = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.mus.log", 0));
         Boot.runTimed("MUS Server Protokollierer " + (musLog == 0L ? "deaktiviert" : "aktiviert"), () -> { });
         boolean gameLog = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.log", 0)) != 0L;
-        Licence.global_00829190 = gameLog;
+        Licence.setRuntimeState(Licence.runtimeState().withPacketTraceEnabled(gameLog));
         Filesystems.global_00829190 = gameLog;
         Boot.runTimed("Game Server Protokollierer aktiviert", () -> { });
     }

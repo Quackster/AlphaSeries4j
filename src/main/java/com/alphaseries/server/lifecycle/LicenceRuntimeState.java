@@ -79,4 +79,8 @@ public final class LicenceRuntimeState {
     public boolean shouldTracePackets() {
         return packetTraceEnabled && !debugLoggingEnabled;
     }
+
+    public LicenceRuntimeState withPacketTraceEnabled(boolean packetTraceEnabled) {
+        return new LicenceRuntimeState(primaryColor, productName, version, debugLoggingEnabled, secondaryColor, packetTraceEnabled);
+    }
 }
