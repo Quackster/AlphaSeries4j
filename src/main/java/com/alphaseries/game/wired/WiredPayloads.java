@@ -1,17 +1,25 @@
 package com.alphaseries.game.wired;
 
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiFunction;
 
 public final class WiredPayloads {
     private WiredPayloads() {
     }
 
-    public static final class ApplyResult {
-        public long appliedCount;
-        public String statePayloads = "";
+    public record ApplyResult(long appliedCount, String statePayloads) {
+        public ApplyResult {
+            statePayloads = statePayloads == null ? "" : statePayloads;
+        }
+
+        public static ApplyResult empty() {
+            return new ApplyResult(0L, "");
+        }
     }
 
     public record WiredRecord(
@@ -22,13 +30,30 @@ public final class WiredPayloads {
         String textValue,
         String extraValue
     ) {
+        public List<Long> selectedFurnitureIds() {
+            return parseIdList(selectedIds);
+        }
     }
 
+    /**
+     * Original function: Proc_6_218_7EA200.
+     */
     public static String specialState(long itemState) {
         return itemState == 1507L ? "5;1;7;1;5;0;" : "";
     }
 
-    public static String recordText(
+    static String recordText(
+        long wiredCode,
+        long furnitureId,
+        List<Long> selectedFurnitureIds,
+        List<Long> parameterValues,
+        String textValue,
+        String extraValue
+    ) {
+        return recordText(wiredCode, furnitureId, joinIds(selectedFurnitureIds), joinIds(parameterValues), textValue, extraValue);
+    }
+
+    static String recordText(
         long wiredCode,
         long furnitureId,
         String selectedIdsText,
@@ -47,7 +72,7 @@ public final class WiredPayloads {
         return recordText;
     }
 
-    public static WiredRecord record(String recordText) {
+    static WiredRecord record(String recordText) {
         String bodyText = StringUtils.text(recordText);
         if (bodyText.startsWith("\1")) {
             bodyText = bodyText.substring(1);
@@ -82,7 +107,7 @@ public final class WiredPayloads {
         return new WiredRecord(code, furnitureId, selectedIds, parameterText, textValue, extraValue);
     }
 
-    public static String recordMarker(String recordText) {
+    private static String recordMarker(String recordText) {
         WiredRecord record = record(recordText);
         if (record.code().isEmpty() || record.furnitureId().isEmpty()) {
             return "";
@@ -90,7 +115,7 @@ public final class WiredPayloads {
         return "\1" + record.code() + '\2' + record.furnitureId() + '\3';
     }
 
-    public static String cacheWithRecord(String cacheText, String recordText) {
+    static String cacheWithRecord(String cacheText, String recordText) {
         String record = StringUtils.text(recordText);
         if (record.isEmpty()) {
             return StringUtils.text(cacheText);
@@ -99,13 +124,12 @@ public final class WiredPayloads {
         return cache.isEmpty() ? record : record + '\n' + cache;
     }
 
-    public static boolean selectedItemsExist(String selectedIds, String existingIds) {
-        String selected = StringUtils.text(selectedIds);
+    public static boolean selectedItemsExist(List<Long> selectedFurnitureIds, String existingIds) {
+        List<Long> selected = selectedFurnitureIds == null ? List.of() : selectedFurnitureIds;
         if (selected.isEmpty()) {
             return true;
         }
-        for (String idPart : selected.replace(',', ';').split(";", -1)) {
-            long furnitureId = NumberUtils.parseLong(idPart);
+        for (long furnitureId : selected) {
             if (furnitureId > 0L && !containsDelimitedId(existingIds, furnitureId)) {
                 return false;
             }
@@ -114,27 +138,29 @@ public final class WiredPayloads {
     }
 
     public static ApplyResult applySelected(
-        String selectedIds,
+        List<Long> selectedFurnitureIds,
         String parameterText,
         long selectedFurnitureId,
         String existingIds,
         BiFunction<Long, Long, String> statePayloadBuilder
     ) {
-        ApplyResult result = new ApplyResult();
-        String effectiveSelectedIds = selectedFurnitureId > 0L ? String.valueOf(selectedFurnitureId) : StringUtils.text(selectedIds);
+        List<Long> effectiveSelectedIds = selectedFurnitureId > 0L
+            ? List.of(selectedFurnitureId)
+            : selectedFurnitureIds == null ? List.of() : selectedFurnitureIds;
         if (effectiveSelectedIds.isEmpty()) {
-            return result;
+            return ApplyResult.empty();
         }
         String[] parameterParts = (StringUtils.text(parameterText) + ";").split(";", -1);
         long stateValue = NumberUtils.parseLong(parameterParts.length > 0 ? parameterParts[0] : "");
-        for (String idPart : effectiveSelectedIds.replace(',', ';').split(";", -1)) {
-            long furnitureId = NumberUtils.parseLong(idPart);
+        long appliedCount = 0L;
+        PacketBuilder statePayloads = PacketBuilder.create();
+        for (long furnitureId : effectiveSelectedIds) {
             if (furnitureId > 0L && containsDelimitedId(existingIds, furnitureId)) {
-                result.statePayloads += statePayloadBuilder.apply(furnitureId, stateValue);
-                result.appliedCount++;
+                statePayloads.appendRaw(statePayloadBuilder.apply(furnitureId, stateValue));
+                appliedCount++;
             }
         }
-        return result;
+        return new ApplyResult(appliedCount, statePayloads.build());
     }
 
     private static boolean containsDelimitedId(String idText, long wantedId) {
@@ -145,6 +171,30 @@ public final class WiredPayloads {
             }
         }
         return false;
+    }
+
+    private static List<Long> parseIdList(String idText) {
+        List<Long> ids = new ArrayList<>();
+        for (String idPart : StringUtils.text(idText).replace(',', ';').split(";", -1)) {
+            long id = NumberUtils.parseLong(idPart);
+            if (id > 0L) {
+                ids.add(id);
+            }
+        }
+        return List.copyOf(ids);
+    }
+
+    private static String joinIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return "";
+        }
+        List<String> textIds = new ArrayList<>();
+        for (long id : ids) {
+            if (id > 0L) {
+                textIds.add(String.valueOf(id));
+            }
+        }
+        return String.join(";", textIds);
     }
 
 }

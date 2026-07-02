@@ -48,7 +48,11 @@ public final class PetPayloads {
             .build();
     }
 
-    public static String inventoryAdd(String inventoryRowPayload) {
+    public static String inventoryAdd(PetInventoryRow row) {
+        return inventoryAdd(inventoryRow(row));
+    }
+
+    private static String inventoryAdd(String inventoryRowPayload) {
         if (StringUtils.text(inventoryRowPayload).isEmpty()) {
             return "";
         }
@@ -117,6 +121,9 @@ public final class PetPayloads {
             .build();
     }
 
+    /**
+     * Original function: Proc_6_181_7CA920.
+     */
     public static long nameValidationCode(String candidateName) {
         String name = StringUtils.text(candidateName);
         if (name.length() > 30) {
@@ -159,19 +166,21 @@ public final class PetPayloads {
             .build();
     }
 
-    public static String commandList(long petLevel, Object commandRows) {
+    public static String commandList(long petLevel, List<PetSettings.PetCommandRow> commandRows) {
         long resolvedLevel = Math.max(0L, petLevel);
         long allCount = 0L;
         long availableCount = 0L;
         PacketBuilder allPayload = PacketBuilder.create();
         PacketBuilder availablePayload = PacketBuilder.create();
-        for (PetSettings.PetCommandRow row : PetSettings.commandRows(commandRows)) {
-            if (row != null && row.commandId() > 0L) {
-                allPayload.appendRaw('0').appendInt(row.commandId());
-                allCount++;
-                if (row.requiredLevel() <= resolvedLevel) {
-                    availablePayload.appendRaw('0').appendInt(row.commandId());
-                    availableCount++;
+        if (commandRows != null) {
+            for (PetSettings.PetCommandRow row : commandRows) {
+                if (row != null && row.commandId() > 0L) {
+                    allPayload.appendRaw('0').appendInt(row.commandId());
+                    allCount++;
+                    if (row.requiredLevel() <= resolvedLevel) {
+                        availablePayload.appendRaw('0').appendInt(row.commandId());
+                        availableCount++;
+                    }
                 }
             }
         }

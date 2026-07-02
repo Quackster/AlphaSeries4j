@@ -31,7 +31,7 @@ public final class LicenceRuntimeState {
         this.packetTraceEnabled = packetTraceEnabled;
     }
 
-    public static LicenceRuntimeState fromLegacy(
+    public static LicenceRuntimeState fromState(
         long primaryColor,
         String productName,
         long version,

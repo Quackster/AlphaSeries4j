@@ -9,19 +9,8 @@ import java.util.Map;
 public final class RoomEventLocales {
     private final Map<String, List<String>> fieldsByKey;
 
-    private RoomEventLocales(Object cacheText) {
-        this.fieldsByKey = parseFields(cacheText);
-    }
-
     private RoomEventLocales(Map<String, List<String>> fieldsByKey) {
         this.fieldsByKey = copyFields(fieldsByKey);
-    }
-
-    public static RoomEventLocales fromLegacy(Object cacheText) {
-        if (cacheText instanceof RoomEventLocales locales) {
-            return locales;
-        }
-        return new RoomEventLocales(cacheText);
     }
 
     public static RoomEventLocales fromEntries(List<LocaleEntry> entries) {
@@ -30,22 +19,21 @@ public final class RoomEventLocales {
         return new RoomEventLocales(fields);
     }
 
+    public static RoomEventLocales empty() {
+        return new RoomEventLocales(Map.of());
+    }
+
     public RoomEventLocales withEntries(List<LocaleEntry> entries) {
         Map<String, List<String>> fields = copyFields(fieldsByKey);
         appendEntries(fields, entries);
         return new RoomEventLocales(fields);
     }
 
-    public String cacheText() {
-        StringBuilder cache = new StringBuilder();
-        for (Map.Entry<String, List<String>> entry : fieldsByKey.entrySet()) {
-            cache.append('\0').append(entry.getKey()).append('\1')
-                .append(String.join("\2", entry.getValue()));
-        }
-        return cache.toString();
+    public String categoryName(long categoryId) {
+        return field(String.valueOf(categoryId), 0);
     }
 
-    public String field(String keyName, long columnIndex) {
+    private String field(String keyName, long columnIndex) {
         String key = StringUtils.text(keyName);
         if (key.isEmpty()) {
             return "";
@@ -61,20 +49,6 @@ public final class RoomEventLocales {
         return fieldsByKey.entrySet().stream()
             .map(entry -> new LocaleEntry(entry.getKey(), entry.getValue()))
             .toList();
-    }
-
-    private static Map<String, List<String>> parseFields(Object cacheText) {
-        Map<String, List<String>> fieldsByKey = new LinkedHashMap<>();
-        for (String record : StringUtils.text(cacheText).split("\0", -1)) {
-            int separatorAt = record.indexOf('\1');
-            if (separatorAt <= 0) {
-                continue;
-            }
-            String key = record.substring(0, separatorAt);
-            String fields = record.substring(separatorAt + 1);
-            fieldsByKey.put(key, List.of(fields.split("\2", -1)));
-        }
-        return fieldsByKey;
     }
 
     private static void appendEntries(Map<String, List<String>> fieldsByKey, List<LocaleEntry> entries) {

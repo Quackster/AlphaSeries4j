@@ -1,8 +1,8 @@
 package com.alphaseries.game.inventory;
 
-import com.alphaseries.DataManager;
-import com.alphaseries.Licence;
+import com.alphaseries.game.GameDataCaches;
 import com.alphaseries.game.catalog.CatalogRegistry;
+import com.alphaseries.game.catalog.CatalogState;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.StringUtils;
 
@@ -12,13 +12,25 @@ public final class InventoryMessagePayloads {
     private InventoryMessagePayloads() {
     }
 
-    public static final class InventoryList {
-        public long regularCount = 0L;
-        public String regularPayload = "";
-        public long iconCount = 0L;
-        public String iconPayload = "";
+    public record InventoryList(
+        long regularCount,
+        String regularPayload,
+        long iconCount,
+        String iconPayload
+    ) {
+        public InventoryList {
+            regularPayload = regularPayload == null ? "" : regularPayload;
+            iconPayload = iconPayload == null ? "" : iconPayload;
+        }
+
+        public static InventoryList empty() {
+            return new InventoryList(0L, "", 0L, "");
+        }
     }
 
+    /**
+     * Original function: Proc_6_138_7678A0.
+     */
     public static String item(long itemId, long productId, String itemData, long extraValue) {
         ProductMetadata product = ProductMetadata.lookup(productId);
         String itemClass = product.type == 9L ? "I" : "S";
@@ -46,21 +58,35 @@ public final class InventoryMessagePayloads {
             .build();
     }
 
-    public static String add(String itemPayload) {
+    public static String add(long itemId, long productId, String itemData, long extraValue) {
+        return addPayload(item(itemId, productId, itemData, extraValue));
+    }
+
+    private static String addPayload(String itemPayload) {
         return PacketBuilder.message("Ab")
             .appendRaw(itemPayload)
             .appendRaw('\1')
             .build();
     }
 
-    public static String roomAdd(String itemPayload) {
+    public static String roomAdd(long itemId, long productId, String itemData, long extraValue) {
+        return roomAddPayload(item(itemId, productId, itemData, extraValue));
+    }
+
+    private static String roomAddPayload(String itemPayload) {
         return PacketBuilder.message("Ab")
             .appendRaw(itemPayload)
             .appendRaw('\2')
             .build();
     }
 
-    public static String regularList(long itemCount, String itemPayload) {
+    public static String regularList(InventoryList inventoryList) {
+        return regularListPayload(
+            inventoryList == null ? 0L : inventoryList.regularCount(),
+            inventoryList == null ? "" : inventoryList.regularPayload());
+    }
+
+    private static String regularListPayload(long itemCount, String itemPayload) {
         return PacketBuilder.create()
             .appendRaw('\2')
             .appendRaw(PacketBuilder.message("BLS").appendRaw('\2').appendRaw("II").appendInt(itemCount))
@@ -68,7 +94,13 @@ public final class InventoryMessagePayloads {
             .build();
     }
 
-    public static String iconList(long itemCount, String itemPayload) {
+    public static String iconList(InventoryList inventoryList) {
+        return iconListPayload(
+            inventoryList == null ? 0L : inventoryList.iconCount(),
+            inventoryList == null ? "" : inventoryList.iconPayload());
+    }
+
+    private static String iconListPayload(long itemCount, String itemPayload) {
         return PacketBuilder.message("BL")
             .appendRaw('\2')
             .appendRaw("II")
@@ -89,10 +121,11 @@ public final class InventoryMessagePayloads {
     }
 
     public static InventoryList listFromItems(List<InventoryItemRow> items) {
-        InventoryList result = new InventoryList();
         if (items == null) {
-            return result;
+            return InventoryList.empty();
         }
+        long regularCount = 0L;
+        long iconCount = 0L;
         PacketBuilder regularPayload = PacketBuilder.create();
         PacketBuilder iconPayload = PacketBuilder.create();
         for (InventoryItemRow item : items) {
@@ -102,18 +135,16 @@ public final class InventoryMessagePayloads {
                     item.productId(),
                     item.itemData(),
                     item.secondaryValue());
-                if (DataManager.productCache().type(item.productId()) == 9L) {
+                if (GameDataCaches.productCache().type(item.productId()) == 9L) {
                     iconPayload.appendRaw(itemPayload);
-                    result.iconCount++;
+                    iconCount++;
                 } else {
                     regularPayload.appendRaw(itemPayload);
-                    result.regularCount++;
+                    regularCount++;
                 }
             }
         }
-        result.regularPayload = regularPayload.build();
-        result.iconPayload = iconPayload.build();
-        return result;
+        return new InventoryList(regularCount, regularPayload.build(), iconCount, iconPayload.build());
     }
 
     private static final class ProductMetadata {
@@ -130,7 +161,7 @@ public final class InventoryMessagePayloads {
         }
 
         private static ProductMetadata lookup(long productId) {
-            CatalogRegistry.Product product = Licence.product(productId);
+            CatalogRegistry.Product product = CatalogState.instance().registry().product(productId).orElse(null);
             if (product == null) {
                 return new ProductMetadata(0L, "", "", "");
             }

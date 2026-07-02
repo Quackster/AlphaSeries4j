@@ -20,7 +20,4 @@ public final class AdvertisingState {
         visitRoomAds = ads == null ? VisitRoomAds.empty() : ads;
     }
 
-    public synchronized void setVisitRoomAdsFromLegacy(Object payloadsById, long count) {
-        visitRoomAds = VisitRoomAds.fromLegacy(payloadsById, count);
-    }
 }

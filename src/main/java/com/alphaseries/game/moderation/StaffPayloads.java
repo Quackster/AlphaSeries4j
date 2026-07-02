@@ -2,10 +2,8 @@ package com.alphaseries.game.moderation;
 
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.protocol.PacketReader;
 import com.alphaseries.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,12 +11,23 @@ public final class StaffPayloads {
     private StaffPayloads() {
     }
 
-    public static final class ChatRows {
-        public long chatCount;
-        public String payload = "";
+    public record ChatRows(long chatCount, String payload) {
+        public ChatRows {
+            payload = StringUtils.text(payload);
+        }
     }
 
-    public static String callForHelpNotification(String rowPayload) {
+    public record ChatHistoryVisit(StaffRoomChatVisitRow visitRow, List<StaffRoomChatRow> chatRows) {
+        public ChatHistoryVisit {
+            chatRows = chatRows == null ? List.of() : List.copyOf(chatRows);
+        }
+    }
+
+    public static String callForHelpNotification(StaffCallForHelpRow row, Map<Long, String> userNamesById) {
+        return callForHelpNotification(callForHelpRow(row, userNamesById));
+    }
+
+    private static String callForHelpNotification(String rowPayload) {
         return PacketBuilder.message("HR")
             .appendRaw(rowPayload)
             .build();
@@ -46,7 +55,11 @@ public final class StaffPayloads {
             .build();
     }
 
-    public static String moderationPanel(String moderationPayload) {
+    public static String moderationPanel(StaffSettings staffSettings, long rankIndex, long hcLevel) {
+        return moderationPanelPayload(staffSettings == null ? "" : staffSettings.moderationPayload(rankIndex, hcLevel));
+    }
+
+    private static String moderationPanelPayload(String moderationPayload) {
         return PacketBuilder.message("HS")
             .appendInt(0L)
             .appendInt(0L)
@@ -66,7 +79,7 @@ public final class StaffPayloads {
             .appendInt(room.userId())
             .appendInt(room.partnerId())
             .appendString(room.roomName())
-            .appendRaw(roomChatRows(chatRows == null ? List.of() : chatRows).payload)
+            .appendRaw(roomChatRows(chatRows == null ? List.of() : chatRows).payload())
             .build();
     }
 
@@ -75,7 +88,7 @@ public final class StaffPayloads {
             .appendInt(room.roomId())
             .appendInt(room.modelType())
             .appendString(room.roomName())
-            .appendRaw(roomChatRows(chatRows == null ? List.of() : chatRows).payload)
+            .appendRaw(roomChatRows(chatRows == null ? List.of() : chatRows).payload())
             .build();
     }
 
@@ -101,7 +114,7 @@ public final class StaffPayloads {
         return payload.build();
     }
 
-    public static String callForHelpRow(StaffCallForHelpRow row, Map<Long, String> userNamesById) {
+    private static String callForHelpRow(StaffCallForHelpRow row, Map<Long, String> userNamesById) {
         long callForHelpId = row.callForHelpId();
         long callerId = row.callerUserId();
         String callerName = row.callerName();
@@ -117,6 +130,9 @@ public final class StaffPayloads {
             descriptionText, roomId, roomName, callForHelpId, pickerName);
     }
 
+    /**
+     * Original function: Proc_6_29_70D800.
+     */
     public static String callForHelp(
         long baseValue,
         long firstValue,
@@ -152,38 +168,6 @@ public final class StaffPayloads {
             .build();
     }
 
-    public static String callForHelpWhereClause(String packetPayload) {
-        List<Long> callForHelpIds = callForHelpIds(packetPayload);
-        if (callForHelpIds.isEmpty()) {
-            return "";
-        }
-        StringBuilder whereClause = new StringBuilder();
-        for (long callForHelpId : callForHelpIds) {
-            if (whereClause.length() > 0) {
-                whereClause.append(" OR ");
-            }
-            whereClause.append("id='").append(callForHelpId).append('\'');
-        }
-        return whereClause.toString();
-    }
-
-    public static List<Long> callForHelpIds(String packetPayload) {
-        PacketReader reader = PacketReader.of(packetPayload);
-        long requestedCount = reader.readInt();
-        if (requestedCount < 1L || requestedCount > 150L) {
-            return List.of();
-        }
-        List<Long> callForHelpIds = new ArrayList<>();
-        for (long requestIndex = 0L; requestIndex < requestedCount; requestIndex++) {
-            long callForHelpId = reader.readInt();
-            if (callForHelpId <= 0L) {
-                return List.of();
-            }
-            callForHelpIds.add(callForHelpId);
-        }
-        return callForHelpIds;
-    }
-
     public static String userSummary(
         StaffUserSummaryRow row,
         long callForHelpCount,
@@ -215,18 +199,20 @@ public final class StaffPayloads {
     }
 
     public static ChatRows roomChatRows(List<StaffRoomChatRow> rows) {
-        ChatRows result = new ChatRows();
         PacketBuilder chatPayload = PacketBuilder.create();
+        long chatCount = 0L;
+        if (rows == null) {
+            return new ChatRows(chatCount, chatPayload.build());
+        }
         for (StaffRoomChatRow row : rows) {
             chatPayload.appendInt(row.hour())
                 .appendInt(row.minute())
                 .appendInt(row.userId())
                 .appendString(row.userName())
                 .appendString(row.description());
-            result.chatCount++;
+            chatCount++;
         }
-        result.payload = chatPayload.build();
-        return result;
+        return new ChatRows(chatCount, chatPayload.build());
     }
 
     public static String roomChatHistory(StaffRoomChatVisitRow visitRow, List<StaffRoomChatRow> chatRows) {
@@ -234,13 +220,27 @@ public final class StaffPayloads {
         return PacketBuilder.create()
             .appendInt(visitRow.modelType())
             .appendInt(visitRow.roomId())
-            .appendInt(chatRowsPayload.chatCount)
+            .appendInt(chatRowsPayload.chatCount())
             .appendString(visitRow.roomName())
-            .appendRaw(chatRowsPayload.payload)
+            .appendRaw(chatRowsPayload.payload())
             .build();
     }
 
-    public static String roomChatHistoryResponse(StaffUserLookup targetUser, long rowCount, String rowPayload) {
+    public static String roomChatHistoryResponse(StaffUserLookup targetUser, List<ChatHistoryVisit> visits) {
+        PacketBuilder rowPayload = PacketBuilder.create();
+        long rowCount = 0L;
+        if (visits != null) {
+            for (ChatHistoryVisit visit : visits) {
+                if (visit != null && visit.visitRow() != null) {
+                    rowPayload.appendRaw(roomChatHistory(visit.visitRow(), visit.chatRows()));
+                    rowCount++;
+                }
+            }
+        }
+        return roomChatHistoryResponse(targetUser, rowCount, rowPayload.build());
+    }
+
+    private static String roomChatHistoryResponse(StaffUserLookup targetUser, long rowCount, String rowPayload) {
         return PacketBuilder.message("HX")
             .appendInt(targetUser.userId())
             .appendString(targetUser.userName())
@@ -249,7 +249,21 @@ public final class StaffPayloads {
             .build();
     }
 
-    public static String roomVisitHistoryResponse(StaffUserLookup targetUser, long rowCount, String rowPayload) {
+    public static String roomVisitHistoryResponse(StaffUserLookup targetUser, List<StaffRoomVisitRow> visitRows) {
+        PacketBuilder rowPayload = PacketBuilder.create();
+        long rowCount = 0L;
+        if (visitRows != null) {
+            for (StaffRoomVisitRow row : visitRows) {
+                if (row != null) {
+                    rowPayload.appendRaw(roomVisit(row));
+                    rowCount++;
+                }
+            }
+        }
+        return roomVisitHistoryResponse(targetUser, rowCount, rowPayload.build());
+    }
+
+    private static String roomVisitHistoryResponse(StaffUserLookup targetUser, long rowCount, String rowPayload) {
         return PacketBuilder.message("HY")
             .appendInt(targetUser.userId())
             .appendString(targetUser.userName())

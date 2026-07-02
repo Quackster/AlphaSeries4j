@@ -155,60 +155,165 @@ public final class RoomDao {
                 + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,"
                 + "rooms.is_staff_picked FROM users,rooms,rooms_categories WHERE rooms.id=? "
                 + "AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1",
-            resultSet -> new NavigatorRoom(
-                resultSet.getLong(1),
-                resultSet.getString(2),
-                resultSet.getString(3),
-                resultSet.getLong(4),
-                resultSet.getLong(5),
-                resultSet.getLong(6),
-                resultSet.getString(7),
-                resultSet.getLong(8),
-                resultSet.getLong(10),
-                resultSet.getLong(11),
-                resultSet.getString(12),
-                resultSet.getString(13),
-                resultSet.getString(14),
-                resultSet.getLong(15),
-                resultSet.getLong(16)),
+            RoomDao::navigatorRoomFromResultSet,
             roomId);
     }
 
-    public List<NavigatorRoom> navigatorRoomsByTail(String queryTail, boolean includeStaffPicked) throws SQLException {
-        String staffPickedColumn = includeStaffPicked ? "rooms.is_staff_picked" : "0";
+    public List<NavigatorRoom> navigatorSearchRooms(String searchText, long limit) throws SQLException {
+        String searchValue = StringUtils.text(searchText);
+        String predicate = searchValue.length() > 2
+            ? "(users.name LIKE ? OR rooms.name LIKE ?)"
+            : "(users.name = ? OR rooms.name = ?)";
+        String parameterValue = searchValue.length() > 2 ? searchValue + "%" : searchValue;
         return database.query(
             "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
                 + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
-                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,"
-                + staffPickedColumn + " FROM " + queryTail,
-            resultSet -> new NavigatorRoom(
-                resultSet.getLong(1),
-                resultSet.getString(2),
-                resultSet.getString(3),
-                resultSet.getLong(4),
-                resultSet.getLong(5),
-                resultSet.getLong(6),
-                resultSet.getString(7),
-                resultSet.getLong(8),
-                resultSet.getLong(10),
-                resultSet.getLong(11),
-                resultSet.getString(12),
-                resultSet.getString(13),
-                resultSet.getString(14),
-                resultSet.getLong(15),
-                resultSet.getLong(16)));
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,0 "
+                + "FROM users,rooms,rooms_categories WHERE " + predicate
+                + " AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
+                + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT ?",
+            RoomDao::navigatorRoomFromResultSet,
+            parameterValue,
+            parameterValue,
+            nonNegativeLimit(limit));
     }
 
-    public List<NavigatorEventRow> navigatorEventsByTail(String queryTail, String timeFormat, boolean includePetFlag)
-        throws SQLException {
+    public List<NavigatorRoom> topRatedNavigatorRooms(long limit) throws SQLException {
+        return database.query(
+            "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,0 "
+                + "FROM users,rooms,rooms_categories WHERE rooms.rate > 0 AND users.id=rooms.id_owner "
+                + "AND rooms_categories.id=rooms.id_category GROUP BY rooms.id ORDER BY rooms.rate DESC LIMIT ?",
+            RoomDao::navigatorRoomFromResultSet,
+            nonNegativeLimit(limit));
+    }
 
-        String petColumn = includePetFlag ? "rooms.allow_otherspets" : "NULL";
+    public List<NavigatorRoom> popularNavigatorRooms(long categoryId, long limit) throws SQLException {
+        if (categoryId > 1L) {
+            return database.query(
+                "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                    + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                    + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,0 "
+                    + "FROM users,rooms,rooms_categories WHERE rooms.id_category=? AND rooms.visitors_now > 0 "
+                    + "AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
+                    + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT ?",
+                RoomDao::navigatorRoomFromResultSet,
+                categoryId,
+                nonNegativeLimit(limit));
+        }
+        return database.query(
+            "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,0 "
+                + "FROM users,rooms,rooms_categories WHERE rooms.visitors_now > 0 "
+                + "AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
+                + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT ?",
+            RoomDao::navigatorRoomFromResultSet,
+            nonNegativeLimit(limit));
+    }
+
+    public List<NavigatorRoom> eventCategoryNavigatorRooms(long categoryId, long limit) throws SQLException {
+        if (categoryId > 1L) {
+            return database.query(
+                "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                    + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                    + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,0 "
+                    + "FROM rooms_events,users,rooms,rooms_categories WHERE rooms_events.id_category=? "
+                    + "AND rooms.id=rooms_events.id_room AND rooms_categories.id=rooms.id_category "
+                    + "AND users.id=rooms.id_owner GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT ?",
+                RoomDao::navigatorRoomFromResultSet,
+                categoryId,
+                nonNegativeLimit(limit));
+        }
+        return database.query(
+            "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,0 "
+                + "FROM rooms_events,users,rooms,rooms_categories WHERE rooms.id=rooms_events.id_room "
+                + "AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
+                + "GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT ?",
+            RoomDao::navigatorRoomFromResultSet,
+            nonNegativeLimit(limit));
+    }
+
+    public List<NavigatorRoom> ownedNavigatorRooms(long ownerId, long limit) throws SQLException {
+        return database.query(
+            "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,0 "
+                + "FROM users,rooms,rooms_categories WHERE rooms.id_owner=? "
+                + "AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
+                + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT ?",
+            RoomDao::navigatorRoomFromResultSet,
+            ownerId,
+            nonNegativeLimit(limit));
+    }
+
+    public List<NavigatorRoom> friendCurrentNavigatorRooms(long userId, long limit) throws SQLException {
+        return database.query(
+            "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,0 "
+                + "FROM friendships,logs_visitedrooms,users,rooms,rooms_categories WHERE friendships.id_user=? "
+                + "AND logs_visitedrooms.id_user=friendships.id_friend AND logs_visitedrooms.timestamp_left IS NULL "
+                + "AND rooms.id=logs_visitedrooms.id_room AND rooms_categories.id=rooms.id_category "
+                + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.id DESC LIMIT ?",
+            RoomDao::navigatorRoomFromResultSet,
+            userId,
+            nonNegativeLimit(limit));
+    }
+
+    public List<NavigatorRoom> friendOwnedNavigatorRooms(long userId, long limit) throws SQLException {
+        return database.query(
+            "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,0 "
+                + "FROM friendships,users,rooms,rooms_categories WHERE friendships.id_user=? "
+                + "AND users.id=friendships.id_friend AND rooms_categories.id=rooms.id_category "
+                + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT ?",
+            RoomDao::navigatorRoomFromResultSet,
+            userId,
+            nonNegativeLimit(limit));
+    }
+
+    public List<NavigatorRoom> favouriteNavigatorRooms(long userId, long limit) throws SQLException {
+        return database.query(
+            "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,0 "
+                + "FROM rooms_favourites,users,rooms,rooms_categories WHERE rooms_favourites.id_user=? "
+                + "AND rooms.id=rooms_favourites.id_room AND rooms_categories.id=rooms.id_category "
+                + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT ?",
+            RoomDao::navigatorRoomFromResultSet,
+            userId,
+            nonNegativeLimit(limit));
+    }
+
+    public List<NavigatorRoom> recentlyVisitedNavigatorRooms(long userId, long limit) throws SQLException {
+        return database.query(
+            "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,0 "
+                + "FROM logs_visitedrooms,users,rooms,rooms_categories WHERE logs_visitedrooms.id_user=? "
+                + "AND rooms.id=logs_visitedrooms.id_room AND rooms_categories.id=rooms.id_category "
+                + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.id DESC LIMIT ?",
+            RoomDao::navigatorRoomFromResultSet,
+            userId,
+            nonNegativeLimit(limit));
+    }
+
+    public List<NavigatorEventRow> navigatorSearchEvents(String searchText, String timeFormat, long limit) throws SQLException {
+        String searchValue = StringUtils.text(searchText);
         return database.query(
             "SELECT rooms.id,rooms_events.name,users.name,rooms.status_door,"
                 + "rooms.visitors_now,rooms.visitors_max,rooms_events.description,rooms_categories.has_trading,"
-                + petColumn + ",rooms.rate,rooms_events.id_category,rooms.icon,rooms_events.tag_1,"
-                + "rooms_events.tag_2,DATE_FORMAT(FROM_UNIXTIME(rooms_events.timestamp), '" + timeFormat
-                + "') FROM " + queryTail,
+                + "rooms.allow_otherspets,rooms.rate,rooms_events.id_category,rooms.icon,rooms_events.tag_1,"
+                + "rooms_events.tag_2,DATE_FORMAT(FROM_UNIXTIME(rooms_events.timestamp), ?) "
+                + "FROM rooms_events,users,rooms,rooms_categories WHERE (users.name=? "
+                + "AND rooms_events.id_user=users.id OR rooms_events.name LIKE ? AND users.id=rooms.id_owner) "
+                + "AND rooms.id=rooms_events.id_room AND rooms_categories.id=rooms.id_category "
+                + "GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT ?",
             resultSet -> new NavigatorEventRow(
                 resultSet.getLong(1),
                 resultSet.getString(2),
@@ -223,7 +328,59 @@ public final class RoomDao {
                 resultSet.getString(12),
                 resultSet.getString(13),
                 resultSet.getString(14),
-                resultSet.getString(15)));
+                resultSet.getString(15)),
+            timeFormat,
+            searchValue,
+            searchValue + "%",
+            nonNegativeLimit(limit));
+    }
+
+    public List<NavigatorEventRow> navigatorTagEvents(String tagText, String timeFormat, long limit) throws SQLException {
+        String tagValue = StringUtils.text(tagText);
+        return database.query(
+            "SELECT rooms.id,rooms_events.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms_events.description,rooms_categories.has_trading,"
+                + "rooms.allow_otherspets,rooms.rate,rooms_events.id_category,rooms.icon,rooms_events.tag_1,"
+                + "rooms_events.tag_2,DATE_FORMAT(FROM_UNIXTIME(rooms_events.timestamp), ?) "
+                + "FROM rooms_events,users,rooms,rooms_categories WHERE (rooms_events.name_category=? "
+                + "OR rooms_events.tag_1=? OR rooms_events.tag_2=?) AND rooms.id=rooms_events.id_room "
+                + "AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
+                + "GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT ?",
+            resultSet -> new NavigatorEventRow(
+                resultSet.getLong(1),
+                resultSet.getString(2),
+                resultSet.getString(3),
+                resultSet.getString(4),
+                resultSet.getLong(5),
+                resultSet.getLong(6),
+                resultSet.getString(7),
+                resultSet.getLong(8),
+                resultSet.getLong(10),
+                resultSet.getLong(11),
+                resultSet.getString(12),
+                resultSet.getString(13),
+                resultSet.getString(14),
+                resultSet.getString(15)),
+            timeFormat,
+            tagValue,
+            tagValue,
+            tagValue,
+            nonNegativeLimit(limit));
+    }
+
+    public List<NavigatorRoom> navigatorTagRooms(String tagText, long limit) throws SQLException {
+        String tagValue = StringUtils.text(tagText);
+        return database.query(
+            "SELECT rooms.id,rooms.name,users.name,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,0 "
+                + "FROM users,rooms,rooms_categories WHERE (rooms.tag_1=? OR rooms.tag_2=?) "
+                + "AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
+                + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT ?",
+            RoomDao::navigatorRoomFromResultSet,
+            tagValue,
+            tagValue,
+            nonNegativeLimit(limit));
     }
 
     public List<NavigatorTagPopularity> navigatorTagPopularities(long limit) throws SQLException {
@@ -1095,7 +1252,7 @@ public final class RoomDao {
         String caption,
         String captionTwo,
         String captionThree,
-        String legacyNullSlot,
+        String reservedSlot,
         long roomId,
         String roomName,
         String ownerName,
@@ -1104,7 +1261,7 @@ public final class RoomDao {
         long visitorsMax,
         String description,
         long trading,
-        String legacySecondNullSlot,
+        String reservedSecondSlot,
         long rating,
         long categoryId,
         String roomIcon,
@@ -1187,6 +1344,29 @@ public final class RoomDao {
 
     private static String nullableText(String value) {
         return value == null || value.isEmpty() ? null : value;
+    }
+
+    private static NavigatorRoom navigatorRoomFromResultSet(ResultSet resultSet) throws SQLException {
+        return new NavigatorRoom(
+            resultSet.getLong(1),
+            resultSet.getString(2),
+            resultSet.getString(3),
+            resultSet.getLong(4),
+            resultSet.getLong(5),
+            resultSet.getLong(6),
+            resultSet.getString(7),
+            resultSet.getLong(8),
+            resultSet.getLong(10),
+            resultSet.getLong(11),
+            resultSet.getString(12),
+            resultSet.getString(13),
+            resultSet.getString(14),
+            resultSet.getLong(15),
+            resultSet.getLong(16));
+    }
+
+    private static long nonNegativeLimit(long limit) {
+        return Math.max(0L, limit);
     }
 
     private static String officialNavigatorQuery() {

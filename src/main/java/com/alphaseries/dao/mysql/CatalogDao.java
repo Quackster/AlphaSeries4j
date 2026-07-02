@@ -188,7 +188,15 @@ public final class CatalogDao {
     public record CatalogProductCacheRow(List<String> values) {
     }
 
-    public record ProductDealRow(long dealId, String items) {
+    public record ProductDealRow(long dealId, String items, List<Long> itemProductIds) {
+        public ProductDealRow(long dealId, String items) {
+            this(dealId, items, productIds(items));
+        }
+
+        public ProductDealRow {
+            items = items == null ? "" : items;
+            itemProductIds = itemProductIds == null ? List.of() : List.copyOf(itemProductIds);
+        }
     }
 
     public record CatalogPageRow(
@@ -241,5 +249,23 @@ public final class CatalogDao {
             values.add(value == null ? "" : value);
         }
         return values;
+    }
+
+    private static List<Long> productIds(String items) {
+        List<Long> productIds = new ArrayList<>();
+        if (items == null || items.isEmpty()) {
+            return List.of();
+        }
+        for (String item : items.replace(',', ';').split(";", -1)) {
+            try {
+                long productId = Long.parseLong(item.trim());
+                if (productId > 0L) {
+                    productIds.add(productId);
+                }
+            } catch (NumberFormatException ignored) {
+                // Keep legacy tolerance for malformed deal item lists.
+            }
+        }
+        return List.copyOf(productIds);
     }
 }

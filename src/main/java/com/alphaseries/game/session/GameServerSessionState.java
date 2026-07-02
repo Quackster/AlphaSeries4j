@@ -1,6 +1,6 @@
 package com.alphaseries.game.session;
 
-import com.alphaseries.util.NumberUtils;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -14,17 +14,11 @@ public final class GameServerSessionState {
     private final List<QueuedPacket> queuedPackets = new ArrayList<>();
     private final Set<Long> readySocketIndexes = new LinkedHashSet<>();
 
-    private GameServerSessionState(String queuedPacketData, Object readySessionMarkers) {
-        parseQueuedPackets(StringUtils.text(queuedPacketData));
-        parseReadyMarkers(readySessionMarkers);
-    }
-
-    public static GameServerSessionState fromLegacy(String queuedPacketData, Object readySessionMarkers) {
-        return new GameServerSessionState(queuedPacketData, readySessionMarkers);
+    private GameServerSessionState() {
     }
 
     public static GameServerSessionState empty() {
-        return new GameServerSessionState("", "");
+        return new GameServerSessionState();
     }
 
     public static GameServerSessionState fromState(List<QueuedPacket> queuedPackets, Set<Long> readySocketIndexes) {
@@ -55,19 +49,16 @@ public final class GameServerSessionState {
     }
 
     public String queuedPacketData() {
-        StringBuilder data = new StringBuilder();
+        PacketBuilder data = PacketBuilder.create();
         for (QueuedPacket packet : queuedPackets) {
-            data.append('[').append(packet.socketIndex()).append(':').append(packet.payload()).append(']');
+            data
+                .appendRaw('[')
+                .appendRaw(packet.socketIndex())
+                .appendRaw(':')
+                .appendRaw(packet.payload())
+                .appendRaw(']');
         }
-        return data.toString();
-    }
-
-    public String readySessionMarkers() {
-        StringBuilder markers = new StringBuilder();
-        for (Long socketIndex : readySocketIndexes) {
-            markers.append('[').append(socketIndex).append(']');
-        }
-        return markers.toString();
+        return data.build();
     }
 
     public void appendPacketPayload(long socketIndex, String packetPayload) {
@@ -96,40 +87,6 @@ public final class GameServerSessionState {
     public void removeSocket(long socketIndex) {
         queuedPackets.removeIf(packet -> packet.socketIndex() == socketIndex);
         readySocketIndexes.remove(socketIndex);
-    }
-
-    private void parseQueuedPackets(String queuedPacketData) {
-        for (String record : queuedPacketData.split("\\[", -1)) {
-            int payloadAt = record.indexOf(':');
-            int endAt = record.indexOf(']', payloadAt + 1);
-            if (payloadAt > 0 && endAt > payloadAt) {
-                long socketIndex = NumberUtils.parseLong(record.substring(0, payloadAt));
-                if (socketIndex > 0L) {
-                    queuedPackets.add(new QueuedPacket(socketIndex, record.substring(payloadAt + 1, endAt)));
-                }
-            }
-        }
-    }
-
-    private void parseReadyMarkers(Object readySessionMarkers) {
-        if (readySessionMarkers instanceof Iterable<?> socketIndexes) {
-            for (Object socketIndexValue : socketIndexes) {
-                long socketIndex = NumberUtils.parseLong(socketIndexValue);
-                if (socketIndex > 0L) {
-                    readySocketIndexes.add(socketIndex);
-                }
-            }
-            return;
-        }
-        for (String part : StringUtils.text(readySessionMarkers).split("\\]", -1)) {
-            String marker = part.replace("[", "");
-            if (!marker.isEmpty()) {
-                long socketIndex = NumberUtils.parseLong(marker);
-                if (socketIndex > 0L) {
-                    readySocketIndexes.add(socketIndex);
-                }
-            }
-        }
     }
 
     public record QueuedPacket(long socketIndex, String payload) {

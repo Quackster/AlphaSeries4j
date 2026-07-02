@@ -1,88 +1,218 @@
 package com.alphaseries;
 
 import com.alphaseries.config.AppDatabaseConfig;
+import com.alphaseries.config.AppConfigState;
+import com.alphaseries.config.AppPaths;
+import com.alphaseries.config.AppSettingsBootCache;
 import com.alphaseries.config.AppSettingsCache;
+import com.alphaseries.config.FiguredataBootCache;
 import com.alphaseries.config.PermissionMatrix;
+import com.alphaseries.dao.mysql.AchievementDao;
 import com.alphaseries.dao.mysql.AdvertisingDao;
+import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.dao.mysql.ClubDao;
 import com.alphaseries.dao.mysql.FurnitureDao;
 import com.alphaseries.dao.mysql.HelpDao;
+import com.alphaseries.dao.mysql.JukeboxDao;
+import com.alphaseries.dao.mysql.MessengerDao;
 import com.alphaseries.dao.mysql.PackageDao;
+import com.alphaseries.dao.mysql.PollDao;
 import com.alphaseries.dao.mysql.QuestDao;
+import com.alphaseries.dao.mysql.RecyclerDao;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.SettingsDao;
 import com.alphaseries.dao.mysql.StaffModerationDao;
+import com.alphaseries.dao.mysql.TradeDao;
 import com.alphaseries.dao.mysql.UserDao;
+import com.alphaseries.dao.mysql.VoucherDao;
 import com.alphaseries.db.Database;
+import com.alphaseries.db.MySQL;
+import com.alphaseries.game.GameDataCaches;
+import com.alphaseries.game.achievement.AchievementBootCache;
+import com.alphaseries.game.achievement.AchievementLookups;
+import com.alphaseries.game.achievement.AchievementProgress;
+import com.alphaseries.game.achievement.AchievementProgressDecision;
+import com.alphaseries.game.achievement.AchievementRewardGrant;
 import com.alphaseries.game.achievement.AchievementSettings;
+import com.alphaseries.game.achievement.AchievementState;
+import com.alphaseries.game.advertising.AdvertisingBootCache;
+import com.alphaseries.game.advertising.AdvertisingState;
 import com.alphaseries.game.advertising.VisitRoomAds;
 import com.alphaseries.game.catalog.CatalogPages;
+import com.alphaseries.game.catalog.CatalogGiftBootCache;
+import com.alphaseries.game.catalog.CatalogPageBootCache;
 import com.alphaseries.game.catalog.CatalogProductSettings;
 import com.alphaseries.game.catalog.CatalogRegistry;
+import com.alphaseries.game.catalog.CatalogState;
+import com.alphaseries.game.catalog.CatalogWire;
+import com.alphaseries.game.catalog.ClubPeriodService;
 import com.alphaseries.game.catalog.ProductCache;
+import com.alphaseries.game.catalog.VoucherRedemption;
+import com.alphaseries.game.catalog.VoucherWire;
 import com.alphaseries.game.help.HelpCenterCache;
+import com.alphaseries.game.help.HelpCenterBootCache;
+import com.alphaseries.game.help.HelpCenterState;
+import com.alphaseries.game.help.HelpWire;
+import com.alphaseries.game.inventory.CreditFurniture;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
+import com.alphaseries.game.inventory.InventoryRefreshService;
 import com.alphaseries.game.jukebox.JukeboxPlaylistEntry;
+import com.alphaseries.game.jukebox.JukeboxAddRequest;
+import com.alphaseries.game.jukebox.JukeboxLookups;
+import com.alphaseries.game.jukebox.JukeboxRequests;
+import com.alphaseries.game.jukebox.SongInfoRequest;
 import com.alphaseries.game.catalog.GiftSettings;
+import com.alphaseries.game.chat.ChatCommands;
 import com.alphaseries.game.jukebox.SongDiskRow;
 import com.alphaseries.game.jukebox.SongInfoRow;
+import com.alphaseries.game.messenger.AcceptedFriendRequests;
 import com.alphaseries.game.messenger.MessengerFriend;
+import com.alphaseries.game.messenger.MessengerLookups;
+import com.alphaseries.game.messenger.MessengerRoomInvite;
 import com.alphaseries.game.messenger.MessengerSearchResult;
 import com.alphaseries.game.messenger.MessengerSettings;
+import com.alphaseries.game.messenger.MessengerState;
+import com.alphaseries.game.messenger.MessengerViews;
+import com.alphaseries.game.messenger.MessengerWire;
 import com.alphaseries.game.messenger.PendingFriendRequest;
-import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
+import com.alphaseries.game.navigator.NavigatorBootCache;
 import com.alphaseries.game.navigator.NewFriendRooms;
+import com.alphaseries.game.navigator.NavigatorRequests;
+import com.alphaseries.game.navigator.NavigatorRoom;
+import com.alphaseries.game.navigator.NavigatorState;
+import com.alphaseries.game.navigator.NavigatorWire;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
 import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.game.navigator.RoomCategoryCache;
+import com.alphaseries.game.pet.PetBootCache;
+import com.alphaseries.game.pet.PetCommandCacheRow;
+import com.alphaseries.game.pet.PetCommandAction;
+import com.alphaseries.game.pet.PetExperienceUpdate;
 import com.alphaseries.game.pet.PetInventoryRow;
+import com.alphaseries.game.pet.PetLookups;
+import com.alphaseries.game.pet.PetLevelCacheRow;
+import com.alphaseries.game.pet.PetPackagePlacement;
 import com.alphaseries.game.pet.PetPayloads;
+import com.alphaseries.game.pet.PetProgress;
 import com.alphaseries.game.pet.PetRaceCacheRow;
 import com.alphaseries.game.pet.PetRaceRow;
+import com.alphaseries.game.pet.PetRoomOccupants;
 import com.alphaseries.game.pet.PetSettings;
+import com.alphaseries.game.pet.PetState;
 import com.alphaseries.game.pet.PetStatusRow;
+import com.alphaseries.game.pet.PetWire;
 import com.alphaseries.game.pet.RepresentedBotEntry;
 import com.alphaseries.game.pet.RepresentedBotRegistry;
 import com.alphaseries.game.poll.PollAnswerRow;
+import com.alphaseries.game.poll.PollAnswerSubmission;
 import com.alphaseries.game.poll.PollDefinition;
 import com.alphaseries.game.poll.PollHeader;
+import com.alphaseries.game.poll.PollLookups;
 import com.alphaseries.game.poll.PollPrompt;
 import com.alphaseries.game.poll.PollQuestionRow;
+import com.alphaseries.game.poll.PollWire;
+import com.alphaseries.game.quest.QuestAcceptResult;
+import com.alphaseries.game.quest.QuestProgress;
+import com.alphaseries.game.quest.QuestProgressDecision;
+import com.alphaseries.game.quest.QuestResetResult;
+import com.alphaseries.game.quest.QuestWire;
 import com.alphaseries.game.chat.ChatSettings;
+import com.alphaseries.game.chat.ChatState;
+import com.alphaseries.game.user.AvatarNameUpdate;
+import com.alphaseries.game.user.UserActivityPoints;
+import com.alphaseries.game.user.UserEffectActivation;
+import com.alphaseries.game.user.UserEffectExpiry;
 import com.alphaseries.game.moderation.StaffCallForHelpRow;
+import com.alphaseries.game.moderation.StaffModerationPacketHandlers;
+import com.alphaseries.game.moderation.StaffModerationLookups;
 import com.alphaseries.game.moderation.StaffPayloads;
+import com.alphaseries.game.moderation.StaffModerationBootCache;
 import com.alphaseries.game.moderation.StaffRoomChatRow;
 import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
 import com.alphaseries.game.moderation.StaffRoomVisitRow;
+import com.alphaseries.game.moderation.StaffWire;
 import com.alphaseries.game.moderation.StaffSettings;
+import com.alphaseries.game.moderation.ModerationState;
 import com.alphaseries.game.moderation.StaffUserLookup;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
 import com.alphaseries.game.quest.QuestSettings;
+import com.alphaseries.game.quest.QuestState;
+import com.alphaseries.game.recycler.RecyclerBootCache;
+import com.alphaseries.game.recycler.RecyclerLookups;
+import com.alphaseries.game.recycler.RecyclerSelection;
 import com.alphaseries.game.recycler.RecyclerSettings;
+import com.alphaseries.game.recycler.RecyclerState;
+import com.alphaseries.game.recycler.RecyclerWire;
+import com.alphaseries.game.room.CreatedRoom;
+import com.alphaseries.game.room.FurnitureCharges;
+import com.alphaseries.game.room.FurnitureDimmers;
+import com.alphaseries.game.room.FurnitureLookups;
+import com.alphaseries.game.room.FurnitureRoomCache;
+import com.alphaseries.game.room.FurnitureScoreStates;
+import com.alphaseries.game.room.FurnitureStateWrites;
+import com.alphaseries.game.room.FurnitureWire;
 import com.alphaseries.game.room.MovementStep;
 import com.alphaseries.game.room.RepresentedRoomCache;
 import com.alphaseries.game.room.RepresentedRoomSlots;
+import com.alphaseries.game.room.RoomEventBootCache;
 import com.alphaseries.game.room.RoomEventLocales;
+import com.alphaseries.game.room.RoomEventPayload;
+import com.alphaseries.game.room.RoomLookups;
+import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
+import com.alphaseries.game.room.RoomOccupantRow;
 import com.alphaseries.game.room.RoomPortalSettings;
+import com.alphaseries.game.room.RoomPositionService;
+import com.alphaseries.game.room.RoomRefreshService;
 import com.alphaseries.game.room.RoomRollers;
+import com.alphaseries.game.room.RoomSettingsPayload;
+import com.alphaseries.game.room.RoomState;
+import com.alphaseries.game.room.RoomWire;
 import com.alphaseries.game.room.RoomUserPosition;
 import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
+import com.alphaseries.game.room.RoomUserEntryRow;
+import com.alphaseries.game.room.RoomUserTargetRow;
+import com.alphaseries.game.room.StaffPickedToggle;
+import com.alphaseries.game.room.WallPlacement;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.RepresentedSocketCache;
 import com.alphaseries.game.session.SessionRegistry;
+import com.alphaseries.game.session.SessionState;
+import com.alphaseries.game.session.SessionWire;
 import com.alphaseries.game.session.SocketMarkerSet;
+import com.alphaseries.game.social.BadgeUpdateSelections;
 import com.alphaseries.game.social.BadgeRow;
+import com.alphaseries.game.social.SocialLookups;
+import com.alphaseries.game.social.SocialRoomOccupants;
+import com.alphaseries.game.social.SocialWire;
 import com.alphaseries.game.trade.RepresentedTradeOffer;
+import com.alphaseries.game.trade.TradeConfirmation;
+import com.alphaseries.game.trade.TradeInteractionCloseAction;
+import com.alphaseries.game.trade.TradeInteractionRequestAction;
+import com.alphaseries.game.trade.TradeInteractionStateAction;
+import com.alphaseries.game.trade.TradeLookups;
+import com.alphaseries.game.trade.TradeOfferAction;
 import com.alphaseries.game.trade.TradePayloads;
+import com.alphaseries.game.trade.TradeState;
+import com.alphaseries.game.trade.TradeWire;
 import com.alphaseries.game.user.OwnProfileRow;
+import com.alphaseries.game.user.UserLookups;
+import com.alphaseries.game.user.UserRefreshService;
 import com.alphaseries.game.user.UserEffectSummaryRow;
 import com.alphaseries.game.user.UserGroupRow;
+import com.alphaseries.game.user.UserValidation;
+import com.alphaseries.game.user.UserWire;
 import com.alphaseries.game.wired.WiredPayloads;
+import com.alphaseries.game.wired.WiredCache;
+import com.alphaseries.game.wired.WiredLookups;
+import com.alphaseries.game.wired.WiredSettings;
+import com.alphaseries.game.wired.WiredState;
+import com.alphaseries.game.wired.WiredWire;
 import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
+import com.alphaseries.messages.outgoing.AchievementPayloads;
 import com.alphaseries.messages.outgoing.CatalogPayloads;
 import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
@@ -94,16 +224,38 @@ import com.alphaseries.messages.outgoing.PollPayloads;
 import com.alphaseries.messages.outgoing.QuestPayloads;
 import com.alphaseries.messages.outgoing.RecyclerPayloads;
 import com.alphaseries.messages.outgoing.RoomPayloads;
+import com.alphaseries.messages.outgoing.SessionPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.messages.outgoing.VoucherPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.PacketReader;
 import com.alphaseries.protocol.WireEncoding;
+import com.alphaseries.protocol.WireReader;
+import com.alphaseries.protocol.WireRequests;
+import com.alphaseries.server.http.PrivSockHTTP;
+import com.alphaseries.server.lifecycle.BootLog;
+import com.alphaseries.server.lifecycle.LifecycleState;
+import com.alphaseries.server.logging.Console;
 import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.server.mus.MusPayloads;
+import com.alphaseries.server.lifecycle.LicenceChecker;
+import com.alphaseries.server.lifecycle.LicenceCheckState;
+import com.alphaseries.server.lifecycle.ServerLifecycle;
+import com.alphaseries.server.lifecycle.StartupEnvironmentError;
+import com.alphaseries.server.packet.Filesystems;
+import com.alphaseries.server.runtime.Guardian;
+import com.alphaseries.server.runtime.GameServerBridge;
+import com.alphaseries.server.runtime.RuntimeTasks;
+import com.alphaseries.server.update.Updater;
 import com.alphaseries.server.update.UpdaterSettings;
+import com.alphaseries.server.update.UpdaterState;
+import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.FileUtils;
+import com.alphaseries.util.IdentityEncoding;
+import com.alphaseries.util.RandomUtils;
 import com.alphaseries.util.StringUtils;
+import com.alphaseries.util.TimeUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -111,6 +263,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -120,29 +274,29 @@ public final class PortedModuleSmokeTest {
     }
 
     public static void main(String[] args) throws Exception {
-        assertEquals(0L, Crypto.decodeVl64(Crypto.encodeVl64(0)));
-        assertEquals(1L, Crypto.decodeVl64(Crypto.encodeVl64(1)));
-        assertEquals(42L, Crypto.decodeVl64(Crypto.encodeVl64(42)));
-        assertEquals(-42L, Crypto.decodeVl64(Crypto.encodeVl64(-42)));
-        assertEquals(4096L, Crypto.decodeVl64(Crypto.encodeVl64(4096)));
-        assertEquals(1L, Crypto.Proc_3_2_6D30A0(Crypto.encodeVl64(0)));
-        assertEquals(64L, Crypto.Proc_3_4_6D3620("@\u0080"));
-        assertEquals(Crypto.encodeVl64(4096), WireEncoding.encodeVl64(4096));
+        run(() -> {
+        assertEquals(0L, WireEncoding.decodeVl64(WireEncoding.encodeVl64(0)));
+        assertEquals(1L, WireEncoding.decodeVl64(WireEncoding.encodeVl64(1)));
+        assertEquals(42L, WireEncoding.decodeVl64(WireEncoding.encodeVl64(42)));
+        assertEquals(-42L, WireEncoding.decodeVl64(WireEncoding.encodeVl64(-42)));
         assertEquals(4096L, WireEncoding.decodeVl64(WireEncoding.encodeVl64(4096)));
-        assertEquals("DK" + Crypto.encodeVl64(2) + "figure\2",
+        assertEquals(1L, WireEncoding.encodedVl64LengthByteCount(WireEncoding.encodeVl64(0)));
+        assertEquals(64L, WireEncoding.decodeBase64Length("@\u0080"));
+        assertEquals(4096L, WireEncoding.decodeVl64(WireEncoding.encodeVl64(4096)));
+        assertEquals("DK" + WireEncoding.encodeVl64(2) + "figure\2",
             PacketBuilder.message("DK").appendInt(2).appendString("figure").build());
-        assertEquals("Dk" + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(96, null, ""), UserPayloads.errorCode(1, 96));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "H{") + "NewName\2",
+        assertEquals("Dk" + encodedVl64(1, null, "")
+            + encodedVl64(96, null, ""), UserPayloads.errorCode(1, 96));
+        assertEquals(encodedVl64(2, null, "H{") + "NewName\2",
             UserPayloads.avatarNameValidation(2, "NewName"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(4, null,
-            Crypto.Proc_3_0_6D2AF0(77, null, "H|")) + "NewName\2",
+        assertEquals(encodedVl64(4, null,
+            encodedVl64(77, null, "H|")) + "NewName\2",
             UserPayloads.roomUserNameChanged(77, 4, "NewName"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "DX"), UserPayloads.emailStatus(1));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(88, null, "Fx") + Crypto.Proc_3_0_6D2AF0(12, null, ""),
+        assertEquals(encodedVl64(1, null, "DX"), UserPayloads.emailStatus(1));
+        assertEquals(encodedVl64(88, null, "Fx") + encodedVl64(12, null, ""),
             UserPayloads.respectReceived(88, 12));
-        assertEquals(UserPayloads.errorCode(1, 96), Functions.Proc_10_8_80A580(1, 96));
-        PacketReader reader = PacketReader.of(Crypto.encodeVl64(7) + "@Dtesttail");
+        assertEquals(UserPayloads.errorCode(1, 96), UserPayloads.errorCode(1, 96));
+        PacketReader reader = PacketReader.of(WireEncoding.encodeVl64(7) + "@Dtesttail");
         assertEquals(7L, reader.readInt());
         assertEquals("test", reader.readString());
         assertEquals("tail", reader.remaining());
@@ -153,9 +307,12 @@ public final class PortedModuleSmokeTest {
 
         String config = "mySQL_host=db\r\nmySQL_port=3307\nmySQL_db=alpha\nmySQL_username=user\nmySQL_password=pass";
         assertEquals("Driver={MySQL ODBC 3.51 Driver};Server=db;Port=3307;Database=alpha;User=user;Password=pass;Option=3;",
-            Crypto.buildDatabaseConnectionString(config));
+            AppDatabaseConfig.buildDatabaseConnectionString(config));
+        assertEquals("Driver={Driver};Server=host;Port=3308;Database=db;User=user;Password=pass;Option=3;",
+            AppDatabaseConfig.buildDatabaseConnectionString(
+                new AppDatabaseConfig.DatabaseConnectionSettings("host", "3308", "db", "user", "pass", "Driver")));
         final List<String> connectionStrings = new ArrayList<>();
-        Crypto.configureDatabaseConnector(connectionString -> {
+        AppDatabaseConfig.configureDatabaseConnector(connectionString -> {
             connectionStrings.add(connectionString);
             return new Database() {
                 @Override
@@ -168,114 +325,119 @@ public final class PortedModuleSmokeTest {
                 }
             };
         });
-        assertEquals(1L, Crypto.Proc_3_5_6D3880(config));
-        assertEquals(Crypto.buildDatabaseConnectionString(config), connectionStrings.get(0));
+        assertEquals(1L, AppDatabaseConfig.connectDatabaseFromConfig(config));
+        assertEquals(AppDatabaseConfig.buildDatabaseConnectionString(config), connectionStrings.get(0));
         assertEquals("jdbc:mysql://db:3307/alpha?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC",
             AppDatabaseConfig.jdbcUrl("db", "3307", "alpha"));
         assertEquals("db", AppDatabaseConfig.parseOdbcConnectionString(connectionStrings.get(0)).get("server"));
         assertEquals("pass", AppDatabaseConfig.parseOdbcConnectionString(connectionStrings.get(0)).get("password"));
-        assertEquals("connected", MySQL.Proc_5_2_6D4690("SELECT 1"));
-        assertEquals(0L, Crypto.Proc_3_5_6D3880(""));
-        Crypto.configureDatabaseConnector(connectionString -> {
+        assertEquals("connected", MySQL.readSqlRows("SELECT 1"));
+        assertEquals(0L, AppDatabaseConfig.connectDatabaseFromConfig(""));
+        AppDatabaseConfig.configureDatabaseConnector(connectionString -> {
             throw new IllegalStateException("connect failed");
         });
-        assertEquals(0L, Crypto.Proc_3_5_6D3880(config));
-        Crypto.configureDatabaseConnector(null);
+        assertEquals(0L, AppDatabaseConfig.connectDatabaseFromConfig(config));
+        AppDatabaseConfig.configureDatabaseConnector(null);
         MySQL.configureDatabaseConnection(null);
 
-        DataManager.global_008291AC = "\0chair\1id\2name\2price\0";
-        assertEquals("name", DataManager.Proc_8_11_8069B0("chair", 1));
-        assertEquals("name", DataManager.roomEventLocales().field("chair", 1));
-        assertEquals("\0chair\1id\2name\2price", DataManager.roomEventLocales().cacheText());
-        DataManager.global_008292BC = "10\tsofa\t5\r11\ttable\t7";
-        assertEquals("table", DataManager.Proc_8_12_806C30(11, 1));
-        String[] dataManagerProducts = new String[12];
-        dataManagerProducts[11] = productRow(11, "0", "9", "4", "default", "5", "fallback", "7", "switch",
+        GameDataCaches.setRoomEventLocales(RoomEventLocales.fromEntries(
+            List.of(new RoomEventLocales.LocaleEntry("1", List.of("events", "name", "price")))));
+        assertEquals("events", GameDataCaches.roomEventLocales().categoryName(1));
+        assertEquals(List.of(new RoomEventLocales.LocaleEntry("1", List.of("events", "name", "price"))),
+            GameDataCaches.roomEventLocales().entries());
+        GameDataCaches.setProductCache(ProductCache.fromProductRows(List.of(
+            productCacheRow(10, "1", "sofa", "2", "5"),
+            productCacheRow(11, "1", "table", "2", "7", "14", "Table"))));
+        assertEquals("Table", GameDataCaches.productCache().displayName(11));
+        List<ProductCache.ProductRow> dataManagerProducts = List.of(productCacheRow(11, "0", "9", "4", "default", "5", "fallback", "7", "switch",
             "10", "6", "12", "4", "13", "Trade", "14", "Name", "15", "Description",
             "17", "present_wrap_basic", "18", "post.it.vd", "20", "77", "24", "payload",
-            "26", "ACH", "27", "502", "34", "1");
-        DataManager.global_008292BC = dataManagerProducts;
-        assertEquals(9L, DataManager.productCache().type(11));
-        assertEquals("default", DataManager.productCache().defaultSign(11));
-        assertEquals("fallback", DataManager.productCache().fallbackDefaultSign(11));
-        assertEquals("switch", DataManager.productCache().interactionAction(11));
-        assertEquals(6L, DataManager.productCache().stateCount(11));
-        assertEquals(4L, DataManager.productCache().maxState(11));
-        assertEquals("Trade", DataManager.productCache().tradeName(11));
-        assertEquals("Name", DataManager.productCache().displayName(11));
-        assertEquals("Description", DataManager.productCache().description(11));
-        assertEquals("present_wrap_basic", DataManager.productCache().primarySprite(11));
-        assertEquals("post.it.vd", DataManager.productCache().alternateSprite(11));
-        assertEquals(77L, DataManager.productCache().dimensionMapId(11));
-        assertEquals("payload", DataManager.productCache().itemData(11));
-        assertEquals("ACH", DataManager.productCache().badgeId(11));
-        assertEquals("502", DataManager.productCache().fallbackBadgeId(11));
-        assertEquals(502L, DataManager.productCache().wiredCode(11));
-        assertEquals(true, DataManager.productCache().hasCharges(11));
+            "26", "ACH", "27", "502", "34", "1"));
+        GameDataCaches.setProductCache(ProductCache.fromProductRows(dataManagerProducts));
+        assertEquals(9L, GameDataCaches.productCache().type(11));
+        assertEquals("default", GameDataCaches.productCache().defaultSign(11));
+        assertEquals("fallback", GameDataCaches.productCache().fallbackDefaultSign(11));
+        assertEquals("switch", GameDataCaches.productCache().interactionAction(11));
+        assertEquals(6L, GameDataCaches.productCache().stateCount(11));
+        assertEquals(4L, GameDataCaches.productCache().maxState(11));
+        assertEquals("Trade", GameDataCaches.productCache().tradeName(11));
+        assertEquals("Name", GameDataCaches.productCache().displayName(11));
+        assertEquals("Description", GameDataCaches.productCache().description(11));
+        assertEquals("present_wrap_basic", GameDataCaches.productCache().primarySprite(11));
+        assertEquals("post.it.vd", GameDataCaches.productCache().alternateSprite(11));
+        assertEquals(77L, GameDataCaches.productCache().dimensionMapId(11));
+        assertEquals("payload", GameDataCaches.productCache().itemData(11));
+        assertEquals("ACH", GameDataCaches.productCache().badgeId(11));
+        assertEquals("502", GameDataCaches.productCache().fallbackBadgeId(11));
+        assertEquals(502L, GameDataCaches.productCache().wiredCode(11));
+        assertEquals(true, GameDataCaches.productCache().hasCharges(11));
         ProductCache typedProductCache = ProductCache.fromRows(List.of(new CatalogDao.ProductCacheRow(List.of(
             "12", "7", "", "", "", "typed", "fallbackTyped"))));
         assertEquals(7L, typedProductCache.type(12));
         assertEquals("typed", typedProductCache.defaultSign(12));
         assertEquals("fallbackTyped", typedProductCache.fallbackDefaultSign(12));
+        ProductCache cacheProductCache = ProductCache.fromRows(List.of(
+            new CatalogDao.ProductCacheRow(List.of("13", "8", "", "", "", "cache", "fallbackCache"))));
+        assertEquals(8L, cacheProductCache.type(13));
+        assertEquals("cache", cacheProductCache.defaultSign(13));
+        assertEquals("rowCache", ProductCache.fromProductRows(List.of(productCacheRow(14, "4", "rowCache"))).defaultSign(14L));
         assertProductCacheRows(typedProductCache);
         Path dataManagerWritePath = Files.createTempFile("alphaseries-datamanager-write", ".txt");
-        DataManager.writeTextFile(dataManagerWritePath.toString(), "replace");
+        FileUtils.writeTextFile(dataManagerWritePath.toString(), "replace");
         assertEquals("replace" + System.lineSeparator(), new String(Files.readAllBytes(dataManagerWritePath), "UTF-8"));
-        DataManager.appendTextFile(dataManagerWritePath.toString(), "append");
+        FileUtils.appendTextFile(dataManagerWritePath.toString(), "append");
         assertEquals("replace" + System.lineSeparator() + "append" + System.lineSeparator(),
             new String(Files.readAllBytes(dataManagerWritePath), "UTF-8"));
-        assertEquals("pro", DataManager.extractLicenceSetting("\rrank=7\rmode:pro\r", "mode"));
-        assertEquals("rank=7\rmode\nok", DataManager.licenceBlockFromResponse("aFMTbFMTcFMTrank=7--*-mode*-*-ok", "FMT"));
-        assertEquals("fallback", DataManager.licenceBlockFromResponse("prefixFMTfallback", "FMT"));
-        assertEquals("\rrank=7\rmode=pro\r", DataManager.licenceCacheTextFromBlock("rank=7\nmode=pro"));
-        assertEquals("reason text", DataManager.blockedLicenceMessage("{BLOCKED reason%20text}"));
-        assertEquals("5AZ12675B12870", DataManager.buildLicenceToken("AB", 3, 65, "ZB"));
-        assertEquals("AB", DataManager.Proc_8_5_804AB0("YCD"));
-        assertEquals(true, DataManager.applyLicenceResponse("rank=2\r7:2=5\r8:2=1", "FMT", 0));
-        assertEquals(2, DataManager.global_00829054);
-        assertEquals(5, DataManager.global_00829068[7]);
-        assertEquals(1, DataManager.global_00829068[8]);
-        assertEquals("", DataManager.lastLicenceFailureMessage);
-        assertEquals(true, DataManager.licenceChecksumValid("12345678" + "100000" + "-20-99980", 0));
-        assertEquals(false, DataManager.licenceChecksumValid("12345678" + "100000" + "-20-99981", 0));
-        assertEquals(false, DataManager.applyLicenceResponse("12345678" + "100000" + "-20-99981", "FMT", 0));
+        assertEquals("pro", LicenceChecker.extractLicenceSetting("\rrank=7\rmode:pro\r", "mode"));
+        assertEquals("rank=7\rmode\nok", LicenceChecker.licenceBlockFromResponse("aFMTbFMTcFMTrank=7--*-mode*-*-ok", "FMT"));
+        assertEquals("fallback", LicenceChecker.licenceBlockFromResponse("prefixFMTfallback", "FMT"));
+        assertEquals("\rrank=7\rmode=pro\r", LicenceChecker.licenceCacheTextFromBlock("rank=7\nmode=pro"));
+        assertEquals("reason text", LicenceChecker.blockedLicenceMessage("{BLOCKED reason%20text}"));
+        assertEquals("5AZ12675B12870", LicenceChecker.buildLicenceToken("AB", 3, 65, "ZB"));
+        assertEquals("AB", LicenceChecker.decodeShiftedLicenceText("YCD"));
+        assertEquals(true, LicenceChecker.applyLicenceResponse("rank=2\r7:2=5\r8:2=1", "FMT", 0));
+        assertEquals(2, LicenceChecker.licenceRank());
+        assertEquals(5, LicenceChecker.cachedLicenceRankValue(7));
+        assertEquals(1, LicenceChecker.cachedLicenceRankValue(8));
+        assertEquals("", LicenceChecker.lastLicenceFailureMessage);
+        LicenceCheckState typedLicenceState = LicenceCheckState.fromCacheText("\rrank=2\r7:2=5\r9:2=10\r");
+        assertEquals(2, typedLicenceState.rank());
+        assertEquals(5, typedLicenceState.cachedRankValue(7));
+        assertEquals(1, typedLicenceState.cachedRankValue(9));
+        assertEquals(true, LicenceChecker.licenceChecksumValid("12345678" + "100000" + "-20-99980", 0));
+        assertEquals(false, LicenceChecker.licenceChecksumValid("12345678" + "100000" + "-20-99981", 0));
+        assertEquals(false, LicenceChecker.applyLicenceResponse("12345678" + "100000" + "-20-99981", "FMT", 0));
         assertEquals("Das Lizenzsystem ist zurzeit nicht erreichbar. Versuch es sp\u00e4ter wieder!",
-            DataManager.lastLicenceFailureMessage);
-        assertEquals(false, DataManager.applyLicenceResponse("{BLOCKED no%20licence}", "FMT", 0));
-        assertEquals("no licence", DataManager.lastLicenceFailureMessage);
-        assertEquals(DataManager.DEFAULT_LICENCE_ENDPOINT, DataManager.licenceEndpointFromEnvironment(new HashMap<>()));
+            LicenceChecker.lastLicenceFailureMessage);
+        assertEquals(false, LicenceChecker.applyLicenceResponse("{BLOCKED no%20licence}", "FMT", 0));
+        assertEquals("no licence", LicenceChecker.lastLicenceFailureMessage);
+        assertEquals(LicenceChecker.DEFAULT_LICENCE_ENDPOINT, LicenceChecker.licenceEndpointFromEnvironment(new HashMap<>()));
         Map<String, String> licenceEnvironment = new HashMap<>();
-        licenceEnvironment.put(DataManager.LICENCE_ENDPOINT_ENV, "http://127.0.0.1:8080/check_product_sep11");
+        licenceEnvironment.put(LicenceChecker.LICENCE_ENDPOINT_ENV, "http://127.0.0.1:8080/check_product_sep11");
         assertEquals("http://127.0.0.1:8080/check_product_sep11",
-            DataManager.licenceEndpointFromEnvironment(licenceEnvironment));
-        assertEquals(true, DataManager.buildLicenceRequestUrl(
-            new DataManager.LicenceCheckContext("PRODUCT-KEY", "ALPHASERIES_FINAL (PREMIUM)",
+            LicenceChecker.licenceEndpointFromEnvironment(licenceEnvironment));
+        assertEquals(true, LicenceChecker.buildLicenceRequestUrl(
+            new LicenceChecker.LicenceCheckContext("PRODUCT-KEY", "ALPHASERIES_FINAL (PREMIUM)",
                 LocalDateTime.of(2026, 6, 29, 14, 50, 0)),
             "http://127.0.0.1:8080/check_product_sep11").startsWith(
                 "http://127.0.0.1:8080/check_product_sep11?local_time="));
         final List<String> licenceUrls = new ArrayList<>();
-        DataManager.configureLicenceHttpFetcher((requestUrl, action) -> {
+        LicenceChecker.configureLicenceHttpFetcher((requestUrl, action) -> {
             licenceUrls.add(action + ":" + requestUrl);
             return "rank=4\r7:4=1";
         });
-        assertEquals(true, DataManager.checkLicence(new DataManager.LicenceCheckContext(
+        assertEquals(true, LicenceChecker.checkLicence(new LicenceChecker.LicenceCheckContext(
             "PRODUCT-KEY", "ALPHASERIES_FINAL (PREMIUM)", LocalDateTime.of(2026, 6, 29, 14, 50, 0))));
         assertEquals(true, licenceUrls.get(0).startsWith("1:http://www.alpha-series.com/check_product_sep11?local_time="));
         assertEquals(true, licenceUrls.get(0).contains("2026-06-29_14-50-00%3A"));
         assertEquals(true, licenceUrls.get(0).contains("&version=ALPHASERIES_FINAL+%28PREMIUM%29&productKey=PRODUCT-KEY&token="));
-        assertEquals("ALPHASERIES_FINAL+%28PREMIUM%29", DataManager.urlEncode("ALPHASERIES_FINAL (PREMIUM)"));
-        assertEquals(4, DataManager.global_00829054);
-        assertEquals(1, DataManager.global_00829068[7]);
-        DataManager.configureLicenceHttpFetcher(null);
+        assertEquals("ALPHASERIES_FINAL+%28PREMIUM%29", LicenceChecker.urlEncode("ALPHASERIES_FINAL (PREMIUM)"));
+        assertEquals(4, LicenceChecker.licenceRank());
+        assertEquals(1, LicenceChecker.cachedLicenceRankValue(7));
+        LicenceChecker.configureLicenceHttpFetcher(null);
 
-        assertEquals("SELECT * FROM users", MySQL.buildSqlFromArgs("SELECT ", 0, "*", -1, " FROM users"));
-        assertEquals(42, MySQL.mySqlSocketIndex("42"));
-        assertEquals(0, MySQL.mySqlSocketIndex());
-        assertEquals("third", MySQL.mySqlPacketPayload(1, "second", "third"));
-        assertEquals("second", MySQL.mySqlPacketPayload(1, "second", ""));
-        assertEquals("payload", MySQL.mySqlRequestPayload("GHpayload", "GH"));
-        assertEquals("GKpayload", MySQL.mySqlRequestPayload("GKpayload", "GH"));
-        Functions.global_008292A8 = new String[][]{{""}, {"\2fuse_mod\2fuse_chatlog\2fuse_receive_calls_for_help\2"}};
+        AppConfigState.instance().setPermissionMatrix(permissions(
+            new PermissionMatrix.PermissionPayload(1L, 0L, "\2fuse_mod\2fuse_chatlog\2fuse_receive_calls_for_help\2")));
         final List<String> mysqlHandlerPayloads = new ArrayList<>();
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> mysqlHandlerPayloads.add(socketIndex + ":" + payload));
         MySQL.configureDatabaseConnection(new Database() {
@@ -320,11 +482,12 @@ public final class PortedModuleSmokeTest {
         });
         String roomId12Field = "B12";
         String roomId13Field = "B13";
-        MySQL.Proc_5_4_6D55E0(4, "GI" + roomId12Field);
+        StaffModerationPacketHandlers.sendCallForHelpChatLog(
+            4, StaffWire.callForHelpChatLogRequest("GI" + roomId12Field));
         assertEquals(true, mysqlHandlerPayloads.get(0).startsWith("4:DATA\6" + "4\6HV"));
-        MySQL.Proc_5_5_6D64D0(4, "GH" + roomId12Field);
+        StaffModerationPacketHandlers.sendRoomChatLog(4, StaffWire.roomChatLogRequest("GH" + roomId12Field));
         assertEquals(true, mysqlHandlerPayloads.get(1).startsWith("4:DATA\6" + "4\6HW"));
-        MySQL.Proc_5_6_6D7090(4, "GK" + roomId13Field);
+        StaffModerationPacketHandlers.sendRoomInfo(4, StaffWire.roomInfoRequest("GK" + roomId13Field));
         assertEquals(true, mysqlHandlerPayloads.get(2).startsWith("4:DATA\6" + "4\6HZ"));
         assertEquals("77", MySQL.mySqlUserIdFromSocket(4));
         assertEquals(true, MySQL.mySqlUserHasPermission("77", "fuse_chatlog"));
@@ -334,47 +497,53 @@ public final class PortedModuleSmokeTest {
             new ArrayList<Object>(Arrays.<Object>asList(1, "alice")),
             new ArrayList<Object>(Arrays.<Object>asList(2, "bob")));
         assertEquals("1\talice\r2\tbob", MySQL.formatSqlRows(rows));
-        Functions.global_0082928C = "[server.port=1234]\nname=alpha";
-        assertEquals("1234", Functions.Proc_10_0_809570("server.port", "0"));
-        assertEquals("1234", Functions.settingsCache().valueOrDefault("server.port", "0"));
-        assertEquals("fallback", Functions.Proc_10_0_809570("missing", "fallback"));
-        assertEquals("fallback", Functions.settingsCache().valueOrDefault("missing", "fallback"));
+        AppConfigState.instance().setSettingsCache(settings("server.port", "1234", "name", "alpha"));
+        assertEquals("1234", AppConfigState.instance().settingValueOrDefault("server.port", "0"));
+        assertEquals("1234", AppConfigState.instance().settingsCache().valueOrDefault("server.port", "0"));
+        assertEquals(1234L, AppConfigState.instance().settingsCache().longValueOrDefault("server.port", 0L));
+        assertEquals("fallback", AppConfigState.instance().settingValueOrDefault("missing", "fallback"));
+        assertEquals("fallback", AppConfigState.instance().settingsCache().valueOrDefault("missing", "fallback"));
         assertAppSettingsCache();
-        Functions.global_008292A8 = new String[][]{{"\2base\2"}, {"\2fuse_mod\2"}};
-        assertEquals(true, Functions.Proc_10_1_809790(1, "", "fuse_mod", 0));
-        assertEquals(true, Functions.permissionMatrix().allows(1, "", "fuse_mod", 0));
+        AppConfigState.instance().setPermissionMatrix(permissions(
+            new PermissionMatrix.PermissionPayload(0L, 0L, "\2base\2"),
+            new PermissionMatrix.PermissionPayload(1L, 0L, "\2fuse_mod\2")));
+        assertEquals(true, AppConfigState.instance().allowsPermission(1, "", "fuse_mod", 0));
+        assertEquals(true, AppConfigState.instance().permissionMatrix().allows(1, "", "fuse_mod", 0));
         assertPermissionMatrix();
-        assertEquals("bcd", Functions.Proc_10_5_809D80("abcdef", 2, 3));
-        assertEquals("O''Reilly test ", Functions.Proc_10_11_80A9C0("O'Reilly\\rtest\""));
-        assertEquals("O''Reilly test ", Functions.sqlEscapedText("O'Reilly\\rtest\""));
-        assertEquals("Line Break", Functions.singleLineText("Line\nBreak"));
+        assertEquals("bcd", StringUtils.middleText("abcdef", 2, 3));
+        assertEquals("O''Reilly test ", StringUtils.sqlEscapedText("O'Reilly\\rtest\""));
+        assertEquals("Line Break", StringUtils.singleLineText("Line\nBreak"));
         String vl64LengthPayload = wireLong(3) + "abc";
-        assertEquals(Functions.Proc_10_6_809F10(vl64LengthPayload), Functions.readVl64LengthString(vl64LengthPayload));
-        assertEquals("packet", Functions.readBase64LengthString(wireString("packet")));
-        assertEquals(5L, Functions.randomLongInclusive(5, 5));
-        long randomRangeValue = Functions.randomLongInclusive(2, 4);
+        assertEquals("@ab", WireEncoding.readVl64LengthString(vl64LengthPayload));
+        assertEquals("packet", WireEncoding.readBase64LengthString(wireString("packet")));
+        assertEquals(5L, RandomUtils.longInclusive(5, 5));
+        long randomRangeValue = RandomUtils.longInclusive(2, 4);
         assertEquals(true, randomRangeValue >= 2L && randomRangeValue <= 4L);
-        assertEquals("a\u00a0b", Functions.normalizeNullBytes("a\0b"));
-        assertEquals("\1" + "123\t45\tdata\t6\2", Functions.inventoryCacheRecord(123, 45, "data", 6));
-        assertEquals("x", Functions.trimInventoryCache("x\r\n"));
-        String inventoryCache = Functions.inventoryCacheAddRecord("x\r\n", 123, 45, "data", 6);
-        assertEquals("x\1" + "123\t45\tdata\t6\2", inventoryCache);
-        assertEquals(inventoryCache, Functions.inventoryCacheAddRecord(inventoryCache, 123, 99, "other", 1));
-        assertEquals("x", Functions.inventoryCacheRemoveRecord(inventoryCache, 123));
-        assertEquals(inventoryCache, Functions.inventoryCacheRemoveRecord(inventoryCache, 999));
+        assertEquals("a\u00a0b", StringUtils.normalizeNullBytes("a\0b"));
+        InventoryRefreshService.InventoryItem inventoryItem =
+            new InventoryRefreshService.InventoryItem(123, 45, "data", 6);
+        InventoryRefreshService.InventoryCache baseInventoryCache =
+            new InventoryRefreshService.InventoryCache("x", List.of());
+        InventoryRefreshService.InventoryCache inventoryCache = baseInventoryCache.add(inventoryItem);
+        assertEquals(new InventoryRefreshService.InventoryCache("x", List.of(inventoryItem)), inventoryCache);
+        assertEquals(inventoryCache, inventoryCache.add(new InventoryRefreshService.InventoryItem(123, 99, "other", 1)));
+        assertEquals(baseInventoryCache, inventoryCache.remove(123));
+        assertEquals(inventoryCache, inventoryCache.remove(999));
         assertEquals("Ab" + InventoryMessagePayloads.item(123, 45, "data", 6) + '\1',
-            Functions.inventoryAddPayload(123, 45, "data", 6));
-        assertEquals(Functions.inventoryAddPayload(123, 45, "data", 6),
-            InventoryMessagePayloads.add(InventoryMessagePayloads.item(123, 45, "data", 6)));
+            InventoryMessagePayloads.add(123, 45, "data", 6));
         assertEquals("Ab" + InventoryMessagePayloads.item(123, 45, "data", 6) + '\2',
-            InventoryMessagePayloads.roomAdd(InventoryMessagePayloads.item(123, 45, "data", 6)));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(123, null, "Ac"), InventoryMessagePayloads.remove(123));
-        assertEquals(InventoryMessagePayloads.remove(123), Functions.inventoryRemovePayload(123));
+            InventoryMessagePayloads.roomAdd(123, 45, "data", 6));
+        assertEquals(encodedVl64(123, null, "Ac"), InventoryMessagePayloads.remove(123));
+        assertEquals(10L, CreditFurniture.fromSprite("CF_10").value());
+        assertEquals(50L, CreditFurniture.fromSprite("CFC_50_extra").value());
+        assertEquals(false, CreditFurniture.fromSprite("chair").redeemable());
+        assertEquals("A^73\2", FurniturePayloads.floorItemRemoved(73));
+        assertEquals("A^73\2H\2", FurniturePayloads.floorItemRemovedWithState(73, "H"));
         Path inventoryRoot = Files.createTempDirectory("alphaseries-inventory");
-        String previousApplicationPath = Functions.applicationPath;
-        Functions.applicationPath = inventoryRoot.toString();
+        String previousApplicationPath = AppPaths.applicationPath();
+        AppPaths.setApplicationPath(inventoryRoot.toString());
         final List<String> inventoryRefreshPayloads = new ArrayList<>();
-        Licence.global_00829268 = "\2" + "200]33\0";
+        SessionState.instance().setSessionRegistry(linkedSessionRegistry("200", "33\0"));
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> inventoryRefreshPayloads.add(socketIndex + ":" + payload));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
@@ -392,30 +561,32 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList());
             }
         });
-        assertEquals(1L, Functions.Proc_10_14_80B010(501));
+        assertEquals(1L, InventoryRefreshService.sendInventoryAddRefresh(501));
         Path inventoryCachePath = inventoryRoot.resolve("cache").resolve("users").resolve("200.cache");
-        assertEquals(Functions.inventoryCacheRecord(501, 45, "data", 6) + System.lineSeparator(),
+        assertEquals("\1" + "501\t45\tdata\t6\2" + System.lineSeparator(),
             new String(Files.readAllBytes(inventoryCachePath), "UTF-8"));
-        assertEquals("33:DATA\6" + "33\6" + Functions.inventoryAddPayload(501, 45, "data", 6) + "\7",
+        assertEquals("33:DATA\6" + "33\6"
+                + InventoryMessagePayloads.add(501, 45, "data", 6) + "\7",
             inventoryRefreshPayloads.get(0));
-        assertEquals(1L, Functions.Proc_10_15_80BA40(501));
+        assertEquals(1L, InventoryRefreshService.sendInventoryRemoveRefresh(501));
         assertEquals(System.lineSeparator(), new String(Files.readAllBytes(inventoryCachePath), "UTF-8"));
-        assertEquals("33:DATA\6" + "33\6" + Functions.inventoryRemovePayload(501) + "\7", inventoryRefreshPayloads.get(1));
+        assertEquals("33:DATA\6" + "33\6" + InventoryMessagePayloads.remove(501) + "\7",
+            inventoryRefreshPayloads.get(1));
         MySQL.configureDatabaseConnection(null);
         MusConnectionManager.instance().configureSink(null);
-        Licence.global_00829268 = "";
-        Functions.applicationPath = previousApplicationPath;
-        assertEquals("@F250.0\2", Functions.creditsRefreshPayload(250));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, Crypto.Proc_3_0_6D2AF0(300, null, "Fv") + "H"),
-            Functions.activityPointRefreshPayload(2, 300));
+        SessionState.instance().setSessionRegistry(SessionRegistry.empty());
+        AppPaths.setApplicationPath(previousApplicationPath);
+        assertEquals("@F250.0\2", UserRefreshService.creditsRefreshPayload(250));
+        assertEquals(encodedVl64(2, null, encodedVl64(300, null, "Fv") + "H"),
+            UserRefreshService.activityPointRefreshPayload(2, 300));
         String expectedPointRefreshes = "";
         for (int pointType = 0; pointType <= 4; pointType++) {
-            expectedPointRefreshes += Functions.activityPointRefreshPayload(pointType, pointType * 10L);
+            expectedPointRefreshes += UserRefreshService.activityPointRefreshPayload(pointType, pointType * 10L);
         }
-        assertEquals(expectedPointRefreshes, Functions.activityPointRefreshPayloads(0, 10, 20, 30, 40));
+        assertEquals(expectedPointRefreshes, UserRefreshService.activityPointRefreshPayloads(0, 10, 20, 30, 40));
         final List<String> refreshQueries = new ArrayList<>();
         final List<String> refreshPayloads = new ArrayList<>();
-        Licence.global_00829268 = "\2" + "77]42\0";
+        SessionState.instance().setSessionRegistry(linkedSessionRegistry("77", "42\0"));
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> refreshPayloads.add(socketIndex + ":" + payload));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
@@ -436,17 +607,18 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
             }
         });
-        assertEquals(1L, Functions.sendCreditsRefresh("77"));
-        assertEquals("42:DATA\6" + "42\6" + Functions.creditsRefreshPayload(250) + "\7", refreshPayloads.get(0));
-        assertEquals(5L, Functions.sendActivityPointRefreshes("77"));
+        assertEquals(1L, UserRefreshService.sendCreditsRefresh("77"));
+        assertEquals("42:DATA\6" + "42\6" + UserRefreshService.creditsRefreshPayload(250) + "\7", refreshPayloads.get(0));
+        assertEquals(5L, UserRefreshService.sendActivityPointRefreshes("77"));
         assertEquals(6, refreshPayloads.size());
-        assertEquals("42:DATA\6" + "42\6" + Functions.activityPointRefreshPayload(4, 40) + "\7", refreshPayloads.get(5));
-        assertEquals(0L, Functions.Proc_10_16_80C480("missing"));
-        assertEquals(0L, Functions.Proc_10_17_80C6B0("missing"));
+        assertEquals("42:DATA\6" + "42\6" + UserRefreshService.activityPointRefreshPayload(4, 40) + "\7",
+            refreshPayloads.get(5));
+        assertEquals(0L, UserRefreshService.sendCreditsRefresh("missing"));
+        assertEquals(0L, UserRefreshService.sendActivityPointRefreshes("missing"));
         assertEquals(6, refreshPayloads.size());
         MySQL.configureDatabaseConnection(null);
         MusConnectionManager.instance().configureSink(null);
-        Licence.global_00829268 = "";
+        SessionState.instance().setSessionRegistry(SessionRegistry.empty());
         final List<String> readyPayloads = new ArrayList<>();
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> readyPayloads.add(socketIndex + ":" + payload));
         MySQL.configureDatabaseConnection(new Database() {
@@ -466,19 +638,20 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
             }
         });
-        assertEquals(2L, Functions.sendRoomReadyRefreshes(77));
+        assertEquals(2L, RoomRefreshService.sendRoomReadyRefreshes(77));
         assertEquals("5:DATA\6" + "5\6@R\7", readyPayloads.get(0));
         assertEquals("6:DATA\6" + "6\6@R\7", readyPayloads.get(1));
-        assertEquals(0L, Functions.Proc_10_18_80C9E0(0));
+        assertEquals(0L, RoomRefreshService.sendRoomReadyRefreshes(0));
         MySQL.configureDatabaseConnection(null);
         MusConnectionManager.instance().configureSink(null);
-        assertEquals("Baalert\2hello\2", Functions.roomAlertPayload("alert", "hello"));
+        assertEquals("Baalert\2hello\2", RoomRefreshService.roomAlertPayload("alert", "hello"));
         final List<String> alertPayloads = new ArrayList<>();
-        Licence.global_00829268 = "\2" + "81]9\0";
+        SessionState.instance().setSessionRegistry(linkedSessionRegistry("81", "9\0"));
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> alertPayloads.add(socketIndex + ":" + payload));
-        assertEquals(1L, Functions.Proc_10_20_80CF60("81", "notice", "hello"));
-        assertEquals("9:DATA\6" + "9\6" + Functions.roomAlertPayload("notice", "hello") + "\7", alertPayloads.get(0));
-        assertEquals(0L, Functions.Proc_10_20_80CF60("missing", "notice", "hello"));
+        assertEquals(1L, RoomRefreshService.sendUserRoomAlert("81", "notice", "hello"));
+        assertEquals("9:DATA\6" + "9\6" + RoomRefreshService.roomAlertPayload("notice", "hello") + "\7",
+            alertPayloads.get(0));
+        assertEquals(0L, RoomRefreshService.sendUserRoomAlert("missing", "notice", "hello"));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -496,21 +669,25 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
             }
         });
-        assertEquals(2L, Functions.Proc_10_21_80D0A0(55, "room", "message"));
-        assertEquals("9:DATA\6" + "9\6" + Functions.roomAlertPayload("room", "message") + "\7", alertPayloads.get(1));
-        assertEquals("10:DATA\6" + "10\6" + Functions.roomAlertPayload("room", "message") + "\7", alertPayloads.get(2));
-        assertEquals(0L, Functions.Proc_10_21_80D0A0(0, "room", "message"));
+        assertEquals(2L, RoomRefreshService.sendRoomAlertToRoom(55, "room", "message"));
+        assertEquals("9:DATA\6" + "9\6" + RoomRefreshService.roomAlertPayload("room", "message") + "\7",
+            alertPayloads.get(1));
+        assertEquals("10:DATA\6" + "10\6" + RoomRefreshService.roomAlertPayload("room", "message") + "\7",
+            alertPayloads.get(2));
+        assertEquals(0L, RoomRefreshService.sendRoomAlertToRoom(0, "room", "message"));
         MySQL.configureDatabaseConnection(null);
         MusConnectionManager.instance().configureSink(null);
-        Licence.global_00829268 = "";
-        assertEquals("L}1\2" + Crypto.Proc_3_0_6D2AF0(1, null, "") + Crypto.Proc_3_0_6D2AF0(1, null, "") + "HH",
-            Functions.emailValidatedPayload(0));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "DJ") + "motto\2M\2figure\2",
-            Functions.userIdentityRefreshPayload(7, "motto", "figure", "M"));
+        SessionState.instance().setSessionRegistry(SessionRegistry.empty());
+        assertEquals("L}1\2" + encodedVl64(1, null, "") + encodedVl64(1, null, "") + "HH",
+            UserRefreshService.emailValidatedPayload(0));
+        assertEquals(encodedVl64(7, null, "DJ") + "motto\2M\2figure\2",
+            UserRefreshService.userIdentityRefreshPayload(7, "motto", "figure", "M"));
         final List<String> userStateExecutions = new ArrayList<>();
         final List<String> userStatePayloads = new ArrayList<>();
-        Licence.global_00829268 = "\2" + "91]14\0\2" + "92]15\0";
-        Functions.global_0082928C = "[com.server.socket.game.club.gifts.hcrank1.amount=4]";
+        SessionState.instance().setSessionRegistry(linkedSessionRegistry(
+            new SessionRegistry.LinkedSessionSection("91", "14\0"),
+            new SessionRegistry.LinkedSessionSection("92", "15\0")));
+        AppConfigState.instance().setSettingsCache(settings("com.server.socket.game.club.gifts.hcrank1.amount", "4"));
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> userStatePayloads.add(socketIndex + ":" + payload));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
@@ -529,26 +706,28 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
             }
         });
-        assertEquals(1L, Functions.Proc_10_19_80CCD0(91));
+        assertEquals(1L, UserRefreshService.validateEmailAndRefresh(91));
         assertEquals("UPDATE users SET email_validated='1' WHERE id='91' LIMIT 1", userStateExecutions.get(0));
-        assertEquals("14:DATA\6" + "14\6" + Functions.emailValidatedPayload(1) + "\7", userStatePayloads.get(0));
-        assertEquals(1L, Functions.Proc_10_22_80D460("92"));
-        assertEquals("15:DATA\6" + "15\6" + Functions.userIdentityRefreshPayload(92, "motto", "figure", "F") + "\7",
+        assertEquals("14:DATA\6" + "14\6" + UserRefreshService.emailValidatedPayload(1) + "\7",
+            userStatePayloads.get(0));
+        assertEquals(1L, UserRefreshService.sendUserIdentityRefresh("92"));
+        assertEquals("15:DATA\6" + "15\6"
+                + UserRefreshService.userIdentityRefreshPayload(92, "motto", "figure", "F") + "\7",
             userStatePayloads.get(1));
-        assertEquals(1L, Functions.applyClubPeriod(93, 1, 0, 0));
+        assertEquals(1L, ClubPeriodService.applyClubPeriod(93, 1, 0, 0));
         assertEquals("UPDATE users SET hc_startperiod=UNIX_TIMESTAMP(),hc_periods=hc_periods+1,hc_presents=hc_presents+4 WHERE id='93'",
             userStateExecutions.get(1));
-        assertEquals(0L, Functions.Proc_10_23_80E110(0, 1, 0));
-        assertEquals(0L, Functions.Proc_10_19_80CCD0(0));
+        assertEquals(0L, ClubPeriodService.applyClubPeriod(0, 1, 0, 0));
+        assertEquals(0L, UserRefreshService.validateEmailAndRefresh(0));
         MySQL.configureDatabaseConnection(null);
         MusConnectionManager.instance().configureSink(null);
-        Licence.global_00829268 = "";
-        assertEquals("1\0" + "1\0" + "3\0" + "1\0", MovementStep.between(0, 0, 2, 2).toLegacyText());
-        assertEquals("0\0" + "0\0" + "0\0" + "0\0", MovementStep.zero().toLegacyText());
-        assertEquals(1L, Functions.representedPositionAvailable(0, 5, 5));
-        assertEquals(0L, Functions.representedPositionAvailable(7, 1, 0));
-        assertEquals(0L, Functions.representedPositionAvailable(7, 0, 1));
-        assertEquals(1L, Functions.representedPositionAvailable(7, 0, 0));
+        SessionState.instance().setSessionRegistry(SessionRegistry.empty());
+        assertEquals("1\0" + "1\0" + "3\0" + "1\0", MovementStep.between(0, 0, 2, 2).frameText());
+        assertEquals("0\0" + "0\0" + "0\0" + "0\0", MovementStep.zero().frameText());
+        assertEquals(1L, RoomPositionService.representedPositionAvailable(0, 5, 5));
+        assertEquals(0L, RoomPositionService.representedPositionAvailable(7, 1, 0));
+        assertEquals(0L, RoomPositionService.representedPositionAvailable(7, 0, 1));
+        assertEquals(1L, RoomPositionService.representedPositionAvailable(7, 0, 0));
         final List<String> occupancyQueries = new ArrayList<>();
         MySQL.configureDatabaseConnection(new Database() {
             @Override
@@ -567,17 +746,19 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
             }
         });
-        assertEquals(1L, Functions.Proc_10_25_80F5D0(0, 2, 3));
-        assertEquals(1L, Functions.roomPositionAvailable(0, 2, 3));
+        assertEquals(1L, RoomPositionService.roomPositionAvailable(0, 2, 3));
         assertEquals(0, occupancyQueries.size());
-        assertEquals(0L, Functions.roomPositionAvailable(7, 2, 4));
+        assertEquals(0L, RoomPositionService.roomPositionAvailable(7, 2, 4));
         assertEquals(1, occupancyQueries.size());
-        assertEquals(0L, Functions.roomPositionAvailable(7, 4, 3));
+        assertEquals(0L, RoomPositionService.roomPositionAvailable(7, 4, 3));
         assertEquals(3, occupancyQueries.size());
-        assertEquals(1L, Functions.roomPositionAvailable(7, 4, 4));
+        assertEquals(1L, RoomPositionService.roomPositionAvailable(7, 4, 4));
         MySQL.configureDatabaseConnection(null);
         final List<String> botAvailabilityQueries = new ArrayList<>();
-        Licence.global_00829358 = "[10:3\2" + "501\2room-bot][11:0\2" + "502\2fallback-bot][12:0\2" + "0\2self-bot]";
+        PetState.instance().setRepresentedBots(representedBots(Map.of(
+            10L, "3\2" + "501\2room-bot",
+            11L, "0\2" + "502\2fallback-bot",
+            12L, "0\2" + "0\2self-bot")));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -598,44 +779,41 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
             }
         });
-        assertEquals(1L, Functions.representedBotPositionAvailable(10, 4, 4));
+        assertEquals(1L, RoomPositionService.representedBotPositionAvailable(10, 4, 4));
         assertEquals(true, botAvailabilityQueries.get(0).contains("FROM rooms"));
-        assertEquals(1L, Functions.representedBotPositionAvailable(11, 4, 4));
+        assertEquals(1L, RoomPositionService.representedBotPositionAvailable(11, 4, 4));
         assertEquals(true, botAvailabilityQueries.get(3).contains("id_room FROM bots"));
-        assertEquals(1L, Functions.representedBotPositionAvailable(12, 4, 4));
-        assertEquals(0L, Functions.representedBotPositionAvailable(0, 4, 4));
+        assertEquals(1L, RoomPositionService.representedBotPositionAvailable(12, 4, 4));
+        assertEquals(0L, RoomPositionService.representedBotPositionAvailable(0, 4, 4));
         MySQL.configureDatabaseConnection(null);
         Path downloadSource = Files.createTempFile("alphaseries-download-source", ".txt");
         Path downloadDestination = Files.createTempFile("alphaseries-download-destination", ".txt");
         Files.write(downloadSource, "update-payload".getBytes("UTF-8"));
-        assertEquals(true, Functions.Proc_10_28_8210C0(downloadSource.toUri().toURL().toString(), downloadDestination.toString()));
+        assertEquals(true, FileUtils.downloadFile(downloadSource.toUri().toURL().toString(), downloadDestination.toString()));
         assertEquals("update-payload", new String(Files.readAllBytes(downloadDestination), "UTF-8"));
-        assertEquals(true, Functions.downloadFile(downloadSource.toUri().toURL().toString(), downloadDestination.toString()));
-        assertEquals("update-payload", new String(Files.readAllBytes(downloadDestination), "UTF-8"));
-        assertEquals(false, Functions.Proc_10_28_8210C0(downloadSource.toUri().toURL().toString()));
-        assertEquals(false, Functions.downloadFile(downloadSource.toUri().toURL().toString(), ""));
-        assertEquals("@@", Console.Proc_2_4_6D28B0(-1));
-        assertEquals("@A", Console.Proc_2_4_6D28B0(1));
-        assertEquals("A@", Console.Proc_2_4_6D28B0(64));
-        assertEquals(15.0f, Console.elapsedSeconds(86395.0f, 10.0f));
-        assertEquals(250L, Console.delayMilliseconds("0.25"));
-        assertEquals(250L, Console.delayMilliseconds("0,25"));
-        assertEquals(0L, Console.delayMilliseconds("-1"));
-        Console.Proc_2_3_6D27D0(0);
+        assertEquals(false, FileUtils.downloadFile(downloadSource.toUri().toURL().toString(), ""));
+        assertEquals("@@", WireEncoding.encodeBase64Length(-1));
+        assertEquals("@A", WireEncoding.encodeBase64Length(1));
+        assertEquals("A@", WireEncoding.encodeBase64Length(64));
+        assertEquals(15.0f, TimeUtils.elapsedSeconds(86395.0f, 10.0f));
+        assertEquals(250L, TimeUtils.delayMilliseconds("0.25"));
+        assertEquals(250L, TimeUtils.delayMilliseconds("0,25"));
+        assertEquals(0L, TimeUtils.delayMilliseconds("-1"));
+        TimeUtils.sleepSeconds(0);
         Console.clear();
-        Console.Proc_2_0_6D1510("boot", "SYS", 123);
-        Console.Proc_2_1_6D1B60("raw", "", 456);
-        Console.Proc_2_2_6D21D0("secret", "HIDDEN", 789);
-        Console.Proc_2_2_6D21D0("shown", "GAME", 321);
+        Console.logSourceLine("boot", "SYS", 123);
+        Console.appendPlainLine("raw", 456);
+        Console.appendOptionalSourceLine("secret", "HIDDEN", 789);
+        Console.appendOptionalSourceLine("shown", "GAME", 321);
         assertEquals("[SYS] boot", Console.entries().get(0).lineText());
         assertEquals(123L, Console.entries().get(0).foreColor());
         assertEquals("raw", Console.entries().get(1).lineText());
         assertEquals("secret", Console.entries().get(2).lineText());
         assertEquals("[GAME] shown", Console.entries().get(3).lineText());
 
-        String previousFigureApplicationPath = Functions.applicationPath;
+        String previousFigureApplicationPath = AppPaths.applicationPath();
         Path emptyFigureRoot = Files.createTempDirectory("alphaseries-empty-figuredata");
-        Functions.applicationPath = emptyFigureRoot.toString();
+        AppPaths.setApplicationPath(emptyFigureRoot.toString());
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -647,7 +825,7 @@ public final class PortedModuleSmokeTest {
             }
         });
         Console.clear();
-        Boot.runTimed("Figuredata im Cache gespeichert", Boot::writeFiguredataCache);
+        BootLog.runTimed("Figuredata im Cache gespeichert", FiguredataBootCache::writeFiguredataCache);
         assertEquals("[ERROR] \"Figuredata\" Datei konnte nicht gefunden werden!",
             Console.entries().get(0).lineText());
         assertEquals(1, Console.entries().size());
@@ -662,18 +840,20 @@ public final class PortedModuleSmokeTest {
             }
         });
         Console.clear();
-        Boot.runTimed("Figuredata im Cache gespeichert", Boot::writeFiguredataCache);
+        BootLog.runTimed("Figuredata im Cache gespeichert", FiguredataBootCache::writeFiguredataCache);
         assertEquals(true, Console.entries().get(0).lineText().contains("Figuredata im Cache gespeichert"));
-        Functions.applicationPath = previousFigureApplicationPath;
+        AppPaths.setApplicationPath(previousFigureApplicationPath);
         MySQL.configureDatabaseConnection(null);
 
         List<String> sent = new ArrayList<>();
         Filesystems.configurePacketSink((socketIndex, payload) -> sent.add(socketIndex + ":" + payload));
-        Filesystems.global_00829268 = "[1:\1Alice\2" + "5][1:\1Bob\2" + "6]";
-        assertEquals(2L, Filesystems.Proc_7_0_8034A0("hello"));
+        Filesystems.setActiveSessions(List.of(
+            new Filesystems.ActiveSession("Alice", 5),
+            new Filesystems.ActiveSession("Bob", 6)));
+        assertEquals(2L, Filesystems.broadcastToActiveSessions("hello", ""));
         assertEquals(Arrays.asList("5:hello", "6:hello"), sent);
         sent.clear();
-        assertEquals(1L, Filesystems.Proc_7_1_8038A0("bob", "one"));
+        assertEquals(1L, Filesystems.broadcastToActiveSessions("one", "bob"));
         assertEquals(Arrays.asList("6:one"), sent);
         assertEquals(true, Filesystems.isCrossDomainPolicyRequest("<policy-file-request/>\0"));
         assertEquals(false, Filesystems.isCrossDomainPolicyRequest("normal"));
@@ -681,157 +861,187 @@ public final class PortedModuleSmokeTest {
         assertEquals(Arrays.asList("CN1", "F_22"), Filesystems.readyPacketPayloadsFromBuffer(framedPackets));
         List<Filesystems.ReadyPacket> readyPackets = Filesystems.readyPacketsFromBuffer(framedPackets);
         assertEquals(2, readyPackets.size());
-        assertEquals("CN", readyPackets.get(0).code);
-        assertEquals("CN1", readyPackets.get(0).payload);
-        assertEquals("F_", readyPackets.get(1).code);
-        assertEquals("F_22", readyPackets.get(1).payload);
+        assertEquals("CN", readyPackets.get(0).code());
+        assertEquals("CN1", readyPackets.get(0).payload());
+        assertEquals("F_", readyPackets.get(1).code());
+        assertEquals("F_22", readyPackets.get(1).payload());
         assertEquals(Arrays.asList(), Filesystems.readyPacketPayloadsFromBuffer("<policy/>\0"));
 
         sent.clear();
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> sent.add(socketIndex + ":" + payload));
-        HandlingMUS.Proc_12_1_821AA0(4, "payload");
-        HandlingMUS.Proc_12_0_8218C0(4);
+        MusConnectionManager.instance().sendData(4, "payload");
+        MusConnectionManager.instance().sendShutdown(4);
         assertEquals(Arrays.asList("4:DATA\6" + "4\6payload\7", "4:SHUTDOWN\6" + "4\7"), sent);
         sent.clear();
         MusConnectionManager.instance().sendData(5, "relay");
         MusConnectionManager.instance().sendShutdown(5);
         assertEquals(Arrays.asList("5:DATA\6" + "5\6relay\7", "5:SHUTDOWN\6" + "5\7"), sent);
         assertEquals("DATA\6" + "6\6named\7", MusPayloads.data(6, "named"));
+        MusPayloads.ClientFrame dataFrame = MusPayloads.clientFrame("DATA\6" + "7\6client-payload\7");
+        assertEquals("DATA", dataFrame.command());
+        assertEquals("7", dataFrame.socketIndexText());
+        assertEquals("client-payload", MusPayloads.clientPayload(dataFrame));
+        MusPayloads.ClientFrame shutdownFrame = MusPayloads.clientFrame("SHUTDOWN\6" + "7\7");
+        assertEquals("SHUTDOWN", shutdownFrame.command());
+        assertEquals("7", shutdownFrame.socketIndexText());
+        assertEquals("", MusPayloads.clientPayload(shutdownFrame));
+        assertEquals("raw", MusPayloads.clientPayload(MusPayloads.clientFrame("raw")));
 
+        });
+        run(() -> {
         assertGuardianSocketMarkers();
-        Guardian.global_008291A0 = "[12]";
-        Licence.global_008291A0 = "[4][12]";
-        Handling.Proc_6_243_7FFEB0(12);
-        assertEquals(true, Guardian.global_008291A0 instanceof SocketMarkerSet);
-        assertEquals("", SocketMarkerSet.fromLegacy(Guardian.global_008291A0).toLegacyMarkers());
-        assertEquals(true, Licence.global_008291A0 instanceof SocketMarkerSet);
-        assertEquals("[4]", Licence.socketMarkers().toLegacyMarkers());
+        Guardian.setSocketMarkers(SocketMarkerSet.fromSocketIndexes(List.of(12L)));
+        SessionState.instance().setSocketMarkers(SocketMarkerSet.fromSocketIndexes(List.of(4L, 12L)));
+        Handling.disconnectSocket(12);
+        assertEquals(Set.of(), Guardian.socketMarkers().socketIndexes());
+        assertEquals(Set.of(4L), SessionState.instance().socketMarkers().socketIndexes());
 
-        Licence.global_008292BC = "10\t100\tchair\r11\t200\ttable";
-        Licence.global_008292C0 = new String[]{"", "1\talpha\t7"};
-        Licence.global_00829258 = "5\trow-five\r6\trow-six";
-        assertEquals(100L, Licence.Proc_9_0_806F70(10, 1));
-        assertEquals(100L, Licence.productFieldLong(10, 1));
-        assertEquals("alpha", Licence.Proc_9_1_8072B0(1, 1));
-        assertEquals("alpha", Licence.catalogProductField(1, 1));
-        assertEquals(7L, Licence.Proc_9_2_8075F0(1, 2));
-        assertEquals(7L, Licence.catalogProductFieldLong(1, 2));
-        assertEquals("11\t200\ttable", Licence.Proc_9_3_807930(11));
-        assertEquals("1\talpha\t7", Licence.Proc_9_4_807B90(1));
-        assertEquals("6\trow-six", Licence.Proc_9_5_807DF0(6));
-        Licence.global_008292BC = List.of(new CatalogDao.ProductCacheRow(List.of("10", "100", "chair")));
-        Licence.global_008292C0 = List.of(new CatalogDao.CatalogProductCacheRow(List.of("1", "alpha", "7")));
-        assertEquals(100L, Licence.Proc_9_0_806F70(10, 1));
-        assertEquals(100L, Licence.productType(10));
-        assertEquals("alpha", Licence.Proc_9_1_8072B0(1, 1));
-        assertEquals("alpha", Licence.catalogProductField(1, 1));
-        assertEquals("10\t100\tchair", Licence.Proc_9_3_807930(10));
-        assertEquals("1\talpha\t7", Licence.Proc_9_4_807B90(1));
-        Licence.global_00829258 = List.of(new CatalogDao.ProductDealRow(6L, "10;11"));
-        assertEquals("6\t10;11", Licence.Proc_9_5_807DF0(6));
-        assertEquals(10L, Licence.product(10).productId());
-        assertEquals(1L, Licence.catalogProduct(1).catalogProductId());
-        assertEquals(2, Licence.productDeal(6L).itemProductIds().size());
+        seedCatalogRegistryProductRows(List.of(
+            productDaoRow(10, "0", "100", "1", "chair"),
+            productDaoRow(11, "0", "200", "1", "table")));
+        seedCatalogRegistryCatalogProductRows(List.of(catalogProductRow(1, "1", "alpha", "2", "7")));
+        seedCatalogRegistryDealRows(List.of(
+            new CatalogDao.ProductDealRow(5L, "row-five"),
+            new CatalogDao.ProductDealRow(6L, "row-six")));
+        CatalogRegistry registry = CatalogState.instance().registry();
+        assertEquals(100L, NumberUtils.parseLong(registry.productCell(10, 1)));
+        assertEquals("alpha", registry.catalogProductCell(1, 1));
+        assertEquals(7L, NumberUtils.parseLong(registry.catalogProductCell(1, 2)));
+        assertEquals(200L, registry.product(11).orElseThrow().type());
+        assertEquals("alpha", registry.catalogProduct(1).orElseThrow().sprite());
+        assertEquals(List.of(), registry.productDeal(6L).orElseThrow().itemProductIds());
+        seedCatalogRegistryProductRows(List.of(new CatalogDao.ProductCacheRow(List.of("10", "100", "chair"))));
+        seedCatalogRegistryCatalogProductRows(List.of(new CatalogDao.CatalogProductCacheRow(List.of("1", "alpha", "7"))));
+        registry = CatalogState.instance().registry();
+        assertEquals(100L, NumberUtils.parseLong(registry.productCell(10, 1)));
+        assertEquals(100L, registry.product(10).orElseThrow().type());
+        assertEquals("alpha", registry.catalogProductCell(1, 1));
+        seedCatalogRegistryDealRows(List.of(new CatalogDao.ProductDealRow(6L, "10;11")));
+        registry = CatalogState.instance().registry();
+        assertEquals(List.of(10L, 11L), registry.productDeal(6L).orElseThrow().itemProductIds());
+        assertEquals(10L, registry.product(10).orElseThrow().productId());
+        assertEquals(1L, registry.catalogProduct(1).orElseThrow().catalogProductId());
+        assertEquals(2, registry.productDeal(6L).orElseThrow().itemProductIds().size());
         assertCatalogRegistryRows();
-        Licence.global_00829268 = "[0:5\1u5\2sock5][1:bob\1bob\2" + "6][room\1" + "7\2" + "8]";
-        assertEquals("u5", Licence.Proc_9_6_808080(5, 0));
-        assertEquals("u5", Licence.socketUserId("5"));
-        assertEquals(6L, Licence.Proc_9_7_808320("bob", 1));
-        assertEquals(7L, Licence.Proc_9_10_808F30("room", 0));
-        assertEquals(7L, Licence.sessionCacheLong("room", 0));
-        Licence.global_00829268 = "\2" + "91]14\0";
-        assertEquals(14L, Licence.linkedUserSocketIndex("91"));
-        assertEquals(14L, Licence.linkedSocketIndex("91"));
-        SessionRegistry typedSessionRegistry = SessionRegistry.fromLegacyCache(
-            "[0:5\1u5\2sock5][1:bob\1bob\2" + "6]\2" + "91]14\0\2" + "92]15\0");
-        assertEquals("u5", typedSessionRegistry.recordField("0:", "5", 0));
-        assertEquals(6L, typedSessionRegistry.recordLong("1:", "bob", 1));
-        assertEquals(14L, typedSessionRegistry.linkedLong("91", false));
-        assertEquals(15L, typedSessionRegistry.linkedLong("92", false));
+        SessionState.instance().setSessionRegistry(sessionRegistry(
+            new SessionRegistry.SessionRecord("0:5", "u5\2sock5"),
+            new SessionRegistry.SessionRecord("1:6", "66\2" + "6"),
+            new SessionRegistry.SessionRecord("room", "7\2" + "8")));
+        assertEquals("u5", SessionState.instance().socketUserId("5"));
+        assertEquals(66L, SessionState.instance().sessionUserIdBySocket(6));
+        assertEquals(7L, SessionState.instance().sessionCacheLong("room", 0));
+        SessionState.instance().setSessionRegistry(linkedSessionRegistry("91", "14\0"));
+        assertEquals(14L, SessionState.instance().linkedUserSocketIndex("91"));
+        assertEquals(14L, SessionState.instance().linkedSocketIndex("91"));
+        SessionRegistry typedSessionRegistry = SessionRegistry.fromEntries(
+            List.of(
+                new SessionRegistry.SessionRecord("0:5", "u5\2sock5"),
+                new SessionRegistry.SessionRecord("1:bob", "bob\2" + "6")),
+            List.of(
+                new SessionRegistry.LinkedSessionSection("91", "14\0"),
+                new SessionRegistry.LinkedSessionSection("92", "15\0")));
+        SessionState.instance().setSessionRegistry(typedSessionRegistry);
+        assertEquals("u5", SessionState.instance().socketUserId("5"));
+        assertEquals(14L, SessionState.instance().linkedSocketIndex("91"));
+        assertEquals(15L, SessionState.instance().linkedSocketIndex("92"));
+        SessionState.instance().setSessionRegistry(sessionRegistry(new SessionRegistry.SessionRecord("1:4", "77\2" + "4")));
+        assertEquals(77L, SessionState.instance().sessionUserIdBySocket(4));
+        SessionState.instance().setSessionRegistry(SessionRegistry.empty());
+        SessionState.instance().storeSocketSession(9, "99\2" + "9");
+        assertEquals(99L, SessionState.instance().socketSessions().get(0).userId());
 
-        String[] cache = new String[12];
-        Boot.cacheRowsById(cache, "10\t100\tchair\r11\t200\ttable");
-        assertEquals("11\t200\ttable", cache[11]);
-        String bootErrorHeader = Boot.bootErrorLogHeader("ALPHASERIES_FINAL (PREMIUM)", "2026-06-30T10:15");
+        });
+        run(() -> {
+        String bootErrorHeader = BootLog.bootErrorLogHeader("ALPHASERIES_FINAL (PREMIUM)", "2026-06-30T10:15");
         assertEquals(true, bootErrorHeader.contains("Alpha Series [Version ALPHASERIES_FINAL (PREMIUM)"));
         assertEquals(true, bootErrorHeader.contains("Emulator is running since 2026-06-30T10:15, errors are being logged."));
-        String bootSlowHeader = Boot.bootSlowLogHeader("ALPHASERIES_FINAL (PREMIUM)", "2026-06-30T10:15");
+        String bootSlowHeader = BootLog.bootSlowLogHeader("ALPHASERIES_FINAL (PREMIUM)", "2026-06-30T10:15");
         assertEquals(true, bootSlowHeader.contains(
             "slow query are being logged if you are running the development mode."));
         Console.clear();
-        Boot.printStartupNotice("short");
+        BootLog.printStartupNotice("short");
         assertEquals(0, Console.entries().size());
-        Boot.printStartupNotice();
+        BootLog.printStartupNotice();
         assertEquals(true, Console.entries().get(0).lineText().contains("ILLEGAL KOMBINATION"));
         assertEquals(true, Console.entries().get(0).lineText().contains("Bitte eigene Software nutzen"));
         assertEquals(49344L, Console.entries().get(0).foreColor());
         assertEquals("Unable to intialize. File may be corrupted!",
-            Boot.initializationIntegrityFailureMessage(true, "Alpha Series [INITIALISIERE] - [%%]"));
-        assertEquals("", Boot.initializationIntegrityFailureMessage(false, "Alpha Series [INITIALISIERE] - [%%]"));
-        assertEquals("", Boot.initializationIntegrityFailureMessage(true, "Alpha Series [RUNNING] - [%%]"));
-        String[] startupCreditLines = Boot.startupCreditLines();
+            BootLog.initializationIntegrityFailureMessage(true, "Alpha Series [INITIALISIERE] - [%%]"));
+        assertEquals("", BootLog.initializationIntegrityFailureMessage(false, "Alpha Series [INITIALISIERE] - [%%]"));
+        assertEquals("", BootLog.initializationIntegrityFailureMessage(true, "Alpha Series [RUNNING] - [%%]"));
+        String[] startupCreditLines = BootLog.startupCreditLines();
         assertEquals(true, startupCreditLines[0].contains("2 . 0 - \"Meilenstein 2\""));
         assertEquals(true, startupCreditLines[1].contains("Server Autor: Privilege"));
         assertEquals(true, startupCreditLines[1].contains("Deutsche \u00dcbersetzung: Medaillon"));
         assertEquals(true, startupCreditLines[2].contains("Shoutouts: Tweeney, Pure, MoBaT"));
         Console.clear();
-        Boot.printStartupCredits();
+        BootLog.printStartupCredits();
         assertEquals(3, Console.entries().size());
         assertEquals(49344L, Console.entries().get(0).foreColor());
         assertEquals("Server has Exit Suburned following error:       socket failed",
-            Boot.serverReturnedErrorMessage("socket failed"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "a\2b\2c\2d\2",
-            Boot.buildCampaignReplacementCache("a\tb\rc\td"));
-        Boot.AchievementSettingsCache achievementSettings = Boot.buildAchievementSettingsCache(
-            "7\tACH_ONE\t10\t2\t3\t4\t1\r8\tACH_TWO\t20\t5\t6\t7\t2");
-        assertEquals("7\2" + "8\2", achievementSettings.questIdPayload);
-        assertEquals("ACH_TWO", achievementSettings.achievements.get(1).badgePrefix());
-        assertEquals(20L, achievementSettings.achievements.get(1).progressRequired());
-        int[] messengerFriendLimits = Boot.buildMessengerFriendLimitCache(50, 75, 100);
+            BootLog.serverReturnedErrorMessage("socket failed"));
+        AchievementBootCache.AchievementSettingsCache achievementSettings = AchievementBootCache.buildAchievementSettingsCache(List.of(
+            new AchievementDao.AchievementSettingsRow(7L, "ACH_ONE", 10L, 2L, 3L, 4L, 1L),
+            new AchievementDao.AchievementSettingsRow(8L, "ACH_TWO", 20L, 5L, 6L, 7L, 2L)));
+        assertEquals("7\2" + "8\2", achievementSettings.questIdPayload());
+        assertEquals("ACH_TWO", achievementSettings.achievements().get(1).badgePrefix());
+        assertEquals(20L, achievementSettings.achievements().get(1).progressRequired());
+        int[] messengerFriendLimits = AchievementBootCache.buildMessengerFriendLimitCache(50, 75, 100);
         assertEquals(50, messengerFriendLimits[0]);
         assertEquals(0, messengerFriendLimits[1]);
         assertEquals(75, messengerFriendLimits[2]);
         assertEquals(100, messengerFriendLimits[4]);
         assertEquals(
-            Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(1, null, "") + "public\2"
-                + Crypto.Proc_3_0_6D2AF0(0, null, "")
-                + Crypto.Proc_3_0_6D2AF0(3, null, "") + "hc\2"
-                + Crypto.Proc_3_0_6D2AF0(1, null, ""),
-            Boot.buildRoomCategoryPayload("1\tpublic\t0\t0\t0\r2\tstaff\t1\t5\t0\r3\thc\t1\t2\t1", 2, 1));
+            encodedVl64(2, null, "")
+                + encodedVl64(1, null, "") + "public\2"
+                + encodedVl64(0, null, "")
+                + encodedVl64(3, null, "") + "hc\2"
+                + encodedVl64(1, null, ""),
+            NavigatorBootCache.buildRoomCategoryPayload(List.of(
+                new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L),
+                new RoomDao.RoomCategoryRow(2L, "staff", 1L, 5L, 0L),
+                new RoomDao.RoomCategoryRow(3L, "hc", 1L, 2L, 1L)), 2, 1));
         assertRecyclerCacheBuilders();
         assertEquals("[pet_dog\t1\t2\t3\t4\tDog][pet_cat\t5\t6\t7\t8\tCat]",
-            Boot.buildPetRaceCache("pet_dog\t1.2\t2\t3\t4\tDog\rpet_cat\t5\t6\t7\t8\tCat"));
-        assertEquals("20\t30\t40", Boot.buildPetLevelCache("2\t20\t30\t40").get(2L));
-        Boot.PetCommandCache petCommandCache = Boot.buildPetCommandCache("1\t0\tsit\tidle\r2\t3\tjump\tmove");
-        assertEquals(2L, petCommandCache.commandCount);
-        PetSettings.PetCommandRow jumpCommand = petCommandCache.commandById.get(2L);
+            PetBootCache.buildPetRaceCache(List.of(
+                new PetRaceCacheRow("pet_dog", 1L, 2L, 3L, 4L, "Dog"),
+                new PetRaceCacheRow("pet_cat", 5L, 6L, 7L, 8L, "Cat"))));
+        assertEquals(List.of(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 4)),
+            PetBootCache.buildPetLevelRows(List.of(new PetLevelCacheRow(2L, 20L, 30L, 40L))));
+        PetBootCache.PetCommandCache petCommandCache = PetBootCache.buildPetCommandCache(List.of(
+            new PetCommandCacheRow(1L, 0L, "sit", "idle"),
+            new PetCommandCacheRow(2L, 3L, "jump", "move")));
+        assertEquals(2L, petCommandCache.commandCount());
+        PetSettings.PetCommandRow jumpCommand = petCommandCache.commandById().get(2L);
         assertEquals(2L, jumpCommand.commandId());
         assertEquals(3L, jumpCommand.requiredLevel());
         assertEquals("jump", jumpCommand.command());
         assertEquals("move", jumpCommand.action());
-        assertEquals("base" + "\0" + "5\1party\2" + "\0" + "7\1game\2",
-            Boot.buildRoomEventLocaleCache("roomevent_type_5\tparty\rroomevent_type_7\tgame", "base"));
+        RoomEventLocales builtRoomEventLocales = RoomEventBootCache.buildRoomEventLocales(List.of(
+                new SettingsDao.LocaleRow("roomevent_type_5", "party"),
+                new SettingsDao.LocaleRow("roomevent_type_7", "game")),
+            RoomEventLocales.empty());
+        assertEquals(List.of(
+                new RoomEventLocales.LocaleEntry("5", List.of("party", "")),
+                new RoomEventLocales.LocaleEntry("7", List.of("game", ""))),
+            builtRoomEventLocales.entries());
         assertRoomEventLocaleTypedBuilder();
         assertEquals("[site.name=Alpha][com.client.format.date=dd.mm.yyyy][com.client.format.time=hh:nn:ss]"
                 + "[com.mysql.format.date=%d.%m.%Y][com.mysql.format.time=%H:%i:%s]",
-            Boot.buildSettingsCache("site.name\tAlpha", "d.m.Y", "h:i:s"));
-        assertEquals(Boot.buildSettingsCache("site.name\tAlpha", "d.m.Y", "h:i:s"),
-            Boot.buildSettingsCache(List.of(new SettingsDao.SettingRow("site.name", "Alpha")), "d.m.Y", "h:i:s"));
+            AppSettingsBootCache.buildSettingsCache(
+                List.of(new SettingsDao.SettingRow("site.name", "Alpha")), "d.m.Y", "h:i:s"));
         assertEquals(
-            Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(1, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(10, null, "")
-                + Crypto.Proc_3_0_6D2AF0(12, null, "")
-                + Crypto.Proc_3_0_6D2AF0(3, null, "")
-                + Crypto.Proc_3_0_6D2AF0(1, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(3, null, ""),
-            Boot.buildGiftWrapPayload("10\r0\r12", 2, 3));
-        assertEquals(Boot.buildGiftWrapPayload("10\r0\r12", 2, 3),
-            Boot.buildGiftWrapPayload(List.of(10L, 0L, 12L), 2, 3));
+            encodedVl64(2, null, "")
+                + encodedVl64(1, null, "")
+                + encodedVl64(2, null, "")
+                + encodedVl64(2, null, "")
+                + encodedVl64(10, null, "")
+                + encodedVl64(12, null, "")
+                + encodedVl64(3, null, "")
+                + encodedVl64(1, null, "")
+                + encodedVl64(2, null, "")
+                + encodedVl64(3, null, ""),
+            CatalogGiftBootCache.buildGiftWrapPayload(List.of(10L, 0L, 12L), 2, 3));
         Map<Long, Long> giftProductIds = new HashMap<>();
         giftProductIds.put(100L, 200L);
         Map<Long, Long> giftProductTypes = new HashMap<>();
@@ -843,145 +1053,167 @@ public final class PortedModuleSmokeTest {
         Map<Long, String> giftDescriptions = new HashMap<>();
         giftDescriptions.put(200L, "Badge desc");
         giftDescriptions.put(300L, "Sofa desc");
-        Boot.ClubGiftCache clubGiftCache = Boot.buildClubGiftCache("100\t1\t30\r300\t0\t5",
+        CatalogGiftBootCache.ClubGiftCache clubGiftCache = CatalogGiftBootCache.buildClubGiftCache(List.of(
+                new ClubDao.ClubGiftRow(100L, 1L, 30L),
+                new ClubDao.ClubGiftRow(300L, 0L, 5L)),
             giftProductIds, giftProductTypes, giftNames, giftDescriptions);
         assertEquals(
-            Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(100, null, "")
-                + Crypto.Proc_3_0_6D2AF0(200, null, "")
+            encodedVl64(2, null, "")
+                + encodedVl64(100, null, "")
+                + encodedVl64(200, null, "")
                 + "VIP badge\2Badge desc\2IHHIi\2"
-                + Crypto.Proc_3_0_6D2AF0(1, null, "")
-                + Crypto.Proc_3_0_6D2AF0(30, null, "")
-                + Crypto.Proc_3_0_6D2AF0(300, null, "")
-                + Crypto.Proc_3_0_6D2AF0(300, null, "")
+                + encodedVl64(1, null, "")
+                + encodedVl64(30, null, "")
+                + encodedVl64(300, null, "")
+                + encodedVl64(300, null, "")
                 + "Fallback sofa\2Sofa desc\2IHHIs\2"
-                + Crypto.Proc_3_0_6D2AF0(0, null, "")
-                + Crypto.Proc_3_0_6D2AF0(5, null, ""),
-            clubGiftCache.giftPayload);
-        assertEquals("[100\0" + "200\1" + "30][300\0" + "300\1" + "5]", clubGiftCache.giftLookup);
-        assertEquals("one\2two\2", Boot.buildStaffMessageList("one\rtwo"));
-        assertEquals("one\2two\2", Boot.buildStaffMessageList(List.of(
-            new StaffModerationDao.StaffMessageRow("one"),
-            new StaffModerationDao.StaffMessageRow("two"))));
-        Map<Long, String> staffCategoryChildren = new HashMap<>();
-        staffCategoryChildren.put(10L, "11\tchild-a\r12\tchild-b");
-        assertEquals(
-            Crypto.Proc_3_0_6D2AF0(10, null, "") + "root-a\2"
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(11, null, "") + "child-a\2"
-                + Crypto.Proc_3_0_6D2AF0(12, null, "") + "child-b\2"
-                + Crypto.Proc_3_0_6D2AF0(20, null, "") + "root-b\2"
-                + Crypto.Proc_3_0_6D2AF0(0, null, ""),
-            Boot.buildStaffCategoryPayload("10\troot-a\r20\troot-b", staffCategoryChildren));
-        Map<Long, String> importantFaqRows = new HashMap<>();
-        importantFaqRows.put(1L, "31\tfirst");
-        importantFaqRows.put(2L, "41\tsecond\r42\tthird");
-        assertEquals(
-            Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(1, null, "")
-                + Crypto.Proc_3_0_6D2AF0(31, null, "") + "first\2"
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(41, null, "") + "second\2"
-                + Crypto.Proc_3_0_6D2AF0(42, null, "") + "third\2",
-            Boot.buildImportantFaqPayload(importantFaqRows));
+                + encodedVl64(0, null, "")
+                + encodedVl64(5, null, ""),
+            clubGiftCache.giftPayload());
+        assertEquals("[100\0" + "200\1" + "30][300\0" + "300\1" + "5]", clubGiftCache.giftLookup());
         Map<Long, List<HelpDao.FaqNameRow>> typedImportantFaqRows = new HashMap<>();
         typedImportantFaqRows.put(1L, List.of(new HelpDao.FaqNameRow(31L, "first")));
         typedImportantFaqRows.put(2L, List.of(new HelpDao.FaqNameRow(41L, "second"), new HelpDao.FaqNameRow(42L, "third")));
-        assertEquals(Boot.buildImportantFaqPayload(importantFaqRows), Boot.buildImportantFaqPayloadFromRows(typedImportantFaqRows));
-        assertEquals("HF" + Boot.buildImportantFaqPayload(importantFaqRows),
-            HelpPayloads.importantFaqs(Boot.buildImportantFaqPayload(importantFaqRows)));
-        Map<Long, String> faqRowsByCategory = new HashMap<>();
-        faqRowsByCategory.put(7L, "70\tfaq-a\r71\tfaq-b");
-        Boot.FaqCategoryCache faqCategoryCache = Boot.buildFaqCategoryCache("7\tcat-a\r9\tcat-b", faqRowsByCategory);
+        String importantFaqPayload = HelpCenterBootCache.buildImportantFaqPayloadFromRows(typedImportantFaqRows);
+        assertEquals(
+            encodedVl64(2, null, "")
+                + encodedVl64(1, null, "")
+                + encodedVl64(31, null, "") + "first\2"
+                + encodedVl64(2, null, "")
+                + encodedVl64(41, null, "") + "second\2"
+                + encodedVl64(42, null, "") + "third\2",
+            importantFaqPayload);
+        HelpCenterCache importantFaqCache = HelpCenterCache.fromPayloads(importantFaqPayload, "", Map.of(), Map.of());
+        assertEquals("HF" + importantFaqPayload, HelpPayloads.importantFaqs(importantFaqCache));
         Map<Long, List<HelpDao.FaqNameRow>> typedFaqRowsByCategory = new HashMap<>();
         typedFaqRowsByCategory.put(7L, List.of(new HelpDao.FaqNameRow(70L, "faq-a"), new HelpDao.FaqNameRow(71L, "faq-b")));
-        Boot.FaqCategoryCache typedFaqCategoryCache = Boot.buildFaqCategoryCacheFromRows(
+        HelpCenterBootCache.FaqCategoryCache faqCategoryCache = HelpCenterBootCache.buildFaqCategoryCacheFromRows(
             List.of(new HelpDao.FaqNameRow(7L, "cat-a"), new HelpDao.FaqNameRow(9L, "cat-b")),
             typedFaqRowsByCategory);
         assertEquals(
-            Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(7, null, "") + "cat-a\2"
-                + Crypto.Proc_3_0_6D2AF0(9, null, "") + "cat-b\2",
-            faqCategoryCache.categoryPayload);
-        assertEquals(faqCategoryCache.categoryPayload, typedFaqCategoryCache.categoryPayload);
-        assertEquals("HG" + faqCategoryCache.categoryPayload, HelpPayloads.categories(faqCategoryCache.categoryPayload));
+            encodedVl64(2, null, "")
+                + encodedVl64(7, null, "") + "cat-a\2"
+                + encodedVl64(9, null, "") + "cat-b\2",
+            faqCategoryCache.categoryPayload());
+        HelpCenterCache categoryHelpCache = HelpCenterCache.fromPayloads(
+            "",
+            faqCategoryCache.categoryPayload(),
+            faqCategoryCache.faqPayloadByCategoryId(),
+            Map.of());
+        assertEquals("HG" + faqCategoryCache.categoryPayload(), HelpPayloads.categories(categoryHelpCache));
         assertEquals(
-            Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(70, null, "") + "faq-a\2"
-                + Crypto.Proc_3_0_6D2AF0(71, null, "") + "faq-b\2",
-            faqCategoryCache.faqPayloadByCategoryId.get(7L));
-        assertEquals(faqCategoryCache.faqPayloadByCategoryId.get(7L), typedFaqCategoryCache.faqPayloadByCategoryId.get(7L));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "HJ") + '\2' + faqCategoryCache.faqPayloadByCategoryId.get(7L),
-            HelpPayloads.categoryFaqs(7L, faqCategoryCache.faqPayloadByCategoryId.get(7L)));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), faqCategoryCache.faqPayloadByCategoryId.get(9L));
-        assertEquals(faqCategoryCache.faqPayloadByCategoryId.get(9L), typedFaqCategoryCache.faqPayloadByCategoryId.get(9L));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(5, null, "") + "line1\rline2\2",
-            Boot.buildFaqDescriptionCache("5\tline1\nline2").get(5L));
-        assertEquals("HH" + Crypto.Proc_3_0_6D2AF0(5, null, "") + "line1\rline2\2",
-            HelpPayloads.description(Boot.buildFaqDescriptionCache("5\tline1\nline2").get(5L)));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "HI")
-            + Crypto.Proc_3_0_6D2AF0(70, null, "") + "faq-a\2"
-            + Crypto.Proc_3_0_6D2AF0(71, null, "") + "faq-b\2",
+            encodedVl64(2, null, "")
+                + encodedVl64(70, null, "") + "faq-a\2"
+                + encodedVl64(71, null, "") + "faq-b\2",
+            faqCategoryCache.faqPayloadByCategoryId().get(7L));
+        assertEquals(encodedVl64(7, null, "HJ") + '\2' + faqCategoryCache.faqPayloadByCategoryId().get(7L),
+            HelpPayloads.categoryFaqs(categoryHelpCache, 7L));
+        assertEquals(encodedVl64(0, null, ""), faqCategoryCache.faqPayloadByCategoryId().get(9L));
+        Map<Long, String> faqDescriptions = HelpCenterBootCache.buildFaqDescriptionCache(
+            List.of(new HelpDao.FaqDescriptionRow(5L, "line1\nline2")));
+        assertEquals(encodedVl64(5, null, "") + "line1\rline2\2",
+            faqDescriptions.get(5L));
+        HelpCenterCache descriptionHelpCache = HelpCenterCache.fromPayloads("", "", Map.of(), faqDescriptions);
+        assertEquals("HH" + encodedVl64(5, null, "") + "line1\rline2\2",
+            HelpPayloads.description(descriptionHelpCache, 5L));
+        assertEquals(7L, HelpWire.categoryFaqRequest("Fd" + wireLong(7), "Fd").categoryId());
+        assertEquals("hotel''help", HelpWire.faqSearchRequest("Fc" + wireString("hotel'help"), "Fc").searchText());
+        assertEquals(5L, HelpWire.faqIdRequest("Fb" + wireLong(5), "Fb").faqId());
+        assertEquals(encodedVl64(2, null, "HI")
+            + encodedVl64(70, null, "") + "faq-a\2"
+            + encodedVl64(71, null, "") + "faq-b\2",
             HelpPayloads.searchResults(List.of(new HelpDao.FaqNameRow(70L, "faq-a"), new HelpDao.FaqNameRow(71L, "faq-b"))));
-        assertEquals(Boot.buildFaqDescriptionCache("5\tline1\nline2").get(5L),
-            Boot.buildFaqDescriptionCache(List.of(new HelpDao.FaqDescriptionRow(5L, "line1\nline2"))).get(5L));
-        Boot.VisitRoomCache visitRoomCache = Boot.buildAdvertisementVisitRoomCache("2\t/lobby\r4\t/cafe", "/ad/");
-        assertEquals(2L, visitRoomCache.count);
-        assertEquals("/ad/4\2/cafe\2", visitRoomCache.payloadByVisitRoomId.get(4L));
-        Boot.VisitRoomCache typedVisitRoomCache = Boot.buildAdvertisementVisitRoomCache(
+        AdvertisingBootCache.VisitRoomCache visitRoomCache = AdvertisingBootCache.buildAdvertisementVisitRoomCache(
+            List.of(
+                new AdvertisingDao.VisitRoomAdRow(2L, "/lobby"),
+                new AdvertisingDao.VisitRoomAdRow(4L, "/cafe")),
+            "/ad/");
+        assertEquals(2L, visitRoomCache.count());
+        assertEquals("/ad/4\2/cafe\2", visitRoomCache.payloadByVisitRoomId().get(4L));
+        AdvertisingBootCache.VisitRoomCache typedVisitRoomCache = AdvertisingBootCache.buildAdvertisementVisitRoomCache(
             List.of(new AdvertisingDao.VisitRoomAdRow(4L, "/cafe")), "/ad/");
-        assertEquals(1L, typedVisitRoomCache.count);
-        assertEquals("/ad/4\2/cafe\2", typedVisitRoomCache.payloadByVisitRoomId.get(4L));
-        assertEquals(true, Boot.buildRecommendedRoomsQuery(3).contains("id_tree='3'"));
+        assertEquals(1L, typedVisitRoomCache.count());
+        assertEquals("/ad/4\2/cafe\2", typedVisitRoomCache.payloadByVisitRoomId().get(4L));
+        RoomDao recommendedRoomDao = new RoomDao(new Database() {
+            @Override
+            public void execute(String sqlText) {
+            }
+
+            @Override
+            public List<List<Object>> query(String sqlText) {
+                return List.of(Arrays.asList(
+                    2L, 1L, 5L, "caption", "caption-2", "caption-3", null,
+                    77L, "room", "owner", 0L, 4L, 25L, "description", 1L, null,
+                    8L, 9L, "icon", "tag-a", "tag-b", 1L, null, null, null, 3L, 44L));
+            }
+        });
+        RoomDao.RecommendedRoomRow recommendedRoomRow = recommendedRoomDao.recommendedRoomRows(3L).get(0);
+        assertEquals(77L, recommendedRoomRow.roomId());
+        assertEquals("room", recommendedRoomRow.roomName());
+        assertEquals(3L, recommendedRoomRow.treeId());
         RecommendedRooms typedRecommendedRooms = RecommendedRooms.fromPayloads(Map.of(0L, "REC"), 1L);
         assertEquals("REC", typedRecommendedRooms.payload(1L));
         assertEquals(Map.of(0L, "REC"), typedRecommendedRooms.payloadsByIndex());
+        NavigatorState.instance().setRecommendedRooms(Map.of(0L, "SET_REC"), 1L);
+        assertEquals(1L, NavigatorState.instance().recommendedRooms().count());
+        assertEquals("SET_REC", NavigatorState.instance().recommendedRooms().payload(1L));
         assertRecommendedRoomsPayloadMapBridge();
-        Object previousRecommendedRooms = Licence.global_0082911C;
-        long previousRecommendedRoomCount = Licence.global_00829128;
-        Licence.global_0082911C = typedRecommendedRooms;
-        Licence.global_00829128 = typedRecommendedRooms.count();
-        assertEquals("REC", Licence.recommendedRooms().payload(1L));
-        Licence.global_0082911C = previousRecommendedRooms;
-        Licence.global_00829128 = previousRecommendedRoomCount;
+        RecommendedRooms previousRecommendedRooms = NavigatorState.instance().recommendedRooms();
+        NavigatorState.instance().setRecommendedRooms(typedRecommendedRooms);
+        assertEquals("REC", NavigatorState.instance().recommendedRooms().payload(1L));
+        NavigatorState.instance().setRecommendedRooms(previousRecommendedRooms);
         assertRecommendedRoomsPayloadBuilders();
-        assertEquals("i", Boot.catalogProductClass(9));
-        assertEquals("s", Boot.catalogProductClass(0));
-        assertEquals(false, Boot.catalogTextFieldPresent("NULL"));
-        assertCatalogProductEntryBuilder();
+        assertEquals("i", CatalogPageBootCache.catalogProductClass(9));
+        assertEquals("s", CatalogPageBootCache.catalogProductClass(0));
+        assertEquals(false, CatalogPageBootCache.catalogTextFieldPresent("NULL"));
         assertCatalogPagePayloadBuilder();
         assertCatalogPagePayloadMapBridge();
-        assertEquals(true, Boot.catalogPageVisible(new String[]{"1", "name", "1", "2", "0", "1"}, 0, 0));
-        Functions.global_008292A8 = new String[][]{{}, {"\2fuse_developer\2"}};
-        assertEquals(true, Boot.catalogPageVisible(new String[]{"1", "name", "1", "2", "1", "1"}, 1, 0));
-        assertEquals(Boot.buildCatalogPageTreeEntry(new String[]{"10", "Root", "5", "6", "0", "1"}, 2),
-            Boot.buildCatalogPageTreeEntry(new CatalogDao.CatalogPageTreeRow(10L, "Root", 5L, 6L, 0L, 1L), 2));
+        assertEquals(true, CatalogPageBootCache.catalogPageVisible(
+            new CatalogDao.CatalogPageTreeRow(1L, "name", 1L, 2L, 0L, 1L), 0, 0));
+        AppConfigState.instance().setPermissionMatrix(permissions(
+            new PermissionMatrix.PermissionPayload(1L, 0L, "\2fuse_developer\2")));
+        assertEquals(true, CatalogPageBootCache.catalogPageVisible(
+            new CatalogDao.CatalogPageTreeRow(1L, "name", 1L, 2L, 1L, 1L), 1, 0));
+        CatalogDao.CatalogPageTreeRow rootPage = new CatalogDao.CatalogPageTreeRow(10L, "Root", 5L, 6L, 0L, 1L);
+        CatalogDao.CatalogPageTreeRow childPage = new CatalogDao.CatalogPageTreeRow(11L, "Child A", 1L, 2L, 0L, 1L);
+        CatalogDao.CatalogPageTreeRow hiddenRootPage = new CatalogDao.CatalogPageTreeRow(20L, "Hidden", 1L, 2L, 0L, 0L);
         Map<Long, Long> catalogChildCounts = new HashMap<>();
         catalogChildCounts.put(10L, 2L);
-        Map<Long, String> catalogChildren = new HashMap<>();
-        catalogChildren.put(10L, "11\tChild A\t1\t2\t0\t1\r12\tChild B\t1\t3\t0\t0");
-        String expectedCatalogTree = Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Boot.buildCatalogPageTreeEntry(new String[]{"10", "Root", "5", "6", "0", "1"}, 2)
-            + Boot.buildCatalogPageTreeEntry(new String[]{"11", "Child A", "1", "2", "0", "1"}, 0);
-        assertEquals(expectedCatalogTree, Boot.buildCatalogPageTreePayload(
-            "10\tRoot\t5\t6\t0\t1\r20\tHidden\t1\t2\t0\t0", catalogChildCounts, catalogChildren, 1, 0));
+        String expectedCatalogTree = encodedVl64(1, null, "")
+            + "0"
+            + encodedVl64(10, null, "")
+            + encodedVl64(5, null, "")
+            + encodedVl64(6, null, "")
+            + encodedVl64(1, null, "")
+            + "Root\2"
+            + encodedVl64(2, null, "")
+            + "0"
+            + encodedVl64(11, null, "")
+            + encodedVl64(1, null, "")
+            + encodedVl64(2, null, "")
+            + encodedVl64(1, null, "")
+            + "Child A\2"
+            + encodedVl64(0, null, "");
         Map<Long, List<CatalogDao.CatalogPageTreeRow>> typedCatalogChildren = new HashMap<>();
         typedCatalogChildren.put(10L, List.of(
-            new CatalogDao.CatalogPageTreeRow(11L, "Child A", 1L, 2L, 0L, 1L),
+            childPage,
             new CatalogDao.CatalogPageTreeRow(12L, "Child B", 1L, 3L, 0L, 0L)));
-        assertEquals(expectedCatalogTree, Boot.buildCatalogPageTreePayload(
-            List.of(
-                new CatalogDao.CatalogPageTreeRow(10L, "Root", 5L, 6L, 0L, 1L),
-                new CatalogDao.CatalogPageTreeRow(20L, "Hidden", 1L, 2L, 0L, 0L)),
+        assertEquals(expectedCatalogTree, CatalogPageBootCache.buildCatalogPageTreePayload(
+            List.of(rootPage, hiddenRootPage),
             catalogChildCounts, typedCatalogChildren, 1, 0));
-        assertEquals("fuse_developer\2payload", Boot.appendPermissionPayload(1, 0, "fuse_developer", "payload"));
-        Functions.global_0082928C = "[com.system.format.date=d.m.Y][com.system.format.time=h:i:s]"
-            + "[com.client.catalog.gifts.wrap.count.accessories=2][com.client.catalog.gifts.wrap.count.colors=3]"
-            + "[com.client.navigator.categories.default.private.id=1][com.client.navigator.categories.default.public.id=2]"
-            + "[com.server.socket.game.advertisement.visitrooms.path=/ad/]"
-            + "[com.client.messenger.maxfriends.hclevel0=50]"
-            + "[com.client.messenger.maxfriends.hclevel1=75]"
-            + "[com.client.messenger.maxfriends.hclevel2=100]";
+        });
+        run(() -> {
+        AppConfigState.instance().setSettingsCache(settings(
+            "com.system.format.date", "d.m.Y",
+            "com.system.format.time", "h:i:s",
+            "com.client.catalog.gifts.wrap.count.accessories", "2",
+            "com.client.catalog.gifts.wrap.count.colors", "3",
+            "com.client.navigator.categories.default.private.id", "1",
+            "com.client.navigator.categories.default.public.id", "2",
+            "com.server.socket.game.advertisement.visitrooms.path", "/ad/",
+            "com.client.messenger.maxfriends.hclevel0", "50",
+            "com.client.messenger.maxfriends.hclevel1", "75",
+            "com.client.messenger.maxfriends.hclevel2", "100"));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -1073,197 +1305,248 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
             }
         });
-        Boot.Proc_1_0_6BA9D0();
-        assertEquals(1L, Licence.global_00829168);
-        assertEquals(true, Licence.global_00829140 instanceof RecyclerSettings);
-        assertEquals("80", ((String[]) Licence.global_0082915C)[0]);
-        assertEquals(List.of(10L, 11L), Licence.recyclerSettings().rewardGroups().get(0).productIds());
-        assertEquals(true, Licence.global_008292BC instanceof List);
-        assertEquals(true, Licence.global_008292C0 instanceof List);
-        assertEquals(true, Licence.global_00829258 instanceof List);
-        Licence.setPackageRows(List.of(new PackageDao.PackageRow(10L, "i", 20L, "")));
-        assertEquals(true, Licence.global_00829078 instanceof List);
-        assertEquals("10\ti\t20\t", Licence.catalogProductSettings().packageRows());
-        Licence.setPetPackageRows(List.of(new PackageDao.PetPackageRow(7L, 8L, 9L, "ffeeaa")));
-        assertEquals("7\t8\t9\tffeeaa", Licence.catalogProductSettings().petPackageRows());
-        Licence.setClubProductRows(List.of(new ClubDao.ContainedClubProductRow(33L, 2L, 1L)));
-        assertEquals(true, Licence.global_00829084 instanceof List);
-        assertEquals(true, Licence.catalogProductSettings().containsClubProduct(33L));
-        assertEquals("\r33\t2\t1\r", Licence.catalogProductSettings().clubProductRows());
+        RecyclerBootCache.loadRecyclerRewardsCache();
+        assertEquals(1, RecyclerState.instance().settings().rewardGroups().size());
+        assertEquals(80L, RecyclerState.instance().settings().rewardGroups().get(0).chance());
+        assertEquals(List.of(10L, 11L), RecyclerState.instance().settings().rewardGroups().get(0).productIds());
+        assertEquals(true, CatalogState.instance().registry().product(10L).isPresent());
+        assertEquals(true, CatalogState.instance().registry().catalogProduct(1L).isPresent());
+        assertEquals(true, CatalogState.instance().registry().productDeal(6L).isPresent());
+        seedCatalogPackageRows(List.of(new PackageDao.PackageRow(10L, "i", 20L, "")));
+        assertEquals(List.of(new PackageDao.PackageRow(10L, "i", 20L, "")),
+            CatalogState.instance().productSettings().packages());
+        seedCatalogPetPackageRows(List.of(new PackageDao.PetPackageRow(7L, 8L, 9L, "ffeeaa")));
+        assertEquals(List.of(new PackageDao.PetPackageRow(7L, 8L, 9L, "ffeeaa")),
+            CatalogState.instance().productSettings().petPackages());
+        seedCatalogClubProductRows(List.of(new ClubDao.ContainedClubProductRow(33L, 2L, 1L)));
+        assertEquals(true, CatalogState.instance().productSettings().containsClubProduct(33L));
+        assertEquals(List.of(new CatalogProductSettings.ClubProductSetting(33L, 2L, 1L, 3)),
+            CatalogState.instance().productSettings().clubProducts());
         CatalogProductSettings typedCatalogProducts = CatalogProductSettings.fromRows(
-            "1\t2", 10L, 11L,
+            List.of(1L, 2L), 10L, 11L,
             List.of(new PackageDao.PackageRow(10L, "i", 20L, "")),
             List.of(new PackageDao.PetPackageRow(7L, 8L, 9L, "ffeeaa")),
             List.of(new ClubDao.ContainedClubProductRow(33L, 2L, 1L)));
-        assertEquals("10\ti\t20\t", typedCatalogProducts.packageRows());
-        assertEquals("7\t8\t9\tffeeaa", typedCatalogProducts.petPackageRows());
-        assertEquals("\r33\t2\t1\r", typedCatalogProducts.clubProductRows());
+        assertEquals(List.of(new PackageDao.PackageRow(10L, "i", 20L, "")), typedCatalogProducts.packages());
+        assertEquals(List.of(new PackageDao.PetPackageRow(7L, 8L, 9L, "ffeeaa")), typedCatalogProducts.petPackages());
+        assertEquals(List.of(new CatalogProductSettings.ClubProductSetting(33L, 2L, 1L, 3)),
+            typedCatalogProducts.clubProducts());
         assertCatalogProductCounterRows(typedCatalogProducts);
-        assertEquals("\r\r", CatalogProductSettings.fromRows("", 0L, 0L, List.of(), List.of(), List.of()).clubProductRows());
-        CatalogProductSettings legacyCatalogProducts = CatalogProductSettings.fromLegacy(
-            "1\t2", 10L, 11L, "10\ti\t20\t", "7\t8\t9\tffeeaa", "33");
-        assertEquals("10\ti\t20\t", legacyCatalogProducts.packageRows());
-        assertEquals("7\t8\t9\tffeeaa", legacyCatalogProducts.petPackageRows());
-        assertEquals(true, legacyCatalogProducts.containsClubProduct(33L));
-        assertEquals("33", legacyCatalogProducts.clubProductRows());
-        assertEquals("AD" + Crypto.Proc_3_0_6D2AF0(2, null, ""), CatalogPayloads.purchaseError(2));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, Crypto.Proc_3_0_6D2AF0(81, null, "In")) + '\2',
+        CatalogProductSettings typedSettingProducts = CatalogProductSettings.fromRows(
+            List.of(1L, 0L, 2L), 12L, 13L,
+            List.of(new PackageDao.PackageRow(12L, "s", 21L, "extra")),
+            List.of(new PackageDao.PetPackageRow(8L, 9L, 10L, "aabbcc")),
+            List.of(new ClubDao.ContainedClubProductRow(34L, 3L, 2L)));
+        assertEquals(List.of(1L, 2L), typedSettingProducts.counterProducts());
+        assertEquals(List.of(new PackageDao.PackageRow(12L, "s", 21L, "extra")),
+            typedSettingProducts.packages());
+        assertEquals(List.of(new PackageDao.PetPackageRow(8L, 9L, 10L, "aabbcc")),
+            typedSettingProducts.petPackages());
+        assertEquals(List.of(new CatalogProductSettings.ClubProductSetting(34L, 3L, 2L, 3)),
+            typedSettingProducts.clubProducts());
+        assertEquals(List.of(), CatalogProductSettings.fromRows(
+            List.of(), 0L, 0L, List.of(), List.of(), List.of()).clubProducts());
+        CatalogProductSettings previousCatalogProductSettings = CatalogState.instance().productSettings();
+        CatalogState.instance().setProductSettings(CatalogProductSettings.fromSettings(
+            List.of(1L, 2L),
+            10L,
+            11L,
+            List.of(new PackageDao.PackageRow(10L, "i", 20L, "")),
+            List.of(new PackageDao.PetPackageRow(7L, 8L, 9L, "ffeeaa")),
+            List.of(new CatalogProductSettings.ClubProductSetting(33L, 0L, 0L, 1))));
+        CatalogProductSettings mirroredCatalogProducts = CatalogState.instance().productSettings();
+        assertEquals(List.of(new PackageDao.PackageRow(10L, "i", 20L, "")), mirroredCatalogProducts.packages());
+        assertEquals(List.of(new PackageDao.PetPackageRow(7L, 8L, 9L, "ffeeaa")), mirroredCatalogProducts.petPackages());
+        assertEquals(true, mirroredCatalogProducts.containsClubProduct(33L));
+        assertEquals(List.of(new CatalogProductSettings.ClubProductSetting(33L, 0L, 0L, 1)),
+            mirroredCatalogProducts.clubProducts());
+        CatalogState.instance().setProductSettings(previousCatalogProductSettings);
+        assertEquals("AD" + encodedVl64(2, null, ""), CatalogPayloads.purchaseError(2));
+        assertEquals(encodedVl64(1, null, encodedVl64(81, null, "In")) + '\2',
             CatalogPayloads.giftAvailability(81, 1));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "") + "WRAP", CatalogPayloads.giftWrapOptions(7, "WRAP"));
-        assertEquals("0" + Crypto.Proc_3_0_6D2AF0(1, null, "Il"), CatalogPayloads.giftWrapPriceFallback(1));
-        assertEquals("A\u007f" + Crypto.Proc_3_0_6D2AF0(2, null, "") + "PAGE", CatalogPayloads.page(2, "PAGE"));
-        String expectedCatalogPurchase = Crypto.Proc_3_0_6D2AF0(81, null, "AC");
-        expectedCatalogPurchase = Crypto.Proc_3_0_6D2AF0(3, null, expectedCatalogPurchase);
-        expectedCatalogPurchase = Crypto.Proc_3_0_6D2AF0(2, null, expectedCatalogPurchase);
-        expectedCatalogPurchase = Crypto.Proc_3_0_6D2AF0(0, null, expectedCatalogPurchase);
-        expectedCatalogPurchase = Crypto.Proc_3_0_6D2AF0(97, null, expectedCatalogPurchase) + '\2' + "i" + '\2' + "IHH";
+        GiftSettings giftWrapSettings = GiftSettings.fromRows("", List.of(), List.of(), "WRAP");
+        assertEquals(encodedVl64(7, null, "") + "WRAP", CatalogPayloads.giftWrapOptions(7, giftWrapSettings));
+        assertEquals("0" + encodedVl64(1, null, "Il"), CatalogPayloads.giftWrapPriceFallback(1));
+        CatalogPages pagePayloads = CatalogPages.fromPayloadMaps(Map.of(2L, "PAGE"), Map.of());
+        assertEquals("A\u007f" + encodedVl64(2, null, "") + "PAGE", CatalogPayloads.page(pagePayloads, 2));
+        CatalogWire.ProductPurchaseRequest purchaseRequest =
+            CatalogWire.productPurchaseRequest("Ad" + wireLong(81) + wireString("catalog sign"));
+        assertEquals(81L, purchaseRequest.catalogProductId());
+        assertEquals("catalog sign", purchaseRequest.signText());
+        assertEquals("trade_sprite", CatalogWire.clubGiftClaimRequest("G[" + wireString("trade_sprite")).requestedSprite());
+        assertEquals("ABCD0000", VoucherWire.redeemRequest("BAABCD    ").voucherCode());
+        assertEquals("ABCD0000", VoucherWire.redeemRequest("BA" + wireString("ABCD    ")).voucherCode());
+        CatalogWire.GiftPurchaseRequest giftPurchaseRequest = CatalogWire.giftPurchaseRequest("GX" + wireLong(81)
+            + wireLong(506) + wireString("Friend") + wireString("Happy birthday") + wireLong(10) + wireLong(2)
+            + wireLong(3));
+        assertEquals(81L, giftPurchaseRequest.catalogProductId());
+        assertEquals(506L, giftPurchaseRequest.expectedProductId());
+        assertEquals("Friend", giftPurchaseRequest.recipientName());
+        assertEquals("Happy birthday", giftPurchaseRequest.giftMessage());
+        assertEquals(10L, giftPurchaseRequest.wrapProductId());
+        assertEquals(2L, giftPurchaseRequest.ribbonId());
+        assertEquals(3L, giftPurchaseRequest.colorId());
+        assertEquals(81L, CatalogWire.giftAvailabilityRequest("oV" + wireLong(81)).itemId());
+        assertEquals(2L, CatalogWire.pageRequest("xx" + wireLong(2)).pageId());
+        String expectedCatalogPurchase = encodedVl64(81, null, "AC");
+        expectedCatalogPurchase = encodedVl64(3, null, expectedCatalogPurchase);
+        expectedCatalogPurchase = encodedVl64(2, null, expectedCatalogPurchase);
+        expectedCatalogPurchase = encodedVl64(0, null, expectedCatalogPurchase);
+        expectedCatalogPurchase = encodedVl64(97, null, expectedCatalogPurchase) + '\2' + "i" + '\2' + "IHH";
         assertEquals(expectedCatalogPurchase, CatalogPayloads.purchase(81, 3, 2, 0, 97, "i"));
-        String expectedClubGiftClaim = Crypto.Proc_3_0_6D2AF0(506, null, "AC") + "DATA" + '\2' + "HHHII" + '\2';
-        expectedClubGiftClaim = Crypto.Proc_3_0_6D2AF0(97, null, expectedClubGiftClaim) + '\2' + "IH";
+        String expectedClubGiftClaim = encodedVl64(506, null, "AC") + "DATA" + '\2' + "HHHII" + '\2';
+        expectedClubGiftClaim = encodedVl64(97, null, expectedClubGiftClaim) + '\2' + "IH";
         assertEquals(expectedClubGiftClaim, CatalogPayloads.clubGiftClaim(506, "DATA", "I", 97));
-        String expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(81, null, "AC") + "chair" + '\2';
-        expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(10, null, expectedGiftPurchase);
-        expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(2, null, expectedGiftPurchase);
-        expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(0, null, expectedGiftPurchase);
-        expectedGiftPurchase = Crypto.Proc_3_0_6D2AF0(97, null, expectedGiftPurchase) + '\2' + "i" + '\2' + "IH";
-        assertEquals(expectedGiftPurchase, CatalogPayloads.giftPurchase(81, "chair", 10, 2, 0, 97));
-        assertEquals("GM" + Crypto.Proc_3_0_6D2AF0(97, null, "") + Crypto.Proc_3_0_6D2AF0(12, null, ""),
+        CatalogRegistry.CatalogProduct giftCatalogProduct = new CatalogRegistry.CatalogProduct(
+            81L, "chair", 506L, 2L, "s", 1L, "", 10L, 2L, 0L, 1L, 0L, 0L);
+        String expectedGiftPurchase = encodedVl64(81, null, "AC") + "81" + '\2';
+        expectedGiftPurchase = encodedVl64(10, null, expectedGiftPurchase);
+        expectedGiftPurchase = encodedVl64(2, null, expectedGiftPurchase);
+        expectedGiftPurchase = encodedVl64(0, null, expectedGiftPurchase);
+        expectedGiftPurchase = encodedVl64(97, null, expectedGiftPurchase) + '\2' + "i" + '\2' + "IH";
+        assertEquals(expectedGiftPurchase, CatalogPayloads.giftPurchase(giftCatalogProduct, 10, 2, 0, 97));
+        assertEquals("GM" + encodedVl64(97, null, "") + encodedVl64(12, null, ""),
             CatalogPayloads.dimensionMap(97, 12));
         assertEquals("CUABCD0000\2", VoucherPayloads.invalid("ABCD0000"));
-        assertEquals("CTRewardA\2RewardB\2", VoucherPayloads.redeemed("RewardA\2RewardB\2"));
-        Licence.setClubGiftState(new GiftSettings.ClubGiftState(
+        ProductCache voucherProductCache = ProductCache.fromProductRows(
+            List.of(productCacheRow(55, "13", "RewardA", "14", "RewardB")));
+        assertEquals("CTRewardA\2RewardB\2", VoucherPayloads.redeemed(voucherProductCache, 55L));
+        CatalogState.instance().setGiftSettings(GiftSettings.fromRows(
             "GIFTS",
-            "[81\0" + "506\1" + "20]",
-            List.of(new GiftSettings.ClubGift(81L, 506L, 20L))));
-        assertEquals(true, Licence.global_00829178 instanceof GiftSettings.ClubGiftState);
-        assertEquals("GIFTS", Licence.giftSettings().clubGiftPayload());
-        assertEquals(506L, Licence.giftSettings().clubGiftByCatalogProductId(81L).productId());
-        GiftSettings legacyGiftSettings = GiftSettings.fromLegacy(
-            "GIFTS", "[82\0" + "507\1" + "30]", "\r501\r502\r", "WRAPS");
-        assertGiftSettingsTypedAccessors(legacyGiftSettings);
-        assertEquals("IoM" + Crypto.Proc_3_0_6D2AF0(4, null, "")
+            List.of(new GiftSettings.ClubGift(81L, 506L, 20L)),
+            CatalogState.instance().giftSettings().giftWrapProductIds(),
+            CatalogState.instance().giftSettings().giftWrapPayload()));
+        assertEquals("GIFTS", CatalogState.instance().giftSettings().clubGiftPayload());
+        assertEquals(506L, CatalogState.instance().giftSettings().clubGiftByCatalogProductId(81L).productId());
+        GiftSettings previousGiftSettingsForTypedFixture = CatalogState.instance().giftSettings();
+        CatalogState.instance().setGiftSettings(GiftSettings.fromRows("GIFTS",
+            List.of(new GiftSettings.ClubGift(82L, 507L, 30L)),
+            List.of(501L, 502L),
+            "WRAPS"));
+        GiftSettings typedGiftSettingsFixture = CatalogState.instance().giftSettings();
+        assertGiftSettingsTypedAccessors(typedGiftSettingsFixture);
+        CatalogState.instance().setGiftSettings(previousGiftSettingsForTypedFixture);
+        assertEquals("IoM" + encodedVl64(4, null, "")
                 + "GIFTS"
-                + Crypto.Proc_3_0_6D2AF0(1, null, "")
-                + Crypto.Proc_3_0_6D2AF0(81, null, "")
-                + Crypto.Proc_3_0_6D2AF0(506, null, "")
-                + Crypto.Proc_3_0_6D2AF0(20, null, "")
-                + Crypto.Proc_3_0_6D2AF0(1, null, "")
+                + encodedVl64(1, null, "")
+                + encodedVl64(81, null, "")
+                + encodedVl64(506, null, "")
+                + encodedVl64(20, null, "")
+                + encodedVl64(1, null, "")
                 + "H",
             ClubPayloads.clubGiftStatus(
-                Licence.giftSettings(),
+                CatalogState.instance().giftSettings(),
                 new ClubDao.ClubGiftStatus(2L, 10L, 70L, 4L, 8L)));
-        assertEquals("Iq" + Crypto.Proc_3_0_6D2AF0(1, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "") + "club_vip\2"
-                + Crypto.Proc_3_0_6D2AF0(3, null, "")
-                + Crypto.Proc_3_0_6D2AF0(93, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(60, null, "")
-                + Crypto.Proc_3_0_6D2AF0(0, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(62, null, "")
-                + Crypto.Proc_3_0_6D2AF0(3, null, "")
-                + Crypto.Proc_3_0_6D2AF0(4, null, ""),
+        assertEquals("Iq" + encodedVl64(1, null, "")
+                + encodedVl64(2, null, "") + "club_vip\2"
+                + encodedVl64(3, null, "")
+                + encodedVl64(93, null, "")
+                + encodedVl64(2, null, "")
+                + encodedVl64(60, null, "")
+                + encodedVl64(0, null, "")
+                + encodedVl64(2, null, "")
+                + encodedVl64(62, null, "")
+                + encodedVl64(3, null, "")
+                + encodedVl64(4, null, ""),
             ClubPayloads.subscriptionOffers(
                 List.of(new ClubDao.ClubProductRow(2L, "club_vip", 3L, 2L, 60L)),
                 new ClubDao.UserClubStatus(2L, 10L, 70L, 1L, 3L, 4L, 8L)));
-        Boot.Proc_1_6_6C5830();
-        assertEquals(true, Licence.global_008291EC instanceof List);
+        PetBootCache.loadPetRaceCache();
         assertEquals(new PetRaceCacheRow("pet_dog", 1L, 2L, 3L, 4L, "Dog"),
-            ((List<?>) Licence.global_008291EC).get(0));
-        assertEquals(true, Licence.petSettings().raceRows().contains("pet_dog"));
-        Boot.Proc_1_7_6C5E10();
-        assertEquals(true, Licence.global_008292D0 instanceof List);
-        List<?> petLevelMirror = (List<?>) Licence.global_008292D0;
+            PetState.instance().settings().races().get(0));
+        PetBootCache.loadPetLevelAndCommandCache();
         assertEquals(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 4),
-            petLevelMirror.get(0));
-        assertEquals("20\t30\t40", ((String[]) Licence.petSettings().levelRows())[2]);
-        assertEquals(true, Licence.global_008292CC instanceof List);
-        List<?> petCommandMirror = (List<?>) Licence.global_008292CC;
-        PetSettings.PetCommandRow cachedCommand = (PetSettings.PetCommandRow) petCommandMirror.get(0);
+            PetState.instance().settings().levels().get(0));
+        PetSettings.PetCommandRow cachedCommand = PetState.instance().settings().commands().get(0);
         assertEquals(2L, cachedCommand.commandId());
         assertEquals(3L, cachedCommand.requiredLevel());
         assertEquals("jump", cachedCommand.command());
         assertEquals("move", cachedCommand.action());
-        assertEquals(cachedCommand, ((PetSettings.PetCommandRow[]) Licence.petSettings().commandRows())[2]);
-        PetSettings typedPetSettings = PetSettings.fromRows(
-            "races",
+        assertEquals(cachedCommand, PetState.instance().settings().commands().get(0));
+        PetSettings typedPetSettings = PetSettings.fromRaceRows(
+            List.of(),
             List.of(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 3)),
             List.of(cachedCommand),
             1L);
-        assertEquals("races", typedPetSettings.raceRows());
-        assertEquals("20\t30\t40", ((String[]) typedPetSettings.levelRows())[2]);
-        assertEquals(cachedCommand, ((PetSettings.PetCommandRow[]) typedPetSettings.commandRows())[2]);
+        assertEquals(List.of(), typedPetSettings.races());
+        assertEquals(List.of(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 3)), typedPetSettings.levels());
+        assertEquals(List.of(cachedCommand), typedPetSettings.commands());
         assertPetSettingsTypedAccessors(typedPetSettings, cachedCommand);
+        PetSettings cachePetSettings = PetSettings.fromRaceRows(
+            List.of(new PetRaceCacheRow("pet_cache", 3L, 4L, 5L, 6L, "Cache")),
+            List.of(new PetSettings.PetLevelRow(3L, 30L, 40L, 50L, 4)),
+            List.of(cachedCommand),
+            1L);
+        assertEquals("pet_cache", cachePetSettings.races().get(0).productPet());
+        assertEquals(new PetSettings.PetLevelRow(3L, 30L, 40L, 50L, 4),
+            cachePetSettings.levels().get(0));
+        assertEquals(List.of(cachedCommand), cachePetSettings.commands());
         PetSettings typedPetRaceSettings = PetSettings.fromRaceRows(
             List.of(new PetRaceCacheRow("pet_typed", 9L, 8L, 7L, 6L, "Typed")),
             List.of(), List.of(), 0L);
-        assertEquals("[pet_typed\t9\t8\t7\t6\tTyped]", typedPetRaceSettings.raceRows());
         assertEquals("pet_typed", typedPetRaceSettings.races().get(0).productPet());
-        Licence.global_008292D0 = typedPetSettings;
-        assertPetSettingsTypedAccessors(Licence.petSettings(), cachedCommand);
-        Boot.Proc_1_8_6C6850();
-        assertEquals(true, DataManager.global_008291AC instanceof RoomEventLocales);
-        assertEquals("party", DataManager.roomEventLocales().field("5", 0));
-        Boot.Proc_1_9_6C6DF0();
-        assertEquals(true, Licence.global_00829098 instanceof RoomPortalSettings);
-        assertEquals(true, Licence.global_0082909C instanceof RoomPortalSettings);
-        assertRoomPortalSettingsBootRows(Licence.roomPortalSettings());
+        PetState.instance().setSettings(typedPetSettings);
+        assertPetSettingsTypedAccessors(PetState.instance().settings(), cachedCommand);
+        RoomEventBootCache.loadRoomEventLocalesCache();
+        assertEquals("party", GameDataCaches.roomEventLocales().categoryName(5));
+        AppSettingsBootCache.loadServerSettingsCache();
+        assertRoomPortalSettingsBootRows(RoomState.instance().portalSettings());
         RoomPortalSettings typedRoomPortalSettings = RoomPortalSettings.fromRows(
             List.of(new RoomDao.WarpSpaceRow(12L, 1L, 2L, 34L, 5L, 6L, 1L)),
             List.of(new RoomDao.SpecialGateRow(12L, 1L)));
         assertRoomPortalSettingsTypedRows(typedRoomPortalSettings);
-        assertEquals(true, Functions.global_0082928C.contains("com.mysql.format.time=%H:%i:%s"));
+        RoomPortalSettings previousRoomPortalSettings = RoomState.instance().portalSettings();
+        RoomState.instance().setPortalSettings(typedRoomPortalSettings);
+        RoomPortalSettings mirroredRoomPortalSettings = RoomState.instance().portalSettings();
+        assertRoomPortalSettingsTypedRows(mirroredRoomPortalSettings);
+        RoomState.instance().setPortalSettings(previousRoomPortalSettings);
+        assertEquals("%H:%i:%s", AppConfigState.instance().settingsCache().value("com.mysql.format.time"));
         assertRoomCategoryBootCaches();
-        Boot.Proc_1_13_6C9820();
-        assertEquals(true, Licence.global_00829260.length() > 0);
-        assertEquals(true, Licence.giftSettings().containsGiftWrapProduct(10L));
-        Boot.Proc_1_16_6CCA60();
-        assertEquals(true, Functions.global_008292A8 instanceof PermissionMatrix);
-        assertEquals(true, Functions.permissionMatrix().allows(1, "", "fuse_mod", 0));
-        Boot.Proc_1_19_6CF190();
-        assertEquals(true, Licence.global_00829204.contains("important"));
-        Boot.Proc_1_20_6CF830();
-        assertEquals(true, Licence.global_00829208.contains("cat"));
-        assertEquals(true, Licence.helpCenterCache().categoryPayload().contains("cat"));
-        Boot.Proc_1_21_6D08C0();
-        assertEquals(true, Licence.helpCenterCache().descriptionPayload(5L).contains("line1\rline2"));
-        assertHelpCenterMapMirrors();
-        Boot.Proc_1_22_6D0F00();
-        assertEquals(true, Licence.global_008291D4 instanceof Map);
-        assertEquals("/ad/4\2/cafe\2", ((Map<?, ?>) Licence.global_008291D4).get(4L));
-        assertEquals("/ad/4\2/cafe\2", Licence.visitRoomAds().payload(4L));
+        CatalogGiftBootCache.loadGiftWrapCache();
+        assertEquals(true, CatalogState.instance().giftSettings().giftWrapPayload().length() > 0);
+        assertEquals(true, CatalogState.instance().giftSettings().containsGiftWrapProduct(10L));
+        AppSettingsBootCache.loadPermissionMatrixCache();
+        assertEquals(true, AppConfigState.instance().permissionMatrix().allows(1, "", "fuse_mod", 0));
+        HelpCenterBootCache.loadImportantFaqCache();
+        assertEquals(true, HelpCenterState.instance().cache().importantFaqPayload().contains("important"));
+        HelpCenterBootCache.loadFaqCategoryCache();
+        assertEquals(true, HelpCenterState.instance().cache().categoryPayload().contains("cat"));
+        assertEquals(true, HelpCenterState.instance().cache().categoryPayload().contains("cat"));
+        HelpCenterBootCache.loadFaqDescriptionCache();
+        assertEquals(true, HelpCenterState.instance().cache().descriptionPayload(5L).contains("line1\rline2"));
+        assertHelpCenterPayloadMaps();
+        AdvertisingBootCache.loadVisitRoomAdsCache();
+        assertEquals("/ad/4\2/cafe\2", AdvertisingState.instance().visitRoomAds().payload(4L));
         VisitRoomAds typedVisitRoomAds = VisitRoomAds.fromPayloads(Map.of(8L, "/ad/8\2/lounge\2"), 1L);
         assertEquals("/ad/8\2/lounge\2", typedVisitRoomAds.payload(8L));
         assertEquals(Map.of(8L, "/ad/8\2/lounge\2"), typedVisitRoomAds.payloadsById());
-        Licence.global_008291D4 = typedVisitRoomAds;
-        assertEquals("/ad/8\2/lounge\2", Licence.visitRoomAds().payload(8L));
-        Boot.Proc_1_23_6D1480("booted", "DEBUG");
-        Boot.Proc_1_5_6C4F80();
-        assertEquals("7\2", Licence.global_008291E4);
-        assertEquals("ACH_ONE",
-            ((AchievementSettings.Achievement) ((List<?>) Licence.global_008291E8).get(0)).badgePrefix());
-        assertEquals("7\2", Licence.achievementSettings().questIdPayload());
-        assertEquals(true, Licence.achievementSettings().rowsAsText().contains("ACH_ONE"));
+        AdvertisingState.instance().setVisitRoomAds(typedVisitRoomAds);
+        assertEquals("/ad/8\2/lounge\2", AdvertisingState.instance().visitRoomAds().payload(8L));
+        BootLog.logBootLine("booted", "DEBUG");
+        AchievementBootCache.loadBonusSystemCache();
+        assertEquals("7\2", AchievementState.instance().settings().questIdPayload());
+        assertEquals("ACH_ONE", AchievementState.instance().settings().achievementByIndex(0L).badgePrefix());
         AchievementSettings typedAchievementSettings = AchievementSettings.fromAchievements("42\2",
             List.of(new AchievementSettings.Achievement(42L, "ACH_TYPED", 1L, 2L, 3L, 4L, 5L)));
-        Licence.global_008291E8 = typedAchievementSettings;
-        assertEquals("42\2", Licence.achievementSettings().questIdPayload());
-        assertEquals("ACH_TYPED", Licence.achievementSettings().achievementByIndex(0L).badgePrefix());
-        assertEquals(new ChatSettings.Gesture(":-)", 5L), ((List<?>) Licence.global_00829294).get(0));
-        assertEquals(new ChatSettings.FilterWord("badword"), ((List<?>) Licence.global_00829290).get(0));
-        assertChatSettingsTypedAccessors(Licence.chatSettings());
-        assertEquals(true, Licence.global_0082927C instanceof MessengerSettings);
-        assertEquals(75L, ((MessengerSettings) Licence.global_0082927C).maxFriends(2));
-        assertEquals(75L, Licence.messengerSettings().maxFriends(2));
+        AchievementState.instance().setSettings(typedAchievementSettings);
+        assertEquals("42\2", AchievementState.instance().settings().questIdPayload());
+        assertEquals("ACH_TYPED", AchievementState.instance().settings().achievementByIndex(0L).badgePrefix());
+        assertEquals(new ChatSettings.Gesture(":-)", 5L), ChatState.instance().settings().gestures().get(0));
+        assertEquals(new ChatSettings.FilterWord("badword"), ChatState.instance().settings().filterWords().get(0));
+        assertChatSettingsTypedAccessors(ChatState.instance().settings());
+        assertEquals(75L, MessengerState.instance().settings().maxFriends(2));
         MySQL.configureDatabaseConnection(null);
 
-        Licence.global_00829350 = "";
-        assertEquals(new Main.GameServerPacket("DATA", 7L, "A\2B\2C"), Main.gameServerPacket("DATA\2" + "7\2A\2B\2C"));
-        Main.appendGameServerPacketPayload(8, "direct");
-        assertEquals("direct", Main.popGameServerPacketData(8));
-        Main.appendGameServerPacketPayload(7, "A\2B\2C");
-        assertEquals("A\2B\2C", Main.popGameServerPacketData(7));
-        assertEquals("", Licence.global_00829350);
+        });
+        run(() -> {
+        SessionState.instance().setGameServerSession(GameServerSessionState.empty());
+        assertEquals(new GameServerBridge.GameServerPacket("DATA", 7L, "A\2B\2C"),
+            GameServerBridge.gameServerPacket("DATA\2" + "7\2A\2B\2C"));
+        GameServerBridge.appendGameServerPacketPayload(8, "direct");
+        assertEquals("direct", GameServerBridge.popGameServerPacketData(8));
+        GameServerBridge.appendGameServerPacketPayload(7, "A\2B\2C");
+        assertEquals("A\2B\2C", GameServerBridge.popGameServerPacketData(7));
+        assertEquals(List.of(), SessionState.instance().gameServerSession().queuedPackets());
         GameServerSessionState typedGameSession = GameServerSessionState.fromState(
             List.of(new GameServerSessionState.QueuedPacket(12L, "typed-packet")),
             Set.of(12L)
@@ -1273,78 +1556,86 @@ public final class PortedModuleSmokeTest {
         assertEquals(Set.of(12L), typedGameSession.readySocketIndexes());
         assertEquals("[12:typed-packet]", typedGameSession.queuedPacketData());
         assertTypedGameServerSessionState(typedGameSession);
-        Guardian.global_008291A0 = "";
-        Guardian.global_0082919C = 0;
-        Main.processGameServerData("DATA\2" + "7\2queued\2packet\1LISTEN\2" + "9");
-        assertEquals("queued\2packet", Main.popGameServerPacketData(7));
-        assertEquals(true, SocketMarkerSet.fromLegacy(Guardian.global_008291A0).contains(9L));
-        assertEquals("bcd", Main.shiftIdentityText("abc", 1));
-        assertEquals("abc", Main.easyGetIdentity(Main.shiftIdentityText("abc", 25)));
-        assertEquals("cde", Main.createSuperEasyIdentity("abc"));
-        assertEquals("abc", Main.superEasyGetIdentity("cde"));
-        String encodedIdentity = Main.Proc_0_22_68C1A0("AZ");
-        assertEquals("AZ", Main.getIdentity(encodedIdentity, 0));
-        assertEquals("hij", Main.Proc_0_23_68C430("abc"));
-        Main.Proc_0_24_68EEF0();
-        assertEquals("AB", Main.newPremiumCheck(2, "d" + Character.toString((char) 163) + Character.toString((char) 164)));
-        assertEquals("AZ", Main.getIdentity("e" + Character.toString((char) 164) + Character.toString((char) 190), 3));
-        assertEquals("KEY", Main.productKeyFromConfig("a=b=c=d=e=f=g=KEY\r\nnext"));
-        assertEquals("PRODUCT-KEY", Main.productKeyFromConfig("mySQL_db=alphaseries\r\nproductKey=PRODUCT-KEY\r\n"));
-        assertEquals("LEGACY-KEY", Main.productKeyFromConfig("mySQL_db=snapshot\r\nlicence=LEGACY-KEY\r\n"));
-        Licence.global_00829354 = "[3][7]";
-        assertEquals(true, Main.isGameSessionReady(7));
-        assertEquals(false, Main.isGameSessionReady(8));
+        Guardian.clearSocketMarkers();
+        GameServerBridge.processGameServerData("DATA\2" + "7\2queued\2packet\1LISTEN\2" + "9");
+        assertEquals("queued\2packet", GameServerBridge.popGameServerPacketData(7));
+        assertEquals(true, Guardian.socketMarkers().contains(9L));
+        assertEquals("bcd", IdentityEncoding.shift("abc", 1));
+        assertEquals("abc", IdentityEncoding.easyDecode(IdentityEncoding.shift("abc", 25)));
+        assertEquals("cde", IdentityEncoding.superEasyEncode("abc"));
+        assertEquals("abc", IdentityEncoding.superEasyDecode("cde"));
+        String encodedIdentity = IdentityEncoding.encode("AZ");
+        assertEquals("AZ", IdentityEncoding.decode(encodedIdentity, 0));
+        assertEquals("hij", IdentityEncoding.shift("abc", 7));
+        ServerLifecycle.runRecoveredStartupNoop();
+        assertEquals("AB", IdentityEncoding.premiumDecode(2, "d" + Character.toString((char) 163) + Character.toString((char) 164)));
+        assertEquals("AZ", IdentityEncoding.decode("e" + Character.toString((char) 164) + Character.toString((char) 190), 3));
+        assertEquals("KEY", ServerLifecycle.productKeyFromConfig("a=b=c=d=e=f=g=KEY\r\nnext"));
+        assertEquals("PRODUCT-KEY", ServerLifecycle.productKeyFromConfig("mySQL_db=alphaseries\r\nproductKey=PRODUCT-KEY\r\n"));
+        assertEquals("LEGACY-KEY", ServerLifecycle.productKeyFromConfig("mySQL_db=snapshot\r\nlicence=LEGACY-KEY\r\n"));
+        SessionState.instance().setGameServerSession(GameServerSessionState.fromState(
+            SessionState.instance().gameServerSession().queuedPackets(),
+            Set.of(3L, 7L)));
+        assertEquals(true, GameServerBridge.isGameSessionReady(7));
+        assertEquals(false, GameServerBridge.isGameSessionReady(8));
         Guardian.setSocketConnected(7, true);
         List<String> preSessionPackets = new ArrayList<>();
-        Main.configurePreSessionPacketSink((socketIndex, payload) -> preSessionPackets.add(socketIndex + ":" + payload));
-        Licence.global_00829354 = "";
-        Main.appendGameServerPacketPayload(7, "login-data");
-        assertEquals(true, Main.dataProcessTimer(7));
+        GameServerBridge.configurePreSessionPacketSink((socketIndex, payload) -> preSessionPackets.add(socketIndex + ":" + payload));
+        SessionState.instance().setGameServerSession(GameServerSessionState.fromState(
+            SessionState.instance().gameServerSession().queuedPackets(),
+            Set.of()));
+        GameServerBridge.appendGameServerPacketPayload(7, "login-data");
+        assertEquals(true, GameServerBridge.dataProcessTimer(7));
         assertEquals(Arrays.asList("7:login-data"), preSessionPackets);
         List<String> readyPacketsSent = new ArrayList<>();
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> readyPacketsSent.add(socketIndex + ":" + payload));
-        Licence.global_00829354 = "[7]";
-        Main.processClientPacket(7, "<policy-file-request/>\0");
+        SessionState.instance().setGameServerSession(GameServerSessionState.fromState(
+            SessionState.instance().gameServerSession().queuedPackets(),
+            Set.of(7L)));
+        GameServerBridge.processClientPacket(7, "<policy-file-request/>\0");
         assertEquals(1, readyPacketsSent.size());
         assertEquals(true, readyPacketsSent.get(0).startsWith("7:DATA\6" + "7\6<?xml"));
-        Main.configurePreSessionPacketSink(null);
+        GameServerBridge.configurePreSessionPacketSink(null);
         MusConnectionManager.instance().configureSink(null);
         Guardian.setSocketConnected(7, false);
-        assertEquals("payload", Main.mainRepresentedRecordByBracket("[5]payload[6]other", 5));
-        assertEquals("11\talpha", Main.mainRepresentedRecordByKey("\1" + "11\talpha\2\1" + "12\tbeta\2", 11));
-        Licence.global_00829358 = "[50:2\2bot-id\2name]";
-        assertEquals("2\2bot-id\2name", Licence.representedBots().recordText(50));
-        assertEquals("name", Licence.representedBots().record(50).name());
+        PetState.instance().setRepresentedBots(representedBots(Map.of(50L, "2\2bot-id\2name")));
+        assertEquals(2L, PetState.instance().representedBots().record(50).roomSlot());
+        assertEquals("name", PetState.instance().representedBots().record(50).name());
         String representedBotRecord = "3\2" + "501\2Guide\2hello\2speech\2responses\2"
             + "2\2" + "3\2" + "0.5\2" + "4\2" + "1 2 ff\2"
             + "3\2" + "4\2cache\2submit\2" + "1\2" + "6";
-        RepresentedBotRegistry representedBots = RepresentedBotRegistry.fromLegacy("[1][3]",
-            "[1:" + representedBotRecord + "][3:4\2" + "601\2Helper]");
+        RepresentedBotRegistry previousRepresentedBots = PetState.instance().representedBots();
+        PetState.instance().setRepresentedBots(representedBots(new LinkedHashSet<>(List.of(1L, 3L)), Map.of(
+            1L, representedBotRecord,
+            3L, "4\2" + "601\2Helper")));
+        RepresentedBotRegistry representedBots = PetState.instance().representedBots();
         assertEquals(List.of(1L, 3L), representedBots.allocatedEntityIds());
         assertEquals(2, representedBots.recordsByEntityId().size());
         assertEquals(501L, representedBots.recordsByEntityId().get(1L).botId());
         assertEquals(501L, representedBots.record(1).botId());
-        assertEquals("[1:" + representedBotRecord + "][3:4\2" + "601\2Helper]", representedBots.recordCache());
+        assertEquals(601L, representedBots.record(3).botId());
         representedBots.storePosition(1, 5, 6, "1.0", 7);
         assertEquals(5L, representedBots.record(1).positionX());
-        assertEquals("3\2" + "501\2Guide\2hello\2speech\2responses\2"
-            + "5\2" + "6\2" + "1.0\2" + "7\2" + "1 2 ff\2"
-            + "3\2" + "4\2cache\2submit\2" + "1\2" + "6", representedBots.recordText(1));
+        assertEquals("1.0", representedBots.record(1).positionZ());
+        assertEquals(7L, representedBots.record(1).positionR());
         assertEquals(2L, representedBots.reserveSlot());
-        assertEquals("[1][3][2]", representedBots.allocatedEntityMarkers());
-        Licence.global_00829310 = "";
-        Main.mainRepresentedRoomOccupantAdd(4, 9, 1);
-        assertEquals("\1" + "4\t\1" + "9\2", Licence.representedRooms().cacheText());
-        assertEquals(4L, Licence.representedRooms().roomSlot(4));
-        assertEquals("\1" + "9", Licence.representedRooms().activeUserMarkers(4));
-        Main.mainRepresentedRoomOccupantMove(4, 9, 1, 2, 3, 4, 1);
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "9\t2\t3\t4\t1\2"));
+        assertEquals(List.of(1L, 3L, 2L), representedBots.allocatedEntityIds());
+        PetState.instance().setRepresentedBots(previousRepresentedBots);
+        RoomState.instance().setRepresentedRooms(RepresentedRoomCache.empty());
+        RuntimeTasks.mainRepresentedRoomOccupantAdd(4, 9, 1);
+        assertEquals("\1" + "4\t\1" + "9\2", RoomState.instance().representedRooms().cacheText());
+        assertEquals(4L, RoomState.instance().representedRooms().roomSlot(4));
+        assertEquals(List.of(9L), RoomState.instance().representedRooms().userEntityIds(4));
+        RuntimeTasks.mainRepresentedRoomOccupantMove(4, 9, 1, 2, 3, 4, 1);
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "9\t2\t3\t4\t1\2"));
         assertEquals(1L, RoomRollers.deltaX(2));
         assertEquals(-1L, RoomRollers.deltaX(6));
         assertEquals(-1L, RoomRollers.deltaY(0));
         assertEquals(1L, RoomRollers.deltaY(4));
         assertEquals("12", RoomRollers.targetHeight("12.5", "7"));
         assertEquals("7", RoomRollers.targetHeight("", "7.9"));
+        });
+        run(() -> {
         final List<String> mainSql = new ArrayList<>();
         MySQL.configureDatabaseConnection(new Database() {
             @Override
@@ -1391,78 +1682,78 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
             }
         });
-        assertEquals(44L, Main.mainCurrentRoomIdForSlot(4));
-        Licence.global_0082934C = "[8]user\2" + "4";
-        Licence.global_00829310 = "";
+        assertEquals(44L, RuntimeTasks.mainCurrentRoomIdForSlot(4));
+        SessionState.instance().setRepresentedSockets(RepresentedSocketCache.fromRecords(Map.of(
+            8L, new RepresentedSocketCache.RepresentedSocketRecord("user\2" + "4", 4L, false))));
+        RoomState.instance().setRepresentedRooms(RepresentedRoomCache.empty());
         Guardian.setSocketConnected(8, true);
-        Main.Proc_0_26_6ACF30(8);
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "4\t\1" + "8\2"));
-        Licence.global_00829358 = "[70:4\2bot-id\2name]";
-        Main.Proc_0_27_6AD400(70);
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "70"));
-        Main.Proc_0_28_6AD850(70, 1, 1, 2, 1);
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "70\t2\t1"));
-        Main.Proc_0_29_6B0E10(8, 1, 1, 1, 2);
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "8\t1\t2"));
-        Licence.global_008291FC = "\1" + "101\2";
-        assertEquals(1L, Main.signerTimer());
+        RuntimeTasks.attachRepresentedUser(8);
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "4\t\1" + "8\2"));
+        PetState.instance().setRepresentedBots(representedBots(Map.of(70L, "4\2bot-id\2name")));
+        RuntimeTasks.attachRepresentedBot(70);
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "70"));
+        RuntimeTasks.moveRepresentedBot(70, 1, 1, 2, 1);
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "70\t2\t1"));
+        RuntimeTasks.moveRepresentedUser(8, 1, 1, 1, 2);
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "8\t1\t2"));
+        RoomState.instance().setFurnitureRoomCache(FurnitureRoomCache.State.from("", "\1" + "101\2", RoomState.instance().representedRooms()));
+        assertEquals(1L, RuntimeTasks.signerTimer());
         assertEquals(true, containsSql(mainSql, "UPDATE furnitures SET sign='0' WHERE id='101' LIMIT 1"));
-        Licence.global_008292D4 = "[70]";
-        Licence.global_00829358 = "[70:4\2bot-id\2name\2a\2b\2c\2" + "1\2" + "1\2x\2x\2x\2x\2x\2x\2x\2" + "1]";
-        assertEquals(1L, Main.botsTimer());
-        assertEquals(true, Main.walkingTimer(4) >= 1L);
+        PetState.instance().setRepresentedBots(representedBots(new LinkedHashSet<>(List.of(70L)), Map.of(
+            70L, "4\2bot-id\2name\2a\2b\2c\2" + "1\2" + "1\2x\2x\2x\2x\2x\2x\2x\2" + "1")));
+        assertEquals(1L, RuntimeTasks.botsTimer());
+        assertEquals(true, RuntimeTasks.walkingTimer(4) >= 1L);
         mainSql.clear();
-        Guardian.global_008291A0 = "[8]";
-        Guardian.global_0082919C = 8;
-        assertEquals(1L, Main.pingTimer(0));
+        Guardian.setSocketMarkers(SocketMarkerSet.fromSocketIndexes(List.of(8L)));
+        assertEquals(1L, RuntimeTasks.pingTimer(0));
         assertEquals(true, containsSql(mainSql, "UPDATE settings SET value=UNIX_TIMESTAMP() WHERE variable='com.server.socket.check.time'"));
         assertEquals(true, containsSql(mainSql, "UPDATE settings SET value='1' WHERE variable='com.server.socket.mostactive'"));
         mainSql.clear();
-        assertEquals(1L, Main.rollersTimer(4));
+        assertEquals(1L, RuntimeTasks.rollersTimer(4));
         assertEquals(true, containsSql(mainSql, "UPDATE furnitures SET position_x='2',position_y='1',position_z='2' WHERE id='302' AND id_room='44' LIMIT 1"));
         mainSql.clear();
-        assertEquals(true, Main.formQueryUnload());
+        assertEquals(true, ServerLifecycle.formQueryUnload());
         assertEquals(true, containsSql(mainSql, "UPDATE users SET id_socket=null,lastonline_time=UNIX_TIMESTAMP() WHERE id_socket IS NOT NULL"));
         assertEquals(true, containsSql(mainSql, "UPDATE rooms SET id_slot=null,visitors_now='0' WHERE id_slot IS NOT NULL OR visitors_now!='0'"));
-        assertEquals(false, Main.runServer("[!] Alpha", ""));
+        assertEquals(false, ServerLifecycle.runServer("[!] Alpha", ""));
         Path runServerRoot = Files.createTempDirectory("alphaseries-runserver");
-        String oldApplicationPathForRunServer = Functions.applicationPath;
-        Functions.applicationPath = runServerRoot.toString();
-        assertEquals(true, Main.runServer("Alpha", "rank=2\r7:2=1"));
+        String oldApplicationPathForRunServer = AppPaths.applicationPath();
+        AppPaths.setApplicationPath(runServerRoot.toString());
+        assertEquals(true, ServerLifecycle.runServer("Alpha", "rank=2\r7:2=1"));
         assertEquals(true, Files.exists(runServerRoot.resolve("ERR.log")));
         assertEquals(true, Files.exists(runServerRoot.resolve("SLOW.log")));
-        Functions.applicationPath = oldApplicationPathForRunServer;
-        Main.StartupResult missingLifecycleStartup = Main.startServer(null);
-        assertEquals(false, missingLifecycleStartup.success);
-        assertEquals("lifecycle", missingLifecycleStartup.stage);
-        Main.LifecycleResult failedLicenceLifecycle = new Main.LifecycleResult();
-        failedLicenceLifecycle.productKey = "BAD-KEY";
-        DataManager.lastLicenceFailureMessage = "licence unavailable";
-        DataManager.configureLicenceHttpFetcher((requestUrl, action) -> "");
-        Main.StartupResult failedLicenceStartup = Main.startServer(failedLicenceLifecycle);
-        assertEquals(false, failedLicenceStartup.success);
-        assertEquals("licence", failedLicenceStartup.stage);
-        assertEquals("Das Lizenzsystem ist zurzeit nicht erreichbar. Versuch es sp\u00e4ter wieder!", failedLicenceStartup.message);
-        DataManager.configureLicenceHttpFetcher(null);
+        AppPaths.setApplicationPath(oldApplicationPathForRunServer);
+        ServerLifecycle.StartupResult missingLifecycleStartup = ServerLifecycle.startServer(null);
+        assertEquals(false, missingLifecycleStartup.success());
+        assertEquals("lifecycle", missingLifecycleStartup.stage());
+        ServerLifecycle.LifecycleResult failedLicenceLifecycle =
+            ServerLifecycle.LifecycleResult.initialized("", "", "BAD-KEY");
+        LicenceChecker.lastLicenceFailureMessage = "licence unavailable";
+        LicenceChecker.configureLicenceHttpFetcher((requestUrl, action) -> "");
+        ServerLifecycle.StartupResult failedLicenceStartup = ServerLifecycle.startServer(failedLicenceLifecycle);
+        assertEquals(false, failedLicenceStartup.success());
+        assertEquals("licence", failedLicenceStartup.stage());
+        assertEquals("Das Lizenzsystem ist zurzeit nicht erreichbar. Versuch es sp\u00e4ter wieder!", failedLicenceStartup.message());
+        LicenceChecker.configureLicenceHttpFetcher(null);
         assertEquals("Server Exit Suburned following error: \r\nfatal",
-            Main.serverExitErrorMessage("fatal"));
-        assertEquals("Unbekanntes Problem", Main.UNKNOWN_PROBLEM_MESSAGE);
-        String[] mainDesignCaptions = Main.designCaptions();
+            ServerLifecycle.serverExitErrorMessage("fatal"));
+        assertEquals("Unbekanntes Problem", ServerLifecycle.UNKNOWN_PROBLEM_MESSAGE);
+        String[] mainDesignCaptions = ServerLifecycle.designCaptions();
         assertEquals("Bitte warte...", mainDesignCaptions[0]);
         assertEquals("frame :: ADDONS", mainDesignCaptions[1]);
         assertEquals("Server by Privilege", mainDesignCaptions[2]);
         assertEquals("User Voice", mainDesignCaptions[3]);
         assertEquals("Source is only avaible for the author. Please do not share this Source!", mainDesignCaptions[4]);
-        assertEquals("ACCEPT 16387", Main.gameServerUnknownEventAccept());
-        assertEquals(1, Guardian.Proc_11_2_821390());
-        assertEquals("LISTEN", Main.gameServerUnknownEventListen());
+        assertEquals("ACCEPT 16387", GameServerBridge.gameServerUnknownEventAccept());
+        assertEquals(true, Guardian.isSocketConnected(0));
+        assertEquals("LISTEN", GameServerBridge.gameServerUnknownEventListen());
         Guardian.setGameServerConnected(false);
-        Main.ResizeResult resizeResult = Main.formResize(1000, 1000, 800, 700);
-        assertEquals(11085L, resizeResult.width);
-        assertEquals(10245L, resizeResult.height);
-        assertEquals(800L, resizeResult.logWidth);
-        assertEquals(175L, resizeResult.logHeight);
-        assertEquals("88", Main.mainUserIdFromSocket(8));
+        ServerLifecycle.ResizeResult resizeResult = ServerLifecycle.formResize(1000, 1000, 800, 700);
+        assertEquals(11085L, resizeResult.width());
+        assertEquals(10245L, resizeResult.height());
+        assertEquals(800L, resizeResult.logWidth());
+        assertEquals(175L, resizeResult.logHeight());
+        assertEquals("88", RuntimeTasks.mainUserIdFromSocket(8));
         Guardian.setSocketConnected(8, false);
         MySQL.configureDatabaseConnection(null);
         Path lifecycleRoot = Files.createTempDirectory("alphaseries-main-lifecycle");
@@ -1470,35 +1761,33 @@ public final class PortedModuleSmokeTest {
         Files.createDirectories(lifecycleRoot.resolve("CACHE").resolve("PATHFINDER"));
         Files.createDirectories(lifecycleRoot.resolve("CACHE").resolve("USERS"));
         Files.writeString(lifecycleRoot.resolve("config.ini"), "a=b=c=d=e=f=g=PRODUCT-KEY\r\nrest");
-        String oldApplicationPathForLifecycle = Functions.applicationPath;
-        Functions.applicationPath = lifecycleRoot.toString();
-        Main.LifecycleResult lifecycleResult = Main.formInitialize("%% [!]");
-        assertEquals(true, lifecycleResult.success);
-        assertEquals("ALPHASERIES_FINAL (PREMIUM)", lifecycleResult.caption);
-        assertEquals("ALPHASERIES_FINAL (PREMIUM) [!]", lifecycleResult.consoleTitle);
-        assertEquals("PRODUCT-KEY", lifecycleResult.productKey);
-        Main.LifecycleResult bootTitleLifecycle = Main.formInitialize(Main.INITIALIZING_CAPTION_TEMPLATE);
+        String oldApplicationPathForLifecycle = AppPaths.applicationPath();
+        AppPaths.setApplicationPath(lifecycleRoot.toString());
+        ServerLifecycle.LifecycleResult lifecycleResult = ServerLifecycle.formInitialize("%% [!]");
+        assertEquals(true, lifecycleResult.success());
+        assertEquals("ALPHASERIES_FINAL (PREMIUM)", lifecycleResult.caption());
+        assertEquals("ALPHASERIES_FINAL (PREMIUM) [!]", lifecycleResult.consoleTitle());
+        assertEquals("PRODUCT-KEY", lifecycleResult.productKey());
+        ServerLifecycle.LifecycleResult bootTitleLifecycle =
+            ServerLifecycle.formInitialize(ServerLifecycle.INITIALIZING_CAPTION_TEMPLATE);
         assertEquals("Alpha Series [INITIALISIERE] - [ALPHASERIES_FINAL (PREMIUM)]",
-            bootTitleLifecycle.consoleTitle);
+            bootTitleLifecycle.consoleTitle());
         assertEquals("Alpha Series [INITIALISIERT] - [ALPHASERIES_FINAL (PREMIUM)]",
-            Main.initializedConsoleTitle(bootTitleLifecycle.consoleTitle));
+            ServerLifecycle.initializedConsoleTitle(bootTitleLifecycle.consoleTitle()));
         assertEquals("Alpha Series [RUNNING] - [ALPHASERIES_FINAL (PREMIUM)]",
-            Main.initializedConsoleTitle("Alpha Series [INITIALIZING] - [ALPHASERIES_FINAL (PREMIUM)]"));
+            ServerLifecycle.initializedConsoleTitle("Alpha Series [INITIALIZING] - [ALPHASERIES_FINAL (PREMIUM)]"));
         assertEquals(false, Files.exists(lifecycleRoot.resolve("CACHE").resolve("ROOMS")));
-        assertEquals(0xFFFFFFL, Licence.global_0082904C);
-        assertEquals(0x17L, Licence.global_0082903C);
-        assertEquals("ALPHASERIES_FINAL (PREMIUM)", Licence.runtimeState().productName());
-        Functions.applicationPath = oldApplicationPathForLifecycle;
-        assertEquals(Crypto.Proc_3_0_6D2AF0(3, null,
-            Crypto.Proc_3_0_6D2AF0(2, null,
-                Crypto.Proc_3_0_6D2AF0(1, null,
-                    Crypto.Proc_3_0_6D2AF0(99, null, "AZ")))),
+        assertEquals(0xFFFFFFL, LifecycleState.instance().runtimeState().primaryColor());
+        assertEquals(0x17L, LifecycleState.instance().runtimeState().version());
+        assertEquals("ALPHASERIES_FINAL (PREMIUM)", LifecycleState.instance().runtimeState().productName());
+        AppPaths.setApplicationPath(oldApplicationPathForLifecycle);
+        assertEquals(encodedVl64(3, null,
+            encodedVl64(2, null,
+                encodedVl64(1, null,
+                    encodedVl64(99, null, "AZ")))),
             RoomPayloads.rollerMove(99, 1, 2, "3"));
         assertEquals(RoomPayloads.rollerMove(99, 1, 2, "3"),
             RoomRollers.movePayload(99, 1, 2, "3"));
-        assertEquals("[9][10]", Main.mainRepresentedEntityIds("\1" + "9\tdata\2\1" + "10\2\1" + "9\2"));
-        assertEquals(10L, Main.mainRepresentedEntityIdAt("[9][10]", 1));
-
         Updater updater = new Updater();
         updater.queueHeightAnimation(1000, 5);
         assertEquals(1000L, updater.pendingHeightTarget);
@@ -1508,24 +1797,24 @@ public final class PortedModuleSmokeTest {
         assertEquals(false, updater.timer1Enabled);
         assertEquals(true, updater.timer2Enabled);
         Updater.HeightStep heightStep = updater.applyHeightTimerStep(900);
-        assertEquals(950L, heightStep.height);
-        assertEquals(true, heightStep.timer2Enabled);
+        assertEquals(950L, heightStep.height());
+        assertEquals(true, heightStep.timer2Enabled());
         Updater.HeightStep clampedHeightStep = Updater.heightTimerStep(990, 1000);
-        assertEquals(1000L, clampedHeightStep.height);
-        assertEquals(false, clampedHeightStep.timer2Enabled);
+        assertEquals(1000L, clampedHeightStep.height());
+        assertEquals(false, clampedHeightStep.timer2Enabled());
         Updater.HeightStep shrinkingHeightStep = Updater.heightTimerStep(1100, 1000);
-        assertEquals(1050L, shrinkingHeightStep.height);
-        assertEquals(true, shrinkingHeightStep.timer2Enabled);
+        assertEquals(1050L, shrinkingHeightStep.height());
+        assertEquals(true, shrinkingHeightStep.timer2Enabled());
         updater.queueProgressWidth(250);
         assertEquals(250L, updater.pendingProgressWidth);
         assertEquals(true, updater.walkPercentEnabled);
         Updater.ProgressStep progressStep = updater.applyProgressTimerStep(225, true);
-        assertEquals(250L, progressStep.width);
-        assertEquals(true, progressStep.walkPercentEnabled);
+        assertEquals(250L, progressStep.width());
+        assertEquals(true, progressStep.walkPercentEnabled());
         Updater.ProgressStep completeProgressStep = Updater.progressTimerStep(11500, Updater.PROGRESS_WIDTH_MAX, false);
-        assertEquals(Updater.PROGRESS_WIDTH_MAX, completeProgressStep.width);
-        assertEquals(true, completeProgressStep.complete);
-        assertEquals(false, completeProgressStep.walkPercentEnabled);
+        assertEquals(Updater.PROGRESS_WIDTH_MAX, completeProgressStep.width());
+        assertEquals(true, completeProgressStep.complete());
+        assertEquals(false, completeProgressStep.walkPercentEnabled());
         updater.currentUpdateIndex = 0;
         updater.advanceUpdateProgress(4);
         assertEquals(5766L, updater.pendingProgressWidth);
@@ -1537,22 +1826,27 @@ public final class PortedModuleSmokeTest {
         assertEquals("Kostet 99 Punkte", updater.unfreeFeature.caption);
         updater.applyFeatureState(UpdaterSettings.UpdateEntry.fromFields("id", "title", "body", 1L, 0L));
         assertEquals(true, updater.downloadFeature.visible);
-        UpdaterSettings.UpdateEntry updateEntry = UpdaterSettings.UpdateEntry.fromLegacyRow("x\t42\tbody\t3\t7");
+        UpdaterSettings.UpdateEntry updateEntry = UpdaterSettings.UpdateEntry.fromFields("x", "42", "body", 3L, 7L);
         assertEquals("42", updateEntry.title());
         assertEquals(3L, updateEntry.featureMode());
         assertEquals(7L, updateEntry.featureCost());
-        UpdaterSettings legacyUpdaterSettings = UpdaterSettings.fromLegacy("updater", "a\tA\tbody\t0\t0\n", "INSERT INTO a");
-        assertEquals(2, legacyUpdaterSettings.entries().length);
-        assertEquals("a\tA\tbody\t0\t0", legacyUpdaterSettings.updateEntries()[0]);
-        assertEquals("", legacyUpdaterSettings.updateEntries()[1]);
-        assertEquals(1L, legacyUpdaterSettings.updateCountOrOne());
+        UpdaterSettings previousUpdaterSettings = UpdaterState.instance().settings();
+        UpdaterState.instance().setSettings(UpdaterSettings.fromEntries("updater", List.of(
+            UpdaterSettings.UpdateEntry.fromFields("a", "A", "body", 0L, 0L),
+            new UpdaterSettings.UpdateEntry("", "", "", "", 0L, 0L, false)), "INSERT INTO a"));
+        UpdaterSettings mirroredUpdaterSettings = UpdaterState.instance().settings();
+        assertEquals(2, mirroredUpdaterSettings.entryList().size());
+        assertEquals(UpdaterSettings.UpdateEntry.fromFields("a", "A", "body", 0L, 0L),
+            mirroredUpdaterSettings.entryList().get(0));
+        assertEquals("", mirroredUpdaterSettings.entryList().get(1).sourceText());
+        assertEquals(1L, mirroredUpdaterSettings.updateCountOrOne());
+        UpdaterState.instance().setSettings(previousUpdaterSettings);
         List<UpdaterSettings.UpdateEntry> typedUpdateEntries = new ArrayList<>();
         typedUpdateEntries.add(updateEntry);
         UpdaterSettings typedUpdaterSettings = UpdaterSettings.fromEntries("typed-updater", typedUpdateEntries, "");
         typedUpdateEntries.add(UpdaterSettings.UpdateEntry.fromFields("y", "title", "body", 1L, 2L));
         assertEquals("typed-updater", typedUpdaterSettings.executableName());
-        assertEquals(1, typedUpdaterSettings.entries().length);
-        assertEquals("x\t42\tbody\t3\t7", typedUpdaterSettings.updateEntries()[0]);
+        assertEquals(List.of(updateEntry), typedUpdaterSettings.entryList());
         assertEquals("custom", Updater.getUpdaterExecutableName("custom", "app"));
         assertEquals("app", Updater.getUpdaterExecutableName("", "app"));
         assertEquals("INSERT IGNORE INTO a\nINSERT IGNORE INTO b", Updater.normalizedUpdateSql("INSERT INTO a\r\ninsert into b"));
@@ -1569,20 +1863,23 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, Updater.successfulDownloadMessage("Alpha")
             .contains("Die Webseite wurde automatisch ge\u00f6ffnet."));
         assertEquals(3, Updater.visibleBodyLines("line1\\n\\nline3", 25).length);
-        Licence.setUpdaterRows("1\ttitle\tline1\\nline2\t0\t0\n2\tother\tbody\t1\t0");
+        UpdaterState.instance().setSettings(UpdaterSettings.fromEntries("updater", List.of(
+            UpdaterSettings.UpdateEntry.fromFields("1", "title", "line1\\nline2", 0L, 0L),
+            UpdaterSettings.UpdateEntry.fromFields("2", "other", "body", 1L, 0L)), ""));
         updater.height = 1000;
         updater.currentUpdateIndex = 0;
         Updater.RenderStep renderStep = updater.timer3Step();
-        assertEquals(true, renderStep.rendered);
-        assertEquals("title", renderStep.title);
-        assertEquals("line2", renderStep.bodyLines[1]);
+        assertEquals(true, renderStep.rendered());
+        assertEquals("title", renderStep.title());
+        assertEquals("line2", renderStep.bodyLines()[1]);
         assertEquals(true, updater.freeFeature.visible);
         assertEquals(11534L, updater.pendingProgressWidth);
-        Licence.setUpdaterExecutableName("custom-updater");
+        UpdaterState.instance().setExecutableName("custom-updater");
+        assertEquals("custom-updater", UpdaterState.instance().settings().executableName());
         Updater.DownloadPlan downloadPlan = updater.downloadPlan("appname", LocalDateTime.of(2026, 6, 29, 13, 45, 6));
-        assertEquals("custom-updater", downloadPlan.executableName);
-        assertEquals(true, downloadPlan.destinationPath.endsWith("custom-updater.exe"));
-        assertEquals(true, downloadPlan.sourceUrl.contains("/custom-updater/file.database?timestamp="));
+        assertEquals("custom-updater", downloadPlan.executableName());
+        assertEquals(true, downloadPlan.destinationPath().endsWith("custom-updater.exe"));
+        assertEquals(true, downloadPlan.sourceUrl().contains("/custom-updater/file.database?timestamp="));
         List<String> updaterSql = new ArrayList<>();
         MySQL.configureDatabaseConnection(new Database() {
             @Override
@@ -1595,7 +1892,8 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(1));
             }
         });
-        Licence.setUpdaterSql("INSERT INTO a\r\ninsert into b\n");
+        UpdaterState.instance().setUpdateSql("INSERT INTO a\r\ninsert into b\n");
+        assertEquals("INSERT INTO a\r\ninsert into b\n", UpdaterState.instance().settings().updateSql());
         assertEquals(true, updater.formLoad(true));
         assertEquals(true, containsSql(updaterSql, "INSERT IGNORE INTO a"));
         assertEquals(true, containsSql(updaterSql, "INSERT IGNORE INTO b"));
@@ -1605,271 +1903,355 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, updater.formQueryUnload());
         MySQL.configureDatabaseConnection(null);
 
+        });
+        run(() -> {
         String httpRequest = PrivSockHTTP.buildGetRequest("/path", "example.com", "8080");
         assertEquals(true, httpRequest.startsWith("GET /path HTTP/1.1\r\nHost:   example.com:8080\r\n"));
         assertEquals(true, httpRequest.contains("User-Agent:   FireFox/1.0\r\n"));
         assertEquals("", PrivSockHTTP.buildGetRequest("", "example.com", "80"));
-        PrivSockHTTP.AliveState aliveState = new PrivSockHTTP.AliveState();
-        aliveState.requestPath = "/alive";
-        aliveState.requestHost = "example.com";
-        aliveState.requestPort = "8080";
+        PrivSockHTTP.AliveState aliveState = PrivSockHTTP.AliveState.request("/alive", "example.com", "8080");
         assertEquals(true, PrivSockHTTP.tmrCheckAliveTimer(aliveState).startsWith("GET /alive HTTP/1.1"));
-        assertEquals(1L, aliveState.ticks);
-        aliveState.ticks = 200L;
+        assertEquals(1L, aliveState.ticks());
+        aliveState.setTicks(200L);
         assertEquals("", PrivSockHTTP.tmrCheckAliveTimer(aliveState));
-        assertEquals(false, aliveState.enabled);
-        assertEquals("Cache", Cache.VB_MODULE_NAME);
-        assertEquals(false, Cache.HAS_PROCEDURES);
-        assertEquals("DownloadFile", DownloadFile.VB_MODULE_NAME);
-        assertEquals(false, DownloadFile.HAS_PROCEDURES);
-        assertEquals("Proxy", Proxy.VB_MODULE_NAME);
-        assertEquals(false, Proxy.HAS_PROCEDURES);
-        assertEquals("Walking", Walking.VB_MODULE_NAME);
-        assertEquals(false, Walking.HAS_PROCEDURES);
-        assertEquals("Walking_Bot", Walking_Bot.VB_MODULE_NAME);
-        assertEquals(false, Walking_Bot.HAS_PROCEDURES);
-        assertEquals("socketHTTP", SocketHTTP.VB_MODULE_NAME);
-        assertEquals(false, SocketHTTP.HAS_PROCEDURES);
-        Mistake.MessageBox mistakeMessageBox = Mistake.formLoad();
-        assertEquals(Mistake.MESSAGE, mistakeMessageBox.message);
-        assertEquals(Mistake.MessageStyle.CRITICAL, mistakeMessageBox.style);
-        String[] mistakeInstructionCaptions = Mistake.instructionCaptions();
+        assertEquals(false, aliveState.enabled());
+        StartupEnvironmentError.MessageBox mistakeMessageBox = StartupEnvironmentError.loadMessage();
+        assertEquals(StartupEnvironmentError.MESSAGE, mistakeMessageBox.message());
+        assertEquals(StartupEnvironmentError.MessageStyle.CRITICAL, mistakeMessageBox.style());
+        String[] mistakeInstructionCaptions = StartupEnvironmentError.instructionCaptions();
         assertEquals("1. Click here to customize your regional options!", mistakeInstructionCaptions[0]);
         assertEquals("2. Select the decimal symbol ,", mistakeInstructionCaptions[1]);
         assertEquals("3. Click \"OK\" to apply your changes. You need to restart your Computer/VPS",
             mistakeInstructionCaptions[2]);
-        Mistake.QueryUnloadResult mistakeUnload = Mistake.formQueryUnload(3);
-        assertEquals(false, mistakeUnload.cancel);
-        assertEquals(true, mistakeUnload.exitRequested);
-        assertEquals(3, mistakeUnload.unloadMode);
-        assertEquals("", DataManager.Proc_8_0_804330(""));
+        StartupEnvironmentError.QueryUnloadResult mistakeUnload = StartupEnvironmentError.queryUnload(3);
+        assertEquals(false, mistakeUnload.cancel());
+        assertEquals(true, mistakeUnload.exitRequested());
+        assertEquals(3, mistakeUnload.unloadMode());
+        assertEquals("", LicenceChecker.readHttp("", 0));
 
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "hd-180-1\2M\2",
+        assertEquals(encodedVl64(2, null, "") + "hd-180-1\2M\2",
             UserPayloads.wardrobeSlot(2, "hd-180-1", "M"));
         UserPayloads.WardrobePayload wardrobePayload = UserPayloads.wardrobeSlots(List.of(
             new UserDao.WardrobeSlotRow(1L, "hd-180-1", "m"),
             new UserDao.WardrobeSlotRow(6L, "ch-255-66", "x")), 5L);
         assertEquals(1L, wardrobePayload.slotCount());
-        assertEquals("DK" + Crypto.Proc_3_0_6D2AF0(1, null, "")
-                + Crypto.Proc_3_0_6D2AF0(1, null, "") + "hd-180-1\2M\2",
+        assertEquals("DK" + encodedVl64(1, null, "")
+                + encodedVl64(1, null, "") + "hd-180-1\2M\2",
             wardrobePayload.payload());
-        assertEquals("0@B" + Crypto.Proc_3_0_6D2AF0(7, null, "")
-                + Crypto.Proc_3_0_6D2AF0(7, null, "")
-                + Crypto.Proc_3_0_6D2AF0(1, null, ""),
+        assertEquals("0@B" + encodedVl64(7, null, "")
+                + encodedVl64(7, null, "")
+                + encodedVl64(1, null, ""),
             UserPayloads.rankAndStaffState(7L, 1L));
         NavigatorPayloads.FavouriteRoomsPayload favouriteRoomsPayload =
             NavigatorPayloads.favouriteRoomIds(List.of(9L, 0L, 12L), 30L);
         assertEquals(2L, favouriteRoomsPayload.roomCount());
-        assertEquals("GJ" + Crypto.Proc_3_0_6D2AF0(30, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(9, null, "")
-                + Crypto.Proc_3_0_6D2AF0(12, null, ""),
+        assertEquals("GJ" + encodedVl64(30, null, "")
+                + encodedVl64(2, null, "")
+                + encodedVl64(9, null, "")
+                + encodedVl64(12, null, ""),
             favouriteRoomsPayload.payload());
-        assertEquals(true, Handling.isValidWardrobeFigure("hd-180-1.ch-255-66", "M"));
-        assertEquals(false, Handling.isValidWardrobeFigure("bad-1", "M"));
-        assertEquals(false, Handling.isValidWardrobeFigure("hd-'1", "M"));
+        assertEquals(true, UserValidation.isValidWardrobeFigure("hd-180-1.ch-255-66", "M"));
+        assertEquals(false, UserValidation.isValidWardrobeFigure("bad-1", "M"));
+        assertEquals(false, UserValidation.isValidWardrobeFigure("hd-'1", "M"));
         String figureData = "<settype type=\"hd\"><set id=\"180\" gender=\"M\"></set></settype>"
             + "<settype type=\"ch\"><set id=\"255\" gender=\"U\"/></settype>";
-        assertEquals(true, Handling.isValidWardrobeFigure("hd-180-1.ch-255-66", "M", figureData));
-        assertEquals(false, Handling.isValidWardrobeFigure("hd-180-1", "F", figureData));
-        assertEquals(true, Handling.figureSetAllowsGender("<set id=\"1\" gender=\"U\"/>", "<set id=\"1\"", "F"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(44, null, "DJ") + "hello\2M\2hd-180-1\2",
+        assertEquals(true, UserValidation.isValidWardrobeFigure("hd-180-1.ch-255-66", "M", figureData));
+        assertEquals(false, UserValidation.isValidWardrobeFigure("hd-180-1", "F", figureData));
+        assertEquals(true, UserValidation.figureSetAllowsGender("<set id=\"1\" gender=\"U\"/>", "<set id=\"1\"", "F"));
+        UserWire.WardrobeSlotRequest wardrobeSlotRequest =
+            UserWire.wardrobeSlotRequest("Ex" + wireLong(2) + wireString("hd-180-1\nch-255-66") + wireString("m"));
+        assertEquals(2L, wardrobeSlotRequest.slotId());
+        assertEquals("hd-180-1 ch-255-66", wardrobeSlotRequest.figureText());
+        assertEquals("M", wardrobeSlotRequest.genderText());
+        UserWire.TutorialClothesRequest tutorialClothesRequest =
+            UserWire.tutorialClothesRequest("@l" + wireString("f") + wireString("hd-180-1\rch-255-66"));
+        assertEquals("F", tutorialClothesRequest.genderText());
+        assertEquals("hd-180-1 ch-255-66", tutorialClothesRequest.figureText());
+        assertEquals("NewName", UserWire.avatarNameRequest("GV" + wireString("NewName"), "GV").candidateName());
+        assertEquals("CheckName", UserWire.avatarNameRequest("GW" + wireString("CheckName"), "GW").candidateName());
+        assertEquals("New motto", UserWire.mottoRequest("Gd" + wireString("New motto")).mottoText());
+        assertEquals(77L, UserWire.guideInviteRequest("oLB77").userId());
+        assertEquals(encodedVl64(44, null, "DJ") + "hello\2M\2hd-180-1\2",
             UserPayloads.identityRefresh(44, "hello", "hd-180-1", "M"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null,
-            Crypto.Proc_3_0_6D2AF0(3, null, "@Y") + "hi\2"),
+        assertEquals(encodedVl64(7, null,
+            encodedVl64(3, null, "@Y") + "hi\2"),
             UserPayloads.representedChat(3, "hi", 7, 1));
-        assertEquals(true, Handling.legacyChatCommandPayload(":about").contains(
+        assertEquals(true, ChatCommands.commandPayload(":about", "").contains(
             "This is a copy of the unique Alpha Series written in Visual Basic 2006."));
-        assertEquals(true, Handling.legacyChatCommandPayload(":entwicklung").contains("UNIQUE ID: --"));
-        assertEquals(true, Handling.legacyChatCommandPayload(":commands").contains("You've following commands avaible:"));
-        assertEquals(true, Handling.legacyChatCommandPayload(":commands").contains(
+        assertEquals(true, ChatCommands.commandPayload(":entwicklung", "").contains("UNIQUE ID: --"));
+        assertEquals(true, ChatCommands.commandPayload(":commands", "").contains("You've following commands avaible:"));
+        assertEquals(true, ChatCommands.commandPayload(":commands", "").contains(
             "Please note that some commands require additional syntax"));
-        assertEquals("", Handling.legacyChatCommandPayload(":unknown"));
-        assertEquals("BKActive users:\r\rAlice, Bob\2\2", Handling.legacyActiveUsersPayload("Alice, Bob"));
+        assertEquals("", ChatCommands.commandPayload(":unknown", ""));
+        assertEquals("BKActive users:\r\rAlice, Bob\2\2", ChatCommands.activeUsersPayload("Alice, Bob"));
+        assertEquals("BKActive users:\r\rAlice, Bob\2\2",
+            ChatCommands.dynamicCommandPayload(":whosonline", SessionRegistry.fromEntries(List.of(
+                new SessionRegistry.SessionRecord("1:4", "44\2" + "4"),
+                new SessionRegistry.SessionRecord("1:5", "55\2" + "5")), List.of()).socketSessions(),
+                userId -> "44".equals(userId) ? "Alice" : "Bob"));
         assertEquals("www.example.com;http://alpha;https://beta;",
-            Handling.extractUrlList("see www.example.com and http://alpha or https://beta"));
-        assertEquals("", Handling.extractUrlList("www bad example.com"));
+            ChatCommands.extractUrlList("see www.example.com and http://alpha or https://beta"));
+        assertEquals("", ChatCommands.extractUrlList("www bad example.com"));
         List<ChatSettings.FilterWord> filterWords = List.of(
             new ChatSettings.FilterWord("badword"),
             new ChatSettings.FilterWord("xx"));
-        assertEquals("hello *** and ***", Handling.filterChatText("hello badword and BADWORD", true, "***", filterWords));
-        assertEquals("***", Handling.filterChatText("xx", true, "***", filterWords));
-        assertEquals("xx now", Handling.filterChatText("xx now", true, "***", List.of(new ChatSettings.FilterWord("xx"))));
+        ChatSettings filterSettings = ChatSettings.fromRows(filterWords, List.of());
+        assertEquals("hello *** and ***", filterSettings.filterText("hello badword and BADWORD", true, "***"));
+        assertEquals("***", filterSettings.filterText("xx", true, "***"));
+        assertEquals("xx now", ChatSettings.fromRows(List.of(new ChatSettings.FilterWord("xx")), List.of())
+            .filterText("xx now", true, "***"));
         List<ChatSettings.Gesture> gestures = List.of(
             new ChatSettings.Gesture(":)", 5L),
             new ChatSettings.Gesture(":(", 6L));
-        assertEquals(5L, Handling.findGestureId("hello :)", true, gestures));
-        assertEquals(0L, Handling.findGestureId("hello", false, List.of(new ChatSettings.Gesture(":)", 5L))));
-        String complexPayload = Handling.Proc_6_29_70D800(1, 2, 3, 4, "four", 5, "six", "seven", 8, "nine", 10, "eleven");
+        assertEquals(5L, ChatSettings.fromRows(List.of(), gestures).gestureId("hello :)", true));
+        assertEquals(0L, ChatSettings.fromRows(List.of(), List.of(new ChatSettings.Gesture(":)", 5L)))
+            .gestureId("hello", false));
+        String complexPayload = StaffPayloads.callForHelp(1, 2, 3, 4, "four", 5, "six", "seven", 8, "nine", 10, "eleven");
         assertEquals(true, complexPayload.endsWith("eleven\2"));
         assertEquals(true, complexPayload.contains("four\2"));
         assertEquals("keep\nalso", StringUtils.removeLineRecord("keep\r\nremove-this\nalso", "remove"));
-        assertEquals("\1" + "1\talpha\2", RepresentedRoomCache.removeRecord("\1" + "1\talpha\2\1" + "2\tbeta\2", "\1" + "2\t"));
-        RepresentedRoomCache representedRoomCache = RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2\1" + "2\tbeta\2");
-        assertEquals("2\tbeta", representedRoomCache.record(2));
+        RepresentedRoomCache representedRoomCache = RepresentedRoomCache.fromCacheText("\1" + "1\talpha\2\1" + "2\tbeta\2");
         assertEquals(List.of(
             new RepresentedRoomCache.RoomRecord(1L, "1\talpha"),
             new RepresentedRoomCache.RoomRecord(2L, "2\tbeta")), representedRoomCache.roomRecords());
-        RepresentedRoomCache duplicateRoomCache = RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2\1" + "1\tbeta\2");
-        assertEquals("1\talpha", duplicateRoomCache.record(1));
+        assertEquals("beta", representedRoomCache.roomRecords().get(1).fields().get(1));
+        RepresentedRoomCache duplicateRoomCache = RepresentedRoomCache.fromCacheText("\1" + "1\talpha\2\1" + "1\tbeta\2");
+        assertEquals(new RepresentedRoomCache.RoomRecord(1L, "1\talpha"), duplicateRoomCache.roomRecords().get(0));
         assertEquals("\1" + "1\talpha\2\1" + "1\tbeta\2", duplicateRoomCache.cacheText());
         assertEquals("\1" + "1\tgamma\2", duplicateRoomCache.setRecord(1, "1\tgamma").cacheText());
-        assertEquals("3", RepresentedRoomCache.fromLegacy("\1" + "3\2").record(3));
-        assertEquals("", RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2").record(4));
-        assertEquals("snapshot-room-cache", RepresentedRoomCache.fromLegacy("snapshot-room-cache").cacheText());
+        assertEquals(List.of(new RepresentedRoomCache.RoomRecord(3L, "3")), RepresentedRoomCache.fromCacheText("\1" + "3\2").roomRecords());
+        assertEquals(0L, RepresentedRoomCache.fromCacheText("\1" + "1\talpha\2").roomSlot(4));
+        assertEquals("snapshot-room-cache", RepresentedRoomCache.fromCacheText("snapshot-room-cache").cacheText());
         assertEquals("snapshot-room-cache\1" + "2\tbeta\2",
-            RepresentedRoomCache.fromLegacy("snapshot-room-cache").setRecord(2, "2\tbeta").cacheText());
+            RepresentedRoomCache.fromCacheText("snapshot-room-cache").setRecord(2, "2\tbeta").cacheText());
+        assertEquals(List.of(new RepresentedRoomCache.RoomRecord(7L, "7\ttyped")),
+            RepresentedRoomCache.fromRecords("", List.of(new RepresentedRoomCache.RoomRecord(7L, "7\ttyped")))
+                .roomRecords());
         List<Long> mutableRoomSlots = new ArrayList<>();
         mutableRoomSlots.add(5L);
         mutableRoomSlots.add(7L);
         RepresentedRoomSlots typedRoomSlots = RepresentedRoomSlots.fromSlots(mutableRoomSlots);
         mutableRoomSlots.add(9L);
         assertEquals(List.of(5L, 7L), typedRoomSlots.availableSlots());
-        assertEquals("[5][7]", typedRoomSlots.availableSlotMarkers());
-        assertEquals(List.of(5L, 7L), RepresentedRoomSlots.fromLegacy("[5][7]").availableSlots());
-        Object previousRoomSlots = Licence.global_0082930C;
-        Licence.setRepresentedRoomSlots(typedRoomSlots);
-        assertEquals(true, Licence.global_0082930C instanceof RepresentedRoomSlots);
-        assertEquals(List.of(5L, 7L), Licence.representedRoomSlots().availableSlots());
-        Licence.global_0082930C = previousRoomSlots;
-        String roomRecordCache = RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2\1" + "2\told\2")
+        RepresentedRoomSlots previousRoomSlots = RoomState.instance().representedRoomSlots();
+        RoomState.instance().setRepresentedRoomSlots(RepresentedRoomSlots.fromSlots(List.of(5L, 7L)));
+        assertEquals(List.of(5L, 7L), RoomState.instance().representedRoomSlots().availableSlots());
+        RoomState.instance().setRepresentedRoomSlots(typedRoomSlots);
+        assertEquals(List.of(5L, 7L), RoomState.instance().representedRoomSlots().availableSlots());
+        RoomState.instance().setRepresentedRoomSlots(previousRoomSlots);
+        RepresentedRoomCache previousRepresentedRooms = RoomState.instance().representedRooms();
+        RepresentedRoomCache typedRepresentedRooms = RepresentedRoomCache.fromRecords(
+            "typed-prefix",
+            List.of(new RepresentedRoomCache.RoomRecord(8L, "8\ttyped")));
+        RoomState.instance().setRepresentedRooms(typedRepresentedRooms);
+        assertEquals(List.of(new RepresentedRoomCache.RoomRecord(8L, "8\ttyped")),
+            RoomState.instance().representedRooms().roomRecords());
+        assertEquals("typed-prefix" + "\1" + "8\ttyped\2", RoomState.instance().representedRooms().cacheText());
+        RoomState.instance().setRepresentedRooms(previousRepresentedRooms);
+        String roomRecordCache = RepresentedRoomCache.fromCacheText("\1" + "1\talpha\2\1" + "2\told\2")
             .setRecord(2, "2\tnew").cacheText();
         assertEquals("\1" + "1\talpha\2\1" + "2\tnew\2", roomRecordCache);
-        assertEquals("\1" + "1\talpha\2", RepresentedRoomCache.fromLegacy("\1" + "1\talpha\2")
+        assertEquals("\1" + "1\talpha\2", RepresentedRoomCache.fromCacheText("\1" + "1\talpha\2")
             .setRecord(0, "0\tignored").cacheText());
-        String movementCache = RepresentedRoomCache.fromLegacy("")
+        String movementCache = RepresentedRoomCache.fromCacheText("")
             .moveOccupant(4, 9, 2, 3, 4, 1).cacheText();
         assertEquals("\1" + "4\t\t\t0\t\1" + "9\t2\t3\t4\t1\2\2", movementCache);
-        RepresentedRoomCache.Position movementPosition = RepresentedRoomCache.fromLegacy(movementCache).movementPosition(4, 9);
-        assertEquals(true, movementPosition.found);
-        assertEquals(2L, movementPosition.positionX);
-        assertEquals(3L, movementPosition.positionY);
-        assertEquals(false, RepresentedRoomCache.fromLegacy(movementCache).movementPosition(4, 10).found);
-        RoomUserPosition argumentPosition = RoomUserPosition.fromHandlerArgs(new Object[]{4, "AM", "payload", 8, 9});
+        RepresentedRoomCache.Position movementPosition = RepresentedRoomCache.fromCacheText(movementCache).movementPosition(4, 9);
+        assertEquals(true, movementPosition.found());
+        assertEquals(2L, movementPosition.positionX());
+        assertEquals(3L, movementPosition.positionY());
+        assertEquals(false, RepresentedRoomCache.fromCacheText(movementCache).movementPosition(4, 10).found());
+        RoomUserPosition argumentPosition = RoomUserPosition.fromCoordinates(8, 9);
         assertEquals(true, argumentPosition.found());
         assertEquals(8L, argumentPosition.positionX());
         assertEquals(9L, argumentPosition.positionY());
-        assertEquals(false, RoomUserPosition.fromHandlerArgs(new Object[]{4, "AM", "payload"}).found());
-        movementCache = RepresentedRoomCache.fromLegacy(movementCache)
+        assertEquals(false, RoomUserPosition.absent().found());
+        movementCache = RepresentedRoomCache.fromCacheText(movementCache)
             .moveOccupant(4, 9, 5, 6, 2, 0).cacheText();
         assertEquals("\1" + "4\t\t\t0\t\1" + "9\t5\t6\t2\t0\2\2", movementCache);
         Path tempFile = Files.createTempFile("alphaseries4j", ".cache");
-        Handling.Proc_6_240_7FC2B0(tempFile.toString(), "cache-data");
-        assertEquals("cache-data" + System.lineSeparator(), Handling.Proc_6_239_7FC170(tempFile.toString()));
+        FileUtils.writeTextFile(tempFile.toString(), "cache-data");
+        assertEquals("cache-data" + System.lineSeparator(), FileUtils.readTextFile(tempFile.toString()));
         Path missingCache = Files.createTempDirectory("alphaseries4j-cache").resolve("room.cache");
-        assertEquals(System.lineSeparator(), Handling.handlingEnsureRoomCacheFile(missingCache.toString()));
+        assertEquals(System.lineSeparator(), FileUtils.ensureTextFile(missingCache.toString()));
         String userEntryPayload = SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
             "7", "alice", "hd-1", "motto", "F", "8", "2", "3", "1.0", "4", "5"));
         assertEquals(true, userEntryPayload.contains("alice\2hd-1"));
         assertEquals(true, userEntryPayload.contains("motto\2"));
+        assertEquals(SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
+                "7", "alice", "hd-1", "motto", "F", "8", "2", "3", "0.0", "0", "0")),
+            SocialLookups.roomUserEntryPayload(
+                new RoomUserEntryRow(7L, "alice", "hd-1", "motto", "F", 2L, 3L, 4L), 8L));
+        SocialRoomOccupants socialOccupants = SocialLookups.roomOccupantsPayloads(
+            List.of(new RoomOccupantRow(9L, 7L, "alice", "hd-1", "motto", "x", 1L, 1L, 4L)),
+            4L,
+            RepresentedRoomCache.fromCacheText("").moveOccupant(4L, 9L, 2L, 3L, 4L, 1L));
+        assertEquals(1L, socialOccupants.occupantCount());
+        assertEquals(1L, socialOccupants.statusCount());
+        assertEquals(SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
+                "7", "alice", "hd-1", "motto", "M", "9", "2", "3", "0.0", "0", "0")),
+            socialOccupants.occupantPayload());
+        assertEquals(SocialPayloads.roomOccupantStatus(9L, 2L, 3L, "0.0", 0L),
+            socialOccupants.statusPayload());
+        SocialRoomOccupants mergedOccupants = socialOccupants.withPetOccupants(
+            new PetRoomOccupants(1L, 1L, "pet-entry", "pet-status"));
+        assertEquals(2L, mergedOccupants.occupantCount());
+        assertEquals(2L, mergedOccupants.statusCount());
+        assertEquals(socialOccupants.occupantPayload() + "pet-entry", mergedOccupants.occupantPayload());
+        assertEquals(socialOccupants.statusPayload() + "pet-status", mergedOccupants.statusPayload());
         String botPayload = SocialPayloads.roomObjectEntry(new RoomObjectEntryPayloadArgs(
             "9", "bot", "figure", "M", "10", "4", "5", "0.0", "2"));
         assertEquals(true, botPayload.startsWith("Mbot\2figure\2M\2"));
         assertEquals(true, botPayload.endsWith("0.0\2HK"));
         String petPayload = SocialPayloads.roomObjectEntry(new RoomObjectEntryPayloadArgs(
             "11", "pet", "figure", "F", "12", "6", "7", "0.5", "3"));
-        assertEquals(true, petPayload.startsWith(Crypto.Proc_3_0_6D2AF0(11, null, "") + "pet\2"));
+        assertEquals(true, petPayload.startsWith(encodedVl64(11, null, "") + "pet\2"));
         assertEquals(true, petPayload.endsWith("0.5\2PAJJ"));
-        assertEquals(2L, Handling.avatarNameValidationCode("ab", "", 0));
-        assertEquals(1L, Handling.avatarNameValidationCode("abcdefghijklmnop", "", 0));
-        assertEquals(2L, Handling.avatarNameValidationCode("MOD-user", "", 0));
-        assertEquals(2L, Handling.avatarNameValidationCode("bad name", "", 0));
-        assertEquals(0L, Handling.avatarNameValidationCode("Alice_1", "alice_1", 1));
-        assertEquals(3L, Handling.avatarNameValidationCode("Alice_2", "alice_1", 1));
-        assertEquals(0L, Handling.avatarNameValidationCode("Alice_2", "alice_1", 0));
-        assertEquals("1\0" + "1\0" + "3\0" + "1\0", MovementStep.between(0, 0, 2, 2).toLegacyText());
-        assertEquals("0\0" + "0\0" + "0\0" + "0\0", MovementStep.zero().toLegacyText());
-        assertEquals(3L, Handling.handlingDirectionCode(1, 1));
+        assertEquals(2L, UserValidation.avatarNameValidationCode("ab", "", 0));
+        assertEquals(1L, UserValidation.avatarNameValidationCode("abcdefghijklmnop", "", 0));
+        assertEquals(2L, UserValidation.avatarNameValidationCode("MOD-user", "", 0));
+        assertEquals(2L, UserValidation.avatarNameValidationCode("bad name", "", 0));
+        assertEquals(0L, UserValidation.avatarNameValidationCode("Alice_1", "alice_1", 1));
+        assertEquals(3L, UserValidation.avatarNameValidationCode("Alice_2", "alice_1", 1));
+        assertEquals(0L, UserValidation.avatarNameValidationCode("Alice_2", "alice_1", 0));
+        assertEquals("1\0" + "1\0" + "3\0" + "1\0", MovementStep.between(0, 0, 2, 2).frameText());
+        assertEquals("0\0" + "0\0" + "0\0" + "0\0", MovementStep.zero().frameText());
+        assertEquals(3L, MovementStep.directionCode(1, 1));
         String wireStringPayload = "@Cabc";
-        Handling.LongRef wireOffset = new Handling.LongRef(1);
-        assertEquals("abc", Handling.readWireString(wireStringPayload, wireOffset));
-        assertEquals(6L, wireOffset.value);
-        String wireLongPayload = Crypto.Proc_3_0_6D2AF0(123, null, "") + "tail";
-        Handling.LongRef longOffset = new Handling.LongRef(1);
-        assertEquals(123L, Handling.readWireLong(wireLongPayload, longOffset));
-        assertEquals(3L, longOffset.value);
-        Handling.StickyNoteUpdate note = new Handling.StickyNoteUpdate();
-        assertEquals(true, Handling.stickyNoteUpdateFromWire("A5" + "9CFF9Chello\nworld", note));
-        assertEquals(5L, note.furnitureId);
-        assertEquals("9CFF9C", note.noteColor);
-        assertEquals("world", note.noteCaption);
-        assertEquals(5L, Handling.stickyFurnitureIdFromPayload(wireLong(5)));
-        assertEquals(true, Handling.isStickyNoteColor("ffff33"));
-        assertEquals(false, Handling.isStickyNoteColor("ffffff"));
-        assertEquals(true, Handling.isDimmerColour("#82f349"));
-        assertEquals(false, Handling.isDimmerColour("#ffffff"));
+        WireReader.Offset wireOffset = new WireReader.Offset(1);
+        assertEquals("abc", WireReader.readString(wireStringPayload, wireOffset));
+        assertEquals(6L, wireOffset.value());
+        String wireLongPayload = encodedVl64(123, null, "") + "tail";
+        WireReader.Offset longOffset = new WireReader.Offset(1);
+        assertEquals(123L, WireReader.readLong(wireLongPayload, longOffset));
+        assertEquals(3L, longOffset.value());
+        FurnitureWire.StickyNoteUpdate note = FurnitureWire.stickyNoteUpdate("ATA5" + "9CFF9Chello\nworld");
+        assertEquals(5L, note.furnitureId());
+        assertEquals("9CFF9C", note.noteColor());
+        assertEquals("world", note.noteCaption());
+        assertEquals(5L, FurnitureWire.stickyFurnitureId(wireLong(5)));
+        assertEquals(70L, FurnitureWire.stickyFurnitureId("AS" + wireLong(70)));
+        assertEquals(71L, FurnitureWire.stickyFurnitureId("AN" + wireLong(71)));
+        assertEquals(72L, FurnitureWire.stickyFurnitureId("FI" + wireLong(72)));
+        assertEquals(79L, FurnitureWire.stickyFurnitureId("AB" + wireLong(79)));
+        assertEquals(85L, FurnitureWire.stickyFurnitureId("AC" + wireLong(85)));
+        assertEquals(86L, FurnitureWire.stickyFurnitureRequest("AN" + wireLong(86)).furnitureId());
+        String wallPlacementWire = "B88" + ":w=1,2 l=3,4";
+        FurnitureWire.WallFurniturePlacementRequest wallPlacementRequest =
+            FurnitureWire.wallFurniturePlacementRequest("rv" + wallPlacementWire);
+        assertEquals(88L, wallPlacementRequest.furnitureId());
+        assertEquals(wallPlacementWire, wallPlacementRequest.wallPayload());
+        assertEquals(true, FurnitureWire.isStickyNoteColor("ffff33"));
+        assertEquals(false, FurnitureWire.isStickyNoteColor("ffffff"));
+        assertEquals(true, FurnitureWire.isDimmerColour("#82f349"));
+        assertEquals(false, FurnitureWire.isDimmerColour("#ffffff"));
+        FurnitureWire.DimmerPresetRequest dimmerPresetRequest =
+            FurnitureWire.dimmerPresetRequest("EV" + wireLong(2) + wireLong(1) + wireString("#82f349") + wireLong(100));
+        assertEquals(2L, dimmerPresetRequest.presetId());
+        assertEquals(1L, dimmerPresetRequest.backgroundId());
+        assertEquals("#82F349", dimmerPresetRequest.colourText());
+        assertEquals(100L, dimmerPresetRequest.lightLevel());
         FurniturePayloads.DimmerPresetPayload dimmerPresetPayload = FurniturePayloads.dimmerPresets(List.of(
             new FurnitureDao.DimmerPreset(150L, 1L, 1L, "#0053F7", 1L),
             new FurnitureDao.DimmerPreset(100L, 2L, 1L, "#82F349", 2L)));
         assertEquals(2L, dimmerPresetPayload.currentPresetId());
-        assertEquals("Em" + Crypto.Proc_3_0_6D2AF0(0, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(1, null, "")
-                + Crypto.Proc_3_0_6D2AF0(1, null, "")
-                + Crypto.Proc_3_0_6D2AF0(150, null, "") + "#0053F7\2"
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(1, null, "")
-                + Crypto.Proc_3_0_6D2AF0(100, null, "") + "#82F349\2",
+        assertEquals("Em" + encodedVl64(0, null, "")
+                + encodedVl64(2, null, "")
+                + encodedVl64(1, null, "")
+                + encodedVl64(1, null, "")
+                + encodedVl64(150, null, "") + "#0053F7\2"
+                + encodedVl64(2, null, "")
+                + encodedVl64(1, null, "")
+                + encodedVl64(100, null, "") + "#82F349\2",
             dimmerPresetPayload.payload());
-        assertEquals("AU78\2" + Crypto.Proc_3_0_6D2AF0(501, null, "") + ":w=1,2 l=3,4\2"
+        assertEquals("AU78\2" + encodedVl64(501, null, "") + ":w=1,2 l=3,4\2"
                 + "2,1,1,#82F349,100\2",
             FurniturePayloads.wallState(78, 501, ":w=1,2 l=3,4", "2,1,1,#82F349,100"));
-        assertEquals("AU78\2" + Crypto.Proc_3_0_6D2AF0(501, null, "") + "1\2" + "0\2",
+        assertEquals("AU78\2" + encodedVl64(501, null, "") + "1\2" + "0\2",
             FurniturePayloads.wallState(78, 501, "1", "0"));
-        assertEquals("AT77\1AS77\2" + Crypto.Proc_3_0_6D2AF0(500, null, "") + "500\2FFFF33\2",
+        assertEquals("AT77\1AS77\2" + encodedVl64(500, null, "") + "500\2FFFF33\2",
             FurniturePayloads.stickyNoteUpdated(77L, 500L, "FFFF33"));
         UserPayloads.EffectListPayload effectListPayload = UserPayloads.effectList(List.of(
             new UserEffectSummaryRow(12L, 3600L, 2L, 1000L, 900L),
             new UserEffectSummaryRow(13L, 120L, 1L, 0L, 900L)));
         assertEquals(2L, effectListPayload.listedEffects());
-        assertEquals("GL" + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(12, null, "")
-                + Crypto.Proc_3_0_6D2AF0(3600, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(100, null, "")
-                + Crypto.Proc_3_0_6D2AF0(13, null, "")
-                + Crypto.Proc_3_0_6D2AF0(120, null, "")
-                + Crypto.Proc_3_0_6D2AF0(1, null, "")
+        assertEquals("GL" + encodedVl64(2, null, "")
+                + encodedVl64(12, null, "")
+                + encodedVl64(3600, null, "")
+                + encodedVl64(2, null, "")
+                + encodedVl64(100, null, "")
+                + encodedVl64(13, null, "")
+                + encodedVl64(120, null, "")
+                + encodedVl64(1, null, "")
                 + "M",
             effectListPayload.payload());
-        assertEquals(Crypto.Proc_3_0_6D2AF0(3600, null,
-            Crypto.Proc_3_0_6D2AF0(12, null, "GN")), UserPayloads.effectActivated(12, 3600));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(12, null, "GO"), UserPayloads.effectExpired(12));
-        Handling.WallPlacement placement = new Handling.WallPlacement();
-        assertEquals(true, Handling.wallPlacementFromPayload(":w= 10,20 l= 3,4", placement));
-        assertEquals(10L, placement.wallX);
-        assertEquals(20L, placement.wallY);
-        assertEquals(3L, placement.localX);
-        assertEquals(4L, placement.localY);
-        assertEquals(false, Handling.wallPlacementFromPayload("bad", new Handling.WallPlacement()));
+        assertEquals(encodedVl64(3600, null,
+            encodedVl64(12, null, "GN")), UserPayloads.effectActivated(12, 3600));
+        assertEquals(encodedVl64(12, null, "GO"), UserPayloads.effectExpired(12));
+        WallPlacement placement = RoomWire.wallPlacementFromPayload(":w= 10,20 l= 3,4");
+        assertEquals(true, placement.valid());
+        assertEquals(10L, placement.wallX());
+        assertEquals(20L, placement.wallY());
+        assertEquals(3L, placement.localX());
+        assertEquals(4L, placement.localY());
+        assertEquals(false, RoomWire.wallPlacementFromPayload("bad").valid());
+        assertEquals("xxx\r000", RoomWire.normalizeModelMap("xxx\n\n000"));
         String iconWire = "A" + "B" + "A" + "C" + "B";
-        String iconPayload = Crypto.Proc_3_0_6D2AF0(1, null, "");
-        iconPayload = Crypto.Proc_3_0_6D2AF0(2, null, iconPayload);
-        iconPayload = Crypto.Proc_3_0_6D2AF0(1, null, iconPayload);
-        iconPayload = Crypto.Proc_3_0_6D2AF0(3, null, iconPayload);
-        iconPayload = Crypto.Proc_3_0_6D2AF0(2, null, iconPayload);
+        String iconPayload = encodedVl64(1, null, "");
+        iconPayload = encodedVl64(2, null, iconPayload);
+        iconPayload = encodedVl64(1, null, iconPayload);
+        iconPayload = encodedVl64(3, null, iconPayload);
+        iconPayload = encodedVl64(2, null, iconPayload);
         assertEquals(iconPayload, RoomPayloads.icon(1L, 2L, List.of(new RoomPayloads.RoomIconItem(3L, 2L))));
-        assertEquals(iconPayload, Handling.roomIconPayloadFromWire(iconWire));
-        assertEquals("", Handling.roomIconPayloadFromWire("Z"));
-        DataManager.global_008291AC = "\0" + "1\1events\2";
-        Handling.RoomEventPayload createdEvent = new Handling.RoomEventPayload();
+        assertEquals(iconPayload, RoomWire.roomIconRequest(iconWire).iconPayload());
+        assertEquals(iconPayload, RoomWire.roomIconRequest("FB" + iconWire).iconPayload());
+        assertEquals(false, RoomWire.roomIconRequest("Z").valid());
+        assertEquals(9L, RoomWire.roomIdRequest("@S" + wireLong(9), "@S").roomId());
+        assertEquals(9L, RoomWire.roomIdRequest("@T" + wireLong(9), "@T").roomId());
+        assertEquals(9L, RoomWire.roomSettingsReadRequest("FF" + wireLong(9)).requestedRoomId());
+        assertEquals(1L, RoomWire.roomRatingRequest("DE" + wireLong(1)).voteValue());
+        assertEquals(9L, RoomWire.roomEntryRequest("FG9").roomId());
+        assertEquals("pw", RoomWire.roomEntryRequest("FG" + wireString("9") + "Bpw").roomPassword());
+        RoomWire.CreateRoomRequest createRoomRequest =
+            RoomWire.createRoomRequest("@]" + wireString("Created Room") + wireString("model_a"));
+        assertEquals("Created Room", createRoomRequest.roomName());
+        assertEquals("model_a", createRoomRequest.modelName());
+        assertEquals(0L, RoomWire.deleteRoomRequest("@W" + wireLong(0)).requestFlag());
+        assertEquals(1L, RoomWire.deleteRoomRequest("@W" + wireLong(1)).requestFlag());
+        assertEquals(88L, RoomWire.roomRightGrantRequest("A`" + wireLong(88)).targetUserId());
+        assertEquals(88L, RoomWire.roomUserTargetRequest("A_" + wireLong(88), "A_").targetUserId());
+        assertEquals(88L, RoomWire.roomUserTargetRequest("E@" + wireLong(88), "E@").targetUserId());
+        assertEquals("Target", RoomWire.roomRightNameRequest("D\u007f" + wireString("Target"), "D\u007f").targetName());
+        assertEquals("Target", RoomWire.roomRightNameRequest("EB" + wireString("Target"), "EB").targetName());
+        assertEquals(List.of(88L, 89L), RoomWire.roomRightRevokeRequest("Aa" + wireLong(2) + wireLong(88) + wireLong(89)).targetUserIds());
+        assertEquals(9L, RoomWire.roomIdRequest("F@" + wireLong(9), "F@").roomId());
+        assertEquals(9L, RoomWire.roomIdRequest("XX" + wireLong(9), "XX").roomId());
+        assertEquals(9L, RoomWire.roomIdRequest("FD" + wireLong(9), "FD").roomId());
+        RoomWire.PositionRequest lookRequest = RoomWire.positionRequest("AK" + wireLong(3) + wireLong(4), "AK");
+        assertEquals(3L, lookRequest.positionX());
+        assertEquals(4L, lookRequest.positionY());
+        RoomWire.PositionRequest walkRequest = RoomWire.positionRequest("AO" + wireLong(5) + wireLong(6), "AO");
+        assertEquals(5L, walkRequest.positionX());
+        assertEquals(6L, walkRequest.positionY());
+        GameDataCaches.setRoomEventLocales(RoomEventLocales.fromEntries(
+            List.of(new RoomEventLocales.LocaleEntry("1", List.of("events", "")))));
         String eventWire = "A"
             + "@CJam"
             + "@DDesc"
             + "B"
             + "@COne"
             + "@DTwo2";
-        assertEquals(true, Handling.roomEventCreatePayloadFromWire(eventWire, createdEvent));
-        assertEquals(1L, createdEvent.categoryId);
-        assertEquals("events", createdEvent.categoryName);
-        assertEquals("Jam", createdEvent.eventName);
-        assertEquals("Desc", createdEvent.eventDescription);
-        assertEquals("one", createdEvent.tagOne);
-        assertEquals("two2", createdEvent.tagTwo);
-        Handling.RoomEventPayload editedEvent = new Handling.RoomEventPayload();
-        assertEquals(true, Handling.roomEventEditPayloadFromWire("@CJam@DDescA@CTag", editedEvent));
-        assertEquals("tag", editedEvent.tagOne);
-        Handling.RoomSettingsPayload roomSettings = new Handling.RoomSettingsPayload();
+        RoomEventPayload createdEvent = RoomWire.roomEventCreatePayloadFromWire("EZ" + eventWire);
+        assertEquals(false, createdEvent == null);
+        assertEquals(1L, createdEvent.categoryId());
+        assertEquals("events", createdEvent.categoryName());
+        assertEquals("Jam", createdEvent.eventName());
+        assertEquals("Desc", createdEvent.eventDescription());
+        assertEquals("one", createdEvent.tagOne());
+        assertEquals("two2", createdEvent.tagTwo());
+        RoomEventPayload editedEvent = RoomWire.roomEventEditPayloadFromWire("E\\@CJam@DDescA@CTag");
+        assertEquals(false, editedEvent == null);
+        assertEquals("tag", editedEvent.tagOne());
         String roomSettingsWire = "@DRoom"
             + "@Epass1"
             + "A"
@@ -1885,64 +2267,131 @@ public final class PortedModuleSmokeTest {
             + "A"
             + "F"
             + "A";
-        assertEquals(true, Handling.roomSettingsFromWire(roomSettingsWire, roomSettings));
-        assertEquals("Room", roomSettings.roomName);
-        assertEquals(3L, roomSettings.visitorsMax);
-        assertEquals("tag", roomSettings.tagOne);
-        assertEquals(1L, roomSettings.allowOthersPets);
-        assertEquals(1L, roomSettings.allowFeedPets);
-        assertEquals(1L, roomSettings.allowWalkthrough);
-        assertEquals(-2L, roomSettings.thicknessFloor);
-        assertEquals(1L, roomSettings.thicknessWallpaper);
-        assertEquals(1L, Handling.roomSettingsFlag(99));
-        assertEquals(0L, Handling.roomSettingsFlag(0));
-        assertEquals(-2L, Handling.roomSettingsThickness(-99));
-        assertEquals(1L, Handling.roomSettingsThickness(99));
-        assertEquals("null", Handling.nullableSqlText(""));
-        assertEquals("'O''Reilly'", Handling.nullableSqlText("O'Reilly"));
-        Functions.global_0082928C = "[com.client.navigator.list.limit=25]";
-        assertEquals(25L, Handling.navigatorListLimit());
-        Functions.global_0082928C = "[com.client.navigator.list.limit=0]";
-        assertEquals(50L, Handling.navigatorListLimit());
-        assertEquals("100'' ok", Handling.navigatorSearchTerm("100%' ok"));
-        String officialNavigatorQuery = Handling.officialNavigatorQuery();
-        assertEquals(4, officialNavigatorQuery.split(" UNION ALL ", -1).length);
-        assertEquals(true, officialNavigatorQuery.contains("rooms_official.id_type='1'"));
-        assertEquals(true, officialNavigatorQuery.contains("rooms_official.id_type='2'"));
-        assertEquals(true, officialNavigatorQuery.contains("rooms_official.id_type='3'"));
-        assertEquals(true, officialNavigatorQuery.contains("rooms_official.id_type='4'"));
-        assertEquals(true, officialNavigatorQuery.endsWith("ORDER BY 27 ASC LIMIT 255"));
-        LegacyNavigatorRoomRow legacyNavigatorRoom = new LegacyNavigatorRoomRow(
-            10L, "room", "owner", "desc", 3L, 25L, "open", 1L, 9L, 4L, "tag1", "tag2", "event", 1L, 0L);
-        RoomDao.NavigatorEventRow legacyNavigatorEvent = new RoomDao.NavigatorEventRow(
+        RoomSettingsPayload roomSettings = RoomWire.roomSettingsFromWire("FQ" + roomSettingsWire);
+        assertEquals(false, roomSettings == null);
+        assertEquals("Room", roomSettings.roomName());
+        assertEquals(3L, roomSettings.visitorsMax());
+        assertEquals("tag", roomSettings.tagOne());
+        assertEquals(1L, roomSettings.allowOthersPets());
+        assertEquals(1L, roomSettings.allowFeedPets());
+        assertEquals(1L, roomSettings.allowWalkthrough());
+        assertEquals(-2L, roomSettings.thicknessFloor());
+        assertEquals(1L, roomSettings.thicknessWallpaper());
+        assertEquals(1L, RoomWire.roomSettingsFlag(99));
+        assertEquals(0L, RoomWire.roomSettingsFlag(0));
+        assertEquals(-2L, RoomWire.roomSettingsThickness(-99));
+        assertEquals(1L, RoomWire.roomSettingsThickness(99));
+        assertEquals(25L, NavigatorRequests.listLimit(settings("com.client.navigator.list.limit", "25")));
+        assertEquals(50L, NavigatorRequests.listLimit(settings("com.client.navigator.list.limit", "0")));
+        assertEquals("100'' ok", NavigatorRequests.searchTerm("100%' ok"));
+        assertEquals(2L, NavigatorWire.categoryId("GC" + wireLong(2)));
+        assertEquals("100' ok", NavigatorRequests.searchParameter("100%' ok"));
+        NavigatorWire.SingleRoomRequest singleRoomRequest =
+            NavigatorWire.singleRoomRequest("FA" + wireLong(0) + wireLong(1) + wireLong(9));
+        assertEquals(0L, singleRoomRequest.requestMode());
+        assertEquals(1L, singleRoomRequest.detailFlag());
+        assertEquals(9L, singleRoomRequest.roomId());
+        List<String> navigatorSearchSql = new ArrayList<>();
+        RoomDao navigatorSearchDao = new RoomDao(new Database() {
+            @Override
+            public void execute(String sqlText) {
+            }
+
+            @Override
+            public List<List<Object>> query(String sqlText) {
+                navigatorSearchSql.add(sqlText);
+                if (sqlText.contains("SELECT rooms.id,rooms.name") && sqlText.contains("rooms_events")) {
+                    return List.of(Arrays.asList(
+                        88L, "event-room", "owner", 0L, 4L, 25L, "event-room-description", 1L, null,
+                        8L, 9L, "event-room-icon", "tag-a", "tag-b", 1L, 0L));
+                }
+                if (sqlText.contains("rooms_events")) {
+                    return List.of(Arrays.asList(
+                        12L, "event", "owner", "open", 4L, 25L, "event-description", 1L, 1L,
+                        8L, 9L, "event-icon", "tag-a", "tag-b", "12:30"));
+                }
+                return List.of(Arrays.asList(
+                    77L, "room", "owner", 0L, 4L, 25L, "description", 1L, null,
+                    8L, 9L, "icon", "tag-a", "tag-b", 1L, 0L));
+            }
+        });
+        List<RoomDao.NavigatorEventRow> navigatorSearchEvents =
+            navigatorSearchDao.navigatorSearchEvents("search", "%H:%i", 50L);
+        List<NavigatorRoom> navigatorSearchRooms = navigatorSearchDao.navigatorSearchRooms("search", 50L);
+        List<NavigatorRoom> topRatedRooms = navigatorSearchDao.topRatedNavigatorRooms(50L);
+        List<NavigatorRoom> popularRooms = navigatorSearchDao.popularNavigatorRooms(2L, 50L);
+        List<NavigatorRoom> eventCategoryRooms = navigatorSearchDao.eventCategoryNavigatorRooms(2L, 50L);
+        List<NavigatorRoom> ownedRooms = navigatorSearchDao.ownedNavigatorRooms(77L, 50L);
+        List<NavigatorRoom> friendCurrentRooms = navigatorSearchDao.friendCurrentNavigatorRooms(77L, 50L);
+        List<NavigatorRoom> friendOwnedRooms = navigatorSearchDao.friendOwnedNavigatorRooms(77L, 50L);
+        List<NavigatorRoom> favouriteRooms = navigatorSearchDao.favouriteNavigatorRooms(77L, 50L);
+        List<NavigatorRoom> recentRooms = navigatorSearchDao.recentlyVisitedNavigatorRooms(77L, 50L);
+        List<RoomDao.NavigatorEventRow> tagEvents = navigatorSearchDao.navigatorTagEvents("tag-a", "%H:%i", 50L);
+        List<NavigatorRoom> tagRooms = navigatorSearchDao.navigatorTagRooms("tag-a", 50L);
+        assertEquals("event", navigatorSearchEvents.get(0).eventName());
+        assertEquals("room", navigatorSearchRooms.get(0).roomName());
+        assertEquals("room", topRatedRooms.get(0).roomName());
+        assertEquals("room", popularRooms.get(0).roomName());
+        assertEquals("event-room", eventCategoryRooms.get(0).roomName());
+        assertEquals("room", ownedRooms.get(0).roomName());
+        assertEquals("room", friendCurrentRooms.get(0).roomName());
+        assertEquals("room", friendOwnedRooms.get(0).roomName());
+        assertEquals("room", favouriteRooms.get(0).roomName());
+        assertEquals("room", recentRooms.get(0).roomName());
+        assertEquals("event", tagEvents.get(0).eventName());
+        assertEquals("room", tagRooms.get(0).roomName());
+        assertEquals(12, navigatorSearchSql.size());
+        RoomDao officialNavigatorDao = new RoomDao(new Database() {
+            @Override
+            public void execute(String sqlText) {
+            }
+
+            @Override
+            public List<List<Object>> query(String sqlText) {
+                return List.of(Arrays.asList(
+                    2L, 1L, 5L, "caption", "caption-2", "caption-3", null,
+                    "77", "room", "owner", "0", "4", "25", "description", "1", null,
+                    "8", "9", "icon", "tag-a", "tag-b", "1", null, null, null, 3L, 44L, 7L));
+            }
+        });
+        OfficialNavigatorItem mappedOfficialItem = officialNavigatorDao.officialNavigatorItems().get(0);
+        assertEquals(77L, NumberUtils.parseLong(mappedOfficialItem.roomId()));
+        assertEquals("room", mappedOfficialItem.roomName());
+        assertEquals(3L, mappedOfficialItem.parentId());
+        assertEquals(7L, mappedOfficialItem.requiredLevel());
+        assertEquals(true, mappedOfficialItem.requiredLevelPresent());
+        RoomDao.NavigatorEventRow typedNavigatorEvent = new RoomDao.NavigatorEventRow(
             10L, "room", "owner", "desc", 3L, 25L, "open", 1L, 9L, 4L, "tag1", "tag2", "event", "1");
-        String expectedEventFragment = Crypto.Proc_3_0_6D2AF0(10, null, "");
-        expectedEventFragment = Crypto.Proc_3_0_6D2AF0(3, null, expectedEventFragment);
-        expectedEventFragment = Crypto.Proc_3_0_6D2AF0(25, null, expectedEventFragment);
-        expectedEventFragment = Crypto.Proc_3_0_6D2AF0(9, null, expectedEventFragment);
-        expectedEventFragment = Crypto.Proc_3_0_6D2AF0(4, null, expectedEventFragment);
-        expectedEventFragment = Crypto.Proc_3_0_6D2AF0(1, null, expectedEventFragment)
+        String expectedEventFragment = encodedVl64(10, null, "");
+        expectedEventFragment = encodedVl64(3, null, expectedEventFragment);
+        expectedEventFragment = encodedVl64(25, null, expectedEventFragment);
+        expectedEventFragment = encodedVl64(9, null, expectedEventFragment);
+        expectedEventFragment = encodedVl64(4, null, expectedEventFragment);
+        expectedEventFragment = encodedVl64(1, null, expectedEventFragment)
             + " room\2owner\2desc\2open\2tag1\2tag2\2event\2" + "1\2H";
-        assertEquals(expectedEventFragment, NavigatorPayloads.eventFragment(legacyNavigatorEvent));
-        String expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(10, null, "");
-        expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(3, null, expectedRoomFragment);
-        expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(25, null, expectedRoomFragment);
-        expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(9, null, expectedRoomFragment);
-        expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(4, null, expectedRoomFragment);
-        expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomFragment);
-        expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomFragment);
-        expectedRoomFragment = Crypto.Proc_3_0_6D2AF0(0, null, expectedRoomFragment)
-            + "room\2owner\2desc\2open\2tag1\2tag2\2event\2H";
-        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomFragment),
-            NavigatorPayloads.legacyRoomList(List.of(legacyNavigatorRoom)));
-        assertEquals(expectedRoomFragment, NavigatorPayloads.roomFragment(legacyNavigatorRoom));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, expectedEventFragment),
-            NavigatorPayloads.eventList(List.of(legacyNavigatorEvent)));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, expectedEventFragment + expectedRoomFragment),
-            NavigatorPayloads.combinedLegacyRoomList(List.of(legacyNavigatorEvent), List.of(legacyNavigatorRoom)));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), NavigatorPayloads.legacyRoomList(List.of()));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), NavigatorPayloads.roomList(List.of()));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), NavigatorPayloads.eventList(List.of()));
+        assertEquals(expectedEventFragment, NavigatorPayloads.eventFragment(typedNavigatorEvent));
+        String expectedRoomFragment = encodedVl64(10, null, "");
+        expectedRoomFragment = encodedVl64(3, null, expectedRoomFragment);
+        expectedRoomFragment = encodedVl64(25, null, expectedRoomFragment);
+        expectedRoomFragment = encodedVl64(9, null, expectedRoomFragment);
+        expectedRoomFragment = encodedVl64(4, null, expectedRoomFragment);
+        expectedRoomFragment = encodedVl64(1, null, expectedRoomFragment);
+        expectedRoomFragment = encodedVl64(1, null, expectedRoomFragment);
+        expectedRoomFragment = encodedVl64(0, null, expectedRoomFragment);
+        NavigatorRoom typedNavigatorRoom = new NavigatorRoom(
+            10L, "room", "owner", 0L, 3L, 25L, "desc", 1L, 9L, 4L, "event", "tag1", "tag2", 1L, 0L);
+        expectedRoomFragment += "room\2owner\2" + "0" + "\2desc\2event\2tag1\2tag2\2H";
+        assertEquals(encodedVl64(1, null, expectedRoomFragment),
+            NavigatorPayloads.roomList(List.of(typedNavigatorRoom)));
+        assertEquals(expectedRoomFragment, NavigatorPayloads.roomFragment(typedNavigatorRoom));
+        assertEquals(encodedVl64(0, null, "GF") + NavigatorPayloads.singleRoom(typedNavigatorRoom),
+            NavigatorPayloads.singleRoomResponse(typedNavigatorRoom));
+        assertEquals(encodedVl64(1, null, expectedEventFragment),
+            NavigatorPayloads.eventList(List.of(typedNavigatorEvent)));
+        assertEquals(encodedVl64(2, null, expectedEventFragment + expectedRoomFragment),
+            NavigatorPayloads.combinedRoomList(List.of(typedNavigatorEvent), List.of(typedNavigatorRoom)));
+        assertEquals(encodedVl64(0, null, ""), NavigatorPayloads.roomList(List.of()));
+        assertEquals(encodedVl64(0, null, ""), NavigatorPayloads.eventList(List.of()));
         OfficialNavigatorItem officialItem = new OfficialNavigatorItem(
             1L, 2L, 3L, "caption", "cap2", "cap3", "7", "8", "9", "10",
             "11", "12", "13", "description", "15", "16", "17", "18", "icon",
@@ -1950,114 +2399,147 @@ public final class PortedModuleSmokeTest {
         String expectedOfficialRow = expectedOfficialNavigatorRow(officialItem);
         assertEquals(expectedOfficialRow, NavigatorPayloads.officialItem(officialItem));
         assertEquals(expectedOfficialRow, NavigatorPayloads.official(List.of(officialItem), false));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedOfficialRow,
+        assertEquals(encodedVl64(1, null, "") + expectedOfficialRow,
             NavigatorPayloads.official(List.of(officialItem), true));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), NavigatorPayloads.official(List.of(), true));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, Crypto.Proc_3_0_6D2AF0(12, null, "L\u007f")),
+        assertEquals(encodedVl64(0, null, ""), NavigatorPayloads.official(List.of(), true));
+        assertEquals(encodedVl64(1, null, encodedVl64(12, null, "L\u007f")),
             NavigatorPayloads.newFriendRoom(new com.alphaseries.game.navigator.NewFriendRooms.RoomPick(12L, 1L)));
-        assertEquals("GCPC7\2" + Crypto.Proc_3_0_6D2AF0(50, null, "") + "ROWS",
-            NavigatorPayloads.queryResult("GCPC", 7, 50, "ROWS"));
-        assertEquals("GC" + '\0' + '\2' + Crypto.Proc_3_0_6D2AF0(50, null, "") + "ROWS",
-            NavigatorPayloads.queryResult("GC", "\0", 50, "ROWS"));
-        assertEquals("GCSAquery\2" + Crypto.Proc_3_0_6D2AF0(50, null, "") + "ROWS",
-            NavigatorPayloads.queryResult("GCSA", "query", 50, "ROWS"));
-        Licence.global_008292BC = "20\t1\t2\t3\t4\t5\t6\t7\t8\t9\t10\t11\t12\t13\tchair\tseat\t16\t17\tchair_sprite\r"
-            + "21\t9\t2\t3\t4\t5\t6\t7\t8\t9\t10\t11\t12\t13\tposter\twall\t16\t17\tposter_sprite";
-        String expectedInventoryItem = Crypto.Proc_3_0_6D2AF0(100, null, "0") + "S\2"
-            + Crypto.Proc_3_0_6D2AF0(100, null, "")
-            + Crypto.Proc_3_0_6D2AF0(20, null, "")
-            + Crypto.Proc_3_0_6D2AF0(1, null, "")
+        assertEquals("GCPC7\2" + encodedVl64(50, null, "") + NavigatorPayloads.roomList(List.of(typedNavigatorRoom)),
+            NavigatorPayloads.queryResult("GCPC", "7", 50, List.of(typedNavigatorRoom)));
+        assertEquals("GC" + '\0' + '\2' + encodedVl64(50, null, "") + NavigatorPayloads.roomList(List.of()),
+            NavigatorPayloads.queryResult("GC", "\0", 50, List.of()));
+        assertEquals("GCSAquery\2" + encodedVl64(50, null, "") + expectedEventFragment + expectedRoomFragment
+                + encodedVl64(2, null, ""),
+            NavigatorPayloads.combinedQueryResult(
+                "GCSA",
+                "query",
+                50,
+                List.of(typedNavigatorEvent),
+                List.of(typedNavigatorRoom)));
+        assertEquals("GCPC7\2" + encodedVl64(50, null, "") + NavigatorPayloads.roomList(List.of(typedNavigatorRoom))
+                + "REC",
+            NavigatorPayloads.queryResultWithRecommended(
+                "GCPC",
+                "7",
+                50,
+                List.of(typedNavigatorRoom),
+                RecommendedRooms.fromPayloads(Map.of(0L, "REC"), 1L),
+                1L));
+        seedCatalogRegistryProductRows(List.of(
+            productDaoRow(20, "0", "1", "13", "chair", "14", "seat", "17", "chair_sprite"),
+            productDaoRow(21, "0", "9", "13", "poster", "14", "wall", "17", "poster_sprite")));
+        String expectedInventoryItem = encodedVl64(100, null, "0") + "S\2"
+            + encodedVl64(100, null, "")
+            + encodedVl64(20, null, "")
+            + encodedVl64(1, null, "")
             + "a\tb\2"
-            + Crypto.Proc_3_0_6D2AF0(4, null, "")
+            + encodedVl64(4, null, "")
             + "chair\2seat\2chair_sprite\2M\2"
-            + Crypto.Proc_3_0_6D2AF0(4, null, "");
+            + encodedVl64(4, null, "");
         assertEquals(expectedInventoryItem, InventoryMessagePayloads.item(100, 20, "a\bb", 4));
-        assertEquals(expectedInventoryItem, Handling.Proc_6_138_7678A0(100, 20, "a\bb", 4));
         String iconInventoryItem = InventoryMessagePayloads.item(101, 21, "", 0);
-        assertEquals(true, iconInventoryItem.contains("0" + Crypto.Proc_3_0_6D2AF0(101, null, "") + "I\2"));
+        assertEquals(true, iconInventoryItem.contains("0" + encodedVl64(101, null, "") + "I\2"));
         assertEquals(true, iconInventoryItem.contains("poster\2wall\2poster_sprite\2"));
-        String[] productTypeCache = new String[22];
-        productTypeCache[20] = "1";
-        productTypeCache[21] = "9";
-        DataManager.global_008292BC = productTypeCache;
-        Handling.InventoryPayloads inventoryPayloads = Handling.inventoryPayloadsFromInventory(
-            InventoryMessagePayloads.listFromItems(List.of(
-                new InventoryItemRow(100L, 20L, "a\bb", 4L),
-                new InventoryItemRow(101L, 21L, "", 0L))));
-        assertEquals(1L, inventoryPayloads.regularCount);
-        assertEquals(1L, inventoryPayloads.iconCount);
-        assertEquals(expectedInventoryItem, inventoryPayloads.regularPayload);
-        assertEquals(iconInventoryItem, inventoryPayloads.iconPayload);
-        assertEquals('\2' + Crypto.Proc_3_0_6D2AF0(1, null, "BLS" + '\2' + "II") + expectedInventoryItem,
-            InventoryMessagePayloads.regularList(1, expectedInventoryItem));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "BL" + '\2' + "II") + iconInventoryItem,
-            InventoryMessagePayloads.iconList(1, iconInventoryItem));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null,
-            Crypto.Proc_3_0_6D2AF0(0, null,
-                Crypto.Proc_3_0_6D2AF0(0, null,
-                    Crypto.Proc_3_0_6D2AF0(0, null, "Id") + "HHH"))) + "H",
+        GameDataCaches.setProductCache(ProductCache.fromProductRows(List.of(
+            productCacheRow(20, "0", "1"),
+            productCacheRow(21, "0", "9"))));
+        InventoryMessagePayloads.InventoryList inventoryPayloads = InventoryMessagePayloads.listFromItems(List.of(
+            new InventoryItemRow(100L, 20L, "a\bb", 4L),
+            new InventoryItemRow(101L, 21L, "", 0L)));
+        assertEquals(1L, inventoryPayloads.regularCount());
+        assertEquals(1L, inventoryPayloads.iconCount());
+        assertEquals(expectedInventoryItem, inventoryPayloads.regularPayload());
+        assertEquals(iconInventoryItem, inventoryPayloads.iconPayload());
+        assertEquals('\2' + encodedVl64(1, null, "BLS" + '\2' + "II") + expectedInventoryItem,
+            InventoryMessagePayloads.regularList(inventoryPayloads));
+        assertEquals(encodedVl64(1, null, "BL" + '\2' + "II") + iconInventoryItem,
+            InventoryMessagePayloads.iconList(inventoryPayloads));
+        assertEquals(encodedVl64(0, null,
+            encodedVl64(0, null,
+                encodedVl64(0, null,
+                    encodedVl64(0, null, "Id") + "HHH"))) + "H",
             InventoryMessagePayloads.emptyRentalList());
-        List<RepresentedTradeOffer> tradeOffers = Handling.representedTradeOfferStore(List.of(), 2, 100, 20, "a\rb", 4);
+        List<RepresentedTradeOffer> tradeOffers = TradePayloads.storeOffer(List.of(), 2, 100, 20, "a\rb", 4);
         assertEquals(1, tradeOffers.size());
         assertEquals(2L, tradeOffers.get(0).socketIndex());
         assertEquals(100L, tradeOffers.get(0).furnitureId());
         assertEquals(20L, tradeOffers.get(0).productId());
         assertEquals("ab", tradeOffers.get(0).signText());
         assertEquals(4L, tradeOffers.get(0).secondaryValue());
-        tradeOffers = Handling.representedTradeOfferStore(tradeOffers, 2, 101, 21, "", 0);
+        tradeOffers = TradePayloads.storeOffer(tradeOffers, 2, 101, 21, "", 0);
         assertEquals(2, tradeOffers.size());
-        tradeOffers = Handling.representedTradeOfferStore(tradeOffers, 3, 102, 20, "x", 5);
+        tradeOffers = TradePayloads.storeOffer(tradeOffers, 3, 102, 20, "x", 5);
         assertEquals(3, tradeOffers.size());
-        tradeOffers = Handling.representedTradeOfferStore(tradeOffers, 2, 100, 20, "new", 6);
+        tradeOffers = TradePayloads.storeOffer(tradeOffers, 2, 100, 20, "new", 6);
         assertEquals(3, tradeOffers.size());
         assertEquals("new", tradeOffers.get(0).signText());
         assertEquals(6L, tradeOffers.get(0).secondaryValue());
-        assertEquals("'100','101'", Handling.representedTradeOfferSqlIds(tradeOffers, 2));
-        assertEquals(List.of(100L, 101L), Handling.representedTradeOfferFurnitureIds(tradeOffers, 2));
-        assertEquals("100:20\1" + "101:21", Handling.representedTradeOfferLogItems(tradeOffers, 2));
-        Handling.TradeOfferItemPayload sourceTradeItems = Handling.representedTradeOfferItemPayload(tradeOffers, 2);
+        assertEquals(List.of(100L, 101L), TradePayloads.furnitureIds(tradeOffers, 2));
+        assertEquals("100:20\1" + "101:21", TradePayloads.logItems(tradeOffers, 2));
+        TradePayloads.ItemPayload sourceTradeItems = TradePayloads.itemPayload(tradeOffers, 2);
         String expectedSourceTradeItems = InventoryMessagePayloads.item(100, 20, "new", 6) + iconInventoryItem;
-        assertEquals(2L, sourceTradeItems.itemCount);
-        assertEquals(expectedSourceTradeItems, sourceTradeItems.payload);
-        Handling.TradeOfferItemPayload targetTradeItems = Handling.representedTradeOfferItemPayload(tradeOffers, 3);
+        assertEquals(2L, sourceTradeItems.itemCount());
+        assertEquals(expectedSourceTradeItems, sourceTradeItems.payload());
+        TradePayloads.ItemPayload targetTradeItems = TradePayloads.itemPayload(tradeOffers, 3);
         String expectedTargetTradeItems = InventoryMessagePayloads.item(102, 20, "x", 5);
-        assertEquals(1L, targetTradeItems.itemCount);
-        assertEquals(expectedTargetTradeItems, targetTradeItems.payload);
-        String expectedTradePayload = Crypto.Proc_3_0_6D2AF0(5, null, "Al");
-        expectedTradePayload = Crypto.Proc_3_0_6D2AF0(6, null, expectedTradePayload);
-        expectedTradePayload = Crypto.Proc_3_0_6D2AF0(2, null, expectedTradePayload) + expectedSourceTradeItems;
-        expectedTradePayload = Crypto.Proc_3_0_6D2AF0(1, null, expectedTradePayload) + expectedTargetTradeItems;
+        assertEquals(1L, targetTradeItems.itemCount());
+        assertEquals(expectedTargetTradeItems, targetTradeItems.payload());
+        String expectedTradePayload = encodedVl64(5, null, "Al");
+        expectedTradePayload = encodedVl64(6, null, expectedTradePayload);
+        expectedTradePayload = encodedVl64(2, null, expectedTradePayload) + expectedSourceTradeItems;
+        expectedTradePayload = encodedVl64(1, null, expectedTradePayload) + expectedTargetTradeItems;
         assertEquals(expectedTradePayload, TradePayloads.confirmation(5, 6, 2, expectedSourceTradeItems, 1, expectedTargetTradeItems));
-        assertEquals(expectedTradePayload, Handling.representedTradeOfferPayload(tradeOffers, 2, 3, "5", "6"));
-        List<RepresentedTradeOffer> removedSingleTradeOffer = Handling.representedTradeOfferRemove(tradeOffers, 2, 101);
+        assertEquals(expectedTradePayload, TradePayloads.offerPayload(tradeOffers, 2, 3, "5", "6"));
+        List<RepresentedTradeOffer> removedSingleTradeOffer = TradePayloads.removeOffer(tradeOffers, 2, 101);
         assertEquals(2, removedSingleTradeOffer.size());
         assertEquals(100L, removedSingleTradeOffer.get(0).furnitureId());
         assertEquals(102L, removedSingleTradeOffer.get(1).furnitureId());
-        List<RepresentedTradeOffer> removedSocketTradeOffers = Handling.representedTradeOfferRemove(tradeOffers, 2, 0);
+        List<RepresentedTradeOffer> removedSocketTradeOffers = TradePayloads.removeOffer(tradeOffers, 2, 0);
         assertEquals(1, removedSocketTradeOffers.size());
         assertEquals(3L, removedSocketTradeOffers.get(0).socketIndex());
         assertEquals(102L, removedSocketTradeOffers.get(0).furnitureId());
-        Handling.FurnitureMoveRequest moveRequest = Handling.furnitureMoveRequestFromPayload("A[100\1" + "3\2" + "4\t2");
-        assertEquals(100L, moveRequest.furnitureId);
-        assertEquals(3L, moveRequest.positionX);
-        assertEquals(4L, moveRequest.positionY);
-        assertEquals(2L, moveRequest.rotation);
-        Handling.FurnitureMoveRequest wireMoveRequest = Handling.furnitureMoveRequestFromPayload("A");
-        assertEquals(1L, wireMoveRequest.furnitureId);
-        assertEquals(0L, wireMoveRequest.positionX);
-        String expectedPointBalance = Crypto.Proc_3_0_6D2AF0(4, null, "M@")
-            + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(10, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(20, null, "")
-            + Crypto.Proc_3_0_6D2AF0(3, null, "")
-            + Crypto.Proc_3_0_6D2AF0(0, null, "")
-            + Crypto.Proc_3_0_6D2AF0(4, null, "")
-            + Crypto.Proc_3_0_6D2AF0(40, null, "");
+        assertEquals(76L, TradeWire.furnitureRequest("FU" + wireLong(76), "FU").furnitureId());
+        assertEquals(76L, TradeWire.furnitureRequest("AH" + wireLong(76), "AH").furnitureId());
+        FurnitureWire.FurnitureMoveRequest moveRequest = FurnitureWire.moveRequest("A[100\1" + "3\2" + "4\t2");
+        assertEquals(100L, moveRequest.furnitureId());
+        assertEquals(3L, moveRequest.positionX());
+        assertEquals(4L, moveRequest.positionY());
+        assertEquals(2L, moveRequest.rotation());
+        FurnitureWire.FurnitureMoveRequest wireMoveRequest = FurnitureWire.moveRequest("A");
+        assertEquals(1L, wireMoveRequest.furnitureId());
+        assertEquals(0L, wireMoveRequest.positionX());
+        FurnitureWire.FloorPlacementRequest floorPlacementRequest =
+            FurnitureWire.floorPlacementRequest("A[100\1" + "3\2" + "4\t2");
+        assertEquals("100\1" + "3\2" + "4\t2", floorPlacementRequest.placementPayload());
+        assertEquals(100L, floorPlacementRequest.placement().furnitureId());
+        assertEquals(3L, floorPlacementRequest.placement().positionX());
+        assertEquals(4L, floorPlacementRequest.placement().positionY());
+        assertEquals(2L, floorPlacementRequest.placement().rotation());
+        String expectedPointBalance = encodedVl64(4, null, "M@")
+            + encodedVl64(1, null, "")
+            + encodedVl64(10, null, "")
+            + encodedVl64(2, null, "")
+            + encodedVl64(20, null, "")
+            + encodedVl64(3, null, "")
+            + encodedVl64(0, null, "")
+            + encodedVl64(4, null, "")
+            + encodedVl64(40, null, "");
         assertEquals(expectedPointBalance, UserPayloads.activityPointBalance(10L, 20L, 0L, 40L));
-        assertEquals(1L, Handling.pickupFurnitureIdFromPayload("AZA"));
-        assertEquals(1L, Handling.pickupFurnitureIdFromPayload("A"));
-        Handling.FurnitureCacheState tracked = Handling.trackFurnitureCacheMarker(
+        assertEquals(1L, FurnitureWire.pickupFurnitureId("AZA"));
+        assertEquals(1L, FurnitureWire.pickupFurnitureId("A"));
+        assertEquals(1L, FurnitureWire.pickupFurnitureRequest("AZA").furnitureId());
+        assertEquals(73L, FurnitureWire.creditFurnitureRequest("AT" + wireLong(73)).furnitureId());
+        assertEquals(86L, FurnitureWire.floorStateFurnitureId("Ch" + wireLong(86)));
+        assertEquals(86L, FurnitureWire.floorStateFurnitureId("FH" + wireLong(86)));
+        assertEquals(86L, FurnitureWire.floorStateFurnitureId(wireLong(86)));
+        assertEquals(86L, FurnitureWire.floorStateFurnitureRequest("Ch" + wireLong(86)).furnitureId());
+        assertEquals(93L, FurnitureWire.simpleFloorItemUseRequest("AM" + wireLong(93), "AM").furnitureId());
+        assertEquals(94L, FurnitureWire.simpleFloorItemUseRequest("AL" + wireLong(94), "AL").furnitureId());
+        FurnitureWire.FloorFurniturePackageRequest packageRequest =
+            FurnitureWire.floorFurniturePackageRequest("FH" + wireLong(95));
+        assertEquals(95L, packageRequest.furnitureId());
+        assertEquals(wireLong(95), packageRequest.requestPayload());
+        FurnitureRoomCache.State tracked = FurnitureRoomCache.trackMarker(
             "\1" + "8\2\1" + "5\tstale\2",
             "\1" + "7\2\1" + "7\told\2",
             "\1" + "7\2\1" + "7\troom\2\1" + "9\2",
@@ -2066,7 +2548,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("\1" + "8\2\1" + "5\2", tracked.pendingRoomCache);
         assertEquals("\1" + "7\2", tracked.pendingFurnitureCache);
         assertEquals("\1" + "9\2", tracked.representedRoomCache);
-        Handling.FurnitureCacheState removed = Handling.removeFurnitureCacheMarker(
+        FurnitureRoomCache.State removed = FurnitureRoomCache.removeMarker(
             "\1" + "7\2\1" + "7\troom\2\1" + "8\2",
             "\1" + "7\2\1" + "7\told\2",
             "\1" + "7\2\1" + "7\troom\2\1" + "9\2",
@@ -2074,24 +2556,24 @@ public final class PortedModuleSmokeTest {
         assertEquals("\1" + "8\2", removed.pendingRoomCache);
         assertEquals("", removed.pendingFurnitureCache);
         assertEquals("\1" + "9\2", removed.representedRoomCache);
-        assertEquals(1L, Handling.nextFurnitureState("chair", 0, 1));
-        assertEquals(0L, Handling.nextFurnitureState("chair", 1, 1));
-        assertEquals(99L, Handling.nextFurnitureState("bb_score_blue", 98, 0));
-        assertEquals(0L, Handling.nextFurnitureState("scoreboard", 99, 0));
-        long diceState = Handling.nextFurnitureState("dice_red", 0, 0);
+        assertEquals(1L, FurnitureWire.nextState("chair", 0, 1));
+        assertEquals(0L, FurnitureWire.nextState("chair", 1, 1));
+        assertEquals(99L, FurnitureWire.nextState("bb_score_blue", 98, 0));
+        assertEquals(0L, FurnitureWire.nextState("scoreboard", 99, 0));
+        long diceState = FurnitureWire.nextState("dice_red", 0, 0);
         assertEquals(true, diceState >= 1L && diceState <= 6L);
         assertEquals("AX77\2" + "3\2", FurniturePayloads.stateChanged(77, 3));
-        assertEquals("0" + Crypto.Proc_3_0_6D2AF0(3, null,
-            Crypto.Proc_3_0_6D2AF0(77, null, "AZ")), FurniturePayloads.simpleFloorUse(77, 3));
+        assertEquals("0" + encodedVl64(3, null,
+            encodedVl64(77, null, "AZ")), FurniturePayloads.simpleFloorUse(77, 3));
         assertEquals(
-            Crypto.Proc_3_0_6D2AF0(77, null, "Iu")
-                + Crypto.Proc_3_0_6D2AF0(0, null, "")
-                + Crypto.Proc_3_0_6D2AF0(3, null, "")
-                + Crypto.Proc_3_0_6D2AF0(10, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(1, null, ""),
+            encodedVl64(77, null, "Iu")
+                + encodedVl64(0, null, "")
+                + encodedVl64(3, null, "")
+                + encodedVl64(10, null, "")
+                + encodedVl64(2, null, "")
+                + encodedVl64(1, null, ""),
             FurniturePayloads.chargePrompt(77, 0, 3, 10, 2, 1));
-        Handling.FurnitureStateCache stateCache = Handling.representedFurnitureStateCache(
+        FurnitureRoomCache.State stateCache = FurnitureRoomCache.stateCache(
             "\1" + "5\2\1" + "9\told\2",
             "\1" + "77\2",
             "\1" + "5\t77\t1\2\1" + "77\2\1" + "88\2",
@@ -2101,7 +2583,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("\1" + "9\told\2\1" + "5\2", stateCache.pendingRoomCache);
         assertEquals("\1" + "77\2", stateCache.pendingFurnitureCache);
         assertEquals("\1" + "5\t77\t4\2", stateCache.representedRoomCache);
-        Handling.FurnitureStateCache stateWrite = Handling.representedFurnitureStateWrite(
+        FurnitureRoomCache.State stateWrite = FurnitureRoomCache.stateWrite(
             "\1" + "5\2\1" + "8\2",
             "\1" + "77\2\1" + "88\2",
             "\1" + "77\2\1" + "77\t5\told\2\1" + "99\t5\tkeep\2",
@@ -2111,213 +2593,249 @@ public final class PortedModuleSmokeTest {
         assertEquals("\1" + "8\2\1" + "5\2", stateWrite.pendingRoomCache);
         assertEquals("\1" + "88\2\1" + "77\2", stateWrite.pendingFurnitureCache);
         assertEquals("\1" + "99\t5\tkeep\2\1" + "77\t5\tnew-state\2", stateWrite.representedRoomCache);
-        Handling.FurnitureStateCache stateWriteNoRoom = Handling.representedFurnitureStateWrite("", "", "", 0, 77, "off");
+        FurnitureRoomCache.State stateWriteNoRoom = FurnitureRoomCache.stateWrite("", "", "", 0, 77, "off");
         assertEquals("", stateWriteNoRoom.pendingRoomCache);
         assertEquals("\1" + "77\2", stateWriteNoRoom.pendingFurnitureCache);
         assertEquals("\1" + "77\t0\toff\2", stateWriteNoRoom.representedRoomCache);
-        String expectedWallInventory = "0" + Crypto.Proc_3_0_6D2AF0(9, null,
-            Crypto.Proc_3_0_6D2AF0(20, null, "77\2") + ":w=1,2 l=3,4\2data\2");
+        String expectedWallInventory = "0" + encodedVl64(9, null,
+            encodedVl64(20, null, "77\2") + ":w=1,2 l=3,4\2data\2");
         assertEquals(expectedWallInventory,
             FurniturePayloads.wallInventoryPlacement(77, 20, ":w=1,2 l=3,4", "data", 9));
-        assertEquals(expectedWallInventory, Handling.Proc_6_156_7972B0(77, 20, ":w=1,2 l=3,4", "data", 9));
-        String expectedFloorPlacement = Crypto.Proc_3_0_6D2AF0(99, null, "0");
-        expectedFloorPlacement = Crypto.Proc_3_0_6D2AF0(1, null, expectedFloorPlacement);
-        expectedFloorPlacement = "0" + Crypto.Proc_3_0_6D2AF0(2, null, expectedFloorPlacement);
-        expectedFloorPlacement = "0" + Crypto.Proc_3_0_6D2AF0(4, null, expectedFloorPlacement);
-        expectedFloorPlacement = Crypto.Proc_3_0_6D2AF0(3, null, expectedFloorPlacement) + "state\2";
-        expectedFloorPlacement = Crypto.Proc_3_0_6D2AF0(7, null, expectedFloorPlacement) + "a\tb\tc\2M";
-        expectedFloorPlacement = Crypto.Proc_3_0_6D2AF0(20, null, expectedFloorPlacement);
+        assertEquals(expectedWallInventory, FurniturePayloads.wallInventoryPlacement(77, 20, ":w=1,2 l=3,4", "data", 9));
+        String expectedFloorPlacement = encodedVl64(99, null, "0");
+        expectedFloorPlacement = encodedVl64(1, null, expectedFloorPlacement);
+        expectedFloorPlacement = "0" + encodedVl64(2, null, expectedFloorPlacement);
+        expectedFloorPlacement = "0" + encodedVl64(4, null, expectedFloorPlacement);
+        expectedFloorPlacement = encodedVl64(3, null, expectedFloorPlacement) + "state\2";
+        expectedFloorPlacement = encodedVl64(7, null, expectedFloorPlacement) + "a\tb\tc\2M";
+        expectedFloorPlacement = encodedVl64(20, null, expectedFloorPlacement);
         assertEquals(expectedFloorPlacement,
             FurniturePayloads.floorPlacement(99, 1, 2, 4, 3, "state", "a\bb{{9}}c", 7, 20));
-        assertEquals(expectedFloorPlacement, Handling.Proc_6_161_7B2EE0(99, 1, 2, 4, 3, "state", "a\bb{{9}}c", 7, 20));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BAi\2") + "data\2",
+        assertEquals(expectedFloorPlacement, FurniturePayloads.floorPlacement(99, 1, 2, 4, 3, "state", "a\bb{{9}}c", 7, 20));
+        assertEquals(encodedVl64(77, null, "BAi\2") + "data\2",
             FurniturePayloads.presentOpened(77, "i", "data"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(88, null,
-            Crypto.Proc_3_0_6D2AF0(77, null, "L}package\2")) + "H",
+        assertEquals(encodedVl64(88, null,
+            encodedVl64(77, null, "L}package\2")) + "H",
             FurniturePayloads.packageOpened(77, 88, "package"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "@^") + expectedFloorPlacement,
-            FurniturePayloads.floorList(2, expectedFloorPlacement));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(3, null, "@m") + expectedWallInventory,
-            FurniturePayloads.wallList(3, expectedWallInventory));
-        assertEquals("0DAQBHHIIKHJHPAHQA\2SAHPBhttp://www.alpha-series.com/\2QBH", Handling.systemHandshakePayload(""));
-        assertEquals("0FMT\2SAHPBhttp://www.alpha-series.com/\2QBH", Handling.systemHandshakePayload("FMT"));
-        assertEquals("ticket one", Handling.handlingLoginTicketFromPayload("F_ticket\none"));
-        assertEquals("ticket two", Handling.handlingLoginTicketFromPayload(" F_ticket two "));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, Crypto.Proc_3_0_6D2AF0(300, null, "Fv") + "H"),
+        String expectedModelFloorPlacement = FurniturePayloads.floorPlacement(99, 1, 2, 4, 3, "", "a\bb{{9}}c", 0, 20);
+        assertEquals(encodedVl64(2, null, "@^") + expectedModelFloorPlacement + expectedModelFloorPlacement,
+            FurniturePayloads.floorList(List.of(
+                new RoomModelFurnitureRow(20L, 99L, "sprite", 1L, 2L, 3L, "a\bb{{9}}c", 4L, 7L),
+                new RoomModelFurnitureRow(20L, 99L, "sprite", 1L, 2L, 3L, "a\bb{{9}}c", 4L, 7L))));
+        String expectedWallListItem = FurniturePayloads.wallInventoryPlacement(100L, 101L, "wallpos", "state", 5L);
+        assertEquals(encodedVl64(3, null, "@m") + expectedWallListItem + expectedWallListItem + expectedWallListItem,
+            FurniturePayloads.wallList(List.of(
+                new FurnitureDao.WallFurniture(100L, 101L, "wallpos", "state", 5L),
+                new FurnitureDao.WallFurniture(100L, 101L, "wallpos", "state", 5L),
+                new FurnitureDao.WallFurniture(100L, 101L, "wallpos", "state", 5L))));
+        assertEquals("0DAQBHHIIKHJHPAHQA\2SAHPBhttp://www.alpha-series.com/\2QBH", SessionPayloads.systemHandshake(""));
+        assertEquals("0FMT\2SAHPBhttp://www.alpha-series.com/\2QBH", SessionPayloads.systemHandshake("FMT"));
+        assertEquals("ticket one", SessionWire.loginTicket("F_ticket\none"));
+        assertEquals("ticket two", SessionWire.loginTicket(" F_ticket two "));
+        assertEquals(encodedVl64(2, null, encodedVl64(300, null, "Fv") + "H"),
             UserPayloads.activityPointRefresh(2, 300));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, Crypto.Proc_3_0_6D2AF0(300, null, "Fv")) + "H",
+        assertEquals(encodedVl64(2, null, encodedVl64(300, null, "Fv")) + "H",
             UserPayloads.activityPointAward(2, 300));
-        Handling.ActivityPointAward pointAward = Handling.activityPointAwardDecision(120, 2, 60, 500, 25, 300);
-        assertEquals(true, pointAward.shouldAward);
-        assertEquals(325L, pointAward.newPoints);
-        assertEquals(UserPayloads.activityPointAward(2, 325), pointAward.payload);
-        assertEquals(false, Handling.activityPointAwardDecision(121, 2, 60, 500, 25, 300).shouldAward);
-        String busyCache = "[4]a\2b\2c\2d\2e\2" + "1[5]a\2b\2c\2d\2e\2" + "0";
-        assertEquals(true, Handling.isSocketMarkedBusy(busyCache, 4));
-        assertEquals(false, Handling.isSocketMarkedBusy(busyCache, 5));
-        assertEquals(false, Handling.isSocketMarkedBusy("[6]a\2b", 6));
-        assertEquals(false, Handling.isSocketMarkedBusy(busyCache, 9));
+        UserActivityPoints.Award pointAward = UserActivityPoints.awardDecision(120, 2, 60, 500, 25, 300);
+        assertEquals(true, pointAward.shouldAward());
+        assertEquals(325L, pointAward.newPoints());
+        assertEquals(UserPayloads.activityPointAward(2, 325), pointAward.payload());
+        UserActivityPoints.AwardBatch pointAwards = UserActivityPoints.AwardBatch.fromAwards(List.of(pointAward));
+        assertEquals(pointAward.payload(), UserActivityPoints.payloadForAwards(List.of(pointAward)));
+        assertEquals(List.of(pointAward.payload()), pointAwards.deliveryPayloads());
+        assertEquals(false, UserActivityPoints.awardDecision(121, 2, 60, 500, 25, 300).shouldAward());
         RepresentedSocketCache.RepresentedSocketRecord socketRecord =
-            RepresentedSocketCache.RepresentedSocketRecord.fromPayload("a\2" + "7\2c\2d\2e\2" + "1");
+            new RepresentedSocketCache.RepresentedSocketRecord("a\2" + "7\2c\2d\2e\2" + "1", 7L, true);
         assertEquals(7L, socketRecord.roomSlot());
         assertEquals(true, socketRecord.busy());
         RepresentedSocketCache socketCache = RepresentedSocketCache.fromRecords(Map.of(
-            4L, socketRecord
+            4L, socketRecord,
+            5L, new RepresentedSocketCache.RepresentedSocketRecord("a\2b\2c\2d\2e\2" + "0", 0L, false),
+            6L, new RepresentedSocketCache.RepresentedSocketRecord("a\2b", 0L, false)
         ));
-        assertEquals(1, socketCache.recordsBySocketIndex().size());
+        assertEquals(3, socketCache.recordsBySocketIndex().size());
         assertEquals(socketRecord, socketCache.recordsBySocketIndex().get(4L));
-        assertEquals("a\2" + "7\2c\2d\2e\2" + "1", socketCache.record(4));
         assertEquals(7L, socketCache.roomSlot(4));
         assertEquals(true, socketCache.isBusy(4));
-        Object previousRepresentedSocketCache = Licence.global_0082934C;
-        Licence.global_0082934C = socketCache;
-        assertEquals(true, Licence.representedSockets().isBusy(4));
-        Licence.global_0082934C = previousRepresentedSocketCache;
+        assertEquals(false, socketCache.isBusy(5));
+        assertEquals(false, socketCache.isBusy(6));
+        assertEquals(false, socketCache.isBusy(9));
+        RepresentedSocketCache previousRepresentedSocketCache = SessionState.instance().representedSockets();
+        SessionState.instance().setRepresentedSockets(socketCache);
+        assertEquals(true, SessionState.instance().representedSockets().isBusy(4));
+        SessionState.instance().setRepresentedSockets(previousRepresentedSocketCache);
         String expectedOwnProfile = "@E7\2Alice\2hello\2F\2\2\2H\2HIH";
-        expectedOwnProfile = Crypto.Proc_3_0_6D2AF0(4, null, expectedOwnProfile);
-        expectedOwnProfile = Crypto.Proc_3_0_6D2AF0(2, null, expectedOwnProfile);
+        expectedOwnProfile = encodedVl64(4, null, expectedOwnProfile);
+        expectedOwnProfile = encodedVl64(2, null, expectedOwnProfile);
         assertEquals(expectedOwnProfile,
             UserPayloads.ownProfile(new OwnProfileRow(7L, "Alice", "hello", "female", 4L, 2L)));
-        assertEquals(50L, Handling.soundSettingFromWire("Ce50"));
-        assertEquals(0L, Handling.soundSettingFromWire("Ce101"));
-        String expectedGroupPayload = Crypto.Proc_3_0_6D2AF0(55, null, "Dt")
+        assertEquals(50L, UserWire.soundSettingRequest("Ce50").soundSetting());
+        assertEquals(0L, UserWire.soundSettingRequest("Ce101").soundSetting());
+        String expectedGroupPayload = encodedVl64(55, null, "Dt")
             + "Group\2Desc\2BADGE\2"
-            + Crypto.Proc_3_0_6D2AF0(77, null, "")
+            + encodedVl64(77, null, "")
             + "H";
-        assertEquals(expectedGroupPayload, Handling.loginGroupPayload(55, new UserGroupRow("Group", "Desc", "BADGE", 77L)));
-        String expectedQuestPayload = Crypto.Proc_3_0_6D2AF0(7, null, "") + "Quest\2"
-            + Crypto.Proc_3_0_6D2AF0(3, null, "")
-            + Crypto.Proc_3_0_6D2AF0(44, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(5, null, "")
-            + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(0, null, "");
+        assertEquals(expectedGroupPayload, UserPayloads.loginGroup(55, new UserGroupRow("Group", "Desc", "BADGE", 77L)));
+        String expectedQuestPayload = encodedVl64(7, null, "") + "Quest\2"
+            + encodedVl64(3, null, "")
+            + encodedVl64(44, null, "")
+            + encodedVl64(2, null, "")
+            + encodedVl64(5, null, "")
+            + encodedVl64(1, null, "")
+            + encodedVl64(0, null, "");
         assertEquals(expectedQuestPayload, QuestPayloads.completion(7, "Quest", 3, 44, 2, 5, 0));
         assertEquals(expectedQuestPayload, QuestPayloads.completion(7, "Quest", 3, 44, 2, 5, 0));
-        String questRows = "10\t1\tFirst\t\t5\t2\tvisit\t0\t7\t3\t30\r11\t2\tSecond\t\t6\t2\tvisit\t0\t7\t4\t0";
-        QuestSettings typedQuestSettings = QuestSettings.fromLegacy(questRows);
-        assertEquals(questRows, typedQuestSettings.rows());
-        assertEquals(2, typedQuestSettings.definitions().size());
-        assertEquals("12\t3\tShort\t\t1\t2\tvisit\t0\t9",
-            QuestSettings.fromLegacy("12\t3\tShort\t\t1\t2\tvisit\t0\t9").rows());
-        assertEquals("p^" + Crypto.Proc_3_0_6D2AF0(10, null, ""), QuestPayloads.request(10));
-        assertEquals(10L, Handling.questRequestIdFromWire("p^" + Crypto.Proc_3_0_6D2AF0(10, null, ""), "p^"));
-        assertEquals(11L, Handling.nextQuestId(typedQuestSettings, new QuestDao.UserQuestLevelRow(10L, 1L)));
-        assertEquals(10L, Handling.nextQuestId(typedQuestSettings, null));
-        Handling.QuestProgressDecision waitDecision = Handling.questProgressDecision(
+        List<QuestSettings.QuestDefinitionRow> questDefinitions = List.of(
+            new QuestSettings.QuestDefinitionRow(10L, 1L, "First", "", 5L, 2L, "visit", 0L, 7L, 3L, 30L, 11),
+            new QuestSettings.QuestDefinitionRow(11L, 2L, "Second", "", 6L, 2L, "visit", 0L, 7L, 4L, 0L, 11));
+        QuestSettings typedQuestSettings = QuestSettings.fromDefinitions(questDefinitions);
+        assertEquals(questDefinitions, typedQuestSettings.definitions());
+        QuestSettings previousQuestSettings = QuestState.instance().settings();
+        QuestState.instance().setSettings(typedQuestSettings);
+        assertEquals(questDefinitions, QuestState.instance().settings().definitions());
+        QuestState.instance().setSettings(QuestSettings.fromDefinitions(List.of(new QuestSettings.QuestDefinitionRow(
+            12L, 3L, "Short", "", 1L, 2L, "visit", 0L, 9L, 0L, 0L, 9))));
+        assertEquals(List.of(new QuestSettings.QuestDefinitionRow(
+                12L, 3L, "Short", "", 1L, 2L, "visit", 0L, 9L, 0L, 0L, 9)),
+            QuestState.instance().settings().definitions());
+        QuestState.instance().setSettings(previousQuestSettings);
+        assertEquals("p^" + encodedVl64(10, null, ""), QuestPayloads.request(10));
+        assertEquals(10L, WireRequests.id("p^" + encodedVl64(10, null, ""), "p^"));
+        assertEquals(10L, QuestWire.questIdRequest("p^" + wireLong(10), "p^").questId());
+        assertEquals(11L, QuestProgress.nextQuestId(typedQuestSettings, new QuestDao.UserQuestLevelRow(10L, 1L)));
+        assertEquals(10L, QuestProgress.nextQuestId(typedQuestSettings, null));
+        QuestProgressDecision waitDecision = QuestProgress.decision(
             new QuestDao.UserQuestProgressRow(10L, 10L, 1L, 0L, ""), typedQuestSettings, 0);
-        assertEquals(10L, waitDecision.questId);
-        assertEquals(3L, waitDecision.amountRequired);
-        assertEquals(true, waitDecision.shouldScheduleWait);
-        assertEquals(true, waitDecision.shouldSendList);
-        Handling.QuestProgressDecision completeDecision = Handling.questProgressDecision(
+        assertEquals(10L, waitDecision.questId());
+        assertEquals(3L, waitDecision.amountRequired());
+        assertEquals(true, waitDecision.shouldScheduleWait());
+        assertEquals(true, waitDecision.shouldSendList());
+        QuestProgressDecision completeDecision = QuestProgress.decision(
             new QuestDao.UserQuestProgressRow(10L, 10L, 3L, 0L, "0"), typedQuestSettings, 0);
-        assertEquals(true, completeDecision.shouldComplete);
-        String expectedQuestListRow = Crypto.Proc_3_0_6D2AF0(7, null, "") + "First\2"
-            + Crypto.Proc_3_0_6D2AF0(10, null, "")
-            + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(0, null, "")
-            + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(3, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(5, null, "")
+        assertEquals(true, completeDecision.shouldComplete());
+        String expectedQuestListRow = encodedVl64(7, null, "") + "First\2"
+            + encodedVl64(10, null, "")
+            + encodedVl64(1, null, "")
+            + encodedVl64(1, null, "")
+            + encodedVl64(1, null, "")
+            + encodedVl64(0, null, "")
+            + encodedVl64(1, null, "")
+            + encodedVl64(3, null, "")
+            + encodedVl64(2, null, "")
+            + encodedVl64(5, null, "")
             + "HHH\2\2H\2HHH"
-            + Crypto.Proc_3_0_6D2AF0(12, null, "");
-        String expectedSecondQuestListRow = Crypto.Proc_3_0_6D2AF0(7, null, "") + "Second\2"
-            + Crypto.Proc_3_0_6D2AF0(11, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(0, null, "")
-            + Crypto.Proc_3_0_6D2AF0(0, null, "")
-            + Crypto.Proc_3_0_6D2AF0(0, null, "")
-            + Crypto.Proc_3_0_6D2AF0(4, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(6, null, "")
+            + encodedVl64(12, null, "");
+        String expectedSecondQuestListRow = encodedVl64(7, null, "") + "Second\2"
+            + encodedVl64(11, null, "")
+            + encodedVl64(2, null, "")
+            + encodedVl64(2, null, "")
+            + encodedVl64(0, null, "")
+            + encodedVl64(0, null, "")
+            + encodedVl64(0, null, "")
+            + encodedVl64(4, null, "")
+            + encodedVl64(2, null, "")
+            + encodedVl64(6, null, "")
             + "HHH\2\2H\2HHH"
-            + Crypto.Proc_3_0_6D2AF0(0, null, "");
+            + encodedVl64(0, null, "");
         List<QuestSettings.UserQuestListRow> userQuestListRows = List.of(
             new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "2026-01-01", 1L, 12L, 7));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(2, null, "L`"))
+        assertEquals(encodedVl64(0, null, encodedVl64(2, null, "L`"))
                 + expectedQuestListRow + expectedSecondQuestListRow,
             QuestPayloads.list(typedQuestSettings, userQuestListRows));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(2, null, "L`"))
+        assertEquals(encodedVl64(0, null, encodedVl64(2, null, "L`"))
                 + expectedQuestListRow + expectedSecondQuestListRow,
             QuestPayloads.list(typedQuestSettings, userQuestListRows));
-        Functions.global_0082928C = "[com.client.messenger.follow.enabled=1]";
-        String expectedOnlineFriend = Crypto.Proc_3_0_6D2AF0(5, null, "0") + "Alice\2";
-        expectedOnlineFriend = Crypto.Proc_3_0_6D2AF0(3, null, expectedOnlineFriend);
-        expectedOnlineFriend = Crypto.Proc_3_0_6D2AF0(1, null, expectedOnlineFriend);
-        expectedOnlineFriend = Crypto.Proc_3_0_6D2AF0(1, null, expectedOnlineFriend) + "motto\2today\2\2";
-        assertEquals(expectedOnlineFriend, Handling.messengerFriendPayload(5, "Alice", "motto", "fig", 3, 2, 1, "today", 1));
-        String expectedOfflineFriend = Crypto.Proc_3_0_6D2AF0(6, null, "0") + "Bob\2";
-        expectedOfflineFriend = Crypto.Proc_3_0_6D2AF0(2, null, expectedOfflineFriend);
-        expectedOfflineFriend = Crypto.Proc_3_0_6D2AF0(0, null, expectedOfflineFriend)
+        AppConfigState.instance().setSettingsCache(settings("com.client.messenger.follow.enabled", "1"));
+        String expectedOnlineFriend = encodedVl64(5, null, "0") + "Alice\2";
+        expectedOnlineFriend = encodedVl64(3, null, expectedOnlineFriend);
+        expectedOnlineFriend = encodedVl64(1, null, expectedOnlineFriend);
+        expectedOnlineFriend = encodedVl64(1, null, expectedOnlineFriend) + "motto\2today\2\2";
+        assertEquals(expectedOnlineFriend, MessengerViews.friendPayload(5, "Alice", "motto", "fig", 3, 2, 1, "today", 1));
+        String expectedOfflineFriend = encodedVl64(6, null, "0") + "Bob\2";
+        expectedOfflineFriend = encodedVl64(2, null, expectedOfflineFriend);
+        expectedOfflineFriend = encodedVl64(0, null, expectedOfflineFriend)
             + "\2Hfig2\2" + "4\2yesterday\2\2";
-        assertEquals(expectedOfflineFriend, Handling.Proc_6_166_7BE940(6, "Bob", "motto2", "fig2", 2, 0, 0, "yesterday", 4));
+        assertEquals(expectedOfflineFriend, MessengerViews.friendPayload(6, "Bob", "motto2", "fig2", 2, 0, 0, "yesterday", 4));
         assertEquals(expectedOnlineFriend,
-            Handling.messengerFriendSummaryPayload(new MessengerFriend(5L, "Alice", "motto", "fig", 3L, 22L, "today"), 1));
-        String expectedSearch = Crypto.Proc_3_0_6D2AF0(8, null, "") + "Carol\2hi\2";
-        expectedSearch = "1" + Crypto.Proc_3_0_6D2AF0(1, null, expectedSearch) + "H\2nick\2fig\2now\2";
+            MessengerViews.friendSummaryPayload(new MessengerFriend(5L, "Alice", "motto", "fig", 3L, 22L, "today"), 1));
+        String expectedSearch = encodedVl64(8, null, "") + "Carol\2hi\2";
+        expectedSearch = "1" + encodedVl64(1, null, expectedSearch) + "H\2nick\2fig\2now\2";
         assertEquals(expectedSearch, MessengerPayloads.searchResult("8", "Carol", "fig", "hi", "nick", "now", 1));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "Fs") + expectedSearch
-            + Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedSearch,
+        assertEquals(encodedVl64(1, null, "Fs") + expectedSearch
+            + encodedVl64(1, null, "") + expectedSearch,
             MessengerPayloads.searchResults(List.of(
                 new MessengerSearchResult(8L, "Carol", "fig", "hi", "nick", "now", true, true),
                 new MessengerSearchResult(8L, "Carol", "fig", "hi", "nick", "now", true, false))));
-        Licence.global_0082927C = new String[]{"10", "x", "20", "x", "30"};
-        assertEquals(20L, Licence.messengerSettings().maxFriends(2));
-        assertEquals(20L, Handling.messengerMaxFriends(2));
-        assertEquals(0L, Handling.messengerMaxFriends(99));
+        MessengerState.instance().setSettings(MessengerSettings.fromLimits(10L, 0L, 20L, 0L, 30L));
+        assertEquals(20L, MessengerState.instance().settings().maxFriends(2));
+        assertEquals(20L, MessengerViews.maxFriends(2));
+        assertEquals(0L, MessengerViews.maxFriends(99));
         assertMessengerSettingsTypedAccessors();
-        assertEquals("hello world", Handling.requestTextFromWirePayload("@i@Khello world", "@i", 50));
-        assertEquals("abc", Handling.requestTextFromWirePayload("@g@Cabc", "@g", 2_000));
-        assertEquals("he", Handling.requestTextFromWirePayload("@g@Khello", "@g", 2));
-        Handling.FriendTargetList deleteAll = Handling.friendDeleteTargetsFromPayload("@fA");
-        assertEquals(true, deleteAll.deleteAllPending);
-        Handling.FriendTargetList deleteTargets = Handling.friendDeleteTargetsFromPayload("@fCABA");
-        assertEquals(false, deleteTargets.deleteAllPending);
-        assertEquals("1,2", deleteTargets.targetList);
-        assertEquals(List.of(1L, 2L), deleteTargets.targetIds);
-        assertEquals(2L, deleteTargets.targetCount);
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "@MH") + expectedOnlineFriend + expectedOfflineFriend,
-            MessengerPayloads.acceptedFriends(expectedOnlineFriend + expectedOfflineFriend, 2));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(44, null, ""), MessengerPayloads.removedId(44));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "@MM") + Crypto.Proc_3_0_6D2AF0(44, null, ""),
-            MessengerPayloads.removeFriends(MessengerPayloads.removedId(44), 1));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(88, null, "DD") + "H", MessengerPayloads.requestAcceptedCaller(88));
+        assertEquals("hello world", MessengerWire.requestTextFromWirePayload("@i@Khello world", "@i", 50));
+        assertEquals("abc", MessengerWire.requestTextFromWirePayload("@g@Cabc", "@g", 2_000));
+        assertEquals("he", MessengerWire.requestTextFromWirePayload("@g@Khello", "@g", 2));
+        assertEquals("target", MessengerWire.searchRequest("@i@GTarget", "@i").searchText());
+        assertEquals("Target", MessengerWire.friendRequest("@g@GTarget", "@g").targetName());
+        MessengerWire.FriendTargetList deleteAll = MessengerWire.friendDeleteTargetsFromPayload("@fA");
+        assertEquals(true, deleteAll.deleteAllPending());
+        MessengerWire.FriendTargetList deleteTargets = MessengerWire.friendDeleteTargetsFromPayload("@fCABA");
+        assertEquals(false, deleteTargets.deleteAllPending());
+        assertEquals("1,2", deleteTargets.targetList());
+        assertEquals(List.of(1L, 2L), deleteTargets.targetIds());
+        assertEquals(2L, deleteTargets.targetCount());
+        MessengerWire.AcceptFriendRequests acceptRequests =
+            MessengerWire.acceptFriendRequests("@e" + wireLong(3) + wireLong(88) + wireLong(88) + wireLong(89));
+        assertEquals(3L, acceptRequests.requestedCount());
+        assertEquals(List.of(88L, 89L), acceptRequests.targetIds());
+        String expectedAcceptedOfflineFriend = encodedVl64(6, null, "0") + "Bob\2";
+        expectedAcceptedOfflineFriend = encodedVl64(2, null, expectedAcceptedOfflineFriend);
+        expectedAcceptedOfflineFriend = encodedVl64(0, null, expectedAcceptedOfflineFriend)
+            + "\2Hfig2\2" + "0\2yesterday\2\2";
+        assertEquals(encodedVl64(2, null, "@MH") + "H" + expectedOnlineFriend + "H" + expectedAcceptedOfflineFriend,
+            MessengerPayloads.acceptedFriends(List.of(
+                new MessengerFriend(5L, "Alice", "motto", "fig", 3L, 22L, "today"),
+                new MessengerFriend(6L, "Bob", "motto2", "fig2", 2L, 0L, "yesterday")), true));
+        assertEquals(encodedVl64(1, null, "@MM") + encodedVl64(44, null, ""),
+            MessengerPayloads.removeFriends(List.of(44L)));
+        assertEquals(encodedVl64(88, null, "DD") + "H", MessengerPayloads.requestAcceptedCaller(88));
         assertEquals("DDH\2", MessengerPayloads.requestDenied());
-        assertEquals(Crypto.Proc_3_0_6D2AF0(5, null, "BD") + "Alice\2" + "5\2",
+        assertEquals(encodedVl64(5, null, "BD") + "Alice\2" + "5\2",
             MessengerPayloads.requestNotify(5, "Alice"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BF") + "hello\2",
+        assertEquals(encodedVl64(77, null, "BF") + "hello\2",
             MessengerPayloads.privateChatMessage(77, "hello"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BG") + "join\2",
+        assertEquals(encodedVl64(77, null, "BG") + "join\2",
             MessengerPayloads.roomInviteMessage(77, "join"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, Crypto.Proc_3_0_6D2AF0(61, null, "D^")),
+        String roomInviteWire = "@b" + wireLong(2) + wireLong(88) + wireLong(88) + wireString("Join me");
+        MessengerWire.RoomInviteRequest roomInviteRequest = MessengerWire.roomInviteFromWire(roomInviteWire);
+        assertEquals(List.of(88L), roomInviteRequest.targetIds());
+        assertEquals(2L, roomInviteRequest.targetCount());
+        assertEquals(WireEncoding.readBase64LengthString(roomInviteWire.substring(2)), roomInviteRequest.inviteText());
+        assertEquals(88L, MessengerWire.friendFollowRequest("DF" + wireLong(88)).targetUserId());
+        assertEquals(encodedVl64(9, null, encodedVl64(61, null, "D^")),
             MessengerPayloads.followRoom(61, 9));
-        assertEquals("@MHIH" + expectedOnlineFriend, MessengerPayloads.friendOnlineNotification(expectedOnlineFriend));
+        assertEquals("@MHIH" + expectedOnlineFriend, MessengerPayloads.friendOnlineNotification(
+            new MessengerFriend(5L, "Alice", "motto", "fig", 3L, 22L, "today"), 1L, true));
         assertEquals("@MMIM77", MessengerPayloads.friendRemovedNotification(77));
-        String expectedPendingRequestRows = "0" + Crypto.Proc_3_0_6D2AF0(5, null, "") + "Alice\2Alice\2"
-            + "0" + Crypto.Proc_3_0_6D2AF0(6, null, "") + "Bob\2Bob\2";
-        String expectedPendingPayload = Crypto.Proc_3_0_6D2AF0(2, null, "Dz")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "Dz");
-        expectedPendingPayload = Crypto.Proc_3_0_6D2AF0(2, null, expectedPendingPayload) + expectedPendingRequestRows;
+        String expectedPendingRequestRows = "0" + encodedVl64(5, null, "") + "Alice\2Alice\2"
+            + "0" + encodedVl64(6, null, "") + "Bob\2Bob\2";
+        String expectedPendingPayload = encodedVl64(2, null, "Dz")
+            + encodedVl64(2, null, "Dz");
+        expectedPendingPayload = encodedVl64(2, null, expectedPendingPayload) + expectedPendingRequestRows;
         assertEquals(expectedPendingPayload, MessengerPayloads.pendingRequests(List.of(
             new PendingFriendRequest(5L, "Alice"),
             new PendingFriendRequest(6L, "Bob"))));
-        String expectedListedOfflineFriend = Crypto.Proc_3_0_6D2AF0(6, null, "0") + "Bob\2";
-        expectedListedOfflineFriend = Crypto.Proc_3_0_6D2AF0(2, null, expectedListedOfflineFriend);
-        expectedListedOfflineFriend = Crypto.Proc_3_0_6D2AF0(0, null, expectedListedOfflineFriend)
+        String expectedListedOfflineFriend = encodedVl64(6, null, "0") + "Bob\2";
+        expectedListedOfflineFriend = encodedVl64(2, null, expectedListedOfflineFriend);
+        expectedListedOfflineFriend = encodedVl64(0, null, expectedListedOfflineFriend)
             + "\2Hfig2\2" + "1\2yesterday\2\2";
-        String expectedFriendList = Crypto.Proc_3_0_6D2AF0(10, null, "@L")
-            + Crypto.Proc_3_0_6D2AF0(20, null, "")
-            + Crypto.Proc_3_0_6D2AF0(30, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
+        String expectedFriendList = encodedVl64(10, null, "@L")
+            + encodedVl64(20, null, "")
+            + encodedVl64(30, null, "")
+            + encodedVl64(2, null, "")
             + expectedOnlineFriend
             + expectedListedOfflineFriend
             + "PYH";
-        assertEquals(expectedFriendList, Handling.messengerFriendListPayload(
+        assertEquals(expectedFriendList, MessengerViews.friendListPayload(
             List.of(
                 new MessengerFriend(5L, "Alice", "motto", "fig", 3L, 22L, "today"),
                 new MessengerFriend(6L, "Bob", "motto2", "fig2", 2L, 0L, "yesterday")),
@@ -2333,33 +2851,33 @@ public final class PortedModuleSmokeTest {
             30,
             List.of(5L),
             true));
-        Handling.FriendTargetList removeTargets = Handling.friendRemoveTargetsFromPayload("@hCBCA", "2");
-        assertEquals("3,1", removeTargets.targetList);
-        assertEquals(List.of(3L, 1L), removeTargets.targetIds);
-        assertEquals(2L, removeTargets.targetCount);
-        String expectedRacePayload = Crypto.Proc_3_0_6D2AF0(2, null, "L{dog\2")
-            + Crypto.Proc_3_0_6D2AF0(1, null, "") + "II"
-            + Crypto.Proc_3_0_6D2AF0(3, null, "") + "II";
+        MessengerWire.FriendTargetList removeTargets = MessengerWire.friendRemoveTargetsFromPayload("@hCBCA", "2");
+        assertEquals("3,1", removeTargets.targetList());
+        assertEquals(List.of(3L, 1L), removeTargets.targetIds());
+        assertEquals(2L, removeTargets.targetCount());
+        String expectedRacePayload = encodedVl64(2, null, "L{dog\2")
+            + encodedVl64(1, null, "") + "II"
+            + encodedVl64(3, null, "") + "II";
         assertEquals(expectedRacePayload, PetPayloads.raceList("dog", List.of(
             new PetRaceRow(1L, 1L, 0L, 0L, "A"),
             new PetRaceRow(2L, 2L, 5L, 0L, "B"),
             new PetRaceRow(3L, 3L, 2L, 1L, "C")), 3, 1));
-        String expectedPetRow = "0" + Crypto.Proc_3_0_6D2AF0(10, null, "") + "Rex\2"
-            + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
+        String expectedPetRow = "0" + encodedVl64(10, null, "") + "Rex\2"
+            + encodedVl64(1, null, "")
+            + encodedVl64(2, null, "")
             + "0ff00aa\2"
-            + Crypto.Proc_3_0_6D2AF0(4, null, "");
+            + encodedVl64(4, null, "");
         assertEquals(expectedPetRow, PetPayloads.inventoryRow(new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L)));
-        assertEquals("I[" + expectedPetRow, PetPayloads.inventoryAdd(expectedPetRow));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(10, null, "I\\"), PetPayloads.placed(10L));
+        assertEquals("I[" + expectedPetRow, PetPayloads.inventoryAdd(new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L)));
+        assertEquals(encodedVl64(10, null, "I\\"), PetPayloads.placed(10L));
         assertEquals("@]10\2", PetPayloads.removedFromRoom(10L));
-        String expectedPetList = Crypto.Proc_3_0_6D2AF0(2, null, "IX")
+        String expectedPetList = encodedVl64(2, null, "IX")
             + expectedPetRow
-            + "0" + Crypto.Proc_3_0_6D2AF0(11, null, "") + "Mia\2"
-            + Crypto.Proc_3_0_6D2AF0(3, null, "")
-            + Crypto.Proc_3_0_6D2AF0(0, null, "")
+            + "0" + encodedVl64(11, null, "") + "Mia\2"
+            + encodedVl64(3, null, "")
+            + encodedVl64(0, null, "")
             + "0\2"
-            + Crypto.Proc_3_0_6D2AF0(0, null, "");
+            + encodedVl64(0, null, "");
         assertEquals(expectedPetList, PetPayloads.inventoryList(List.of(
             new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L),
             new PetInventoryRow(11L, "Mia", "3", 0L))));
@@ -2367,32 +2885,53 @@ public final class PortedModuleSmokeTest {
         assertEquals(1L, PetPayloads.nameValidationCode("abcdefghijklmnopqrstuvwxyzabcde"));
         assertEquals(2L, PetPayloads.nameValidationCode(""));
         assertEquals(2L, PetPayloads.nameValidationCode("Rex1"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "@d"), PetPayloads.nameValidation("Rex1"));
-        String expectedPetPreview = Crypto.Proc_3_0_6D2AF0(55, null, "Ly");
-        expectedPetPreview = Crypto.Proc_3_0_6D2AF0(1, null, expectedPetPreview);
-        expectedPetPreview = Crypto.Proc_3_0_6D2AF0(2, null, expectedPetPreview);
-        expectedPetPreview = Crypto.Proc_3_0_6D2AF0(12345, null, expectedPetPreview) + "12345\2";
+        assertEquals(encodedVl64(2, null, "@d"), PetPayloads.nameValidation("Rex1"));
+        String expectedPetPreview = encodedVl64(55, null, "Ly");
+        expectedPetPreview = encodedVl64(1, null, expectedPetPreview);
+        expectedPetPreview = encodedVl64(2, null, expectedPetPreview);
+        expectedPetPreview = encodedVl64(12345, null, expectedPetPreview) + "12345\2";
         assertEquals(expectedPetPreview, PetPayloads.packagePreview(55L, 1L, 2L, "12345"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(55, null, "Lz") + Crypto.Proc_3_0_6D2AF0(2, null, "") + "Rex1\2",
+        assertEquals(75L, PetWire.packagePreviewRequest("p`" + wireLong(75)).furnitureId());
+        assertEquals(75L, PetWire.packagePreviewRequest("rt" + wireLong(75)).furnitureId());
+        PetWire.PackagePlacementRequest petPlacementRequest =
+            PetWire.packagePlacementRequest("n~" + wireLong(93) + wireString("Buddy"));
+        assertEquals(93L, petPlacementRequest.furnitureId());
+        assertEquals("Buddy", petPlacementRequest.petName());
+        assertEquals("dog", PetWire.raceListRequest("n\u007f" + wireString("dog")).productPet());
+        PetWire.RoomPlacementRequest petRoomPlacement =
+            PetWire.roomPlacementRequest("nz" + wireLong(10) + wireLong(2) + wireLong(3) + wireLong(4));
+        assertEquals(10L, petRoomPlacement.petId());
+        assertEquals(2L, petRoomPlacement.positionX());
+        assertEquals(3L, petRoomPlacement.positionY());
+        assertEquals(4L, petRoomPlacement.rotation());
+        assertEquals("Rex", PetWire.nameValidationRequest("@c" + wireString("Rex")).petName());
+        assertEquals(10L, PetWire.petIdRequest("ny" + wireLong(10), "ny").petId());
+        assertEquals(10L, PetWire.petIdRequest("n|" + wireLong(10), "n|").petId());
+        assertEquals(10L, PetWire.petIdRequest("n}" + wireLong(10), "n}").petId());
+        assertEquals(0L, PetWire.petIdRequest("Fy" + wireLong(0), "Fy").petId());
+        PetWire.CommandRequest petCommandRequest = PetWire.commandRequest("n{" + wireLong(10) + wireLong(2));
+        assertEquals(10L, petCommandRequest.petId());
+        assertEquals(2L, petCommandRequest.commandId());
+        assertEquals(encodedVl64(55, null, "Lz") + encodedVl64(2, null, "") + "Rex1\2",
             PetPayloads.packageNameValidation(55L, 2L, "Rex1"));
         List<PetSettings.PetCommandRow> commandRows = List.of(
             new PetSettings.PetCommandRow(1L, 0L, "sit", "gst ok", 4),
             new PetSettings.PetCommandRow(2L, 3L, "jump", "gst jump", 4),
             new PetSettings.PetCommandRow(3L, 5L, "high", "gst high", 4));
-        String expectedCommandList = Crypto.Proc_3_0_6D2AF0(3, null, "I]")
-            + Crypto.Proc_3_0_6D2AF0(3, null, "")
-            + "0" + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + "0" + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + "0" + Crypto.Proc_3_0_6D2AF0(3, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + "0" + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + "0" + Crypto.Proc_3_0_6D2AF0(2, null, "");
+        String expectedCommandList = encodedVl64(3, null, "I]")
+            + encodedVl64(3, null, "")
+            + "0" + encodedVl64(1, null, "")
+            + "0" + encodedVl64(2, null, "")
+            + "0" + encodedVl64(3, null, "")
+            + encodedVl64(2, null, "")
+            + "0" + encodedVl64(1, null, "")
+            + "0" + encodedVl64(2, null, "");
         assertEquals(expectedCommandList, PetPayloads.commandList(3, commandRows));
-        Handling.PetCommandAction commandAction = Handling.petCommandAction(2, commandRows);
-        assertEquals(true, commandAction.found);
-        assertEquals(3L, commandAction.requiredLevel);
-        assertEquals("gst jump", commandAction.action);
-        assertEquals(false, Handling.petCommandAction(9, commandRows).found);
+        PetCommandAction commandAction = PetLookups.commandAction(2, commandRows, null);
+        assertEquals(true, commandAction.found());
+        assertEquals(3L, commandAction.requiredLevel());
+        assertEquals("gst jump", commandAction.action());
+        assertEquals(false, PetLookups.commandAction(9, commandRows, null).found());
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -2409,147 +2948,192 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList());
             }
         });
-        Handling.PetCommandAction fallbackCommandAction = Handling.petCommandAction(9, "");
-        assertEquals(true, fallbackCommandAction.found);
-        assertEquals(7L, fallbackCommandAction.requiredLevel);
-        assertEquals("fallback-action", fallbackCommandAction.action);
-        assertEquals(42L, Handling.petLevelMaxExperience(9, ""));
+        BotDao fallbackBots = new BotDao(MySQL.configuredDatabase());
+        PetCommandAction fallbackCommandAction = PetLookups.commandAction(9, List.of(), fallbackBots);
+        assertEquals(true, fallbackCommandAction.found());
+        assertEquals(7L, fallbackCommandAction.requiredLevel());
+        assertEquals("fallback-action", fallbackCommandAction.action());
+        assertEquals(42L, PetLookups.levelMaxExperience(9, List.of(), fallbackBots));
         MySQL.configureDatabaseConnection(null);
-        String expectedPetStatus = "IY" + Crypto.Proc_3_0_6D2AF0(50, null, "") + "Rex\2"
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(7, null, "")
-            + Crypto.Proc_3_0_6D2AF0(100, null, "")
-            + Crypto.Proc_3_0_6D2AF0(90, null, "")
-            + Crypto.Proc_3_0_6D2AF0(4, null, "") + "1 2 ff\2"
-            + Crypto.Proc_3_0_6D2AF0(12, null, "")
-            + Crypto.Proc_3_0_6D2AF0(5, null, "") + "Owner\2";
+        String expectedPetStatus = "IY" + encodedVl64(50, null, "") + "Rex\2"
+            + encodedVl64(2, null, "")
+            + encodedVl64(7, null, "")
+            + encodedVl64(100, null, "")
+            + encodedVl64(90, null, "")
+            + encodedVl64(4, null, "") + "1 2 ff\2"
+            + encodedVl64(12, null, "")
+            + encodedVl64(5, null, "") + "Owner\2";
         PetStatusRow expectedPetStatusRow = new PetStatusRow(10L, "Rex", "1 2 ff", 2L, 7L, 100L, 90L, 4L, 12L, 5L, "Owner");
         assertEquals(expectedPetStatus, PetPayloads.status(50, expectedPetStatusRow));
-        String levelRows = "1\t10\r2\t20\r3\t30";
-        assertEquals(20L, Handling.petLevelMaxExperience(2, levelRows));
-        Handling.PetExperienceUpdate expUpdate = Handling.petExperienceUpdate(50, "Rex", "1 2 ff", 2, 18, 100, 90, 4, 3, levelRows);
-        assertEquals(3L, expUpdate.petLevel);
-        assertEquals(0L, expUpdate.petExperience);
-        assertEquals(true, expUpdate.leveledUp);
-        assertEquals("IY" + Crypto.Proc_3_0_6D2AF0(50, null, "") + "Rex\2"
-            + Crypto.Proc_3_0_6D2AF0(3, null, "")
-            + Crypto.Proc_3_0_6D2AF0(0, null, "")
-            + Crypto.Proc_3_0_6D2AF0(100, null, "")
-            + Crypto.Proc_3_0_6D2AF0(90, null, "")
-            + Crypto.Proc_3_0_6D2AF0(4, null, "") + "1 2 ff\2", expUpdate.statusPayload);
-        assertEquals("Ia" + Crypto.Proc_3_0_6D2AF0(50, null, "")
-            + Crypto.Proc_3_0_6D2AF0(3, null, "")
-            + Crypto.Proc_3_0_6D2AF0(0, null, ""), expUpdate.experiencePayload);
-        assertEquals("I^" + Crypto.Proc_3_0_6D2AF0(50, null, "")
-            + Crypto.Proc_3_0_6D2AF0(5, null, "")
-            + Crypto.Proc_3_0_6D2AF0(6, null, "")
-            + "Rex\2" + "1 2 ff\2", Handling.petScratchPayload(50, 5, 6, "Rex", "1 2 ff"));
-        assertEquals("IZ" + Crypto.Proc_3_0_6D2AF0(50, null, "") + "gst jump\2"
-            + Crypto.Proc_3_0_6D2AF0(2, null, ""), Handling.petCommandActionPayload(50, "gst jump", 2));
-        assertEquals("@X" + Crypto.Proc_3_0_6D2AF0(50, null, "") + "gst sml\2H",
-            Handling.petSpeechPayload(50, "gst sml"));
-        Licence.global_008292D4 = "";
-        Licence.global_00829358 = "";
+        List<PetSettings.PetLevelRow> levelRows = List.of(
+            new PetSettings.PetLevelRow(1L, 0L, 10L, 0L, 2),
+            new PetSettings.PetLevelRow(2L, 0L, 20L, 0L, 2),
+            new PetSettings.PetLevelRow(3L, 0L, 30L, 0L, 2));
+        assertEquals(20L, PetProgress.levelMaxExperience(2, levelRows));
+        PetExperienceUpdate expUpdate = PetProgress.experienceUpdate(50, "Rex", "1 2 ff", 2, 18, 100, 90, 4, 3, levelRows);
+        assertEquals(3L, expUpdate.petLevel());
+        assertEquals(0L, expUpdate.petExperience());
+        assertEquals(true, expUpdate.leveledUp());
+        assertEquals("IY" + encodedVl64(50, null, "") + "Rex\2"
+            + encodedVl64(3, null, "")
+            + encodedVl64(0, null, "")
+            + encodedVl64(100, null, "")
+            + encodedVl64(90, null, "")
+            + encodedVl64(4, null, "") + "1 2 ff\2", expUpdate.statusPayload());
+        assertEquals("Ia" + encodedVl64(50, null, "")
+            + encodedVl64(3, null, "")
+            + encodedVl64(0, null, ""), expUpdate.experiencePayload());
+        assertEquals("I^" + encodedVl64(50, null, "")
+            + encodedVl64(5, null, "")
+            + encodedVl64(6, null, "")
+            + "Rex\2" + "1 2 ff\2", PetPayloads.scratch(50, 5, 6, "Rex", "1 2 ff"));
+        assertEquals("IZ" + encodedVl64(50, null, "") + "gst jump\2"
+            + encodedVl64(2, null, ""), PetPayloads.commandAction(50, "gst jump", 2));
+        assertEquals("@X" + encodedVl64(50, null, "") + "gst sml\2H",
+            PetPayloads.speech(50, "gst sml"));
+        PetState.instance().setRepresentedBots(RepresentedBotRegistry.empty());
         RepresentedBotEntry representedBotEntry = new RepresentedBotEntry(
             501L, "Guide", "hello", "speech", "responses", 2L, 3L, "0.5", 4L, "1 2 ff",
             3L, 4L, "cache", "submit", 1L, 6L);
-        assertEquals("3\2" + "501\2Guide\2hello\2speech\2responses\2" + "2\2" + "3\2" + "0.5\2" + "4\2"
-            + "1 2 ff\2" + "3\2" + "4\2cache\2submit\2" + "1\2" + "6",
-            Handling.representedBotRecord(3, representedBotEntry));
-        long botEntityId = Handling.allocateRepresentedBot(3, representedBotEntry);
+        long botEntityId = PetState.instance().allocateRepresentedBot(3, representedBotEntry);
         assertEquals(1L, botEntityId);
-        assertEquals(true, Licence.global_008292D4 instanceof RepresentedBotRegistry);
-        assertEquals("[1]", Licence.representedBots().allocatedEntityMarkers());
-        assertEquals(501L, Licence.representedBots().record(botEntityId).botId());
-        assertEquals(1L, Licence.representedBots().entityFromBotId(501));
-        assertEquals("1", Licence.representedBots().entitiesForRoom(3, 501));
-        assertEquals(true, !Licence.representedBots().entitiesForRoom(3, 501).isEmpty());
-        Handling.storeRepresentedBotPosition(botEntityId, 5, 6, "1.0", 7);
-        assertEquals(5L, Licence.representedBots().record(botEntityId).positionX());
-        assertEquals("1.0", Licence.representedBots().record(botEntityId).positionZ());
-        String expectedBotEntry = "@\\" + Crypto.Proc_3_0_6D2AF0(botEntityId, null, "")
+        assertEquals(true, PetState.instance().representedBots().recordsByEntityId().containsKey(botEntityId));
+        assertEquals(List.of(1L), PetState.instance().representedBots().allocatedEntityIds());
+        assertEquals(3L, PetState.instance().representedBots().record(botEntityId).roomSlot());
+        assertEquals(501L, PetState.instance().representedBots().record(botEntityId).botId());
+        assertEquals("Guide", PetState.instance().representedBots().record(botEntityId).name());
+        assertEquals(1L, PetState.instance().representedBots().entityFromBotId(501));
+        assertEquals(List.of(1L), PetState.instance().representedBots().entityIdsForRoom(3, 501));
+        assertEquals(true, !PetState.instance().representedBots().entityIdsForRoom(3, 501).isEmpty());
+        PetState.instance().storeRepresentedBotPosition(botEntityId, 5, 6, "1.0", 7);
+        assertEquals(5L, PetState.instance().representedBots().record(botEntityId).positionX());
+        assertEquals("1.0", PetState.instance().representedBots().record(botEntityId).positionZ());
+        String expectedBotEntry = "@\\" + encodedVl64(botEntityId, null, "")
             + "Guide\2" + "5 6 1.0\2" + "7\2" + "1 2 ff\2";
-        assertEquals(expectedBotEntry, Handling.representedBotRoomEntryPayload(botEntityId));
+        assertEquals(expectedBotEntry, PetState.instance().representedBotRoomEntryPayload(botEntityId));
         assertEquals(expectedBotEntry, PetPayloads.representedBotRoomEntry(
             botEntityId, "Guide", 5L, 6L, "1.0", 7L, "1 2 ff"));
-        Handling.removeRepresentedBotRecord(botEntityId);
-        assertEquals("", Licence.representedBots().recordText(botEntityId));
-        assertEquals("", Licence.representedBots().allocatedEntityMarkers());
-        String expectedProfile = Crypto.Proc_3_0_6D2AF0(9, null, "Jf")
+        PetState.instance().removeRepresentedBotRecord(botEntityId);
+        assertEquals(0L, PetState.instance().representedBots().record(botEntityId).botId());
+        assertEquals(List.of(), PetState.instance().representedBots().allocatedEntityIds());
+        String expectedProfile = encodedVl64(9, null, "Jf")
             + "Alice\2motto\2"
-            + Crypto.Proc_3_0_6D2AF0(123, null, "")
+            + encodedVl64(123, null, "")
             + "fig\2";
         assertEquals(expectedProfile, SocialPayloads.roomUserProfile(9, "Alice", "motto", 123, "fig"));
-        assertEquals("Ge" + Crypto.Proc_3_0_6D2AF0(9, null, "") + Crypto.Proc_3_0_6D2AF0(12, null, ""),
+        assertEquals("Ge" + encodedVl64(9, null, "") + encodedVl64(12, null, ""),
             SocialPayloads.roomUserEffect(9L, 12L));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "Ge") + "H", SocialPayloads.roomUserEffectCleared(9L));
-        assertEquals("0" + Crypto.Proc_3_0_6D2AF0(4, null, Crypto.Proc_3_0_6D2AF0(9, null, "Ge")),
+        assertEquals(encodedVl64(9, null, "Ge") + "H", SocialPayloads.roomUserEffectCleared(9L));
+        assertEquals("0" + encodedVl64(4, null, encodedVl64(9, null, "Ge")),
             SocialPayloads.roomUserStatus(9L, 4L));
         assertEquals("", SocialPayloads.roomUserStatus(0L, 4L));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "Ga"), SocialPayloads.roomUserWave(9L));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(3, null,
-            Crypto.Proc_3_0_6D2AF0(9, null, "G`")), SocialPayloads.roomUserDance(9L, 3L));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "@\\"), SocialPayloads.roomUserRemoved(9L));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "Ei") + '\r', SocialPayloads.roomUserPreReadyState(9L));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "") + " 2 3 1.0 4 4/\r",
+        assertEquals(encodedVl64(9, null, "Ga"), SocialPayloads.roomUserWave(9L));
+        SocialLookups.RoomUserAction waveAction = SocialLookups.roomUserWaveAction("77", 9L, 9L);
+        assertEquals(9L, waveAction.resultValue());
+        assertEquals(SocialPayloads.roomUserWave(9L), waveAction.payload());
+        assertEquals(false, SocialLookups.roomUserWaveAction("0", 9L, 9L).valid());
+        assertEquals(encodedVl64(3, null,
+            encodedVl64(9, null, "G`")), SocialPayloads.roomUserDance(9L, 3L));
+        SocialLookups.RoomUserAction danceAction =
+            SocialLookups.roomUserDanceAction("77", 9L, 9L, SocialWire.danceRequest("A]" + wireLong(3)));
+        assertEquals(3L, danceAction.resultValue());
+        assertEquals(SocialPayloads.roomUserDance(9L, 3L), danceAction.payload());
+        assertEquals(false, SocialLookups.roomUserDanceAction("77", 0L, 9L,
+            SocialWire.danceRequest("A]" + wireLong(3))).valid());
+        assertEquals(encodedVl64(9, null, "@\\"), SocialPayloads.roomUserRemoved(9L));
+        assertEquals(SocialPayloads.roomUserRemoved(9L), SocialLookups.roomUserRemovedPayload(9L));
+        assertEquals(encodedVl64(9, null, "Ei") + '\r', SocialPayloads.roomUserPreReadyState(9L));
+        assertEquals(encodedVl64(9, null, "") + " 2 3 1.0 4 4/\r",
             SocialPayloads.roomOccupantStatus(9L, 2L, 3L, "1.0", 4L));
-        assertEquals("00" + Crypto.Proc_3_0_6D2AF0(9, null, "Am") + Crypto.Proc_3_0_6D2AF0(1, null, ""),
+        assertEquals("00" + encodedVl64(9, null, "Am") + encodedVl64(1, null, ""),
             SocialPayloads.interactionStateForSource(9L, 1L));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(9, null, "Am") + Crypto.Proc_3_0_6D2AF0(1, null, ""),
+        assertEquals(encodedVl64(9, null, "Am") + encodedVl64(1, null, ""),
             SocialPayloads.interactionStateForTarget(9L, 1L));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(88, null, Crypto.Proc_3_0_6D2AF0(77, null, "Ah")),
+        assertEquals(SocialPayloads.interactionStateForSource(9L, 1L),
+            SocialLookups.interactionStatePayloads(9L, 1L).sourcePayload());
+        assertEquals(SocialPayloads.interactionStateForTarget(9L, 1L),
+            SocialLookups.interactionStatePayloads(9L, 1L).targetPayload());
+        assertEquals(encodedVl64(88, null, encodedVl64(77, null, "Ah")),
             SocialPayloads.interactionRequest(77L, 88L));
-        assertEquals("0" + Crypto.Proc_3_0_6D2AF0(9, null, "An"), SocialPayloads.interactionClosed(9L));
-        String equippedBadges = "0" + Crypto.Proc_3_0_6D2AF0(1, null, "") + "ACH1\2"
-            + "0" + Crypto.Proc_3_0_6D2AF0(3, null, "") + "VIP\2";
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges,
+        assertEquals(SocialPayloads.interactionRequest(77L, 88L),
+            SocialLookups.interactionRequestPayload(77L, 88L));
+        assertEquals("0" + encodedVl64(9, null, "An"), SocialPayloads.interactionClosed(9L));
+        assertEquals(SocialPayloads.interactionClosed(9L), SocialLookups.interactionClosedPayload(9L));
+        String equippedBadges = "0" + encodedVl64(1, null, "") + "ACH1\2"
+            + "0" + encodedVl64(3, null, "") + "VIP\2";
+        assertEquals(encodedVl64(2, null, "") + equippedBadges,
             SocialPayloads.equippedBadges(List.of(
                 new BadgeRow("ACH1", 1L, 10L),
                 new BadgeRow("VIP", 3L, 11L))));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), SocialPayloads.equippedBadges(List.of()));
-        String expectedBadgeInventory = Crypto.Proc_3_0_6D2AF0(2, null, "Ce")
-            + "0" + Crypto.Proc_3_0_6D2AF0(20, null, "") + "ACH2\2"
-            + "0" + Crypto.Proc_3_0_6D2AF0(21, null, "") + "MOD\2"
-            + Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges;
+        assertEquals(encodedVl64(0, null, ""), SocialPayloads.equippedBadges(List.of()));
+        String expectedBadgeInventory = encodedVl64(2, null, "Ce")
+            + "0" + encodedVl64(20, null, "") + "ACH2\2"
+            + "0" + encodedVl64(21, null, "") + "MOD\2"
+            + encodedVl64(2, null, "") + equippedBadges;
         assertEquals(expectedBadgeInventory, SocialPayloads.badgeInventory(List.of(
                 new BadgeRow("ACH2", 0L, 20L),
                 new BadgeRow("MOD", 0L, 21L)),
-            Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges));
-        assertEquals("Cd" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges,
-            SocialPayloads.badgeDisplay(5, Crypto.Proc_3_0_6D2AF0(2, null, "") + equippedBadges));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2", SocialPayloads.tags(List.of("one", "two")));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2",
+            List.of(new BadgeRow("ACH1", 1L, 10L), new BadgeRow("VIP", 3L, 11L))));
+        assertEquals("Cd" + encodedVl64(5, null, "") + encodedVl64(2, null, "") + equippedBadges,
+            SocialPayloads.badgeDisplay(5, List.of(new BadgeRow("ACH1", 1L, 10L), new BadgeRow("VIP", 3L, 11L))));
+        assertEquals(encodedVl64(2, null, "") + "one\2two\2",
             SocialPayloads.tags(List.of(new UserDao.UserTagRow("one"), new UserDao.UserTagRow("two"))));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, ""), SocialPayloads.tags(List.of()));
-        assertEquals("E^" + Crypto.Proc_3_0_6D2AF0(5, null, "") + Crypto.Proc_3_0_6D2AF0(2, null, "") + "one\2two\2",
-            SocialPayloads.tagDisplay(5, SocialPayloads.tags(List.of("one", "two"))));
+        assertEquals(encodedVl64(0, null, ""), SocialPayloads.tags(List.of()));
+        assertEquals("E^" + encodedVl64(5, null, "") + encodedVl64(2, null, "") + "one\2two\2",
+            SocialPayloads.tagDisplay(5, List.of(new UserDao.UserTagRow("one"), new UserDao.UserTagRow("two"))));
         String badgeWire = "A@CONEA@CTWO";
-        Handling.BadgeUpdateSelections badgeSlots = Handling.badgeUpdateSelectionsFromWire("B^" + badgeWire);
+        BadgeUpdateSelections badgeSlots = SocialWire.badgeUpdateSelections("B^" + badgeWire);
         assertEquals("ONE", badgeSlots.first());
         assertEquals("TWO", badgeSlots.second());
         assertEquals("", badgeSlots.third());
         assertEquals("", badgeSlots.fourth());
         assertEquals("", badgeSlots.fifth());
-        assertEquals(1L, Handling.idRequestFromWire("CkA", "Ck"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(1, null, "G{")),
+        assertEquals(61L, SocialWire.roomUserIndexRequest("Cg" + wireLong(61), "Cg").roomUserIndex());
+        assertEquals(88L, SocialWire.userIdRequest("Es" + wireLong(88), "Es").userId());
+        assertEquals(88L, SocialWire.userIdRequest("DG" + wireLong(88), "DG").userId());
+        assertEquals("Target", SocialWire.followUserRequest("AbTarget").targetName());
+        assertEquals("Target", SocialWire.followUserRequest("Ab" + wireString("Target")).targetName());
+        SocialLookups.FollowRoomAction failedFollowAction =
+            SocialLookups.followRoomAction(SocialWire.followUserRequest("Ab"), null);
+        assertEquals(false, failedFollowAction.canEnterRoom());
+        assertEquals("BC", failedFollowAction.failurePayload());
+        assertEquals(61L, SocialWire.roomUserIndexRequest("B_" + wireLong(61), "B_").roomUserIndex());
+        assertEquals(3L, SocialWire.danceRequest("A]" + wireLong(3)).danceId());
+        assertEquals(4L, SocialWire.danceRequest("A]" + wireLong(9)).danceId());
+        assertEquals(61L, SocialWire.roomUserIndexRequest("AG" + wireLong(61), "AG").roomUserIndex());
+        assertEquals(12L, SocialWire.effectRequest("Fx" + wireLong(12)).effectId());
+        SocialWire.RepresentedChatMessage chatMessage =
+            SocialWire.representedChatMessage("@t" + wireString("hello"), 0L);
+        assertEquals("", chatMessage.targetName());
+        assertEquals("hello", chatMessage.messageText());
+        SocialWire.RepresentedChatMessage whisperMessage =
+            SocialWire.representedChatMessage("@x" + wireString("Target") + wireString("secret"), 2L);
+        assertEquals("Target", whisperMessage.targetName());
+        assertEquals("secret", whisperMessage.messageText());
+        SocialWire.RepresentedChatMessage fallbackWhisper =
+            SocialWire.representedChatMessage("@xTarget raw secret", 2L);
+        assertEquals("Target", fallbackWhisper.targetName());
+        assertEquals("raw secret", fallbackWhisper.messageText());
+        assertEquals(1L, WireRequests.id("CkA", "Ck"));
+        assertEquals(encodedVl64(0, null, encodedVl64(1, null, "G{")),
             RecyclerPayloads.status(42, 0));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(506, null, "G|"), RecyclerPayloads.reward(506));
-        assertEquals(7L, Handling.pollIdFromWire("Ck" + Crypto.Proc_3_0_6D2AF0(7, null, ""), "Ck"));
-        Handling.PollAnswerSubmission pollAnswer = Handling.pollAnswerFromWire("Cl"
-            + Crypto.Proc_3_0_6D2AF0(7, null, "")
-            + Crypto.Proc_3_0_6D2AF0(8, null, "")
-            + Crypto.Proc_3_0_6D2AF0(4, null, "")
+        assertEquals(encodedVl64(506, null, "G|"), RecyclerPayloads.reward(506));
+        assertEquals(7L, PollWire.idFromWire("Ck" + encodedVl64(7, null, ""), "Ck"));
+        PollAnswerSubmission pollAnswer = PollWire.answerFromWire("Cl"
+            + encodedVl64(7, null, "")
+            + encodedVl64(8, null, "")
+            + encodedVl64(4, null, "")
             + "@Cyes", "Cl");
-        assertEquals(true, pollAnswer.valid);
-        assertEquals(7L, pollAnswer.pollId);
-        assertEquals(8L, pollAnswer.questionId);
-        assertEquals(4L, pollAnswer.answerValue);
-        assertEquals("yes", pollAnswer.answerText);
-        Handling.PollAnswerSubmission numericPollAnswer = Handling.pollAnswerFromWire("Cl"
-            + Crypto.Proc_3_0_6D2AF0(7, null, "")
-            + Crypto.Proc_3_0_6D2AF0(8, null, "")
-            + Crypto.Proc_3_0_6D2AF0(4, null, ""), "Cl");
-        assertEquals("4", numericPollAnswer.answerText);
+        assertEquals(true, pollAnswer.valid());
+        assertEquals(7L, pollAnswer.pollId());
+        assertEquals(8L, pollAnswer.questionId());
+        assertEquals(4L, pollAnswer.answerValue());
+        assertEquals("yes", pollAnswer.answerText());
+        PollAnswerSubmission numericPollAnswer = PollWire.answerFromWire("Cl"
+            + encodedVl64(7, null, "")
+            + encodedVl64(8, null, "")
+            + encodedVl64(4, null, ""), "Cl");
+        assertEquals("4", numericPollAnswer.answerText());
         PollDefinition testPoll = new PollDefinition(
             new PollHeader(7L, "Title", "Thanks"),
             List.of(new PollQuestionRow(
@@ -2559,113 +3143,103 @@ public final class PortedModuleSmokeTest {
                 List.of(
                     new PollAnswerRow(1L, 8L, "Yes"),
                     new PollAnswerRow(2L, 8L, "No")))));
-        String expectedQuestionPayload = Crypto.Proc_3_0_6D2AF0(8, null, "");
-        expectedQuestionPayload = Crypto.Proc_3_0_6D2AF0(1, null, expectedQuestionPayload);
-        expectedQuestionPayload = Crypto.Proc_3_0_6D2AF0(2, null, expectedQuestionPayload);
+        String expectedQuestionPayload = encodedVl64(8, null, "");
+        expectedQuestionPayload = encodedVl64(1, null, expectedQuestionPayload);
+        expectedQuestionPayload = encodedVl64(2, null, expectedQuestionPayload);
         expectedQuestionPayload += "Question?\2";
-        expectedQuestionPayload = Crypto.Proc_3_0_6D2AF0(2, null, expectedQuestionPayload);
-        expectedQuestionPayload = Crypto.Proc_3_0_6D2AF0(0, null, expectedQuestionPayload);
-        expectedQuestionPayload = Crypto.Proc_3_0_6D2AF0(2, null, expectedQuestionPayload) + "Yes\2No\2";
-        String expectedPollPayload = Crypto.Proc_3_0_6D2AF0(7, null, "D}") + "Title\2Thanks\2";
-        expectedPollPayload = Crypto.Proc_3_0_6D2AF0(1, null, expectedPollPayload) + expectedQuestionPayload;
+        expectedQuestionPayload = encodedVl64(2, null, expectedQuestionPayload);
+        expectedQuestionPayload = encodedVl64(0, null, expectedQuestionPayload);
+        expectedQuestionPayload = encodedVl64(2, null, expectedQuestionPayload) + "Yes\2No\2";
+        String expectedPollPayload = encodedVl64(7, null, "D}") + "Title\2Thanks\2";
+        expectedPollPayload = encodedVl64(1, null, expectedPollPayload) + expectedQuestionPayload;
         assertEquals(expectedPollPayload, PollPayloads.poll(testPoll));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "D|") + "Title\2",
+        assertEquals(encodedVl64(7, null, "D|") + "Title\2",
             PollPayloads.prompt(new PollPrompt(7L, "Title")));
-        String recyclerWire = "F^" + Crypto.Proc_3_0_6D2AF0(5, null, "")
-            + Crypto.Proc_3_0_6D2AF0(10, null, "")
-            + Crypto.Proc_3_0_6D2AF0(11, null, "")
-            + Crypto.Proc_3_0_6D2AF0(12, null, "")
-            + Crypto.Proc_3_0_6D2AF0(13, null, "")
-            + Crypto.Proc_3_0_6D2AF0(14, null, "");
-        Handling.RecyclerSelection recyclerSelection = Handling.recyclerSelectionFromWire(recyclerWire);
-        assertEquals(true, recyclerSelection.valid);
-        assertEquals(5L, recyclerSelection.requestedCount);
-        assertEquals("10,11,12,13,14", recyclerSelection.selectedItems);
-        assertEquals(List.of(10L, 11L, 12L, 13L, 14L), recyclerSelection.selectedItemIds);
-        Handling.RecyclerSelection duplicateRecyclerSelection = Handling.recyclerSelectionFromWire("F^"
-            + Crypto.Proc_3_0_6D2AF0(5, null, "")
-            + Crypto.Proc_3_0_6D2AF0(10, null, "")
-            + Crypto.Proc_3_0_6D2AF0(11, null, "")
-            + Crypto.Proc_3_0_6D2AF0(10, null, "")
-            + Crypto.Proc_3_0_6D2AF0(13, null, "")
-            + Crypto.Proc_3_0_6D2AF0(14, null, ""));
-        assertEquals(false, duplicateRecyclerSelection.valid);
+        String recyclerWire = "F^" + encodedVl64(5, null, "")
+            + encodedVl64(10, null, "")
+            + encodedVl64(11, null, "")
+            + encodedVl64(12, null, "")
+            + encodedVl64(13, null, "")
+            + encodedVl64(14, null, "");
+        RecyclerSelection recyclerSelection = RecyclerWire.selectionFromWire(recyclerWire);
+        assertEquals(true, recyclerSelection.valid());
+        assertEquals(5L, recyclerSelection.requestedCount());
+        assertEquals(List.of(10L, 11L, 12L, 13L, 14L), recyclerSelection.selectedItemIds());
+        RecyclerSelection duplicateRecyclerSelection = RecyclerWire.selectionFromWire("F^"
+            + encodedVl64(5, null, "")
+            + encodedVl64(10, null, "")
+            + encodedVl64(11, null, "")
+            + encodedVl64(10, null, "")
+            + encodedVl64(13, null, "")
+            + encodedVl64(14, null, ""));
+        assertEquals(false, duplicateRecyclerSelection.valid());
         AchievementSettings.Achievement achievement = new AchievementSettings.Achievement(42L, "ACH_", 10L, 5L, 3L, 7L, 2L);
         List<AchievementSettings.Achievement> achievements = List.of(achievement);
         List<AchievementSettings.IndexedAchievement> indexedAchievements = AchievementSettings.indexedAchievements(achievements);
         AchievementSettings typedAchievements = AchievementSettings.fromAchievements("42\2", achievements);
-        assertEquals("42\tACH_\t10\t5\t3\t7\t2", typedAchievements.rowByIndex(0L));
         assertEquals(achievement, typedAchievements.achievementByIndex(0L));
-        assertAchievementRows(typedAchievements, achievement);
-        String expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(1, null, "Fu");
-        expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(42, null, expectedAchievementReward);
-        expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(99, null, expectedAchievementReward) + "ACH_2\2";
-        expectedAchievementReward = Crypto.Proc_3_0_6D2AF0(5, null,
-            Crypto.Proc_3_0_6D2AF0(7, null, expectedAchievementReward)) + "HHH\2" + "3\2";
-        assertEquals(expectedAchievementReward, Handling.achievementRewardPayload(1, achievement, 2, 99));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null,
-            Crypto.Proc_3_0_6D2AF0(5, null, Crypto.Proc_3_0_6D2AF0(7, null, "Fv"))),
-            Handling.achievementAwardPayload(achievement));
+        assertAchievementRows(typedAchievements, indexedAchievements);
+        String expectedAchievementReward = encodedVl64(1, null, "Fu");
+        expectedAchievementReward = encodedVl64(42, null, expectedAchievementReward);
+        expectedAchievementReward = encodedVl64(99, null, expectedAchievementReward) + "ACH_2\2";
+        expectedAchievementReward = encodedVl64(5, null,
+            encodedVl64(7, null, expectedAchievementReward)) + "HHH\2" + "3\2";
+        assertEquals(expectedAchievementReward, AchievementPayloads.reward(1, achievement, 2, 99));
+        assertEquals(encodedVl64(2, null,
+            encodedVl64(5, null, encodedVl64(7, null, "Fv"))),
+            AchievementPayloads.award(achievement));
         Map<String, Long> achievementLevels = new HashMap<>();
         achievementLevels.put("ACH_", 2L);
-        String expectedAchievementEntry = Crypto.Proc_3_0_6D2AF0(42, null, "");
-        expectedAchievementEntry = Crypto.Proc_3_0_6D2AF0(2, null, expectedAchievementEntry);
-        expectedAchievementEntry = Crypto.Proc_3_0_6D2AF0(20, null, expectedAchievementEntry);
-        expectedAchievementEntry = Crypto.Proc_3_0_6D2AF0(10, null, expectedAchievementEntry);
-        expectedAchievementEntry = Crypto.Proc_3_0_6D2AF0(5, null, expectedAchievementEntry);
-        expectedAchievementEntry = Crypto.Proc_3_0_6D2AF0(7, null, expectedAchievementEntry);
-        expectedAchievementEntry = Crypto.Proc_3_0_6D2AF0(2, null, expectedAchievementEntry);
-        expectedAchievementEntry = Crypto.Proc_3_0_6D2AF0(3, null, expectedAchievementEntry) + "ACH_\2" + "2\2";
-        assertEquals(Crypto.Proc_3_0_6D2AF0(1, null, "Ft") + expectedAchievementEntry,
-            Handling.achievementListPayload(achievements, achievementLevels));
-        Handling.AchievementProgressDecision achievementDecision = Handling.achievementProgressDecision(
+        String expectedAchievementEntry = encodedVl64(42, null, "");
+        expectedAchievementEntry = encodedVl64(2, null, expectedAchievementEntry);
+        expectedAchievementEntry = encodedVl64(20, null, expectedAchievementEntry);
+        expectedAchievementEntry = encodedVl64(10, null, expectedAchievementEntry);
+        expectedAchievementEntry = encodedVl64(5, null, expectedAchievementEntry);
+        expectedAchievementEntry = encodedVl64(7, null, expectedAchievementEntry);
+        expectedAchievementEntry = encodedVl64(2, null, expectedAchievementEntry);
+        expectedAchievementEntry = encodedVl64(3, null, expectedAchievementEntry) + "ACH_\2" + "2\2";
+        assertEquals(encodedVl64(1, null, "Ft") + expectedAchievementEntry,
+            AchievementPayloads.list(achievements, achievementLevels));
+        AchievementProgressDecision achievementDecision = AchievementProgress.decision(
             indexedAchievements, 42, achievementLevels, 30);
-        assertEquals(0L, achievementDecision.achievementIndex);
-        assertEquals(3L, achievementDecision.nextLevel);
-        assertEquals(30L, achievementDecision.requiredProgress);
-        assertEquals(true, achievementDecision.shouldReward);
+        assertEquals(0L, achievementDecision.achievementIndex());
+        assertEquals(3L, achievementDecision.nextLevel());
+        assertEquals(30L, achievementDecision.requiredProgress());
+        assertEquals(true, achievementDecision.shouldReward());
         assertEquals("5;1;7;1;5;0;", WiredPayloads.specialState(1507));
         assertEquals("", WiredPayloads.specialState(1));
-        String wiredRecord = WiredPayloads.recordText(502, 44, "100;101", "7;8", "txt", "9");
+        String wiredRecord = wiredRecordText(502, 44, "100;101", "7;8", "txt", "9");
         assertEquals("\1" + "502\2" + "44\3" + "100;101\4" + "7;8\5" + "txt\6" + "9", wiredRecord);
-        WiredPayloads.WiredRecord parsedWiredRecord = WiredPayloads.record(wiredRecord);
-        assertEquals("502", parsedWiredRecord.code());
-        assertEquals("44", parsedWiredRecord.furnitureId());
-        assertEquals("100;101", parsedWiredRecord.selectedIds());
-        assertEquals("7;8", parsedWiredRecord.parameterText());
-        assertEquals("txt", parsedWiredRecord.textValue());
-        assertEquals("9", parsedWiredRecord.extraValue());
-        String wiredWire = "ok" + Crypto.Proc_3_0_6D2AF0(44, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(7, null, "")
-            + Crypto.Proc_3_0_6D2AF0(8, null, "")
+        String wiredWire = "ok" + encodedVl64(44, null, "")
+            + encodedVl64(2, null, "")
+            + encodedVl64(7, null, "")
+            + encodedVl64(8, null, "")
             + "@Ctxt"
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(100, null, "")
-            + Crypto.Proc_3_0_6D2AF0(101, null, "")
-            + Crypto.Proc_3_0_6D2AF0(9, null, "");
-        assertEquals(wiredRecord, Handling.wiredEditRecordFromWire(wiredWire, "ok", 502, true));
-        String replacementRecord = WiredPayloads.recordText(502, 44, "102", "5", "next", "3");
-        String otherRecord = WiredPayloads.recordText(503, 45, "200", "1", "", "");
-        assertEquals(replacementRecord + "\n" + otherRecord,
-            WiredPayloads.cacheWithRecord(wiredRecord + "\n" + otherRecord, replacementRecord));
-        assertEquals(true, WiredPayloads.selectedItemsExist("100;101", "99,100,101"));
-        assertEquals(false, WiredPayloads.selectedItemsExist("100;101", "99,100"));
+            + encodedVl64(2, null, "")
+            + encodedVl64(100, null, "")
+            + encodedVl64(101, null, "")
+            + encodedVl64(9, null, "");
+        assertEquals(wiredRecord, WiredWire.editRecord(wiredWire, "ok", 502, true));
+        assertEquals(44L, WiredWire.editFurnitureRequest(wiredWire, "ok").furnitureId());
+        assertEquals(44L, WiredWire.snapshotRequest("on" + encodedVl64(44, null, "")).furnitureId());
+        String replacementRecord = wiredRecordText(502, 44, "102", "5", "next", "3");
+        String otherRecord = wiredRecordText(503, 45, "200", "1", "", "");
+        assertEquals(true, WiredPayloads.selectedItemsExist(List.of(100L, 101L), "99,100,101"));
+        assertEquals(false, WiredPayloads.selectedItemsExist(List.of(100L, 101L), "99,100"));
         WiredPayloads.ApplyResult wiredApply = WiredPayloads.applySelected(
-            "100;101,102", "5;ignored", 0, "100;102", FurniturePayloads::stateChanged);
-        assertEquals(2L, wiredApply.appliedCount);
-        assertEquals(FurniturePayloads.stateChanged(100, 5) + FurniturePayloads.stateChanged(102, 5), wiredApply.statePayloads);
+            List.of(100L, 101L, 102L), "5;ignored", 0, "100;102", FurniturePayloads::stateChanged);
+        assertEquals(2L, wiredApply.appliedCount());
+        assertEquals(FurniturePayloads.stateChanged(100, 5) + FurniturePayloads.stateChanged(102, 5), wiredApply.statePayloads());
         WiredPayloads.ApplyResult wiredOverride = WiredPayloads.applySelected(
-            "100", "7", 101, "100;101", FurniturePayloads::stateChanged);
-        assertEquals(1L, wiredOverride.appliedCount);
-        assertEquals(FurniturePayloads.stateChanged(101, 7), wiredOverride.statePayloads);
-        Path previousApplicationPathForWired = Path.of(Functions.applicationPath);
-        Object previousProductCacheForWired = DataManager.global_008292BC;
+            List.of(100L), "7", 101, "100;101", FurniturePayloads::stateChanged);
+        assertEquals(1L, wiredOverride.appliedCount());
+        assertEquals(FurniturePayloads.stateChanged(101, 7), wiredOverride.statePayloads());
+        Path previousApplicationPathForWired = Path.of(AppPaths.applicationPath());
+        ProductCache previousProductCacheForWired = GameDataCaches.productCache();
         Path wiredRoot = Files.createTempDirectory("alphaseries-wired");
-        Functions.applicationPath = wiredRoot.toString();
-        String[] wiredProducts = new String[601];
-        wiredProducts[600] = productRow(600, "27", "502");
-        DataManager.global_008292BC = wiredProducts;
+        AppPaths.setApplicationPath(wiredRoot.toString());
+        List<ProductCache.ProductRow> wiredProducts = List.of(productCacheRow(600, "27", "502"));
+        GameDataCaches.setProductCache(ProductCache.fromProductRows(wiredProducts));
         final List<String> wiredSql = new ArrayList<>();
         final List<String> wiredSends = new ArrayList<>();
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> wiredSends.add(socketIndex + ":" + payload));
@@ -2704,216 +3278,307 @@ public final class PortedModuleSmokeTest {
                 return new ArrayList<List<Object>>();
             }
         });
-        String liveWiredRecord = Handling.Proc_6_220_7EBA50(4, wiredWire);
+        SessionState.instance().setSessionRegistry(sessionRegistry(
+            new SessionRegistry.SessionRecord("1:4", "77\2" + "4"),
+            new SessionRegistry.SessionRecord("4", "0\2" + "9")));
+        WiredLookups.RoomRequest wiredRequest =
+            WiredLookups.roomRequest(4, new UserDao(MySQL.configuredDatabase()), new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, wiredRequest.valid());
+        assertEquals("77", wiredRequest.userId());
+        assertEquals(9L, wiredRequest.roomId());
+        String liveWiredRecord = WiredLookups.editRecord(
+            4,
+            wiredRequest,
+            wiredWire,
+            "ok",
+            501,
+            1000,
+            "wired_action",
+            true,
+            new FurnitureDao(MySQL.configuredDatabase()),
+            new RoomDao(MySQL.configuredDatabase()));
         assertEquals(wiredRecord, liveWiredRecord);
-        assertEquals(true, Handling.Proc_6_239_7FC170(
+        assertEquals(true, FileUtils.readTextFile(
             wiredRoot.resolve("cache").resolve("wired_action").resolve("9.cache").toString()).contains(wiredRecord));
-        Licence.global_00829310 = "snapshot-room-cache";
-        String snapshotPath = Handling.Proc_6_221_7ED1E0(4, "on" + Crypto.Proc_3_0_6D2AF0(44, null, ""));
+        WiredPayloads.WiredRecord parsedWiredRecord = WiredCache.records("wired_action", 9).get(0);
+        assertEquals("502", parsedWiredRecord.code());
+        assertEquals("44", parsedWiredRecord.furnitureId());
+        assertEquals("100;101", parsedWiredRecord.selectedIds());
+        assertEquals(List.of(100L, 101L), parsedWiredRecord.selectedFurnitureIds());
+        assertEquals("7;8", parsedWiredRecord.parameterText());
+        assertEquals("txt", parsedWiredRecord.textValue());
+        assertEquals("9", parsedWiredRecord.extraValue());
+        WiredCache.appendRecord("wired_action", 19, otherRecord);
+        WiredCache.appendRecord("wired_action", 19, replacementRecord);
+        assertEquals(List.of("502", "503"), WiredCache.records("wired_action", 19).stream()
+            .map(WiredPayloads.WiredRecord::code)
+            .toList());
+        assertEquals("102", WiredCache.records("wired_action", 19).get(0).selectedIds());
+        assertEquals(true, FurnitureLookups.selectedItemsExistInRoom(
+            9, List.of(100L, 101L), new FurnitureDao(MySQL.configuredDatabase())));
+        FurnitureStateWrites.WiredStateApplyResult wiredStateApply = FurnitureStateWrites.applyWiredSelectedStates(
+            RoomState.instance().furnitureRoomCache(), 9, List.of(100L, 101L), "7;8", 0,
+            new FurnitureDao(MySQL.configuredDatabase()));
+        assertEquals(2L, wiredStateApply.appliedCount());
+        assertEquals(List.of(FurniturePayloads.stateChanged(100, 7), FurniturePayloads.stateChanged(101, 7)),
+            wiredStateApply.broadcastPayloads());
+        RoomState.instance().setRepresentedRooms(RepresentedRoomCache.fromCacheText("snapshot-room-cache"));
+        String snapshotPath = WiredLookups.createSnapshot(
+            4,
+            wiredRequest,
+            "on" + encodedVl64(44, null, ""),
+            new FurnitureDao(MySQL.configuredDatabase()),
+            new RoomDao(MySQL.configuredDatabase()));
         assertEquals(wiredRoot.resolve("cache").resolve("wired_snapshots").resolve("44.cache").toString(), snapshotPath);
         assertEquals("snapshot-room-cache" + System.lineSeparator(), new String(Files.readAllBytes(Path.of(snapshotPath)), "UTF-8"));
-        String triggerRecord = WiredPayloads.recordText(1001, 55, "", "", "", "");
-        Handling.Proc_6_240_7FC2B0(wiredRoot.resolve("cache").resolve("wired_trigger").resolve("9.cache").toString(), triggerRecord);
-        assertEquals(2L, Handling.Proc_6_212_7E36C0(4));
+        String triggerRecord = wiredRecordText(1001, 55, "", "", "", "");
+        FileUtils.writeTextFile(wiredRoot.resolve("cache").resolve("wired_trigger").resolve("9.cache").toString(), triggerRecord);
+        assertEquals(2L, WiredLookups.trigger(
+            9,
+            1001,
+            0,
+            new FurnitureDao(MySQL.configuredDatabase()),
+            (roomId, payload) -> wiredSends.add(roomId + ":" + payload)));
         assertEquals(true, containsSql(wiredSql, "UPDATE furnitures SET sign='7' WHERE id='100' LIMIT 1"));
         assertEquals(true, containsSql(wiredSql, "UPDATE furnitures SET sign='7' WHERE id='101' LIMIT 1"));
         wiredSql.clear();
         wiredSends.clear();
-        String action503 = WiredPayloads.recordText(503, 45, "102", "8", "", "");
-        Handling.Proc_6_240_7FC2B0(wiredRoot.resolve("cache").resolve("wired_action").resolve("9.cache").toString(), action503);
-        assertEquals(1L, Handling.Proc_6_215_7E6770(4));
+        String action503 = wiredRecordText(503, 45, "102", "8", "", "");
+        FileUtils.writeTextFile(wiredRoot.resolve("cache").resolve("wired_action").resolve("9.cache").toString(), action503);
+        assertEquals(1L, WiredLookups.action(
+            9,
+            503,
+            0,
+            new FurnitureDao(MySQL.configuredDatabase()),
+            (roomId, payload) -> wiredSends.add(roomId + ":" + payload)));
         assertEquals(true, containsSql(wiredSql, "UPDATE furnitures SET sign='8' WHERE id='102' LIMIT 1"));
+        SessionState.instance().setSessionRegistry(SessionRegistry.empty());
         MusConnectionManager.instance().configureSink(null);
         MySQL.configureDatabaseConnection(null);
-        Functions.applicationPath = previousApplicationPathForWired.toString();
-        DataManager.global_008292BC = previousProductCacheForWired;
-        String songInfoWire = "C]" + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(50, null, "")
-            + Crypto.Proc_3_0_6D2AF0(51, null, "");
-        Handling.SongInfoRequest songInfoRequest = Handling.songInfoRequestFromWire(songInfoWire);
-        assertEquals(2L, songInfoRequest.requestedCount);
-        assertEquals("50,51", songInfoRequest.requestedIds);
-        assertEquals(List.of(50L, 51L), songInfoRequest.requestedIdList);
-        String expectedCdPayload = Crypto.Proc_3_0_6D2AF0(50, null, "");
-        expectedCdPayload = Crypto.Proc_3_0_6D2AF0(3, null, expectedCdPayload) + "Song A\2Author A\2sound-a\2";
-        expectedCdPayload += Crypto.Proc_3_0_6D2AF0(4, null, Crypto.Proc_3_0_6D2AF0(51, null, ""))
+        AppPaths.setApplicationPath(previousApplicationPathForWired.toString());
+        GameDataCaches.setProductCache(previousProductCacheForWired);
+        String songInfoWire = "C]" + encodedVl64(2, null, "")
+            + encodedVl64(50, null, "")
+            + encodedVl64(51, null, "");
+        SongInfoRequest songInfoRequest = JukeboxRequests.songInfoFromWire(songInfoWire);
+        assertEquals(2L, songInfoRequest.requestedCount());
+        assertEquals("50,51", songInfoRequest.requestedIds());
+        assertEquals(List.of(50L, 51L), songInfoRequest.requestedIdList());
+        String expectedCdPayload = encodedVl64(50, null, "");
+        expectedCdPayload = encodedVl64(3, null, expectedCdPayload) + "Song A\2Author A\2sound-a\2";
+        expectedCdPayload += encodedVl64(4, null, encodedVl64(51, null, ""))
             + "Song B\2Author B\2sound-b\2";
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "Dl") + expectedCdPayload,
+        assertEquals(encodedVl64(2, null, "Dl") + expectedCdPayload,
             JukeboxPayloads.songInfo(List.of(
                 new SongInfoRow("Song A", 3L, "Author A", "sound-a", 50L),
                 new SongInfoRow("Song B", 4L, "Author B", "sound-b", 51L))));
-        assertEquals("\1" + "200\2" + "keep\1" + "300\2",
-            Handling.removeSoundMachineMarkers("\1" + "100\2\1" + "200\2" + "keep\1" + "300\2", 100, 0));
-        Handling.JukeboxAddRequest addRequest = Handling.jukeboxAddRequestFromWire("C" + '\177'
-            + Crypto.Proc_3_0_6D2AF0(77, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, ""));
-        assertEquals(77L, addRequest.diskFurnitureId);
-        assertEquals(2L, addRequest.playlistOrder);
-        assertEquals(true, Handling.jukeboxCanAddDisk(2, "1", 1, 10));
-        assertEquals(false, Handling.jukeboxCanAddDisk(3, "1", 1, 10));
-        assertEquals(true, Handling.jukeboxCanAddDisk(0, "", 0, 0));
-        assertEquals(3L, Handling.jukeboxRemoveOrderFromWire("D@" + Crypto.Proc_3_0_6D2AF0(3, null, "")));
-        String expectedPlaylist = Crypto.Proc_3_0_6D2AF0(2, null, "");
-        expectedPlaylist += Crypto.Proc_3_0_6D2AF0(40, null, "");
-        expectedPlaylist += Crypto.Proc_3_0_6D2AF0(3, null, "");
-        expectedPlaylist += Crypto.Proc_3_0_6D2AF0(41, null, "");
-        assertEquals(Crypto.Proc_3_0_6D2AF0(5, null, Crypto.Proc_3_0_6D2AF0(2, null, "EN")) + expectedPlaylist,
+        JukeboxAddRequest addRequest = JukeboxRequests.addRequestFromWire("C" + '\177'
+            + encodedVl64(77, null, "")
+            + encodedVl64(2, null, ""));
+        assertEquals(77L, addRequest.diskFurnitureId());
+        assertEquals(2L, addRequest.playlistOrder());
+        assertEquals(true, JukeboxRequests.canAddDisk(2, "1", 1, 10));
+        assertEquals(false, JukeboxRequests.canAddDisk(3, "1", 1, 10));
+        assertEquals(true, JukeboxRequests.canAddDisk(0, "", 0, 0));
+        assertEquals(3L, JukeboxRequests.removeOrderFromWire("D@" + encodedVl64(3, null, "")));
+        String expectedPlaylist = encodedVl64(2, null, "");
+        expectedPlaylist += encodedVl64(40, null, "");
+        expectedPlaylist += encodedVl64(3, null, "");
+        expectedPlaylist += encodedVl64(41, null, "");
+        assertEquals(encodedVl64(5, null, encodedVl64(2, null, "EN")) + expectedPlaylist,
             JukeboxPayloads.playlist(5, List.of(
                 new JukeboxPlaylistEntry(2L, 40L),
                 new JukeboxPlaylistEntry(3L, 41L))));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "EM") + expectedPlaylist,
+        assertEquals(encodedVl64(2, null, "EM") + expectedPlaylist,
             JukeboxPayloads.diskInventory(List.of(
                 new SongDiskRow(2L, 40L),
                 new SongDiskRow(3L, 41L))));
-        String expectedPlayback = Crypto.Proc_3_0_6D2AF0(10, null, "EG");
-        expectedPlayback = Crypto.Proc_3_0_6D2AF0(3, null, expectedPlayback);
-        expectedPlayback = Crypto.Proc_3_0_6D2AF0(40, null, expectedPlayback);
-        expectedPlayback = Crypto.Proc_3_0_6D2AF0(2, null, expectedPlayback);
-        expectedPlayback = Crypto.Proc_3_0_6D2AF0(0, null, Crypto.Proc_3_0_6D2AF0(0, null, expectedPlayback));
+        String expectedPlayback = encodedVl64(10, null, "EG");
+        expectedPlayback = encodedVl64(3, null, expectedPlayback);
+        expectedPlayback = encodedVl64(40, null, expectedPlayback);
+        expectedPlayback = encodedVl64(2, null, expectedPlayback);
+        expectedPlayback = encodedVl64(0, null, encodedVl64(0, null, expectedPlayback));
         assertEquals(expectedPlayback, JukeboxPayloads.playback(10, 3, 40, 2));
         RoomDao.RoomSettingsRead settingsReadRow = new RoomDao.RoomSettingsRead(
             7L, "Room", "Desc", 2L, 4L, 25L, 30L, "tag1", "tag2", 1L, 0L, 1L, 0L);
         List<RoomDao.RoomRight> roomRights = List.of(
             new RoomDao.RoomRight(5L, "Alice"),
             new RoomDao.RoomRight(6L, "Bob"));
-        String expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(7, null, "GQ") + "Room\2Desc\2";
-        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(2, null, expectedRoomSettings);
-        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(4, null, expectedRoomSettings);
-        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(25, null, expectedRoomSettings);
-        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(30, null, expectedRoomSettings);
-        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(2, null, expectedRoomSettings) + "tag1\2tag2\2";
-        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(2, null, expectedRoomSettings);
-        expectedRoomSettings += Crypto.Proc_3_0_6D2AF0(5, null, "") + "Alice\2";
-        expectedRoomSettings += Crypto.Proc_3_0_6D2AF0(6, null, "") + "Bob\2H";
-        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomSettings);
-        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(0, null, expectedRoomSettings);
-        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomSettings);
-        expectedRoomSettings = Crypto.Proc_3_0_6D2AF0(0, null, expectedRoomSettings);
+        String expectedRoomSettings = encodedVl64(7, null, "GQ") + "Room\2Desc\2";
+        expectedRoomSettings = encodedVl64(2, null, expectedRoomSettings);
+        expectedRoomSettings = encodedVl64(4, null, expectedRoomSettings);
+        expectedRoomSettings = encodedVl64(25, null, expectedRoomSettings);
+        expectedRoomSettings = encodedVl64(30, null, expectedRoomSettings);
+        expectedRoomSettings = encodedVl64(2, null, expectedRoomSettings) + "tag1\2tag2\2";
+        expectedRoomSettings = encodedVl64(2, null, expectedRoomSettings);
+        expectedRoomSettings += encodedVl64(5, null, "") + "Alice\2";
+        expectedRoomSettings += encodedVl64(6, null, "") + "Bob\2H";
+        expectedRoomSettings = encodedVl64(1, null, expectedRoomSettings);
+        expectedRoomSettings = encodedVl64(0, null, expectedRoomSettings);
+        expectedRoomSettings = encodedVl64(1, null, expectedRoomSettings);
+        expectedRoomSettings = encodedVl64(0, null, expectedRoomSettings);
         assertEquals(expectedRoomSettings, RoomPayloads.settingsRead(settingsReadRow, roomRights));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GI") + '\2', RoomPayloads.iconUpdated(7));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GH"), RoomPayloads.entryUpdated(7));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GG"), RoomPayloads.homeRoom(7));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "AE") + '\2', RoomPayloads.currentRoom(7));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "@\\") + "entries",
-            RoomPayloads.occupantEntries(2, "entries"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(3, null, "Du") + "statuses",
-            RoomPayloads.occupantStatuses(3, "statuses"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "@{") + "Created Room\2",
+        assertEquals(encodedVl64(7, null, "GI") + '\2', RoomPayloads.iconUpdated(7));
+        assertEquals(encodedVl64(7, null, "GH"), RoomPayloads.entryUpdated(7));
+        assertEquals(encodedVl64(7, null, "GG"), RoomPayloads.homeRoom(7));
+        assertEquals(encodedVl64(7, null, "AE") + '\2', RoomPayloads.currentRoom(7));
+        assertEquals(encodedVl64(2, null, "@\\") + "entries",
+            RoomPayloads.occupantEntries(new SocialRoomOccupants(2L, 3L, "entries", "statuses")));
+        assertEquals(encodedVl64(3, null, "Du") + "statuses",
+            RoomPayloads.occupantStatuses(new SocialRoomOccupants(2L, 3L, "entries", "statuses")));
+        assertEquals(encodedVl64(7, null, "@{") + "Created Room\2",
             RoomPayloads.createdRoom(7, "Created Room"));
-        String expectedOfficialRoomModel = Crypto.Proc_3_0_6D2AF0(7, null, "GE") + "model.cast\2";
-        expectedOfficialRoomModel = Crypto.Proc_3_0_6D2AF0(7, null, expectedOfficialRoomModel) + "Caption\2";
+        String expectedOfficialRoomModel = encodedVl64(7, null, "GE") + "model.cast\2";
+        expectedOfficialRoomModel = encodedVl64(7, null, expectedOfficialRoomModel) + "Caption\2";
         assertEquals(expectedOfficialRoomModel,
             RoomPayloads.officialRoomModel(7, new RoomDao.OfficialRoomModel(7, 2, "model.cast", "Caption")));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(4, null, Crypto.Proc_3_0_6D2AF0(20, null, "H@")),
+        assertEquals(encodedVl64(4, null, encodedVl64(20, null, "H@")),
             RoomPayloads.creatableRoomCount(20, 4));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, "Fc"), RoomPayloads.roomRightRemoved());
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GS"), RoomPayloads.settingsUpdated(7));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(12, null, "EY"), RoomPayloads.rating(12));
-        String expectedWallOptions = Crypto.Proc_3_0_6D2AF0(1, null, "GX");
-        expectedWallOptions = Crypto.Proc_3_0_6D2AF0(2, null, expectedWallOptions);
-        expectedWallOptions = Crypto.Proc_3_0_6D2AF0(3, null, expectedWallOptions);
+        assertEquals(encodedVl64(0, null, "Fc"), RoomPayloads.roomRightRemoved());
+        assertEquals(encodedVl64(7, null, "GS"), RoomPayloads.settingsUpdated(7));
+        assertEquals(encodedVl64(12, null, "EY"), RoomPayloads.rating(12));
+        String expectedWallOptions = encodedVl64(1, null, "GX");
+        expectedWallOptions = encodedVl64(2, null, expectedWallOptions);
+        expectedWallOptions = encodedVl64(3, null, expectedWallOptions);
         assertEquals(expectedWallOptions, RoomPayloads.wallOptions(1, 2, 3));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GK") + "H", RoomPayloads.favouriteRemoved(7));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(7, null, "GK") + " ", RoomPayloads.favouriteAdded(7));
+        assertEquals(encodedVl64(7, null, "GK") + "H", RoomPayloads.favouriteRemoved(7));
+        assertEquals(encodedVl64(7, null, "GK") + " ", RoomPayloads.favouriteAdded(7));
         Map<Long, String> staffNames = new HashMap<>();
         staffNames.put(6L, "Partner");
         staffNames.put(9L, "Picker");
-        String expectedCallForHelp = Handling.Proc_6_29_70D800(0, 0, 8, 5, "Caller", 6, "Partner",
+        String expectedCallForHelp = StaffPayloads.callForHelp(0, 0, 8, 5, "Caller", 6, "Partner",
             "Need help", 7, "Room", 50, "Picker");
-        assertEquals(expectedCallForHelp, StaffPayloads.callForHelpRow(
+        assertEquals("HR" + expectedCallForHelp, StaffPayloads.callForHelpNotification(
             new StaffCallForHelpRow(50L, 2L, 5L, "Caller", 6L, 7L, 8L, "Need help", 7L, "Room", 9L),
             staffNames));
-        assertEquals("HR" + expectedCallForHelp, StaffPayloads.callForHelpNotification(expectedCallForHelp));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(2, null, "H\\"), StaffPayloads.callForHelpClosed(2L));
+        assertEquals(encodedVl64(2, null, "H\\"), StaffPayloads.callForHelpClosed(2L));
         assertEquals("E@", StaffPayloads.callForHelpDeleted());
-        assertEquals(Crypto.Proc_3_0_6D2AF0(50, null, "EA"), StaffPayloads.callForHelpCreated(50L));
+        assertEquals(encodedVl64(50, null, "EA"), StaffPayloads.callForHelpCreated(50L));
         assertEquals("BaCareful\2", StaffPayloads.alert("Careful"));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(0, null, "HS")
-            + Crypto.Proc_3_0_6D2AF0(0, null, "") + "MOD", StaffPayloads.moderationPanel("MOD"));
-        String staffWhereWire = Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(50, null, "")
-            + Crypto.Proc_3_0_6D2AF0(51, null, "");
-        assertEquals("id='50' OR id='51'", StaffPayloads.callForHelpWhereClause(staffWhereWire));
-        assertEquals("", StaffPayloads.callForHelpWhereClause(Crypto.Proc_3_0_6D2AF0(0, null, "")));
-        String expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(5, null, "HU") + "Alice\2";
-        expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(60, null, expectedStaffSummary);
-        expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(10, null, expectedStaffSummary);
-        expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(1, null, expectedStaffSummary);
-        expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(2, null, expectedStaffSummary);
-        expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(1, null, expectedStaffSummary);
-        expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(4, null, expectedStaffSummary);
-        expectedStaffSummary = Crypto.Proc_3_0_6D2AF0(0, null, expectedStaffSummary);
+        StaffSettings moderationPanelSettings = StaffSettings.fromPayloadRows(
+            List.of(new StaffSettings.ModerationPayload(2L, 0L, "MOD")));
+        assertEquals(encodedVl64(0, null, "HS")
+            + encodedVl64(0, null, "") + "MOD", StaffPayloads.moderationPanel(moderationPanelSettings, 2L, 0L));
+        String expectedStaffSummary = encodedVl64(5, null, "HU") + "Alice\2";
+        expectedStaffSummary = encodedVl64(60, null, expectedStaffSummary);
+        expectedStaffSummary = encodedVl64(10, null, expectedStaffSummary);
+        expectedStaffSummary = encodedVl64(1, null, expectedStaffSummary);
+        expectedStaffSummary = encodedVl64(2, null, expectedStaffSummary);
+        expectedStaffSummary = encodedVl64(1, null, expectedStaffSummary);
+        expectedStaffSummary = encodedVl64(4, null, expectedStaffSummary);
+        expectedStaffSummary = encodedVl64(0, null, expectedStaffSummary);
         assertEquals(expectedStaffSummary,
             StaffPayloads.userSummary(new StaffUserSummaryRow(5L, "Alice", 60L, 10L, 3L), 2, 1, 4, 0));
-        String expectedVisit = Crypto.Proc_3_0_6D2AF0(1, null, "");
-        expectedVisit = Crypto.Proc_3_0_6D2AF0(7, null, expectedVisit);
-        expectedVisit = Crypto.Proc_3_0_6D2AF0(12, null, expectedVisit);
-        expectedVisit = Crypto.Proc_3_0_6D2AF0(30, null, expectedVisit) + "Room\2";
+        String expectedVisit = encodedVl64(1, null, "");
+        expectedVisit = encodedVl64(7, null, expectedVisit);
+        expectedVisit = encodedVl64(12, null, expectedVisit);
+        expectedVisit = encodedVl64(30, null, expectedVisit) + "Room\2";
         assertEquals(expectedVisit, StaffPayloads.roomVisit(new StaffRoomVisitRow(1L, 7L, "Room", 12L, 30L)));
-        assertEquals(123L, Handling.staffNestedUserIdFromWire("@C123"));
-        assertEquals(77L, Handling.staffNestedUserIdFromWire(Crypto.Proc_3_0_6D2AF0(77, null, "")));
+        assertEquals(88L, StaffWire.userId("B88"));
+        assertEquals(123L, StaffWire.nestedUserId("@C123"));
+        assertEquals(77L, StaffWire.nestedUserId(encodedVl64(77, null, "")));
+        assertEquals(88L, StaffWire.userSummaryRequest("GF" + wireLong(88)).targetUserId());
+        StaffWire.BanRequest staffBanRequest =
+            StaffWire.banRequest("GP" + wireLong(88) + wireString("Ban\nnow") + wireLong(2));
+        assertEquals(88L, staffBanRequest.targetUserId());
+        assertEquals("Ban now", staffBanRequest.banMessage());
+        assertEquals(2L, staffBanRequest.banHours());
+        StaffWire.RoomModerationRequest roomModerationRequest =
+            StaffWire.roomModerationRequest("CH" + wireLong(1) + wireString("Room\nalert"));
+        assertEquals(1L, roomModerationRequest.actionType());
+        assertEquals("Room alert", roomModerationRequest.messageText());
+        StaffWire.CloseCallForHelpRequest closeCallForHelpRequest =
+            StaffWire.closeCallForHelpRequest("GD" + wireLong(2) + wireLong(50));
+        assertEquals(2L, closeCallForHelpRequest.closeState());
+        assertEquals(50L, closeCallForHelpRequest.callForHelpId());
+        assertEquals(1L, StaffWire.roomLockRequest("GL" + wireLong(0) + wireLong(1)).lockFlag());
+        StaffWire.DirectMessageRequest directMessageRequest =
+            StaffWire.directMessageRequest("GM" + wireLong(88) + wireString("Careful\nnow"), "GM");
+        assertEquals(88L, directMessageRequest.targetUserId());
+        assertEquals("Careful now", directMessageRequest.messageText());
+        StaffWire.SubmitCallForHelpRequest submitCallForHelpRequest =
+            StaffWire.submitCallForHelpRequest("GE" + wireString("This is a long\ncall for help description")
+                + wireLong(8) + wireLong(88));
+        assertEquals("This is a long call for help description", submitCallForHelpRequest.descriptionText());
+        assertEquals(8L, submitCallForHelpRequest.categoryId());
+        assertEquals(88L, submitCallForHelpRequest.partnerUserId());
+        String staffTabWire = encodedVl64(2, null, "")
+            + encodedVl64(50, null, "")
+            + encodedVl64(51, null, "");
+        assertEquals(List.of(50L, 51L), StaffWire.callForHelpTabRequest("GB" + staffTabWire, "GB").callForHelpIds());
+        assertEquals(123L, StaffWire.historyRequest("GG@C123", "GG", true).targetUserId());
+        assertEquals(88L, StaffWire.historyRequest("GJB88", "GJ", false).targetUserId());
+        assertEquals(12L, StaffWire.callForHelpChatLogRequest("GIB12").callForHelpId());
+        assertEquals(13L, StaffWire.roomChatLogRequest("GHB13").roomId());
+        assertEquals(14L, StaffWire.roomInfoRequest("GKB14").roomId());
         List<StaffRoomChatRow> staffChatRows = List.of(
             new StaffRoomChatRow(10L, 5L, 7L, "Alice", "hello"),
             new StaffRoomChatRow(11L, 6L, 8L, "Bob", "hi"));
-        String expectedStaffChatRows = Crypto.Proc_3_0_6D2AF0(10, null, "");
-        expectedStaffChatRows += Crypto.Proc_3_0_6D2AF0(5, null, "");
-        expectedStaffChatRows += Crypto.Proc_3_0_6D2AF0(7, null, "");
+        String expectedStaffChatRows = encodedVl64(10, null, "");
+        expectedStaffChatRows += encodedVl64(5, null, "");
+        expectedStaffChatRows += encodedVl64(7, null, "");
         expectedStaffChatRows += "Alice\2hello\2";
-        expectedStaffChatRows += Crypto.Proc_3_0_6D2AF0(11, null, "");
-        expectedStaffChatRows += Crypto.Proc_3_0_6D2AF0(6, null, "");
-        expectedStaffChatRows += Crypto.Proc_3_0_6D2AF0(8, null, "");
+        expectedStaffChatRows += encodedVl64(11, null, "");
+        expectedStaffChatRows += encodedVl64(6, null, "");
+        expectedStaffChatRows += encodedVl64(8, null, "");
         expectedStaffChatRows += "Bob\2hi\2";
-        Handling.StaffChatRowsPayload staffChat = Handling.staffRoomChatRowsPayload(staffChatRows);
-        assertEquals(2L, staffChat.chatCount);
-        assertEquals(expectedStaffChatRows, staffChat.payload);
-        String expectedCallForHelpChatLogResponse = Crypto.Proc_3_0_6D2AF0(50, null, "HV");
-        expectedCallForHelpChatLogResponse = Crypto.Proc_3_0_6D2AF0(7, null, expectedCallForHelpChatLogResponse);
-        expectedCallForHelpChatLogResponse = Crypto.Proc_3_0_6D2AF0(1, null, expectedCallForHelpChatLogResponse);
-        expectedCallForHelpChatLogResponse = Crypto.Proc_3_0_6D2AF0(5, null, expectedCallForHelpChatLogResponse);
-        expectedCallForHelpChatLogResponse = Crypto.Proc_3_0_6D2AF0(6, null, expectedCallForHelpChatLogResponse);
+        StaffPayloads.ChatRows staffChat = StaffPayloads.roomChatRows(staffChatRows);
+        assertEquals(2L, staffChat.chatCount());
+        assertEquals(expectedStaffChatRows, staffChat.payload());
+        String expectedCallForHelpChatLogResponse = encodedVl64(50, null, "HV");
+        expectedCallForHelpChatLogResponse = encodedVl64(7, null, expectedCallForHelpChatLogResponse);
+        expectedCallForHelpChatLogResponse = encodedVl64(1, null, expectedCallForHelpChatLogResponse);
+        expectedCallForHelpChatLogResponse = encodedVl64(5, null, expectedCallForHelpChatLogResponse);
+        expectedCallForHelpChatLogResponse = encodedVl64(6, null, expectedCallForHelpChatLogResponse);
         expectedCallForHelpChatLogResponse += "Room\2" + expectedStaffChatRows;
         assertEquals(expectedCallForHelpChatLogResponse, StaffPayloads.callForHelpChatLogResponse(
             50L, new StaffModerationDao.CallForHelpRoom(7L, "Room", 1L, 5L, 6L, 1000L), staffChatRows));
-        String expectedRoomChatLogResponse = Crypto.Proc_3_0_6D2AF0(7, null, "HW");
-        expectedRoomChatLogResponse = Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomChatLogResponse);
+        String expectedRoomChatLogResponse = encodedVl64(7, null, "HW");
+        expectedRoomChatLogResponse = encodedVl64(1, null, expectedRoomChatLogResponse);
         expectedRoomChatLogResponse += "Room\2" + expectedStaffChatRows;
         assertEquals(expectedRoomChatLogResponse, StaffPayloads.roomChatLogResponse(
             new StaffModerationDao.RoomChatHeader(7L, "Room", 1L), staffChatRows));
-        String expectedRoomInfoResponse = Crypto.Proc_3_0_6D2AF0(7, null, "HZ");
-        expectedRoomInfoResponse = Crypto.Proc_3_0_6D2AF0(2, null, expectedRoomInfoResponse);
-        expectedRoomInfoResponse = Crypto.Proc_3_0_6D2AF0(5, null, expectedRoomInfoResponse);
+        String expectedRoomInfoResponse = encodedVl64(7, null, "HZ");
+        expectedRoomInfoResponse = encodedVl64(2, null, expectedRoomInfoResponse);
+        expectedRoomInfoResponse = encodedVl64(5, null, expectedRoomInfoResponse);
         expectedRoomInfoResponse += "Owner\2Room\2Desc\2tag1\2tag2\2";
-        expectedRoomInfoResponse = Crypto.Proc_3_0_6D2AF0(1, null, expectedRoomInfoResponse);
+        expectedRoomInfoResponse = encodedVl64(1, null, expectedRoomInfoResponse);
         expectedRoomInfoResponse += "Event\2Event desc\2etag1\2etag2\2";
         assertEquals(expectedRoomInfoResponse, StaffPayloads.roomInfoResponse(
             new StaffModerationDao.RoomInfo(7L, 2L, 5L, "Owner", "Room", "Desc", "tag1", "tag2"),
             new StaffModerationDao.RoomEvent("Event", "Event desc", "etag1", "etag2")));
-        String expectedStaffChatHistory = Crypto.Proc_3_0_6D2AF0(1, null, "");
-        expectedStaffChatHistory = Crypto.Proc_3_0_6D2AF0(7, null, expectedStaffChatHistory);
-        expectedStaffChatHistory = Crypto.Proc_3_0_6D2AF0(2, null, expectedStaffChatHistory) + "Room\2" + expectedStaffChatRows;
+        String expectedStaffChatHistory = encodedVl64(1, null, "");
+        expectedStaffChatHistory = encodedVl64(7, null, expectedStaffChatHistory);
+        expectedStaffChatHistory = encodedVl64(2, null, expectedStaffChatHistory) + "Room\2" + expectedStaffChatRows;
         assertEquals(expectedStaffChatHistory,
             StaffPayloads.roomChatHistory(new StaffRoomChatVisitRow(1L, 7L, "Room", 100L, 200L), staffChatRows));
         StaffUserLookup staffTarget = new StaffUserLookup(88L, "Target");
-        String expectedRoomChatHistoryResponse = Crypto.Proc_3_0_6D2AF0(88, null, "HX")
-            + "Target\2" + Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedStaffChatHistory;
+        String expectedRoomChatHistoryResponse = encodedVl64(88, null, "HX")
+            + "Target\2" + encodedVl64(1, null, "") + expectedStaffChatHistory;
         assertEquals(expectedRoomChatHistoryResponse,
-            StaffPayloads.roomChatHistoryResponse(staffTarget, 1L, expectedStaffChatHistory));
-        String expectedRoomVisitHistoryResponse = Crypto.Proc_3_0_6D2AF0(88, null, "HY")
-            + "Target\2" + Crypto.Proc_3_0_6D2AF0(1, null, "") + expectedVisit;
+            StaffPayloads.roomChatHistoryResponse(staffTarget, List.of(new StaffPayloads.ChatHistoryVisit(
+                new StaffRoomChatVisitRow(1L, 7L, "Room", 100L, 200L), staffChatRows))));
+        String expectedRoomVisitHistoryResponse = encodedVl64(88, null, "HY")
+            + "Target\2" + encodedVl64(1, null, "") + expectedVisit;
         assertEquals(expectedRoomVisitHistoryResponse,
-            StaffPayloads.roomVisitHistoryResponse(staffTarget, 1L, expectedVisit));
+            StaffPayloads.roomVisitHistoryResponse(staffTarget, List.of(
+                new StaffRoomVisitRow(1L, 7L, "Room", 12L, 30L))));
         assertEquals(true, StaffPayloads.containsUnsafeAlert("cookie plus javascript:"));
         assertEquals(false, StaffPayloads.containsUnsafeAlert("cookie only"));
 
+        });
+        run(() -> {
         final List<String> handlingSends = new ArrayList<>();
         final List<String> handlingSql = new ArrayList<>();
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> handlingSends.add(socketIndex + ":" + payload));
         Guardian.setSocketConnected(4, true);
         Guardian.setSocketConnected(8, true);
-        Licence.global_00829268 = "[1:4\1" + "77\2" + "4][1:8\1" + "88\2" + "8]";
-        Licence.global_0082934C = "";
-        Licence.setRecyclerStatusPayload("CACHE");
-        assertEquals("CACHE", Licence.recyclerSettings().statusPayload());
+        SessionState.instance().setSessionRegistry(sessionRegistry(
+            new SessionRegistry.SessionRecord("1:4", "77\2" + "4"),
+            new SessionRegistry.SessionRecord("1:8", "88\2" + "8")));
+        SessionState.instance().setRepresentedSockets(RepresentedSocketCache.empty());
+        RecyclerState.instance().setStatusPayload("CACHE");
+        assertEquals("CACHE", RecyclerState.instance().settings().statusPayload());
         List<Long> recyclerProductIds = new ArrayList<>();
         recyclerProductIds.add(501L);
         RecyclerSettings typedRecyclerSettings = RecyclerSettings.fromRewardGroups("STATUS",
@@ -2923,76 +3588,77 @@ public final class PortedModuleSmokeTest {
         assertEquals(508L, typedRecyclerSettings.boxProductId());
         assertEquals(7L, typedRecyclerSettings.rewardGroups().get(0).chance());
         assertEquals(List.of(501L), typedRecyclerSettings.rewardGroups().get(0).productIds());
-        Licence.setRecyclerRewards(List.of(new RecyclerSettings.RewardGroup(9L, List.of(503L, 504L))));
-        assertEquals(true, Licence.global_00829140 instanceof RecyclerSettings);
-        assertEquals("9", ((String[]) Licence.global_0082915C)[0]);
-        assertEquals(1L, Licence.global_00829168);
-        Licence.setRecyclerStatusPayload("STATUS-2");
-        Licence.setRecyclerBoxProductId(509L);
-        assertEquals("STATUS-2", Licence.recyclerSettings().statusPayload());
-        assertEquals(509L, Licence.recyclerSettings().boxProductId());
-        assertEquals(List.of(503L, 504L), Licence.recyclerSettings().rewardGroups().get(0).productIds());
-        Licence.setRecyclerStatusPayload("CACHE");
-        Licence.global_00829204 = "IMPORTANTFAQ";
-        Licence.global_00829208 = "FAQCATS";
-        Licence.global_0082920C = new String[]{"", "CATFAQ"};
-        Licence.global_00829210 = new String[]{"", "", "FAQDESC"};
+        RecyclerSettings cacheRecyclerSettings = RecyclerSettings.fromRewardGroups("CACHE-STATUS",
+            List.of(new RecyclerSettings.RewardGroup(8L, List.of(505L))), 510L);
+        assertEquals("CACHE-STATUS", cacheRecyclerSettings.statusPayload());
+        assertEquals(510L, cacheRecyclerSettings.boxProductId());
+        assertEquals(List.of(505L), cacheRecyclerSettings.rewardGroups().get(0).productIds());
+        RecyclerState.instance().setRewards(List.of(new RecyclerSettings.RewardGroup(9L, List.of(503L, 504L))));
+        assertEquals(1, RecyclerState.instance().settings().rewardGroups().size());
+        assertEquals(9L, RecyclerState.instance().settings().rewardGroups().get(0).chance());
+        RecyclerState.instance().setStatusPayload("STATUS-2");
+        RecyclerState.instance().setBoxProductId(509L);
+        assertEquals("STATUS-2", RecyclerState.instance().settings().statusPayload());
+        assertEquals(509L, RecyclerState.instance().settings().boxProductId());
+        assertEquals(List.of(503L, 504L), RecyclerState.instance().settings().rewardGroups().get(0).productIds());
+        RecyclerState.instance().setStatusPayload("CACHE");
         HelpCenterCache typedHelpCache = HelpCenterCache.fromPayloads(
-            "IMPORTANT", "CATS", Map.of(7L, "CATFAQ7"), Map.of(9L, "FAQDESC9"));
+            "IMPORTANTFAQ", "FAQCATS", Map.of(1L, "CATFAQ", 7L, "CATFAQ7"),
+            Map.of(2L, "FAQDESC", 9L, "FAQDESC9"));
         assertEquals("CATFAQ7", typedHelpCache.categoryFaqPayload(7L));
         assertEquals("FAQDESC9", typedHelpCache.descriptionPayload(9L));
-        assertEquals(Map.of(7L, "CATFAQ7"), typedHelpCache.categoryFaqPayloads());
-        assertEquals(Map.of(9L, "FAQDESC9"), typedHelpCache.descriptionPayloads());
-        Licence.global_008292D8 = new String[][]{{}, {"STAFFMOD"}};
-        assertEquals("STAFFMOD", Licence.staffSettings().moderationPayload(1L, 0L));
+        assertEquals(Map.of(1L, "CATFAQ", 7L, "CATFAQ7"), typedHelpCache.categoryFaqPayloads());
+        assertEquals(Map.of(2L, "FAQDESC", 9L, "FAQDESC9"), typedHelpCache.descriptionPayloads());
+        HelpCenterState.instance().setCache(typedHelpCache);
+        assertEquals("CATFAQ7", HelpCenterState.instance().cache().categoryFaqPayload(7L));
+        assertEquals("FAQDESC9", HelpCenterState.instance().cache().descriptionPayload(9L));
+        ModerationState.instance().setStaffSettings(StaffSettings.fromPayloadRows(
+            List.of(new StaffSettings.ModerationPayload(1L, 0L, "STAFFMOD"))));
+        assertEquals("STAFFMOD", ModerationState.instance().staffSettings().moderationPayload(1L, 0L));
         assertStaffSettingsTypedAccessors();
-        Licence.global_00829094 = "WIREDSTATE";
-        assertEquals("WIREDSTATE", Licence.wiredSettings().statePayload());
-        Licence.global_0082908C = "12\t1";
-        Licence.global_00829090 = java.time.LocalDateTime.now().plusSeconds(90L);
-        assertEquals(false, Licence.newFriendRooms().shouldRefresh(java.time.LocalDateTime.now()));
-        NewFriendRooms legacyFriendRooms = NewFriendRooms.fromLegacy("12\t1\rbad\r13\t2",
+        WiredState.instance().setStatePayload("WIREDSTATE");
+        assertEquals("WIREDSTATE", WiredState.instance().settings().statePayload());
+        WiredState.instance().setStatePayload("TYPED-WIRED");
+        assertEquals("TYPED-WIRED", WiredState.instance().settings().statePayload());
+        WiredState.instance().setSettings(WiredSettings.fromStatePayload("WIREDSTATE"));
+        NavigatorState.instance().setNewFriendRooms(List.of(new NewFriendRooms.RoomPick(12L, 1L)),
+                java.time.LocalDateTime.now().plusSeconds(90L));
+        assertEquals(false, NavigatorState.instance().newFriendRooms().shouldRefresh(java.time.LocalDateTime.now()));
+        NavigatorState.instance().setNewFriendRooms(List.of(
+                new NewFriendRooms.RoomPick(12L, 1L),
+                NewFriendRooms.RoomPick.empty(),
+                new NewFriendRooms.RoomPick(13L, 2L)),
                 java.time.LocalDateTime.now().plusSeconds(30L));
+        NewFriendRooms mirroredFriendRooms = NavigatorState.instance().newFriendRooms();
         assertEquals(List.of(
                 new NewFriendRooms.RoomPick(12L, 1L),
                 new NewFriendRooms.RoomPick(0L, 0L),
-                new NewFriendRooms.RoomPick(13L, 2L)), legacyFriendRooms.roomPicks());
+                new NewFriendRooms.RoomPick(13L, 2L)), mirroredFriendRooms.roomPicks());
         List<NewFriendRooms.RoomPick> mutableFriendRooms = new ArrayList<>();
         mutableFriendRooms.add(new NewFriendRooms.RoomPick(21L, 3L));
         NewFriendRooms typedFriendRooms = NewFriendRooms.fromRoomPicks(mutableFriendRooms,
                 java.time.LocalDateTime.now().plusSeconds(30L));
         mutableFriendRooms.add(new NewFriendRooms.RoomPick(22L, 4L));
         assertEquals(List.of(new NewFriendRooms.RoomPick(21L, 3L)), typedFriendRooms.roomPicks());
-        Licence.setNewFriendRooms(java.util.List.of(new NewFriendRooms.RoomPick(12L, 1L)),
+        NavigatorState.instance().setNewFriendRooms(java.util.List.of(new NewFriendRooms.RoomPick(12L, 1L)),
                 java.time.LocalDateTime.now().plusSeconds(90L));
-        assertEquals(true, Licence.global_0082908C instanceof NewFriendRooms);
-        Object previousNewFriendRooms = Licence.global_0082908C;
-        java.time.LocalDateTime previousNewFriendRoomsExpiresAt = Licence.global_00829090;
-        Licence.global_0082908C = typedFriendRooms;
-        Licence.global_00829090 = typedFriendRooms.expiresAt();
-        assertEquals(List.of(new NewFriendRooms.RoomPick(21L, 3L)), Licence.newFriendRooms().roomPicks());
-        Licence.global_0082908C = previousNewFriendRooms;
-        Licence.global_00829090 = previousNewFriendRoomsExpiresAt;
-        DataManager.global_008291AC = "\0" + "1\1events\2";
-        Path originalApplicationPath = Path.of(Functions.applicationPath);
-        Object originalProductCache = DataManager.global_008292BC;
-        Object originalLicenceProductCache = Licence.global_008292BC;
-        Object originalCatalogProductCache = Licence.global_008292C0;
-        Object originalRoomCategoryPayloads = Licence.global_00829244;
-        Object originalRecommendedRooms = Licence.global_0082911C;
-        long originalRecommendedRoomCount = Licence.global_00829128;
-        Object originalHcGiftPayload = Licence.global_00829178;
-        Object originalHcGiftLookup = Licence.global_0082917C;
-        Object originalGiftWrapLookup = Licence.global_0082925C;
-        String originalGiftWrapPayload = Licence.global_00829260;
-        Object originalCatalogPagePayloads = Licence.global_00829308;
-        Object originalRecyclerProductLists = Licence.global_00829140;
-        Object originalRecyclerChances = Licence.global_0082915C;
-        long originalRecyclerGroupCount = Licence.global_00829168;
-        long originalRecyclerBoxProductId = Licence.global_0082916C;
-        String originalSettingsCache = Functions.global_0082928C;
+        NewFriendRooms previousNewFriendRooms = NavigatorState.instance().newFriendRooms();
+        NavigatorState.instance().setNewFriendRooms(typedFriendRooms);
+        assertEquals(List.of(new NewFriendRooms.RoomPick(21L, 3L)), NavigatorState.instance().newFriendRooms().roomPicks());
+        NavigatorState.instance().setNewFriendRooms(previousNewFriendRooms);
+        GameDataCaches.setRoomEventLocales(RoomEventLocales.fromEntries(
+            List.of(new RoomEventLocales.LocaleEntry("1", List.of("events", "")))));
+        Path originalApplicationPath = Path.of(AppPaths.applicationPath());
+        ProductCache originalProductCache = GameDataCaches.productCache();
+        CatalogRegistry originalCatalogRegistry = CatalogState.instance().registry();
+        RoomCategoryCache originalRoomCategoryCache = NavigatorState.instance().roomCategoryCache();
+        RecommendedRooms originalRecommendedRooms = NavigatorState.instance().recommendedRooms();
+        GiftSettings originalGiftSettings = CatalogState.instance().giftSettings();
+        CatalogPages originalCatalogPages = CatalogState.instance().catalogPages();
+        RecyclerSettings originalRecyclerSettings = RecyclerState.instance().settings();
+        AppSettingsCache originalSettingsCache = AppConfigState.instance().settingsCache();
         Path figureCachePath = Files.createTempDirectory("alphaseries-figuredata");
-        Functions.applicationPath = figureCachePath.toString();
+        AppPaths.setApplicationPath(figureCachePath.toString());
         Files.write(figureCachePath.resolve("figuredata.cache"),
             "<settype type=\"hd\"><set id=\"180\" gender=\"M\"/></settype><settype type=\"ch\"><set id=\"255\" gender=\"M\"/></settype>"
                 .getBytes());
@@ -3001,58 +3667,74 @@ public final class PortedModuleSmokeTest {
         Files.createDirectories(figureCachePath.resolve("cache").resolve("items_charges"));
         Files.write(figureCachePath.resolve("cache").resolve("wired_trigger").resolve("9.cache"), "trigger-cache".getBytes());
         Files.write(figureCachePath.resolve("cache").resolve("rooms").resolve("9.cache"), "room-cache".getBytes());
-        String[] stickyProducts = new String[512];
-        stickyProducts[9] = productRow(9, "18", "wall_sprite");
-        stickyProducts[500] = productRow(500, "18", "post.it.vd");
-        stickyProducts[501] = productRow(501, "17", "present_wrap_basic");
-        stickyProducts[502] = productRow(502, "0", "2", "24", "Opened Sofa");
-        stickyProducts[503] = productRow(503, "10", "2");
-        stickyProducts[504] = productRow(504, "17", "CF_10");
-        stickyProducts[506] = productRow(506, "1", "1", "13", "RewardA", "14", "Trade Chair", "15", "Trade Desc", "18", "trade_sprite");
-        stickyProducts[507] = productRow(507, "1", "2", "14", "Wallpaper", "15", "Wallpaper Desc", "18", "paper_sprite", "20", "paper1");
-        stickyProducts[508] = productRow(508, "12", "1", "18", "charge_sprite", "34", "3", "35", "10", "36", "2", "37", "1");
-        stickyProducts[509] = productRow(509, "7", "static", "18", "plain_sprite");
-        stickyProducts[510] = productRow(510, "12", "99", "17", "bb_score_blue");
-        stickyProducts[511] = productRow(511, "0", "0", "1", "0", "17", "habbowheel", "24", "0");
-        DataManager.global_008292BC = stickyProducts;
-        Licence.global_008292BC = stickyProducts;
-        String[] catalogProducts = new String[82];
-        catalogProducts[81] = productRow(81, "2", "506", "4", "products", "5", "1", "7", "3", "8", "2", "9", "0", "10", "1", "11", "0");
-        Licence.global_008292C0 = catalogProducts;
-        Licence.global_00829244 = List.of(new RoomCategoryCache.CategoryPayload(2L, 1L, "CATEGORY_PAYLOAD"));
-        Licence.global_0082911C = new String[]{"RECOMMENDED"};
-        Licence.global_00829128 = 1L;
-        Licence.global_00829178 = "GIFTS";
-        Licence.global_0082917C = "[81\0" + "506\1" + "20]";
-        Licence.global_0082925C = "\r501\r";
-        Licence.global_00829260 = "WRAP_PAYLOAD";
-        Licence.global_00829308 = new String[]{"", "", "PAGE_PAYLOAD"};
-        Licence.global_00829140 = new String[]{"506\2"};
-        Licence.global_0082915C = new String[]{"1"};
-        Licence.global_00829168 = 1L;
-        Licence.global_0082916C = 508L;
-        Functions.global_0082928C = "[com.server.socket.game.rooms.own.max=5]"
-            + "[com.client.navigator.staff_picked.category.id.default=2]"
-            + "[com.client.navigator.staff_picked.style.default=3]"
-            + "[com.client.navigator.staff_picked.category.icon.default=4]"
-            + "[com.server.socket.game.rooms.favourites.max=3]"
-            + "[com.client.navigator.list.limit=4]"
-            + "[com.mysql.format.time=%H:%i]"
-            + "[com.client.catalog.gifts.enabled=1]"
-            + "[com.client.catalog.gifts.wrap.enabled=1]"
-            + "[com.client.catalog.gifts.wrap.price=7]"
-            + "[com.client.rooms.bots.pets.enabled=1]"
-            + "[com.client.rooms.bots.guide.enabled=1]"
-            + "[com.client.bot.guide.id=20]"
-            + "[com.client.catalog.recycler.enabled=1]"
-            + "[com.server.socket.game.default.songdisk=700]"
-            + "[com.server.socket.game.jukebox.900.soundsets.max=5]"
-            + "[com.server.socket.game.activitypoints_0.interval=60]"
-            + "[com.server.socket.game.activitypoints_0.max=500]"
-            + "[com.server.socket.game.activitypoints_0.amount=5]";
-        Licence.global_008291E8 = new String[][]{{"2", "ACH_", "10", "5", "3", "7", "2"}};
-        Functions.global_008292A8 = new String[][]{{}, {"\2fuse_mod\2fuse_alert\2fuse_kick\2fuse_receive_calls_for_help\2fuse_chatlog\2"
-            + "fuse_use_wardrobe\2fuse_larger_wardrobe\2fuse_client_staff\2"}};
+        List<ProductCache.ProductRow> stickyProducts = List.of(
+            productCacheRow(9, "18", "wall_sprite"),
+            productCacheRow(500, "18", "post.it.vd"),
+            productCacheRow(501, "17", "present_wrap_basic"),
+            productCacheRow(502, "0", "2", "24", "Opened Sofa"),
+            productCacheRow(503, "10", "2"),
+            productCacheRow(504, "17", "CF_10"),
+            productCacheRow(506, "1", "1", "13", "RewardA", "14", "Trade Chair", "15", "Trade Desc", "18", "trade_sprite"),
+            productCacheRow(507, "1", "2", "14", "Wallpaper", "15", "Wallpaper Desc", "18", "paper_sprite", "20", "paper1"),
+            productCacheRow(508, "12", "1", "18", "charge_sprite", "34", "3", "35", "10", "36", "2", "37", "1"),
+            productCacheRow(509, "7", "static", "18", "plain_sprite"),
+            productCacheRow(510, "12", "99", "17", "bb_score_blue"),
+            productCacheRow(511, "0", "0", "1", "0", "17", "habbowheel", "24", "0"));
+        GameDataCaches.setProductCache(ProductCache.fromProductRows(stickyProducts));
+        seedCatalogRegistryProductRows(List.of(
+            productDaoRow(9, "17", "wall_sprite"),
+            productDaoRow(500, "17", "post.it.vd"),
+            productDaoRow(501, "16", "present_wrap_basic"),
+            productDaoRow(502, "0", "2", "23", "Opened Sofa"),
+            productDaoRow(503, "9", "2"),
+            productDaoRow(504, "16", "CF_10"),
+            productDaoRow(506, "0", "1", "12", "RewardA", "13", "Trade Chair", "14", "Trade Desc", "17", "trade_sprite"),
+            productDaoRow(507, "0", "2", "13", "Wallpaper", "14", "Wallpaper Desc", "17", "paper_sprite", "19", "paper1"),
+            productDaoRow(508, "11", "1", "17", "charge_sprite", "33", "3", "34", "10", "35", "2", "36", "1"),
+            productDaoRow(509, "6", "static", "17", "plain_sprite"),
+            productDaoRow(510, "11", "99", "16", "bb_score_blue"),
+            productDaoRow(511, "0", "0", "16", "habbowheel", "23", "0")));
+        List<CatalogDao.CatalogProductCacheRow> catalogProducts = List.of(catalogProductRow(81, "2", "506", "4", "products",
+            "5", "1", "7", "3", "8", "2", "9", "0", "10", "1", "11", "0"));
+        seedCatalogRegistryCatalogProductRows(catalogProducts);
+        NavigatorState.instance().setRoomCategoryPayloads(
+            List.of(new RoomCategoryCache.CategoryPayload(2L, 1L, "CATEGORY_PAYLOAD")));
+        NavigatorState.instance().setRecommendedRooms(Map.of(0L, "RECOMMENDED"), 1L);
+        CatalogState.instance().setGiftSettings(GiftSettings.fromRows("GIFTS",
+            List.of(new GiftSettings.ClubGift(81L, 506L, 20L)),
+            List.of(501L),
+            "WRAP_PAYLOAD"));
+        seedCatalogPagePayloads(Map.of(2L, "PAGE_PAYLOAD"));
+        RecyclerState.instance().setSettings(RecyclerSettings.fromRewardGroups(
+            RecyclerState.instance().settings().statusPayload(),
+            List.of(new RecyclerSettings.RewardGroup(1L, List.of(506L))),
+            508L));
+        AppConfigState.instance().setSettingsCache(settings(
+            "com.server.socket.game.rooms.own.max", "5",
+            "com.client.navigator.staff_picked.category.id.default", "2",
+            "com.client.navigator.staff_picked.style.default", "3",
+            "com.client.navigator.staff_picked.category.icon.default", "4",
+            "com.server.socket.game.rooms.favourites.max", "3",
+            "com.client.navigator.list.limit", "4",
+            "com.mysql.format.time", "%H:%i",
+            "com.client.catalog.gifts.enabled", "1",
+            "com.client.catalog.gifts.wrap.enabled", "1",
+            "com.client.catalog.gifts.wrap.price", "7",
+            "com.client.rooms.bots.pets.enabled", "1",
+            "com.client.rooms.bots.guide.enabled", "1",
+            "com.client.bot.guide.id", "20",
+            "com.client.catalog.recycler.enabled", "1",
+            "com.server.socket.game.default.songdisk", "700",
+            "com.server.socket.game.jukebox.900.soundsets.max", "5",
+            "com.server.socket.game.activitypoints_0.interval", "60",
+            "com.server.socket.game.activitypoints_0.max", "500",
+            "com.server.socket.game.activitypoints_0.amount", "5"));
+        AchievementState.instance().setSettings(AchievementSettings.fromAchievements(
+            "",
+            List.of(new AchievementSettings.Achievement(2L, "ACH_", 10L, 5L, 3L, 7L, 2L))));
+        AppConfigState.instance().setPermissionMatrix(permissions(new PermissionMatrix.PermissionPayload(1L, 0L,
+            "\2fuse_mod\2fuse_alert\2fuse_kick\2fuse_receive_calls_for_help\2fuse_chatlog\2"
+                + "fuse_use_wardrobe\2fuse_larger_wardrobe\2fuse_client_staff\2")));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -3464,6 +4146,10 @@ public final class PortedModuleSmokeTest {
                 if (sqlText.contains("SELECT COUNT(*) FROM users WHERE name='NewName'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
                 }
+                if (sqlText.contains("SELECT rooms.id,rooms_events.name,users.name,rooms.status_door")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(
+                        9, "Event Room", "Owner", "open", 2, 25, "Description", 1, 1, 5, 3, "icon", "tag1", "tag2", "12:00"));
+                }
                 if (sqlText.contains("SELECT rooms.id,rooms.name,users.name,rooms.status_door")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(
                         9, "NavRoom", "Owner", 0, 2, 25, "Description", 1, "", 5, 3, "icon", "tag1", "tag2", 1, 0));
@@ -3541,6 +4227,9 @@ public final class PortedModuleSmokeTest {
                     && sqlText.contains("FROM rooms,models WHERE rooms.id='9'")) {
                     return Arrays.<List<Object>>asList(Arrays.<Object>asList(
                         9, 4, "", "model", 20, "floorA", "wallA", "landA", 5, "000\n111", 2, 3, "", "Room", 0, 1, 1, 1, 0, 77));
+                }
+                if (sqlText.contains("SELECT id_model FROM rooms WHERE id='9'")) {
+                    return Arrays.<List<Object>>asList(Arrays.<Object>asList(20));
                 }
                 if (sqlText.contains("SELECT rooms.id,rooms.id_slot,users.id,models.name,models.id,rooms.id_floor")
                     && sqlText.contains("FROM rooms,models,users WHERE rooms.id='9'")) {
@@ -3701,17 +4390,17 @@ public final class PortedModuleSmokeTest {
             }
         });
 
-        Handling.Proc_6_244_801E80(4, "PING");
+        Handling.sendToSocket(4, "PING");
         assertEquals("4:DATA\6" + "4\6PING\1\7", handlingSends.get(0));
         handlingSends.clear();
         int sqlBeforeCommand = handlingSql.size();
-        String aboutCommandPayload = Handling.Proc_6_25_6EEAC0(4, ":about");
+        String aboutCommandPayload = Handling.routeChatCommand(4, ":about");
         assertEquals(true, aboutCommandPayload.startsWith("BKAlpha Series"));
         assertEquals(true, handlingSends.get(0).contains(
             "This is a copy of the unique Alpha Series written in Visual Basic 2006."));
         assertEquals(sqlBeforeCommand, handlingSql.size());
         handlingSends.clear();
-        String onlineCommandPayload = Handling.Proc_6_25_6EEAC0(4, ":whosonline");
+        String onlineCommandPayload = Handling.routeChatCommand(4, ":whosonline");
         assertEquals(true, onlineCommandPayload.startsWith("BKActive users:"));
         assertEquals(true, onlineCommandPayload.contains("OldName"));
         assertEquals(true, onlineCommandPayload.contains("Target"));
@@ -3720,83 +4409,100 @@ public final class PortedModuleSmokeTest {
         assertEquals(2L, Handling.broadcastToRoomUsers(9, "ROOM"));
         assertEquals(Arrays.asList("4:DATA\6" + "4\6ROOM\1\7", "8:DATA\6" + "8\6ROOM\1\7"), handlingSends);
         handlingSends.clear();
-        Handling.Proc_6_0_6D7FF0(4, "GF" + wireLong(88));
+        Handling.sendStaffUserSummary(4, "GF", "GF" + wireLong(88));
         assertEquals(true, handlingSends.get(0).contains("HU"));
         handlingSends.clear();
-        Handling.Proc_6_1_6D8B70(4, "GM" + wireLong(88) + wireString("Careful"));
+        Handling.sendStaffCaution(4, "GM", "GM" + wireLong(88) + wireString("Careful"));
         assertEquals("8:DATA\6" + "8\6BaCareful\2\1\7", handlingSends.get(0));
         assertEquals(true, containsSql(handlingSql, "users_cautions"));
         handlingSends.clear();
-        Handling.Proc_6_2_6D9880(4, "GO" + wireLong(88) + wireString("Leave"));
+        Handling.staffKickUser(4, "GO", "GO" + wireLong(88) + wireString("Leave"));
         assertEquals(true, handlingSends.contains("8:DATA\6" + "8\6BaLeave\2\1\7"));
         assertEquals(true, handlingSends.contains("8:DATA\6" + "8\6@R\7"));
         handlingSends.clear();
-        Handling.Proc_6_3_6DA490(4, "GP" + wireLong(88) + wireString("Ban") + wireLong(2));
+        Handling.staffBanUser(4, "GP", "GP" + wireLong(88) + wireString("Ban") + wireLong(2));
         assertEquals(true, containsSql(handlingSql, "users_bans"));
         assertEquals(true, containsSql(handlingSql, "UNIX_TIMESTAMP()+7200"));
         Guardian.setSocketConnected(8, true);
         handlingSends.clear();
-        assertEquals(1L, Handling.Proc_6_4_6DAFB0(4, "CH" + wireLong(1) + wireString("Room alert")));
+        assertEquals(1L, Handling.moderateCurrentRoom(4, "CH", "CH" + wireLong(1) + wireString("Room alert")));
         assertEquals(true, handlingSends.contains("4:DATA\6" + "4\6BaRoom alert\2\1\7"));
         assertEquals(true, handlingSends.contains("8:DATA\6" + "8\6BaRoom alert\2\1\7"));
         handlingSends.clear();
-        Handling.Proc_6_5_6DC340(50, 4);
+        Handling.sendCallForHelpReview(50, 4);
         assertEquals(true, handlingSends.get(0).contains("HR"));
         handlingSql.clear();
-        Handling.Proc_6_6_6DC9D0(4, "GB" + wireLong(1) + wireLong(50));
+        Handling.moveCallForHelpToPickedTab(4, "GB", "GB" + wireLong(1) + wireLong(50));
         assertEquals(true, containsSql(handlingSql, "id_tab='2'"));
         handlingSql.clear();
-        Handling.Proc_6_8_6DD790(4, "GC" + wireLong(1) + wireLong(50));
+        Handling.moveCallForHelpToOpenTab(4, "GC", "GC" + wireLong(1) + wireLong(50));
         assertEquals(true, containsSql(handlingSql, "id_tab='1'"));
         handlingSends.clear();
-        Handling.Proc_6_7_6DD0E0(4, "GD" + wireLong(2) + wireLong(50));
+        Handling.closeCallForHelp(4, "GD", "GD" + wireLong(2) + wireLong(50));
         assertEquals(true, handlingSends.get(0).contains("H\\"));
         handlingSql.clear();
-        Handling.Proc_6_9_6DDD70(4, "GL" + wireLong(1) + wireLong(1));
+        Handling.lockCurrentRoomForModeration(4, "GL", "GL" + wireLong(1) + wireLong(1));
         assertEquals(true, containsSql(handlingSql, "Inappropriate to hotel management"));
         handlingSends.clear();
-        Handling.Proc_6_10_6DE1D0(4, "GG" + wireLong(88));
+        Handling.sendStaffRoomChatHistory(4, "GG", "GG" + wireLong(88));
         assertEquals(true, handlingSends.get(0).contains("HX"));
+        assertEquals(sentPayload(handlingSends.get(0)),
+            StaffModerationLookups.roomChatHistoryResponse(
+                new StaffUserLookup(88L, "Target"), new StaffModerationDao(MySQL.configuredDatabase())));
         handlingSends.clear();
-        Handling.Proc_6_11_6DF4A0(4, "GJB88");
+        Handling.sendStaffRoomVisitHistory(4, "GJ", "GJB88");
         assertEquals(true, handlingSends.get(0).contains("HY"));
+        assertEquals(sentPayload(handlingSends.get(0)),
+            StaffModerationLookups.roomVisitHistoryResponse(
+                new StaffUserLookup(88L, "Target"), new StaffModerationDao(MySQL.configuredDatabase())));
         handlingSends.clear();
-        Handling.Proc_6_12_6DFE90(4, "GN" + wireLong(88) + wireString("Direct"));
+        Handling.sendStaffAlert(4, "GN", "GN" + wireLong(88) + wireString("Direct"));
         assertEquals("8:DATA\6" + "8\6BaDirect\2\1\7", handlingSends.get(0));
         handlingSends.clear();
-        assertEquals(4L, Handling.Proc_6_13_6E0A80(4));
+        assertEquals(4L, Handling.waveCurrentRoomUser(4, "A^", "A^"));
         assertEquals(true, handlingSends.get(0).contains("Ga"));
         handlingSends.clear();
-        assertEquals(3L, Handling.Proc_6_14_6E10C0(4, "A]" + wireLong(3)));
+        assertEquals(3L, Handling.danceCurrentRoomUser(4, "A]", "A]" + wireLong(3)));
         assertEquals(true, handlingSends.get(0).contains("G`"));
         handlingSends.clear();
-        Handling.Proc_6_15_6E1900(4, "Ew");
-        assertEquals(true, handlingSends.get(0).contains("DK"));
-        assertEquals(true, handlingSends.get(0).contains("hd-180-1"));
+        String wardrobePayload = UserLookups.wardrobeSlotsPayload(
+            "77", new UserDao(MySQL.configuredDatabase()), AppConfigState.instance().permissionMatrix());
+        assertEquals(true, wardrobePayload.contains("DK"));
+        assertEquals(true, wardrobePayload.contains("hd-180-1"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_16_6E2320(4, "Ex" + wireLong(2) + wireString("hd-180-1.ch-255-66") + wireString("M"));
+        String savedWardrobePayload = UserLookups.saveWardrobeSlotPayload(
+            "77",
+            "Ex" + wireLong(2) + wireString("hd-180-1.ch-255-66") + wireString("M"),
+            Files.readString(figureCachePath.resolve("figuredata.cache")),
+            new UserDao(MySQL.configuredDatabase()),
+            AppConfigState.instance().permissionMatrix());
         assertEquals(true, containsSql(handlingSql, "DELETE FROM users_wardrobe"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO users_wardrobe"));
-        assertEquals(true, handlingSends.get(0).contains("DK"));
+        assertEquals(true, savedWardrobePayload.contains("DK"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_17_6E48D0(4, "@l" + wireString("M") + wireString("hd-180-1.ch-255-66"));
+        String tutorialClothesPayload = UserLookups.updateTutorialClothesPayload(
+            "77",
+            "@l" + wireString("M") + wireString("hd-180-1.ch-255-66"),
+            Files.readString(figureCachePath.resolve("figuredata.cache")),
+            new UserDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "tutorial_clothes='1'"));
-        assertEquals(true, handlingSends.get(0).contains("DJ"));
+        assertEquals(true, tutorialClothesPayload.contains("DJ"));
         handlingSends.clear();
-        Handling.Proc_6_18_6E7480(4);
+        Handling.sendClubSubscriptionOffers(4, "oW", "oW");
         assertEquals(true, handlingSends.get(0).contains("Iq"));
         assertEquals(true, handlingSends.get(0).contains("club_vip"));
         handlingSends.clear();
-        assertEquals("GzCACHE", Handling.Proc_6_19_6E8040(4));
+        assertEquals("GzCACHE", Handling.sendCachedRecyclerStatus(4, "", "Gz"));
         assertEquals("4:DATA\6" + "4\6GzCACHE\1\7", handlingSends.get(0));
         handlingSends.clear();
-        Handling.Proc_6_20_6E88E0(4);
-        assertEquals(true, handlingSends.get(0).contains("@B"));
+        String rankAndStaffPayload = UserLookups.rankAndStaffStatePayload(
+            "77", new UserDao(MySQL.configuredDatabase()), AppConfigState.instance().permissionMatrix());
+        assertEquals(true, rankAndStaffPayload.contains("@B"));
         handlingSql.clear();
         handlingSends.clear();
-        String chatPayload = Handling.Proc_6_26_7034C0(4, "@t" + wireString("hello"));
+        String chatPayload = Handling.chatInCurrentRoom(4, "@t", "@t" + wireString("hello"));
         assertEquals(true, chatPayload.contains("@X"));
         assertEquals(true, chatPayload.contains("hello"));
         assertEquals(true, containsSql(handlingSql, "logs_chat"));
@@ -3804,11 +4510,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(2, handlingSends.size());
         handlingSql.clear();
         handlingSends.clear();
-        String shoutPayload = Handling.Proc_6_27_706920(4, "@w" + wireString("loud"));
+        String shoutPayload = Handling.shoutInCurrentRoom(4, "@w", "@w" + wireString("loud"));
         assertEquals(true, shoutPayload.contains("@Y"));
         assertEquals(true, containsSql(handlingSql, "'1'"));
         handlingSends.clear();
-        String whisperPayload = Handling.Proc_6_28_709DA0(4, "@x" + wireString("Target") + wireString("secret"));
+        String whisperPayload = Handling.whisperInCurrentRoom(4, "@x", "@x" + wireString("Target") + wireString("secret"));
         assertEquals(true, whisperPayload.contains("@X"));
         assertEquals(true, whisperPayload.contains("secret"));
         assertEquals(2, handlingSends.size());
@@ -3816,95 +4522,167 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, handlingSends.get(1).startsWith("4:DATA"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_30_70DC90(4, "EG");
+        Handling.cancelLatestCallForHelp(4, "EG", "EG");
         assertEquals(true, containsSql(handlingSql, "DELETE FROM staff_cfh WHERE id='51'"));
         assertEquals("4:DATA\6" + "4\6E@\1\7", handlingSends.get(0));
         handlingSends.clear();
-        Handling.Proc_6_31_70DE80(4);
+        Handling.openStaffModerationPanel(4);
         assertEquals(true, handlingSends.get(0).contains("HS"));
         assertEquals(true, handlingSends.get(0).contains("STAFFMOD"));
         assertEquals(true, handlingSends.get(1).contains("HR"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_32_70EAB0(4, "GE" + wireString("This is a sufficiently long call for help description") + wireLong(8) + wireLong(88));
+        Handling.submitCallForHelp(4, "GE", "GE" + wireString("This is a sufficiently long call for help description") + wireLong(8) + wireLong(88));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO staff_cfh"));
         assertEquals(true, handlingSends.get(0).contains("EA"));
         handlingSends.clear();
-        Handling.Proc_6_33_70F4F0(4);
+        Handling.sendImportantFaqs(4);
         assertEquals("4:DATA\6" + "4\6HFIMPORTANTFAQ\1\7", handlingSends.get(0));
         handlingSends.clear();
-        Handling.Proc_6_34_70F590(4);
+        Handling.sendFaqCategories(4);
         assertEquals("4:DATA\6" + "4\6HGFAQCATS\1\7", handlingSends.get(0));
         handlingSends.clear();
-        Handling.Proc_6_35_70F630(4, "Fd" + wireLong(1));
+        Handling.sendCategoryFaqs(4, "Fd", "Fd" + wireLong(1));
         assertEquals(true, handlingSends.get(0).contains("HJ"));
         assertEquals(true, handlingSends.get(0).contains("CATFAQ"));
         handlingSends.clear();
-        Handling.Proc_6_36_70F7B0(4, "Fc" + "hotel");
+        Handling.searchFaqs(4, "Fc", "Fc" + "hotel");
         assertEquals(true, handlingSends.get(0).contains("HI"));
         assertEquals(true, handlingSends.get(0).contains("FAQ Two"));
         handlingSends.clear();
-        Handling.Proc_6_37_70FC20(4, "Fb" + wireLong(2));
+        Handling.sendFaqDescription(4, "Fb", "Fb" + wireLong(2));
         assertEquals("4:DATA\6" + "4\6HHFAQDESC\1\7", handlingSends.get(0));
-        String eventInfoPayload = Handling.Proc_6_51_716AC0(9);
+        String eventInfoPayload = Handling.roomEventInfoPayload(9);
         assertEquals(true, eventInfoPayload.contains("Party"));
-        assertEquals("-1\2", Handling.Proc_6_51_716AC0(0));
+        assertEquals(eventInfoPayload, RoomLookups.eventInfoPayload(
+            9, "%H:%i", new RoomDao(MySQL.configuredDatabase())));
+        assertEquals("-1\2", RoomPayloads.eventInfo(null));
+        assertEquals("-1\2", Handling.roomEventInfoPayload(0));
         handlingSends.clear();
-        assertEquals(0L, Handling.Proc_6_39_711650(4, "GW" + wireString("NewName")));
-        assertEquals(true, handlingSends.get(0).contains("H{"));
-        assertEquals(true, handlingSends.get(0).contains("NewName"));
+        AvatarNameUpdate checkName = UserLookups.validateOrChangeAvatarName(
+            "77", 4, true, "NewName", new UserDao(MySQL.configuredDatabase()));
+        assertEquals(0L, checkName.validationCode());
+        assertEquals(true, checkName.validationPayload().contains("H{"));
+        assertEquals(true, checkName.validationPayload().contains("NewName"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(0L, Handling.Proc_6_38_70FD10(4, "GV" + wireString("NewName")));
+        AvatarNameUpdate changeName = UserLookups.validateOrChangeAvatarName(
+            "77", 4, false, "NewName", new UserDao(MySQL.configuredDatabase()));
+        assertEquals(0L, changeName.validationCode());
+        assertEquals(true, changeName.changed());
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET name='NewName'"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO logs_identity"));
-        assertEquals(true, containsSend(handlingSends, "H|"));
-        assertEquals(true, containsSend(handlingSends, "GH"));
-        assertEquals(true, Handling.Proc_6_112_74E0C0("users,rooms,rooms_categories WHERE rooms.id='9' LIMIT 1").contains("NavRoom"));
         handlingSends.clear();
-        Handling.Proc_6_43_713680(4, "FF" + wireLong(9));
+        String settingsPayload = RoomLookups.roomSettingsPayload(9, new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, settingsPayload.contains("GQ"));
+        assertEquals(true, settingsPayload.contains("Room"));
+        Handling.sendRoomSettings(4, "FF", "FF" + wireLong(9));
         assertEquals(true, handlingSends.get(0).contains("GQ"));
         assertEquals(true, handlingSends.get(0).contains("Room"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_44_7145E0(4, "FB" + wireLong(1) + wireLong(2) + wireLong(0));
+        RoomLookups.RoomIconUpdate iconUpdate =
+            RoomLookups.updateRoomIcon(9, RoomWire.roomIconRequest("FB" + wireLong(1) + wireLong(2) + wireLong(0)),
+                new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, iconUpdate.valid());
+        assertEquals(true, iconUpdate.iconUpdatedPayload().contains("GI"));
+        assertEquals(true, iconUpdate.entryUpdatedPayload().contains("GH"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET icon="));
+        handlingSql.clear();
+        Handling.updateRoomIcon(4, "FB", "FB" + wireLong(1) + wireLong(2) + wireLong(0));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET icon="));
         assertEquals(true, containsSend(handlingSends, "GI"));
         assertEquals(true, containsSend(handlingSends, "GH"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_45_714B60(4);
+        RoomLookups.RoomEventChange deletedEvent = RoomLookups.deleteRoomEvent(
+            9, new RoomDao(MySQL.configuredDatabase()));
+        assertEquals("Er-1\2", deletedEvent.directPayload());
+        assertEquals(false, deletedEvent.hasBroadcastPayload());
+        assertEquals(true, containsSql(handlingSql, "DELETE FROM rooms_events WHERE id_room='9'"));
+        handlingSql.clear();
+        Handling.deleteRoomEvent(4, "E[", "E[");
         assertEquals(true, containsSql(handlingSql, "DELETE FROM rooms_events WHERE id_room='9'"));
         assertEquals("4:DATA\6" + "4\6Er-1\2\1\7", handlingSends.get(0));
         handlingSends.clear();
-        Handling.Proc_6_46_714D50(4);
+        assertEquals("EoIH", RoomLookups.doorStatusPayload(9, new RoomDao(MySQL.configuredDatabase())));
+        Handling.sendRoomDoorStatus(4, "EY", "EY");
         assertEquals("4:DATA\6" + "4\6EoIH\1\7", handlingSends.get(0));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_47_714F60(4, "XX" + wireLong(9));
+        assertEquals(RoomPayloads.homeRoom(9), RoomLookups.setHomeRoomPayload(
+            "77", 9, new UserDao(MySQL.configuredDatabase())));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET homeroom='9'"));
+        handlingSql.clear();
+        Handling.setHomeRoom(4, "XX", "XX" + wireLong(9));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET homeroom='9'"));
         assertEquals(true, handlingSends.get(0).contains("GG"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_48_7151E0(4, "EZ" + wireLong(1) + wireString("Party") + wireString("Description")
+        RoomLookups.RoomEventChange createdEventChange = RoomLookups.createRoomEvent(
+            "77",
+            9,
+            RoomWire.roomEventCreatePayloadFromWire("EZ" + wireLong(1) + wireString("Party")
+                + wireString("Description") + wireLong(2) + wireString("TagOne") + wireString("TagTwo")),
+            "%H:%i",
+            new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(false, createdEventChange.hasDirectPayload());
+        assertEquals(true, createdEventChange.broadcastPayload().contains("Er"));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms_events"));
+        handlingSql.clear();
+        Handling.createRoomEvent(4, "EZ", "EZ" + wireLong(1) + wireString("Party") + wireString("Description")
             + wireLong(2) + wireString("TagOne") + wireString("TagTwo"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms_events"));
         assertEquals(true, containsSend(handlingSends, "Er"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_49_715D30(4, "E\\" + wireString("Edited") + wireString("Description")
+        RoomLookups.RoomEventChange editedEventChange = RoomLookups.editRoomEvent(
+            "77",
+            9,
+            RoomWire.roomEventEditPayloadFromWire("E\\" + wireString("Edited") + wireString("Description")
+                + wireLong(1) + wireString("TagOne")),
+            "%H:%i",
+            new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(false, editedEventChange.hasDirectPayload());
+        assertEquals(true, editedEventChange.broadcastPayload().contains("Er"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE rooms_events SET"));
+        handlingSql.clear();
+        Handling.editRoomEvent(4, "E\\", "E\\" + wireString("Edited") + wireString("Description")
             + wireLong(1) + wireString("TagOne"));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms_events SET"));
         assertEquals(true, containsSend(handlingSends, "Er"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_50_7166B0(4, "AbTarget");
+        Handling.followUserToRoom(4, "Ab", "AbTarget");
         assertEquals(true, containsSql(handlingSql, "INSERT INTO logs_visitedrooms"));
         assertEquals(true, containsSend(handlingSends, "@S"));
         assertEquals(true, containsSend(handlingSends, "@R"));
+        SocialLookups.FollowRoomAction followAction =
+            SocialLookups.followRoomAction(SocialWire.followUserRequest("AbTarget"),
+                new UserDao(MySQL.configuredDatabase()));
+        assertEquals(true, followAction.canEnterRoom());
+        assertEquals(9L, followAction.roomId());
+        assertEquals(false, followAction.hasFailurePayload());
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_52_7172B0(4, "FQ" + wireString("Updated Room") + wireString("secret")
+        RoomLookups.RoomSettingsUpdate settingsUpdate = RoomLookups.updateRoomSettings(
+            9,
+            RoomWire.roomSettingsFromWire("FQ" + wireString("Updated Room") + wireString("secret")
+                + wireLong(0) + wireString("Updated description") + wireLong(20) + wireLong(1)
+                + wireLong(2) + wireString("TagOne") + wireString("TagTwo")
+                + wireLong(1) + wireLong(0) + wireLong(1) + wireLong(0) + wireLong(0) + wireLong(0)),
+            1,
+            0,
+            false,
+            new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, settingsUpdate.valid());
+        assertEquals(true, settingsUpdate.settingsUpdatedPayload().contains("GS"));
+        assertEquals(true, settingsUpdate.entryUpdatedPayload().contains("GH"));
+        assertEquals(true, settingsUpdate.wallOptionsPayload().contains("GX"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET"));
+        assertEquals(true, containsSql(handlingSql, "name='Updated Room'"));
+        handlingSql.clear();
+        Handling.updateRoomSettings(4, "FQ", "FQ" + wireString("Updated Room") + wireString("secret")
             + wireLong(0) + wireString("Updated description") + wireLong(20) + wireLong(1)
             + wireLong(2) + wireString("TagOne") + wireString("TagTwo")
             + wireLong(1) + wireLong(0) + wireLong(1) + wireLong(0) + wireLong(0) + wireLong(0));
@@ -3914,142 +4692,186 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "GX"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(4L, Handling.Proc_6_57_71E8F0(4, 9, ""));
+        assertEquals(4L, Handling.enterRoom(4, 9, ""));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET id_slot='4'"));
         assertEquals(true, containsSend(handlingSends, "@R"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(9L, Handling.Proc_6_55_71A6E0(4));
+        assertEquals(9L, Handling.leaveCurrentRoom(4));
         assertEquals(true, containsSql(handlingSql, "timestamp_left=UNIX_TIMESTAMP()"));
         assertEquals(true, containsSend(handlingSends, "J|H"));
         handlingSends.clear();
-        Handling.Proc_6_56_71E730(4, 0);
+        Handling.sendRoomEntryBootstrap(4, 0);
         assertEquals(true, containsSend(handlingSends, "@S"));
         assertEquals(true, containsSend(handlingSends, "Bf/client.php"));
         assertEquals(true, containsSend(handlingSends, "@i"));
         handlingSends.clear();
-        assertEquals(9L, Handling.Proc_6_58_71FCA0(4, "FG9"));
+        assertEquals(9L, Handling.enterRoomFromPayload(4, "FG", "FG9"));
         assertEquals(true, containsSend(handlingSends, "@R"));
         handlingSends.clear();
-        Handling.Proc_6_59_71FEE0(4);
+        Handling.sendVisitRoomAdvertisement(4, "Bv", "Bv");
         assertEquals("4:DATA\6" + "4\6DB\2\2\1\7", handlingSends.get(0));
         handlingSends.clear();
-        Handling.Proc_6_60_720060(4, "FA" + wireLong(0) + wireLong(1) + wireLong(9));
-        assertEquals(true, containsSend(handlingSends, "GF"));
-        assertEquals(true, containsSend(handlingSends, "NavRoom"));
-        handlingSends.clear();
-        Handling.Proc_6_61_720490(4, "A_" + wireLong(88));
+        String singleRoomPayload = NavigatorRequests.singleRoomResponsePayload(9, new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, singleRoomPayload.contains("GF"));
+        assertEquals(true, singleRoomPayload.contains("NavRoom"));
+        Handling.kickRoomUser(4, "A_", "A_" + wireLong(88));
         assertEquals(true, containsSend(handlingSends, "@aXjO"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_62_7209F0(4, "E@" + wireLong(88));
+        Handling.banRoomUser(4, "E@", "E@" + wireLong(88));
         assertEquals(true, containsSend(handlingSends, "@aXjO"));
         assertEquals(true, containsSql(handlingSql, "INSERT IGNORE INTO rooms_bans"));
         assertEquals(true, containsSql(handlingSql, "UNIX_TIMESTAMP()+900"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_63_721050(4, "DE" + wireLong(1));
+        String roomRatingPayload = RoomLookups.rateRoomPayload("77", 9, 1, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms_rates"));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET rate='6'"));
-        assertEquals(true, containsSend(handlingSends, "EY"));
+        assertEquals(true, roomRatingPayload.contains("EY"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_64_721650(4, "D\u007f" + wireString("Target"));
+        String roomRightRevokedPayload = RoomLookups.revokeRoomRightByNamePayload(
+            "Target", 9, new UserDao(MySQL.configuredDatabase()), new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM rooms_rights WHERE id_user='88'"));
-        assertEquals(true, containsSend(handlingSends, "Fc"));
+        assertEquals(true, roomRightRevokedPayload.contains("Fc"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_65_721A10(4, "A`" + wireLong(88));
+        String roomRightGrantedPayload = RoomLookups.grantRoomRightPayload(
+            88, 9, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "INSERT IGNORE INTO rooms_rights"));
-        assertEquals(true, containsSend(handlingSends, "8:DATA"));
-        assertEquals(true, containsSend(handlingSends, "@j"));
+        assertEquals("@j", roomRightGrantedPayload);
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_66_721D60(4, "AT" + wireLong(70) + "9CFF9C\nhello\nworld");
+        FurnitureWire.StickyNoteUpdate stickyNoteUpdate =
+            FurnitureWire.stickyNoteUpdate("AT" + wireLong(70) + "9CFF9C\nhello\nworld");
+        String stickyNoteUpdatedPayload = FurnitureLookups.updateStickyNotePayload(
+            stickyNoteUpdate, 9, new FurnitureDao(MySQL.configuredDatabase()), GameDataCaches.productCache());
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='9CFF9C'"));
         assertEquals(true, containsSql(handlingSql, "caption='hello\u001fworld'"));
-        assertEquals(true, containsSend(handlingSends, "AT70\u0001AS70"));
-        assertEquals(true, containsSend(handlingSends, "9CFF9C"));
+        assertEquals(true, stickyNoteUpdatedPayload.contains("AT70\u0001AS70"));
+        assertEquals(true, stickyNoteUpdatedPayload.contains("9CFF9C"));
         handlingSends.clear();
-        Handling.Proc_6_67_722940(4, "AS" + wireLong(70));
-        assertEquals(true, containsSend(handlingSends, "@p70\2" + "9CFF9C\rhello\rworld\2"));
+        String stickyNotePayload = FurnitureLookups.stickyNotePayload(
+            70, 9, new FurnitureDao(MySQL.configuredDatabase()), GameDataCaches.productCache());
+        assertEquals(true, stickyNotePayload.contains("@p70\2" + "9CFF9C\rhello\rworld\2"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_68_723170(4, "AU" + wireLong(70));
+        String deletedStickyNotePayload = FurnitureLookups.deleteStickyNotePayload(
+            70, 9, new FurnitureDao(MySQL.configuredDatabase()), GameDataCaches.productCache());
         assertEquals(true, containsSql(handlingSql, "DELETE FROM furnitures WHERE id='70' LIMIT 1"));
-        assertEquals(true, containsSend(handlingSends, "AT70"));
+        assertEquals(true, deletedStickyNotePayload.contains("AT70"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_69_723630(4, "AN" + wireLong(71));
-        assertEquals(true, containsSend(handlingSends, "A^71\2H\2"));
+        FurnitureLookups.PresentOpenResult presentOpenResult = FurnitureLookups.openPresent(
+            71, 9, 77, new FurnitureDao(MySQL.configuredDatabase()), GameDataCaches.productCache());
+        assertEquals(true, presentOpenResult.removedPayload().contains("A^71\2H\2"));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM furnitures WHERE id='71' LIMIT 1"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time) VALUES('502','77','gift sign','77',UNIX_TIMESTAMP())"));
-        assertEquals(true, containsSend(handlingSends, "BAs\2"));
-        assertEquals(true, containsSend(handlingSends, "Opened Sofa"));
+        assertEquals(true, presentOpenResult.responsePayload().contains("BAs\2"));
+        assertEquals(true, presentOpenResult.responsePayload().contains("Opened Sofa"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_70_724190(4, "FI" + wireLong(72));
+        String wallStatePayload = FurnitureLookups.toggleWallFurnitureStatePayload(
+            72, 9, new FurnitureDao(MySQL.configuredDatabase()), CatalogState.instance().registry(), GameDataCaches.productCache());
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='2' WHERE id='72'"));
-        assertEquals(true, containsSend(handlingSends, "AU72\2"));
-        assertEquals(true, containsSend(handlingSends, "2\2" + "0\2"));
+        assertEquals(true, wallStatePayload.contains("AU72\2"));
+        assertEquals(true, wallStatePayload.contains("2\2" + "0\2"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_71_724CF0(4);
+        RoomLookups.RoomRightSocketRevocation allRightsRevocation = RoomLookups.revokeAllRoomRights(
+            9, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM rooms_rights WHERE id_room='9'"));
-        assertEquals(true, containsSend(handlingSends, "8:DATA"));
-        assertEquals(true, containsSend(handlingSends, "@k"));
+        assertEquals(List.of(8L), allRightsRevocation.socketIndexes());
+        assertEquals("@k", allRightsRevocation.notificationPayload());
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_72_7250D0(4, "@W" + wireLong(0));
+        assertEquals(true, RoomLookups.deleteRoom(9, new RoomDao(MySQL.configuredDatabase())));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM rooms WHERE id='9' LIMIT 1"));
-        assertEquals(true, containsSend(handlingSends, "@R"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_73_725540(4, "AT" + wireLong(73));
+        FurnitureLookups.CreditFurnitureRedemption creditRedemption = FurnitureLookups.redeemCreditFurniture(
+            73, 9, 77, new FurnitureDao(MySQL.configuredDatabase()), new UserDao(MySQL.configuredDatabase()),
+            GameDataCaches.productCache());
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET credits=credits+10 WHERE id='77'"));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM furnitures WHERE id='73' LIMIT 1"));
-        assertEquals(true, containsSend(handlingSends, "@F110.0\2"));
-        assertEquals(true, containsSend(handlingSends, "A^73\2H\2"));
+        assertEquals("@F110.0\2", creditRedemption.creditsPayload());
+        assertEquals("A^73\2H\2", creditRedemption.removedPayload());
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_74_7265B0(4, "Aa" + wireLong(1) + wireLong(88));
+        RoomLookups.RoomRightRevocation roomRightRevocation = RoomLookups.revokeRoomRights(
+            List.of(88L), 9, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM rooms_rights WHERE id_user='88' AND id_room='9'"));
-        assertEquals(true, containsSend(handlingSends, "8:DATA"));
-        assertEquals(true, containsSend(handlingSends, "@k"));
+        assertEquals(List.of(88L), roomRightRevocation.targetUserIds());
+        assertEquals("@k", roomRightRevocation.notificationPayload());
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_75_7269D0(4, "EB" + wireString("Target"));
+        String targetNameRightRevokedPayload = RoomLookups.revokeRoomRightByNamePayload(
+            "Target", 9, new UserDao(MySQL.configuredDatabase()), new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM rooms_rights WHERE id_user='88' AND id_room='9'"));
-        assertEquals(true, containsSend(handlingSends, "Fc"));
+        assertEquals(true, targetNameRightRevokedPayload.contains("Fc"));
         handlingSends.clear();
-        Handling.Proc_6_77_727590(4, "FD" + wireLong(9));
+        String officialRoomModelPayload = RoomLookups.officialRoomModelPayload(
+            9, new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, officialRoomModelPayload.contains("GE"));
+        assertEquals(true, officialRoomModelPayload.contains("model.swf"));
+        assertEquals(true, officialRoomModelPayload.contains("Official Room"));
+        Handling.sendOfficialRoomModel(4, "FD", "FD" + wireLong(9));
         assertEquals(true, containsSend(handlingSends, "GE"));
         assertEquals(true, containsSend(handlingSends, "model.swf"));
         assertEquals(true, containsSend(handlingSends, "Official Room"));
         handlingSends.clear();
-        Handling.Proc_6_80_72EB60(4, 9);
+        String roomUserEntryBroadcastPayload = SocialLookups.roomUserEntryBroadcastPayload(
+            "77", 9, 4, new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, roomUserEntryBroadcastPayload.contains("@\\"));
+        assertEquals(true, roomUserEntryBroadcastPayload.contains("Caller"));
+        assertEquals(true, roomUserEntryBroadcastPayload.contains("hd-180-1"));
+        Handling.broadcastCurrentRoomUserEntry(4, 9);
         assertEquals(true, containsSend(handlingSends, "@\\"));
         assertEquals(true, containsSend(handlingSends, "Caller"));
         assertEquals(true, containsSend(handlingSends, "hd-180-1"));
         handlingSends.clear();
-        Object originalBotRecordCacheForRoomList = Licence.global_00829358;
-        Licence.global_00829358 = "[200:4\2" + "501\2RoomBot\2hello\2speech\2responses\2" + "5\2" + "6\2" + "0.5\2" + "3\2" + "1 2 ff\2]";
-        Handling.Proc_6_81_730010(4, 9);
+        RepresentedBotRegistry originalRepresentedBotsForRoomList = PetState.instance().representedBots();
+        PetState.instance().setRepresentedBots(representedBots(Map.of(
+            200L, "4\2" + "501\2RoomBot\2hello\2speech\2responses\2" + "5\2" + "6\2" + "0.5\2" + "3\2" + "1 2 ff\2")));
+        List<String> roomOccupantListPayloads = SocialLookups.roomOccupantListPayloads(
+            9, RoomState.instance().representedRooms(), new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, roomOccupantListPayloads.stream().anyMatch(payload -> payload.contains("@\\")));
+        assertEquals(true, roomOccupantListPayloads.stream().anyMatch(payload -> payload.contains("Caller")));
+        assertEquals(true, roomOccupantListPayloads.stream().anyMatch(payload -> payload.contains("RoomBot")));
+        assertEquals(true, roomOccupantListPayloads.stream().anyMatch(payload -> payload.contains("Du")));
+        Handling.sendRoomOccupantList(4, 9);
         assertEquals(true, containsSend(handlingSends, "@\\"));
         assertEquals(true, containsSend(handlingSends, "Caller"));
         assertEquals(true, containsSend(handlingSends, "RoomBot"));
         assertEquals(true, containsSend(handlingSends, "Du"));
         assertEquals(true, containsSend(handlingSends, "0.5"));
-        Licence.global_00829358 = originalBotRecordCacheForRoomList;
+        PetState.instance().setRepresentedBots(originalRepresentedBotsForRoomList);
         handlingSends.clear();
-        Handling.Proc_6_78_7279A0(4);
+        RoomLookups.RoomModelLoad roomModelLoad =
+            RoomLookups.roomModelLoad(9, new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, roomModelLoad.valid());
+        assertEquals(20L, roomModelLoad.modelId());
+        assertEquals(true, roomModelLoad.initialPayloads().contains("Bf/client.php\2"));
+        assertEquals(true, roomModelLoad.initialPayloads().contains("@_000\r111\2"));
+        assertEquals(true, roomModelLoad.initialPayloads().contains("GWH000\r111\2H"));
+        Handling.loadCurrentRoomModel(4);
         assertEquals(true, containsSend(handlingSends, "Bf/client.php"));
         assertEquals(true, containsSend(handlingSends, "AE9"));
         assertEquals(true, containsSend(handlingSends, "@_000\r111\2"));
         assertEquals(true, containsSend(handlingSends, "GWH000\r111\2H"));
         assertEquals(true, containsSend(handlingSends, "CP\2\2"));
         handlingSends.clear();
-        Handling.Proc_6_79_72A430(4);
+        RoomLookups.RoomPresentationLoad roomPresentationLoad =
+            RoomLookups.roomPresentationLoad("77", 9, true,
+                Handling.roomEventInfoPayload(9), new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, roomPresentationLoad.valid());
+        assertEquals(20L, roomPresentationLoad.modelId());
+        assertEquals(true, roomPresentationLoad.initialPayloads().contains("@nfloor\2floorA\2"));
+        assertEquals(true, roomPresentationLoad.initialPayloads().contains("@nwallpaper\2wallA\2"));
+        assertEquals(true, roomPresentationLoad.initialPayloads().contains("@nlandscape\2landA\2"));
+        assertEquals(true, roomPresentationLoad.initialPayloads().contains("@o"));
+        Handling.sendCurrentRoomDecoration(4, "@{", "@{");
         assertEquals(true, containsSend(handlingSends, "@nfloor\2floorA\2"));
         assertEquals(true, containsSend(handlingSends, "@nwallpaper\2wallA\2"));
         assertEquals(true, containsSend(handlingSends, "@nlandscape\2landA\2"));
@@ -4060,47 +4882,69 @@ public final class PortedModuleSmokeTest {
         Handling.processPreSessionPacketBuffer(4, "x@Bpa");
         assertEquals(true, containsSend(handlingSends, "J|H"));
         handlingSends.clear();
-        Handling.Proc_6_82_731070(4, 9);
+        List<String> activeEffectPayloads = SocialLookups.activeRoomEffectPayloads(
+            9, new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, activeEffectPayloads.stream().anyMatch(payload -> payload.contains("Ge")));
+        Handling.sendRoomActiveEffects(4, 9);
         assertEquals(true, containsSend(handlingSends, "Ge"));
         handlingSends.clear();
-        String modelFurniturePayload = Handling.Proc_6_83_732640(4, 20);
+        String modelFurniturePayload = Handling.sendRoomModelFurniture(4, 20);
         assertEquals(true, modelFurniturePayload.contains("@^"));
         assertEquals(true, modelFurniturePayload.contains("state"));
+        assertEquals(modelFurniturePayload,
+            FurnitureLookups.modelFurniturePayload(20, new RoomDao(MySQL.configuredDatabase())));
+        assertEquals(modelFurniturePayload,
+            FurnitureLookups.modelFurniturePayloadForRoom(0, 9, new RoomDao(MySQL.configuredDatabase())));
         assertEquals(true, containsSend(handlingSends, "@^"));
         handlingSends.clear();
-        String cachePayload = Handling.Proc_6_84_733600(4, 9);
+        String directCachePayload = WiredLookups.roomStartupCachePayload(9, WiredState.instance().settings());
+        assertEquals(true, directCachePayload.contains("DiWIREDSTATE"));
+        assertEquals(true, directCachePayload.contains("trigger-cache"));
+        assertEquals(true, directCachePayload.contains("room-cache"));
+        String cachePayload = Handling.sendRoomStartupCache(4, 9);
         assertEquals(true, cachePayload.contains("DiWIREDSTATE"));
         assertEquals(true, cachePayload.contains("trigger-cache"));
         assertEquals(true, cachePayload.contains("room-cache"));
         assertEquals(true, containsSend(handlingSends, "DiWIREDSTATE"));
         handlingSends.clear();
-        String wallPayload = Handling.Proc_6_85_73A8E0(4, 9);
+        String wallPayload = Handling.sendRoomWallFurniture(4, 9);
         assertEquals(true, wallPayload.contains("@m"));
         assertEquals(true, wallPayload.contains(":w=1,2 l=3,4"));
         assertEquals(true, wallPayload.contains("wall-state"));
+        assertEquals(wallPayload,
+            FurnitureLookups.wallFurniturePayload(9, new FurnitureDao(MySQL.configuredDatabase())));
         assertEquals(true, containsSend(handlingSends, "@m"));
         handlingSends.clear();
-        String petPreviewPayload = Handling.Proc_6_86_73B0D0(4, "p`" + wireLong(75));
+        String petPreviewPayload = Handling.sendPetPackagePreview(4, "p`", "p`" + wireLong(75));
         assertEquals(true, petPreviewPayload.contains("Ly"));
         assertEquals(true, petPreviewPayload.endsWith("3\2"));
         assertEquals(true, containsSend(handlingSends, "Ly"));
         handlingSends.clear();
-        Handling.Proc_6_88_73E4F0(4);
+        NavigatorState.instance().setNewFriendRooms(List.of(new NewFriendRooms.RoomPick(12L, 1L)),
+            LocalDateTime.now().plusSeconds(90L));
+        assertEquals(NavigatorPayloads.newFriendRoom(new NewFriendRooms.RoomPick(12L, 1L)),
+            NavigatorRequests.newFriendRoomPayload(LocalDateTime.now(), NavigatorState.instance(), null));
+        Handling.sendNewFriendRoom(4, "Gj", "Gj");
         assertEquals(true, containsSend(handlingSends, "L\u007f"));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals(2L, Handling.Proc_6_98_747D80(4));
+        FurnitureDimmers.PresetPayload userDimmerPresets = FurnitureDimmers.presetsForUser(
+            "77", 9, new RoomDao(MySQL.configuredDatabase()), new FurnitureDao(MySQL.configuredDatabase()));
+        assertEquals(2L, userDimmerPresets.currentPresetId());
+        assertEquals(true, userDimmerPresets.payload().contains("#82F349"));
+        assertEquals(2L, Handling.sendDimmerPresets(4));
         assertEquals(true, containsSend(handlingSends, "Em"));
         assertEquals(true, containsSend(handlingSends, "#82F349"));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals(1L, Handling.Proc_6_99_748460(4));
+        assertEquals(1L, Handling.toggleDimmerState(4, "EW", "EW"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='1,2,1,#82F349,100' WHERE id='78'"));
         assertEquals(true, containsSend(handlingSends, "AU78\2"));
         assertEquals(true, containsSend(handlingSends, "1,2,1,#82F349,100"));
         handlingSends.clear();
         handlingSql.clear();
-        long dimmerId = Handling.Proc_6_100_748C80(4, "EV" + wireLong(2) + wireLong(1) + wireString("#82f349") + wireLong(100));
+        long dimmerId = Handling.updateDimmerPreset(4, "EV",
+            "EV" + wireLong(2) + wireLong(1) + wireString("#82f349") + wireLong(100));
         assertEquals(78L, dimmerId);
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures_dimmerpresets SET id_state='1'"));
         assertEquals(true, containsSql(handlingSql, "colour='#82F349'"));
@@ -4109,105 +4953,148 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "2,2,1,#82F349,100"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(2L, Handling.Proc_6_101_749540(4));
-        assertEquals(true, containsSend(handlingSends, "GL"));
+        UserPayloads.EffectListPayload userEffectList = UserLookups.effectListPayload(
+            "77", new UserDao(MySQL.configuredDatabase()));
+        assertEquals(2L, userEffectList.listedEffects());
+        assertEquals(true, userEffectList.payload().contains("GL"));
         handlingSends.clear();
-        assertEquals(12L, Handling.Proc_6_102_749C50(4, "Fx" + wireLong(12)));
+        UserEffectActivation activatedEffect = UserLookups.activateUserEffect(
+            "77", 12L, 4L, new UserDao(MySQL.configuredDatabase()));
+        assertEquals(12L, activatedEffect.effectId());
         assertEquals(true, containsSql(handlingSql, "UPDATE users_effects SET timestamp_expire=UNIX_TIMESTAMP()+time_rent"));
-        assertEquals(true, containsSend(handlingSends, "GN"));
-        assertEquals(true, containsSend(handlingSends, "Ge"));
+        assertEquals(true, activatedEffect.payload().contains("GN"));
+        assertEquals(true, activatedEffect.broadcastPayload().contains("Ge"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(1L, Handling.Proc_6_103_74A510());
+        List<UserEffectExpiry> expiredEffects = UserLookups.expiredUserEffects(new UserDao(MySQL.configuredDatabase()));
+        assertEquals(1, expiredEffects.size());
         assertEquals(true, containsSql(handlingSql, "DELETE FROM users_effects WHERE users_effects.timestamp_expire IS NOT NULL"));
-        assertEquals(true, containsSend(handlingSends, "GO"));
-        assertEquals(true, containsSend(handlingSends, "Ge"));
+        assertEquals(true, expiredEffects.get(0).payload().contains("GO"));
+        assertEquals(true, expiredEffects.get(0).broadcastPayload().contains("Ge"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_104_74AB60(4);
-        assertEquals(true, containsSend(handlingSends, "H@"));
+        String creatableRoomCountPayload = RoomLookups.creatableRoomCountPayload(
+            "77",
+            AppConfigState.instance().settingsCache().longValueOrDefault("com.server.socket.game.rooms.own.max", 0),
+            new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, creatableRoomCountPayload.contains("H@"));
         handlingSends.clear();
-        Handling.Proc_6_105_74AD50(4, "@]" + wireString("Created Room") + wireString("model_a"));
+        CreatedRoom createdRoom = RoomLookups.createRoom(
+            "77",
+            RoomWire.createRoomRequest("@]" + wireString("Created Room") + wireString("model_a")),
+            AppConfigState.instance().settingsCache().longValueOrDefault("com.server.socket.game.rooms.own.max", 0),
+            UserLookups.hcLevel("77", new UserDao(MySQL.configuredDatabase())),
+            new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, createdRoom.valid());
         assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms(id_owner,name,visitors_max,id_model,timestamp_created)"));
-        assertEquals(true, containsSend(handlingSends, "@{"));
-        assertEquals(true, containsSend(handlingSends, "Created Room"));
+        assertEquals(true, createdRoom.payload().contains("@{"));
+        assertEquals(true, createdRoom.payload().contains("Created Room"));
+        assertEquals(2, createdRoom.cacheInvalidationPaths().size());
+        assertEquals(true, createdRoom.cacheInvalidationPaths().get(0).endsWith("CACHE/ROOMS/" + createdRoom.roomId() + ".cache"));
+        assertEquals(true, createdRoom.cacheInvalidationPaths().get(1).endsWith("CACHE/PATHFINDER/" + createdRoom.roomId() + ".cache"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_107_74B7E0(4);
+        StaffPickedToggle staffPickedToggle = RoomLookups.toggleStaffPickedRoom(
+            9,
+            AppConfigState.instance().settingsCache().longValueOrDefault("com.client.navigator.staff_picked.category.id.default", 0),
+            AppConfigState.instance().settingsCache().longValueOrDefault("com.client.navigator.staff_picked.style.default", 0),
+            AppConfigState.instance().settingsCache().longValueOrDefault("com.client.navigator.staff_picked.category.icon.default", 0),
+            new RoomDao(MySQL.configuredDatabase()),
+            new UserDao(MySQL.configuredDatabase()));
+        assertEquals(true, staffPickedToggle.changed());
         assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms_official"));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET is_staff_picked='1'"));
-        assertEquals(true, containsSend(handlingSends, "NavRoom"));
-        assertEquals(true, containsSend(handlingSends, "GH"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_108_74D800(4);
-        assertEquals(true, containsSend(handlingSends, "GJ"));
+        String favouriteRoomIdsPayload = RoomLookups.favouriteRoomIdsPayload(
+            "77",
+            AppConfigState.instance().settingsCache().longValueOrDefault("com.server.socket.game.rooms.favourites.max", 30),
+            new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, favouriteRoomIdsPayload.contains("GJ"));
         handlingSends.clear();
-        Handling.Proc_6_110_74DDA0(4, "@S" + wireLong(9));
+        String favouriteAddedPayload = RoomLookups.addFavouriteRoomPayload(
+            "77", 9, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms_favourites"));
-        assertEquals(true, containsSend(handlingSends, "GK"));
+        assertEquals(true, favouriteAddedPayload.contains("GK"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_109_74DBD0(4, "@T" + wireLong(9));
+        String favouriteRemovedPayload = RoomLookups.removeFavouriteRoomPayload(
+            "77", 9, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM rooms_favourites WHERE id_room='9'"));
-        assertEquals(true, containsSend(handlingSends, "GK"));
+        assertEquals(true, favouriteRemovedPayload.contains("GK"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_111_74DF70(4, "", "", 2, 1);
-        assertEquals(true, containsSend(handlingSends, "C]CATEGORY_PAYLOAD"));
+        assertEquals("C]CATEGORY_PAYLOAD", NavigatorState.instance().roomCategoryCache().rankPayload(2, 1));
+        String eventCategoryPayload = NavigatorRequests.eventCategoryQueryPayload(
+            2,
+            NavigatorRequests.listLimit(AppConfigState.instance().settingsCache()),
+            1,
+            new RoomDao(MySQL.configuredDatabase()),
+            NavigatorState.instance().recommendedRooms());
+        assertEquals(true, eventCategoryPayload.contains("GCPC2"));
+        assertEquals(true, eventCategoryPayload.contains("RECOMMENDED"));
+        String popularCategoryPayload = NavigatorRequests.popularCategoryQueryPayload(
+            2,
+            NavigatorRequests.listLimit(AppConfigState.instance().settingsCache()),
+            1,
+            new RoomDao(MySQL.configuredDatabase()),
+            NavigatorState.instance().recommendedRooms());
+        assertEquals(true, popularCategoryPayload.contains("GC 2"));
+        assertEquals(true, popularCategoryPayload.contains("RECOMMENDED"));
+        RoomDao navigatorRequestRooms = new RoomDao(MySQL.configuredDatabase());
+        long navigatorLimit = NavigatorRequests.listLimit(AppConfigState.instance().settingsCache());
+        assertEquals(true, NavigatorRequests.eventCategoryQueryPayload(
+            "GC" + wireLong(2), AppConfigState.instance().settingsCache(),
+            NavigatorState.instance().recommendedRooms(), navigatorRequestRooms).contains("GCPC2"));
+        assertEquals(true, NavigatorRequests.popularCategoryQueryPayload(
+            "GC" + wireLong(2), AppConfigState.instance().settingsCache(),
+            NavigatorState.instance().recommendedRooms(), navigatorRequestRooms).contains("GC 2"));
+        assertEquals(true, NavigatorRequests.friendCurrentQueryPayload(77, navigatorLimit, navigatorRequestRooms).contains("GCQA"));
+        assertEquals(true, NavigatorRequests.friendCurrentQueryPayload(
+            "77", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GCQA"));
+        assertEquals(true, NavigatorRequests.friendOwnedQueryPayload(77, navigatorLimit, navigatorRequestRooms).contains("GC\0"));
+        assertEquals(true, NavigatorRequests.friendOwnedQueryPayload(
+            "77", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GC\0"));
+        assertEquals(true, NavigatorRequests.favouriteQueryPayload(77, navigatorLimit, navigatorRequestRooms).contains("GCRA"));
+        assertEquals(true, NavigatorRequests.favouriteQueryPayload(
+            "77", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GCRA"));
+        assertEquals(true, NavigatorRequests.recentlyVisitedQueryPayload(77, navigatorLimit, navigatorRequestRooms).contains("GCSA"));
+        assertEquals(true, NavigatorRequests.recentlyVisitedQueryPayload(
+            "77", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GCSA"));
+        assertEquals(true, NavigatorRequests.ownedQueryPayload(77, navigatorLimit, navigatorRequestRooms).contains("GCQA"));
+        assertEquals(true, NavigatorRequests.ownedQueryPayload(
+            "77", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GCQA"));
+        String officialNavigatorPayload = NavigatorRequests.officialNavigatorPayload(navigatorRequestRooms);
+        assertEquals(true, officialNavigatorPayload.contains("GB"));
+        assertEquals(true, officialNavigatorPayload.contains("caption"));
+        String popularTagsPayload = NavigatorRequests.popularTagsPayload(navigatorLimit, navigatorRequestRooms);
+        assertEquals(true, popularTagsPayload.contains("GD"));
+        assertEquals(true, popularTagsPayload.contains("tag1"));
+        assertEquals(true, NavigatorRequests.popularTagsPayload(
+            AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("tag1"));
+        String navigatorTimeFormat = AppConfigState.instance().settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
+        String tagResultsPayload = NavigatorRequests.tagResultsQueryPayload(
+            "tag1", navigatorTimeFormat, navigatorLimit, navigatorRequestRooms);
+        assertEquals(true, tagResultsPayload.contains("GCSAtag1"));
+        assertEquals(true, tagResultsPayload.contains("Event Room"));
+        assertEquals(true, NavigatorRequests.topRatedQueryPayload(navigatorLimit, navigatorRequestRooms).contains("GC\b"));
+        assertEquals(true, NavigatorRequests.topRatedQueryPayload(
+            AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GC\b"));
+        String searchResultsPayload = NavigatorRequests.searchResultsQueryPayload(
+            "Nav", navigatorTimeFormat, navigatorLimit, navigatorRequestRooms);
+        assertEquals(true, searchResultsPayload.contains("GCSANav"));
+        assertEquals(true, searchResultsPayload.contains("Event Room"));
+        assertEquals(true, NavigatorRequests.tagResultsQueryPayload(
+            "GCtag1", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GCSAtag1"));
+        assertEquals(true, NavigatorRequests.searchResultsQueryPayload(
+            "GCNav", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GCSANav"));
         handlingSends.clear();
-        assertEquals(true, Handling.Proc_6_114_750550("rooms_events,users,rooms,rooms_categories WHERE rooms.id=rooms_events.id_room").contains("Event Room"));
-        assertEquals(true, Handling.Proc_6_113_74EE70(
-            "rooms_events,users,rooms,rooms_categories WHERE rooms.id=rooms_events.id_room",
-            "users,rooms,rooms_categories WHERE rooms.id='9'").contains("Event Room"));
-        Handling.Proc_6_115_751220(4, "GC" + wireLong(2));
-        assertEquals(true, containsSend(handlingSends, "GCPC2"));
-        assertEquals(true, containsSend(handlingSends, "RECOMMENDED"));
-        handlingSends.clear();
-        Handling.Proc_6_116_751550(4, "GC" + wireLong(2));
-        assertEquals(true, containsSend(handlingSends, "GC 2"));
-        assertEquals(true, containsSend(handlingSends, "RECOMMENDED"));
-        handlingSends.clear();
-        Handling.Proc_6_117_751880(4);
-        assertEquals(true, containsSend(handlingSends, "GCQA"));
-        handlingSends.clear();
-        Handling.Proc_6_118_751A80(4);
-        assertEquals(true, containsSend(handlingSends, "GC\0"));
-        handlingSends.clear();
-        Handling.Proc_6_119_751C80(4);
-        assertEquals(true, containsSend(handlingSends, "GCRA"));
-        handlingSends.clear();
-        Handling.Proc_6_120_751E80(4);
-        assertEquals(true, containsSend(handlingSends, "GCSA"));
-        handlingSends.clear();
-        Handling.Proc_6_121_752080(4);
-        assertEquals(true, containsSend(handlingSends, "GCQA"));
-        handlingSends.clear();
-        Handling.Proc_6_123_754020(4);
-        assertEquals(true, containsSend(handlingSends, "GB"));
-        assertEquals(true, containsSend(handlingSends, "caption"));
-        handlingSends.clear();
-        Handling.Proc_6_124_754D90(4);
-        assertEquals(true, containsSend(handlingSends, "GD"));
-        assertEquals(true, containsSend(handlingSends, "tag1"));
-        handlingSends.clear();
-        Handling.Proc_6_125_755650(4, "XXtag1");
-        assertEquals(true, containsSend(handlingSends, "GCSAtag1"));
-        assertEquals(true, containsSend(handlingSends, "Event Room"));
-        handlingSends.clear();
-        Handling.Proc_6_126_755B40(4);
-        assertEquals(true, containsSend(handlingSends, "GC\b"));
-        handlingSends.clear();
-        Handling.Proc_6_127_755D30(4, "XXNav");
-        assertEquals(true, containsSend(handlingSends, "GCSANav"));
-        assertEquals(true, containsSend(handlingSends, "Event Room"));
-        handlingSends.clear();
-        Handling.Proc_6_131_75C700(4);
+        Handling.sendClubGiftStatus(4, "GZ", "GZ");
         assertEquals(true, containsSend(handlingSends, "IoM"));
         assertEquals(true, containsSend(handlingSends, "GIFTS"));
         handlingSends.clear();
         handlingSql.clear();
-        String hcGiftPayload = Handling.Proc_6_130_75B770(4, "G[" + wireString("trade_sprite"));
+        String hcGiftPayload = Handling.claimClubGift(4, "G[", "G[" + wireString("trade_sprite"));
         assertEquals(true, hcGiftPayload.contains("AC"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO furnitures(id_product,id_ctlgproduct,id_owner,task_owner,task_time,position_r,sign) VALUES('506','81','77','77',UNIX_TIMESTAMP(),'0','')"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET hc_presents=hc_presents-1 WHERE id='77'"));
@@ -4215,7 +5102,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "BLS"));
         handlingSends.clear();
         handlingSql.clear();
-        String purchasePayload = Handling.Proc_6_128_756190(4, "Ad" + wireLong(81) + wireString("catalog sign"));
+        String purchasePayload = Handling.purchaseCatalogProduct(4, "Ad",
+            "Ad" + wireLong(81) + wireString("catalog sign"));
         assertEquals(true, purchasePayload.contains("AC"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time,id_ctlgproduct) VALUES('506','77','catalog sign','77',UNIX_TIMESTAMP(),'81')"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET credits=credits-3,activitypoints_0=activitypoints_0-2 WHERE id='77'"));
@@ -4224,7 +5112,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "BLS"));
         handlingSends.clear();
         handlingSql.clear();
-        String giftPayload = Handling.Proc_6_132_75D4A0(4, "GX" + wireLong(81) + wireLong(506)
+        String giftPayload = Handling.purchaseCatalogGift(4, "GX", "GX" + wireLong(81) + wireLong(506)
             + wireString("Target") + wireString("gift note") + wireLong(501) + wireLong(2) + wireLong(3));
         assertEquals(true, giftPayload.contains("AC"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time,id_ctlgproduct) VALUES('506','77','gift note','77',UNIX_TIMESTAMP(),'81')"));
@@ -4237,154 +5125,239 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "8:DATA"));
         assertEquals(true, containsSend(handlingSends, "Ab"));
         handlingSends.clear();
-        Handling.Proc_6_134_765B90(4, "oV" + wireLong(81));
+        Handling.sendCatalogGiftAvailability(4, "oV", "oV" + wireLong(81));
         assertEquals(true, containsSend(handlingSends, "In"));
         handlingSends.clear();
-        Handling.Proc_6_135_765D80(4);
+        Handling.sendCatalogGiftWrapOptions(4, "oC", "oC");
         assertEquals(true, containsSend(handlingSends, "WRAP_PAYLOAD"));
         handlingSends.clear();
-        Handling.Proc_6_136_765F10(4, "xx" + wireLong(2));
+        Handling.sendCatalogPage(4, "Af", "xx" + wireLong(2));
         assertEquals(true, containsSend(handlingSends, "A\u007f"));
         assertEquals(true, containsSend(handlingSends, "PAGE_PAYLOAD"));
         handlingSends.clear();
-        Handling.Proc_6_140_769400(4);
+        Handling.sendInventoryToSocket(4);
         assertEquals(true, containsSend(handlingSends, "BLS"));
         assertEquals(true, containsSend(handlingSends, "Id"));
         handlingSends.clear();
         handlingSql.clear();
-        Handling.Proc_6_137_766470(4, "BAABCD    ");
+        VoucherRedemption voucherRedemption = VoucherRedemption.redeem(
+            "ABCD0000",
+            77,
+            new VoucherDao(MySQL.configuredDatabase()),
+            new UserDao(MySQL.configuredDatabase()),
+            GameDataCaches.productCache());
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET credits=credits+5"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_0=activitypoints_0+7"));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM vouchers WHERE name='ABCD0000'"));
-        assertEquals(true, containsSend(handlingSends, "CTRewardA"));
+        assertEquals(true, voucherRedemption.responsePayload().contains("CTRewardA"));
+        assertEquals(true, voucherRedemption.creditsRefreshRequired());
+        assertEquals(true, voucherRedemption.activityPointRefreshRequired());
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_139_768100(4, "AB" + wireLong(79));
-        assertEquals(true, containsSend(handlingSends, "@nwallpaper\2paper1\2"));
-        assertEquals(true, containsSend(handlingSends, "Ac"));
-        assertEquals(true, containsSend(handlingSends, "BLS"));
+        FurnitureLookups.RoomDecorationApplication decorationApplication =
+            FurnitureLookups.applyRoomDecorationFurniture(
+                79, 9, 77, new FurnitureDao(MySQL.configuredDatabase()), new RoomDao(MySQL.configuredDatabase()),
+                CatalogState.instance().registry());
+        assertEquals("@nwallpaper\2paper1\2", decorationApplication.roomPayload());
+        assertEquals(InventoryMessagePayloads.remove(79), decorationApplication.inventoryRemovePayload());
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET id_wallpaper='paper1'"));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM furnitures WHERE id='79' LIMIT 1"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_143_76BB80(4);
+        String activityPointBalancePayload = UserLookups.activityPointBalancePayload(
+            "77", new UserDao(MySQL.configuredDatabase()));
+        assertEquals(true, activityPointBalancePayload.contains("M@"));
+        Handling.sendActivityPointBalanceToSocket(4);
         assertEquals(true, containsSend(handlingSends, "M@"));
         handlingSends.clear();
         handlingSql.clear();
-        Handling.Proc_6_144_76BE70(4, "AZ" + wireLong(80));
+        FurnitureLookups.FurnitureInventoryReturn inventoryReturn =
+            FurnitureLookups.returnRoomFurnitureToInventory(
+                80, 9, 77, false, true, false, new FurnitureDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_room=NULL"));
-        assertEquals(true, containsSend(handlingSends, "A^80\2"));
-        assertEquals(true, containsSend(handlingSends, "BLS"));
+        assertEquals("A^80\2", inventoryReturn.removedPayload());
         handlingSql.clear();
         handlingSends.clear();
-        Licence.global_008291F8 = "";
-        Licence.global_008291FC = "";
-        Licence.global_00829310 = "";
-        Handling.Proc_6_145_76CA20(4, 9, 81);
-        assertEquals(true, Licence.global_008291F8.contains("\1" + "9\2"));
-        assertEquals(true, Licence.global_008291FC.contains("\1" + "81\2"));
-        Handling.Proc_6_151_78AC20(9, 82, 3);
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "9\t82\t3\2"));
+        RoomState.instance().setFurnitureRoomCache(FurnitureRoomCache.State.empty());
+        RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.trackMarker(RoomState.instance().furnitureRoomCache(), 9, 81));
+        assertEquals(true, RoomState.instance().furnitureRoomCache().pendingRoomCache.contains("\1" + "9\2"));
+        assertEquals(true, RoomState.instance().furnitureRoomCache().pendingFurnitureCache.contains("\1" + "81\2"));
+        RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.refreshState(RoomState.instance().furnitureRoomCache(), 9, 82, 3));
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "9\t82\t3\2"));
         handlingSends.clear();
-        assertEquals("93", Handling.Proc_6_95_746CD0(4, "Cw" + wireLong(93)));
-        String simpleUsePayload = Handling.Proc_6_96_747000(4, "AM" + wireLong(93));
-        assertEquals(true, simpleUsePayload.contains("AZ"));
+        assertEquals(93L, FurnitureWire.habbowheelFurnitureId(wireLong(93)));
+        assertEquals(93L, FurnitureLookups.habbowheelFurnitureId(
+            wireLong(93), 9, new FurnitureDao(MySQL.configuredDatabase()), GameDataCaches.productCache()));
+        FurnitureLookups.SimpleFloorUse simpleUse = FurnitureLookups.simpleFloorUse(
+            93, 9, new RoomUserPosition(2, 3, true), 0, true, new FurnitureDao(MySQL.configuredDatabase()),
+            GameDataCaches.productCache());
+        assertEquals(true, simpleUse.payload().contains("AZ"));
+        String simpleUsePayload = Handling.handlingSimpleFloorItemUse(
+            4, "AM" + wireLong(93), "AM", 0L, true, RoomUserPosition.absent());
+        assertEquals(simpleUse.payload(), simpleUsePayload);
         assertEquals(true, containsSend(handlingSends, "AZ"));
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "9\t93\t0\2"));
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "9\t93\t0\2"));
         handlingSends.clear();
-        String simpleResetPayload = Handling.Proc_6_97_747640(4, "AL" + wireLong(93));
-        assertEquals(true, simpleResetPayload.contains("AZ"));
+        FurnitureLookups.SimpleFloorUse simpleReset = FurnitureLookups.simpleFloorUse(
+            93, 9, new RoomUserPosition(2, 3, true), -1, false, new FurnitureDao(MySQL.configuredDatabase()),
+            GameDataCaches.productCache());
+        assertEquals(true, simpleReset.payload().contains("AZ"));
+        String simpleResetPayload = Handling.handlingSimpleFloorItemUse(
+            4, "AL" + wireLong(93), "AL", -1L, false, RoomUserPosition.absent());
+        assertEquals(simpleReset.payload(), simpleResetPayload);
         assertEquals(true, containsSend(handlingSends, "AZ"));
-        assertEquals(true, Licence.global_008291F8.contains("\1" + "9\2"));
-        Handling.Proc_6_151_78AC20(9, 82, 3);
+        assertEquals(true, RoomState.instance().furnitureRoomCache().pendingRoomCache.contains("\1" + "9\2"));
+        RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.refreshState(RoomState.instance().furnitureRoomCache(), 9, 82, 3));
         handlingSends.clear();
         handlingSql.clear();
-        String movedFloorPayload = Handling.Proc_6_141_76A670(4, "A[94 5 6 2");
-        assertEquals(true, movedFloorPayload.contains("A_"));
+        FurnitureLookups.FloorFurniturePlacement movedFloorPlacement = FurnitureLookups.placeOrMoveFloorFurniture(
+            FurnitureWire.floorPlacement("94 5 6 2"),
+            9,
+            77,
+            false,
+            new FurnitureDao(MySQL.configuredDatabase()),
+            CatalogState.instance().registry());
+        assertEquals(true, movedFloorPlacement.roomPayload().contains("A_"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET position_x='5',position_y='6',position_z='0',position_r='2'"));
-        assertEquals(true, containsSend(handlingSends, "A_"));
         handlingSends.clear();
         handlingSql.clear();
-        String movedFloorWrapperPayload = Handling.Proc_6_159_79FCD0(4, "AI94 6 7 4");
+        String movedFloorWrapperPayload = Handling.moveFloorFurnitureInRoom(4, "AI94 6 7 4");
         assertEquals(true, movedFloorWrapperPayload.contains("A_"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET position_x='6',position_y='7',position_z='0',position_r='4'"));
         handlingSends.clear();
         handlingSql.clear();
-        String placedFloorPayload = Handling.Proc_6_142_76B310(4, "rv95 2 3 6");
-        assertEquals(true, placedFloorPayload.contains("A]"));
+        FurnitureLookups.FloorFurniturePlacement placedFloorPlacement = FurnitureLookups.placeOrMoveFloorFurniture(
+            FurnitureWire.floorPlacement("95 2 3 6"),
+            9,
+            77,
+            true,
+            new FurnitureDao(MySQL.configuredDatabase()),
+            CatalogState.instance().registry());
+        assertEquals(true, placedFloorPlacement.roomPayload().contains("A]"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner=NULL,id_room='9',position_x='2',position_y='3',position_z='0',position_r='6'"));
-        assertEquals(true, containsSend(handlingSends, "Ac"));
-        assertEquals(true, containsSend(handlingSends, "A]"));
+        assertEquals(InventoryMessagePayloads.remove(95), placedFloorPlacement.inventoryRemovePayload());
         handlingSends.clear();
         handlingSql.clear();
-        Handling.Proc_6_146_76D300(4, 82, 506);
-        assertEquals(false, Licence.global_008291FC.contains("\1" + "82\2"));
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "9\t82\t3\2"));
-        Licence.global_008291F8 = "";
-        Licence.global_008291FC = "";
-        Licence.global_00829310 = "";
-        Handling.Proc_6_152_78C2F0(9, 83, "on");
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "83\t9\ton\2"));
-        Handling.Proc_6_153_78D980(83, "off");
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "83\t9\toff\2"));
-        assertEquals(false, Licence.representedRooms().cacheText().contains("\1" + "83\t9\ton\2"));
+        RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.removeMarker(RoomState.instance().furnitureRoomCache(), 9, 82));
+        assertEquals(false, RoomState.instance().furnitureRoomCache().pendingFurnitureCache.contains("\1" + "82\2"));
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "9\t82\t3\2"));
+        RoomState.instance().setFurnitureRoomCache(FurnitureRoomCache.State.empty());
+        FurnitureDao furniture = new FurnitureDao(MySQL.configuredDatabase());
+        FurnitureStateWrites.Result writeResult = FurnitureStateWrites.write(
+            RoomState.instance().furnitureRoomCache(), 9, 83, "on", furniture);
+        RoomState.instance().setFurnitureRoomCache(writeResult.state());
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "83\t9\ton\2"));
+        writeResult = FurnitureStateWrites.write(RoomState.instance().furnitureRoomCache(), 0, 83, "off", furniture);
+        RoomState.instance().setFurnitureRoomCache(writeResult.state());
+        assertEquals(9L, writeResult.roomId());
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "83\t9\toff\2"));
+        assertEquals(false, RoomState.instance().representedRooms().cacheText().contains("\1" + "83\t9\ton\2"));
         handlingSends.clear();
-        String refreshPayload = Handling.Proc_6_154_78F040(84);
-        assertEquals("AX84\2" + "5\2", refreshPayload);
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "9\t84\t5\2"));
-        assertEquals(true, containsSend(handlingSends, "AX84\2" + "5\2"));
+        FurnitureLookups.LocatedFurnitureStateRefresh locatedRefresh =
+            FurnitureLookups.refreshLocatedFurnitureState(
+                84, 0, new FurnitureDao(MySQL.configuredDatabase()), GameDataCaches.productCache());
+        assertEquals("AX84\2" + "5\2", locatedRefresh.payload());
+        String refreshPayload = Handling.refreshLocatedFurnitureState(84, 0);
+        assertEquals(locatedRefresh.payload(), refreshPayload);
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "9\t84\t5\2"));
+        assertEquals(true, containsSend(handlingSends, locatedRefresh.payload()));
         handlingSql.clear();
         handlingSends.clear();
-        Licence.global_008291FC = "\1" + "85\2";
-        Handling.Proc_6_155_795C90(4, "AC" + wireLong(85));
-        assertEquals(false, Licence.global_008291FC.contains("\1" + "85\2"));
+        RoomState.instance().setFurnitureRoomCache(FurnitureRoomCache.State.from(
+            RoomState.instance().furnitureRoomCache().pendingRoomCache,
+            "\1" + "85\2",
+            RoomState.instance().representedRooms()));
+        RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.removeMarker(
+            RoomState.instance().furnitureRoomCache(), 9, 85));
+        FurnitureLookups.RoomFurniturePickup roomPickup = FurnitureLookups.pickUpRoomFurniture(
+            85, 9, 77, false, true, false, new FurnitureDao(MySQL.configuredDatabase()));
+        assertEquals(false, RoomState.instance().furnitureRoomCache().pendingFurnitureCache.contains("\1" + "85\2"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_room=NULL"));
         assertEquals(true, containsSql(handlingSql, "WHERE id='85' AND id_room='9' LIMIT 1"));
-        assertEquals(true, containsSend(handlingSends, "Ac"));
-        assertEquals(true, containsSend(handlingSends, "A^85\2"));
-        assertEquals(true, containsSend(handlingSends, "BLS"));
+        assertEquals(InventoryMessagePayloads.remove(85), roomPickup.inventoryRemovePayload());
+        assertEquals("A^85\2", roomPickup.removedPayload());
+        assertEquals(false, roomPickup.moderationLogRequired());
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_148_7756D0(4, 508, 87);
-        assertEquals(true, containsSend(handlingSends, "Iu"));
+        String chargePrompt = FurnitureCharges.consumeOrPrompt(
+            87,
+            CatalogState.instance().registry().product(508).orElse(null),
+            AppPaths.applicationPath());
+        assertEquals(true, chargePrompt.contains("Iu"));
         handlingSends.clear();
-        Handling.Proc_6_149_775C10(4, "Ch" + wireLong(86));
+        FurnitureLookups.FloorFurnitureStateToggle floorToggle = FurnitureLookups.toggleFloorFurnitureState(
+            86,
+            9,
+            77,
+            new FurnitureDao(MySQL.configuredDatabase()),
+            GameDataCaches.productCache(),
+            CatalogState.instance().registry(),
+            AppPaths.applicationPath());
+        assertEquals("AX86\2" + "1\2", floorToggle.payload());
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='1'"));
+        handlingSql.clear();
+        handlingSends.clear();
+        assertEquals(false, FurnitureLookups.openFloorFurniturePackage(
+            86, 9, new FurnitureDao(MySQL.configuredDatabase()), new PackageDao(MySQL.configuredDatabase()))
+            .hasPayload());
+        assertEquals(Long.valueOf(86L), Handling.openFloorFurniturePackageOrToggleState(
+            4, FurnitureWire.floorFurniturePackageRequest("FH" + wireLong(86))));
         assertEquals(true, containsSend(handlingSends, "AX86\2" + "1\2"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(Long.valueOf(86L), Handling.Proc_6_150_777FA0(4, "FH" + wireLong(86)));
-        assertEquals(true, containsSend(handlingSends, "AX86\2" + "1\2"));
-        handlingSql.clear();
-        handlingSends.clear();
-        Licence.global_00829310 = "";
-        assertEquals(1L, Handling.Proc_6_147_76E910(9, 2, 3));
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "9\t88\t4\2"));
-        assertEquals(true, containsSend(handlingSends, "AX88\2" + "4\2"));
+        RoomState.instance().setRepresentedRooms(RepresentedRoomCache.empty());
+        List<FurnitureLookups.FloorPositionStateRefresh> positionRefreshes =
+            FurnitureLookups.floorStateRefreshesAtPosition(
+                9, 2, 3, new FurnitureDao(MySQL.configuredDatabase()), GameDataCaches.productCache());
+        assertEquals(1, positionRefreshes.size());
+        assertEquals("AX88\2" + "4\2", positionRefreshes.get(0).payload());
+        assertEquals(1L, Handling.refreshFloorFurnitureStatesAtPosition(9, 2, 3));
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "9\t88\t4\2"));
+        assertEquals(true, containsSend(handlingSends, positionRefreshes.get(0).payload()));
         assertEquals(false, containsSend(handlingSends, "AX89\2" + "7\2"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.placeWallFurnitureFromInventory(4, "rv:w=1,2 l=3,4",
-            new FurnitureDao.InventoryPlacementFurniture(9L, 90L, "wall-state", 6L, 0L));
+        FurnitureLookups.WallFurniturePlacement wallPlacement = FurnitureLookups.placeWallFurnitureFromInventory(
+            ":w=1,2 l=3,4",
+            90,
+            9,
+            77,
+            new FurnitureDao.InventoryPlacementFurniture(9L, 90L, "wall-state", 6L, 0L),
+            new FurnitureDao(MySQL.configuredDatabase()),
+            GameDataCaches.productCache());
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET position_wall=':w=1,2 l=3,4'"));
         assertEquals(true, containsSql(handlingSql, "WHERE id='90' AND id_owner='77' AND id_room IS NULL LIMIT 1"));
-        assertEquals(true, containsSend(handlingSends, "Ac"));
-        assertEquals(true, containsSend(handlingSends, "AS0"));
-        assertEquals(true, containsSend(handlingSends, "BLS"));
+        assertEquals(InventoryMessagePayloads.remove(90), wallPlacement.inventoryRemovePayload());
+        assertEquals(true, wallPlacement.roomPayload().contains("AS0"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(1L, Handling.Proc_6_158_7987C0(91, 0, 0, 1, 1));
-        assertEquals(0L, Handling.Proc_6_158_7987C0(91, 1, 1, 1, 1));
-        assertEquals(0L, Handling.Proc_6_158_7987C0(91, 2, 2, 1, 1));
+        FurnitureDao placementFurniture = new FurnitureDao(MySQL.configuredDatabase());
+        RoomDao placementRooms = new RoomDao(MySQL.configuredDatabase());
+        assertEquals(1L, RoomPositionService.canPlaceFloorFurnitureAt(
+            91, 0, 0, 1, 1, placementFurniture, placementRooms, RoomState.instance().representedRooms()));
+        assertEquals(0L, RoomPositionService.canPlaceFloorFurnitureAt(
+            91, 1, 1, 1, 1, placementFurniture, placementRooms, RoomState.instance().representedRooms()));
+        assertEquals(0L, RoomPositionService.canPlaceFloorFurnitureAt(
+            91, 2, 2, 1, 1, placementFurniture, placementRooms, RoomState.instance().representedRooms()));
         handlingSql.clear();
         handlingSends.clear();
-        String scoreboardPayload = Handling.Proc_6_160_7A71A0(4, 510, 92);
-        assertEquals("AX92\2" + "0\2", scoreboardPayload);
+        FurnitureScoreStates.Target scoreTarget = FurnitureScoreStates.refreshTarget(
+            510, 92, new FurnitureDao(MySQL.configuredDatabase()), GameDataCaches.productCache());
+        assertEquals(true, scoreTarget.found());
+        FurnitureLookups.LocatedFurnitureStateRefresh scoreboardRefresh =
+            FurnitureLookups.refreshLocatedFurnitureState(
+                scoreTarget.furnitureId(),
+                scoreTarget.productId(),
+                new FurnitureDao(MySQL.configuredDatabase()),
+                GameDataCaches.productCache());
+        assertEquals("AX92\2" + "0\2", scoreboardRefresh.payload());
+        String scoreboardPayload = Handling.refreshLocatedFurnitureState(scoreTarget.furnitureId(), scoreTarget.productId());
+        assertEquals(scoreboardRefresh.payload(), scoreboardPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='0' WHERE id='92' LIMIT 1"));
-        assertEquals(true, containsSend(handlingSends, "AX92\2" + "0\2"));
+        assertEquals(true, containsSend(handlingSends, scoreboardRefresh.payload()));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_162_7B3310(4);
+        Handling.sendClientDateSettings(4);
         assertEquals(true, containsSend(handlingSends, "DAQBHHIIKHJHPAHQA"));
         assertEquals(true, containsSend(handlingSends, "http://www.alpha-series.com/"));
         handlingSends.clear();
@@ -4392,7 +5365,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "DAQBHHIIKHJHPAHQA"));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals("77", Handling.Proc_6_163_7B3480(4, "F_login-77"));
+        assertEquals("77", Handling.handleLoginTicket(4, "F_login-77"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET login_ticket=null,id_socket = '4' WHERE id = '77'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_amount='5',scratch_amount='5',update_time=UNIX_TIMESTAMP() WHERE id='77' LIMIT 1"));
         assertEquals(true, containsSend(handlingSends, "@C"));
@@ -4402,37 +5375,60 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "DX"));
         assertEquals(true, containsSend(handlingSends, "Cd"));
         assertEquals(true, containsSend(handlingSends, "E^"));
-        assertEquals(true, Licence.getSessionRecordPayload("1:", "4").contains("login-77"));
+        assertEquals(77L, SessionState.instance().sessionUserIdBySocket(4));
         handlingSends.clear();
         handlingSql.clear();
-        String friendNotifyPayload = Handling.Proc_6_165_7BE0B0(4);
+        String friendNotifyPayload = Handling.sendMessengerFriendOnlineNotification(4, 0);
         assertEquals(true, friendNotifyPayload.startsWith("@MHIH"));
         assertEquals(true, friendNotifyPayload.contains("User77"));
         assertEquals(true, containsSend(handlingSends, "@MHIH"));
         assertEquals(true, containsSend(handlingSends, "User77"));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals(1L, Handling.Proc_6_170_7C1100(4, "@fA"));
+        assertEquals(1L, Handling.deleteMessengerFriendRequests(4, "@f", "@fA"));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM friendships WHERE id_user='77' AND has_accept='0' LIMIT 75"));
         handlingSql.clear();
-        assertEquals(1L, Handling.Proc_6_170_7C1100(4, "@fCABA"));
+        assertEquals(1L, Handling.deleteMessengerFriendRequests(4, "@f", "@fCABA"));
         assertEquals(true, containsSql(handlingSql, "id_friend IN ('1','2') LIMIT 75"));
         handlingSql.clear();
         handlingSends.clear();
-        String followPayload = Handling.Proc_6_169_7C0DC0(4, "DF" + wireLong(88));
+        String followPayload = MessengerLookups.followRoomPayload(
+            77, 88, 61, 9, new MessengerDao(MySQL.configuredDatabase()));
         assertEquals(MessengerPayloads.followRoom(61, 9), followPayload);
-        assertEquals(true, containsSend(handlingSends, "D^"));
         handlingSends.clear();
         handlingSql.clear();
         String inviteWire = wireLong(1) + wireLong(88) + wireString("Join me");
-        String inviteText = Functions.Proc_10_7_80A190(inviteWire, 0, 0);
-        String invitePayload = Handling.Proc_6_168_7C05F0(4, "@b" + inviteWire);
-        assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BG") + inviteText + "\2", invitePayload);
-        assertEquals(true, containsSend(handlingSends, "BG"));
+        String inviteText = WireEncoding.readBase64LengthString(inviteWire);
+        MessengerWire.RoomInviteRequest inviteRequest = MessengerWire.roomInviteFromWire("@b" + inviteWire);
+        MessengerRoomInvite invite = MessengerLookups.roomInvite(
+            77,
+            61,
+            4,
+            inviteRequest,
+            inviteText,
+            new MessengerDao(MySQL.configuredDatabase()),
+            targetUserId -> targetUserId == 88L ? 8 : 0,
+            targetUserId -> targetUserId == 88L ? "Target" : "");
+        assertEquals(encodedVl64(77, null, "BG") + inviteText + "\2", invite.payload());
+        assertEquals(1, invite.notifications().size());
+        assertEquals(invite.notifications(), invite.deliveryPayloads());
+        assertEquals("BG", invite.notifications().get(0).payload().substring(0, 2));
         assertEquals(true, containsSql(handlingSql, "(Invite To: Target) -- " + inviteText));
         handlingSql.clear();
         handlingSends.clear();
-        String acceptPayload = Handling.Proc_6_167_7BECA0(4, "@e" + wireLong(1) + wireLong(88));
+        String messengerDateTimeFormat = StringUtils.sqlEscapedText(
+            AppConfigState.instance().settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y")
+                + " "
+                + AppConfigState.instance().settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i"));
+        AcceptedFriendRequests acceptedFriends = MessengerLookups.acceptPendingFriends(
+            77, List.of(88L), messengerDateTimeFormat, new MessengerDao(MySQL.configuredDatabase()));
+        assertEquals(true, acceptedFriends.valid());
+        assertEquals(acceptedFriends.notifications(), acceptedFriends.deliveryPayloads());
+        assertEquals(1, acceptedFriends.deliveryPayloads().size());
+        handlingSql.clear();
+        handlingSends.clear();
+        String acceptPayload = Handling.acceptMessengerFriendRequests(
+            4, MessengerWire.acceptFriendRequests("@e" + wireLong(1) + wireLong(88)));
         assertEquals(true, acceptPayload.startsWith("@MH"));
         assertEquals(true, acceptPayload.contains("Target"));
         assertEquals(true, containsSql(handlingSql, "INSERT IGNORE INTO friendships(id_user,id_friend,has_accept) VALUES('88','77','0')"));
@@ -4442,15 +5438,15 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "@MH"));
         handlingSql.clear();
         handlingSends.clear();
-        String removePayload = Handling.Proc_6_171_7C1520(4, "@h" + wireLong(1) + wireLong(88));
-        assertEquals(MessengerPayloads.removeFriends(MessengerPayloads.removedId(88), 1), removePayload);
+        String removePayload = Handling.removeMessengerFriends(4, "@h", "@h" + wireLong(1) + wireLong(88));
+        assertEquals(MessengerPayloads.removeFriends(List.of(88L)), removePayload);
         assertEquals(true, containsSql(handlingSql, "DELETE FROM friendships WHERE has_accept='1'"));
         assertEquals(true, containsSql(handlingSql, "id_friend IN ('88')"));
         assertEquals(true, containsSend(handlingSends, "@MMIM77"));
         assertEquals(true, containsSend(handlingSends, "@MM"));
         handlingSql.clear();
         handlingSends.clear();
-        String searchPayload = Handling.Proc_6_172_7C25B0(4, "@i" + wireString("targ"));
+        String searchPayload = Handling.searchMessengerUsers(4, MessengerWire.searchRequest("@i" + wireString("targ"), "@i"));
         assertEquals(true, searchPayload.startsWith("Fs"));
         assertEquals(true, searchPayload.contains("Target"));
         assertEquals(true, searchPayload.contains("Targus"));
@@ -4458,51 +5454,53 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         String chatWire = wireLong(88) + wireString("Private hello");
-        String chatText = Functions.Proc_10_7_80A190(chatWire, 0, 0);
-        String privateChatPayload = Handling.Proc_6_173_7C3430(4, "@a" + chatWire);
-        assertEquals(Crypto.Proc_3_0_6D2AF0(77, null, "BF") + chatText + "\2", privateChatPayload);
+        String chatText = WireEncoding.readBase64LengthString(chatWire);
+        String privateChatPayload = Handling.sendMessengerPrivateMessage(
+            4, MessengerWire.privateMessageFromWire("@a" + chatWire));
+        assertEquals(encodedVl64(77, null, "BF") + chatText + "\2", privateChatPayload);
         assertEquals(true, containsSql(handlingSql, "(Chat To:     Target) -- " + chatText));
         assertEquals(true, containsSend(handlingSends, "BF"));
         handlingSql.clear();
         handlingSends.clear();
-        String requestPayload = Handling.Proc_6_174_7C3BC0(4, "@g" + wireString("Target"));
+        String requestPayload = Handling.requestMessengerFriend(
+            4, MessengerWire.friendRequest("@g" + wireString("Target"), "@g"));
         assertEquals(MessengerPayloads.requestAcceptedCaller(88), requestPayload);
         assertEquals(true, containsSql(handlingSql, "INSERT IGNORE INTO friendships(id_user,id_friend) VALUES('88','77')"));
         assertEquals(true, containsSend(handlingSends, "BD"));
         assertEquals(true, containsSend(handlingSends, "DD"));
         handlingSql.clear();
         handlingSends.clear();
-        String pendingPayload = Handling.Proc_6_175_7C4800(4);
+        String pendingPayload = Handling.sendMessengerPendingRequests(4, "Ci", "Ci");
         assertEquals(MessengerPayloads.pendingRequests(List.of(new PendingFriendRequest(88L, "Target"))), pendingPayload);
         assertEquals(true, containsSend(handlingSends, "Dz"));
         assertEquals(true, containsSend(handlingSends, "Target"));
         handlingSends.clear();
-        String friendListPayload = Handling.Proc_6_176_7C4EE0(4);
+        String friendListPayload = Handling.sendMessengerFriendList(4, "@L", "@L");
         assertEquals(true, friendListPayload.startsWith("@L"));
         assertEquals(true, friendListPayload.contains("Target"));
         assertEquals(true, friendListPayload.endsWith("PYH"));
         assertEquals(true, containsSend(handlingSends, "@MHIH"));
         assertEquals(true, containsSend(handlingSends, "@L"));
         handlingSends.clear();
-        String raceListPayload = Handling.Proc_6_177_7C6580(4, "n\u007f" + wireString("dog"));
+        String raceListPayload = Handling.sendPetRaceList(4, "n\u007f", "n\u007f" + wireString("dog"));
         assertEquals(PetPayloads.raceList("dog", List.of(
             new PetRaceRow(1L, 1L, 0L, 0L, "A"),
             new PetRaceRow(2L, 2L, 2L, 0L, "B")), 1, 0), raceListPayload);
         assertEquals(true, containsSend(handlingSends, "L{dog\2"));
         handlingSends.clear();
-        String petInventoryPayload = Handling.Proc_6_178_7C6E60(4);
+        String petInventoryPayload = Handling.sendPetInventory(4, "nx", "nx");
         assertEquals(PetPayloads.inventoryList(List.of(new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L))),
             petInventoryPayload);
         assertEquals(true, containsSend(handlingSends, "IX"));
         assertEquals(true, containsSend(handlingSends, "Rex"));
         handlingSends.clear();
-        assertEquals(2L, Handling.Proc_6_181_7CA920("Rex1"));
-        String nameCheckPayload = Handling.Proc_6_182_7CAAD0(4, "@c" + wireString("Rex"));
+        assertEquals(2L, PetPayloads.nameValidationCode("Rex1"));
+        String nameCheckPayload = Handling.validatePetName(4, "@j", "@c" + wireString("Rex"));
         assertEquals(PetPayloads.nameValidation("Rex"), nameCheckPayload);
         assertEquals(true, containsSend(handlingSends, "@d"));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals("30", Handling.Proc_6_87_73C120(4, "n~" + wireLong(93) + wireString("Buddy")));
+        assertEquals("30", Handling.placePetFromPackage(4, "n~", "n~" + wireLong(93) + wireString("Buddy")));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO bots(id_user,figure,name,id_handle) VALUES('77','1 2 3','Buddy','3')"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO bots_petdata(id_bot,timestamp_buy,id_owner,energy,nutrition,scratches) VALUES('30',UNIX_TIMESTAMP(),'77','100','100','0')"));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM furnitures WHERE id='93' LIMIT 1"));
@@ -4510,45 +5508,70 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "Buddy"));
         assertEquals(true, containsSend(handlingSends, "A^93"));
         assertEquals(true, containsSend(handlingSends, "Lz"));
+        handlingSql.clear();
+        PetPackagePlacement packagePlacement = PetLookups.packagePlacementAction(
+            93,
+            9,
+            77,
+            "Buddy",
+            0,
+            new FurnitureDao(MySQL.configuredDatabase()),
+            new PackageDao(MySQL.configuredDatabase()),
+            new BotDao(MySQL.configuredDatabase()),
+            new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(30L, packagePlacement.botId());
+        assertEquals(true, packagePlacement.inventoryAddPayload().contains("Buddy"));
+        assertEquals(true, packagePlacement.nameValidationPayload().contains("Lz"));
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO bots(id_user,figure,name,id_handle) VALUES('77','1 2 3','Buddy','3')"));
         handlingSends.clear();
-        String petStatusPayload = Handling.Proc_6_183_7CABF0(4, "ny" + wireLong(10));
+        String petStatusPayload = Handling.sendPetStatus(4, "ny", "ny" + wireLong(10));
+        PetStatusRow expectedPetStatusRow = new PetStatusRow(
+            10L, "Rex", "1 2 ff", 2L, 7L, 100L, 90L, 4L, 12L, 5L, "Owner");
         assertEquals(PetPayloads.status(10, expectedPetStatusRow), petStatusPayload);
         assertEquals(true, containsSend(handlingSends, "IY"));
         assertEquals(true, containsSend(handlingSends, "Owner"));
         handlingSends.clear();
-        Licence.global_008292CC = new PetSettings.PetCommandRow[]{
-            null,
+        List<PetSettings.PetCommandRow> commandRows = List.of(
             new PetSettings.PetCommandRow(1L, 0L, "sit", "gst sit", 4),
             new PetSettings.PetCommandRow(2L, 3L, "jump", "gst jump", 4)
-        };
-        String petCommandPayload = Handling.Proc_6_184_7CBDA0(4, 2);
-        assertEquals(PetPayloads.commandList(2, Licence.global_008292CC), petCommandPayload);
+        );
+        PetSettings previousPetSettings = PetState.instance().settings();
+        PetState.instance().setSettings(PetSettings.fromRaceRows(
+            previousPetSettings.races(),
+            previousPetSettings.levels(),
+            commandRows,
+            commandRows.size()));
+        String petCommandPayload = Handling.sendPetCommandList(4, 2);
+        assertEquals(PetPayloads.commandList(2, commandRows), petCommandPayload);
         assertEquals(true, containsSend(handlingSends, "I]"));
         handlingSends.clear();
         handlingSql.clear();
-        String routedCommandPayload = Handling.Proc_7CC190(4, "n|" + wireLong(10));
-        assertEquals(PetPayloads.commandList(3, Licence.global_008292CC), routedCommandPayload);
+        String routedCommandPayload = Handling.sendPetCommandListForTarget(4, "n|", "n|" + wireLong(10));
+        assertEquals(PetPayloads.commandList(3, commandRows), routedCommandPayload);
         assertEquals(true, containsSend(handlingSends, "I]"));
         handlingSends.clear();
-        Object originalBotRecordCacheForCommand = Licence.global_00829358;
-        Licence.global_00829358 = "[300:4\2" + "10\2Rex\2hello\2speech\2responses\2" + "2\2" + "3\2" + "0.0\2" + "0\2" + "1 2 ff\2]";
+        RepresentedBotRegistry originalRepresentedBotsForCommand = PetState.instance().representedBots();
+        PetState.instance().setRepresentedBots(representedBots(Map.of(
+            300L, "4\2" + "10\2Rex\2hello\2speech\2responses\2" + "2\2" + "3\2" + "0.0\2" + "0\2" + "1 2 ff\2")));
         handlingSql.clear();
-        assertEquals(1L, Handling.Proc_7CA730(4, "n{" + wireLong(300) + wireLong(1)));
+        assertEquals(1L, Handling.performPetCommand(4, "n{", "n{" + wireLong(300) + wireLong(1)));
         assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET id_level='3',experience='0' WHERE id_bot='10'"));
         assertEquals(true, containsSend(handlingSends, "IZ"));
         assertEquals(true, containsSend(handlingSends, "gst sit"));
-        Licence.global_00829358 = originalBotRecordCacheForCommand;
+        PetState.instance().setRepresentedBots(originalRepresentedBotsForCommand);
+        PetState.instance().setSettings(previousPetSettings);
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals(42L, Handling.Proc_7F44D0(4, "oL" + wireString("42")));
-        assertEquals("", Handling.Proc_7FA5A0(4, "CD"));
+        assertEquals(42L, Handling.guideInviteUserIdFromWire(4, "oL", "oL" + wireString("42")));
+        assertEquals("", Handling.ignoreClientReadyPacket());
         handlingSends.clear();
         handlingSql.clear();
-        Handling.dispatchPreReadyPacket(4, "Ce", "Ce50");
+        assertEquals(50L, UserLookups.updateSoundSetting(
+            "77", UserWire.soundSettingRequest("Ce50"), new UserDao(MySQL.configuredDatabase())));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET settings_sound='50' WHERE id='77' LIMIT 1"));
-        Licence.global_008292F4 = new String[][]{{"CATALOG_TREE"}};
+        seedCatalogPageTrees(Map.of(new CatalogPages.PageTreeKey(0L, 0L), "CATALOG_TREE"));
         Handling.dispatchPreReadyPacket(4, "Ae", "Ae");
-        assertEquals("CATALOG_TREE", Licence.catalogPages().defaultPageTree());
+        assertEquals("CATALOG_TREE", CatalogState.instance().catalogPages().defaultPageTree());
         assertCatalogPagesTypedAccessors();
         assertEquals(true, containsSend(handlingSends, "A~IHHM\2CATALOG_TREE"));
         handlingSends.clear();
@@ -4556,105 +5579,150 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "Ei"));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals(3L, Handling.Proc_6_185_7CC2D0(10, 3));
+        assertEquals(3L, Handling.awardPetExperience(10, 3));
         assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET id_level='3',experience='0' WHERE id_bot='10'"));
         assertEquals(true, containsSend(handlingSends, "@X"));
         assertEquals(true, containsSend(handlingSends, "IY"));
         assertEquals(true, containsSend(handlingSends, "Ia"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(5L, Handling.Proc_6_186_7CD040(4, "n}" + wireLong(10)));
+        assertEquals(5L, Handling.scratchPet(4, "n}", "n}" + wireLong(10)));
         assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET scratches='5' WHERE id_bot='10'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET scratch_amount=scratch_amount-1,scratch_given=scratch_given+1 WHERE id='77'"));
         assertEquals(true, containsSend(handlingSends, "I^"));
         assertEquals(true, containsSend(handlingSends, "Rex"));
         handlingSends.clear();
         handlingSql.clear();
-        Licence.global_008292D4 = "";
-        Licence.global_00829358 = "";
-        long placedPetEntityId = Handling.Proc_6_179_7C7790(4, "nz" + wireLong(10) + wireLong(2) + wireLong(3) + wireLong(4));
+        PetState.instance().setRepresentedBots(RepresentedBotRegistry.empty());
+        long placedPetEntityId = Handling.placePetInRoom(4, "nz",
+            "nz" + wireLong(10) + wireLong(2) + wireLong(3) + wireLong(4));
         assertEquals(true, placedPetEntityId > 0L);
-        assertEquals(10L, Licence.representedBots().record(placedPetEntityId).botId());
+        assertEquals(10L, PetState.instance().representedBots().record(placedPetEntityId).botId());
         assertEquals(true, containsSql(handlingSql, "UPDATE bots SET id_room='9',position_x='2',position_y='3',position_z='0',position_r='4' WHERE id='10'"));
         assertEquals(true, containsSend(handlingSends, "@\\"));
         assertEquals(true, containsSend(handlingSends, "I\\"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(10L, Handling.Proc_6_180_7C96F0(4, placedPetEntityId));
-        assertEquals("", Licence.representedBots().recordText(placedPetEntityId));
+        assertEquals(10L, Handling.pickUpPetFromRoom(4, placedPetEntityId));
+        assertEquals(0L, PetState.instance().representedBots().record(placedPetEntityId).botId());
         assertEquals(true, containsSql(handlingSql, "UPDATE bots SET id_room=null WHERE id='10'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET id_level=id_level,energy=energy,experience=experience,nutrition=nutrition,scratches=scratches WHERE id_bot='10'"));
         assertEquals(true, containsSend(handlingSends, "@]"));
         assertEquals(true, containsSend(handlingSends, "I["));
         handlingSends.clear();
         handlingSql.clear();
-        Licence.global_008292D4 = "";
-        Licence.global_00829358 = "";
-        long guideEntityId = Handling.Proc_6_188_7CF3C0(4);
+        PetState.instance().setRepresentedBots(RepresentedBotRegistry.empty());
+        long guideEntityId = Handling.spawnTutorialGuideBot(4, "Fx", "Fx");
         assertEquals(true, guideEntityId > 0L);
-        assertEquals(20L, Licence.representedBots().record(guideEntityId).botId());
+        assertEquals(20L, PetState.instance().representedBots().record(guideEntityId).botId());
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET tutorial_guide='1' WHERE id='77'"));
         assertEquals(true, containsSend(handlingSends, "@aYjO"));
         handlingSends.clear();
-        assertEquals(1L, Handling.Proc_6_189_7D0630(4, "Fy" + wireLong(0)));
-        assertEquals("", Licence.representedBots().recordText(guideEntityId));
+        assertEquals(1L, Handling.removeTutorialGuideBots(4, "Fy", "Fy" + wireLong(0)));
+        assertEquals(0L, PetState.instance().representedBots().record(guideEntityId).botId());
         assertEquals(true, containsSend(handlingSends, "@]"));
         handlingSends.clear();
-        String profilePayload = Handling.Proc_6_190_7D11D0(4, "Cg" + wireLong(61));
+        String profilePayload = Handling.sendRoomUserProfile(4, "Cg", "Cg" + wireLong(61));
         assertEquals(SocialPayloads.roomUserProfile(61, "Target", "Motto", 123, "fig"), profilePayload);
         assertEquals(true, containsSend(handlingSends, "Jf"));
         assertEquals(true, containsSend(handlingSends, "Target"));
+        SocialLookups.DirectPayload profileAction =
+            SocialLookups.roomUserProfileAction(9L, 61L, new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, profileAction.hasPayload());
+        assertEquals(profilePayload, profileAction.payload());
+        assertEquals(false, SocialLookups.roomUserProfileAction(0L, 61L,
+            new RoomDao(MySQL.configuredDatabase())).hasPayload());
         handlingSends.clear();
         handlingSql.clear();
-        String badgeInventoryPayload = Handling.Proc_6_193_7D2BB0(4);
+        String badgeInventoryPayload = Handling.sendBadgeInventory(4, "B]", "B]");
         assertEquals(SocialPayloads.badgeInventory(
                 List.of(new BadgeRow("ACH1", 0L, 201L), new BadgeRow("MOD", 0L, 202L)),
-                SocialPayloads.equippedBadges(List.of(new BadgeRow("VIP", 1L, 203L)))),
+                List.of(new BadgeRow("VIP", 1L, 203L))),
             badgeInventoryPayload);
         assertEquals(true, containsSend(handlingSends, "Ce"));
         assertEquals(true, containsSend(handlingSends, "Cd"));
         handlingSends.clear();
         String badgeUpdateWire = "B^" + wireLong(1) + wireString("VIP")
             + wireLong(0) + wireLong(0) + wireLong(0) + wireLong(0);
-        String updatedBadgesPayload = Handling.Proc_6_194_7D3180(4, badgeUpdateWire);
+        String updatedBadgesPayload = Handling.updateEquippedBadges(4, "B^", badgeUpdateWire);
         assertEquals(SocialPayloads.equippedBadges(List.of(new BadgeRow("VIP", 1L, 203L))), updatedBadgesPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE users_badges SET id_slot='0' WHERE id_user='77'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users_badges SET id_slot='1' WHERE id_badge='VIP' AND id_user='77'"));
         assertEquals(true, containsSend(handlingSends, "Cd"));
+        SocialLookups.BadgeUpdateResult badgeUpdateResult =
+            SocialLookups.updateEquippedBadges("77", SocialWire.badgeUpdateSelections(badgeUpdateWire),
+                new UserDao(MySQL.configuredDatabase()));
+        assertEquals(SocialPayloads.equippedBadges(List.of(new BadgeRow("VIP", 1L, 203L))),
+            badgeUpdateResult.equippedPayload());
+        assertEquals(true, badgeUpdateResult.displayPayload().contains("Cd"));
+        assertEquals(false, SocialLookups.updateEquippedBadges("0", SocialWire.badgeUpdateSelections(badgeUpdateWire),
+            new UserDao(MySQL.configuredDatabase())).hasDisplayPayload());
         handlingSends.clear();
-        assertEquals(SocialPayloads.equippedBadges(List.of(new BadgeRow("VIP", 1L, 203L))), Handling.Proc_6_195_7D38D0("77"));
-        assertEquals(SocialPayloads.tags(List.of("alpha", "beta")), Handling.Proc_6_196_7D3ED0("77"));
-        String tagDisplay = Handling.Proc_6_191_7D18B0(4, "DG" + wireLong(88));
-        assertEquals(SocialPayloads.tagDisplay(88, SocialPayloads.tags(List.of("target"))), tagDisplay);
+        UserDao socialUsers = new UserDao(MySQL.configuredDatabase());
+        assertEquals(SocialPayloads.equippedBadges(List.of(new BadgeRow("VIP", 1L, 203L))),
+            SocialLookups.equippedBadgePayload("77", socialUsers));
+        assertEquals(SocialPayloads.tags(List.of(new UserDao.UserTagRow("alpha"), new UserDao.UserTagRow("beta"))),
+            SocialLookups.tagPayload("77", socialUsers));
+        SocialLookups.DirectPayload tagAction =
+            SocialLookups.tagDisplayAction("77", 9L, "DG" + wireLong(88), socialUsers);
+        assertEquals(true, tagAction.hasPayload());
+        assertEquals(SocialPayloads.tagDisplay(88, List.of(new UserDao.UserTagRow("target"))),
+            tagAction.payload());
+        assertEquals(false, SocialLookups.tagDisplayAction("0", 9L, "DG" + wireLong(88), socialUsers).hasPayload());
+        String tagDisplay = Handling.sendUserTags(4, "DG", "DG" + wireLong(88));
+        assertEquals(SocialPayloads.tagDisplay(88, List.of(new UserDao.UserTagRow("target"))),
+            tagDisplay);
         assertEquals(true, containsSend(handlingSends, "E^"));
         assertEquals(true, containsSend(handlingSends, "target"));
         handlingSends.clear();
-        String lookToBadgePayload = Handling.Proc_6_192_7D1B80(4, "B_" + wireLong(61));
-        assertEquals(SocialPayloads.badgeDisplay(88, SocialPayloads.equippedBadges(List.of())), lookToBadgePayload);
+        String lookToBadgePayload = Handling.lookAtRoomUserBadge(4, "B_", "B_" + wireLong(61));
+        assertEquals(SocialPayloads.badgeDisplay(88, List.of()), lookToBadgePayload);
         assertEquals(true, containsSend(handlingSends, "Cd"));
+        RoomUserTargetRow badgeTarget = RoomLookups.activeRoomUserTarget(
+            9L, 61L, new RoomDao(MySQL.configuredDatabase())).orElse(null);
+        SocialLookups.RoomUserBadgeLook badgeLook =
+            SocialLookups.roomUserBadgeLookAction(4L, badgeTarget, new UserDao(MySQL.configuredDatabase()));
+        assertEquals(true, badgeLook.hasDirectPayload());
+        assertEquals(lookToBadgePayload, badgeLook.directPayload());
+        assertEquals(true, badgeLook.statusPayloads().hasCallerPayload());
+        assertEquals(true, badgeLook.statusPayloads().hasTargetPayload());
+        assertEquals(false, SocialLookups.roomUserBadgeLookAction(0L, badgeTarget,
+            new UserDao(MySQL.configuredDatabase())).hasDirectPayload());
         handlingSends.clear();
-        Licence.global_00829310 = RepresentedRoomCache.fromLegacy("")
-            .moveOccupant(4, 4, 1, 1, 0, 0).cacheText();
-        Handling.Proc_6_197_7D43C0(4, "AK" + wireLong(3) + wireLong(3));
-        RepresentedRoomCache.Position lookPosition = RepresentedRoomCache.fromLegacy(Licence.representedRooms())
-            .movementPosition(4, 4);
-        assertEquals(true, lookPosition.found);
-        assertEquals(1L, lookPosition.positionX);
-        assertEquals(1L, lookPosition.positionY);
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "4\t1\t1\t3\t0\2"));
-        Handling.Proc_6_198_7D4B70(4, "AO" + wireLong(4) + wireLong(4));
-        RepresentedRoomCache.Position walkPosition = RepresentedRoomCache.fromLegacy(Licence.representedRooms())
-            .movementPosition(4, 4);
-        assertEquals(true, walkPosition.found);
-        assertEquals(2L, walkPosition.positionX);
-        assertEquals(2L, walkPosition.positionY);
-        assertEquals(true, Licence.representedRooms().cacheText().contains("\1" + "4\t2\t2\t3\t1\2"));
-        Licence.global_00829310 = "";
+        RoomState.instance().setRepresentedRooms(RepresentedRoomCache.fromCacheText("")
+            .moveOccupant(4, 4, 1, 1, 0, 0));
+        Handling.lookTowardRoomPosition(4, "AK", "AK" + wireLong(3) + wireLong(3));
+        RepresentedRoomCache.Position lookPosition = RoomState.instance().representedRooms().movementPosition(4, 4);
+        assertEquals(true, lookPosition.found());
+        assertEquals(1L, lookPosition.positionX());
+        assertEquals(1L, lookPosition.positionY());
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "4\t1\t1\t3\t0\2"));
+        Handling.walkTowardRoomPosition(4, "AO", "AO" + wireLong(4) + wireLong(4));
+        RepresentedRoomCache.Position walkPosition = RoomState.instance().representedRooms().movementPosition(4, 4);
+        assertEquals(true, walkPosition.found());
+        assertEquals(2L, walkPosition.positionX());
+        assertEquals(2L, walkPosition.positionY());
+        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "4\t2\t2\t3\t1\2"));
+        RoomState.instance().setRepresentedRooms(RepresentedRoomCache.empty());
         handlingSql.clear();
-        Handling.Proc_6_199_7D54E0(4, "Ck" + wireLong(7));
+        PollDao livePollDao = new PollDao(MySQL.configuredDatabase());
+        SessionState.instance().setSessionRegistry(sessionRegistry(
+            new SessionRegistry.SessionRecord("1:4", "77\2" + "4"),
+            new SessionRegistry.SessionRecord("4", "0\2" + "9")));
+        PollLookups.RoomRequest pollRequest =
+            PollLookups.roomRequest(4, new UserDao(MySQL.configuredDatabase()), new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, pollRequest.valid());
+        assertEquals("77", pollRequest.userId());
+        assertEquals(9L, pollRequest.roomId());
+        long pollExitId = PollWire.idFromWire("Ck" + wireLong(7), "Ck");
+        assertEquals(true, PollLookups.recordExit("77", 9, pollExitId, livePollDao));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO poll_exit(id_user,id_poll) VALUES('77','7')"));
         handlingSql.clear();
-        Handling.Proc_6_200_7D5770(4, "Cl" + wireLong(7) + wireLong(8) + wireLong(4) + wireString("yes"));
+        assertEquals(true, PollLookups.submitAnswer(
+            "77",
+            9,
+            PollWire.answerFromWire("Cl" + wireLong(7) + wireLong(8) + wireLong(4) + wireString("yes"), "Cl"),
+            livePollDao));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO poll_results(id_poll,id_question,message_answer,id_user,timestamp) VALUES('7','8','yes','77',UNIX_TIMESTAMP())"));
         handlingSends.clear();
         PollDefinition livePoll = new PollDefinition(
@@ -4666,240 +5734,418 @@ public final class PortedModuleSmokeTest {
                 List.of(
                     new PollAnswerRow(1L, 8L, "Yes"),
                     new PollAnswerRow(2L, 8L, "No")))));
-        String livePollPayload = Handling.Proc_6_201_7D5AC0(4, "Cj" + wireLong(7));
+        String livePollPayload = PollLookups.livePollPayload(
+            "77",
+            9,
+            PollWire.idFromWire("Cj" + wireLong(7), "Cj"),
+            livePollDao);
         assertEquals(PollPayloads.poll(livePoll), livePollPayload);
-        assertEquals(true, containsSend(handlingSends, "D}"));
-        assertEquals(true, containsSend(handlingSends, "Question?"));
+        handlingSends.clear();
+        assertEquals(livePollPayload, Handling.sendLivePoll(4, "Cj", "Cj" + wireLong(7)));
+        assertEquals(true, containsSend(handlingSends, livePollPayload));
+        SessionState.instance().setSessionRegistry(SessionRegistry.empty());
         handlingSends.clear();
         handlingSql.clear();
-        String recyclerStatus = Handling.Proc_6_203_7D7F80(4);
+        String recyclerStatus = RecyclerLookups.statusPayload();
         assertEquals(RecyclerPayloads.status(1, 0), recyclerStatus);
-        assertEquals(true, containsSend(handlingSends, "G{"));
         handlingSends.clear();
         handlingSql.clear();
-        String recyclerSubmitPayload = Handling.Proc_6_202_7D6760(4,
-            "F^" + wireLong(5) + wireLong(1) + wireLong(2) + wireLong(3) + wireLong(4) + wireLong(5));
-        assertEquals(RecyclerPayloads.reward(506), recyclerSubmitPayload);
+        RecyclerLookups.SubmitResult recyclerSubmitResult = RecyclerLookups.submitItems(
+            "77",
+            RecyclerWire.selectionFromWire("F^" + wireLong(5) + wireLong(1) + wireLong(2)
+                + wireLong(3) + wireLong(4) + wireLong(5)),
+            RecyclerState.instance().settings(),
+            new FurnitureDao(MySQL.configuredDatabase()),
+            new CatalogDao(MySQL.configuredDatabase()),
+            new RecyclerDao(MySQL.configuredDatabase()));
+        assertEquals(RecyclerPayloads.reward(506), recyclerSubmitResult.rewardPayload());
+        assertEquals(List.of(1L, 2L, 3L, 4L, 5L), recyclerSubmitResult.removedFurnitureIds());
+        assertEquals(List.of(
+            InventoryMessagePayloads.remove(1),
+            InventoryMessagePayloads.remove(2),
+            InventoryMessagePayloads.remove(3),
+            InventoryMessagePayloads.remove(4),
+            InventoryMessagePayloads.remove(5),
+            RecyclerPayloads.reward(506)), recyclerSubmitResult.deliveryPayloads());
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='"));
         assertEquals(true, containsSql(handlingSql, "id_owner='77',id_destination='81' WHERE id_owner='77' AND id_product='508'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner=NULL WHERE id_owner='77' AND id_room IS NULL AND id IN ('1','2','3','4','5')"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO logs_recycler(id_user,timestamp,items,id_reward,id_session) VALUES('77',UNIX_TIMESTAMP(),'1,2,3,4,5','506','0')"));
-        assertEquals(true, containsSend(handlingSends, "Ac"));
-        assertEquals(true, containsSend(handlingSends, "G|"));
         handlingSends.clear();
         handlingSql.clear();
-        String achievementReward = Handling.Proc_6_204_7D82E0(4, 0, 3);
+        AchievementRewardGrant achievementGrant = AchievementLookups.grantReward(
+            "77", 0, 3, AchievementState.instance().settings(), new UserDao(MySQL.configuredDatabase()));
+        String achievementReward = achievementGrant.rewardPayload();
         AchievementSettings.Achievement liveAchievement = new AchievementSettings.Achievement(
             2L, "ACH_", 10L, 5L, 3L, 7L, 2L);
-        assertEquals(Handling.achievementRewardPayload(0, liveAchievement, 3, 204), achievementReward);
+        assertEquals(AchievementPayloads.reward(0, liveAchievement, 3, 204), achievementReward);
         assertEquals(true, containsSql(handlingSql, "DELETE FROM users_badges WHERE id_user='77' AND id_badge LIKE 'ACH_%' LIMIT 1"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO users_badges(id_user,id_badge) VALUES('77','ACH_3')"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_2=activitypoints_2+5,achievement_score=achievement_score+7 WHERE id='77'"));
-        assertEquals(true, containsSend(handlingSends, "Fu"));
-        assertEquals(true, containsSend(handlingSends, "Fv"));
+        assertEquals(true, achievementGrant.awardPayload().startsWith("Fv"));
+        assertEquals(List.of(achievementGrant.rewardPayload(), achievementGrant.awardPayload()),
+            achievementGrant.deliveryPayloads());
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_205_7D9780(4, 2);
-        assertEquals(true, containsSend(handlingSends, "Fu"));
+        AchievementRewardGrant progressedAchievementGrant = AchievementLookups.advanceProgress(
+            "77", 2, AchievementState.instance().settings(), new UserDao(MySQL.configuredDatabase()));
+        assertEquals(true, progressedAchievementGrant.rewardPayload().startsWith("Fu"));
+        assertEquals(progressedAchievementGrant.rewardPayload(),
+            progressedAchievementGrant.deliveryPayloads().get(0));
         handlingSql.clear();
         handlingSends.clear();
-        String respectPayload = Handling.Proc_6_76_726CE0(4, "Es" + wireLong(88));
+        String respectLookupPayload = SocialLookups.giveRespectPayload(
+            "77", "88", new UserDao(MySQL.configuredDatabase()));
+        assertEquals(UserPayloads.respectReceived(88, 12), respectLookupPayload);
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_amount=respect_amount-1,respect_given=respect_given+1 WHERE id='77'"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_received=respect_received+1 WHERE id='88'"));
+        handlingSql.clear();
+        String respectPayload = Handling.giveRespect(4, "Es", "Es" + wireLong(88));
         assertEquals(UserPayloads.respectReceived(88, 12), respectPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_amount=respect_amount-1,respect_given=respect_given+1 WHERE id='77'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_received=respect_received+1 WHERE id='88'"));
         assertEquals(true, containsSend(handlingSends, "Fx"));
         handlingSends.clear();
-        String achievementListPayload = Handling.Proc_6_206_7DA450(4);
+        String achievementListPayload = AchievementLookups.listPayload(
+            "77", AchievementState.instance().settings(), new UserDao(MySQL.configuredDatabase()));
         Map<String, Long> liveAchievementLevels = new HashMap<>();
         liveAchievementLevels.put("ACH_", 2L);
-        assertEquals(Handling.achievementListPayload(List.of(liveAchievement), liveAchievementLevels), achievementListPayload);
-        assertEquals(true, containsSend(handlingSends, "Ft"));
+        assertEquals(AchievementPayloads.list(List.of(liveAchievement), liveAchievementLevels), achievementListPayload);
         handlingSends.clear();
-        assertEquals("", Handling.Proc_6_210_7E1DC0(4));
-        assertEquals("5;1;7;1;5;0;", Handling.Proc_6_218_7EA200(1507));
+        assertEquals("5;1;7;1;5;0;", WiredPayloads.specialState(1507));
+        JukeboxDao liveJukebox = new JukeboxDao(MySQL.configuredDatabase());
         String liveSongInfoWire = "C]" + wireLong(2) + wireLong(50) + wireLong(51);
-        String liveSongInfoPayload = Handling.Proc_6_223_7EEDD0(4, liveSongInfoWire);
+        String liveSongInfoPayload = JukeboxLookups.songInfoPayload(
+            JukeboxRequests.songInfoFromWire(liveSongInfoWire), liveJukebox);
         assertEquals(JukeboxPayloads.songInfo(List.of(
                 new SongInfoRow("Song A", 3L, "Author A", "sound-a", 50L),
                 new SongInfoRow("Song B", 4L, "Author B", "sound-b", 51L))),
             liveSongInfoPayload);
-        assertEquals(true, containsSend(handlingSends, "Dl"));
-        assertEquals(true, containsSend(handlingSends, "Song A"));
         handlingSends.clear();
-        Licence.global_008291FC = "\1" + "300\2\1" + "40\2\1" + "999\2";
-        Handling.Proc_6_224_7EF5A0(4);
-        assertEquals("\1" + "999\2", Licence.global_008291FC);
+        RoomState.instance().setFurnitureRoomCache(FurnitureRoomCache.State.from(
+            RoomState.instance().furnitureRoomCache().pendingRoomCache,
+            "\1" + "300\2\1" + "40\2\1" + "999\2",
+            RoomState.instance().representedRooms()));
+        RoomState.instance().setFurnitureRoomCache(JukeboxLookups.clearSoundMarkers(
+            RoomState.instance().furnitureRoomCache(), 9, 0, liveJukebox));
+        assertEquals("\1" + "999\2", RoomState.instance().furnitureRoomCache().pendingFurnitureCache);
         handlingSql.clear();
         handlingSends.clear();
-        String addDiskPayload = Handling.Proc_6_225_7EFBD0(4, "C" + '\177' + wireLong(4) + wireLong(1));
-        assertEquals(Crypto.Proc_3_0_6D2AF0(4, null, "Ac"), addDiskPayload);
+        SessionState.instance().setSessionRegistry(sessionRegistry(
+            new SessionRegistry.SessionRecord("1:4", "77\2" + "4"),
+            new SessionRegistry.SessionRecord("4", "0\2" + "9")));
+        JukeboxLookups.RoomRequest jukeboxRequest =
+            JukeboxLookups.roomRequest(4, new UserDao(MySQL.configuredDatabase()), new RoomDao(MySQL.configuredDatabase()));
+        assertEquals(true, jukeboxRequest.validUser());
+        assertEquals(true, jukeboxRequest.validRoom());
+        assertEquals("77", jukeboxRequest.userId());
+        assertEquals(9L, jukeboxRequest.roomId());
+        JukeboxLookups.DiskChangeResult addDiskAction =
+            JukeboxLookups.addDiskAction(jukeboxRequest,
+                JukeboxRequests.addRequestFromWire("C" + '\177' + wireLong(4) + wireLong(1)), liveJukebox);
+        assertEquals(true, addDiskAction.valid());
+        String addDiskPayload = addDiskAction.payload();
+        assertEquals(encodedVl64(4, null, "Ac"), addDiskPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner=NULL WHERE id_owner='77' AND id='4' AND id_product='700' LIMIT 1"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO soundmachine_jb_playlist(id_jukebox,id_cd,id_order,id_destination) VALUES('300','4','1','50')"));
-        assertEquals(true, containsSend(handlingSends, "Ac"));
-        assertEquals(true, containsSend(handlingSends, "EN"));
-        assertEquals(true, containsSend(handlingSends, "EM"));
+        assertEquals(addDiskPayload, addDiskAction.deliveryPayloads().get(0));
+        assertEquals(3, addDiskAction.deliveryPayloads().size());
         handlingSql.clear();
         handlingSends.clear();
-        Handling.Proc_6_226_7F0B20(4, "D@" + wireLong(0));
+        JukeboxLookups.DiskChangeResult removeDiskAction =
+            JukeboxLookups.removeDiskAction(jukeboxRequest,
+                JukeboxRequests.removeOrderFromWire("D@" + wireLong(0)), liveJukebox);
+        assertEquals(true, removeDiskAction.valid());
+        assertEquals(2, removeDiskAction.deliveryPayloads().size());
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner='77' WHERE id='4' AND id_product='700' LIMIT 1"));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM soundmachine_jb_playlist WHERE id_jukebox='300' AND id_cd='4' LIMIT 1"));
         assertEquals(true, containsSql(handlingSql, "UPDATE soundmachine_jb_playlist SET id_order=id_order-1 WHERE id_jukebox='300' AND id_order>'0'"));
-        assertEquals(true, containsSend(handlingSends, "EN"));
-        assertEquals(true, containsSend(handlingSends, "EM"));
         handlingSends.clear();
-        String playlistPayload = Handling.Proc_6_227_7F2400(4);
+        String playlistPayload = JukeboxLookups.playlistPayload(jukeboxRequest, liveJukebox);
         assertEquals(JukeboxPayloads.playlist(5, List.of(
             new JukeboxPlaylistEntry(2L, 40L),
             new JukeboxPlaylistEntry(3L, 41L))), playlistPayload);
-        assertEquals(true, containsSend(handlingSends, "EN"));
         handlingSends.clear();
-        String diskInventoryPayload = Handling.Proc_6_228_7F2AF0(4);
+        String diskInventoryPayload = JukeboxLookups.diskInventoryPayload(jukeboxRequest, liveJukebox);
         assertEquals(JukeboxPayloads.diskInventory(List.of(
             new SongDiskRow(4L, 50L),
             new SongDiskRow(5L, 51L))), diskInventoryPayload);
-        assertEquals(true, containsSend(handlingSends, "EM"));
         handlingSends.clear();
-        String playbackPayload = Handling.Proc_6_229_7F3070(4);
+        String playbackPayload = JukeboxLookups.playbackPayload(9, 0, System.currentTimeMillis() / 1000L, liveJukebox);
         assertEquals(true, playbackPayload.startsWith("EG"));
-        assertEquals(true, containsSend(handlingSends, "EG"));
+        SessionState.instance().setSessionRegistry(SessionRegistry.empty());
         handlingSends.clear();
         handlingSql.clear();
-        String mottoPayload = Handling.Proc_6_230_7F3D20(4, "Gd" + wireString("New motto"));
+        SessionState.instance().setSessionRegistry(sessionRegistry(
+            new SessionRegistry.SessionRecord("1:4", "77\2" + "4")));
+        UserLookups.UserRequest userRequest =
+            UserLookups.userRequest(4, new UserDao(MySQL.configuredDatabase()));
+        assertEquals(true, userRequest.valid());
+        assertEquals("77", userRequest.userId());
+        String mottoPayload = UserLookups.updateMottoPayload(
+            userRequest, UserWire.mottoRequest("Gd" + wireString("New motto")), new UserDao(MySQL.configuredDatabase()));
         assertEquals(UserPayloads.identityRefresh(77, "New motto", "hd-180-1", "M"), mottoPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET motto='New motto' WHERE id='77'"));
-        assertEquals(true, containsSend(handlingSends, "DJ"));
-        assertEquals(true, containsSend(handlingSends, "New motto"));
+        SessionState.instance().setSessionRegistry(SessionRegistry.empty());
         handlingSends.clear();
-        Handling.Proc_6_231_7F4510(4);
+        Handling.sendGuideInvitation(4, "oD", "oD");
         assertEquals(true, containsSend(handlingSends, "IcIQA"));
         handlingSends.clear();
         handlingSql.clear();
-        String liveQuestRows = "10\t1\tFirst\t\t5\t2\tvisit\t0\t7\t3\t30\r11\t2\tSecond\t\t6\t2\tvisit\t0\t7\t4\t0";
-        Licence.global_00829080 = liveQuestRows;
-        assertEquals(liveQuestRows, Licence.questSettings().rows());
-        Licence.setQuestDefinitions(List.of(
+        List<QuestSettings.QuestDefinitionRow> liveQuestDefinitions = List.of(
             new QuestSettings.QuestDefinitionRow(10L, 1L, "First", "", 5L, 2L, "visit", 0L, 7L, 3L, 30L, 11),
-            new QuestSettings.QuestDefinitionRow(11L, 2L, "Second", "", 6L, 2L, "visit", 0L, 7L, 4L, 0L, 11)));
-        assertEquals(true, Licence.global_00829080 instanceof QuestSettings);
-        assertEquals(liveQuestRows, Licence.questSettings().rows());
-        String questListPayload = Handling.Proc_6_236_7F8540(4);
-        assertEquals(QuestPayloads.list(Licence.questSettings(), List.of(
-            new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "0", 1L, 0L, 7))), questListPayload);
+            new QuestSettings.QuestDefinitionRow(11L, 2L, "Second", "", 6L, 2L, "visit", 0L, 7L, 4L, 0L, 11));
+        QuestState.instance().setSettings(QuestSettings.fromDefinitions(liveQuestDefinitions));
+        assertEquals(liveQuestDefinitions, QuestState.instance().settings().definitions());
+        assertEquals(liveQuestDefinitions, QuestState.instance().settings().definitions());
+        assertEquals(QuestPayloads.list(QuestState.instance().settings(), List.of(
+                new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "0", 1L, 0L, 7))),
+            QuestProgress.listPayload("77", QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase())));
+        String questListPayload = Handling.sendQuestList(4, "p]", "p]");
+        assertEquals(QuestPayloads.list(QuestState.instance().settings(), List.of(
+                new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "0", 1L, 0L, 7))),
+            questListPayload);
         assertEquals(true, containsSend(handlingSends, "L`"));
         handlingSends.clear();
-        Handling.Proc_6_234_7F75C0(4);
+        handlingSql.clear();
+        QuestResetResult resetResult = QuestProgress.resetQuests(
+            "77", QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase()));
+        assertEquals(true, resetResult.reset());
+        assertEquals("Lc", resetResult.deliveryPayloads().get(0));
+        assertEquals(2, resetResult.deliveryPayloads().size());
+        assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET timestamp_done=NULL,timestamp_accepted=NULL WHERE id_user='77' LIMIT 50"));
+        handlingSends.clear();
+        handlingSql.clear();
+        Handling.resetQuests(4);
         assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET timestamp_done=NULL,timestamp_accepted=NULL WHERE id_user='77' LIMIT 50"));
         assertEquals(true, containsSend(handlingSends, "Lc"));
         assertEquals(true, containsSend(handlingSends, "L`"));
         handlingSends.clear();
         handlingSql.clear();
-        Handling.Proc_6_232_7F45A0(4, "p^" + wireLong(10));
+        QuestAcceptResult questAcceptResult = QuestProgress.acceptQuest(
+            "77", 10, QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase()));
+        assertEquals(true, questAcceptResult.accepted());
+        assertEquals(10L, questAcceptResult.questId());
+        assertEquals(10L, questAcceptResult.numericQuestId());
+        assertEquals(false, questAcceptResult.complete());
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO users_quests(id_user,id_quest,id_level,id_numericquest,timestamp_accepted) VALUES('77','10','0','10',UNIX_TIMESTAMP())"));
+        assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL 30 SECOND) WHERE id_user='77' AND id_quest='10' LIMIT 1"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Handling.acceptQuest(4, "p^", "p^" + wireLong(10));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO users_quests(id_user,id_quest,id_level,id_numericquest,timestamp_accepted) VALUES('77','10','0','10',UNIX_TIMESTAMP())"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL 30 SECOND) WHERE id_user='77' AND id_quest='10' LIMIT 1"));
         assertEquals(true, containsSend(handlingSends, "L`"));
         handlingSends.clear();
         handlingSql.clear();
-        Handling.Proc_6_233_7F5D60(4);
+        assertEquals(11L, QuestProgress.nextQuestIdForUser(
+            "77", QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase())));
+        Handling.autoAcceptNextQuest(4, "pc", "pc");
         assertEquals(true, containsSql(handlingSql, "id_numericquest='11'"));
         assertEquals(true, containsSend(handlingSends, "L`"));
         handlingSends.clear();
         handlingSql.clear();
-        Handling.Proc_6_235_7F77E0(4);
+        QuestProgressDecision refreshedQuestDecision = QuestProgress.refreshDecision(
+            "77", QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase()));
+        assertEquals(true, refreshedQuestDecision.shouldScheduleWait());
+        assertEquals(true, refreshedQuestDecision.shouldSendList());
+        assertEquals(10L, refreshedQuestDecision.questId());
+        assertEquals(10L, refreshedQuestDecision.numericQuestId());
+        assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL 30 SECOND) WHERE id_user='77' AND id_quest='10' LIMIT 1"));
+        handlingSql.clear();
+        handlingSends.clear();
+        Handling.refreshQuestProgress(4);
         assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL 30 SECOND) WHERE id_user='77' AND id_quest='10' LIMIT 1"));
         assertEquals(true, containsSend(handlingSends, "L`"));
         handlingSends.clear();
         handlingSql.clear();
-        Handling.Proc_6_164_7BC820(4, 10, 10);
+        Handling.completeQuest(4, 10, 10);
         assertEquals(true, containsSend(handlingSends, "Lb"));
         assertEquals(true, containsSend(handlingSends, "La"));
         assertEquals(true, containsSend(handlingSends, "Fv"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_2=activitypoints_2+5 WHERE id='77' LIMIT 1"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET id_level=id_level+1,progress='0',id_numericquest='0',timestamp_done=UNIX_TIMESTAMP() WHERE id_user='77' AND id_quest='10' LIMIT 1"));
-        Licence.global_00829080 = "";
+        QuestState.instance().setSettings(QuestSettings.empty());
         handlingSends.clear();
         handlingSql.clear();
-        String ownProfilePayload = Handling.Proc_6_237_7F9ED0(4);
+        SessionState.instance().setSessionRegistry(sessionRegistry(
+            new SessionRegistry.SessionRecord("1:4", "77\2" + "4")));
+        UserLookups.UserRequest ownProfileRequest =
+            UserLookups.userRequest(4, new UserDao(MySQL.configuredDatabase()));
+        String ownProfilePayload = UserLookups.ownProfilePayload(
+            ownProfileRequest, new UserDao(MySQL.configuredDatabase()));
         assertEquals(UserPayloads.ownProfile(new OwnProfileRow(77L, "Caller", "Motto", "M", 4L, 2L)),
             ownProfilePayload);
-        assertEquals(true, containsSend(handlingSends, "@E77"));
+        SessionState.instance().setSessionRegistry(SessionRegistry.empty());
         handlingSends.clear();
-        String pointAwardPayload = Handling.Proc_6_238_7FA670(4);
-        assertEquals(UserPayloads.activityPointAward(0, 75), pointAwardPayload);
+        UserActivityPoints.AwardBatch pointAwardBatch = UserActivityPoints.timedActivityPointAwardBatch(
+            4, "77", AppConfigState.instance().settingsCache(), new UserDao(MySQL.configuredDatabase()));
+        assertEquals(UserPayloads.activityPointAward(0, 75), pointAwardBatch.payload());
+        assertEquals(List.of(UserPayloads.activityPointAward(0, 75)), pointAwardBatch.deliveryPayloads());
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_0=activitypoints_0+5 WHERE id='77'"));
-        assertEquals(true, containsSend(handlingSends, "Fv"));
         handlingSends.clear();
-        Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
-        assertEquals(8, Handling.representedInteractionPartner(4));
-        assertEquals(4, Handling.representedInteractionPartner(8));
+        TradeInteractionRequestAction requestAction = TradeLookups.requestInteractionAction(
+            4,
+            "77",
+            9,
+            61,
+            new RoomDao(MySQL.configuredDatabase()),
+            TradeState.instance(),
+            userId -> userId == 88L ? 8 : 0);
+        assertEquals(true, requestAction.valid());
+        assertEquals(8L, requestAction.targetSocketIndex());
+        assertEquals(true, requestAction.sourcePayload().contains("Ah"));
+        assertEquals(true, requestAction.targetPayload().contains("Ah"));
+        TradeState.instance().removeInteractionPair(4);
+        TradeState.instance().removeInteractionPair(8);
+        Handling.requestInteraction(4, "AG", "AG" + wireLong(61));
+        assertEquals(8, TradeState.instance().interactionPartner(4));
+        assertEquals(4, TradeState.instance().interactionPartner(8));
         assertEquals(true, containsSend(handlingSends, "Ah"));
         assertEquals(true, containsSend(handlingSends, "8:DATA"));
         handlingSends.clear();
-        Handling.Proc_6_90_742E80(4);
+        TradeInteractionStateAction stateAction = TradeLookups.interactionStateAction(
+            4, 61, 0, false, 0, TradeState.instance());
+        assertEquals(true, stateAction.valid());
+        assertEquals(8L, stateAction.targetSocketIndex());
+        assertEquals(1L, stateAction.interactionState());
+        assertEquals(true, stateAction.sourcePayload().contains("Am"));
+        assertEquals(true, stateAction.targetPayload().contains("Am"));
+        assertEquals("Ao", stateAction.completionPayload());
+        Handling.sendInteractionState(4, 0, null);
         assertEquals(true, containsSend(handlingSends, "Am"));
         assertEquals(true, containsSend(handlingSends, "Ao"));
         handlingSends.clear();
-        String carriedTradePayload = Handling.Proc_6_91_743480(4, "FU" + wireLong(76));
+        TradeState.instance().removeInteractionPair(4);
+        TradeState.instance().removeInteractionPair(8);
+        TradeState.instance().storeInteractionPair(4, 8, 1);
+        TradeOfferAction tradeOfferAction = TradeLookups.addOfferAction(
+            4,
+            8,
+            "77",
+            "88",
+            76,
+            TradeState.instance(),
+            new FurnitureDao(MySQL.configuredDatabase()));
+        assertEquals(true, tradeOfferAction.sourcePayload().contains("Trade Chair"));
+        assertEquals(true, tradeOfferAction.targetPayload().contains("Trade Chair"));
+        TradeState.instance().removeInteractionPair(4);
+        TradeState.instance().removeInteractionPair(8);
+        Handling.requestInteraction(4, "AG", "AG" + wireLong(61));
+        String carriedTradePayload = Handling.addTradeFurniture(4, "FU", "FU" + wireLong(76));
         assertEquals(true, carriedTradePayload.contains("Al"));
         assertEquals(true, carriedTradePayload.contains("Trade Chair"));
         assertEquals(true, containsSend(handlingSends, "Al"));
         assertEquals(true, containsSend(handlingSends, "8:DATA"));
         handlingSends.clear();
-        String removedTradePayload = Handling.Proc_6_92_744870(4, "AH" + wireLong(76));
+        String removedTradePayload = Handling.removeTradeFurniture(4, "AH", "AH" + wireLong(76));
         assertEquals(true, removedTradePayload.contains("Al"));
         assertEquals(false, removedTradePayload.contains("Trade Chair"));
         assertEquals(true, containsSend(handlingSends, "Al"));
         handlingSends.clear();
         handlingSql.clear();
-        Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
-        Handling.Proc_6_91_743480(4, "FU" + wireLong(76));
-        Handling.Proc_6_91_743480(8, "FU" + wireLong(86));
+        Handling.requestInteraction(4, "AG", "AG" + wireLong(61));
+        Handling.addTradeFurniture(4, "FU", "FU" + wireLong(76));
+        Handling.addTradeFurniture(8, "FU", "FU" + wireLong(86));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals("Ap", Handling.Proc_6_89_73EA10(4));
+        TradeConfirmation tradeConfirmation = TradeLookups.confirmTradeAction(
+            4,
+            "77",
+            "88",
+            9,
+            "session-77",
+            TradeState.instance(),
+            new TradeDao(MySQL.configuredDatabase()));
+        assertEquals(true, tradeConfirmation.valid());
+        assertEquals("Ap", tradeConfirmation.payload());
+        assertEquals(8L, tradeConfirmation.targetSocketIndex());
+        assertEquals(true, containsSql(handlingSql, "INSERT INTO logs_trading(id_user,id_partner,items_user,items_partner,id_room,timestamp,id_session) VALUES('77','88','76:506','86:506','9',UNIX_TIMESTAMP(),'session-77')"));
+        assertEquals(0, TradeState.instance().interactionPartner(4));
+        handlingSql.clear();
+        Handling.requestInteraction(4, "AG", "AG" + wireLong(61));
+        Handling.addTradeFurniture(4, "FU", "FU" + wireLong(76));
+        Handling.addTradeFurniture(8, "FU", "FU" + wireLong(86));
+        handlingSends.clear();
+        handlingSql.clear();
+        assertEquals("Ap", Handling.confirmTrade(4, "FR", "FR"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner='88' WHERE id IN ('76') AND id_owner='77' AND id_room IS NULL"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner='77' WHERE id IN ('86') AND id_owner='88' AND id_room IS NULL"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO logs_trading(id_user,id_partner,items_user,items_partner,id_room,timestamp,id_session) VALUES('77','88','76:506','86:506','9',UNIX_TIMESTAMP(),'session-77')"));
         assertEquals(true, containsSend(handlingSends, "Ap"));
-        assertEquals(0, Handling.representedInteractionPartner(4));
+        assertEquals(0, TradeState.instance().interactionPartner(4));
         handlingSends.clear();
-        Handling.Proc_6_93_745D90(4, "AG" + wireLong(61));
+        TradeState.instance().storeInteractionPair(4, 8, 1);
+        TradeInteractionCloseAction closeAction = TradeLookups.closeInteractionAction(
+            4, 8, 9, 61, TradeState.instance());
+        assertEquals(true, closeAction.valid());
+        assertEquals(8L, closeAction.targetSocketIndex());
+        assertEquals(true, closeAction.payload().contains("An"));
+        assertEquals(0, TradeState.instance().interactionPartner(4));
+        Handling.requestInteraction(4, "AG", "AG" + wireLong(61));
         handlingSends.clear();
-        Handling.Proc_6_94_746990(4);
+        Handling.closeInteraction(4, 0);
         assertEquals(true, containsSend(handlingSends, "An"));
         assertEquals(true, containsSend(handlingSends, "8:DATA"));
-        assertEquals(0, Handling.representedInteractionPartner(4));
+        assertEquals(0, TradeState.instance().interactionPartner(4));
         handlingSql.clear();
-        Handling.Proc_6_242_7FF0D0(4);
+        Handling.clearSocketUser(4);
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET id_socket=null WHERE id = '77'"));
         MySQL.configureDatabaseConnection(null);
         MusConnectionManager.instance().configureSink(null);
         Guardian.setSocketConnected(4, false);
         Guardian.setSocketConnected(8, false);
-        DataManager.global_008292BC = originalProductCache;
-        Licence.global_008292BC = originalLicenceProductCache;
-        Licence.global_008292C0 = originalCatalogProductCache;
-        Licence.global_00829244 = originalRoomCategoryPayloads;
-        Licence.global_0082911C = originalRecommendedRooms;
-        Licence.global_00829128 = originalRecommendedRoomCount;
-        Licence.global_00829178 = originalHcGiftPayload;
-        Licence.global_0082917C = originalHcGiftLookup;
-        Licence.global_0082925C = originalGiftWrapLookup;
-        Licence.global_00829260 = originalGiftWrapPayload;
-        Licence.global_00829308 = originalCatalogPagePayloads;
-        Licence.global_00829140 = originalRecyclerProductLists;
-        Licence.global_0082915C = originalRecyclerChances;
-        Licence.global_00829168 = originalRecyclerGroupCount;
-        Licence.global_0082916C = originalRecyclerBoxProductId;
-        Functions.global_0082928C = originalSettingsCache;
-        Functions.applicationPath = originalApplicationPath.toString();
+        GameDataCaches.setProductCache(originalProductCache);
+        CatalogState.instance().setRegistry(originalCatalogRegistry);
+        NavigatorState.instance().setRoomCategoryCache(originalRoomCategoryCache);
+        NavigatorState.instance().setRecommendedRooms(originalRecommendedRooms);
+        CatalogState.instance().setGiftSettings(originalGiftSettings);
+        CatalogState.instance().setCatalogPages(originalCatalogPages);
+        RecyclerState.instance().setSettings(originalRecyclerSettings);
+        AppConfigState.instance().setSettingsCache(originalSettingsCache);
+        AppPaths.setApplicationPath(originalApplicationPath.toString());
+        });
+    }
+
+    @FunctionalInterface
+    private interface SmokeSection {
+        void run() throws Exception;
+    }
+
+    private static void run(SmokeSection section) throws Exception {
+        section.run();
+    }
+
+    private static AppSettingsCache settings(String... keyValuePairs) {
+        Map<String, String> settings = new HashMap<>();
+        for (int index = 0; index + 1 < keyValuePairs.length; index += 2) {
+            settings.put(keyValuePairs[index], keyValuePairs[index + 1]);
+        }
+        return AppSettingsCache.fromSettings(settings);
+    }
+
+    private static PermissionMatrix permissions(PermissionMatrix.PermissionPayload... payloads) {
+        return PermissionMatrix.fromPayloadRows(List.of(payloads));
     }
 
     private static String wireLong(long value) {
-        return Crypto.Proc_3_0_6D2AF0(value, null, "");
+        return encodedVl64(value, "");
+    }
+
+    private static String encodedVl64(Object value, Object ignored, String prefix) {
+        return encodedVl64(WireEncoding.parseLeadingLong(value), prefix);
+    }
+
+    private static String encodedVl64(long value, String prefix) {
+        return prefix + WireEncoding.encodeVl64(value);
     }
 
     private static void assertAppSettingsCache() {
-        AppSettingsCache parsedSettings = AppSettingsCache.fromLegacy("[server.port=1234][SERVER.PORT=5678]\r\nname=alpha");
+        Map<String, String> settingRows = new LinkedHashMap<>();
+        settingRows.put("server.port", "1234");
+        settingRows.put("SERVER.PORT", "5678");
+        settingRows.put("name", "alpha");
+        AppSettingsCache parsedSettings = AppSettingsCache.fromSettings(settingRows);
         assertEquals("1234", parsedSettings.value("SERVER.PORT"));
         assertEquals("alpha", parsedSettings.value("name"));
         AppSettingsCache typedSettings = AppSettingsCache.fromSettings(Map.of("Server.Port", "4321"));
@@ -4910,14 +6156,13 @@ public final class PortedModuleSmokeTest {
     }
 
     private static void assertPermissionMatrix() {
-        assertEquals(true, PermissionMatrix.fromLegacy(new String[]{"", "\2legacy_perm\2"})
-            .allows(1, "", "legacy_perm", 2));
-        String[][] permissionRows = new String[][]{{""}, {"", "\2hc_perm\2"}};
-        PermissionMatrix matrix = PermissionMatrix.fromRows(permissionRows);
-        permissionRows[1][1] = "";
-        assertEquals(true, matrix.allows(1, "", "hc_perm", 1));
-        String[][] copiedRows = matrix.rows();
-        copiedRows[1][1] = "";
+        assertEquals(true, PermissionMatrix.fromPayloadRows(List.of(
+                new PermissionMatrix.PermissionPayload(1L, 2L, "\2typed_perm\2")))
+            .allows(1, "", "typed_perm", 2));
+        List<PermissionMatrix.PermissionPayload> permissionRows = new ArrayList<>(List.of(
+            new PermissionMatrix.PermissionPayload(1L, 1L, "\2hc_perm\2")));
+        PermissionMatrix matrix = PermissionMatrix.fromPayloadRows(permissionRows);
+        permissionRows.set(0, new PermissionMatrix.PermissionPayload(1L, 1L, ""));
         assertEquals(true, matrix.allows(1, "", "hc_perm", 1));
     }
 
@@ -4927,41 +6172,37 @@ public final class PortedModuleSmokeTest {
     }
 
     private static void assertChatSettingsTypedAccessors(ChatSettings settings) {
-        assertEquals("badword", settings.filterRows());
-        assertEquals(":-)\t5", settings.gestureRows());
         assertEquals(List.of(new ChatSettings.FilterWord("badword")), settings.filterWords());
         assertEquals(List.of(new ChatSettings.Gesture(":-)", 5L)), settings.gestures());
+        ChatSettings typedSettings = ChatSettings.fromRows(
+            List.of(new ChatSettings.FilterWord("cacheword")),
+            List.of(new ChatSettings.Gesture(":cache", 6L)));
+        assertEquals(List.of(new ChatSettings.FilterWord("cacheword")), typedSettings.filterWords());
+        assertEquals(6L, typedSettings.gestureId("hello :cache", true));
     }
 
     private static void assertTypedGameServerSessionState(GameServerSessionState sessionState) {
-        assertEquals("[12]", sessionState.readySessionMarkers());
-        String previousQueuedPackets = Licence.global_00829350;
-        Object previousReadySessions = Licence.global_00829354;
-        Licence.setGameServerSessionState(sessionState);
-        assertEquals(true, Licence.global_00829354 instanceof Set);
-        assertEquals(Set.of(12L), Licence.gameServerSessionState().readySocketIndexes());
-        Licence.global_00829350 = previousQueuedPackets;
-        Licence.global_00829354 = previousReadySessions;
+        assertEquals(Set.of(12L), sessionState.readySocketIndexes());
+        GameServerSessionState previousSessionState = SessionState.instance().gameServerSession();
+        SessionState.instance().setGameServerSession(sessionState);
+        assertEquals(Set.of(12L), SessionState.instance().gameServerSession().readySocketIndexes());
+        SessionState.instance().setGameServerSession(previousSessionState);
     }
 
     private static void assertRoomPortalSettingsBootRows(RoomPortalSettings settings) {
-        assertEquals("00\t0\t0\t0\t0\t0\t0\r", settings.warpSpaceRows());
-        assertEquals("0\t0\r", settings.specialGateRows());
         assertEquals(List.of(new RoomDao.WarpSpaceRow(0L, 0L, 0L, 0L, 0L, 0L, 0L)), settings.warpSpaces());
         assertEquals(List.of(new RoomDao.SpecialGateRow(0L, 0L)), settings.specialGates());
     }
 
     private static void assertRoomPortalSettingsTypedRows(RoomPortalSettings settings) {
-        assertEquals("012\t1\t2\t34\t5\t6\t1\r", settings.warpSpaceRows());
-        assertEquals("12\t1\r", settings.specialGateRows());
         assertEquals(List.of(new RoomDao.WarpSpaceRow(12L, 1L, 2L, 34L, 5L, 6L, 1L)), settings.warpSpaces());
         assertEquals(List.of(new RoomDao.SpecialGateRow(12L, 1L)), settings.specialGates());
     }
 
     private static String expectedOfficialNavigatorRow(OfficialNavigatorItem item) {
-        String expected = Crypto.Proc_3_0_6D2AF0(item.typeId(), null, "")
-            + Crypto.Proc_3_0_6D2AF0(item.styleId(), null, "")
-            + Crypto.Proc_3_0_6D2AF0(item.iconId(), null, "");
+        String expected = encodedVl64(item.typeId(), null, "")
+            + encodedVl64(item.styleId(), null, "")
+            + encodedVl64(item.iconId(), null, "");
         expected += item.caption() + '\2' + item.captionTwo() + '\2'
             + item.captionThree() + '\2' + item.unusedSlot() + '\2'
             + item.roomId() + '\2' + item.roomName() + '\2'
@@ -4974,13 +6215,12 @@ public final class PortedModuleSmokeTest {
             + item.allowOtherPets() + '\2' + item.modelName() + '\2'
             + item.requiredFiles() + '\2' + item.modelVisitorsMax() + '\2';
         return expected
-            + Crypto.Proc_3_0_6D2AF0(item.parentId(), null, "")
-            + Crypto.Proc_3_0_6D2AF0(item.officialId(), null, "")
-            + Crypto.Proc_3_0_6D2AF0(item.requiredLevel(), null, "");
+            + encodedVl64(item.parentId(), null, "")
+            + encodedVl64(item.officialId(), null, "")
+            + encodedVl64(item.requiredLevel(), null, "");
     }
 
     private static void assertCatalogProductCounterRows(CatalogProductSettings settings) {
-        assertEquals("1\t2", settings.counterProductIds());
         assertEquals(List.of(1L, 2L), settings.counterProducts());
         assertEquals(List.of(new PackageDao.PackageRow(10L, "i", 20L, "")), settings.packages());
         assertEquals(List.of(new PackageDao.PetPackageRow(7L, 8L, 9L, "ffeeaa")), settings.petPackages());
@@ -4989,52 +6229,50 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, settings.containsCounterProduct(2L));
         CatalogProductSettings typedCounterProducts = CatalogProductSettings.fromCounterProductIds(
             List.of(4L, 5L), 0L, 0L, List.of(), List.of(), List.of());
-        assertEquals("4\t5", typedCounterProducts.counterProductIds());
         assertEquals(List.of(4L, 5L), typedCounterProducts.counterProducts());
-        Object previousCounterProducts = Licence.global_008290A0;
-        Licence.setCounterProductIds(List.of(6L, 7L));
-        assertEquals(true, Licence.global_008290A0 instanceof List);
-        assertEquals("6\t7", Licence.catalogProductSettings().counterProductIds());
-        assertEquals(List.of(6L, 7L), Licence.catalogProductSettings().counterProducts());
-        Licence.setCounterProductIds(previousCounterProducts);
-    }
-
-    private static void assertCatalogProductEntryBuilder() {
-        Object previousProducts = Licence.global_008292BC;
-        Licence.global_008292BC = "77\t9";
-        String[] legacyFields = new String[]{"51", "77", "12", "3", "sprite", "4", "0", "secondary", "1", "2"};
-        CatalogDao.CatalogPageProductRow row = new CatalogDao.CatalogPageProductRow(
-            51L, 77L, 12L, 3L, "sprite", 4L, 0L, "secondary", 1L, 2L);
-        assertEquals(Boot.buildCatalogProductEntry(legacyFields), Boot.buildCatalogProductEntry(row));
-        String legacyRows = String.join("\t", legacyFields);
-        assertEquals(Boot.buildCatalogProductPayload(1L, legacyRows), Boot.buildCatalogProductPayload(1L, List.of(row)));
-        Licence.global_008292BC = previousProducts;
+        CatalogProductSettings previousCounterProducts = CatalogState.instance().productSettings();
+        seedCatalogCounterProductIds(List.of(6L, 7L));
+        assertEquals(List.of(6L, 7L), CatalogState.instance().productSettings().counterProducts());
+        CatalogState.instance().setProductSettings(previousCounterProducts);
     }
 
     private static void assertCatalogPagePayloadBuilder() {
-        Object previousProducts = Licence.global_008292BC;
-        Licence.global_008292BC = "77\t9";
-        String[] pageFields = new String[]{
-            "3", "Page", "0", "0", "1", "template", "header", "special", "specialTemplate",
-            "text1", "", "text3", "", "", "", "", "", "", "", "", "link"
-        };
+        CatalogRegistry previousRegistry = CatalogState.instance().registry();
+        seedCatalogRegistryProductRows(List.of(productDaoRow(77, "0", "9")));
         CatalogDao.CatalogPageRow page = new CatalogDao.CatalogPageRow(
             3L, "Page", 0L, 0L, 1L, "template", "header", "special", "specialTemplate",
             "text1", "", "text3", "", "", "", "", "", "", "", "", "link", 0L);
-        String productRows = "51\t77\t12\t3\tsprite\t4\t0\tsecondary\t1\t2";
         CatalogDao.CatalogPageProductRow productRow = new CatalogDao.CatalogPageProductRow(
             51L, 77L, 12L, 3L, "sprite", 4L, 0L, "secondary", 1L, 2L);
-        assertEquals(Boot.buildCatalogPagePayload(pageFields, productRows),
-            Boot.buildCatalogPagePayload(page, List.of(productRow)));
-        Licence.global_008292BC = previousProducts;
+        String expectedPagePayload = "Page\2"
+            + encodedVl64(1, null, "")
+            + "template\2header\2special\2specialTemplate\2"
+            + encodedVl64(2, null, "")
+            + "text1\2text3\2"
+            + encodedVl64(1, null, "")
+            + "link\2"
+            + encodedVl64(1, null, "")
+            + encodedVl64(51, null, "")
+            + "sprite\2"
+            + encodedVl64(77, null, "")
+            + "i\2"
+            + encodedVl64(12, null, "")
+            + encodedVl64(3, null, "")
+            + encodedVl64(4, null, "")
+            + encodedVl64(1, null, "")
+            + "secondary\2"
+            + encodedVl64(1, null, "")
+            + encodedVl64(2, null, "");
+        assertEquals(expectedPagePayload, CatalogPageBootCache.buildCatalogPagePayload(page, List.of(productRow)));
+        CatalogState.instance().setRegistry(previousRegistry);
     }
 
-    private static void assertGiftSettingsTypedAccessors(GiftSettings legacyGiftSettings) {
-        assertEquals(List.of(new GiftSettings.ClubGift(82L, 507L, 30L)), legacyGiftSettings.clubGifts());
-        assertEquals(507L, legacyGiftSettings.clubGiftByCatalogProductId(82L).productId());
-        assertEquals(List.of(501L, 502L), legacyGiftSettings.giftWrapProductIds());
-        assertEquals(true, legacyGiftSettings.containsGiftWrapProduct(502L));
-        assertEquals(false, legacyGiftSettings.containsGiftWrapProduct(50L));
+    private static void assertGiftSettingsTypedAccessors(GiftSettings giftSettings) {
+        assertEquals(List.of(new GiftSettings.ClubGift(82L, 507L, 30L)), giftSettings.clubGifts());
+        assertEquals(507L, giftSettings.clubGiftByCatalogProductId(82L).productId());
+        assertEquals(List.of(501L, 502L), giftSettings.giftWrapProductIds());
+        assertEquals(true, giftSettings.containsGiftWrapProduct(502L));
+        assertEquals(false, giftSettings.containsGiftWrapProduct(50L));
         GiftSettings typedGiftSettings = GiftSettings.fromRows("TYPED",
             List.of(new GiftSettings.ClubGift(83L, 508L, 40L)),
             List.of(601L, 0L, 602L, 601L),
@@ -5043,81 +6281,64 @@ public final class PortedModuleSmokeTest {
         assertEquals(List.of(new GiftSettings.ClubGift(83L, 508L, 40L)), typedGiftSettings.clubGifts());
         assertEquals(List.of(601L, 602L), typedGiftSettings.giftWrapProductIds());
         assertEquals(true, typedGiftSettings.containsGiftWrapProduct(602L));
-        Object previousGiftPayload = Licence.global_00829178;
-        Object previousGiftLookup = Licence.global_0082917C;
-        Licence.global_00829178 = typedGiftSettings;
-        assertEquals("TYPED", Licence.giftSettings().clubGiftPayload());
-        assertEquals(508L, Licence.giftSettings().clubGiftByCatalogProductId(83L).productId());
-        Licence.global_00829178 = previousGiftPayload;
-        Licence.global_0082917C = previousGiftLookup;
-        Licence.setGiftWrapState(List.of(701L, 0L, 702L), "TYPED-WRAPS");
-        assertEquals(List.of(701L, 0L, 702L), Licence.global_0082925C);
-        assertEquals("TYPED-WRAPS", Licence.giftSettings().giftWrapPayload());
-        assertEquals(List.of(701L, 702L), Licence.giftSettings().giftWrapProductIds());
+        GiftSettings previousGiftSettings = CatalogState.instance().giftSettings();
+        CatalogState.instance().setGiftSettings(typedGiftSettings);
+        assertEquals("TYPED", CatalogState.instance().giftSettings().clubGiftPayload());
+        assertEquals(508L, CatalogState.instance().giftSettings().clubGiftByCatalogProductId(83L).productId());
+        CatalogState.instance().setGiftSettings(previousGiftSettings);
+        CatalogState.instance().setGiftSettings(GiftSettings.fromRows(
+            CatalogState.instance().giftSettings().clubGiftPayload(),
+            CatalogState.instance().giftSettings().clubGifts(),
+            List.of(701L, 0L, 702L),
+            "TYPED-WRAPS"));
+        assertEquals("TYPED-WRAPS", CatalogState.instance().giftSettings().giftWrapPayload());
+        assertEquals(List.of(701L, 702L), CatalogState.instance().giftSettings().giftWrapProductIds());
     }
 
     private static void assertRecyclerCacheBuilders() {
-        Map<Long, String> recyclerProducts = new HashMap<>();
-        recyclerProducts.put(80L, "10\r0\r11");
-        recyclerProducts.put(20L, "12\rbad\r13");
-        Boot.RecyclerCache recyclerCache = Boot.buildRecyclerCache("80\r20", recyclerProducts);
-        assertEquals(2L, recyclerCache.groupCount);
-        assertEquals(80L, recyclerCache.chanceByGroupIndex.get(0L).longValue());
-        assertEquals("10\2" + "11\2", recyclerCache.productListByGroupIndex.get(0L));
-        assertEquals("12\2" + "13\2", recyclerCache.productListByGroupIndex.get(1L));
-        Boot.RecyclerCache typedRecyclerCache = Boot.buildRecyclerCache(List.of(
+        RecyclerBootCache.RecyclerCache recyclerCache = RecyclerBootCache.buildRecyclerCache(List.of(
             new RecyclerSettings.RewardGroup(80L, List.of(10L, 11L)),
             new RecyclerSettings.RewardGroup(20L, List.of(12L, 13L))));
-        assertEquals(recyclerCache.payload, typedRecyclerCache.payload);
-        assertEquals(List.of(10L, 11L), typedRecyclerCache.rewardGroups.get(0).productIds());
-        Object previousRecyclerProductLists = Licence.global_00829140;
-        Object previousRecyclerChances = Licence.global_0082915C;
-        long previousRecyclerGroupCount = Licence.global_00829168;
-        String previousRecyclerStatusPayload = Licence.global_0082912C;
-        long previousRecyclerBoxProductId = Licence.global_0082916C;
-        Licence.global_00829140 = new String[]{"10\2" + "11\2"};
-        Licence.global_0082915C = new String[]{"80"};
-        Licence.global_00829168 = 1L;
-        Licence.setRecyclerStatusPayload("LEGACY-STATUS");
-        Licence.setRecyclerBoxProductId(55L);
-        assertEquals(false, Licence.global_00829140 instanceof RecyclerSettings);
-        assertEquals("LEGACY-STATUS", Licence.recyclerSettings().statusPayload());
-        assertEquals(55L, Licence.recyclerSettings().boxProductId());
-        assertEquals(List.of(10L, 11L), Licence.recyclerSettings().rewardGroups().get(0).productIds());
-        Licence.global_00829140 = previousRecyclerProductLists;
-        Licence.global_0082915C = previousRecyclerChances;
-        Licence.global_00829168 = previousRecyclerGroupCount;
-        Licence.global_0082912C = previousRecyclerStatusPayload;
-        Licence.global_0082916C = previousRecyclerBoxProductId;
+        assertEquals(2L, recyclerCache.groupCount());
+        assertEquals(80L, recyclerCache.chanceByGroupIndex().get(0L).longValue());
+        assertEquals("10\2" + "11\2", recyclerCache.productListByGroupIndex().get(0L));
+        assertEquals("12\2" + "13\2", recyclerCache.productListByGroupIndex().get(1L));
+        assertEquals(List.of(10L, 11L), recyclerCache.rewardGroups().get(0).productIds());
+        RecyclerSettings previousRecyclerSettings = RecyclerState.instance().settings();
+        RecyclerState.instance().setSettings(RecyclerSettings.fromRewardGroups(
+            "LEGACY-STATUS",
+            List.of(new RecyclerSettings.RewardGroup(80L, List.of(10L, 11L))),
+            55L));
+        assertEquals("LEGACY-STATUS", RecyclerState.instance().settings().statusPayload());
+        assertEquals(55L, RecyclerState.instance().settings().boxProductId());
+        assertEquals(List.of(10L, 11L), RecyclerState.instance().settings().rewardGroups().get(0).productIds());
+        RecyclerState.instance().setSettings(previousRecyclerSettings);
         assertEquals(
-            Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(80, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(10, null, "")
-                + Crypto.Proc_3_0_6D2AF0(11, null, "")
-                + Crypto.Proc_3_0_6D2AF0(20, null, "")
-                + Crypto.Proc_3_0_6D2AF0(2, null, "")
-                + Crypto.Proc_3_0_6D2AF0(12, null, "")
-                + Crypto.Proc_3_0_6D2AF0(13, null, ""),
-            recyclerCache.payload);
+            encodedVl64(2, null, "")
+                + encodedVl64(80, null, "")
+                + encodedVl64(2, null, "")
+                + encodedVl64(10, null, "")
+                + encodedVl64(11, null, "")
+                + encodedVl64(20, null, "")
+                + encodedVl64(2, null, "")
+                + encodedVl64(12, null, "")
+                + encodedVl64(13, null, ""),
+            recyclerCache.payload());
     }
 
     private static void assertRoomEventLocaleTypedBuilder() {
-        com.alphaseries.game.room.RoomEventLocales locales = Boot.buildRoomEventLocales(
+        RoomEventLocales locales = RoomEventBootCache.buildRoomEventLocales(
             List.of(new SettingsDao.LocaleRow("roomevent_type_5", "party")),
-            com.alphaseries.game.room.RoomEventLocales.fromLegacy("\0existing\1old"));
-        assertEquals("old", locales.field("existing", 0));
-        assertEquals("party", locales.field("5", 0));
+            RoomEventLocales.fromEntries(List.of(new RoomEventLocales.LocaleEntry("existing", List.of("old")))));
+        assertEquals(true, locales.entries().contains(new RoomEventLocales.LocaleEntry("existing", List.of("old"))));
+        assertEquals("party", locales.categoryName(5));
     }
 
     private static void assertRecommendedRoomsPayloadMapBridge() {
-        Object previousRecommendedRooms = Licence.global_0082911C;
-        long previousRecommendedRoomCount = Licence.global_00829128;
-        Licence.global_0082911C = Map.of(0L, "RECOMMENDED_MAP");
-        Licence.global_00829128 = 1L;
-        assertEquals("RECOMMENDED_MAP", Licence.recommendedRooms().payload(1L));
-        Licence.global_0082911C = previousRecommendedRooms;
-        Licence.global_00829128 = previousRecommendedRoomCount;
+        RecommendedRooms previousRecommendedRooms = NavigatorState.instance().recommendedRooms();
+        NavigatorState.instance().setRecommendedRooms(Map.of(0L, "RECOMMENDED_MAP"), 1L);
+        assertEquals("RECOMMENDED_MAP", NavigatorState.instance().recommendedRooms().payload(1L));
+        NavigatorState.instance().setRecommendedRooms(previousRecommendedRooms);
     }
 
     private static void assertRecommendedRoomsPayloadBuilders() {
@@ -5125,98 +6346,94 @@ public final class PortedModuleSmokeTest {
             1, 2, 3, "c1", "c2", "c3", "c4", 10, "c6", "c7", 11, 12, 13,
             "c10", 14, "c12", 15, 16, "c15", "c16", "c17", 17, "c19", "c20",
             "c21", 4, 5);
-        String expected = Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(1, null, "")
-            + Crypto.Proc_3_0_6D2AF0(2, null, "")
-            + Crypto.Proc_3_0_6D2AF0(3, null, "")
+        String expected = encodedVl64(1, null, "")
+            + encodedVl64(1, null, "")
+            + encodedVl64(2, null, "")
+            + encodedVl64(3, null, "")
             + String.join("\2", List.of(
                 "c1", "c2", "c3", "c4", "10", "c6", "c7", "11", "12", "13",
                 "c10", "14", "c12", "15", "16", "c15", "c16", "c17", "17",
                 "c19", "c20", "c21"))
             + "\2"
-            + Crypto.Proc_3_0_6D2AF0(4, null, "")
-            + Crypto.Proc_3_0_6D2AF0(5, null, "");
-        String rowText = "1\t2\t3\tc1\tc2\tc3\tc4\t10\tc6\tc7\t11\t12\t13\tc10\t14\tc12\t15\t16\tc15\tc16\tc17\t17\tc19\tc20\tc21\t4\t5";
-        assertEquals(expected, Boot.buildRecommendedRoomsPayload(rowText));
-        assertEquals(expected, Boot.buildRecommendedRoomsPayload(List.of(row)));
+            + encodedVl64(4, null, "")
+            + encodedVl64(5, null, "");
+        assertEquals(expected, NavigatorBootCache.buildRecommendedRoomsPayload(List.of(row)));
     }
 
-    private static void assertHelpCenterMapMirrors() {
-        assertEquals(true, Licence.global_0082920C instanceof Map);
-        assertEquals(true, ((Map<?, ?>) Licence.global_0082920C).values().stream()
+    private static void assertHelpCenterPayloadMaps() {
+        assertEquals(true, HelpCenterState.instance().cache().categoryFaqPayloads().values().stream()
             .anyMatch(value -> StringUtils.text(value).contains("faq")));
-        assertEquals(true, Licence.global_00829210 instanceof Map);
-        assertEquals(true, ((Map<?, ?>) Licence.global_00829210).values().stream()
+        assertEquals(true, HelpCenterState.instance().cache().descriptionPayloads().values().stream()
             .anyMatch(value -> StringUtils.text(value).contains("line1\rline2")));
     }
 
     private static void assertCatalogPagePayloadMapBridge() {
-        Object previousPagePayloads = Licence.global_00829308;
-        Object previousPageTrees = Licence.global_008292F4;
-        Licence.global_00829308 = Map.of(8L, "CATALOG_PAGE_MAP");
-        Licence.global_008292F4 = Map.of(new CatalogPages.PageTreeKey(0L, 0L), "TREE");
-        assertEquals("CATALOG_PAGE_MAP", Licence.catalogPages().pagePayload(8L));
-        assertEquals("TREE", Licence.catalogPages().defaultPageTree());
-        Licence.global_00829308 = previousPagePayloads;
-        Licence.global_008292F4 = previousPageTrees;
+        CatalogPages previousCatalogPages = CatalogState.instance().catalogPages();
+        CatalogState.instance().setCatalogPages(CatalogPages.fromPayloadMaps(
+            Map.of(8L, "CATALOG_PAGE_MAP"),
+            Map.of(new CatalogPages.PageTreeKey(0L, 0L), "TREE")));
+        assertEquals("CATALOG_PAGE_MAP", CatalogState.instance().catalogPages().pagePayload(8L));
+        assertEquals("TREE", CatalogState.instance().catalogPages().defaultPageTree());
+        CatalogState.instance().setCatalogPages(previousCatalogPages);
     }
 
     private static void assertCatalogPagesTypedAccessors() {
-        String[][] pageTrees = new String[][]{{"TREE0"}};
-        CatalogPages typedCatalogPages = CatalogPages.fromPayloads(Map.of(4L, "PAGE4"), pageTrees);
-        pageTrees[0][0] = "changed";
+        Map<CatalogPages.PageTreeKey, String> pageTrees =
+            new HashMap<>(Map.of(new CatalogPages.PageTreeKey(0L, 0L), "TREE0"));
+        CatalogPages typedCatalogPages = CatalogPages.fromPayloadMaps(Map.of(4L, "PAGE4"), pageTrees);
+        pageTrees.put(new CatalogPages.PageTreeKey(0L, 0L), "changed");
         assertEquals("PAGE4", typedCatalogPages.pagePayload(4L));
         assertEquals("TREE0", typedCatalogPages.defaultPageTree());
         assertEquals(Map.of(4L, "PAGE4"), typedCatalogPages.pagePayloads());
-        String[][] copiedPageTrees = typedCatalogPages.pageTrees();
-        copiedPageTrees[0][0] = "changed-again";
-        assertEquals("TREE0", typedCatalogPages.defaultPageTree());
         CatalogPages mapCatalogPages = CatalogPages.fromPayloadMaps(
             Map.of(5L, "PAGE5"), Map.of(new CatalogPages.PageTreeKey(1L, 2L), "TREE12"));
         assertEquals("PAGE5", mapCatalogPages.pagePayload(5L));
         assertEquals("TREE12", mapCatalogPages.pageTree(1L, 2L));
-        assertEquals("TREE12", mapCatalogPages.pageTrees()[1][2]);
-        Object previousPagePayloads = Licence.global_00829308;
-        Object previousPageTrees = Licence.global_008292F4;
-        Licence.global_00829308 = typedCatalogPages;
-        assertEquals("PAGE4", Licence.catalogPages().pagePayload(4L));
-        Licence.global_00829308 = previousPagePayloads;
-        Licence.global_008292F4 = previousPageTrees;
+        CatalogPages cacheCatalogPages = CatalogPages.fromPayloadMaps(
+            Map.of(6L, "PAGE6"), Map.of(new CatalogPages.PageTreeKey(2L, 3L), "TREE23"));
+        assertEquals("PAGE6", cacheCatalogPages.pagePayload(6L));
+        assertEquals("TREE23", cacheCatalogPages.pageTree(2L, 3L));
+        CatalogPages previousCatalogPages = CatalogState.instance().catalogPages();
+        CatalogState.instance().setCatalogPages(typedCatalogPages);
+        assertEquals("PAGE4", CatalogState.instance().catalogPages().pagePayload(4L));
+        CatalogState.instance().setCatalogPages(previousCatalogPages);
     }
 
     private static void assertStaffSettingsTypedAccessors() {
-        String[][] payloads = new String[][]{{"ZERO"}, {"STAFF", "HC"}};
-        StaffSettings settings = StaffSettings.fromPayloads(payloads);
-        payloads[1][1] = "changed";
+        List<StaffSettings.ModerationPayload> payloads = new ArrayList<>(List.of(
+            new StaffSettings.ModerationPayload(0L, 0L, "ZERO"),
+            new StaffSettings.ModerationPayload(1L, 0L, "STAFF"),
+            new StaffSettings.ModerationPayload(1L, 1L, "HC")));
+        StaffSettings settings = StaffSettings.fromPayloadRows(payloads);
+        payloads.set(2, new StaffSettings.ModerationPayload(1L, 1L, "changed"));
         assertEquals("HC", settings.moderationPayload(1L, 1L));
         assertEquals(new StaffSettings.ModerationPayload(1L, 1L, "HC"),
             settings.moderationPayloadRows().get(2));
-        String[][] copiedPayloads = settings.moderationPayloads();
-        copiedPayloads[1][1] = "changed-again";
+        List<StaffSettings.ModerationPayload> copiedPayloads = settings.moderationPayloadRows();
+        assertEquals(3, copiedPayloads.size());
         assertEquals("HC", settings.moderationPayload(1L, 1L));
-        Object previousStaffPayloads = Licence.global_008292D8;
-        Licence.global_008292D8 = settings;
-        assertEquals("HC", Licence.staffSettings().moderationPayload(1L, 1L));
+        StaffSettings cacheSettings = StaffSettings.fromPayloadRows(List.of(
+            new StaffSettings.ModerationPayload(2L, 0L, "CACHE_STAFF")));
+        assertEquals("CACHE_STAFF", cacheSettings.moderationPayload(2L, 0L));
+        StaffSettings previousStaffSettings = ModerationState.instance().staffSettings();
+        ModerationState.instance().setStaffSettings(settings);
+        assertEquals("HC", ModerationState.instance().staffSettings().moderationPayload(1L, 1L));
 
-        Boot.Proc_1_16_6CCA60();
-        Boot.Proc_1_10_6C7690();
-        assertEquals(true, Licence.global_008292D8 instanceof List);
-        StaffSettings.ModerationPayload bootPayload =
-            (StaffSettings.ModerationPayload) ((List<?>) Licence.global_008292D8).get(3);
+        AppSettingsBootCache.loadPermissionMatrixCache();
+        StaffModerationBootCache.loadStaffModerationCache();
+        StaffSettings.ModerationPayload bootPayload = ModerationState.instance().staffSettings().moderationPayloadRows().get(3);
         assertEquals(1L, bootPayload.rankIndex());
         assertEquals(0L, bootPayload.hcLevel());
-        assertEquals(bootPayload.payload(), Licence.staffSettings().moderationPayload(1L, 0L));
-        Licence.global_008292D8 = previousStaffPayloads;
-        Licence.staffSettings();
+        assertEquals(bootPayload.payload(), ModerationState.instance().staffSettings().moderationPayload(1L, 0L));
+        ModerationState.instance().setStaffSettings(previousStaffSettings);
     }
 
     private static void assertMessengerSettingsTypedAccessors() {
-        MessengerSettings settings = MessengerSettings.fromLimits(10, 0, 20, 0, 30);
+        long[] friendLimits = new long[]{10L, 0L, 20L, 0L, 30L};
+        MessengerSettings settings = MessengerSettings.fromLimits(friendLimits);
+        friendLimits[4] = 0L;
         assertEquals(30L, settings.maxFriends(4));
         assertEquals(List.of(10L, 0L, 20L, 0L, 30L), settings.friendLimitList());
-        long[] copiedLimits = settings.friendLimits();
-        copiedLimits[4] = 0L;
-        assertEquals(30L, settings.maxFriends(4));
     }
 
     private static void assertProductCacheRows(ProductCache productCache) {
@@ -5227,128 +6444,297 @@ public final class PortedModuleSmokeTest {
     }
 
     private static void assertCatalogRegistryRows() {
-        CatalogRegistry registry = CatalogRegistry.fromLegacyCaches(
+        CatalogRegistry registry = CatalogRegistry.fromRows(
             List.of(new CatalogDao.ProductCacheRow(List.of("21", "3", "chair"))),
             List.of(new CatalogDao.CatalogProductCacheRow(List.of("31", "sprite", "21"))),
             List.of(new CatalogDao.ProductDealRow(41L, "21;22")));
         assertEquals(List.of(new CatalogRegistry.CatalogRow("21\t3\tchair", List.of("21", "3", "chair"))),
             registry.productRows());
-        assertEquals("sprite", registry.catalogProductRows().get(0).field(1));
+        assertEquals("sprite", registry.catalogProduct(31).orElseThrow().sprite());
         assertEquals("41\t21;22", registry.dealRows().get(0).text());
+        assertEquals(List.of(21L, 22L), registry.dealRows().get(0).productDealItemIds());
+        assertEquals(List.of(21L, 22L), registry.productDeal(41L).orElseThrow().itemProductIds());
         List<String> copiedFields = registry.productRows().get(0).fields();
         assertEquals("chair", copiedFields.get(2));
+        CatalogRegistry mapRegistry = CatalogRegistry.fromRowMaps(
+            Map.of(22L, CatalogRegistry.CatalogRow.fromFields(List.of("22", "4", "table"))),
+            Map.of(32L, CatalogRegistry.CatalogRow.fromFields(List.of("32", "table_sprite", "22"))),
+            Map.of(42L, new CatalogRegistry.CatalogRow("42\t22;23", List.of("42", "22;23"))));
+        assertEquals("table", mapRegistry.productRows().get(0).fields().get(2));
+        assertEquals("table_sprite", mapRegistry.catalogProduct(32).orElseThrow().sprite());
+        assertEquals("42\t22;23", mapRegistry.dealRows().get(0).text());
+        assertEquals(List.of(22L, 23L), mapRegistry.productDeal(42L).orElseThrow().itemProductIds());
     }
 
     private static void assertRoomCategoryBootCaches() {
-        Boot.Proc_1_11_6C8D10();
-        assertEquals(true, Licence.global_00829224 instanceof List);
-        assertEquals(List.of("0", "", "0"), Licence.roomCategoryCache().defaultCategoryIdList());
-        assertEquals(true, Licence.global_00829230 instanceof List);
-        assertEquals(Boot.buildRoomCategoryPayload("1\tpublic\t0\t0\t0", 0L, 0L),
-            Boot.buildRoomCategoryPayload(List.of(new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L)), 0L, 0L));
+        NavigatorBootCache.loadRoomCategoryRowsCache();
+        assertEquals(List.of("0", "", "0"), NavigatorState.instance().roomCategoryCache().defaultCategoryIdList());
+        assertEquals(true, NavigatorState.instance().roomCategoryCache().categoryRowList().size() > 0);
+        assertEquals(encodedVl64(1, null, "")
+                + encodedVl64(1, null, "") + "public\2"
+                + encodedVl64(0, null, ""),
+            NavigatorBootCache.buildRoomCategoryPayload(
+                List.of(new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L)), 0L, 0L));
 
-        RoomCategoryCache typedRoomCategories = RoomCategoryCache.fromRows("defaults",
+        RoomCategoryCache typedRoomCategories = RoomCategoryCache.fromPayloadRows(List.of("defaults"),
             List.of(new RoomDao.RoomCategoryRow(5L, "typed", 1L, 2L, 3L)),
-            new String[][]{{"CATEGORY"}});
+            List.of(new RoomCategoryCache.CategoryPayload(0L, 0L, "CATEGORY")));
         assertEquals("defaults", typedRoomCategories.privateDefaultCategoryId());
         assertEquals("", typedRoomCategories.publicDefaultCategoryId());
-        assertEquals("5\ttyped\t1\t2\t3", typedRoomCategories.categoryRows());
+        assertEquals(List.of(new RoomDao.RoomCategoryRow(5L, "typed", 1L, 2L, 3L)),
+            typedRoomCategories.categoryRowList());
         assertEquals("CATEGORY", typedRoomCategories.payload(0L, 0L));
         assertEquals(new RoomCategoryCache.CategoryPayload(0L, 0L, "CATEGORY"),
             typedRoomCategories.payloadRows().get(0));
+        RoomCategoryCache cacheRoomCategories = RoomCategoryCache.fromPayloadRows(
+            List.of("11", "", "22"),
+            List.of(new RoomDao.RoomCategoryRow(7L, "cache", 3L, 4L, 5L)),
+            List.of(new RoomCategoryCache.CategoryPayload(2L, 1L, "CACHE_CATEGORY")));
+        assertEquals(List.of("11", "", "22"), cacheRoomCategories.defaultCategoryIdList());
+        assertEquals(List.of(new RoomDao.RoomCategoryRow(7L, "cache", 3L, 4L, 5L)),
+            cacheRoomCategories.categoryRowList());
+        assertEquals("CACHE_CATEGORY", cacheRoomCategories.payload(2L, 1L));
 
-        RoomCategoryCache legacyRoomCategories = RoomCategoryCache.fromLegacy("defaults",
-            "6\tlegacy\t0\t1\t2", new String[0][]);
-        assertEquals("6\tlegacy\t0\t1\t2", legacyRoomCategories.categoryRows());
+        RoomCategoryCache previousRoomCategoryCacheForRows = NavigatorState.instance().roomCategoryCache();
+        NavigatorState.instance().setRoomCategoryCache(RoomCategoryCache.fromPayloadRows(
+            List.of("defaults"),
+            List.of(new RoomDao.RoomCategoryRow(6L, "legacy", 0L, 1L, 2L)),
+            List.of()));
+        RoomCategoryCache mirroredRoomCategories = NavigatorState.instance().roomCategoryCache();
         assertEquals(List.of(new RoomDao.RoomCategoryRow(6L, "legacy", 0L, 1L, 2L)),
-            legacyRoomCategories.categoryRowList());
+            mirroredRoomCategories.categoryRowList());
+        NavigatorState.instance().setRoomCategoryCache(previousRoomCategoryCacheForRows);
 
-        RoomCategoryCache typedRoomCategoryDefaults = RoomCategoryCache.fromRows(
-            List.of("11", "", "22"), List.of(), new String[][]{{"PAYLOAD"}});
-        String[] defaultCategoryIds = typedRoomCategoryDefaults.defaultCategoryIds();
-        defaultCategoryIds[0] = "changed";
+        List<RoomCategoryCache.CategoryPayload> payloadRows =
+            new ArrayList<>(List.of(new RoomCategoryCache.CategoryPayload(0L, 0L, "PAYLOAD")));
+        List<String> defaultIds = new ArrayList<>(List.of("11", "", "22"));
+        RoomCategoryCache typedRoomCategoryDefaults = RoomCategoryCache.fromPayloadRows(
+            defaultIds, List.of(), payloadRows);
+        defaultIds.set(0, "changed");
+        payloadRows.set(0, new RoomCategoryCache.CategoryPayload(0L, 0L, "changed"));
         assertEquals("11", typedRoomCategoryDefaults.privateDefaultCategoryId());
         assertEquals("22", typedRoomCategoryDefaults.publicDefaultCategoryId());
         assertRoomCategoryDefaults(typedRoomCategoryDefaults);
 
-        Object previousRoomCategoryDefaults = Licence.global_00829224;
-        Licence.global_00829224 = typedRoomCategoryDefaults;
-        assertEquals("PAYLOAD", Licence.roomCategoryCache().payload(0L, 0L));
-        Licence.global_00829224 = previousRoomCategoryDefaults;
+        RoomCategoryCache previousRoomCategoryDefaults = NavigatorState.instance().roomCategoryCache();
+        NavigatorState.instance().setRoomCategoryCache(typedRoomCategoryDefaults);
+        assertEquals("PAYLOAD", NavigatorState.instance().roomCategoryCache().payload(0L, 0L));
+        NavigatorState.instance().setRoomCategoryCache(previousRoomCategoryDefaults);
 
-        Boot.Proc_1_12_6C8EF0();
-        assertEquals(true, Licence.global_00829244 instanceof List);
-        RoomCategoryCache.CategoryPayload payload =
-            (RoomCategoryCache.CategoryPayload) ((List<?>) Licence.global_00829244).get(0);
+        NavigatorBootCache.loadRoomCategoryPayloadCache();
+        RoomCategoryCache.CategoryPayload payload = NavigatorState.instance().roomCategoryCache().payloadRows().get(0);
         assertEquals(true, payload.payload().contains("public"));
-        assertEquals(true, Licence.roomCategoryCache().payload(0L, 0L).contains("public"));
+        assertEquals(true, NavigatorState.instance().roomCategoryCache().payload(0L, 0L).contains("public"));
     }
 
     private static void assertRoomCategoryDefaults(RoomCategoryCache cache) {
         assertEquals(List.of("11", "", "22"), cache.defaultCategoryIdList());
         assertEquals("PAYLOAD", cache.payload(0L, 0L));
         assertEquals(List.of(new RoomCategoryCache.CategoryPayload(0L, 0L, "PAYLOAD")), cache.payloadRows());
-        String[][] copiedPayloads = cache.payloads();
-        copiedPayloads[0][0] = "changed";
-        assertEquals("PAYLOAD", cache.payload(0L, 0L));
     }
 
-    private static void assertAchievementRows(AchievementSettings settings, AchievementSettings.Achievement achievement) {
-        assertEquals(List.of(new AchievementSettings.AchievementRow(
-            achievement, "42\tACH_\t10\t5\t3\t7\t2", true)), settings.rows());
+    private static void assertAchievementRows(
+        AchievementSettings settings,
+        List<AchievementSettings.IndexedAchievement> indexedAchievements
+    ) {
+        assertEquals(indexedAchievements, settings.indexedAchievements());
     }
 
     private static void assertGuardianSocketMarkers() {
-        Guardian.global_008291A0 = "";
-        Guardian.global_0082919C = 0L;
+        Guardian.clearSocketMarkers();
         Guardian.setGameServerConnected(false);
         Guardian.setSocketConnected(8, true);
-        assertEquals(1, Guardian.Proc_11_2_821390(8));
+        assertEquals(true, Guardian.isSocketConnected(8));
         assertEquals(true, Guardian.isSocketConnected(8));
         Guardian.setSocketConnected(8, false);
-        assertEquals(0, Guardian.Proc_11_2_821390(8));
+        assertEquals(false, Guardian.isSocketConnected(8));
         assertEquals(false, Guardian.isSocketConnected(8));
         Guardian.setGameServerConnected(true);
-        assertEquals(1, Guardian.Proc_11_2_821390());
+        assertEquals(true, Guardian.isSocketConnected(0));
         Guardian.setGameServerConnected(false);
         SocketMarkerSet typedSocketMarkers = SocketMarkerSet.fromSocketIndexes(List.of(1L, 12L, 0L));
         assertEquals(Set.of(1L, 12L), typedSocketMarkers.socketIndexes());
-        assertEquals("[1][12]", typedSocketMarkers.toLegacyMarkers());
-        Object previousLicenceMarkers = Licence.global_008291A0;
-        Licence.setSocketMarkers(typedSocketMarkers);
-        assertEquals(true, Licence.global_008291A0 instanceof SocketMarkerSet);
-        assertEquals(Set.of(1L, 12L), Licence.socketMarkers().socketIndexes());
-        Licence.global_008291A0 = previousLicenceMarkers;
-        Guardian.SocketMarkerState addedMarkerState = Guardian.toggleSocketMarkerState("[1]", 1, 12);
-        assertEquals("[1][12]", addedMarkerState.markers);
-        assertEquals(12L, addedMarkerState.highestIndex);
-        assertEquals(true, addedMarkerState.accepted);
-        assertEquals(true, addedMarkerState.added);
-        Guardian.SocketMarkerState removedMarkerState = Guardian.toggleSocketMarkerState("[1][12]", 12, 12);
-        assertEquals("[1]", removedMarkerState.markers);
-        assertEquals(12L, removedMarkerState.highestIndex);
-        assertEquals(true, removedMarkerState.accepted);
-        assertEquals(false, removedMarkerState.added);
-        Guardian.SocketMarkerState rejectedMarkerState = Guardian.toggleSocketMarkerState("[1]", 1, 2500);
-        assertEquals("[1]", rejectedMarkerState.markers);
-        assertEquals(1L, rejectedMarkerState.highestIndex);
-        assertEquals(false, rejectedMarkerState.accepted);
-        Guardian.global_008291A0 = "[1]";
+        SocketMarkerSet previousLicenceMarkers = SessionState.instance().socketMarkers();
+        SessionState.instance().setSocketMarkers(typedSocketMarkers);
+        assertEquals(Set.of(1L, 12L), SessionState.instance().socketMarkers().socketIndexes());
+        SessionState.instance().setSocketMarkers(previousLicenceMarkers);
+        Guardian.SocketMarkerState addedMarkerState =
+            Guardian.toggleSocketMarkerState(SocketMarkerSet.fromSocketIndexes(List.of(1L)), 1, 12);
+        assertEquals(Set.of(1L, 12L), addedMarkerState.markers().socketIndexes());
+        assertEquals(12L, addedMarkerState.highestIndex());
+        assertEquals(true, addedMarkerState.accepted());
+        assertEquals(true, addedMarkerState.added());
+        Guardian.SocketMarkerState removedMarkerState =
+            Guardian.toggleSocketMarkerState(SocketMarkerSet.fromSocketIndexes(List.of(1L, 12L)), 12, 12);
+        assertEquals(Set.of(1L), removedMarkerState.markers().socketIndexes());
+        assertEquals(12L, removedMarkerState.highestIndex());
+        assertEquals(true, removedMarkerState.accepted());
+        assertEquals(false, removedMarkerState.added());
+        Guardian.SocketMarkerState rejectedMarkerState =
+            Guardian.toggleSocketMarkerState(SocketMarkerSet.fromSocketIndexes(List.of(1L)), 1, 2500);
+        assertEquals(Set.of(1L), rejectedMarkerState.markers().socketIndexes());
+        assertEquals(1L, rejectedMarkerState.highestIndex());
+        assertEquals(false, rejectedMarkerState.accepted());
+        Guardian.setSocketMarkers(SocketMarkerSet.fromSocketIndexes(List.of(1L)));
         Guardian.addSocketMarker(12);
-        assertEquals(true, Guardian.global_008291A0 instanceof SocketMarkerSet);
-        assertEquals("[1][12]", SocketMarkerSet.fromLegacy(Guardian.global_008291A0).toLegacyMarkers());
-        Guardian.global_008291A0 = "";
-        Guardian.global_0082919C = 0L;
+        assertEquals(Set.of(1L, 12L), Guardian.socketMarkers().socketIndexes());
+        Guardian.clearSocketMarkers();
         Guardian.toggleSocketMarker(12);
-        assertEquals(true, Guardian.global_008291A0 instanceof SocketMarkerSet);
-        assertEquals("[12]", SocketMarkerSet.fromLegacy(Guardian.global_008291A0).toLegacyMarkers());
-        assertEquals(12L, Guardian.global_0082919C);
-        Guardian.Proc_11_3_821440(12);
-        assertEquals("", SocketMarkerSet.fromLegacy(Guardian.global_008291A0).toLegacyMarkers());
-        assertEquals(12L, Guardian.global_0082919C);
+        assertEquals(Set.of(12L), Guardian.socketMarkers().socketIndexes());
+        assertEquals(12L, Guardian.highestMarkedSocketIndex());
+        Guardian.toggleSocketMarker(12);
+        assertEquals(Set.of(), Guardian.socketMarkers().socketIndexes());
+        assertEquals(12L, Guardian.highestMarkedSocketIndex());
     }
 
-    private static String productRow(long productId, String... columnPairs) {
+    private static RepresentedBotRegistry representedBots(Map<Long, String> recordsByEntityId) {
+        return representedBots(Set.of(), recordsByEntityId);
+    }
+
+    private static RepresentedBotRegistry representedBots(Set<Long> allocatedEntityIds, Map<Long, String> recordsByEntityId) {
+        Map<Long, RepresentedBotRegistry.RepresentedBotRecord> records = new LinkedHashMap<>();
+        for (Map.Entry<Long, String> record : recordsByEntityId.entrySet()) {
+            records.put(record.getKey(), representedBotRecord(record.getValue()));
+        }
+        return RepresentedBotRegistry.fromState(allocatedEntityIds, records);
+    }
+
+    private static RepresentedBotRegistry.RepresentedBotRecord representedBotRecord(String recordText) {
+        String[] fields = StringUtils.text(recordText).split("\2", -1);
+        return new RepresentedBotRegistry.RepresentedBotRecord(
+            numberField(fields, 0),
+            numberField(fields, 1),
+            textField(fields, 2),
+            textField(fields, 3),
+            textField(fields, 4),
+            textField(fields, 5),
+            numberField(fields, 6),
+            numberField(fields, 7),
+            textField(fields, 8),
+            numberField(fields, 9),
+            textField(fields, 10),
+            numberField(fields, 11),
+            numberField(fields, 12),
+            textField(fields, 13),
+            textField(fields, 14),
+            numberField(fields, 15),
+            numberField(fields, 16),
+            List.of(fields));
+    }
+
+    private static String textField(String[] fields, int index) {
+        return StringUtils.field(fields, index);
+    }
+
+    private static long numberField(String[] fields, int index) {
+        return NumberUtils.parseLong(textField(fields, index));
+    }
+
+    private static SessionRegistry sessionRegistry(SessionRegistry.SessionRecord... records) {
+        return SessionRegistry.fromEntries(List.of(records), List.of());
+    }
+
+    private static SessionRegistry linkedSessionRegistry(String recordId, String text) {
+        return linkedSessionRegistry(new SessionRegistry.LinkedSessionSection(recordId, text));
+    }
+
+    private static SessionRegistry linkedSessionRegistry(SessionRegistry.LinkedSessionSection... sections) {
+        return SessionRegistry.fromEntries(List.of(), List.of(sections));
+    }
+
+    private static ProductCache.ProductRow productCacheRow(long productId, String... columnPairs) {
+        return new ProductCache.ProductRow(productId, productFields(productId, columnPairs));
+    }
+
+    private static CatalogDao.ProductCacheRow productDaoRow(long productId, String... columnPairs) {
+        return new CatalogDao.ProductCacheRow(indexedFields(productId, columnPairs));
+    }
+
+    private static CatalogDao.CatalogProductCacheRow catalogProductRow(long productId, String... columnPairs) {
+        return new CatalogDao.CatalogProductCacheRow(indexedFields(0, productId, columnPairs));
+    }
+
+    private static void seedCatalogRegistryProductRows(List<CatalogDao.ProductCacheRow> productRows) {
+        CatalogRegistry current = CatalogState.instance().registry();
+        CatalogState.instance().setRegistry(CatalogRegistry.fromRowMaps(
+            CatalogRegistry.fromRows(productRows, List.of(), List.of()).productRowMap(),
+            current.catalogProductRowMap(),
+            current.dealRowMap()));
+    }
+
+    private static void seedCatalogRegistryCatalogProductRows(
+        List<CatalogDao.CatalogProductCacheRow> catalogProductRows
+    ) {
+        CatalogRegistry current = CatalogState.instance().registry();
+        CatalogState.instance().setRegistry(CatalogRegistry.fromRowMaps(
+            current.productRowMap(),
+            CatalogRegistry.fromRows(List.of(), catalogProductRows, List.of()).catalogProductRowMap(),
+            current.dealRowMap()));
+    }
+
+    private static void seedCatalogRegistryDealRows(List<CatalogDao.ProductDealRow> dealRows) {
+        CatalogRegistry current = CatalogState.instance().registry();
+        CatalogState.instance().setRegistry(CatalogRegistry.fromRowMaps(
+            current.productRowMap(),
+            current.catalogProductRowMap(),
+            CatalogRegistry.fromRows(List.of(), List.of(), dealRows).dealRowMap()));
+    }
+
+    private static void seedCatalogPagePayloads(Map<Long, String> pagePayloads) {
+        CatalogPages current = CatalogState.instance().catalogPages();
+        CatalogState.instance().setCatalogPages(CatalogPages.fromPayloadMaps(pagePayloads, current.pageTrees()));
+    }
+
+    private static void seedCatalogPageTrees(Map<CatalogPages.PageTreeKey, String> pageTrees) {
+        CatalogPages current = CatalogState.instance().catalogPages();
+        CatalogState.instance().setCatalogPages(CatalogPages.fromPayloadMaps(current.pagePayloads(), pageTrees));
+    }
+
+    private static void seedCatalogCounterProductIds(List<Long> counterProductIds) {
+        CatalogProductSettings current = CatalogState.instance().productSettings();
+        CatalogState.instance().setProductSettings(CatalogProductSettings.fromSettings(
+            counterProductIds,
+            current.teleportProductId(),
+            current.moodlightProductId(),
+            current.packages(),
+            current.petPackages(),
+            current.clubProducts()));
+    }
+
+    private static void seedCatalogPackageRows(List<PackageDao.PackageRow> packageRows) {
+        CatalogProductSettings current = CatalogState.instance().productSettings();
+        CatalogState.instance().setProductSettings(CatalogProductSettings.fromSettings(
+            current.counterProducts(),
+            current.teleportProductId(),
+            current.moodlightProductId(),
+            packageRows,
+            current.petPackages(),
+            current.clubProducts()));
+    }
+
+    private static void seedCatalogPetPackageRows(List<PackageDao.PetPackageRow> petPackageRows) {
+        CatalogProductSettings current = CatalogState.instance().productSettings();
+        CatalogState.instance().setProductSettings(CatalogProductSettings.fromSettings(
+            current.counterProducts(),
+            current.teleportProductId(),
+            current.moodlightProductId(),
+            current.packages(),
+            petPackageRows,
+            current.clubProducts()));
+    }
+
+    private static void seedCatalogClubProductRows(List<ClubDao.ContainedClubProductRow> clubProductRows) {
+        CatalogProductSettings current = CatalogState.instance().productSettings();
+        CatalogState.instance().setProductSettings(CatalogProductSettings.fromRows(
+            current.counterProducts(),
+            current.teleportProductId(),
+            current.moodlightProductId(),
+            current.packages(),
+            current.petPackages(),
+            clubProductRows));
+    }
+
+    private static List<String> productFields(long productId, String... columnPairs) {
         int maxColumn = 0;
         for (int index = 0; index + 1 < columnPairs.length; index += 2) {
             maxColumn = Math.max(maxColumn, (int) Long.parseLong(columnPairs[index]));
@@ -5359,7 +6745,25 @@ public final class PortedModuleSmokeTest {
         for (int index = 0; index + 1 < columnPairs.length; index += 2) {
             fields[(int) Long.parseLong(columnPairs[index])] = columnPairs[index + 1];
         }
-        return String.join("\t", fields);
+        return List.of(fields);
+    }
+
+    private static List<String> indexedFields(long productId, String... columnPairs) {
+        return indexedFields(1, productId, columnPairs);
+    }
+
+    private static List<String> indexedFields(int columnOffset, long productId, String... columnPairs) {
+        int maxColumn = 0;
+        for (int index = 0; index + 1 < columnPairs.length; index += 2) {
+            maxColumn = Math.max(maxColumn, (int) Long.parseLong(columnPairs[index]));
+        }
+        String[] fields = new String[maxColumn + columnOffset + 1];
+        Arrays.fill(fields, "");
+        fields[0] = String.valueOf(productId);
+        for (int index = 0; index + 1 < columnPairs.length; index += 2) {
+            fields[(int) Long.parseLong(columnPairs[index]) + columnOffset] = columnPairs[index + 1];
+        }
+        return List.of(fields);
     }
 
     private static List<Object> loginUserRow() {
@@ -5409,6 +6813,30 @@ public final class PortedModuleSmokeTest {
             }
         }
         return false;
+    }
+
+    private static String sentPayload(String send) {
+        String[] parts = StringUtils.text(send).split("\6", -1);
+        if (parts.length < 3) {
+            return "";
+        }
+        return parts[2].replace("\1\7", "");
+    }
+
+    private static String wiredRecordText(
+        long wiredCode,
+        long furnitureId,
+        String selectedIdsText,
+        String parameterValues,
+        String textValue,
+        String extraValue
+    ) {
+        String recordText = "\1" + wiredCode + '\2' + furnitureId + '\3' + StringUtils.text(selectedIdsText)
+            + '\4' + StringUtils.text(parameterValues) + '\5' + StringUtils.left(textValue, 125) + '\6';
+        if (!StringUtils.text(extraValue).isEmpty()) {
+            recordText += StringUtils.text(extraValue);
+        }
+        return recordText;
     }
 
     private static void assertEquals(Object expected, Object actual) {

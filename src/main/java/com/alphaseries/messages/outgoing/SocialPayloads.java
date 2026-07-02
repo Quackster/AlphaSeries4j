@@ -200,7 +200,11 @@ public final class SocialPayloads {
             .build();
     }
 
-    public static String badgeInventory(List<BadgeRow> inventoryRows, String equippedPayload) {
+    public static String badgeInventory(List<BadgeRow> inventoryRows, List<BadgeRow> equippedRows) {
+        return badgeInventory(inventoryRows, equippedBadges(equippedRows));
+    }
+
+    private static String badgeInventory(List<BadgeRow> inventoryRows, String equippedPayload) {
         long inventoryCount = 0L;
         PacketBuilder inventoryPayload = PacketBuilder.create();
         if (inventoryRows != null) {
@@ -235,21 +239,23 @@ public final class SocialPayloads {
             .build();
     }
 
-    public static String badgeDisplay(long userId, String equippedPayload) {
+    public static String badgeDisplay(long userId, List<BadgeRow> equippedRows) {
+        return badgeDisplay(userId, equippedBadges(equippedRows));
+    }
+
+    private static String badgeDisplay(long userId, String equippedPayload) {
         return PacketBuilder.message("Cd")
             .appendInt(userId)
             .appendRaw(equippedPayload)
             .build();
     }
 
-    public static String tags(List<?> tagRows) {
+    public static String tags(List<UserDao.UserTagRow> tagRows) {
         long tagCount = 0L;
         PacketBuilder tagPayload = PacketBuilder.create();
         if (tagRows != null) {
-            for (Object row : tagRows) {
-                String tag = row instanceof UserDao.UserTagRow tagRow
-                    ? StringUtils.text(tagRow.name())
-                    : StringUtils.text(row);
+            for (UserDao.UserTagRow row : tagRows) {
+                String tag = row == null ? "" : StringUtils.text(row.name());
                 if (!tag.isEmpty()) {
                     tagPayload.appendString(tag);
                     tagCount++;
@@ -262,7 +268,11 @@ public final class SocialPayloads {
             .build();
     }
 
-    public static String tagDisplay(long userId, String tagPayload) {
+    public static String tagDisplay(long userId, List<UserDao.UserTagRow> tagRows) {
+        return tagDisplay(userId, tags(tagRows));
+    }
+
+    private static String tagDisplay(long userId, String tagPayload) {
         return PacketBuilder.message("E^")
             .appendInt(userId)
             .appendRaw(tagPayload)

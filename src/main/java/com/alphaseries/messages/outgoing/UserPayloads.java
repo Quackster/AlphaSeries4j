@@ -3,6 +3,7 @@ package com.alphaseries.messages.outgoing;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.game.user.OwnProfileRow;
 import com.alphaseries.game.user.UserEffectSummaryRow;
+import com.alphaseries.game.user.UserGroupRow;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.StringUtils;
 
@@ -79,6 +80,24 @@ public final class UserPayloads {
                 .appendInt(rankIndex)
                 .appendInt(rankIndex)
                 .appendInt(staffFlag))
+            .build();
+    }
+
+    /**
+     * Original function: Proc_6_101_746B60.
+     */
+    public static String loginGroup(long groupId, UserGroupRow groupRow) {
+        if (groupId <= 0L || groupRow == null) {
+            return "";
+        }
+        return PacketBuilder.create()
+            .appendRaw("Dt")
+            .appendInt(groupId)
+            .appendString(groupRow.name())
+            .appendString(groupRow.description())
+            .appendString(groupRow.badgeId())
+            .appendInt(groupRow.roomId())
+            .appendRaw('H')
             .build();
     }
 

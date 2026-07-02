@@ -1,11 +1,11 @@
 package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.dao.mysql.RoomDao;
-import com.alphaseries.game.navigator.LegacyNavigatorRoomRow;
 import com.alphaseries.game.navigator.NavigatorRoom;
 import com.alphaseries.game.navigator.NavigatorTagPopularity;
 import com.alphaseries.game.navigator.NewFriendRooms;
 import com.alphaseries.game.navigator.OfficialNavigatorItem;
+import com.alphaseries.game.navigator.RecommendedRooms;
 import com.alphaseries.protocol.PacketBuilder;
 
 import java.util.List;
@@ -44,35 +44,37 @@ public final class NavigatorPayloads {
             .build();
     }
 
-    public static String queryResult(String header, Object selector, long limitValue, String resultPayload) {
+    public static String queryResult(String header, String selector, long limitValue, List<NavigatorRoom> roomRows) {
+        return queryResult(header, selector, limitValue, roomList(roomRows));
+    }
+
+    public static String queryResultWithRecommended(
+        String header,
+        String selector,
+        long limitValue,
+        List<NavigatorRoom> roomRows,
+        RecommendedRooms recommendedRooms,
+        long recommendedTree
+    ) {
+        return queryResult(header, selector, limitValue,
+            roomList(roomRows) + recommendedPayload(recommendedRooms, recommendedTree));
+    }
+
+    public static String combinedQueryResult(
+        String header,
+        String selector,
+        long limitValue,
+        List<RoomDao.NavigatorEventRow> eventRows,
+        List<NavigatorRoom> roomRows
+    ) {
+        return queryResult(header, selector, limitValue, combinedRoomList(eventRows, roomRows));
+    }
+
+    private static String queryResult(String header, String selector, long limitValue, String resultPayload) {
         return PacketBuilder.message(header)
             .appendString(selector)
             .appendInt(limitValue)
             .appendRaw(resultPayload)
-            .build();
-    }
-
-    public static String roomFragment(LegacyNavigatorRoomRow room) {
-        if (room == null) {
-            return "";
-        }
-        return PacketBuilder.create()
-            .appendInt(room.roomId())
-            .appendInt(room.visitorsNow())
-            .appendInt(room.visitorsMax())
-            .appendInt(room.roomRate())
-            .appendInt(room.categoryId())
-            .appendInt(room.hasTrading())
-            .appendInt(room.allowOtherPets())
-            .appendInt(room.staffPicked())
-            .appendString(room.roomName())
-            .appendString(room.ownerName())
-            .appendString(room.doorStatus())
-            .appendString(room.description())
-            .appendString(room.icon())
-            .appendString(room.tagOne())
-            .appendString(room.tagTwo())
-            .appendRaw("H")
             .build();
     }
 
@@ -100,18 +102,6 @@ public final class NavigatorPayloads {
             .build();
     }
 
-    public static String legacyRoomList(List<LegacyNavigatorRoomRow> rows) {
-        long roomCount = 0L;
-        PacketBuilder payload = PacketBuilder.create();
-        for (LegacyNavigatorRoomRow row : rows == null ? List.<LegacyNavigatorRoomRow>of() : rows) {
-            if (row != null) {
-                payload.appendRaw(roomFragment(row));
-                roomCount++;
-            }
-        }
-        return PacketBuilder.create().appendRaw(payload.build()).appendInt(roomCount).build();
-    }
-
     public static String roomList(List<NavigatorRoom> rows) {
         long roomCount = 0L;
         PacketBuilder payload = PacketBuilder.create();
@@ -126,6 +116,13 @@ public final class NavigatorPayloads {
 
     public static String singleRoom(NavigatorRoom room) {
         return room == null ? "" : roomFragment(room);
+    }
+
+    public static String singleRoomResponse(NavigatorRoom room) {
+        return PacketBuilder.message("GF")
+            .appendInt(0L)
+            .appendRaw(singleRoom(room))
+            .build();
     }
 
     public static String tagPopularity(List<NavigatorTagPopularity> rows) {
@@ -172,27 +169,6 @@ public final class NavigatorPayloads {
         return PacketBuilder.create().appendRaw(payload.build()).appendInt(eventCount).build();
     }
 
-    public static String combinedLegacyRoomList(
-        List<RoomDao.NavigatorEventRow> eventRows,
-        List<LegacyNavigatorRoomRow> roomRows
-    ) {
-        long itemCount = 0L;
-        PacketBuilder payload = PacketBuilder.create();
-        for (RoomDao.NavigatorEventRow row : eventRows == null ? List.<RoomDao.NavigatorEventRow>of() : eventRows) {
-            if (row != null) {
-                payload.appendRaw(eventFragment(row));
-                itemCount++;
-            }
-        }
-        for (LegacyNavigatorRoomRow row : roomRows == null ? List.<LegacyNavigatorRoomRow>of() : roomRows) {
-            if (row != null) {
-                payload.appendRaw(roomFragment(row));
-                itemCount++;
-            }
-        }
-        return PacketBuilder.create().appendRaw(payload.build()).appendInt(itemCount).build();
-    }
-
     public static String combinedRoomList(List<RoomDao.NavigatorEventRow> eventRows, List<NavigatorRoom> roomRows) {
         long itemCount = 0L;
         PacketBuilder payload = PacketBuilder.create();
@@ -209,6 +185,10 @@ public final class NavigatorPayloads {
             }
         }
         return PacketBuilder.create().appendRaw(payload.build()).appendInt(itemCount).build();
+    }
+
+    private static String recommendedPayload(RecommendedRooms recommendedRooms, long recommendedTree) {
+        return recommendedRooms == null ? "" : recommendedRooms.payload(recommendedTree);
     }
 
     public static String official(List<OfficialNavigatorItem> items, boolean includeCountPrefix) {

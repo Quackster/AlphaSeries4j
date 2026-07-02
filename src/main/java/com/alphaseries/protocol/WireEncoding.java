@@ -1,5 +1,7 @@
 package com.alphaseries.protocol;
 
+import com.alphaseries.util.StringUtils;
+
 public final class WireEncoding {
     private WireEncoding() {
     }
@@ -62,6 +64,28 @@ public final class WireEncoding {
         return Math.min(encodedValue.length(), tailLength + 1L);
     }
 
+    public static long encodedVl64LengthByteCount(String encodedValue) {
+        String value = encodedValue == null ? "" : encodedValue;
+        if (value.isEmpty()) {
+            return 0L;
+        }
+        long firstByte = value.charAt(0) - 72L;
+        return (firstByte / 8L) + 1L;
+    }
+
+    /**
+     * Original function: Proc_10_6_809F10.
+     */
+    public static String readVl64LengthString(Object sourceValue) {
+        String sourceText = StringUtils.text(sourceValue);
+        long encodedLengthSize = encodedVl64LengthByteCount(sourceText);
+        long fieldLength = decodeVl64(sourceText);
+        if (encodedLengthSize <= 0L || fieldLength <= 0L) {
+            return "";
+        }
+        return StringUtils.mid(sourceText, (int) encodedLengthSize + 1, (int) fieldLength);
+    }
+
     public static long decodeBase64Length(String encodedValue) {
         String value = encodedValue == null ? "" : encodedValue;
         if (value.length() == 1) {
@@ -73,6 +97,27 @@ public final class WireEncoding {
         long firstValue = value.charAt(0) - 64L;
         long secondValue = value.charAt(1) - 64L;
         return (firstValue * 0x40L) + secondValue;
+    }
+
+    /**
+     * Original function: Proc_10_7_80A190.
+     */
+    public static String readBase64LengthString(Object sourceValue) {
+        String sourceText = StringUtils.text(sourceValue);
+        long fieldLength = decodeBase64Length(sourceText);
+        if (fieldLength <= 0L) {
+            return "";
+        }
+        return StringUtils.mid(sourceText, 3, (int) fieldLength);
+    }
+
+    public static String encodeBase64Length(long value) {
+        if (value < 0L) {
+            value = 0L;
+        }
+        long highValue = value / 0x40L;
+        long lowValue = value % 0x40L;
+        return Character.toString((char) (highValue + 64L)) + (char) (lowValue + 64L);
     }
 
     public static long parseLeadingLong(Object value) {

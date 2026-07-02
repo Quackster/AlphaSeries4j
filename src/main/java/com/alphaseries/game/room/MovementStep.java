@@ -20,7 +20,7 @@ public record MovementStep(long positionX, long positionY, long directionValue, 
         return new MovementStep(0L, 0L, 0L, 0L);
     }
 
-    public String toLegacyText() {
+    public String frameText() {
         return positionX + "\0" + positionY + "\0" + directionValue + "\0" + movingValue + "\0";
     }
 

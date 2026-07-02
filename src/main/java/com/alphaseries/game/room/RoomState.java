@@ -1,12 +1,16 @@
 package com.alphaseries.game.room;
 
+import com.alphaseries.util.StringUtils;
+
 public final class RoomState {
     private static final RoomState INSTANCE = new RoomState();
 
+    private String pendingRoomCache = "";
+    private String pendingFurnitureCache = "";
     private RepresentedRoomCache representedRooms = RepresentedRoomCache.empty();
     private RepresentedRoomSlots representedRoomSlots = RepresentedRoomSlots.empty();
     private RoomPortalSettings portalSettings = RoomPortalSettings.empty();
-    private RoomEventLocales eventLocales = RoomEventLocales.fromLegacy("");
+    private RoomEventLocales eventLocales = RoomEventLocales.empty();
 
     private RoomState() {
     }
@@ -31,35 +35,48 @@ public final class RoomState {
         return eventLocales;
     }
 
-    public synchronized void setEventLocales(RoomEventLocales eventLocales) {
-        this.eventLocales = eventLocales == null ? RoomEventLocales.fromLegacy("") : eventLocales;
+    public synchronized FurnitureRoomCache.State furnitureRoomCache() {
+        return FurnitureRoomCache.State.from(pendingRoomCache, pendingFurnitureCache, representedRooms);
     }
 
-    public synchronized void setEventLocalesFromLegacy(Object cacheText) {
-        eventLocales = RoomEventLocales.fromLegacy(cacheText);
+    public synchronized void setFurnitureRoomCache(FurnitureRoomCache.State state) {
+        if (state == null) {
+            pendingRoomCache = "";
+            pendingFurnitureCache = "";
+            representedRooms = RepresentedRoomCache.empty();
+            return;
+        }
+        pendingRoomCache = StringUtils.text(state.pendingRoomCache);
+        pendingFurnitureCache = StringUtils.text(state.pendingFurnitureCache);
+        representedRooms = RepresentedRoomCache.fromCacheText(state.representedRoomCache);
+    }
+
+    public synchronized void setEventLocales(RoomEventLocales eventLocales) {
+        this.eventLocales = eventLocales == null ? RoomEventLocales.empty() : eventLocales;
     }
 
     public synchronized void setPortalSettings(RoomPortalSettings portalSettings) {
         this.portalSettings = portalSettings == null ? RoomPortalSettings.empty() : portalSettings;
     }
 
-    public synchronized void setPortalSettingsFromLegacy(Object warpSpaceRows, Object specialGateRows) {
-        portalSettings = RoomPortalSettings.fromLegacy(warpSpaceRows, specialGateRows);
-    }
-
     public synchronized void setRepresentedRoomSlots(RepresentedRoomSlots representedRoomSlots) {
         this.representedRoomSlots = representedRoomSlots == null ? RepresentedRoomSlots.empty() : representedRoomSlots;
     }
 
-    public synchronized void setRepresentedRoomSlotsFromLegacy(Object availableSlotMarkers) {
-        representedRoomSlots = RepresentedRoomSlots.fromLegacy(availableSlotMarkers);
-    }
-
     public synchronized void setRepresentedRooms(RepresentedRoomCache representedRooms) {
-        this.representedRooms = representedRooms == null ? RepresentedRoomCache.empty() : representedRooms;
+        this.representedRooms =
+            representedRooms == null ? RepresentedRoomCache.empty() : representedRooms.normalizedForCacheMirror();
     }
 
-    public synchronized void setRepresentedRoomsFromLegacy(Object cacheText) {
-        representedRooms = RepresentedRoomCache.fromLegacy(cacheText);
+    public synchronized void ensureRepresentedRoomSlotPool() {
+        representedRoomSlots.ensureInitialized();
+    }
+
+    public synchronized long reserveRepresentedRoomSlot(long preferredSlot) {
+        return representedRoomSlots.reserve(preferredSlot);
+    }
+
+    public synchronized void releaseRepresentedRoomSlot(long slotId) {
+        representedRoomSlots.release(slotId);
     }
 }

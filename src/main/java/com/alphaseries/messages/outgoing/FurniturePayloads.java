@@ -1,6 +1,7 @@
 package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.dao.mysql.FurnitureDao;
+import com.alphaseries.game.room.RoomModelFurnitureRow;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.StringUtils;
 
@@ -36,6 +37,21 @@ public final class FurniturePayloads {
 
     public static String stateChanged(long furnitureId, long stateValue) {
         return "AX" + furnitureId + '\2' + stateValue + '\2';
+    }
+
+    public static String floorItemRemoved(long furnitureId) {
+        return PacketBuilder.message("A^")
+            .appendRaw(furnitureId)
+            .appendRaw('\2')
+            .build();
+    }
+
+    public static String floorItemRemovedWithState(long furnitureId, String stateText) {
+        return PacketBuilder.message("A^")
+            .appendRaw(furnitureId)
+            .appendRaw('\2')
+            .appendString(stateText)
+            .build();
     }
 
     public static String simpleFloorUse(long furnitureId, long stateValue) {
@@ -88,6 +104,9 @@ public final class FurniturePayloads {
             .build();
     }
 
+    /**
+     * Original function: Proc_6_156_7972B0.
+     */
     public static String wallInventoryPlacement(
         long furnitureId,
         long productId,
@@ -106,6 +125,9 @@ public final class FurniturePayloads {
             .build();
     }
 
+    /**
+     * Original function: Proc_6_161_7B2EE0.
+     */
     public static String floorPlacement(
         long furnitureId,
         long positionX,
@@ -151,14 +173,68 @@ public final class FurniturePayloads {
             .build();
     }
 
-    public static String floorList(long itemCount, String itemPayload) {
+    public static String floorList(List<RoomModelFurnitureRow> rows) {
+        long itemCount = 0L;
+        PacketBuilder itemPayload = PacketBuilder.create();
+        if (rows != null) {
+            for (RoomModelFurnitureRow row : rows) {
+                if (row != null) {
+                    long productId = row.productId();
+                    long sourceId = row.sourceId();
+                    if (sourceId <= 0L) {
+                        sourceId = itemCount + 1L;
+                    }
+                    if (productId <= 0L) {
+                        productId = sourceId;
+                    }
+                    itemPayload.appendRaw(floorPlacement(
+                        sourceId,
+                        row.positionX(),
+                        row.positionY(),
+                        row.rotation(),
+                        row.positionZ(),
+                        "",
+                        row.action(),
+                        0L,
+                        productId));
+                    itemCount++;
+                }
+            }
+        }
+        return floorList(itemCount, itemPayload.build());
+    }
+
+    private static String floorList(long itemCount, String itemPayload) {
         return PacketBuilder.message("@^")
             .appendInt(itemCount)
             .appendRaw(itemPayload)
             .build();
     }
 
-    public static String wallList(long itemCount, String itemPayload) {
+    public static String wallList(List<FurnitureDao.WallFurniture> rows) {
+        long itemCount = 0L;
+        PacketBuilder itemPayload = PacketBuilder.create();
+        if (rows != null) {
+            for (FurnitureDao.WallFurniture wallFurniture : rows) {
+                if (wallFurniture == null) {
+                    continue;
+                }
+                long furnitureId = wallFurniture.furnitureId();
+                long productId = wallFurniture.productId();
+                String wallPosition = StringUtils.text(wallFurniture.wallPosition());
+                String signText = StringUtils.text(wallFurniture.sign());
+                long secondaryValue = wallFurniture.secondaryValue();
+                if (furnitureId > 0L && productId > 0L && !wallPosition.isEmpty()) {
+                    itemPayload.appendRaw(wallInventoryPlacement(
+                        furnitureId, productId, wallPosition, signText, secondaryValue));
+                    itemCount++;
+                }
+            }
+        }
+        return wallList(itemCount, itemPayload.build());
+    }
+
+    private static String wallList(long itemCount, String itemPayload) {
         return PacketBuilder.message("@m")
             .appendInt(itemCount)
             .appendRaw(itemPayload)

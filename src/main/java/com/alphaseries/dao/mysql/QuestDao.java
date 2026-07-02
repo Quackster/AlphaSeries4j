@@ -209,7 +209,7 @@ public final class QuestDao {
         long questId,
         long level,
         String name,
-        String legacyNullSlot,
+        String reservedSlot,
         long reward,
         long rewardType,
         String requiredAction,

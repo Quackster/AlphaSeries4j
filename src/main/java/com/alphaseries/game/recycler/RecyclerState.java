@@ -1,5 +1,7 @@
 package com.alphaseries.game.recycler;
 
+import java.util.List;
+
 public final class RecyclerState {
     private static final RecyclerState INSTANCE = new RecyclerState();
 
@@ -20,23 +22,25 @@ public final class RecyclerState {
         this.settings = settings == null ? RecyclerSettings.empty() : settings;
     }
 
-    public synchronized void setSettingsFromLegacy(
-        String statusPayload,
-        Object productLists,
-        Object chances,
-        long groupCount,
-        long boxProductId
-    ) {
-        settings = RecyclerSettings.fromLegacy(statusPayload, productLists, chances, groupCount, boxProductId);
+    public synchronized void setRewards(List<RecyclerSettings.RewardGroup> rewardGroups) {
+        settings = RecyclerSettings.fromRewardGroups(
+            settings.statusPayload(),
+            rewardGroups == null ? List.of() : List.copyOf(rewardGroups),
+            settings.boxProductId());
     }
 
-    public synchronized void setSettingsFromLegacyRewardState(
-        String statusPayload,
-        Object productLists,
-        Object chances,
-        long groupCount,
-        long boxProductId
-    ) {
-        settings = RecyclerSettings.fromLegacyRewardState(statusPayload, productLists, chances, groupCount, boxProductId);
+    public synchronized void setStatusPayload(String statusPayload) {
+        settings = RecyclerSettings.fromRewardGroups(
+            statusPayload,
+            settings.rewardGroups(),
+            settings.boxProductId());
     }
+
+    public synchronized void setBoxProductId(long boxProductId) {
+        settings = RecyclerSettings.fromRewardGroups(
+            settings.statusPayload(),
+            settings.rewardGroups(),
+            Math.max(0L, boxProductId));
+    }
+
 }

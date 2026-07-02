@@ -3,8 +3,8 @@ package com.alphaseries.config;
 public final class AppConfigState {
     private static final AppConfigState INSTANCE = new AppConfigState();
 
-    private AppSettingsCache settingsCache = AppSettingsCache.fromLegacy("");
-    private PermissionMatrix permissionMatrix = PermissionMatrix.fromLegacy("");
+    private AppSettingsCache settingsCache = AppSettingsCache.empty();
+    private PermissionMatrix permissionMatrix = PermissionMatrix.empty();
 
     private AppConfigState() {
     }
@@ -17,23 +17,29 @@ public final class AppConfigState {
         return settingsCache;
     }
 
-    public synchronized void setSettingsCache(AppSettingsCache settingsCache) {
-        this.settingsCache = settingsCache == null ? AppSettingsCache.fromLegacy("") : settingsCache;
+    /**
+     * Original function: Proc_10_0_809570.
+     */
+    public synchronized String settingValueOrDefault(String keyName, String defaultValue) {
+        return settingsCache.valueOrDefault(keyName, defaultValue);
     }
 
-    public synchronized void setSettingsCacheFromLegacy(String settingsText) {
-        settingsCache = AppSettingsCache.fromLegacy(settingsText);
+    public synchronized void setSettingsCache(AppSettingsCache settingsCache) {
+        this.settingsCache = settingsCache == null ? AppSettingsCache.empty() : settingsCache;
     }
 
     public synchronized PermissionMatrix permissionMatrix() {
         return permissionMatrix;
     }
 
-    public synchronized void setPermissionMatrix(PermissionMatrix permissionMatrix) {
-        this.permissionMatrix = permissionMatrix == null ? PermissionMatrix.fromLegacy("") : permissionMatrix;
+    /**
+     * Original function: Proc_10_1_809790.
+     */
+    public synchronized boolean allowsPermission(long rankIndex, String basePermissions, String permissionName, long hcLevel) {
+        return permissionMatrix.allows(rankIndex, basePermissions, permissionName, hcLevel);
     }
 
-    public synchronized void setPermissionMatrixFromLegacy(Object permissions) {
-        permissionMatrix = PermissionMatrix.fromLegacy(permissions);
+    public synchronized void setPermissionMatrix(PermissionMatrix permissionMatrix) {
+        this.permissionMatrix = permissionMatrix == null ? PermissionMatrix.empty() : permissionMatrix;
     }
 }

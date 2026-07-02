@@ -3,73 +3,63 @@ package com.alphaseries.config;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
-public final class PermissionMatrix {
-    private final String[][] permissions;
+import java.util.ArrayList;
+import java.util.List;
 
-    private PermissionMatrix(String[][] permissions) {
+public final class PermissionMatrix {
+    private final List<PermissionPayload> permissions;
+
+    private PermissionMatrix(List<PermissionPayload> permissions) {
         this.permissions = copy(permissions);
     }
 
-    public static PermissionMatrix fromLegacy(Object permissions) {
-        if (permissions instanceof PermissionMatrix permissionMatrix) {
-            return permissionMatrix;
-        }
-        if (permissions instanceof String[][] matrix) {
-            return new PermissionMatrix(matrix);
-        }
-        if (permissions instanceof String[] rows) {
-            String[][] matrix = new String[rows.length][3];
-            for (int index = 0; index < rows.length; index++) {
-                String row = StringUtils.text(rows[index]);
-                matrix[index][0] = row;
-                matrix[index][1] = row;
-                matrix[index][2] = row;
-            }
-            return new PermissionMatrix(matrix);
-        }
-        return new PermissionMatrix(new String[0][0]);
+    public static PermissionMatrix empty() {
+        return fromPayloadRows(List.of());
     }
 
-    public static PermissionMatrix fromRows(String[][] permissions) {
+    public static PermissionMatrix fromPayloadRows(List<PermissionPayload> permissions) {
         return new PermissionMatrix(permissions);
     }
 
-    public boolean allows(Object rankValue, Object basePermissions, Object permissionName, Object hcLevelValue) {
+    public boolean allows(long rankValue, String basePermissions, String permissionName, long hcLevelValue) {
         int rankIndex = clamp(NumberUtils.parseInt(rankValue), 0, 20);
         int hcLevel = clamp(NumberUtils.parseInt(hcLevelValue), 0, 2);
         String permission = StringUtils.text(permissionName);
         String permissionList = "\2" + StringUtils.text(basePermissions) + "\2";
 
-        if (rankIndex < permissions.length && permissions[rankIndex] != null && hcLevel < permissions[rankIndex].length) {
-            permissionList += StringUtils.text(permissions[rankIndex][hcLevel]);
+        for (PermissionPayload payload : permissions) {
+            if (payload.rankIndex() == rankIndex && payload.hcLevel() == hcLevel) {
+                permissionList += payload.payload();
+                break;
+            }
         }
 
         return permissionList.contains("\2" + permission + "\2");
     }
 
-    public String[][] rows() {
-        return copy(permissions);
+    public record PermissionPayload(long rankIndex, long hcLevel, String payload) {
+        public PermissionPayload {
+            rankIndex = clamp(NumberUtils.parseInt(rankIndex), 0, 20);
+            hcLevel = clamp(NumberUtils.parseInt(hcLevel), 0, 2);
+            payload = StringUtils.text(payload);
+        }
     }
 
     private static int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
     }
 
-    private static String[][] copy(String[][] permissions) {
+    private static List<PermissionPayload> copy(List<PermissionPayload> permissions) {
         if (permissions == null) {
-            return new String[0][0];
+            return List.of();
         }
-        String[][] result = new String[permissions.length][];
-        for (int rowIndex = 0; rowIndex < permissions.length; rowIndex++) {
-            if (permissions[rowIndex] == null) {
-                result[rowIndex] = new String[0];
+        List<PermissionPayload> result = new ArrayList<>();
+        for (PermissionPayload payload : permissions) {
+            if (payload == null) {
                 continue;
             }
-            result[rowIndex] = new String[permissions[rowIndex].length];
-            for (int columnIndex = 0; columnIndex < permissions[rowIndex].length; columnIndex++) {
-                result[rowIndex][columnIndex] = StringUtils.text(permissions[rowIndex][columnIndex]);
-            }
+            result.add(payload);
         }
-        return result;
+        return List.copyOf(result);
     }
 }

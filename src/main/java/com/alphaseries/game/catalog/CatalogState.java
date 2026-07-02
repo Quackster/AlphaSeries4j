@@ -9,7 +9,7 @@ public final class CatalogState {
     private CatalogPages catalogPages = CatalogPages.empty();
     private CatalogProductSettings productSettings = CatalogProductSettings.empty();
     private CatalogRegistry registry = CatalogRegistry.empty();
-    private ProductCache productCache = ProductCache.fromLegacy("");
+    private ProductCache productCache = ProductCache.empty();
 
     private CatalogState() {
     }
@@ -24,15 +24,6 @@ public final class CatalogState {
 
     public synchronized void setGiftSettings(GiftSettings giftSettings) {
         this.giftSettings = giftSettings == null ? GiftSettings.empty() : giftSettings;
-    }
-
-    public synchronized void setGiftSettingsFromLegacy(
-        Object clubGiftPayload,
-        Object clubGiftLookup,
-        Object giftWrapLookup,
-        String giftWrapPayload
-    ) {
-        giftSettings = GiftSettings.fromLegacy(clubGiftPayload, clubGiftLookup, giftWrapLookup, giftWrapPayload);
     }
 
     public synchronized CatalogPages catalogPages() {
@@ -56,15 +47,7 @@ public final class CatalogState {
     }
 
     public synchronized void setProductCache(ProductCache productCache) {
-        this.productCache = productCache == null ? ProductCache.fromLegacy("") : productCache;
-    }
-
-    public synchronized void setProductCacheFromLegacy(Object products) {
-        productCache = ProductCache.fromLegacy(products);
-    }
-
-    public synchronized void setRegistryFromLegacy(Object products, Object catalogProducts, Object deals) {
-        registry = CatalogRegistry.fromLegacyCaches(products, catalogProducts, deals);
+        this.productCache = productCache == null ? ProductCache.empty() : productCache;
     }
 
     public synchronized void setRegistryFromRows(
@@ -79,28 +62,7 @@ public final class CatalogState {
         this.productSettings = productSettings == null ? CatalogProductSettings.empty() : productSettings;
     }
 
-    public synchronized void setProductSettingsFromLegacy(
-        Object counterProductIds,
-        long teleportProductId,
-        long moodlightProductId,
-        Object packageRows,
-        Object petPackageRows,
-        Object clubProductRows
-    ) {
-        productSettings = CatalogProductSettings.fromLegacy(
-            counterProductIds,
-            teleportProductId,
-            moodlightProductId,
-            packageRows,
-            petPackageRows,
-            clubProductRows);
-    }
-
     public synchronized void setCatalogPages(CatalogPages catalogPages) {
         this.catalogPages = catalogPages == null ? CatalogPages.empty() : catalogPages;
-    }
-
-    public synchronized void setCatalogPagesFromLegacy(Object pagePayloads, Object pageTrees) {
-        catalogPages = CatalogPages.fromLegacy(pagePayloads, pageTrees);
     }
 }

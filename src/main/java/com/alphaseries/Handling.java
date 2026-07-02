@@ -1,5 +1,7 @@
 package com.alphaseries;
 
+import com.alphaseries.config.AppConfigState;
+import com.alphaseries.config.AppPaths;
 import com.alphaseries.dao.mysql.StaffModerationDao;
 import com.alphaseries.dao.mysql.CatalogDao;
 import com.alphaseries.dao.mysql.HelpDao;
@@ -16,143 +18,175 @@ import com.alphaseries.dao.mysql.PollDao;
 import com.alphaseries.dao.mysql.JukeboxDao;
 import com.alphaseries.dao.mysql.QuestDao;
 import com.alphaseries.dao.mysql.RecyclerDao;
-import com.alphaseries.db.Database;
+import com.alphaseries.dao.mysql.DaoProvider;
+import com.alphaseries.game.GameDataCaches;
 import com.alphaseries.game.advertising.AdvertisingState;
 import com.alphaseries.game.advertising.VisitRoomAds;
-import com.alphaseries.game.jukebox.JukeboxPlaybackRow;
-import com.alphaseries.game.jukebox.JukeboxRow;
-import com.alphaseries.game.pet.BotRoomEntryRow;
-import com.alphaseries.game.pet.PetCommandActionRow;
-import com.alphaseries.game.pet.PetCommandTargetRow;
-import com.alphaseries.game.pet.PetExperienceStateRow;
-import com.alphaseries.game.pet.PetInventoryRow;
-import com.alphaseries.game.pet.PetLevelExperienceRow;
-import com.alphaseries.game.pet.PetPayloads;
-import com.alphaseries.game.pet.PetPlacementRow;
-import com.alphaseries.game.pet.PetScratchRow;
+import com.alphaseries.game.jukebox.JukeboxLookups;
+import com.alphaseries.game.jukebox.JukeboxRequests;
+import com.alphaseries.game.pet.PetCommandExecution;
+import com.alphaseries.game.pet.PetExperienceAward;
+import com.alphaseries.game.pet.PetLookups;
+import com.alphaseries.game.pet.PetPackagePlacement;
+import com.alphaseries.game.pet.PetPickupAction;
+import com.alphaseries.game.pet.PetPlacementAction;
 import com.alphaseries.game.pet.PetSettings;
+import com.alphaseries.game.pet.PetScratchAction;
 import com.alphaseries.game.pet.PetState;
 import com.alphaseries.game.pet.PetStatusRow;
-import com.alphaseries.game.pet.RepresentedBotEntry;
-import com.alphaseries.game.pet.RepresentedBotRegistry;
-import com.alphaseries.game.poll.PollDefinition;
-import com.alphaseries.game.poll.PollPrompt;
+import com.alphaseries.game.pet.PetTutorialGuideRemoval;
+import com.alphaseries.game.pet.PetTutorialGuideSpawn;
+import com.alphaseries.game.pet.PetWire;
+import com.alphaseries.game.poll.PollLookups;
+import com.alphaseries.game.poll.PollWire;
+import com.alphaseries.game.quest.QuestCompletion;
+import com.alphaseries.game.quest.QuestProgress;
+import com.alphaseries.game.quest.QuestProgressDecision;
 import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.quest.QuestState;
+import com.alphaseries.game.quest.QuestWire;
+import com.alphaseries.game.quest.QuestAcceptResult;
+import com.alphaseries.game.quest.QuestResetResult;
+import com.alphaseries.game.room.CreatedRoom;
 import com.alphaseries.game.room.FurnitureRoomCache;
+import com.alphaseries.game.room.FurnitureLookups;
+import com.alphaseries.game.room.FurnitureWire;
+import com.alphaseries.game.room.FurnitureCharges;
+import com.alphaseries.game.room.FurnitureDimmers;
 import com.alphaseries.game.room.MovementStep;
-import com.alphaseries.game.room.RoomModelFurnitureRow;
-import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
-import com.alphaseries.game.room.RoomOccupantRow;
+import com.alphaseries.game.room.RoomCacheFiles;
+import com.alphaseries.game.room.RoomLookups;
+import com.alphaseries.game.room.RoomPositionService;
+import com.alphaseries.game.room.RoomRefreshService;
+import com.alphaseries.game.room.FurnitureStateWrites;
 import com.alphaseries.game.room.RoomUserPosition;
 import com.alphaseries.game.room.RepresentedRoomCache;
-import com.alphaseries.game.room.RepresentedRoomSlots;
+import com.alphaseries.game.room.RoomWire;
 import com.alphaseries.game.room.RoomUserEntryRow;
-import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
-import com.alphaseries.game.room.RoomUserProfileRow;
 import com.alphaseries.game.room.RoomUserTargetRow;
+import com.alphaseries.game.room.RoomState;
+import com.alphaseries.game.room.StaffPickedToggle;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.SessionRegistry;
+import com.alphaseries.game.session.SessionState;
+import com.alphaseries.game.session.SessionWire;
 import com.alphaseries.game.session.SocketMarkerSet;
-import com.alphaseries.game.social.BadgeRow;
-import com.alphaseries.game.trade.RepresentedInteractionPair;
-import com.alphaseries.game.trade.RepresentedTradeOffer;
-import com.alphaseries.game.trade.TradePayloads;
-import com.alphaseries.game.user.ExpiredUserEffectRow;
-import com.alphaseries.game.user.OwnProfileRow;
-import com.alphaseries.game.user.UserEffectActivationRow;
+import com.alphaseries.game.social.BadgeInventoryPayload;
+import com.alphaseries.game.social.RoomUserStatusPayloads;
+import com.alphaseries.game.social.SocialLookups;
+import com.alphaseries.game.social.SocialRoomOccupants;
+import com.alphaseries.game.social.SocialWire;
+import com.alphaseries.game.trade.TradeConfirmation;
+import com.alphaseries.game.trade.TradeInteractionCloseAction;
+import com.alphaseries.game.trade.TradeInteractionRequestAction;
+import com.alphaseries.game.trade.TradeInteractionStateAction;
+import com.alphaseries.game.trade.TradeLookups;
+import com.alphaseries.game.trade.TradeOfferAction;
+import com.alphaseries.game.trade.TradeState;
+import com.alphaseries.game.trade.TradeWire;
+import com.alphaseries.game.user.AvatarNameUpdate;
+import com.alphaseries.game.user.UserActivityPoints;
+import com.alphaseries.game.user.UserEffectActivation;
+import com.alphaseries.game.user.UserEffectExpiry;
+import com.alphaseries.game.user.UserRefreshService;
 import com.alphaseries.game.user.UserGroupRow;
+import com.alphaseries.game.user.UserLookups;
+import com.alphaseries.game.user.UserValidation;
+import com.alphaseries.game.user.UserWire;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
+import com.alphaseries.server.logging.Console;
+import com.alphaseries.server.lifecycle.LifecycleState;
 import com.alphaseries.server.mus.MusConnectionManager;
+import com.alphaseries.server.runtime.Guardian;
+import com.alphaseries.game.achievement.AchievementLookups;
+import com.alphaseries.game.achievement.AchievementRewardGrant;
 import com.alphaseries.game.achievement.AchievementSettings;
 import com.alphaseries.game.achievement.AchievementState;
 import com.alphaseries.game.catalog.CatalogPages;
 import com.alphaseries.game.catalog.CatalogRegistry;
 import com.alphaseries.game.catalog.CatalogState;
+import com.alphaseries.game.catalog.CatalogWire;
+import com.alphaseries.game.catalog.ClubPeriodService;
 import com.alphaseries.game.catalog.GiftSettings;
-import com.alphaseries.game.chat.ChatSettings;
-import com.alphaseries.game.chat.ChatState;
+import com.alphaseries.game.catalog.VoucherRedemption;
+import com.alphaseries.game.catalog.VoucherWire;
+import com.alphaseries.game.chat.ChatCommands;
+import com.alphaseries.game.chat.ChatLookups;
 import com.alphaseries.game.help.HelpCenterCache;
 import com.alphaseries.game.help.HelpCenterState;
+import com.alphaseries.game.help.HelpWire;
+import com.alphaseries.game.messenger.AcceptedFriendRequests;
 import com.alphaseries.game.messenger.MessengerFriend;
-import com.alphaseries.game.messenger.MessengerSearchResult;
+import com.alphaseries.game.messenger.MessengerFriendList;
+import com.alphaseries.game.messenger.MessengerNotification;
+import com.alphaseries.game.messenger.MessengerFriendRequest;
+import com.alphaseries.game.messenger.MessengerPrivateMessage;
+import com.alphaseries.game.messenger.MessengerRoomInvite;
 import com.alphaseries.game.messenger.MessengerSettings;
+import com.alphaseries.game.messenger.MessengerLookups;
 import com.alphaseries.game.messenger.MessengerState;
+import com.alphaseries.game.messenger.MessengerViews;
+import com.alphaseries.game.messenger.MessengerWire;
 import com.alphaseries.game.messenger.PendingFriendRequest;
-import com.alphaseries.game.navigator.NewFriendRooms;
+import com.alphaseries.game.messenger.RemovedFriendships;
+import com.alphaseries.game.navigator.NavigatorRequests;
 import com.alphaseries.game.navigator.NavigatorState;
+import com.alphaseries.game.navigator.NavigatorWire;
 import com.alphaseries.game.navigator.RecommendedRooms;
-import com.alphaseries.game.navigator.NavigatorRoom;
 import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.moderation.StaffCallForHelpRow;
 import com.alphaseries.game.moderation.ModerationState;
+import com.alphaseries.game.moderation.StaffModerationLookups;
 import com.alphaseries.game.moderation.StaffPayloads;
 import com.alphaseries.game.moderation.StaffModerationPacketHandlers;
 import com.alphaseries.game.moderation.StaffSettings;
-import com.alphaseries.game.moderation.StaffRoomChatRow;
-import com.alphaseries.game.moderation.StaffRoomChatVisitRow;
-import com.alphaseries.game.moderation.StaffRoomVisitRow;
 import com.alphaseries.game.moderation.StaffUserLookup;
 import com.alphaseries.game.moderation.StaffUserSummaryRow;
+import com.alphaseries.game.moderation.StaffWire;
+import com.alphaseries.game.recycler.RecyclerRewards;
+import com.alphaseries.game.recycler.RecyclerLookups;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.recycler.RecyclerState;
-import com.alphaseries.game.wired.WiredPayloads;
+import com.alphaseries.game.recycler.RecyclerWire;
+import com.alphaseries.game.wired.WiredLookups;
 import com.alphaseries.game.wired.WiredSettings;
 import com.alphaseries.game.wired.WiredState;
-import com.alphaseries.messages.outgoing.AchievementPayloads;
 import com.alphaseries.messages.outgoing.CatalogPayloads;
 import com.alphaseries.messages.outgoing.ClubPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
 import com.alphaseries.messages.outgoing.HelpPayloads;
-import com.alphaseries.messages.outgoing.JukeboxPayloads;
 import com.alphaseries.messages.outgoing.MessengerPayloads;
-import com.alphaseries.messages.outgoing.NavigatorPayloads;
-import com.alphaseries.messages.outgoing.PollPayloads;
 import com.alphaseries.messages.outgoing.QuestPayloads;
-import com.alphaseries.messages.outgoing.RecyclerPayloads;
 import com.alphaseries.messages.outgoing.RoomPayloads;
-import com.alphaseries.messages.outgoing.SocialPayloads;
 import com.alphaseries.messages.outgoing.UserPayloads;
-import com.alphaseries.messages.outgoing.VoucherPayloads;
 import com.alphaseries.protocol.PacketBuilder;
+import com.alphaseries.protocol.WireEncoding;
+import com.alphaseries.util.FileUtils;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public final class Handling {
-    private static List<RepresentedInteractionPair> representedInteractionPairs = new ArrayList<>();
-    private static List<RepresentedTradeOffer> representedTradeOffers = new ArrayList<>();
-    private static Map<Long, Long> representedActivityPointTicks = new HashMap<>();
-
     private Handling() {
     }
 
-    public static void Proc_6_0_6D7FF0(Object... args) {
+    /**
+     * Original function: Proc_6_0_6D7FF0.
+     */
+    public static void sendStaffUserSummary(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "GF");
-            long targetUserId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            if (targetUserId <= 0L) {
-                targetUserId = readWireLong(requestPayload, new LongRef(1));
-            }
+            StaffWire.UserSummaryRequest request = StaffWire.userSummaryRequest(packetPayload);
+            long targetUserId = request.targetUserId();
             if (targetUserId <= 0L) {
                 return;
             }
             String callerUserId = handlingUserIdFromSocket(socketIndex);
-            if (callerUserId.isEmpty() || "0".equals(callerUserId) || !handlingUserHasPermission(callerUserId, "fuse_mod")) {
+            if (callerUserId.isEmpty() || "0".equals(callerUserId) || !UserLookups.hasPermission(callerUserId, "fuse_mod", userDao(), AppConfigState.instance().permissionMatrix())) {
                 return;
             }
             StaffModerationDao moderationDao = staffModerationDao();
@@ -176,36 +210,34 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_1_6D8B70(Object... args) {
-        staffDirectMessage(args, "GM", "fuse_alert", "4", false, false);
+    /**
+     * Original function: Proc_6_1_6D8B70.
+     */
+    public static void sendStaffCaution(int socketIndex, String packetPrefix, String packetPayload) {
+        staffDirectMessage(socketIndex, packetPrefix, packetPayload, "fuse_alert", "4", false, false);
     }
 
-    public static void Proc_6_2_6D9880(Object... args) {
-        staffDirectMessage(args, "GO", "fuse_kick", "5", true, false);
+    /**
+     * Original function: Proc_6_2_6D9880.
+     */
+    public static void staffKickUser(int socketIndex, String packetPrefix, String packetPayload) {
+        staffDirectMessage(socketIndex, packetPrefix, packetPayload, "fuse_kick", "5", true, false);
     }
 
-    public static void Proc_6_3_6DA490(Object... args) {
+    /**
+     * Original function: Proc_6_3_6DA490.
+     */
+    public static void staffBanUser(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "GP");
-            LongRef offset = new LongRef(1);
-            long targetUserId = readWireLong(requestPayload, offset);
-            if (targetUserId <= 0L) {
-                targetUserId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
-            String banMessage = Functions.singleLineText(readWireString(requestPayload, offset));
-            if (banMessage.isEmpty()) {
-                banMessage = Functions.singleLineText(Functions.readBase64LengthString(requestPayload));
-            }
-            long banHours = readWireLong(requestPayload, offset);
-            if (banHours <= 0L) {
-                banHours = NumberUtils.parseLong(Functions.readVl64LengthString(StringUtils.mid(requestPayload, (int) offset.value)));
-            }
+            StaffWire.BanRequest request = StaffWire.banRequest(packetPayload);
+            long targetUserId = request.targetUserId();
+            String banMessage = request.banMessage();
+            long banHours = request.banHours();
             String callerUserId = handlingUserIdFromSocket(socketIndex);
             if (targetUserId <= 0L || banMessage.isEmpty() || banHours <= 0L
                 || callerUserId.isEmpty() || "0".equals(callerUserId)
-                || !handlingUserHasPermission(callerUserId, "fuse_mod")
-                || !handlingUserHasPermission(callerUserId, "fuse_alert")
+                || !UserLookups.hasPermission(callerUserId, "fuse_mod", userDao(), AppConfigState.instance().permissionMatrix())
+                || !UserLookups.hasPermission(callerUserId, "fuse_alert", userDao(), AppConfigState.instance().permissionMatrix())
                 || StaffPayloads.containsUnsafeAlert(banMessage)) {
                 return;
             }
@@ -238,22 +270,16 @@ public final class Handling {
         }
     }
 
-    public static long Proc_6_4_6DAFB0(Object... args) {
+    /**
+     * Original function: Proc_6_4_6DAFB0.
+     */
+    public static long moderateCurrentRoom(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "CH");
-            LongRef offset = new LongRef(1);
-            long actionType = readWireLong(requestPayload, offset);
-            if (actionType <= 0L) {
-                actionType = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
-            String messageText = readWireString(requestPayload, offset);
-            if (messageText.isEmpty()) {
-                messageText = Functions.readBase64LengthString(requestPayload);
-            }
-            messageText = Functions.singleLineText(messageText);
+            StaffWire.RoomModerationRequest request = StaffWire.roomModerationRequest(packetPayload);
+            long actionType = request.actionType();
+            String messageText = request.messageText();
             String callerUserId = handlingUserIdFromSocket(socketIndex);
-            if (callerUserId.isEmpty() || "0".equals(callerUserId) || !handlingUserHasPermission(callerUserId, "fuse_mod")) {
+            if (callerUserId.isEmpty() || "0".equals(callerUserId) || !UserLookups.hasPermission(callerUserId, "fuse_mod", userDao(), AppConfigState.instance().permissionMatrix())) {
                 return 0L;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
@@ -273,7 +299,7 @@ public final class Handling {
             broadcastToRoomUsers(roomId, StaffPayloads.alert(messageText));
             if (actionType == 1L || actionType == 4L) {
                 moderationDao.deleteRoomEvent(roomId);
-                Functions.sendRoomReadyRefreshes(roomId);
+                RoomRefreshService.sendRoomReadyRefreshes(roomId);
             }
             if (actionType == 1L) {
                 moderationDao.insertUserCaution(
@@ -287,10 +313,11 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_5_6DC340(Object... args) {
+    /**
+     * Original function: Proc_6_5_6DC340.
+     */
+    public static void sendCallForHelpReview(long callForHelpId, int socketIndex) {
         try {
-            long callForHelpId = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
-            int socketIndex = args != null && args.length >= 2 ? (int) NumberUtils.parseLong(args[1]) : 0;
             if (callForHelpId <= 0L) {
                 return;
             }
@@ -303,7 +330,7 @@ public final class Handling {
             if (reviewRow == null) {
                 return;
             }
-            String payload = StaffPayloads.callForHelpNotification(StaffPayloads.callForHelpRow(reviewRow.toPayloadRow(), null));
+            String payload = StaffPayloads.callForHelpNotification(reviewRow.toPayloadRow(), null);
             if (socketIndex > 0) {
                 sendToSocket(socketIndex, payload);
             } else {
@@ -314,29 +341,30 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_6_6DC9D0(Object... args) {
-        updateCallForHelpTab(args, "GB", "2");
+    /**
+     * Original function: Proc_6_6_6DC9D0.
+     */
+    public static void moveCallForHelpToPickedTab(int socketIndex, String packetPrefix, String packetPayload) {
+        updateCallForHelpTab(socketIndex, packetPrefix, packetPayload, "2");
     }
 
-    public static void Proc_6_7_6DD0E0(Object... args) {
+    /**
+     * Original function: Proc_6_7_6DD0E0.
+     */
+    public static void closeCallForHelp(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "GD");
+            StaffWire.CloseCallForHelpRequest request = StaffWire.closeCallForHelpRequest(packetPayload);
             String callerUserId = handlingUserIdFromSocket(socketIndex);
             if (callerUserId.isEmpty() || "0".equals(callerUserId)
-                || !handlingUserHasPermission(callerUserId, "fuse_mod")
-                || !handlingUserHasPermission(callerUserId, "fuse_receive_calls_for_help")) {
+                || !UserLookups.hasPermission(callerUserId, "fuse_mod", userDao(), AppConfigState.instance().permissionMatrix())
+                || !UserLookups.hasPermission(callerUserId, "fuse_receive_calls_for_help", userDao(), AppConfigState.instance().permissionMatrix())) {
                 return;
             }
-            LongRef offset = new LongRef(1);
-            long closeState = readWireLong(requestPayload, offset);
+            long closeState = request.closeState();
             if (closeState < 1L || closeState > 3L) {
                 return;
             }
-            long callForHelpId = readWireLong(requestPayload, offset);
-            if (callForHelpId <= 0L) {
-                callForHelpId = readWireLong(requestPayload, offset);
-            }
+            long callForHelpId = request.callForHelpId();
             if (callForHelpId <= 0L) {
                 return;
             }
@@ -355,22 +383,25 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_8_6DD790(Object... args) {
-        updateCallForHelpTab(args, "GC", "1");
+    /**
+     * Original function: Proc_6_8_6DD790.
+     */
+    public static void moveCallForHelpToOpenTab(int socketIndex, String packetPrefix, String packetPayload) {
+        updateCallForHelpTab(socketIndex, packetPrefix, packetPayload, "1");
     }
 
-    public static void Proc_6_9_6DDD70(Object... args) {
+    /**
+     * Original function: Proc_6_9_6DDD70.
+     */
+    public static void lockCurrentRoomForModeration(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "GL");
+            StaffWire.RoomLockRequest request = StaffWire.roomLockRequest(packetPayload);
             String callerUserId = handlingUserIdFromSocket(socketIndex);
-            if (callerUserId.isEmpty() || "0".equals(callerUserId) || !handlingUserHasPermission(callerUserId, "fuse_mod")) {
+            if (callerUserId.isEmpty() || "0".equals(callerUserId) || !UserLookups.hasPermission(callerUserId, "fuse_mod", userDao(), AppConfigState.instance().permissionMatrix())) {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            LongRef offset = new LongRef(1);
-            readWireLong(requestPayload, offset);
-            long lockFlag = readWireLong(requestPayload, offset);
+            long lockFlag = request.lockFlag();
             if (roomId > 0L && lockFlag == 1L) {
                 StaffModerationDao moderationDao = staffModerationDao();
                 if (moderationDao != null) {
@@ -382,151 +413,123 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_10_6DE1D0(Object... args) {
-        staffRoomHistory(args, "GG", true);
+    /**
+     * Original function: Proc_6_10_6DE1D0.
+     */
+    public static void sendStaffRoomChatHistory(int socketIndex, String packetPrefix, String packetPayload) {
+        staffRoomHistory(socketIndex, packetPrefix, packetPayload, true);
     }
 
-    public static void Proc_6_11_6DF4A0(Object... args) {
-        staffRoomHistory(args, "GJ", false);
+    /**
+     * Original function: Proc_6_11_6DF4A0.
+     */
+    public static void sendStaffRoomVisitHistory(int socketIndex, String packetPrefix, String packetPayload) {
+        staffRoomHistory(socketIndex, packetPrefix, packetPayload, false);
     }
 
-    public static void Proc_6_12_6DFE90(Object... args) {
-        staffDirectMessage(args, "GN", "fuse_alert", "3", false, true);
+    /**
+     * Original function: Proc_6_12_6DFE90.
+     */
+    public static void sendStaffAlert(int socketIndex, String packetPrefix, String packetPayload) {
+        staffDirectMessage(socketIndex, packetPrefix, packetPayload, "fuse_alert", "3", false, true);
     }
 
-    public static long Proc_6_13_6E0A80(Object... args) {
+    /**
+     * Original function: Proc_6_13_6E0A80.
+     */
+    public static long waveCurrentRoomUser(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return 0L;
-            }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L) {
+            long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
+            SocialLookups.RoomUserAction action = SocialLookups.roomUserWaveAction(userId, roomId, roomUserIndex);
+            if (!action.valid()) {
                 return 0L;
             }
-            long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
-            broadcastToCurrentRoom(socketIndex, SocialPayloads.roomUserWave(roomUserIndex));
-            return roomUserIndex;
+            broadcastToCurrentRoom(socketIndex, action.payload());
+            return action.resultValue();
         } catch (Exception ignored) {
             return 0L;
         }
     }
 
-    public static long Proc_6_14_6E10C0(Object... args) {
+    /**
+     * Original function: Proc_6_14_6E10C0.
+     */
+    public static long danceCurrentRoomUser(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "A]");
-            long danceId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            if (danceId <= 0L) {
-                danceId = readWireLong(requestPayload, new LongRef(1));
-            }
-            if (danceId < 0L) {
-                danceId = 0L;
-            }
-            if (danceId > 4L) {
-                danceId = 4L;
-            }
             String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return 0L;
-            }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L) {
+            long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
+            SocialLookups.RoomUserAction action = SocialLookups.roomUserDanceAction(
+                userId, roomId, roomUserIndex, SocialWire.danceRequest(packetPayload));
+            if (!action.valid()) {
                 return 0L;
             }
-            long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
-            String payload = SocialPayloads.roomUserDance(roomUserIndex, danceId);
-            broadcastToCurrentRoom(socketIndex, payload);
-            return danceId;
+            broadcastToCurrentRoom(socketIndex, action.payload());
+            return action.resultValue();
         } catch (Exception ignored) {
             return 0L;
         }
     }
 
-    public static void Proc_6_15_6E1900(Object... args) {
+    /**
+     * Original function: Proc_6_15_6E1900.
+     */
+    public static void sendWardrobeSlots(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId) || !handlingUserHasPermission(userId, "fuse_use_wardrobe")) {
+            String payload = UserLookups.wardrobeSlotsPayload(
+                userId, userDao(), AppConfigState.instance().permissionMatrix());
+            if (payload.isEmpty()) {
                 return;
             }
-            long maxSlots = handlingUserHasPermission(userId, "fuse_larger_wardrobe") ? 10L : 5L;
-            UserDao users = userDao();
-            List<UserDao.WardrobeSlotRow> wardrobeRows = users == null
-                ? List.<UserDao.WardrobeSlotRow>of()
-                : users.wardrobeRows(NumberUtils.parseLong(userId));
-            sendToSocket(socketIndex, UserPayloads.wardrobeSlots(wardrobeRows, maxSlots).payload());
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_16_6E2320(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "Ex");
-            LongRef offset = new LongRef(1);
-            long slotId = readWireLong(requestPayload, offset);
-            String figureText = Functions.singleLineText(readWireString(requestPayload, offset));
-            String genderText = StringUtils.left(readWireString(requestPayload, offset).toUpperCase(), 1);
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId) || !handlingUserHasPermission(userId, "fuse_use_wardrobe")) {
-                return;
-            }
-            long maxSlots = handlingUserHasPermission(userId, "fuse_larger_wardrobe") ? 10L : 5L;
-            if (slotId < 1L || slotId > maxSlots || (!"M".equals(genderText) && !"F".equals(genderText))) {
-                return;
-            }
-            String figureData = readFile(Functions.applicationPath + "/figuredata.cache");
-            if (!isValidWardrobeFigure(figureText, genderText, figureData)) {
-                return;
-            }
-            UserDao users = userDao();
-            if (users != null) {
-                long numericUserId = NumberUtils.parseLong(userId);
-                users.deleteWardrobeSlot(numericUserId, slotId);
-                users.insertWardrobeSlot(numericUserId, slotId, figureText, genderText);
-            }
-            Proc_6_15_6E1900(socketIndex, "Ew", "Ew");
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_17_6E48D0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "@l");
-            LongRef offset = new LongRef(1);
-            String genderText = StringUtils.left(readWireString(requestPayload, offset).toUpperCase(), 1);
-            String figureText = Functions.singleLineText(readWireString(requestPayload, offset));
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId) || (!"M".equals(genderText) && !"F".equals(genderText))) {
-                return;
-            }
-            String figureData = readFile(Functions.applicationPath + "/figuredata.cache");
-            if (!isValidWardrobeFigure(figureText, genderText, figureData)) {
-                return;
-            }
-            UserDao users = userDao();
-            long numericUserId = NumberUtils.parseLong(userId);
-            String mottoText = "";
-            if (users != null) {
-                users.updateTutorialClothes(numericUserId, genderText, figureText);
-                mottoText = users.motto(numericUserId);
-            }
-            String payload = UserPayloads.identityRefresh(NumberUtils.parseLong(userId), mottoText, figureText, genderText);
             sendToSocket(socketIndex, payload);
-            broadcastToCurrentRoom(socketIndex, payload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_18_6E7480(Object... args) {
+    /**
+     * Original function: Proc_6_16_6E2320.
+     */
+    public static void saveWardrobeSlot(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
+            String userId = handlingUserIdFromSocket(socketIndex);
+            String figureData = FileUtils.readTextFile(AppPaths.applicationPath() + "/figuredata.cache");
+            String payload = UserLookups.saveWardrobeSlotPayload(
+                userId, packetPayload, figureData, userDao(), AppConfigState.instance().permissionMatrix());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_17_6E48D0.
+     */
+    public static void updateTutorialClothes(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            String userId = handlingUserIdFromSocket(socketIndex);
+            String figureData = FileUtils.readTextFile(AppPaths.applicationPath() + "/figuredata.cache");
+            String payload = UserLookups.updateTutorialClothesPayload(
+                userId, packetPayload, figureData, userDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
+                broadcastToCurrentRoom(socketIndex, payload);
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_18_6E7480.
+     */
+    public static void sendClubSubscriptionOffers(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
             String userId = handlingUserIdFromSocket(socketIndex);
             if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
                 return;
@@ -543,14 +546,16 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_19_6E8040(Object... args) {
+    /**
+     * Original function: Proc_6_19_6E8040.
+     */
+    public static String sendCachedRecyclerStatus(int socketIndex, String cachedPayload, String packetPrefix) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return "";
             }
-            String cachedPayload = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
-            String packetPrefix = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
+            cachedPayload = StringUtils.text(cachedPayload);
+            packetPrefix = StringUtils.text(packetPrefix);
             if (packetPrefix.isEmpty()) {
                 packetPrefix = "Gz";
             }
@@ -565,86 +570,56 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_20_6E88E0(Object... args) {
+    /**
+     * Original function: Proc_6_20_6E88E0.
+     */
+    public static void sendRankAndStaffState(int socketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
+            String payload = UserLookups.rankAndStaffStatePayload(
+                userId, userDao(), AppConfigState.instance().permissionMatrix());
+            if (payload.isEmpty()) {
                 return;
             }
-            long rankIndex = handlingUserRank(userId);
-            long staffFlag = handlingUserHasPermission(userId, "fuse_client_staff") ? 1L : 0L;
-            sendToSocket(socketIndex, UserPayloads.rankAndStaffState(rankIndex, staffFlag));
+            sendToSocket(socketIndex, payload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static String Proc_6_24_6EA010(Object... args) {
-        return handlingRepresentedChatRoute(args, 0L);
-    }
-
-    public static String Proc_6_25_6EEAC0(Object... args) {
-        return handlingRepresentedChatRoute(args, 0L);
-    }
-
-    public static String legacyChatCommandPayload(String messageText) {
-        String command = StringUtils.text(messageText).trim().toLowerCase(Locale.ROOT);
-        if (":entwicklung".equals(command)) {
-            return "BK" + "UNIQUE ID: --" + '\n'
-                + "BUILD: " + legacyCommandBuildText() + '\2';
-        }
-        if (":about".equals(command)) {
-            return "BK" + "Alpha Series" + '\n' + '\n'
-                + "This is a copy of the unique Alpha Series written in Visual Basic 2006."
-                + '\n' + '\n' + "UNIQUE ID:   --" + '\n'
-                + "BUILD:   " + legacyCommandBuildText() + '\2';
-        }
-        if (":commands".equals(command)) {
-            return "BK" + "You've following commands avaible:" + '\r' + '\r'
-                + ":about" + '\r'
-                + ":commands" + '\r'
-                + ":entwicklung" + '\r'
-                + ":statistics" + '\r'
-                + ":drink" + '\r'
-                + ":follow" + '\r'
-                + ":transfer" + '\r'
-                + ":tiplock" + '\r'
-                + ":whosonline" + '\r' + '\r'
-                + "\u2022 Please note that some commands require additional syntax, which hasn't been listed up here!"
-                + '\2';
-        }
-        return "";
-    }
-
-    public static String legacyCommandBuildText() {
-        String buildText = Licence.runtimeState().productName();
-        return buildText.isEmpty() ? "ALPHASERIES_FINAL (PREMIUM)" : buildText;
-    }
-
-    public static String legacyActiveUsersPayload(String userNamesText) {
-        String names = StringUtils.text(userNamesText).trim();
-        return "BK" + "Active users:" + '\r' + '\r' + names + '\2' + '\2';
-    }
-
-    public static String Proc_6_26_7034C0(Object... args) {
-        return handlingRepresentedChatRoute(args, 0L);
-    }
-
-    public static String Proc_6_27_706920(Object... args) {
-        return handlingRepresentedChatRoute(args, 1L);
-    }
-
-    public static String Proc_6_28_709DA0(Object... args) {
-        return handlingRepresentedChatRoute(args, 2L);
+    /**
+     * Original function: Proc_6_24_6EA010.
+     */
+    public static String routeChatMessage(int socketIndex, String packetPrefix, String packetPayload) {
+        return handlingRepresentedChatRoute(socketIndex, packetPayload, 0L);
     }
 
     /**
-     * Original function: Proc_6_53_718E00.
+     * Original function: Proc_6_25_6EEAC0.
      */
-    public static void Proc_6_53_718E00(Object... args) {
-        int socketIndex = args != null && args.length >= 1 ? (int) NumberUtils.parseLong(args[0]) : 0;
-        sendRoomReady(socketIndex);
+    public static String routeChatCommand(int socketIndex, String packetPayload) {
+        return handlingRepresentedChatRoute(socketIndex, packetPayload, 0L);
+    }
+
+    /**
+     * Original function: Proc_6_26_7034C0.
+     */
+    public static String chatInCurrentRoom(int socketIndex, String packetPrefix, String packetPayload) {
+        return handlingRepresentedChatRoute(socketIndex, packetPayload, 0L);
+    }
+
+    /**
+     * Original function: Proc_6_27_706920.
+     */
+    public static String shoutInCurrentRoom(int socketIndex, String packetPrefix, String packetPayload) {
+        return handlingRepresentedChatRoute(socketIndex, packetPayload, 1L);
+    }
+
+    /**
+     * Original function: Proc_6_28_709DA0.
+     */
+    public static String whisperInCurrentRoom(int socketIndex, String packetPrefix, String packetPayload) {
+        return handlingRepresentedChatRoute(socketIndex, packetPayload, 2L);
     }
 
     /**
@@ -655,193 +630,6 @@ public final class Handling {
             return;
         }
         MusConnectionManager.instance().sendData(socketIndex, "@R");
-    }
-
-    public static final class LongRef {
-        public long value;
-
-        public LongRef(long value) {
-            this.value = value;
-        }
-    }
-
-    public static final class StickyNoteUpdate {
-        public long furnitureId;
-        public String noteColor = "";
-        public String noteCaption = "";
-    }
-
-    public static final class WallPlacement {
-        public long wallX;
-        public long wallY;
-        public long localX;
-        public long localY;
-    }
-
-    public static final class RoomEventPayload {
-        public long categoryId;
-        public String categoryName = "";
-        public String eventName = "";
-        public String eventDescription = "";
-        public String tagOne = "";
-        public String tagTwo = "";
-    }
-
-    public static final class RoomSettingsPayload {
-        public String roomName = "";
-        public String roomPassword = "";
-        public long doorStatus;
-        public String roomDescription = "";
-        public long visitorsMax;
-        public long categoryId;
-        public String tagOne = "";
-        public String tagTwo = "";
-        public long allowOthersPets;
-        public long allowFeedPets;
-        public long allowWalkthrough;
-        public long disableWalls;
-        public long thicknessFloor;
-        public long thicknessWallpaper;
-    }
-
-    public static final class InventoryPayloads {
-        public long regularCount;
-        public long iconCount;
-        public String regularPayload = "";
-        public String iconPayload = "";
-    }
-
-    public static final class FurnitureMoveRequest {
-        public long furnitureId;
-        public long positionX;
-        public long positionY;
-        public long rotation;
-    }
-
-    public static final class FloorFurniturePlacement {
-        public long furnitureId;
-        public long positionX;
-        public long positionY;
-        public long rotation;
-    }
-
-    public static final class FurnitureCacheState {
-        public String pendingRoomCache = "";
-        public String pendingFurnitureCache = "";
-        public String representedRoomCache = "";
-    }
-
-    public static final class FurnitureStateCache {
-        public String pendingRoomCache = "";
-        public String pendingFurnitureCache = "";
-        public String representedRoomCache = "";
-    }
-
-    public static final class FriendTargetList {
-        public boolean deleteAllPending;
-        public String targetList = "";
-        public List<Long> targetIds = List.of();
-        public long targetCount;
-    }
-
-    public static final class PetCommandAction {
-        public boolean found;
-        public long requiredLevel;
-        public String action = "";
-    }
-
-    public static final class PetExperienceUpdate {
-        public long petLevel;
-        public long petExperience;
-        public boolean leveledUp;
-        public String statusPayload = "";
-        public String experiencePayload = "";
-    }
-
-    public static final class PollAnswerSubmission {
-        public long pollId;
-        public long questionId;
-        public long answerValue;
-        public String answerText = "";
-        public boolean valid;
-    }
-
-    public static final class RecyclerSelection {
-        public long requestedCount;
-        public String selectedItems = "";
-        public List<Long> selectedItemIds = List.of();
-        public boolean valid;
-    }
-
-    public record BadgeUpdateSelections(String first, String second, String third, String fourth, String fifth) {
-        public BadgeUpdateSelections {
-            first = StringUtils.text(first);
-            second = StringUtils.text(second);
-            third = StringUtils.text(third);
-            fourth = StringUtils.text(fourth);
-            fifth = StringUtils.text(fifth);
-        }
-
-        public int size() {
-            return 5;
-        }
-
-        public String slot(int index) {
-            if (index == 0) {
-                return first;
-            }
-            if (index == 1) {
-                return second;
-            }
-            if (index == 2) {
-                return third;
-            }
-            if (index == 3) {
-                return fourth;
-            }
-            if (index == 4) {
-                return fifth;
-            }
-            return "";
-        }
-    }
-
-    public static final class AchievementProgressDecision {
-        public long achievementIndex = -1L;
-        public long nextLevel;
-        public long requiredProgress;
-        public boolean shouldReward;
-    }
-
-    public static final class SongInfoRequest {
-        public long requestedCount;
-        public String requestedIds = "";
-        public List<Long> requestedIdList = List.of();
-    }
-
-    public static final class JukeboxAddRequest {
-        public long diskFurnitureId;
-        public long playlistOrder;
-    }
-
-    public static final class QuestProgressDecision {
-        public long questId;
-        public long numericQuestId;
-        public long progressValue;
-        public long amountRequired;
-        public long waitAmount;
-        public long remainingWait;
-        public boolean shouldComplete;
-        public boolean shouldScheduleWait;
-        public boolean shouldSendList;
-    }
-
-    public static final class ActivityPointAward {
-        public long pointType;
-        public long awardAmount;
-        public long newPoints;
-        public boolean shouldAward;
-        public String payload = "";
     }
 
     public record CatalogGrantResult(List<Long> furnitureIds) {
@@ -861,183 +649,13 @@ public final class Handling {
             return furnitureIds.isEmpty() ? 0L : NumberUtils.parseLong(furnitureIds.get(0));
         }
 
-        public String legacyIdText() {
-            return furnitureIds.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(","));
-        }
-    }
-
-    public static final class TradeOfferItemPayload {
-        public long itemCount;
-        public String payload = "";
-    }
-
-    public static final class StaffChatRowsPayload {
-        public long chatCount;
-        public String payload = "";
-    }
-
-    public static boolean isValidWardrobeFigure(String figureText, String genderText) {
-        return isValidWardrobeFigure(figureText, genderText, "");
-    }
-
-    public static boolean isValidWardrobeFigure(String figureText, String genderText, String figureData) {
-        String figure = StringUtils.text(figureText);
-        String gender = StringUtils.text(genderText).toUpperCase();
-        if (figure.isEmpty() || figure.length() > 255 || figure.indexOf('\'') >= 0 || figure.indexOf('"') >= 0) {
-            return false;
-        }
-
-        String allowedTypes = ";lg;ha;wa;hr;ch;sh;cc;ea;he;ca;hd;fa;cp;";
-        for (String part : figure.split("\\.", -1)) {
-            if (!part.isEmpty()) {
-                String[] piece = part.split("-", -1);
-                if (piece.length < 2) {
-                    return false;
-                }
-                String figureType = piece[0].toLowerCase();
-                String setId = piece[1];
-                if (!allowedTypes.contains(";" + figureType + ";") || NumberUtils.parseLong(setId) <= 0L) {
-                    return false;
-                }
-
-                if (!StringUtils.text(figureData).isEmpty()) {
-                    String lowerFigureData = figureData.toLowerCase();
-                    String setTypeMarker = "<settype type=\"" + figureType + "\"";
-                    int setTypeStart = lowerFigureData.indexOf(setTypeMarker.toLowerCase());
-                    if (setTypeStart < 0) {
-                        return false;
-                    }
-                    int setTypeEnd = lowerFigureData.indexOf("</settype>", setTypeStart);
-                    if (setTypeEnd < 0) {
-                        return false;
-                    }
-                    String setTypeXml = figureData.substring(setTypeStart, setTypeEnd);
-                    String setMarker = "<set id=\"" + NumberUtils.parseLong(setId) + "\"";
-                    if (!setTypeXml.toLowerCase().contains(setMarker.toLowerCase())) {
-                        return false;
-                    }
-                    if (!figureSetAllowsGender(setTypeXml, setMarker, gender)) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    public static boolean figureSetAllowsGender(String setTypeXml, String setMarker, String genderText) {
-        String setType = StringUtils.text(setTypeXml);
-        String marker = StringUtils.text(setMarker);
-        int setStart = setType.toLowerCase().indexOf(marker.toLowerCase());
-        if (setStart < 0) {
-            return false;
-        }
-        String lowerSetType = setType.toLowerCase();
-        int setEnd = lowerSetType.indexOf("</set>", setStart);
-        if (setEnd < 0) {
-            setEnd = lowerSetType.indexOf("/>", setStart);
-        }
-        if (setEnd < 0) {
-            setEnd = setType.length();
-        }
-        String setXml = setType.substring(setStart, setEnd);
-        int genderStart = setXml.toLowerCase().indexOf("gender=\"");
-        if (genderStart < 0) {
-            return true;
-        }
-        if (genderStart + 8 >= setXml.length()) {
-            return false;
-        }
-        String genderValue = setXml.substring(genderStart + 8, genderStart + 9).toUpperCase();
-        String gender = StringUtils.text(genderText).toUpperCase();
-        return "U".equals(genderValue) || genderValue.equals(gender);
-    }
-
-    public static String Proc_6_21_6E8BA0(Object... args) {
-        if (args == null || args.length == 0) {
-            return "";
-        }
-        return extractUrlList(StringUtils.text(args[0]));
-    }
-
-    public static String extractUrlList(String messageText) {
-        StringBuilder urlList = new StringBuilder();
-        for (String word : StringUtils.text(messageText).split(" ", -1)) {
-            String candidate = word.trim();
-            String lowered = candidate.toLowerCase();
-            if (!candidate.isEmpty()) {
-                if (lowered.startsWith("www.") && lowered.indexOf('.', 4) > 0) {
-                    urlList.append(candidate).append(';');
-                } else if (lowered.startsWith("http://")) {
-                    urlList.append(candidate).append(';');
-                } else if (lowered.startsWith("https://")) {
-                    urlList.append(candidate).append(';');
-                }
-            }
-        }
-        return urlList.toString();
-    }
-
-    public static String Proc_6_22_6E9300(Object... args) {
-        if (args == null || args.length == 0) {
-            return "";
-        }
-        boolean enabled = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.chat.filter.enabled", 0)) != 0L;
-        String replacement = Functions.settingsCache().valueOrDefault("com.client.chat.filter.replacement", "");
-        return chatSettings().filterText(StringUtils.text(args[0]), enabled, replacement);
     }
 
     /**
-     * Original function: Proc_6_22_6E9300.
+     * Original function: Proc_6_30_70DC90.
      */
-    public static String filterChatText(
-        String messageText,
-        boolean filterEnabled,
-        String replacementText,
-        List<ChatSettings.FilterWord> filterRows
-    ) {
-        return ChatSettings.fromRows(filterRows, List.of()).filterText(messageText, filterEnabled, replacementText);
-    }
-
-    public static long Proc_6_23_6E9A90(Object... args) {
-        if (args == null || args.length == 0) {
-            return 0L;
-        }
-        boolean enabled = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.chat.gesture.enabled", 0)) != 0L;
-        return chatSettings().gestureId(StringUtils.text(args[0]), enabled);
-    }
-
-    /**
-     * Original function: Proc_6_23_6E9A90.
-     */
-    public static long findGestureId(String messageText, boolean gestureEnabled, List<ChatSettings.Gesture> gestureRows) {
-        return ChatSettings.fromRows(List.of(), gestureRows).gestureId(messageText, gestureEnabled);
-    }
-
-    public static String Proc_6_29_70D800(Object... args) {
-        if (args == null || args.length < 12) {
-            return "";
-        }
-        return StaffPayloads.callForHelp(
-            NumberUtils.parseLong(args[0]),
-            NumberUtils.parseLong(args[1]),
-            NumberUtils.parseLong(args[2]),
-            NumberUtils.parseLong(args[3]),
-            StringUtils.text(args[4]),
-            NumberUtils.parseLong(args[5]),
-            StringUtils.text(args[6]),
-            StringUtils.text(args[7]),
-            NumberUtils.parseLong(args[8]),
-            StringUtils.text(args[9]),
-            NumberUtils.parseLong(args[10]),
-            StringUtils.text(args[11]));
-    }
-
-    public static void Proc_6_30_70DC90(Object... args) {
+    public static void cancelLatestCallForHelp(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty()) {
                 return;
@@ -1056,19 +674,21 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_31_70DE80(Object... args) {
+    /**
+     * Original function: Proc_6_31_70DE80.
+     */
+    public static void openStaffModerationPanel(int socketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
-            long rankIndex = handlingUserRank(userId);
-            long hcLevel = handlingUserHcLevel(userId);
-            if (!Functions.permissionMatrix().allows(rankIndex, "", "fuse_mod", hcLevel)) {
+            long rankIndex = UserLookups.rank(userId, userDao());
+            long hcLevel = UserLookups.hcLevel(userId, userDao());
+            if (!AppConfigState.instance().permissionMatrix().allows(rankIndex, "", "fuse_mod", hcLevel)) {
                 return;
             }
-            String payload = StaffPayloads.moderationPanel(staffModerationPayload(rankIndex, hcLevel));
+            String payload = StaffPayloads.moderationPanel(staffSettings(), rankIndex, hcLevel);
             sendToSocket(socketIndex, payload);
 
             StaffModerationDao moderationDao = staffModerationDao();
@@ -1077,18 +697,19 @@ public final class Handling {
             }
             for (StaffCallForHelpRow row : moderationDao.openStaffCallRows()) {
                 sendToSocket(socketIndex,
-                    StaffPayloads.callForHelpNotification(StaffPayloads.callForHelpRow(row, null)));
+                    StaffPayloads.callForHelpNotification(row, null));
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_32_70EAB0(Object... args) {
+    /**
+     * Original function: Proc_6_32_70EAB0.
+     */
+    public static void submitCallForHelp(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = handlingPacketPayload(args);
-            String requestPayload = packetPayload.length() >= 3 ? packetPayload.substring(2) : packetPayload;
+            StaffWire.SubmitCallForHelpRequest request = StaffWire.submitCallForHelpRequest(packetPayload);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
@@ -1101,16 +722,12 @@ public final class Handling {
             if (lastClosedState.isPresent() && lastClosedState.get() == 0L) {
                 return;
             }
-            LongRef offset = new LongRef(1);
-            String descriptionText = Functions.singleLineText(readWireString(requestPayload, offset));
+            String descriptionText = request.descriptionText();
             if (descriptionText.length() < 30) {
                 return;
             }
-            long categoryId = readWireLong(requestPayload, offset);
-            if (categoryId <= 0L) {
-                categoryId = readWireLong(requestPayload, offset);
-            }
-            long partnerUserId = readWireLong(requestPayload, offset);
+            long categoryId = request.categoryId();
+            long partnerUserId = request.partnerUserId();
             if (partnerUserId == NumberUtils.parseLong(userId)) {
                 partnerUserId = 0L;
             }
@@ -1126,44 +743,48 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_33_70F4F0(Object... args) {
+    /**
+     * Original function: Proc_6_33_70F4F0.
+     */
+    public static void sendImportantFaqs(int socketIndex) {
         try {
-            sendToSocket(handlingSocketIndex(args),
-                HelpPayloads.importantFaqs(helpCenterCache().importantFaqPayload()));
+            sendToSocket(socketIndex, HelpPayloads.importantFaqs(helpCenterCache()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_34_70F590(Object... args) {
+    /**
+     * Original function: Proc_6_34_70F590.
+     */
+    public static void sendFaqCategories(int socketIndex) {
         try {
-            sendToSocket(handlingSocketIndex(args),
-                HelpPayloads.categories(helpCenterCache().categoryPayload()));
+            sendToSocket(socketIndex, HelpPayloads.categories(helpCenterCache()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_35_70F630(Object... args) {
+    /**
+     * Original function: Proc_6_35_70F630.
+     */
+    public static void sendCategoryFaqs(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = handlingPacketPayload(args);
-            long categoryId = packetPayload.length() >= 3 ? readWireLong(packetPayload.substring(2), new LongRef(1)) : 0L;
-            HelpCenterCache helpCenterCache = helpCenterCache();
-            String categoryPayload = helpCenterCache.categoryFaqPayload(categoryId);
-            sendToSocket(socketIndex, HelpPayloads.categoryFaqs(categoryId, categoryPayload));
+            HelpWire.CategoryFaqRequest request = HelpWire.categoryFaqRequest(packetPayload, packetPrefix);
+            long categoryId = request.categoryId();
+            sendToSocket(socketIndex, HelpPayloads.categoryFaqs(helpCenterCache(), categoryId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_36_70F7B0(Object... args) {
+    /**
+     * Original function: Proc_6_36_70F7B0.
+     */
+    public static void searchFaqs(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = handlingPacketPayload(args);
-            String searchText = packetPayload.length() >= 3
-                ? Functions.sqlEscapedText(Functions.readBase64LengthString(packetPayload.substring(2)))
-                : "";
+            HelpWire.FaqSearchRequest request = HelpWire.faqSearchRequest(packetPayload, packetPrefix);
+            String searchText = request.searchText();
             if (searchText.length() < 3) {
                 disconnectSocket(socketIndex);
                 return;
@@ -1179,63 +800,49 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_37_70FC20(Object... args) {
+    /**
+     * Original function: Proc_6_37_70FC20.
+     */
+    public static void sendFaqDescription(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = handlingPacketPayload(args);
-            long faqId = 0L;
-            if (packetPayload.length() >= 3) {
-                String requestPayload = packetPayload.substring(2);
-                faqId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-                if (faqId <= 0L) {
-                    faqId = readWireLong(requestPayload, new LongRef(1));
-                }
-            }
-            sendToSocket(socketIndex,
-                HelpPayloads.description(helpCenterCache().descriptionPayload(faqId)));
+            HelpWire.FaqIdRequest request = HelpWire.faqIdRequest(packetPayload, packetPrefix);
+            long faqId = request.faqId();
+            sendToSocket(socketIndex, HelpPayloads.description(helpCenterCache(), faqId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static long Proc_6_38_70FD10(Object... args) {
+    /**
+     * Original function: Proc_6_38_70FD10.
+     */
+    public static long changeAvatarName(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "GV");
-            LongRef offset = new LongRef(1);
-            String candidateName = Functions.singleLineText(readWireString(requestPayload, offset));
-            if (candidateName.isEmpty()) {
-                candidateName = Functions.singleLineText(Functions.readBase64LengthString(requestPayload));
-            }
-            return Proc_6_40_711770(socketIndex, 0, candidateName);
+            UserWire.AvatarNameRequest request = UserWire.avatarNameRequest(packetPayload, packetPrefix);
+            return validateOrChangeAvatarName(socketIndex, false, request.candidateName());
         } catch (Exception ignored) {
             return 0L;
         }
     }
 
-    public static long Proc_6_39_711650(Object... args) {
+    /**
+     * Original function: Proc_6_39_711650.
+     */
+    public static long checkAvatarName(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "GW");
-            LongRef offset = new LongRef(1);
-            String candidateName = Functions.singleLineText(readWireString(requestPayload, offset));
-            if (candidateName.isEmpty()) {
-                candidateName = Functions.singleLineText(Functions.readBase64LengthString(requestPayload));
-            }
-            return Proc_6_40_711770(socketIndex, -1, candidateName);
+            UserWire.AvatarNameRequest request = UserWire.avatarNameRequest(packetPayload, packetPrefix);
+            return validateOrChangeAvatarName(socketIndex, true, request.candidateName());
         } catch (Exception ignored) {
             return 0L;
         }
     }
 
-    public static long Proc_6_40_711770(Object... args) {
+    /**
+     * Original function: Proc_6_40_711770.
+     */
+    public static long validateOrChangeAvatarName(int socketIndex, boolean checkOnly, String candidateName) {
         try {
-            if (args == null || args.length < 3) {
-                return 0L;
-            }
-            int socketIndex = handlingSocketIndex(args);
-            boolean checkOnly = NumberUtils.parseLong(args[1]) < 0L;
-            String candidateName = StringUtils.text(args[2]).trim();
+            candidateName = StringUtils.text(candidateName).trim();
             if (socketIndex <= 0) {
                 return 0L;
             }
@@ -1243,45 +850,34 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
-            UserDao users = userDao();
-            if (users == null) {
+            long numericUserId = NumberUtils.parseLong(userId);
+            AvatarNameUpdate update = UserLookups.validateOrChangeAvatarName(
+                userId, socketIndex, checkOnly, candidateName, userDao());
+            if (update.validationPayload().isEmpty()) {
                 return 0L;
             }
-            long numericUserId = NumberUtils.parseLong(userId);
-            String oldName = users.name(numericUserId);
-            users.gender(numericUserId);
-            long existingCount = users.countByName(candidateName);
-            long validationCode = avatarNameValidationCode(candidateName, oldName, existingCount);
-            sendToSocket(socketIndex, UserPayloads.avatarNameValidation(validationCode, candidateName));
-            if (checkOnly || validationCode != 0L) {
-                return validationCode;
-            }
-            users.updateName(numericUserId, candidateName);
-            users.insertIdentityLog(oldName, candidateName, socketIndex);
-            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            sendToSocket(socketIndex, update.validationPayload());
+            long roomId = update.changed() ? handlingCurrentRoomId(socketIndex, userId) : 0L;
             if (roomId > 0L) {
                 long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
                 broadcastToCurrentRoom(socketIndex,
-                    UserPayloads.roomUserNameChanged(NumberUtils.parseLong(userId), roomUserIndex, candidateName));
-                String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
-                    + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
-                broadcastToCurrentRoom(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0));
+                    UserPayloads.roomUserNameChanged(numericUserId, roomUserIndex, update.candidateName()));
+                broadcastToCurrentRoom(socketIndex, NavigatorRequests.roomListPayload(roomId, roomDao()));
                 broadcastToCurrentRoom(socketIndex, RoomPayloads.entryUpdated(roomId));
             }
-            return 0L;
+            return update.validationCode();
         } catch (Exception ignored) {
             return 0L;
         }
     }
 
-    public static void Proc_6_43_713680(Object... args) {
+    /**
+     * Original function: Proc_6_43_713680.
+     */
+    public static void sendRoomSettings(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "FF");
-            long requestedRoomId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            if (requestedRoomId <= 0L) {
-                requestedRoomId = readWireLong(requestPayload, new LongRef(1));
-            }
+            RoomWire.RoomSettingsReadRequest request = RoomWire.roomSettingsReadRequest(packetPayload);
+            long requestedRoomId = request.requestedRoomId();
             String callerUserId = handlingUserIdFromSocket(socketIndex);
             if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
                 return;
@@ -1290,19 +886,10 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            if (!handlingUserOwnsRoom(callerUserId, roomId) && !handlingUserHasPermission(callerUserId, "fuse_any_room_controller")) {
+            if (!RoomLookups.userOwnsRoom(callerUserId, roomId, roomDao()) && !UserLookups.hasPermission(callerUserId, "fuse_any_room_controller", userDao(), AppConfigState.instance().permissionMatrix())) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
-                return;
-            }
-            Optional<RoomDao.RoomSettingsRead> roomSettings = rooms.roomSettings(roomId);
-            if (roomSettings.isEmpty()) {
-                return;
-            }
-            List<RoomDao.RoomRight> rightsRows = rooms.rightsRows(roomId);
-            String payload = RoomPayloads.settingsRead(roomSettings.get(), rightsRows);
+            String payload = RoomLookups.roomSettingsPayload(roomId, roomDao());
             if (!payload.isEmpty()) {
                 sendToSocket(socketIndex, payload);
             }
@@ -1311,10 +898,11 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_44_7145E0(Object... args) {
+    /**
+     * Original function: Proc_6_44_7145E0.
+     */
+    public static void updateRoomIcon(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = handlingRequestPayload(args, "FB");
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
@@ -1323,27 +911,24 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            String iconPayload = roomIconPayloadFromWire(packetPayload);
-            if (iconPayload.isEmpty()) {
+            RoomLookups.RoomIconUpdate iconUpdate =
+                RoomLookups.updateRoomIcon(roomId, RoomWire.roomIconRequest(packetPayload), roomDao());
+            if (!iconUpdate.valid()) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms != null) {
-                rooms.updateIcon(roomId, iconPayload);
-            }
-            String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
-                + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
-            broadcastToCurrentRoom(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0));
-            sendToSocket(socketIndex, RoomPayloads.iconUpdated(roomId));
-            sendToSocket(socketIndex, RoomPayloads.entryUpdated(roomId));
+            broadcastToCurrentRoom(socketIndex, NavigatorRequests.roomListPayload(roomId, roomDao()));
+            sendToSocket(socketIndex, iconUpdate.iconUpdatedPayload());
+            sendToSocket(socketIndex, iconUpdate.entryUpdatedPayload());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_45_714B60(Object... args) {
+    /**
+     * Original function: Proc_6_45_714B60.
+     */
+    public static void deleteRoomEvent(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
@@ -1352,19 +937,20 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms != null) {
-                rooms.deleteRoomEvents(roomId);
+            RoomLookups.RoomEventChange change = RoomLookups.deleteRoomEvent(roomId, roomDao());
+            if (change.hasDirectPayload()) {
+                sendToSocket(socketIndex, change.directPayload());
             }
-            sendToSocket(socketIndex, "Er-1" + '\2');
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_46_714D50(Object... args) {
+    /**
+     * Original function: Proc_6_46_714D50.
+     */
+    public static void sendRoomDoorStatus(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
@@ -1373,22 +959,19 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            long doorStatus = rooms == null ? 0L : rooms.doorStatus(roomId);
-            sendToSocket(socketIndex, doorStatus != 0L ? "EoHK" : "EoIH");
+            sendToSocket(socketIndex, RoomLookups.doorStatusPayload(roomId, roomDao()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_47_714F60(Object... args) {
+    /**
+     * Original function: Proc_6_47_714F60.
+     */
+    public static void setHomeRoom(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = handlingPacketPayload(args);
-            if (packetPayload.length() > 2) {
-                packetPayload = packetPayload.substring(2);
-            }
-            long roomId = readWireLong(packetPayload, new LongRef(1));
+            RoomWire.RoomIdRequest request = RoomWire.roomIdRequest(packetPayload, StringUtils.text(packetPrefix));
+            long roomId = request.roomId();
             if (roomId <= 0L) {
                 return;
             }
@@ -1396,59 +979,20 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
-            UserDao users = userDao();
-            if (users != null) {
-                users.updateHomeRoom(NumberUtils.parseLong(userId), roomId);
+            String payload = RoomLookups.setHomeRoomPayload(userId, roomId, userDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            sendToSocket(socketIndex, RoomPayloads.homeRoom(roomId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_48_7151E0(Object... args) {
+    /**
+     * Original function: Proc_6_48_7151E0.
+     */
+    public static void createRoomEvent(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = handlingRequestPayload(args, "EZ");
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return;
-            }
-            long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L) {
-                return;
-            }
-            RoomDao rooms = roomDao();
-            long doorStatus = rooms == null ? 0L : rooms.doorStatus(roomId);
-            if (doorStatus != 0L) {
-                sendToSocket(socketIndex, "EoHK");
-                return;
-            }
-            RoomEventPayload event = new RoomEventPayload();
-            if (!roomEventCreatePayloadFromWire(packetPayload, event)) {
-                return;
-            }
-            if (rooms != null) {
-                rooms.insertRoomEvent(
-                    roomId,
-                    NumberUtils.parseLong(userId),
-                    event.eventName,
-                    event.eventDescription,
-                    event.categoryId,
-                    event.tagOne,
-                    event.tagTwo,
-                    event.categoryName);
-            }
-            broadcastToCurrentRoom(socketIndex, "Er" + Proc_6_51_716AC0(roomId));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_49_715D30(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = handlingRequestPayload(args, "E\\");
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
@@ -1457,54 +1001,25 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            RoomEventPayload event = new RoomEventPayload();
-            if (!roomEventEditPayloadFromWire(packetPayload, event)) {
-                return;
+            String timeFormat = AppConfigState.instance().settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
+            RoomLookups.RoomEventChange change = RoomLookups.createRoomEvent(
+                userId, roomId, RoomWire.roomEventCreatePayloadFromWire(packetPayload), timeFormat, roomDao());
+            if (change.hasDirectPayload()) {
+                sendToSocket(socketIndex, change.directPayload());
             }
-            RoomDao rooms = roomDao();
-            if (rooms != null) {
-                rooms.updateRoomEvent(
-                    roomId,
-                    NumberUtils.parseLong(userId),
-                    event.eventName,
-                    event.eventDescription,
-                    event.tagOne,
-                    event.tagTwo);
+            if (change.hasBroadcastPayload()) {
+                broadcastToCurrentRoom(socketIndex, change.broadcastPayload());
             }
-            broadcastToCurrentRoom(socketIndex, "Er" + Proc_6_51_716AC0(roomId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_50_7166B0(Object... args) {
+    /**
+     * Original function: Proc_6_49_715D30.
+     */
+    public static void editRoomEvent(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "Ab");
-            String targetName = Functions.readBase64LengthString(requestPayload).trim();
-            if (targetName.isEmpty() || !requestPayload.startsWith("@")) {
-                targetName = requestPayload.trim();
-            }
-            if (targetName.isEmpty()) {
-                sendToSocket(socketIndex, "BC");
-                return;
-            }
-            UserDao users = userDao();
-            UserDao.ActiveUserLocation target = users == null ? null : users.activeLocationByName(targetName).orElse(null);
-            if (target == null || target.userId() <= 0L || target.socketIndex() <= 0L || target.roomId() <= 0L) {
-                sendToSocket(socketIndex, "BC");
-                return;
-            }
-            Proc_6_57_71E8F0(socketIndex, target.roomId(), "");
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_52_7172B0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = handlingRequestPayload(args, "FQ");
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
@@ -1513,91 +1028,96 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            if (!handlingUserOwnsRoom(userId, roomId) && !handlingUserHasPermission(userId, "fuse_any_room_controller")) {
+            String timeFormat = AppConfigState.instance().settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
+            RoomLookups.RoomEventChange change = RoomLookups.editRoomEvent(
+                userId, roomId, RoomWire.roomEventEditPayloadFromWire(packetPayload), timeFormat, roomDao());
+            if (change.hasDirectPayload()) {
+                sendToSocket(socketIndex, change.directPayload());
+            }
+            if (change.hasBroadcastPayload()) {
+                broadcastToCurrentRoom(socketIndex, change.broadcastPayload());
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_50_7166B0.
+     */
+    public static void followUserToRoom(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            SocialLookups.FollowRoomAction action =
+                SocialLookups.followRoomAction(SocialWire.followUserRequest(packetPayload), userDao());
+            if (action.hasFailurePayload()) {
+                sendToSocket(socketIndex, action.failurePayload());
                 return;
             }
-            RoomSettingsPayload settings = new RoomSettingsPayload();
-            if (!roomSettingsFromWire(packetPayload, settings)) {
+            if (action.canEnterRoom()) {
+                enterRoom(socketIndex, action.roomId(), "");
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_52_7172B0.
+     */
+    public static void updateRoomSettings(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
-            settings.categoryId = roomCategoryForUser(settings.categoryId, userId);
-            if (settings.categoryId <= 0L) {
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (roomId <= 0L) {
                 return;
             }
-            if (settings.disableWalls != 0L && !handlingUserHasPermission(userId, "fuse_hide_room_walls")) {
-                settings.disableWalls = 0L;
-            }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
+            if (!RoomLookups.userOwnsRoom(userId, roomId, roomDao()) && !UserLookups.hasPermission(userId, "fuse_any_room_controller", userDao(), AppConfigState.instance().permissionMatrix())) {
                 return;
             }
-            rooms.updateSettings(
+            RoomLookups.RoomSettingsUpdate update = RoomLookups.updateRoomSettings(
                 roomId,
-                settings.thicknessFloor,
-                settings.thicknessWallpaper,
-                settings.roomName,
-                settings.roomPassword,
-                settings.roomDescription,
-                settings.doorStatus,
-                settings.categoryId,
-                settings.tagOne,
-                settings.tagTwo,
-                settings.allowOthersPets,
-                settings.allowFeedPets,
-                settings.allowWalkthrough,
-                settings.visitorsMax,
-                settings.disableWalls);
-            String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
-                + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
-            broadcastToCurrentRoom(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0));
-            sendToSocket(socketIndex, RoomPayloads.settingsUpdated(roomId));
-            sendToSocket(socketIndex, RoomPayloads.entryUpdated(roomId));
-            sendToSocket(socketIndex,
-                RoomPayloads.wallOptions(settings.disableWalls, settings.thicknessFloor, settings.thicknessWallpaper));
+                RoomWire.roomSettingsFromWire(packetPayload),
+                UserLookups.rank(userId, userDao()),
+                UserLookups.hcLevel(userId, userDao()),
+                UserLookups.hasPermission(userId, "fuse_hide_room_walls", userDao(), AppConfigState.instance().permissionMatrix()),
+                roomDao());
+            if (!update.valid()) {
+                return;
+            }
+            broadcastToCurrentRoom(socketIndex, NavigatorRequests.roomListPayload(roomId, roomDao()));
+            sendToSocket(socketIndex, update.settingsUpdatedPayload());
+            sendToSocket(socketIndex, update.entryUpdatedPayload());
+            sendToSocket(socketIndex, update.wallOptionsPayload());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static String Proc_6_51_716AC0(Object... args) {
+    /**
+     * Original function: Proc_6_51_716AC0.
+     */
+    public static String roomEventInfoPayload(long roomId) {
         try {
-            if (args == null || args.length == 0) {
-                return "-1" + '\2';
-            }
-            long roomId = NumberUtils.parseLong(args[0]);
             if (roomId <= 0L) {
                 return "-1" + '\2';
             }
-            String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
+            String timeFormat = AppConfigState.instance().settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
             RoomDao rooms = roomDao();
-            Optional<RoomDao.RoomEventInfo> eventInfo = rooms == null
-                ? Optional.empty()
-                : rooms.eventInfo(roomId, timeFormat);
-            if (eventInfo.isEmpty()) {
-                return "-1" + '\2';
-            }
-            RoomDao.RoomEventInfo event = eventInfo.get();
-            return PacketBuilder.create()
-                .appendString(event.eventName())
-                .appendString(event.description())
-                .appendString(event.formattedTime())
-                .appendString(event.tagOne())
-                .appendString(event.tagTwo())
-                .appendInt(event.userId())
-                .appendInt(event.roomId())
-                .appendInt(event.categoryId())
-                .build();
+            return RoomLookups.eventInfoPayload(roomId, timeFormat, rooms);
         } catch (Exception ignored) {
             return "-1" + '\2';
         }
     }
 
-    public static long Proc_6_54_719050(Object... args) {
+    /**
+     * Original function: Proc_6_54_719050.
+     */
+    public static long enterRepresentedRoom(int socketIndex, long roomId, long preferredSlot) {
         long reservedSlot = 0L;
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            long preferredSlot = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
             if (socketIndex <= 0 || roomId <= 0L) {
                 return 0L;
             }
@@ -1606,38 +1126,51 @@ public final class Handling {
                 return 0L;
             }
             if (handlingCurrentRoomId(socketIndex, userId) > 0L) {
-                Proc_6_55_71A6E0(socketIndex, 0, 0);
+                leaveCurrentRoom(socketIndex);
             }
-            reservedSlot = reserveRepresentedRoomSlot(preferredSlot);
+            RoomState.instance().representedRoomSlots();
+            reservedSlot = RoomState.instance().reserveRepresentedRoomSlot(preferredSlot);
+            RoomState.instance().setRepresentedRoomSlots(RoomState.instance().representedRoomSlots());
             if (reservedSlot <= 0L) {
                 sendToSocket(socketIndex, UserPayloads.errorCode(1, 0));
                 return 0L;
             }
-            loadRepresentedRoomBots(reservedSlot, roomId);
+            PetLookups.loadRepresentedRoomBots(
+                reservedSlot,
+                roomId,
+                NumberUtils.parseLong(AppConfigState.instance().settingsCache()
+                    .valueOrDefault("com.client.rooms.bots.enabled", "-1")) != 0L,
+                botDao());
             UserDao users = userDao();
             RoomDao rooms = roomDao();
             if (users == null || rooms == null) {
-                releaseRepresentedRoomSlot(reservedSlot);
+                RoomState.instance().representedRoomSlots();
+                RoomState.instance().releaseRepresentedRoomSlot(reservedSlot);
+                RoomState.instance().setRepresentedRoomSlots(RoomState.instance().representedRoomSlots());
                 return 0L;
             }
             long userIdValue = NumberUtils.parseLong(userId);
             String sessionId = users.loginSession(userIdValue);
             rooms.insertVisit(userIdValue, roomId, sessionId);
             rooms.markRoomEntered(roomId, reservedSlot);
-            Proc_6_56_71E730(socketIndex, 0, 0);
+            sendRoomEntryBootstrap(socketIndex, 0);
             sendRoomReady(socketIndex);
             return reservedSlot;
         } catch (Exception ignored) {
             if (reservedSlot > 0L) {
-                releaseRepresentedRoomSlot(reservedSlot);
+                RoomState.instance().representedRoomSlots();
+                RoomState.instance().releaseRepresentedRoomSlot(reservedSlot);
+                RoomState.instance().setRepresentedRoomSlots(RoomState.instance().representedRoomSlots());
             }
             return 0L;
         }
     }
 
-    public static long Proc_6_55_71A6E0(Object... args) {
+    /**
+     * Original function: Proc_6_55_71A6E0.
+     */
+    public static long leaveCurrentRoom(int socketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return 0L;
             }
@@ -1664,7 +1197,7 @@ public final class Handling {
             }
             long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
             if (roomUserIndex > 0L) {
-                broadcastToCurrentRoom(socketIndex, SocialPayloads.roomUserRemoved(roomUserIndex));
+                broadcastToCurrentRoom(socketIndex, SocialLookups.roomUserRemovedPayload(roomUserIndex));
             }
             if (visitId > 0L) {
                 rooms.closeVisitById(visitId);
@@ -1673,7 +1206,9 @@ public final class Handling {
             }
             rooms.decrementVisitors(roomId);
             if (slotId > 0L) {
-                releaseRepresentedRoomSlot(slotId);
+                RoomState.instance().representedRoomSlots();
+                RoomState.instance().releaseRepresentedRoomSlot(slotId);
+                RoomState.instance().setRepresentedRoomSlots(RoomState.instance().representedRoomSlots());
                 rooms.clearRoomSlot(roomId, slotId);
             }
             sendToSocket(socketIndex, "J|H");
@@ -1683,10 +1218,11 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_56_71E730(Object... args) {
+    /**
+     * Original function: Proc_6_56_71E730.
+     */
+    public static void sendRoomEntryBootstrap(int socketIndex, long roomMode) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long roomMode = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             sendToSocket(socketIndex, "@S");
             sendToSocket(socketIndex, "Bf/client.php" + '\2');
             sendToSocket(socketIndex, roomMode == 0L ? "@i" : "@{");
@@ -1695,11 +1231,12 @@ public final class Handling {
         }
     }
 
-    public static long Proc_6_57_71E8F0(Object... args) {
+    /**
+     * Original function: Proc_6_57_71E8F0.
+     */
+    public static long enterRoom(int socketIndex, long roomId, String suppliedPassword) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            String suppliedPassword = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
+            String roomPassword = StringUtils.text(suppliedPassword);
             if (roomId <= 0L) {
                 sendToSocket(socketIndex, "C`H");
                 return 0L;
@@ -1727,57 +1264,55 @@ public final class Handling {
                     return 0L;
                 }
                 if (entryState.visitorsMax() > 0L && entryState.visitorsNow() >= entryState.visitorsMax()
-                    && !handlingUserHasPermission(userId, "fuse_enter_full_rooms")) {
+                    && !UserLookups.hasPermission(userId, "fuse_enter_full_rooms", userDao(), AppConfigState.instance().permissionMatrix())) {
                     sendRoomReady(socketIndex);
                     sendToSocket(socketIndex, "C`I");
                     return 0L;
                 }
-                if (entryState.doorStatus() == 1L && !handlingUserHasPermission(userId, "fuse_enter_locked_rooms")) {
+                if (entryState.doorStatus() == 1L && !UserLookups.hasPermission(userId, "fuse_enter_locked_rooms", userDao(), AppConfigState.instance().permissionMatrix())) {
                     sendRoomReady(socketIndex);
                     sendToSocket(socketIndex, "C`H");
                     return 0L;
                 }
-                if (entryState.doorStatus() == 2L && !StringUtils.text(entryState.password()).equals(suppliedPassword)) {
+                if (entryState.doorStatus() == 2L && !StringUtils.text(entryState.password()).equals(roomPassword)) {
                     sendRoomReady(socketIndex);
                     sendToSocket(socketIndex, "@afhFF");
                     return 0L;
                 }
             }
-            return Proc_6_54_719050(socketIndex, roomId, entryState.roomSlot());
+            return enterRepresentedRoom(socketIndex, roomId, entryState.roomSlot());
         } catch (Exception ignored) {
             return 0L;
         }
     }
 
-    public static long Proc_6_58_71FCA0(Object... args) {
+    /**
+     * Original function: Proc_6_58_71FCA0.
+     */
+    public static long enterRoomFromPayload(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = handlingRequestPayload(args, "FG");
-            ensureRepresentedRoomSlotPool();
-            if (Licence.representedRoomSlots().isEmpty()) {
+            RoomWire.RoomEntryRequest request = RoomWire.roomEntryRequest(packetPayload);
+            RoomState.instance().representedRoomSlots();
+            RoomState.instance().ensureRepresentedRoomSlotPool();
+            RoomState.instance().setRepresentedRoomSlots(RoomState.instance().representedRoomSlots());
+            if (RoomState.instance().representedRoomSlots().isEmpty()) {
                 sendToSocket(socketIndex, UserPayloads.errorCode(1, 0));
                 return 0L;
             }
-            String roomIdText = Functions.readBase64LengthString(packetPayload);
-            if (roomIdText.isEmpty()) {
-                roomIdText = packetPayload;
-            }
-            long roomId = NumberUtils.parseLong(roomIdText);
-            int passwordStart = 2 + roomIdText.length();
-            String roomPassword = "";
-            if (passwordStart < packetPayload.length()) {
-                roomPassword = Functions.readVl64LengthString(packetPayload.substring(passwordStart));
-            }
-            Proc_6_57_71E8F0(socketIndex, roomId, roomPassword);
+            long roomId = request.roomId();
+            String roomPassword = request.roomPassword();
+            enterRoom(socketIndex, roomId, roomPassword);
             return roomId;
         } catch (Exception ignored) {
             return 0L;
         }
     }
 
-    public static void Proc_6_59_71FEE0(Object... args) {
+    /**
+     * Original function: Proc_6_59_71FEE0.
+     */
+    public static void sendVisitRoomAdvertisement(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String advertisementPayload = "\2\2";
             VisitRoomAds visitRoomAds = visitRoomAds();
             if (visitRoomAds.count() > 0L) {
@@ -1792,28 +1327,24 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_60_720060(Object... args) {
+    /**
+     * Original function: Proc_6_60_720060.
+     */
+    public static void sendSingleRoomNavigatorInfo(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "FA");
-            LongRef offset = new LongRef(1);
-            long requestMode = readWireLong(requestPayload, offset);
-            long detailFlag = readWireLong(requestPayload, offset);
+            NavigatorWire.SingleRoomRequest request =
+                NavigatorWire.singleRoomRequest(packetPayload);
+            long requestMode = request.requestMode();
+            long detailFlag = request.detailFlag();
             if (detailFlag == 1L) {
-                long roomId = readWireLong(requestPayload, offset);
+                long roomId = request.roomId();
                 if (roomId <= 0L) {
                     return;
                 }
-                RoomDao rooms = roomDao();
-                if (rooms == null) {
-                    return;
+                String payload = NavigatorRequests.singleRoomResponsePayload(roomId, roomDao());
+                if (!payload.isEmpty()) {
+                    sendToSocket(socketIndex, payload);
                 }
-                NavigatorRoom room = rooms.navigatorRoom(roomId).orElse(null);
-                sendToSocket(socketIndex,
-                    PacketBuilder.message("GF")
-                        .appendInt(0)
-                        .appendRaw(NavigatorPayloads.singleRoom(room))
-                        .build());
             } else if (requestMode > 0L) {
                 // VB6 reads a room id from packed session offsets here; those offsets are not represented yet.
             }
@@ -1822,20 +1353,27 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_61_720490(Object... args) {
-        roomKickOrBanUser(args, false);
+    /**
+     * Original function: Proc_6_61_720490.
+     */
+    public static void kickRoomUser(int socketIndex, String packetPrefix, String packetPayload) {
+        roomKickOrBanUser(socketIndex, packetPrefix, packetPayload, false);
     }
 
-    public static void Proc_6_62_7209F0(Object... args) {
-        roomKickOrBanUser(args, true);
+    /**
+     * Original function: Proc_6_62_7209F0.
+     */
+    public static void banRoomUser(int socketIndex, String packetPrefix, String packetPayload) {
+        roomKickOrBanUser(socketIndex, packetPrefix, packetPayload, true);
     }
 
-    public static void Proc_6_63_721050(Object... args) {
+    /**
+     * Original function: Proc_6_63_721050.
+     */
+    public static void rateCurrentRoom(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "DE");
-            LongRef offset = new LongRef(1);
-            long voteValue = readWireLong(requestPayload, offset);
+            RoomWire.RoomRatingRequest request = RoomWire.roomRatingRequest(packetPayload);
+            long voteValue = request.voteValue();
             if (voteValue != 1L) {
                 return;
             }
@@ -1847,33 +1385,23 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
-                return;
+            String payload = RoomLookups.rateRoomPayload(userId, roomId, voteValue, roomDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            long userIdValue = NumberUtils.parseLong(userId);
-            if (rooms.userRatedRoom(userIdValue, roomId)) {
-                return;
-            }
-            rooms.insertRoomRate(userIdValue, roomId);
-            long roomRate = rooms.roomRate(roomId);
-            if (roomRate < 0L) {
-                roomRate = 0L;
-            }
-            roomRate++;
-            rooms.updateRoomRate(roomId, roomRate);
-            sendToSocket(socketIndex, RoomPayloads.rating(roomRate));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_64_721650(Object... args) {
+    /**
+     * Original function: Proc_6_64_721650.
+     */
+    public static void revokeRoomRightByName(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "D\u007f");
-            LongRef offset = new LongRef(1);
-            String targetName = readWireString(requestPayload, offset);
+            RoomWire.RoomRightNameRequest request =
+                RoomWire.roomRightNameRequest(packetPayload, packetPrefix);
+            String targetName = request.targetName();
             if (targetName.isEmpty()) {
                 return;
             }
@@ -1882,31 +1410,25 @@ public final class Handling {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+            if (roomId <= 0L || !RoomLookups.userHasRoomRight(callerUserId, roomId, roomDao())) {
                 return;
             }
-            UserDao users = userDao();
-            RoomDao rooms = roomDao();
-            if (users == null || rooms == null) {
-                return;
+            String payload = RoomLookups.revokeRoomRightByNamePayload(targetName, roomId, userDao(), roomDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            long targetUserId = users.userIdByName(targetName);
-            if (targetUserId <= 0L) {
-                return;
-            }
-            rooms.deleteRoomRight(targetUserId, roomId);
-            sendToSocket(socketIndex, RoomPayloads.roomRightRemoved());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_65_721A10(Object... args) {
+    /**
+     * Original function: Proc_6_65_721A10.
+     */
+    public static void grantRoomRight(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "A`");
-            LongRef offset = new LongRef(1);
-            String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
+            RoomWire.RoomRightGrantRequest request = RoomWire.roomRightGrantRequest(packetPayload);
+            String targetUserId = String.valueOf(request.targetUserId());
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return;
             }
@@ -1915,30 +1437,29 @@ public final class Handling {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+            if (roomId <= 0L || !RoomLookups.userHasRoomRight(callerUserId, roomId, roomDao())) {
                 return;
             }
             int targetSocketIndex = handlingSocketFromUserId(targetUserId);
             if (targetSocketIndex <= 0) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
-                return;
+            String payload = RoomLookups.grantRoomRightPayload(NumberUtils.parseLong(targetUserId), roomId, roomDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(targetSocketIndex, payload);
             }
-            rooms.insertRoomRight(NumberUtils.parseLong(targetUserId), roomId);
-            sendToSocket(targetSocketIndex, "@j");
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_66_721D60(Object... args) {
+    /**
+     * Original function: Proc_6_66_721D60.
+     */
+    public static void updateStickyNote(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "AT");
-            StickyNoteUpdate note = new StickyNoteUpdate();
-            if (!stickyNoteUpdateFromWire(requestPayload, note) || note.furnitureId <= 0L) {
+            FurnitureWire.StickyNoteUpdate note = FurnitureWire.stickyNoteUpdate(packetPayload);
+            if (note.furnitureId() <= 0L) {
                 return;
             }
             String callerUserId = handlingUserIdFromSocket(socketIndex);
@@ -1946,34 +1467,25 @@ public final class Handling {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+            if (roomId <= 0L || !RoomLookups.userHasRoomRight(callerUserId, roomId, roomDao())) {
                 return;
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return;
+            String payload = FurnitureLookups.updateStickyNotePayload(
+                note, roomId, furnitureDao(), GameDataCaches.productCache());
+            if (!payload.isEmpty()) {
+                broadcastToCurrentRoom(socketIndex, payload);
             }
-            FurnitureDao.RoomFurnitureWithWall sticky = furniture.roomFurnitureWithWall(note.furnitureId, roomId).orElse(null);
-            if (sticky == null) {
-                return;
-            }
-            long productId = sticky.productId();
-            if (!isPostItProduct(productId)) {
-                return;
-            }
-            furniture.updatePostIt(note.furnitureId, note.noteColor, note.noteCaption);
-            String broadcastPayload = FurniturePayloads.stickyNoteUpdated(note.furnitureId, productId, note.noteColor);
-            broadcastToCurrentRoom(socketIndex, broadcastPayload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_67_722940(Object... args) {
+    /**
+     * Original function: Proc_6_67_722940.
+     */
+    public static void sendStickyNote(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "AS");
-            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            long furnitureId = FurnitureWire.stickyFurnitureId(packetPayload);
             if (furnitureId <= 0L) {
                 return;
             }
@@ -1985,34 +1497,22 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return;
+            String payload = FurnitureLookups.stickyNotePayload(
+                furnitureId, roomId, furnitureDao(), GameDataCaches.productCache());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            FurnitureDao.RoomFurniture sticky = furniture.roomFurniture(furnitureId, roomId).orElse(null);
-            if (sticky == null) {
-                return;
-            }
-            long productId = sticky.productId();
-            if (!isPostItProduct(productId)) {
-                return;
-            }
-            String noteColor = StringUtils.left(sticky.sign(), 6);
-            if (noteColor.isEmpty()) {
-                noteColor = "FFFF33";
-            }
-            String noteCaption = StringUtils.text(sticky.caption()).replace('\u001f', '\r');
-            sendToSocket(socketIndex, "@p" + furnitureId + '\2' + noteColor + '\r' + noteCaption + '\2');
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_68_723170(Object... args) {
+    /**
+     * Original function: Proc_6_68_723170.
+     */
+    public static void deleteStickyNote(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "AU");
-            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            long furnitureId = FurnitureWire.stickyFurnitureId(packetPayload);
             if (furnitureId <= 0L) {
                 return;
             }
@@ -2021,33 +1521,25 @@ public final class Handling {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            if (roomId <= 0L || !handlingUserOwnsRoom(callerUserId, roomId)) {
+            if (roomId <= 0L || !RoomLookups.userOwnsRoom(callerUserId, roomId, roomDao())) {
                 return;
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return;
+            String payload = FurnitureLookups.deleteStickyNotePayload(
+                furnitureId, roomId, furnitureDao(), GameDataCaches.productCache());
+            if (!payload.isEmpty()) {
+                broadcastToCurrentRoom(socketIndex, payload);
             }
-            FurnitureDao.RoomFurniture sticky = furniture.roomFurniture(furnitureId, roomId).orElse(null);
-            if (sticky == null) {
-                return;
-            }
-            long productId = sticky.productId();
-            if (!isPostItProduct(productId)) {
-                return;
-            }
-            furniture.deleteFurniture(furnitureId);
-            broadcastToCurrentRoom(socketIndex, "AT" + furnitureId);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_69_723630(Object... args) {
+    /**
+     * Original function: Proc_6_69_723630.
+     */
+    public static void openPresent(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "AN");
-            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            long furnitureId = FurnitureWire.stickyFurnitureId(packetPayload);
             if (furnitureId <= 0L) {
                 return;
             }
@@ -2056,51 +1548,26 @@ public final class Handling {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+            if (roomId <= 0L || !RoomLookups.userHasRoomRight(callerUserId, roomId, roomDao())) {
                 return;
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return;
+            FurnitureLookups.PresentOpenResult result = FurnitureLookups.openPresent(
+                furnitureId, roomId, NumberUtils.parseLong(callerUserId), furnitureDao(), GameDataCaches.productCache());
+            if (result.valid()) {
+                broadcastToCurrentRoom(socketIndex, result.removedPayload());
+                sendToSocket(socketIndex, result.responsePayload());
             }
-            FurnitureDao.GiftBoxFurniture giftBox = furniture.giftBox(furnitureId, roomId).orElse(null);
-            if (giftBox == null) {
-                return;
-            }
-            long boxProductId = giftBox.boxProductId();
-            long openedProductId = giftBox.openedProductId();
-            String openedSign = StringUtils.text(giftBox.openedSign());
-            if (boxProductId <= 0L || openedProductId <= 0L) {
-                return;
-            }
-            String boxAction = DataManager.productCache().primarySprite(boxProductId).toLowerCase();
-            if (!boxAction.contains("present_") || "ecotron_box".equals(boxAction)) {
-                return;
-            }
-            broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2');
-            furniture.deleteFurniture(furnitureId);
-            furniture.insertInventoryFurniture(openedProductId, NumberUtils.parseLong(callerUserId), openedSign);
-            long openedProductType = DataManager.productCache().type(openedProductId);
-            String responseClass = "i";
-            if (openedProductType == 2L) {
-                responseClass = "s";
-            }
-            if (openedProductType == 3L) {
-                responseClass = "e";
-            }
-            String responsePayload = FurniturePayloads.presentOpened(openedProductId, responseClass,
-                DataManager.productCache().itemData(openedProductId));
-            sendToSocket(socketIndex, responsePayload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_70_724190(Object... args) {
+    /**
+     * Original function: Proc_6_70_724190.
+     */
+    public static void toggleWallFurnitureState(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "FI");
-            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            long furnitureId = FurnitureWire.stickyFurnitureId(packetPayload);
             if (furnitureId <= 0L) {
                 return;
             }
@@ -2109,65 +1576,40 @@ public final class Handling {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+            if (roomId <= 0L || !RoomLookups.userHasRoomRight(callerUserId, roomId, roomDao())) {
                 return;
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return;
+            String payload = FurnitureLookups.toggleWallFurnitureStatePayload(
+                furnitureId, roomId, furnitureDao(), CatalogState.instance().registry(), GameDataCaches.productCache());
+            if (!payload.isEmpty()) {
+                broadcastToCurrentRoom(socketIndex, payload);
             }
-            FurnitureDao.WallStateFurniture wallState = furniture.wallState(furnitureId, roomId).orElse(null);
-            if (wallState == null) {
-                return;
-            }
-            long productId = wallState.productId();
-            if (productId <= 0L) {
-                return;
-            }
-            long currentState = NumberUtils.parseLong(wallState.sign());
-            long stateCount = Licence.productStateCount(productId);
-            if (stateCount <= 0L) {
-                stateCount = DataManager.productCache().stateCount(productId);
-            }
-            if (stateCount <= 0L) {
-                stateCount = 1L;
-            }
-            long nextState = currentState + 1L;
-            if (nextState > stateCount) {
-                nextState = 0L;
-            }
-            if (nextState < 0L) {
-                nextState = 0L;
-            }
-            furniture.updateSign(furnitureId, nextState);
-            String payload = FurniturePayloads.wallState(furnitureId, productId, String.valueOf(nextState), "0");
-            broadcastToCurrentRoom(socketIndex, payload);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_71_724CF0(Object... args) {
+    /**
+     * Original function: Proc_6_71_724CF0.
+     */
+    public static void revokeAllRoomRights(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String callerUserId = handlingUserIdFromSocket(socketIndex);
             if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            if (roomId <= 0L || !handlingUserOwnsRoom(callerUserId, roomId)) {
+            if (roomId <= 0L || !RoomLookups.userOwnsRoom(callerUserId, roomId, roomDao())) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
+            RoomLookups.RoomRightSocketRevocation revocation = RoomLookups.revokeAllRoomRights(roomId, roomDao());
+            if (!revocation.hasNotifications()) {
                 return;
             }
-            List<Long> socketIndexes = rooms.activeRightHolderSocketIndexes(roomId);
-            rooms.deleteRoomRights(roomId);
-            for (Long activeSocketIndex : socketIndexes) {
+            for (Long activeSocketIndex : revocation.socketIndexes()) {
                 int targetSocketIndex = activeSocketIndex == null ? 0 : activeSocketIndex.intValue();
                 if (targetSocketIndex > 0) {
-                    sendToSocket(targetSocketIndex, "@k");
+                    sendToSocket(targetSocketIndex, revocation.notificationPayload());
                 }
             }
         } catch (Exception ignored) {
@@ -2175,15 +1617,13 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_72_7250D0(Object... args) {
+    /**
+     * Original function: Proc_6_72_7250D0.
+     */
+    public static void deleteCurrentRoom(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "@W");
-            long requestFlag = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            if (requestFlag == 0L && !requestPayload.isEmpty()) {
-                requestFlag = readWireLong(requestPayload, new LongRef(1));
-            }
-            if (requestFlag != 0L) {
+            RoomWire.DeleteRoomRequest request = RoomWire.deleteRoomRequest(packetPayload);
+            if (request.requestFlag() != 0L) {
                 return;
             }
             String callerUserId = handlingUserIdFromSocket(socketIndex);
@@ -2191,110 +1631,78 @@ public final class Handling {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            if (roomId <= 0L || !handlingUserOwnsRoom(callerUserId, roomId)) {
+            if (roomId <= 0L || !RoomLookups.userOwnsRoom(callerUserId, roomId, roomDao())) {
                 return;
             }
-            Functions.sendRoomReadyRefreshes(roomId);
-            RoomDao rooms = roomDao();
-            if (rooms != null) {
-                rooms.deleteRoom(roomId);
-            }
+            RoomRefreshService.sendRoomReadyRefreshes(roomId);
+            RoomLookups.deleteRoom(roomId, roomDao());
             sendRoomReady(socketIndex);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_73_725540(Object... args) {
+    /**
+     * Original function: Proc_6_73_725540.
+     */
+    public static void redeemCreditFurniture(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "AT");
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L || (!handlingUserHasRoomRight(userId, roomId)
-                && !handlingUserHasPermission(userId, "fuse_pick_up_any_furni"))) {
+            if (roomId <= 0L || (!RoomLookups.userHasRoomRight(userId, roomId, roomDao())
+                && !UserLookups.hasPermission(userId, "fuse_pick_up_any_furni", userDao(), AppConfigState.instance().permissionMatrix()))) {
                 return;
             }
-            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            FurnitureWire.CreditFurnitureRequest request =
+                FurnitureWire.creditFurnitureRequest(packetPayload);
+            long furnitureId = request.furnitureId();
             if (furnitureId <= 0L) {
                 return;
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return;
-            }
-            FurnitureDao.RoomFurnitureProduct furnitureProduct = furniture.roomFurnitureProduct(furnitureId, roomId).orElse(null);
-            if (furnitureProduct == null) {
-                return;
-            }
-            long productId = furnitureProduct.productId();
-            if (productId <= 0L) {
-                return;
-            }
-            String productSprite = DataManager.productCache().primarySprite(productId);
-            if (productSprite.isEmpty()) {
-                productSprite = DataManager.productCache().alternateSprite(productId);
-            }
-            if (!productSprite.startsWith("CF_") && !productSprite.startsWith("CFC_")) {
-                return;
-            }
-            String[] productParts = productSprite.split("_", -1);
-            if (productParts.length < 2) {
-                return;
-            }
-            long creditValue = NumberUtils.parseLong(productParts[1]);
-            if (creditValue <= 0L) {
-                return;
-            }
-            UserDao users = userDao();
-            if (users == null) {
-                return;
-            }
             long numericUserId = NumberUtils.parseLong(userId);
-            users.addCredits(numericUserId, creditValue);
-            long updatedCredits = users.credits(numericUserId);
-            sendToSocket(socketIndex, "@F" + updatedCredits + ".0" + '\2');
-            broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2');
-            furniture.deleteFurniture(furnitureId);
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
+            FurnitureLookups.CreditFurnitureRedemption redemption = FurnitureLookups.redeemCreditFurniture(
+                furnitureId, roomId, numericUserId, furnitureDao(), userDao(), GameDataCaches.productCache());
+            if (!redemption.valid()) {
+                return;
+            }
+            sendToSocket(socketIndex, redemption.creditsPayload());
+            broadcastToCurrentRoom(socketIndex, redemption.removedPayload());
+            RoomCacheFiles.invalidateRoom(roomId);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_74_7265B0(Object... args) {
+    /**
+     * Original function: Proc_6_74_7265B0.
+     */
+    public static void revokeRoomRights(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "Aa");
+            RoomWire.RoomRightRevokeRequest request = RoomWire.roomRightRevokeRequest(packetPayload);
             String callerUserId = handlingUserIdFromSocket(socketIndex);
             if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+            if (roomId <= 0L || !RoomLookups.userHasRoomRight(callerUserId, roomId, roomDao())) {
                 return;
             }
-            LongRef offset = new LongRef(1);
-            long revokeCount = readWireLong(requestPayload, offset);
-            if (revokeCount < 1L || revokeCount > 150L) {
+            List<Long> targetUserIds = request.targetUserIds();
+            if (targetUserIds.isEmpty()) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
+            RoomLookups.RoomRightRevocation revocation =
+                RoomLookups.revokeRoomRights(targetUserIds, roomId, roomDao());
+            if (!revocation.hasNotifications()) {
                 return;
             }
-            for (long revokeIndex = 1L; revokeIndex <= revokeCount; revokeIndex++) {
-                String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
-                if (!targetUserId.isEmpty() && !"0".equals(targetUserId)) {
-                    rooms.deleteRoomRight(NumberUtils.parseLong(targetUserId), roomId);
-                    int targetSocketIndex = handlingSocketFromUserId(targetUserId);
-                    if (targetSocketIndex > 0) {
-                        sendToSocket(targetSocketIndex, "@k");
-                    }
+            for (long targetUserId : revocation.targetUserIds()) {
+                int targetSocketIndex = handlingSocketFromUserId(String.valueOf(targetUserId));
+                if (targetSocketIndex > 0) {
+                    sendToSocket(targetSocketIndex, revocation.notificationPayload());
                 }
             }
         } catch (Exception ignored) {
@@ -2302,12 +1710,14 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_75_7269D0(Object... args) {
+    /**
+     * Original function: Proc_6_75_7269D0.
+     */
+    public static void revokeRoomRightByTargetName(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "EB");
-            LongRef offset = new LongRef(1);
-            String targetName = readWireString(requestPayload, offset);
+            RoomWire.RoomRightNameRequest request =
+                RoomWire.roomRightNameRequest(packetPayload, packetPrefix);
+            String targetName = request.targetName();
             if (targetName.isEmpty()) {
                 return;
             }
@@ -2316,31 +1726,25 @@ public final class Handling {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, callerUserId);
-            if (roomId <= 0L || !handlingUserHasRoomRight(callerUserId, roomId)) {
+            if (roomId <= 0L || !RoomLookups.userHasRoomRight(callerUserId, roomId, roomDao())) {
                 return;
             }
-            UserDao users = userDao();
-            RoomDao rooms = roomDao();
-            if (users == null || rooms == null) {
-                return;
+            String payload = RoomLookups.revokeRoomRightByNamePayload(targetName, roomId, userDao(), roomDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            long targetUserId = users.userIdByName(targetName);
-            if (targetUserId <= 0L) {
-                return;
-            }
-            rooms.deleteRoomRight(targetUserId, roomId);
-            sendToSocket(socketIndex, RoomPayloads.roomRightRemoved());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static String Proc_6_76_726CE0(Object... args) {
+    /**
+     * Original function: Proc_6_76_726CE0.
+     */
+    public static String giveRespect(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "Es");
-            LongRef offset = new LongRef(1);
-            String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
+            SocialWire.UserIdRequest request = SocialWire.userIdRequest(packetPayload, packetPrefix);
+            String targetUserId = String.valueOf(request.userId());
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
             }
@@ -2352,22 +1756,12 @@ public final class Handling {
             if (targetSocketIndex <= 0) {
                 return "";
             }
-            UserDao users = userDao();
-            if (users == null) {
+            String payload = SocialLookups.giveRespectPayload(giverUserId, targetUserId, userDao());
+            if (payload.isEmpty()) {
                 return "";
             }
-            long giverUserIdValue = NumberUtils.parseLong(giverUserId);
-            long targetUserIdValue = NumberUtils.parseLong(targetUserId);
-            long respectAmount = users.respectAmount(giverUserIdValue);
-            if (respectAmount <= 0L) {
-                return "";
-            }
-            users.spendRespect(giverUserIdValue);
-            users.receiveRespect(targetUserIdValue);
-            Proc_6_205_7D9780(socketIndex, 3);
-            Proc_6_205_7D9780(targetSocketIndex, 2);
-            long respectReceived = users.respectReceived(targetUserIdValue);
-            String payload = UserPayloads.respectReceived(targetUserIdValue, respectReceived);
+            advanceAchievementProgress(socketIndex, 3);
+            advanceAchievementProgress(targetSocketIndex, 2);
             broadcastToCurrentRoom(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
@@ -2376,32 +1770,30 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_77_727590(Object... args) {
+    /**
+     * Original function: Proc_6_77_727590.
+     */
+    public static void sendOfficialRoomModel(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "FD");
-            LongRef offset = new LongRef(1);
-            long roomId = readWireLong(requestPayload, offset);
+            RoomWire.RoomIdRequest request = RoomWire.roomIdRequest(packetPayload, packetPrefix);
+            long roomId = request.roomId();
             if (roomId <= 0L) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
-                return;
+            String payload = RoomLookups.officialRoomModelPayload(roomId, roomDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            RoomDao.OfficialRoomModel officialRoom = rooms.officialRoomModel(roomId).orElse(null);
-            if (officialRoom == null) {
-                return;
-            }
-            sendToSocket(socketIndex, RoomPayloads.officialRoomModel(roomId, officialRoom));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_78_7279A0(Object... args) {
+    /**
+     * Original function: Proc_6_78_7279A0.
+     */
+    public static void loadCurrentRoomModel(int socketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
                 return;
@@ -2410,40 +1802,35 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
+            RoomLookups.RoomModelLoad modelLoad = RoomLookups.roomModelLoad(roomId, roomDao());
+            if (!modelLoad.valid()) {
                 return;
             }
-            RoomDao.RoomModelEntry roomEntry = rooms.roomModelEntry(roomId).orElse(null);
-            if (roomEntry == null) {
-                return;
+            for (String payload : modelLoad.initialPayloads()) {
+                sendToSocket(socketIndex, payload);
             }
-            long modelId = roomEntry.modelId();
-            String modelPayload = normalizeRoomModelMap(roomEntry.modelMap());
-            sendToSocket(socketIndex, "Bf" + "/client.php" + '\2');
-            sendToSocket(socketIndex, "AE" + roomId + '\2' + "H");
-            if (!modelPayload.isEmpty()) {
-                sendToSocket(socketIndex, "@_" + modelPayload + '\2');
-                sendToSocket(socketIndex, "GV" + modelPayload + '\2');
-                sendToSocket(socketIndex, "GWH" + modelPayload + '\2' + "H");
-            }
-            Proc_6_81_730010(socketIndex, roomId, -1);
-            Proc_6_82_731070(socketIndex, roomId, 0);
-            Proc_6_84_733600(socketIndex, roomId);
-            Proc_6_83_732640(socketIndex, modelId);
-            Proc_6_85_73A8E0(socketIndex, roomId);
-            Proc_6_235_7F77E0(socketIndex, 0, 0);
-            Proc_6_80_72EB60(socketIndex, roomId);
+            sendRoomOccupantList(socketIndex, roomId);
+            sendRoomActiveEffects(socketIndex, roomId);
+            sendRoomStartupCache(socketIndex, roomId);
+            sendRoomModelFurniture(socketIndex, modelLoad.modelId());
+            sendRoomWallFurniture(socketIndex, roomId);
+            refreshQuestProgress(socketIndex);
+            broadcastCurrentRoomUserEntry(socketIndex, roomId);
             sendToSocket(socketIndex, "CP" + '\2' + '\2');
-            sendRoomPollPrompt(socketIndex, userId, roomId);
+            String pollPromptPayload = PollLookups.promptPayload(userId, roomId, pollDao());
+            if (!pollPromptPayload.isEmpty()) {
+                sendToSocket(socketIndex, pollPromptPayload);
+            }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_79_72A430(Object... args) {
+    /**
+     * Original function: Proc_6_79_72A430.
+     */
+    public static void sendCurrentRoomDecoration(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
                 return;
@@ -2452,65 +1839,38 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
+            boolean hasControl = RoomLookups.userHasRoomRight(userId, roomId, roomDao())
+                || UserLookups.hasPermission(userId, "fuse_any_room_controller", userDao(), AppConfigState.instance().permissionMatrix());
+            RoomLookups.RoomPresentationLoad presentationLoad = RoomLookups.roomPresentationLoad(
+                userId, roomId, hasControl, roomEventInfoPayload(roomId), roomDao());
+            if (!presentationLoad.valid()) {
                 return;
             }
-            RoomDao.RoomPresentationState roomState = rooms.roomPresentationState(roomId).orElse(null);
-            if (roomState == null) {
-                return;
+            for (String payload : presentationLoad.initialPayloads()) {
+                sendToSocket(socketIndex, payload);
             }
-            long modelId = roomState.modelId();
-            String floorPattern = roomState.floorPattern();
-            String wallpaperPattern = roomState.wallpaperPattern();
-            String landscapePattern = roomState.landscapePattern();
-            long roomRate = roomState.roomRate();
-            if (roomRate < 0L) {
-                roomRate = 0L;
-            }
-            String modelPayload = normalizeRoomModelMap(roomState.modelMap());
-            String ownerUserId = String.valueOf(roomState.ownerUserId());
-            long disableWalls = roomState.disableWalls();
-            long thicknessFloor = roomState.thicknessFloor();
-            long thicknessWallpaper = roomState.thicknessWallpaper();
-            boolean hasControl = handlingUserHasRoomRight(userId, roomId)
-                || handlingUserHasPermission(userId, "fuse_any_room_controller");
-            boolean hasVoted = rooms.hasRatedRoom(NumberUtils.parseLong(userId), roomId);
-            long ratingPayloadValue = hasVoted ? -1L : roomRate;
-            sendToSocket(socketIndex, RoomPayloads.currentRoom(roomId));
-            sendToSocket(socketIndex, "@nfloor" + '\2' + floorPattern + '\2');
-            sendToSocket(socketIndex, "@nwallpaper" + '\2' + wallpaperPattern + '\2');
-            sendToSocket(socketIndex, "@nlandscape" + '\2' + landscapePattern + '\2');
-            sendToSocket(socketIndex, RoomPayloads.rating(ratingPayloadValue));
-            sendToSocket(socketIndex, "Er" + Proc_6_51_716AC0(roomId, 0, 0));
-            if (hasControl) {
-                sendToSocket(socketIndex, "@j");
-            }
-            if (ownerUserId.equals(String.valueOf((long) NumberUtils.parseLong(userId)))) {
-                sendToSocket(socketIndex, "@o");
-            }
-            if (!modelPayload.isEmpty()) {
-                sendToSocket(socketIndex, "@_" + modelPayload + '\2');
-                sendToSocket(socketIndex, "GV" + modelPayload + '\2');
-            }
-            sendToSocket(socketIndex, RoomPayloads.wallOptions(disableWalls, thicknessFloor, thicknessWallpaper));
-            Proc_6_81_730010(socketIndex, roomId, -1);
-            Proc_6_82_731070(socketIndex, roomId, 0);
-            Proc_6_83_732640(socketIndex, modelId);
-            Proc_6_84_733600(socketIndex, roomId);
-            Proc_6_85_73A8E0(socketIndex, roomId);
-            Proc_6_235_7F77E0(socketIndex, 0, 0);
-            Proc_6_80_72EB60(socketIndex, roomId);
+            sendRoomOccupantList(socketIndex, roomId);
+            sendRoomActiveEffects(socketIndex, roomId);
+            sendRoomModelFurniture(socketIndex, presentationLoad.modelId());
+            sendRoomStartupCache(socketIndex, roomId);
+            sendRoomWallFurniture(socketIndex, roomId);
+            refreshQuestProgress(socketIndex);
+            broadcastCurrentRoomUserEntry(socketIndex, roomId);
             sendToSocket(socketIndex, "CP" + '\2' + '\2');
-            sendRoomPollPrompt(socketIndex, userId, roomId);
+            String pollPromptPayload = PollLookups.promptPayload(userId, roomId, pollDao());
+            if (!pollPromptPayload.isEmpty()) {
+                sendToSocket(socketIndex, pollPromptPayload);
+            }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_80_72EB60(Object... args) {
+    /**
+     * Original function: Proc_6_80_72EB60.
+     */
+    public static void broadcastCurrentRoomUserEntry(int socketIndex, long roomId) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return;
             }
@@ -2518,222 +1878,82 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return;
             }
-            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            if (roomId <= 0L) {
-                roomId = handlingCurrentRoomId(socketIndex, userId);
-            }
-            if (roomId <= 0L) {
-                return;
-            }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
-                return;
-            }
-            RoomUserEntryRow entry = rooms.roomUserEntry(NumberUtils.parseLong(userId), roomId).orElse(null);
-            if (entry == null) {
+            long effectiveRoomId = roomId > 0L ? roomId : handlingCurrentRoomId(socketIndex, userId);
+            if (effectiveRoomId <= 0L) {
                 return;
             }
             long roomUserIndex = representedRoomUserIndex(socketIndex, userId);
-            String positionZ = "0.0";
-            long directionValue = 0L;
-            String entryPayload = SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
-                String.valueOf(entry.userId()),
-                entry.name(),
-                entry.figure(),
-                entry.motto(),
-                entry.gender(),
-                String.valueOf(roomUserIndex),
-                String.valueOf(entry.positionX()),
-                String.valueOf(entry.positionY()),
-                positionZ,
-                String.valueOf(directionValue),
-                "0"));
-            if (!entryPayload.isEmpty()) {
-                broadcastToCurrentRoom(socketIndex, RoomPayloads.occupantEntries(1, entryPayload));
+            String payload = SocialLookups.roomUserEntryBroadcastPayload(userId, effectiveRoomId, roomUserIndex, roomDao());
+            if (!payload.isEmpty()) {
+                broadcastToCurrentRoom(socketIndex, payload);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_81_730010(Object... args) {
+    /**
+     * Original function: Proc_6_81_730010.
+     */
+    public static void sendRoomOccupantList(int socketIndex, long roomId) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            if (roomId <= 0L && socketIndex > 0) {
+            long effectiveRoomId = roomId;
+            if (effectiveRoomId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId)) {
-                    roomId = handlingCurrentRoomId(socketIndex, userId);
+                    effectiveRoomId = handlingCurrentRoomId(socketIndex, userId);
                 }
             }
-            if (socketIndex <= 0 || roomId <= 0L) {
+            if (socketIndex <= 0 || effectiveRoomId <= 0L) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
-                return;
+            for (String payload : SocialLookups.roomOccupantListPayloads(
+                effectiveRoomId,
+                RoomState.instance().representedRooms(),
+                roomDao())) {
+                sendToSocket(socketIndex, payload);
             }
-            long roomSlot = rooms.roomSlot(roomId);
-            PacketBuilder occupantPayload = PacketBuilder.create();
-            PacketBuilder statusPayload = PacketBuilder.create();
-            long occupantCount = 0L;
-            long statusCount = 0L;
-            for (RoomOccupantRow occupant : rooms.activeRoomOccupants(roomId)) {
-                if (occupant != null) {
-                    long roomUserIndex = occupant.roomUserIndex();
-                    String genderText = StringUtils.text(occupant.gender()).toUpperCase();
-                    genderText = genderText.isEmpty() ? "M" : genderText.substring(0, 1);
-                    if (!"M".equals(genderText) && !"F".equals(genderText)) {
-                        genderText = "M";
-                    }
-                    long positionX = occupant.positionX();
-                    long positionY = occupant.positionY();
-                    if (roomSlot > 0L) {
-                        RoomUserPosition movementPosition = RoomUserPosition.from(
-                            Licence.representedRooms().movementPosition(roomSlot, roomUserIndex));
-                        if (movementPosition.found()) {
-                            positionX = movementPosition.positionX();
-                            positionY = movementPosition.positionY();
-                        }
-                    }
-                    String positionZ = "0.0";
-                    long directionValue = 0L;
-                    occupantPayload.appendRaw(SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
-                        String.valueOf(occupant.userId()),
-                        occupant.name(),
-                        occupant.figure(),
-                        occupant.motto(),
-                        genderText,
-                        String.valueOf(roomUserIndex),
-                        String.valueOf(positionX),
-                        String.valueOf(positionY),
-                        positionZ,
-                        "0",
-                        "0")));
-                    statusPayload.appendRaw(SocialPayloads.roomOccupantStatus(
-                        roomUserIndex, positionX, positionY, positionZ, directionValue));
-                    occupantCount++;
-                    statusCount++;
-                }
-            }
-            if (roomSlot > 0L) {
-                String botEntities = Licence.representedBots().entitiesForRoom(roomSlot, 0);
-                for (String botRow : botEntities.split("\r", -1)) {
-                    long botEntityId = NumberUtils.parseLong(botRow);
-                    if (botEntityId > 0L) {
-                        RepresentedBotRegistry.RepresentedBotRecord bot = Licence.representedBots().record(botEntityId);
-                        String botName = bot.name();
-                        String botFigure = bot.figure();
-                        long positionX = bot.positionX();
-                        long positionY = bot.positionY();
-                        String positionZ = bot.positionZ();
-                        long directionValue = bot.positionR();
-                        if (positionZ.isEmpty()) {
-                            positionZ = "0.0";
-                        }
-                        String botEntry = SocialPayloads.roomObjectEntry(new RoomObjectEntryPayloadArgs(
-                            String.valueOf(botEntityId),
-                            botName,
-                            botFigure,
-                            "M",
-                            String.valueOf(botEntityId),
-                            String.valueOf(positionX),
-                            String.valueOf(positionY),
-                            positionZ,
-                            "2"));
-                        if (!botEntry.isEmpty()) {
-                            occupantPayload.appendRaw(botEntry);
-                            statusPayload.appendRaw(SocialPayloads.roomOccupantStatus(
-                                botEntityId, positionX, positionY, positionZ, directionValue));
-                            occupantCount++;
-                            statusCount++;
-                        }
-                    }
-                }
-            }
-            sendToSocket(socketIndex, RoomPayloads.occupantEntries(occupantCount, occupantPayload.build()));
-            sendToSocket(socketIndex, RoomPayloads.occupantStatuses(statusCount, statusPayload.build()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_82_731070(Object... args) {
+    /**
+     * Original function: Proc_6_82_731070.
+     */
+    public static void sendRoomActiveEffects(int socketIndex, long roomId) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            if (roomId <= 0L && socketIndex > 0) {
+            long effectiveRoomId = roomId;
+            if (effectiveRoomId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId)) {
-                    roomId = handlingCurrentRoomId(socketIndex, userId);
+                    effectiveRoomId = handlingCurrentRoomId(socketIndex, userId);
                 }
             }
-            if (socketIndex <= 0 || roomId <= 0L) {
+            if (socketIndex <= 0 || effectiveRoomId <= 0L) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
-                return;
-            }
-            for (RoomDao.ActiveRoomEffect activeEffect : rooms.activeRoomEffects(roomId)) {
-                long roomUserIndex = activeEffect.roomUserIndex();
-                long effectId = activeEffect.effectId();
-                if (roomUserIndex > 0L && effectId > 0L) {
-                    sendToSocket(socketIndex, SocialPayloads.roomUserEffect(roomUserIndex, effectId));
-                }
+            for (String payload : SocialLookups.activeRoomEffectPayloads(effectiveRoomId, roomDao())) {
+                sendToSocket(socketIndex, payload);
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static String Proc_6_83_732640(Object... args) {
+    /**
+     * Original function: Proc_6_83_732640.
+     */
+    public static String sendRoomModelFurniture(int socketIndex, long modelId) {
         try {
-            int socketIndex = 0;
-            long modelId = 0L;
-            if (args != null && args.length >= 2) {
-                socketIndex = handlingSocketIndex(args);
-                modelId = NumberUtils.parseLong(args[1]);
-            } else if (args != null && args.length >= 1) {
-                modelId = NumberUtils.parseLong(args[0]);
-            }
+            long roomId = 0L;
             if (modelId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId)) {
-                    long roomId = handlingCurrentRoomId(socketIndex, userId);
-                    if (roomId > 0L) {
-                        RoomDao rooms = roomDao();
-                        if (rooms != null) {
-                            modelId = rooms.modelIdByRoom(roomId);
-                        }
-                    }
+                    roomId = handlingCurrentRoomId(socketIndex, userId);
                 }
             }
-            if (modelId <= 0L) {
-                return "";
-            }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
-                return "";
-            }
-            long itemCount = 0L;
-            PacketBuilder itemPayload = PacketBuilder.create();
-            for (RoomModelFurnitureRow row : rooms.modelFurnitureRows(modelId)) {
-                if (row != null) {
-                    long productId = row.productId();
-                    long sourceId = row.sourceId();
-                    if (sourceId <= 0L) {
-                        sourceId = itemCount + 1L;
-                    }
-                    if (productId <= 0L) {
-                        productId = sourceId;
-                    }
-                    itemPayload.appendRaw(Proc_6_161_7B2EE0(sourceId, row.positionX(), row.positionY(), row.rotation(),
-                        row.positionZ(), "", row.action(), 0, productId));
-                    itemCount++;
-                }
-            }
-            String payload = FurniturePayloads.floorList(itemCount, itemPayload.build());
+            String payload = FurnitureLookups.modelFurniturePayloadForRoom(modelId, roomId, roomDao());
             if (socketIndex > 0) {
                 sendToSocket(socketIndex, payload);
             }
@@ -2743,68 +1963,48 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_84_733600(Object... args) {
-        String payload = "Di" + wiredSettings().statePayload();
+    /**
+     * Original function: Proc_6_84_733600.
+     */
+    public static String sendRoomStartupCache(int socketIndex, long roomId) {
+        String payload = WiredLookups.roomStartupCachePayload(0L, wiredSettings());
         try {
-            int socketIndex = args != null && args.length >= 1 ? handlingSocketIndex(args) : 0;
-            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            if (roomId <= 0L && socketIndex > 0) {
+            long effectiveRoomId = roomId;
+            if (effectiveRoomId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId)) {
-                    roomId = handlingCurrentRoomId(socketIndex, userId);
+                    effectiveRoomId = handlingCurrentRoomId(socketIndex, userId);
                 }
             }
             if (socketIndex > 0) {
                 sendToSocket(socketIndex, payload);
             }
-            if (roomId <= 0L) {
-                return payload;
-            }
-            Path cacheRoot = Path.of(Functions.applicationPath, "cache");
-            String triggerCache = handlingEnsureRoomCacheFile(cacheRoot.resolve("wired_trigger").resolve(roomId + ".cache").toString());
-            String actionCache = handlingEnsureRoomCacheFile(cacheRoot.resolve("wired_action").resolve(roomId + ".cache").toString());
-            String conditionCache = handlingEnsureRoomCacheFile(cacheRoot.resolve("wired_condition").resolve(roomId + ".cache").toString());
-            String pathfinderCache = handlingEnsureRoomCacheFile(cacheRoot.resolve("pathfinder").resolve(roomId + ".cache").toString());
-            String destinationCache = handlingEnsureRoomCacheFile(cacheRoot.resolve("rooms").resolve("destination_" + roomId + ".cache").toString());
-            String roomCache = handlingEnsureRoomCacheFile(cacheRoot.resolve("rooms").resolve(roomId + ".cache").toString());
-            return payload + '\t' + triggerCache + '\t' + actionCache + '\t' + conditionCache
-                + '\t' + pathfinderCache + '\t' + destinationCache + '\t' + roomCache;
+            return WiredLookups.roomStartupCachePayload(effectiveRoomId, wiredSettings());
         } catch (Exception ignored) {
             return payload;
         }
     }
 
-    public static String Proc_6_85_73A8E0(Object... args) {
+    /**
+     * Original function: Proc_6_85_73A8E0.
+     */
+    public static String sendRoomWallFurniture(int socketIndex, long roomId) {
         try {
-            int socketIndex = args != null && args.length >= 1 ? handlingSocketIndex(args) : 0;
-            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            if (roomId <= 0L && socketIndex > 0) {
+            long effectiveRoomId = roomId;
+            if (effectiveRoomId <= 0L && socketIndex > 0) {
                 String userId = handlingUserIdFromSocket(socketIndex);
                 if (!userId.isEmpty() && !"0".equals(userId)) {
-                    roomId = handlingCurrentRoomId(socketIndex, userId);
+                    effectiveRoomId = handlingCurrentRoomId(socketIndex, userId);
                 }
             }
-            if (roomId <= 0L) {
+            if (effectiveRoomId <= 0L) {
                 return "";
             }
             FurnitureDao furniture = furnitureDao();
             if (furniture == null) {
                 return "";
             }
-            long itemCount = 0L;
-            PacketBuilder itemPayload = PacketBuilder.create();
-            for (FurnitureDao.WallFurniture wallFurniture : furniture.wallFurnitureInRoom(roomId)) {
-                long furnitureId = wallFurniture.furnitureId();
-                long productId = wallFurniture.productId();
-                String wallPosition = StringUtils.text(wallFurniture.wallPosition());
-                String signText = StringUtils.text(wallFurniture.sign());
-                long secondaryValue = wallFurniture.secondaryValue();
-                if (furnitureId > 0L && productId > 0L && !wallPosition.isEmpty()) {
-                    itemPayload.appendRaw(Proc_6_156_7972B0(furnitureId, productId, wallPosition, signText, secondaryValue));
-                    itemCount++;
-                }
-            }
-            String payload = FurniturePayloads.wallList(itemCount, itemPayload.build());
+            String payload = FurnitureLookups.wallFurniturePayload(effectiveRoomId, furniture);
             if (socketIndex > 0) {
                 sendToSocket(socketIndex, payload);
             }
@@ -2814,18 +2014,13 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_86_73B0D0(Object... args) {
+    /**
+     * Original function: Proc_6_86_73B0D0.
+     */
+    public static String sendPetPackagePreview(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingPacketPayload(args);
-            if (requestPayload.startsWith("p`") || requestPayload.startsWith("rt")) {
-                requestPayload = requestPayload.substring(2);
-            }
-            LongRef offset = new LongRef(1);
-            long furnitureId = readWireLong(requestPayload, offset);
-            if (furnitureId <= 0L) {
-                furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
+            PetWire.PackagePreviewRequest request = PetWire.packagePreviewRequest(packetPayload);
+            long furnitureId = request.furnitureId();
             if (socketIndex <= 0 || furnitureId <= 0L) {
                 return "";
             }
@@ -2842,32 +2037,10 @@ public final class Handling {
             if (furniture == null || packages == null) {
                 return "";
             }
-            FurnitureDao.RoomFurnitureProduct furnitureProduct = furniture.roomFurnitureProductById(furnitureId, roomId)
-                .orElse(null);
-            if (furnitureProduct == null) {
+            String payload = PetLookups.packagePreviewPayload(furnitureId, roomId, furniture, packages);
+            if (payload.isEmpty()) {
                 return "";
             }
-            long productId = furnitureProduct.productId();
-            if (productId <= 0L) {
-                return "";
-            }
-            PackageDao.PackageRow packageRow = packages.packageByProduct(productId).orElse(null);
-            if (packageRow == null) {
-                return "";
-            }
-            String packageType = StringUtils.text(packageRow.secondaryType()).toLowerCase();
-            long containedPetId = packageRow.containedId();
-            if (!"packages_pets".equals(packageType) || containedPetId <= 0L) {
-                return "";
-            }
-            PackageDao.PetPackage petPackage = packages.petPackage(containedPetId).orElse(null);
-            if (petPackage == null) {
-                return "";
-            }
-            long petType = petPackage.petType();
-            long petRace = petPackage.race();
-            String petColor = StringUtils.text(petPackage.color());
-            String payload = PetPayloads.packagePreview(furnitureId, petType, petRace, petColor);
             sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
@@ -2875,22 +2048,17 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_87_73C120(Object... args) {
+    /**
+     * Original function: Proc_6_87_73C120.
+     */
+    public static String placePetFromPackage(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "n~");
-            LongRef offset = new LongRef(1);
-            long furnitureId = readWireLong(requestPayload, offset);
-            if (furnitureId <= 0L) {
-                furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
-            String petName = Functions.singleLineText(readWireString(requestPayload, offset));
-            if (petName.isEmpty()) {
-                petName = Functions.singleLineText(Functions.readBase64LengthString(requestPayload));
-            }
-            long validationCode = Proc_6_181_7CA920(petName, 0, 0);
+            PetWire.PackagePlacementRequest request = PetWire.packagePlacementRequest(packetPayload);
+            long furnitureId = request.furnitureId();
+            String petName = request.petName();
+            long validationCode = PetLookups.nameValidationCode(petName);
             if (validationCode > 0L) {
-                sendToSocket(socketIndex, PetPayloads.packageNameValidation(furnitureId, validationCode, petName));
+                sendToSocket(socketIndex, PetLookups.packageNameValidationPayload(furnitureId, validationCode, petName));
                 return "";
             }
             if (socketIndex <= 0 || furnitureId <= 0L) {
@@ -2904,88 +2072,62 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            FurnitureDao furniture = furnitureDao();
-            PackageDao packages = packageDao();
-            BotDao bots = botDao();
-            if (furniture == null || packages == null || bots == null) {
-                return "";
-            }
-            FurnitureDao.RoomFurnitureOwnerProduct furnitureProduct = furniture.roomFurnitureOwnerProduct(furnitureId, roomId)
-                .orElse(null);
-            if (furnitureProduct == null) {
-                return "";
-            }
-            long productId = furnitureProduct.productId();
-            long ownerId = furnitureProduct.ownerId();
             long numericUserId = NumberUtils.parseLong(userId);
-            if (productId <= 0L || ownerId != numericUserId
-                && !handlingUserOwnsRoom(userId, roomId)
-                && !handlingUserHasRoomRight(userId, roomId)) {
+            FurnitureDao furniture = furnitureDao();
+            PetPackagePlacement placement = PetLookups.packagePlacementAction(
+                furnitureId,
+                roomId,
+                numericUserId,
+                petName,
+                validationCode,
+                furniture,
+                packageDao(),
+                botDao(),
+                roomDao());
+            if (!placement.valid()) {
                 return "";
             }
-            PackageDao.PackageRow packageRow = packages.packageByProduct(productId).orElse(null);
-            if (packageRow == null) {
-                return "";
+            if (placement.hasInventoryAddPayload()) {
+                sendToSocket(socketIndex, placement.inventoryAddPayload());
             }
-            String packageType = StringUtils.text(packageRow.secondaryType()).toLowerCase();
-            long containedPetId = packageRow.containedId();
-            if (!"packages_pets".equals(packageType) || containedPetId <= 0L) {
-                return "";
+            RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.removeMarker(
+                RoomState.instance().furnitureRoomCache(), roomId, furnitureId));
+            broadcastToCurrentRoom(socketIndex, FurniturePayloads.floorItemRemovedWithState(furnitureId, "H"));
+            if (furniture != null) {
+                furniture.deleteFurniture(furnitureId);
             }
-            PackageDao.PetPackage petPackage = packages.petPackage(containedPetId).orElse(null);
-            if (petPackage == null) {
-                return "";
-            }
-            String petFigure = String.valueOf(petPackage.petType()) + ' '
-                + String.valueOf(petPackage.race()) + ' '
-                + StringUtils.text(petPackage.color());
-            bots.insertPetBot(numericUserId, petFigure.toLowerCase(), petName);
-            long botId = bots.newestPetBotId(numericUserId);
-            if (botId <= 0L) {
-                return "";
-            }
-            bots.insertPetData(botId, numericUserId);
-            String inventoryRow = PetPayloads.inventoryRow(new PetInventoryRow(botId, petName, petFigure, 0L));
-            if (!inventoryRow.isEmpty()) {
-                sendToSocket(socketIndex, PetPayloads.inventoryAdd(inventoryRow));
-            }
-            removeRepresentedFurnitureCacheMarker(socketIndex, furnitureId, productId);
-            broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2' + "H" + '\2');
-            furniture.deleteFurniture(furnitureId);
-            sendToSocket(socketIndex, PetPayloads.packageNameValidation(furnitureId, validationCode, petName));
-            return String.valueOf(botId);
+            sendToSocket(socketIndex, placement.nameValidationPayload());
+            return String.valueOf(placement.botId());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
     }
 
-    public static void Proc_6_88_73E4F0(Object... args) {
+    /**
+     * Original function: Proc_6_88_73E4F0.
+     */
+    public static void sendNewFriendRoom(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            LocalDateTime now = LocalDateTime.now();
-            NavigatorState navigatorState = NavigatorState.instance();
-            if (navigatorState.newFriendRooms().shouldRefresh(now)) {
-                RoomDao rooms = roomDao();
-                if (rooms == null) {
-                    return;
-                }
-                Licence.setNewFriendRooms(rooms.newFriendRoomPicks(), now.plusSeconds(90L));
+            String payload = NavigatorRequests.newFriendRoomPayload(null, NavigatorState.instance(), roomDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            NewFriendRooms.RoomPick roomPick = navigatorState.newFriendRooms().randomRoom();
-            sendToSocket(socketIndex, NavigatorPayloads.newFriendRoom(roomPick));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static String Proc_6_89_73EA10(Object... args) {
+    /**
+     * Original function: Proc_6_89_73EA10.
+     */
+    public static String confirmTrade(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return "";
             }
-            int targetSocketIndex = representedInteractionPartner(socketIndex);
+            TradeState tradeState = TradeState.instance();
+            int targetSocketIndex = tradeState.interactionPartner(socketIndex);
             if (targetSocketIndex <= 0) {
                 return "";
             }
@@ -2994,44 +2136,29 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId) || targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
             }
-            List<Long> sourceFurnitureIds = representedTradeOfferFurnitureIds(representedTradeOffers, socketIndex);
-            List<Long> targetFurnitureIds = representedTradeOfferFurnitureIds(representedTradeOffers, targetSocketIndex);
-            if (sourceFurnitureIds.isEmpty() && targetFurnitureIds.isEmpty()) {
-                return "";
-            }
-            String sourceLogItems = representedTradeOfferLogItems(representedTradeOffers, socketIndex);
-            String targetLogItems = representedTradeOfferLogItems(representedTradeOffers, targetSocketIndex);
-            TradeDao trades = tradeDao();
-            if (trades == null) {
-                return "";
-            }
-            long numericUserId = NumberUtils.parseLong(userId);
-            long numericTargetUserId = NumberUtils.parseLong(targetUserId);
-            if (!sourceFurnitureIds.isEmpty()) {
-                trades.transferInventoryFurniture(sourceFurnitureIds, numericUserId, numericTargetUserId);
-            }
-            if (!targetFurnitureIds.isEmpty()) {
-                trades.transferInventoryFurniture(targetFurnitureIds, numericTargetUserId, numericUserId);
-            }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            String sessionId = handlingUserSessionId(userId);
-            trades.insertTradeLog(numericUserId, numericTargetUserId, sourceLogItems, targetLogItems, roomId, sessionId);
-            sendToSocket(socketIndex, "Ap");
-            sendToSocket(targetSocketIndex, "Ap");
+            String sessionId = UserLookups.sessionId(userId, userDao());
+            TradeConfirmation confirmation = TradeLookups.confirmTradeAction(
+                socketIndex, userId, targetUserId, roomId, sessionId, tradeState, tradeDao());
+            if (!confirmation.valid()) {
+                return "";
+            }
+            sendToSocket(socketIndex, confirmation.payload());
+            sendToSocket(targetSocketIndex, confirmation.payload());
             sendInventoryToSocket(socketIndex);
             sendInventoryToSocket(targetSocketIndex);
-            removeRepresentedInteractionPair(socketIndex);
-            removeRepresentedInteractionPair(targetSocketIndex);
-            return "Ap";
+            return confirmation.payload();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
     }
 
-    public static void Proc_6_90_742E80(Object... args) {
+    /**
+     * Original function: Proc_6_90_742E80.
+     */
+    public static void sendInteractionState(int socketIndex, long suppliedTargetSocketIndex, Long suppliedInteractionState) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return;
             }
@@ -3043,41 +2170,42 @@ public final class Handling {
             if (sourceRoomUserIndex <= 0L) {
                 return;
             }
-            int targetSocketIndex = args != null && args.length >= 2 ? (int) NumberUtils.parseLong(args[1]) : 0;
-            if (targetSocketIndex <= 0) {
-                targetSocketIndex = representedInteractionPartner(socketIndex);
-            }
-            long interactionState = args != null && args.length >= 3
-                ? NumberUtils.parseLong(args[2])
-                : representedInteractionState(socketIndex);
-            if (targetSocketIndex <= 0) {
+            TradeInteractionStateAction action = TradeLookups.interactionStateAction(
+                socketIndex,
+                sourceRoomUserIndex,
+                suppliedTargetSocketIndex,
+                suppliedInteractionState != null,
+                suppliedInteractionState == null ? 0L : suppliedInteractionState,
+                TradeState.instance());
+            if (!action.valid()) {
                 return;
             }
+            int targetSocketIndex = (int) action.targetSocketIndex();
             String targetUserId = handlingUserIdFromSocket(targetSocketIndex);
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return;
             }
-            String sourcePayload = SocialPayloads.interactionStateForSource(sourceRoomUserIndex, interactionState);
-            String targetPayload = SocialPayloads.interactionStateForTarget(sourceRoomUserIndex, interactionState);
-            sendToSocket(socketIndex, sourcePayload);
-            sendToSocket(targetSocketIndex, targetPayload);
-            if (interactionState == 1L) {
-                sendToSocket(socketIndex, "Ao");
-                sendToSocket(targetSocketIndex, "Ao");
+            sendToSocket(socketIndex, action.sourcePayload());
+            sendToSocket(targetSocketIndex, action.targetPayload());
+            if (!action.completionPayload().isEmpty()) {
+                sendToSocket(socketIndex, action.completionPayload());
+                sendToSocket(targetSocketIndex, action.completionPayload());
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static String Proc_6_91_743480(Object... args) {
+    /**
+     * Original function: Proc_6_91_743480.
+     */
+    public static String addTradeFurniture(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return "";
             }
-            String requestPayload = handlingRequestPayload(args, "FU");
-            int targetSocketIndex = representedInteractionPartner(socketIndex);
+            TradeState tradeState = TradeState.instance();
+            int targetSocketIndex = tradeState.interactionPartner(socketIndex);
             if (targetSocketIndex <= 0) {
                 return "";
             }
@@ -3086,48 +2214,35 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId) || targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
             }
-            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            TradeWire.FurnitureRequest request = TradeWire.furnitureRequest(packetPayload, packetPrefix);
+            long furnitureId = request.furnitureId();
             if (furnitureId <= 0L) {
                 return "";
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return "";
+            TradeOfferAction action = TradeLookups.addOfferAction(
+                socketIndex, targetSocketIndex, userId, targetUserId, furnitureId, tradeState, furnitureDao());
+            if (!action.sourcePayload().isEmpty()) {
+                sendToSocket(socketIndex, action.sourcePayload());
             }
-            FurnitureDao.TradeFurniture tradeFurniture = furniture.tradeFurniture(furnitureId, NumberUtils.parseLong(userId))
-                .orElse(null);
-            if (tradeFurniture == null) {
-                return "";
+            if (!action.targetPayload().isEmpty()) {
+                sendToSocket(targetSocketIndex, action.targetPayload());
             }
-            long productId = tradeFurniture.productId();
-            String signText = StringUtils.text(tradeFurniture.sign());
-            long secondaryValue = tradeFurniture.secondaryValue();
-            if (productId <= 0L) {
-                return "";
-            }
-            storeRepresentedTradeOffer(socketIndex, furnitureId, productId, signText, secondaryValue);
-            String sourcePayload = representedTradeOfferPayload(representedTradeOffers, socketIndex, targetSocketIndex, userId, targetUserId);
-            String targetPayload = representedTradeOfferPayload(representedTradeOffers, targetSocketIndex, socketIndex, targetUserId, userId);
-            if (!sourcePayload.isEmpty()) {
-                sendToSocket(socketIndex, sourcePayload);
-            }
-            if (!targetPayload.isEmpty()) {
-                sendToSocket(targetSocketIndex, targetPayload);
-            }
-            return sourcePayload;
+            return action.sourcePayload();
         } catch (Exception ignored) {
             return "";
         }
     }
 
-    public static String Proc_6_92_744870(Object... args) {
+    /**
+     * Original function: Proc_6_92_744870.
+     */
+    public static String removeTradeFurniture(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return "";
             }
-            String requestPayload = handlingRequestPayload(args, "AH");
-            int targetSocketIndex = representedInteractionPartner(socketIndex);
+            TradeState tradeState = TradeState.instance();
+            int targetSocketIndex = tradeState.interactionPartner(socketIndex);
             if (targetSocketIndex <= 0) {
                 return "";
             }
@@ -3136,43 +2251,36 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId) || targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return "";
             }
-            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            TradeWire.FurnitureRequest request = TradeWire.furnitureRequest(packetPayload, packetPrefix);
+            long furnitureId = request.furnitureId();
             if (furnitureId <= 0L) {
                 return "";
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return "";
+            TradeOfferAction action = TradeLookups.removeOfferAction(
+                socketIndex, targetSocketIndex, userId, targetUserId, furnitureId, tradeState, furnitureDao());
+            if (!action.sourcePayload().isEmpty()) {
+                sendToSocket(socketIndex, action.sourcePayload());
             }
-            if (furniture.tradeFurnitureForRemoval(furnitureId, NumberUtils.parseLong(userId)).isEmpty()) {
-                return "";
+            if (!action.targetPayload().isEmpty()) {
+                sendToSocket(targetSocketIndex, action.targetPayload());
             }
-            removeRepresentedTradeOffer(socketIndex, furnitureId);
-            String sourcePayload = representedTradeOfferPayload(representedTradeOffers, socketIndex, targetSocketIndex, userId, targetUserId);
-            String targetPayload = representedTradeOfferPayload(representedTradeOffers, targetSocketIndex, socketIndex, targetUserId, userId);
-            if (!sourcePayload.isEmpty()) {
-                sendToSocket(socketIndex, sourcePayload);
-            }
-            if (!targetPayload.isEmpty()) {
-                sendToSocket(targetSocketIndex, targetPayload);
-            }
-            return sourcePayload;
+            return action.sourcePayload();
         } catch (Exception ignored) {
             return "";
         }
     }
 
-    public static void Proc_6_93_745D90(Object... args) {
+    /**
+     * Original function: Proc_6_93_745D90.
+     */
+    public static void requestInteraction(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return;
             }
-            String requestPayload = handlingRequestPayload(args, "AG");
-            long requestedRoomUserIndex = readWireLong(requestPayload, new LongRef(1));
-            if (requestedRoomUserIndex <= 0L) {
-                requestedRoomUserIndex = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
+            SocialWire.RoomUserIndexRequest request =
+                SocialWire.roomUserIndexRequest(packetPayload, packetPrefix);
+            long requestedRoomUserIndex = request.roomUserIndex();
             if (requestedRoomUserIndex <= 0L) {
                 return;
             }
@@ -3184,37 +2292,29 @@ public final class Handling {
             if (callerRoomId <= 0L) {
                 return;
             }
-            RoomUserTargetRow target = activeRoomUserTarget(callerRoomId, requestedRoomUserIndex);
-            if (target == null) {
+            TradeInteractionRequestAction action = TradeLookups.requestInteractionAction(
+                socketIndex,
+                callerUserId,
+                callerRoomId,
+                requestedRoomUserIndex,
+                roomDao(),
+                TradeState.instance(),
+                userId -> handlingSocketFromUserId(String.valueOf(userId)));
+            if (!action.valid()) {
                 return;
             }
-            long targetRoomUserIndex = target.roomUserIndex();
-            String targetUserId = String.valueOf(target.userId());
-            int targetSocketIndex = (int) target.socketIndex();
-            if (targetRoomUserIndex <= 0L || targetUserId.isEmpty() || "0".equals(targetUserId)) {
-                return;
-            }
-            if (targetSocketIndex <= 0) {
-                targetSocketIndex = handlingSocketFromUserId(targetUserId);
-            }
-            if (targetSocketIndex <= 0 || targetSocketIndex == socketIndex || representedInteractionPartner(targetSocketIndex) > 0) {
-                return;
-            }
-            storeRepresentedInteractionPair(socketIndex, targetSocketIndex, 1L);
-            String callerPayload = SocialPayloads.interactionRequest(
-                NumberUtils.parseLong(callerUserId), NumberUtils.parseLong(targetUserId));
-            String targetPayload = SocialPayloads.interactionRequest(
-                NumberUtils.parseLong(targetUserId), NumberUtils.parseLong(callerUserId));
-            sendToSocket(socketIndex, callerPayload);
-            sendToSocket(targetSocketIndex, targetPayload);
+            sendToSocket(socketIndex, action.sourcePayload());
+            sendToSocket((int) action.targetSocketIndex(), action.targetPayload());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_94_746990(Object... args) {
+    /**
+     * Original function: Proc_6_94_746990.
+     */
+    public static void closeInteraction(int socketIndex, int suppliedTargetSocketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return;
             }
@@ -3226,9 +2326,9 @@ public final class Handling {
             if (sourceRoomUserIndex <= 0L) {
                 return;
             }
-            int targetSocketIndex = args != null && args.length >= 2 ? (int) NumberUtils.parseLong(args[1]) : 0;
+            int targetSocketIndex = suppliedTargetSocketIndex;
             if (targetSocketIndex <= 0) {
-                targetSocketIndex = representedInteractionPartner(socketIndex);
+                targetSocketIndex = TradeState.instance().interactionPartner(socketIndex);
             }
             if (targetSocketIndex <= 0) {
                 return;
@@ -3241,74 +2341,35 @@ public final class Handling {
             if (targetRoomUserIndex <= 0L) {
                 return;
             }
-            String payload = SocialPayloads.interactionClosed(sourceRoomUserIndex);
-            sendToSocket(socketIndex, payload);
-            sendToSocket(targetSocketIndex, payload);
-            removeRepresentedInteractionPair(socketIndex);
-            removeRepresentedInteractionPair(targetSocketIndex);
+            TradeInteractionCloseAction action = TradeLookups.closeInteractionAction(
+                socketIndex, targetSocketIndex, sourceRoomUserIndex, targetRoomUserIndex, TradeState.instance());
+            if (!action.valid()) {
+                return;
+            }
+            sendToSocket(socketIndex, action.payload());
+            sendToSocket((int) action.targetSocketIndex(), action.payload());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static String Proc_6_95_746CD0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "Cw");
-            String userId = handlingUserIdFromSocket(socketIndex);
-            long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (userId.isEmpty() || "0".equals(userId) || roomId <= 0L) {
-                return "";
-            }
-            long furnitureId = idRequestFromWire(requestPayload, "");
-            if (furnitureId <= 0L) {
-                return "";
-            }
-            FurnitureDao.SimpleFloorFurniture item = furnitureDao().simpleFloorFurniture(furnitureId, roomId).orElse(null);
-            if (item == null) {
-                return "";
-            }
-            long productId = item.productId();
-            String productAction = DataManager.productCache().primarySprite(productId);
-            return "habbowheel".equals(productAction) ? String.valueOf(furnitureId) : "";
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_96_747000(Object... args) {
-        return handlingSimpleFloorItemUse(args, "AM", 0L, true);
-    }
-
-    public static String Proc_6_97_747640(Object... args) {
-        return handlingSimpleFloorItemUse(args, "AL", -1L, false);
-    }
-
-    public static long Proc_6_98_747D80(Object... args) {
+    /**
+     * Original function: Proc_6_98_747D80.
+     */
+    public static long sendDimmerPresets(int socketIndex) {
         long currentPresetId = 0L;
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L || (!handlingUserOwnsRoom(userId, roomId) && !handlingUserHasRoomRight(userId, roomId))) {
-                return 0L;
-            }
-            long dimmerFurnitureId = representedDimmerFurnitureId(roomId);
-            if (dimmerFurnitureId <= 0L) {
-                return 0L;
-            }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return 0L;
-            }
-            FurniturePayloads.DimmerPresetPayload dimmerPayload =
-                FurniturePayloads.dimmerPresets(furniture.dimmerPresets(dimmerFurnitureId));
+            FurnitureDimmers.PresetPayload dimmerPayload = FurnitureDimmers.presetsForUser(
+                userId, roomId, roomDao(), furnitureDao());
             currentPresetId = dimmerPayload.currentPresetId();
-            sendToSocket(socketIndex, dimmerPayload.payload());
+            if (!dimmerPayload.payload().isEmpty()) {
+                sendToSocket(socketIndex, dimmerPayload.payload());
+            }
             return currentPresetId;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -3316,112 +2377,70 @@ public final class Handling {
         }
     }
 
-    public static long Proc_6_99_748460(Object... args) {
+    /**
+     * Original function: Proc_6_99_748460.
+     */
+    public static long toggleDimmerState(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L || (!handlingUserOwnsRoom(userId, roomId) && !handlingUserHasRoomRight(userId, roomId))) {
-                return 0L;
+            FurnitureDimmers.StatePayload dimmerPayload = FurnitureDimmers.toggleStateForUser(
+                userId, roomId, roomDao(), furnitureDao());
+            if (!dimmerPayload.payload().isEmpty()) {
+                broadcastToCurrentRoom(socketIndex, dimmerPayload.payload());
             }
-            long dimmerFurnitureId = representedDimmerFurnitureId(roomId);
-            if (dimmerFurnitureId <= 0L) {
-                return 0L;
-            }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return 0L;
-            }
-            FurnitureDao.ActiveDimmerState dimmer = furniture.activeDimmerState(dimmerFurnitureId).orElse(null);
-            if (dimmer == null) {
-                return 0L;
-            }
-            String currentSign = StringUtils.text(dimmer.sign());
-            long currentState = currentSign.isEmpty() ? 0L : NumberUtils.parseLong(currentSign.substring(0, 1));
-            if (currentState <= 0L) {
-                currentState = 2L;
-            }
-            long nextState = currentState - 1L;
-            if (nextState < 1L) {
-                nextState = 2L;
-            }
-            String signText = nextState + "," + dimmer.presetId() + "," + dimmer.backgroundId()
-                + "," + dimmer.colour() + "," + dimmer.lightLevel();
-            furniture.updateSignText(dimmerFurnitureId, signText);
-            broadcastToCurrentRoom(socketIndex,
-                FurniturePayloads.wallState(dimmerFurnitureId, dimmer.productId(), dimmer.wallPosition(), signText));
-            return nextState;
+            return dimmerPayload.state();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
         }
     }
 
-    public static long Proc_6_100_748C80(Object... args) {
+    /**
+     * Original function: Proc_6_100_748C80.
+     */
+    public static long updateDimmerPreset(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "EV");
-            LongRef offset = new LongRef(1);
-            long presetId = readWireLong(requestPayload, offset);
-            long backgroundId = readWireLong(requestPayload, offset);
-            String colourText = readWireString(requestPayload, offset).toUpperCase();
-            long lightLevel = readWireLong(requestPayload, offset);
-            if (presetId < 1L || presetId > 3L || backgroundId < 1L || backgroundId > 2L
-                || !isDimmerColour(colourText) || lightLevel < 76L || lightLevel > 225L) {
-                return 0L;
-            }
+            FurnitureWire.DimmerPresetRequest request =
+                FurnitureWire.dimmerPresetRequest(packetPayload);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L || (!handlingUserOwnsRoom(userId, roomId) && !handlingUserHasRoomRight(userId, roomId))) {
-                return 0L;
+            FurnitureDimmers.UpdatePayload dimmerPayload = FurnitureDimmers.updatePresetForUser(
+                userId,
+                roomId,
+                request.presetId(),
+                request.backgroundId(),
+                request.colourText(),
+                request.lightLevel(),
+                roomDao(),
+                furnitureDao());
+            if (!dimmerPayload.payload().isEmpty()) {
+                broadcastToCurrentRoom(socketIndex, dimmerPayload.payload());
             }
-            long dimmerFurnitureId = representedDimmerFurnitureId(roomId);
-            if (dimmerFurnitureId <= 0L) {
-                return 0L;
-            }
-            String signText = "2," + presetId + "," + backgroundId + "," + colourText + "," + lightLevel;
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return 0L;
-            }
-            furniture.resetDimmerPresetStates(dimmerFurnitureId);
-            furniture.updateDimmerPreset(dimmerFurnitureId, presetId, lightLevel, backgroundId, colourText);
-            furniture.updateSignText(dimmerFurnitureId, signText);
-            FurnitureDao.WallProductPosition wallPosition = furniture.wallProductPosition(dimmerFurnitureId).orElse(null);
-            if (wallPosition != null) {
-                broadcastToCurrentRoom(socketIndex,
-                    FurniturePayloads.wallState(
-                        dimmerFurnitureId,
-                        wallPosition.productId(),
-                        wallPosition.wallPosition(),
-                        signText));
-            }
-            return dimmerFurnitureId;
+            return dimmerPayload.furnitureId();
         } catch (Exception ignored) {
             return 0L;
         }
     }
 
-    public static long Proc_6_101_749540(Object... args) {
+    /**
+     * Original function: Proc_6_101_749540.
+     */
+    public static long sendUserEffectList(int socketIndex, String packetPrefix, String packetPayload) {
         long listedEffects = 0L;
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
-                return 0L;
-            }
-            UserDao users = userDao();
-            if (users == null) {
                 return 0L;
             }
             UserPayloads.EffectListPayload effectPayload =
-                UserPayloads.effectList(users.userEffectSummaries(NumberUtils.parseLong(userId)));
+                UserLookups.effectListPayload(userId, userDao());
             listedEffects = effectPayload.listedEffects();
             sendToSocket(socketIndex, effectPayload.payload());
         } catch (Exception ignored) {
@@ -3430,17 +2449,13 @@ public final class Handling {
         return listedEffects;
     }
 
-    public static long Proc_6_102_749C50(Object... args) {
+    /**
+     * Original function: Proc_6_102_749C50.
+     */
+    public static long activateUserEffect(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "");
-            if (requestPayload.length() >= 3) {
-                requestPayload = requestPayload.substring(2);
-            }
-            long effectId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            if (effectId <= 0L) {
-                effectId = readWireLong(requestPayload, new LongRef(1));
-            }
+            SocialWire.EffectRequest request = SocialWire.effectRequest(packetPayload);
+            long effectId = request.effectId();
             if (effectId <= 0L) {
                 return 0L;
             }
@@ -3448,24 +2463,15 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
-            UserDao users = userDao();
-            if (users == null) {
+            UserEffectActivation activation = UserLookups.activateUserEffect(userId, effectId, socketIndex, userDao());
+            if (!activation.valid()) {
                 return 0L;
             }
-            UserEffectActivationRow effect = users.userEffectActivation(NumberUtils.parseLong(userId), effectId).orElse(null);
-            if (effect == null) {
-                return 0L;
+            sendToSocket(socketIndex, activation.payload());
+            if (!activation.broadcastPayload().isEmpty()) {
+                broadcastToCurrentRoom(socketIndex, activation.broadcastPayload());
             }
-            long effectRowId = effect.rowId();
-            long rentSeconds = effect.rentSeconds();
-            if (effectRowId <= 0L || rentSeconds <= 0L) {
-                return 0L;
-            }
-            users.activateUserEffect(effectRowId);
-            sendToSocket(socketIndex, UserPayloads.effectActivated(effectId, rentSeconds));
-            String broadcastPayload = SocialPayloads.roomUserEffect(socketIndex, effectId) + "H";
-            broadcastToCurrentRoom(socketIndex, broadcastPayload);
-            return effectId;
+            return activation.effectId();
         } catch (Exception ignored) {
             return 0L;
         }
@@ -3474,499 +2480,309 @@ public final class Handling {
     /**
      * Original function: Proc_6_103_74A510.
      */
-    public static long Proc_6_103_74A510(Object... args) {
-        return expireUserEffects();
-    }
-
-    /**
-     * Original function: Proc_6_103_74A510.
-     */
     public static long expireUserEffects() {
         long expiredCount = 0L;
         try {
-            UserDao users = userDao();
-            if (users == null) {
-                return 0L;
-            }
-            for (ExpiredUserEffectRow effect : users.expiredUserEffects()) {
-                long effectId = effect.effectId();
+            for (UserEffectExpiry effect : UserLookups.expiredUserEffects(userDao())) {
                 int socketIndex = (int) effect.socketIndex();
-                if (socketIndex > 0 && effectId > 0L) {
-                    broadcastToCurrentRoom(socketIndex, SocialPayloads.roomUserEffectCleared(socketIndex));
-                    sendToSocket(socketIndex, UserPayloads.effectExpired(effectId));
+                if (effect.valid()) {
+                    if (!effect.broadcastPayload().isEmpty()) {
+                        broadcastToCurrentRoom(socketIndex, effect.broadcastPayload());
+                    }
+                    sendToSocket(socketIndex, effect.payload());
                     expiredCount++;
                 }
             }
-            users.deleteExpiredUserEffects();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
         return expiredCount;
     }
 
-    public static void Proc_6_104_74AB60(Object... args) {
+    /**
+     * Original function: Proc_6_104_74AB60.
+     */
+    public static void sendCreatableRoomCount(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
-            long maxOwnedRooms = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.rooms.own.max", 0));
-            RoomDao rooms = roomDao();
-            long ownedRoomCount = rooms == null ? 0L : rooms.ownedRoomCount(NumberUtils.parseLong(userId));
-            sendToSocket(socketIndex, RoomPayloads.creatableRoomCount(maxOwnedRooms, ownedRoomCount));
+            long maxOwnedRooms = AppConfigState.instance().settingsCache().longValueOrDefault("com.server.socket.game.rooms.own.max", 0);
+            sendToSocket(socketIndex, RoomLookups.creatableRoomCountPayload(userId, maxOwnedRooms, roomDao()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_105_74AD50(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "@]");
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return;
-            }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
-                return;
-            }
-            long maxOwnedRooms = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.rooms.own.max", 0));
-            long userIdValue = NumberUtils.parseLong(userId);
-            long ownedRoomCount = rooms.ownedRoomCount(userIdValue);
-            if (maxOwnedRooms > 0L && ownedRoomCount >= maxOwnedRooms) {
-                return;
-            }
-            LongRef offset = new LongRef(1);
-            String roomName = left(Functions.singleLineText(readWireString(requestPayload, offset)), 25);
-            String modelName = left(Functions.sqlEscapedText(readWireString(requestPayload, offset)), 10);
-            if (roomName.isEmpty() || modelName.isEmpty()) {
-                return;
-            }
-            RoomDao.CreatableRoomModel model = rooms.creatableRoomModel(handlingUserHcLevel(userId), modelName).orElse(null);
-            if (model == null) {
-                return;
-            }
-            long modelId = model.modelId();
-            long visitorsMax = model.visitorsMax();
-            if (modelId <= 0L) {
-                return;
-            }
-            if (visitorsMax <= 0L) {
-                visitorsMax = 25L;
-            }
-            rooms.insertRoom(userIdValue, roomName, visitorsMax, modelId);
-            long roomId = rooms.newestRoomId();
-            if (roomId <= 0L) {
-                return;
-            }
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
-            sendToSocket(socketIndex, RoomPayloads.createdRoom(roomId, roomName));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_106_74B750(Object... args) {
-        try {
-            if (args != null && args.length >= 1) {
-                deleteFile(StringUtils.text(args[0]));
-            }
-        } catch (Exception ignored) {
-            // VB6 source suppresses file delete failures.
         }
     }
 
     /**
-     * Original function: Proc_6_106_74B750.
+     * Original function: Proc_6_105_74AD50.
      */
-    public static void deleteFile(String filePath) {
+    public static void createRoom(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            if (!StringUtils.text(filePath).isEmpty()) {
-                Files.deleteIfExists(Path.of(StringUtils.text(filePath)));
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return;
             }
+            long maxOwnedRooms = AppConfigState.instance().settingsCache().longValueOrDefault("com.server.socket.game.rooms.own.max", 0);
+            CreatedRoom room = RoomLookups.createRoom(
+                userId, RoomWire.createRoomRequest(packetPayload),
+                maxOwnedRooms, UserLookups.hcLevel(userId, userDao()), roomDao());
+            if (!room.valid()) {
+                return;
+            }
+            room.invalidateCaches();
+            sendToSocket(socketIndex, room.payload());
         } catch (Exception ignored) {
-            // VB6 source suppresses file delete failures.
+            // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_107_74B7E0(Object... args) {
+    /**
+     * Original function: Proc_6_107_74B7E0.
+     */
+    public static void toggleStaffPickedRoom(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId) || !handlingUserHasPermission(userId, "fuse_client_staff")) {
+            if (userId.isEmpty() || "0".equals(userId) || !UserLookups.hasPermission(userId, "fuse_client_staff", userDao(), AppConfigState.instance().permissionMatrix())) {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
             if (roomId <= 0L) {
                 return;
             }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
+            long categoryId = AppConfigState.instance().settingsCache().longValueOrDefault("com.client.navigator.staff_picked.category.id.default", 0);
+            long styleId = AppConfigState.instance().settingsCache().longValueOrDefault("com.client.navigator.staff_picked.style.default", 0);
+            long iconId = AppConfigState.instance().settingsCache().longValueOrDefault("com.client.navigator.staff_picked.category.icon.default", 0);
+            StaffPickedToggle toggle = RoomLookups.toggleStaffPickedRoom(
+                roomId, categoryId, styleId, iconId, roomDao(), userDao());
+            if (!toggle.changed()) {
                 return;
             }
-            long ownerUserId = rooms.roomOwnerId(roomId);
-            if (ownerUserId <= 0L) {
-                return;
-            }
-            long currentPicked = rooms.staffPickedState(roomId);
-            long newPicked = currentPicked == 0L ? 1L : 0L;
-            long categoryId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.navigator.staff_picked.category.id.default", 0));
-            if (categoryId <= 0L) {
-                categoryId = 1L;
-            }
-            rooms.deleteStaffPickedOfficialRoom(categoryId, roomId);
-            if (newPicked != 0L) {
-                long styleId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.navigator.staff_picked.style.default", 0));
-                long iconId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.navigator.staff_picked.category.icon.default", 0));
-                rooms.insertStaffPickedOfficialRoom(categoryId, roomId, styleId, iconId);
-                UserDao users = userDao();
-                if (users != null) {
-                    users.incrementStaffPickedCount(ownerUserId);
-                }
-            }
-            rooms.updateStaffPickedState(roomId, newPicked);
-            String queryTail = "users,rooms,rooms_categories WHERE rooms.id='" + roomId
-                + "' AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category LIMIT 1";
-            broadcastToCurrentRoom(socketIndex, Proc_6_112_74E0C0(queryTail, "GF", 0));
+            broadcastToCurrentRoom(socketIndex, NavigatorRequests.roomListPayload(roomId, roomDao()));
             broadcastToCurrentRoom(socketIndex, RoomPayloads.entryUpdated(roomId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_108_74D800(Object... args) {
+    /**
+     * Original function: Proc_6_108_74D800.
+     */
+    public static void sendFavouriteRoomIds(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
-            long maxFavorites = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.rooms.favourites.max", 30));
+            long maxFavorites = AppConfigState.instance().settingsCache().longValueOrDefault("com.server.socket.game.rooms.favourites.max", 30);
             if (maxFavorites <= 0L) {
                 maxFavorites = 30L;
             }
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
-                return;
+            String payload = RoomLookups.favouriteRoomIdsPayload(userId, maxFavorites, roomDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            sendToSocket(socketIndex,
-                NavigatorPayloads.favouriteRoomIds(rooms.favouriteRoomIds(NumberUtils.parseLong(userId), maxFavorites),
-                    maxFavorites).payload());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_109_74DBD0(Object... args) {
+    /**
+     * Original function: Proc_6_109_74DBD0.
+     */
+    public static void removeFavouriteRoom(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "@T");
-            long roomId = readWireLong(requestPayload, new LongRef(1));
-            if (roomId <= 0L) {
-                roomId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
+            RoomWire.RoomIdRequest request = RoomWire.roomIdRequest(packetPayload, packetPrefix);
+            long roomId = request.roomId();
             String userId = handlingUserIdFromSocket(socketIndex);
-            RoomDao rooms = roomDao();
-            if (rooms != null) {
-                rooms.deleteFavouriteRoom(NumberUtils.parseLong(userId), roomId);
+            String payload = RoomLookups.removeFavouriteRoomPayload(userId, roomId, roomDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            sendToSocket(socketIndex, RoomPayloads.favouriteRemoved(roomId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_110_74DDA0(Object... args) {
+    /**
+     * Original function: Proc_6_110_74DDA0.
+     */
+    public static void addFavouriteRoom(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "@S");
-            long roomId = readWireLong(requestPayload, new LongRef(1));
-            if (roomId <= 0L) {
-                roomId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
+            RoomWire.RoomIdRequest request = RoomWire.roomIdRequest(packetPayload, packetPrefix);
+            long roomId = request.roomId();
             String userId = handlingUserIdFromSocket(socketIndex);
-            RoomDao rooms = roomDao();
-            if (rooms != null) {
-                rooms.insertFavouriteRoom(NumberUtils.parseLong(userId), roomId);
+            String payload = RoomLookups.addFavouriteRoomPayload(userId, roomId, roomDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            sendToSocket(socketIndex, RoomPayloads.favouriteAdded(roomId));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_111_74DF70(Object... args) {
+    /**
+     * Original function: Proc_6_111_74DF70.
+     */
+    public static void sendRoomCategoryPayload(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long rankIndex = args != null && args.length >= 4 ? NumberUtils.parseLong(args[3]) : 0L;
-            long hcLevel = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
-            if (rankIndex < 0L) {
-                rankIndex = 0L;
-            }
-            if (rankIndex > 20L) {
-                rankIndex = 20L;
-            }
-            if (hcLevel < 0L) {
-                hcLevel = 0L;
-            }
-            if (hcLevel > 2L) {
-                hcLevel = 2L;
-            }
-            String responsePayload = roomCategoryCache().payload(rankIndex, hcLevel);
-            sendToSocket(socketIndex, "C]" + responsePayload);
+            sendToSocket(socketIndex, roomCategoryCache().rankPayload(0L, 0L));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static String Proc_6_113_74EE70(Object... args) {
+    /**
+     * Original function: Proc_6_115_751220.
+     */
+    public static void sendEventCategoryNavigatorRooms(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            if (args == null || args.length < 2) {
-                return "";
+            sendToSocket(socketIndex, NavigatorRequests.eventCategoryQueryPayload(
+                packetPayload, AppConfigState.instance().settingsCache(), recommendedRooms(), roomDao()));
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_116_751550.
+     */
+    public static void sendPopularCategoryNavigatorRooms(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            sendToSocket(socketIndex, NavigatorRequests.popularCategoryQueryPayload(
+                packetPayload, AppConfigState.instance().settingsCache(), recommendedRooms(), roomDao()));
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_117_751880.
+     */
+    public static void sendFriendCurrentNavigatorRooms(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            sendToSocket(socketIndex, NavigatorRequests.friendCurrentQueryPayload(
+                handlingUserIdFromSocket(socketIndex), AppConfigState.instance().settingsCache(), roomDao()));
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_118_751A80.
+     */
+    public static void sendFriendOwnedNavigatorRooms(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            sendToSocket(socketIndex, NavigatorRequests.friendOwnedQueryPayload(
+                handlingUserIdFromSocket(socketIndex), AppConfigState.instance().settingsCache(), roomDao()));
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_119_751C80.
+     */
+    public static void sendFavouriteNavigatorRooms(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            sendToSocket(socketIndex, NavigatorRequests.favouriteQueryPayload(
+                handlingUserIdFromSocket(socketIndex), AppConfigState.instance().settingsCache(), roomDao()));
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_120_751E80.
+     */
+    public static void sendRecentlyVisitedNavigatorRooms(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            sendToSocket(socketIndex, NavigatorRequests.recentlyVisitedQueryPayload(
+                handlingUserIdFromSocket(socketIndex), AppConfigState.instance().settingsCache(), roomDao()));
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_121_752080.
+     */
+    public static void sendOwnedNavigatorRooms(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            sendToSocket(socketIndex, NavigatorRequests.ownedQueryPayload(
+                handlingUserIdFromSocket(socketIndex), AppConfigState.instance().settingsCache(), roomDao()));
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_123_754020.
+     */
+    public static void sendOfficialNavigator(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            String payload = NavigatorRequests.officialNavigatorPayload(roomDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            String eventQueryTail = StringUtils.text(args[0]);
-            String roomQueryTail = StringUtils.text(args[1]);
-            List<RoomDao.NavigatorEventRow> eventRows = List.of();
-            List<NavigatorRoom> roomRows = List.of();
-            RoomDao rooms = roomDao();
-            if (!eventQueryTail.isEmpty()) {
-                String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
-                eventRows = rooms == null ? List.of() : rooms.navigatorEventsByTail(eventQueryTail, timeFormat, true);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_124_754D90.
+     */
+    public static void sendPopularNavigatorTags(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            String payload = NavigatorRequests.popularTagsPayload(AppConfigState.instance().settingsCache(), roomDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            if (!roomQueryTail.isEmpty()) {
-                roomRows = rooms == null ? List.of() : rooms.navigatorRoomsByTail(roomQueryTail, false);
-            }
-            return NavigatorPayloads.combinedRoomList(eventRows, roomRows);
-        } catch (Exception ignored) {
-            return "";
-        }
-    }
-
-    public static String Proc_6_114_750550(Object... args) {
-        try {
-            if (args == null || args.length == 0) {
-                return "";
-            }
-            String queryTail = StringUtils.text(args[0]);
-            if (queryTail.isEmpty()) {
-                return NavigatorPayloads.eventList(List.of());
-            }
-            String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
-            RoomDao rooms = roomDao();
-            return NavigatorPayloads.eventList(rooms == null ? List.of() : rooms.navigatorEventsByTail(queryTail, timeFormat, false));
-        } catch (Exception ignored) {
-            return "";
-        }
-    }
-
-    public static void Proc_6_115_751220(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            long categoryId = navigatorCategoryIdFromPacket(args, "GC");
-            String categoryFilter = categoryId > 1L ? " rooms_events.id_category='" + categoryId + "' AND" : "";
-            long limitValue = navigatorListLimit();
-            String queryTail = "rooms_events,users,rooms,rooms_categories WHERE" + categoryFilter
-                + " rooms.id=rooms_events.id_room AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
-                + "GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
-            RecommendedRooms recommendedRooms = recommendedRooms();
-            long randomTree = Functions.randomLongInclusive(1, recommendedRooms.count());
-            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCPC", categoryId, limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0) + recommendedRoomPayload(randomTree)));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_116_751550(Object... args) {
+    /**
+     * Original function: Proc_6_125_755650.
+     */
+    public static void sendNavigatorTagResults(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long categoryId = navigatorCategoryIdFromPacket(args, "GC");
-            String categoryFilter = categoryId > 1L ? " rooms.id_category='" + categoryId + "' AND" : "";
-            long limitValue = navigatorListLimit();
-            String queryTail = "users,rooms,rooms_categories WHERE" + categoryFilter
-                + " rooms.visitors_now > 0 AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
-                + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            RecommendedRooms recommendedRooms = recommendedRooms();
-            long randomTree = Functions.randomLongInclusive(1, recommendedRooms.count());
-            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GC ", categoryId, limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0) + recommendedRoomPayload(randomTree)));
+            sendToSocket(socketIndex, NavigatorRequests.tagResultsQueryPayload(
+                packetPayload, AppConfigState.instance().settingsCache(), roomDao()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_117_751880(Object... args) {
+    /**
+     * Original function: Proc_6_126_755B40.
+     */
+    public static void sendTopRatedNavigatorRooms(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String userId = handlingUserIdFromSocket(socketIndex);
-            long limitValue = navigatorListLimit();
-            String queryTail = "friendships,logs_visitedrooms,users,rooms,rooms_categories WHERE friendships.id_user='"
-                + Functions.sqlEscapedText(userId)
-                + "' AND logs_visitedrooms.id_user=friendships.id_friend AND logs_visitedrooms.timestamp_left IS NULL "
-                + "AND rooms.id=logs_visitedrooms.id_room AND rooms_categories.id=rooms.id_category "
-                + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.id DESC LIMIT " + limitValue;
-            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCQA", "", limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0)));
+            sendToSocket(socketIndex, NavigatorRequests.topRatedQueryPayload(AppConfigState.instance().settingsCache(), roomDao()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_118_751A80(Object... args) {
+    /**
+     * Original function: Proc_6_127_755D30.
+     */
+    public static void sendNavigatorSearchResults(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String userId = handlingUserIdFromSocket(socketIndex);
-            long limitValue = navigatorListLimit();
-            String queryTail = "friendships,users,rooms,rooms_categories WHERE friendships.id_user='"
-                + Functions.sqlEscapedText(userId)
-                + "' AND users.id=friendships.id_friend AND rooms_categories.id=rooms.id_category "
-                + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GC", "\0", limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0)));
+            sendToSocket(socketIndex, NavigatorRequests.searchResultsQueryPayload(
+                packetPayload, AppConfigState.instance().settingsCache(), roomDao()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_119_751C80(Object... args) {
+    /**
+     * Original function: Proc_6_128_756190.
+     */
+    public static String purchaseCatalogProduct(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String userId = handlingUserIdFromSocket(socketIndex);
-            long limitValue = navigatorListLimit();
-            String queryTail = "rooms_favourites,users,rooms,rooms_categories WHERE rooms_favourites.id_user='"
-                + Functions.sqlEscapedText(userId)
-                + "' AND rooms.id=rooms_favourites.id_room AND rooms_categories.id=rooms.id_category "
-                + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCRA", "", limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0)));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_120_751E80(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String userId = handlingUserIdFromSocket(socketIndex);
-            long limitValue = navigatorListLimit();
-            String queryTail = "logs_visitedrooms,users,rooms,rooms_categories WHERE logs_visitedrooms.id_user='"
-                + Functions.sqlEscapedText(userId)
-                + "' AND rooms.id=logs_visitedrooms.id_room AND rooms_categories.id=rooms.id_category "
-                + "AND users.id=rooms.id_owner GROUP BY rooms.id ORDER BY rooms.id DESC LIMIT " + limitValue;
-            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCSA", "", limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0)));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_121_752080(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String userId = handlingUserIdFromSocket(socketIndex);
-            long limitValue = navigatorListLimit();
-            String queryTail = "users,rooms,rooms_categories WHERE rooms.id_owner='"
-                + Functions.sqlEscapedText(userId)
-                + "' AND rooms_categories.id=rooms.id_category AND users.id=rooms.id_owner "
-                + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCQA", "", limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0)));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_123_754020(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
-                return;
-            }
-            sendToSocket(socketIndex, "GB" + NavigatorPayloads.official(rooms.officialNavigatorItems(), true));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_124_754D90(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            long limitValue = navigatorListLimit();
-            RoomDao rooms = roomDao();
-            if (rooms == null) {
-                return;
-            }
-            sendToSocket(socketIndex, "GD" + NavigatorPayloads.tagPopularity(rooms.navigatorTagPopularities(limitValue)));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_125_755650(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String tagText = Functions.sqlEscapedText(navigatorTextFromPacket(args));
-            long limitValue = navigatorListLimit();
-            String eventQueryTail = "rooms_events,users,rooms,rooms_categories WHERE (rooms_events.name_category='" + tagText
-                + "' OR rooms_events.tag_1='" + tagText + "' OR rooms_events.tag_2='" + tagText
-                + "') AND rooms.id=rooms_events.id_room AND rooms_categories.id=rooms.id_category "
-                + "AND users.id=rooms.id_owner GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
-            String roomQueryTail = "users,rooms,rooms_categories WHERE (rooms.tag_1 = '" + tagText + "' OR rooms.tag_2 = '"
-                + tagText + "') AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
-                + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCSA", tagText, limitValue,
-                Proc_6_113_74EE70(eventQueryTail, roomQueryTail, 0)));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_126_755B40(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            long limitValue = navigatorListLimit();
-            String queryTail = "users,rooms,rooms_categories WHERE rooms.rate > 0 AND users.id=rooms.id_owner "
-                + "AND rooms_categories.id=rooms.id_category GROUP BY rooms.id ORDER BY rooms.rate DESC LIMIT " + limitValue;
-            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GC", "\b", limitValue,
-                Proc_6_112_74E0C0(queryTail, 0, 0)));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_127_755D30(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String searchText = navigatorSearchTerm(navigatorTextFromPacket(args));
-            String roomPredicate = searchText.length() > 2
-                ? "(users.name LIKE '" + searchText + "%' OR rooms.name LIKE '" + searchText + "%')"
-                : "(users.name = '" + searchText + "' OR rooms.name = '" + searchText + "')";
-            long limitValue = navigatorListLimit();
-            String roomQueryTail = "users,rooms,rooms_categories WHERE " + roomPredicate
-                + " AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
-                + "GROUP BY rooms.id ORDER BY rooms.visitors_now DESC LIMIT " + limitValue;
-            String eventQueryTail = "rooms_events,users,rooms,rooms_categories WHERE (users.name='" + searchText
-                + "' AND rooms_events.id_user=users.id OR rooms_events.name LIKE '" + searchText
-                + "%' AND users.id=rooms.id_owner) AND rooms.id=rooms_events.id_room "
-                + "AND rooms_categories.id=rooms.id_category GROUP BY rooms_events.id ORDER BY rooms_events.id ASC LIMIT " + limitValue;
-            sendToSocket(socketIndex, NavigatorPayloads.queryResult("GCSA", searchText, limitValue,
-                Proc_6_113_74EE70(eventQueryTail, roomQueryTail, 0)));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static String Proc_6_128_756190(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "Ad");
-            LongRef offset = new LongRef(1);
-            long catalogProductId = readWireLong(requestPayload, offset);
-            String signText = Functions.singleLineText(readWireString(requestPayload, offset));
-            if (catalogProductId <= 0L) {
-                catalogProductId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
-            if (signText.isEmpty()) {
-                signText = Functions.singleLineText(Functions.readBase64LengthString(requestPayload));
-            }
+            CatalogWire.ProductPurchaseRequest request =
+                CatalogWire.productPurchaseRequest(packetPayload);
+            long catalogProductId = request.catalogProductId();
+            String signText = request.signText();
             if (catalogProductId <= 0L) {
                 return "";
             }
@@ -3974,7 +2790,8 @@ public final class Handling {
             if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            CatalogRegistry.CatalogProduct catalogProduct = Licence.catalogProduct(catalogProductId);
+            CatalogRegistry.CatalogProduct catalogProduct =
+                CatalogState.instance().registry().catalogProduct(catalogProductId).orElse(null);
             if (catalogProduct == null) {
                 return "";
             }
@@ -4010,22 +2827,22 @@ public final class Handling {
                 sendToSocket(socketIndex, CatalogPayloads.purchaseError(2));
                 return "";
             }
-            long grantedFurnitureId = NumberUtils.parseLong(Proc_6_129_7583C0(socketIndex, catalogProductId, signText));
+            long grantedFurnitureId = NumberUtils.parseLong(sendCatalogPurchaseItems(socketIndex, catalogProductId, signText));
             if (grantedFurnitureId <= 0L) {
                 return "";
             }
             if (creditPrice > 0L || activityPrice > 0L) {
                 users.spendCatalogPurchaseBalance(userIdValue, creditPrice, activityType, activityPrice);
                 if (creditPrice > 0L) {
-                    Functions.sendCreditsRefresh(userId);
+                    UserRefreshService.sendCreditsRefresh(userId);
                 }
                 if (activityPrice > 0L) {
-                    Functions.sendActivityPointRefreshes(userId);
+                    UserRefreshService.sendActivityPointRefreshes(userId);
                 }
             }
             String itemClass = "i";
             if (!"products_deals".equals(typeSecondary)
-                && DataManager.productCache().type(productId) == 8L) {
+                && GameDataCaches.productCache().type(productId) == 8L) {
                 itemClass = "I";
             }
             String purchasePayload = CatalogPayloads.purchase(catalogProductId, creditPrice, activityPrice,
@@ -4039,15 +2856,17 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_129_7583C0(Object... args) {
+    /**
+     * Original function: Proc_6_129_7583C0.
+     */
+    public static String sendCatalogPurchaseItems(int socketIndex, long catalogProductId, String signText) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long catalogProductId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            String signText = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
+            String itemSignText = StringUtils.text(signText);
             if (socketIndex <= 0 || catalogProductId <= 0L) {
                 return "";
             }
-            CatalogRegistry.CatalogProduct catalogProduct = Licence.catalogProduct(catalogProductId);
+            CatalogRegistry.CatalogProduct catalogProduct =
+                CatalogState.instance().registry().catalogProduct(catalogProductId).orElse(null);
             if (catalogProduct == null) {
                 return "";
             }
@@ -4064,7 +2883,7 @@ public final class Handling {
             long[] productIds;
             int itemCount = 0;
             if ("products_deals".equals(typeSecondary)) {
-                CatalogRegistry.ProductDeal deal = Licence.productDeal(productId);
+                CatalogRegistry.ProductDeal deal = CatalogState.instance().registry().productDeal(productId).orElse(null);
                 List<Long> dealProductIds = deal == null ? List.<Long>of() : deal.itemProductIds();
                 productIds = new long[dealProductIds.size()];
                 for (Long dealProductId : dealProductIds) {
@@ -4087,42 +2906,25 @@ public final class Handling {
                     if (firstFurnitureId == 0L) {
                         firstFurnitureId = furnitureId;
                     }
-                    String itemData = DataManager.productCache().itemData(itemProductId);
+                    String itemData = GameDataCaches.productCache().itemData(itemProductId);
                     if (itemData.isEmpty()) {
-                        itemData = DataManager.productCache().defaultSign(itemProductId);
+                        itemData = GameDataCaches.productCache().defaultSign(itemProductId);
                     }
-                    long productType = DataManager.productCache().type(itemProductId);
+                    long productType = GameDataCaches.productCache().type(itemProductId);
                     sendToSocket(socketIndex,
-                        InventoryMessagePayloads.roomAdd(Proc_6_138_7678A0(furnitureId, itemProductId, itemData, 0)));
-                    if ("TROPHY_VAR".equalsIgnoreCase(DataManager.productCache().defaultSign(itemProductId))) {
+                        InventoryMessagePayloads.roomAdd(furnitureId, itemProductId, itemData, 0));
+                    if ("TROPHY_VAR".equalsIgnoreCase(GameDataCaches.productCache().defaultSign(itemProductId))) {
                         String trophySign = handlingUserName(handlingUserIdFromSocket(socketIndex)) + '\b'
-                            + recyclerRewardSign() + '\b' + signText;
-                        furnitureDao().updateSignText(furnitureId, Functions.singleLineText(trophySign));
+                            + RecyclerRewards.rewardSign() + '\b' + itemSignText;
+                        furnitureDao().updateSignText(furnitureId, StringUtils.singleLineText(trophySign));
                     }
                     if (productType == 8L) {
                         sendToSocket(socketIndex, CatalogPayloads.dimensionMap(furnitureId,
-                            DataManager.productCache().dimensionMapId(itemProductId)));
+                            GameDataCaches.productCache().dimensionMapId(itemProductId)));
                     }
                 }
             }
             return String.valueOf(firstFurnitureId);
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_133_760400(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            long catalogProductId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            String signText = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
-            if (socketIndex <= 0 || catalogProductId <= 0L) {
-                catalogProductId = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
-                signText = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
-                socketIndex = 0;
-            }
-            return grantCatalogFurniture(socketIndex, catalogProductId, signText).legacyIdText();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
@@ -4137,7 +2939,8 @@ public final class Handling {
         if (userId.isEmpty() || "0".equals(userId)) {
             return CatalogGrantResult.empty();
         }
-        CatalogRegistry.CatalogProduct catalogProduct = Licence.catalogProduct(catalogProductId);
+        CatalogRegistry.CatalogProduct catalogProduct =
+            CatalogState.instance().registry().catalogProduct(catalogProductId).orElse(null);
         if (catalogProduct == null) {
             return CatalogGrantResult.empty();
         }
@@ -4156,15 +2959,15 @@ public final class Handling {
         }
         long grantedCount = 0L;
         if ("products_deals".equals(typeSecondary)) {
-            CatalogRegistry.ProductDeal deal = Licence.productDeal(productId);
+            CatalogRegistry.ProductDeal deal = CatalogState.instance().registry().productDeal(productId).orElse(null);
             if (deal == null) {
                 return CatalogGrantResult.empty();
             }
             for (Long dealProductId : deal.itemProductIds()) {
                 if (dealProductId != null && dealProductId > 0L) {
-                    String defaultSign = Functions.singleLineText(DataManager.productCache().defaultSign(dealProductId));
+                    String defaultSign = StringUtils.singleLineText(GameDataCaches.productCache().defaultSign(dealProductId));
                     if (defaultSign.isEmpty()) {
-                        defaultSign = Functions.singleLineText(DataManager.productCache().fallbackDefaultSign(dealProductId));
+                        defaultSign = StringUtils.singleLineText(GameDataCaches.productCache().fallbackDefaultSign(dealProductId));
                     }
                     furniture.insertCatalogFurniture(dealProductId, userIdValue, defaultSign, catalogProductId);
                     grantedCount++;
@@ -4185,19 +2988,19 @@ public final class Handling {
                 if (hcLevel <= 0L) {
                     hcLevel = 1L;
                 }
-                Functions.applyClubPeriod(NumberUtils.parseLong(userId), hcLevel, hcMonths, hcMonths * 31L);
+                ClubPeriodService.applyClubPeriod(NumberUtils.parseLong(userId), hcLevel, hcMonths, hcMonths * 31L);
             }
-            String badgeId = DataManager.productCache().badgeId(productId).toUpperCase();
+            String badgeId = GameDataCaches.productCache().badgeId(productId).toUpperCase();
             if (badgeId.isEmpty()) {
-                badgeId = DataManager.productCache().fallbackBadgeId(productId).toUpperCase();
+                badgeId = GameDataCaches.productCache().fallbackBadgeId(productId).toUpperCase();
             }
             if (badgeId.length() > 2) {
                 String existingBadge = StringUtils.text(users.badgeId(userIdValue, badgeId)).toUpperCase();
                 if (!badgeId.equals(existingBadge)) {
                     users.insertBadge(userIdValue, 0L, badgeId);
                     long badgeRowId = users.badgeRowId(userIdValue, badgeId);
-                    Proc_6_195_7D38D0(userId, 0, 0);
-                    Proc_6_193_7D2BB0(socketIndex, "Ce", "");
+                    SocialLookups.equippedBadgePayload(userId, userDao());
+                    sendBadgeInventory(socketIndex, "Ce", "");
                     if (badgeRowId > 0L) {
                         sendActivityPointBalanceToSocket(socketIndex);
                     }
@@ -4205,10 +3008,10 @@ public final class Handling {
             }
             String defaultSign = signText;
             if (defaultSign.isEmpty()) {
-                defaultSign = Functions.singleLineText(DataManager.productCache().defaultSign(productId));
+                defaultSign = StringUtils.singleLineText(GameDataCaches.productCache().defaultSign(productId));
             }
             if (defaultSign.isEmpty()) {
-                defaultSign = Functions.singleLineText(DataManager.productCache().fallbackDefaultSign(productId));
+                defaultSign = StringUtils.singleLineText(GameDataCaches.productCache().fallbackDefaultSign(productId));
             }
             for (long itemIndex = 1L; itemIndex <= amount; itemIndex++) {
                 furniture.insertCatalogFurniture(productId, userIdValue, defaultSign, catalogProductId);
@@ -4226,24 +3029,21 @@ public final class Handling {
         }
         long firstGrantedId = grantedIds.isEmpty() ? 0L : NumberUtils.parseLong(grantedIds.get(0));
         if (!"products_deals".equals(typeSecondary)
-            && DataManager.productCache().type(productId) == 9L && firstGrantedId > 0L) {
+            && GameDataCaches.productCache().type(productId) == 9L && firstGrantedId > 0L) {
             furniture.insertDefaultDimmerPresets(firstGrantedId);
             furniture.updateDefaultDimmerSign(firstGrantedId);
         }
         return new CatalogGrantResult(grantedIds);
     }
 
-    public static String Proc_6_130_75B770(Object... args) {
+    /**
+     * Original function: Proc_6_130_75B770.
+     */
+    public static String claimClubGift(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "G[");
-            String requestedSprite = Functions.readBase64LengthString(requestPayload);
-            if (requestedSprite.isEmpty()) {
-                requestedSprite = Functions.readVl64LengthString(requestPayload);
-            }
-            if (requestedSprite.isEmpty()) {
-                requestedSprite = requestPayload.replace("\2", "").replace("\0", "").trim();
-            }
+            CatalogWire.ClubGiftClaimRequest request =
+                CatalogWire.clubGiftClaimRequest(packetPayload);
+            String requestedSprite = request.requestedSprite();
             if (requestedSprite.isEmpty()) {
                 return "";
             }
@@ -4271,13 +3071,13 @@ public final class Handling {
             if (status.presentsAvailable() <= 0L || status.activeDays() < requiredDays) {
                 return "";
             }
-            String itemData = DataManager.productCache().itemData(productId);
+            String itemData = GameDataCaches.productCache().itemData(productId);
             FurnitureDao furniture = furnitureDao();
             furniture.insertClubGiftFurniture(productId, catalogProductId, userIdValue, itemData);
             long insertedFurnitureId = furniture.newestFurnitureIdByOwnerAndProduct(userIdValue, productId);
-            String itemClass = DataManager.productCache().type(productId) == 9L ? "I" : "i";
+            String itemClass = GameDataCaches.productCache().type(productId) == 9L ? "I" : "i";
             String responsePayload = CatalogPayloads.clubGiftClaim(productId,
-                DataManager.productCache().itemData(productId), itemClass, insertedFurnitureId);
+                GameDataCaches.productCache().itemData(productId), itemClass, insertedFurnitureId);
             sendToSocket(socketIndex, responsePayload);
             clubs.decrementPresents(userIdValue);
             sendInventoryToSocket(socketIndex);
@@ -4288,9 +3088,11 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_131_75C700(Object... args) {
+    /**
+     * Original function: Proc_6_131_75C700.
+     */
+    public static void sendClubGiftStatus(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (socketIndex <= 0 || userId.isEmpty() || "0".equals(userId)) {
                 return;
@@ -4306,27 +3108,20 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_132_75D4A0(Object... args) {
+    /**
+     * Original function: Proc_6_132_75D4A0.
+     */
+    public static String purchaseCatalogGift(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "GX");
-            LongRef offset = new LongRef(1);
-            long catalogProductId = readWireLong(requestPayload, offset);
-            long expectedProductId = readWireLong(requestPayload, offset);
-            String recipientName = Functions.singleLineText(readWireString(requestPayload, offset));
-            String giftMessage = Functions.singleLineText(readWireString(requestPayload, offset));
-            if (giftMessage.length() > 142) {
-                giftMessage = giftMessage.substring(0, 142);
-            }
-            long wrapProductId = readWireLong(requestPayload, offset);
-            long ribbonId = readWireLong(requestPayload, offset);
-            long colorId = readWireLong(requestPayload, offset);
-            if (catalogProductId <= 0L) {
-                catalogProductId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
-            if (recipientName.isEmpty()) {
-                recipientName = Functions.singleLineText(Functions.readBase64LengthString(requestPayload));
-            }
+            CatalogWire.GiftPurchaseRequest request =
+                CatalogWire.giftPurchaseRequest(packetPayload);
+            long catalogProductId = request.catalogProductId();
+            long expectedProductId = request.expectedProductId();
+            String recipientName = request.recipientName();
+            String giftMessage = request.giftMessage();
+            long wrapProductId = request.wrapProductId();
+            long ribbonId = request.ribbonId();
+            long colorId = request.colorId();
             if (catalogProductId <= 0L || recipientName.isEmpty()) {
                 return "";
             }
@@ -4334,7 +3129,8 @@ public final class Handling {
             if (socketIndex <= 0 || senderUserId.isEmpty() || "0".equals(senderUserId)) {
                 return "";
             }
-            CatalogRegistry.CatalogProduct catalogProduct = Licence.catalogProduct(catalogProductId);
+            CatalogRegistry.CatalogProduct catalogProduct =
+                CatalogState.instance().registry().catalogProduct(catalogProductId).orElse(null);
             if (catalogProduct == null) {
                 return "";
             }
@@ -4350,8 +3146,8 @@ public final class Handling {
             if (activityType < 0L || activityType > 4L) {
                 activityType = 0L;
             }
-            if (NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.enabled", 0)) != 0L) {
-                long wrapPrice = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.price", 0));
+            if (AppConfigState.instance().settingsCache().longValueOrDefault("com.client.catalog.gifts.wrap.enabled", 0) != 0L) {
+                long wrapPrice = AppConfigState.instance().settingsCache().longValueOrDefault("com.client.catalog.gifts.wrap.price", 0);
                 if (wrapProductId <= 0L) {
                     CatalogDao catalog = catalogDao();
                     if (catalog == null) {
@@ -4392,41 +3188,40 @@ public final class Handling {
             if (grantedFurnitureId <= 0L) {
                 return "";
             }
-            String productSign = DataManager.productCache().defaultSign(productId);
+            String productSign = GameDataCaches.productCache().defaultSign(productId);
             if ("TROPHY_VAR".equalsIgnoreCase(productSign)) {
-                productSign = handlingUserName(senderUserId) + '\b' + recyclerRewardSign() + '\b' + giftMessage;
+                productSign = handlingUserName(senderUserId) + '\b' + RecyclerRewards.rewardSign() + '\b' + giftMessage;
             }
             long giftSecondary = colorId * 1000L + ribbonId;
             furnitureDao().updateGiftMetadata(
                 grantedFurnitureId,
-                Functions.singleLineText(giftMessage),
-                Functions.singleLineText(productSign),
+                StringUtils.singleLineText(giftMessage),
+                StringUtils.singleLineText(productSign),
                 NumberUtils.parseLong(recipientUserId),
                 catalogProductId,
                 giftSecondary);
             if (creditPrice > 0L || activityPrice > 0L) {
                 users.spendCatalogPurchaseBalance(senderUserIdValue, creditPrice, activityType, activityPrice);
                 if (creditPrice > 0L) {
-                    Functions.sendCreditsRefresh(senderUserId);
+                    UserRefreshService.sendCreditsRefresh(senderUserId);
                 }
                 if (activityPrice > 0L) {
-                    Functions.sendActivityPointRefreshes(senderUserId);
+                    UserRefreshService.sendActivityPointRefreshes(senderUserId);
                 }
             }
             users.incrementGiftsGiven(senderUserIdValue);
             if (!recipientUserId.equals(senderUserId)) {
                 users.incrementGiftsReceived(NumberUtils.parseLong(recipientUserId));
-                Proc_6_205_7D9780(socketIndex, 6);
+                advanceAchievementProgress(socketIndex, 6);
             }
-            String purchasePayload = CatalogPayloads.giftPurchase(catalogProductId,
-                Licence.catalogProductField(catalogProductId, 0), creditPrice, activityPrice, activityType,
-                grantedFurnitureId);
+            String purchasePayload = CatalogPayloads.giftPurchase(
+                catalogProduct, creditPrice, activityPrice, activityType, grantedFurnitureId);
             sendToSocket(socketIndex, purchasePayload);
             long recipientSocket = handlingSocketFromUserId(recipientUserId);
             if (recipientSocket > 0L) {
                 sendToSocket((int) recipientSocket,
-                    InventoryMessagePayloads.roomAdd(Proc_6_138_7678A0(grantedFurnitureId, productId, productSign, giftSecondary)));
-                Proc_6_205_7D9780((int) recipientSocket, 7);
+                    InventoryMessagePayloads.roomAdd(grantedFurnitureId, productId, productSign, giftSecondary));
+                advanceAchievementProgress((int) recipientSocket, 7);
             }
             return purchasePayload;
         } catch (Exception ignored) {
@@ -4435,169 +3230,110 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_134_765B90(Object... args) {
+    /**
+     * Original function: Proc_6_134_765B90.
+     */
+    public static void sendCatalogGiftAvailability(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "oV");
-            long itemId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            if (itemId <= 0L) {
-                itemId = readWireLong(requestPayload, new LongRef(1));
-            }
-            long itemType = NumberUtils.parseLong(Licence.catalogProductField(itemId, 9));
-            long giftEnabled = itemType == 1L ? NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.enabled", 0)) : 0L;
+            CatalogWire.GiftAvailabilityRequest request =
+                CatalogWire.giftAvailabilityRequest(packetPayload);
+            long itemId = request.itemId();
+            CatalogRegistry.CatalogProduct catalogProduct =
+                CatalogState.instance().registry().catalogProduct(itemId).orElse(null);
+            long itemType = catalogProduct == null ? 0L : catalogProduct.activityType();
+            long giftEnabled = itemType == 1L ? AppConfigState.instance().settingsCache().longValueOrDefault("com.client.catalog.gifts.enabled", 0) : 0L;
             sendToSocket(socketIndex, CatalogPayloads.giftAvailability(itemId, giftEnabled));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_135_765D80(Object... args) {
+    /**
+     * Original function: Proc_6_135_765D80.
+     */
+    public static void sendCatalogGiftWrapOptions(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String defaultPayload = CatalogPayloads.giftWrapPriceFallback(
-                NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.enabled", 0)));
-            long giftWrapPrice = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.price", defaultPayload));
+                AppConfigState.instance().settingsCache().longValueOrDefault("com.client.catalog.gifts.wrap.enabled", 0));
+            long giftWrapPrice = NumberUtils.parseLong(AppConfigState.instance().settingsCache().valueOrDefault("com.client.catalog.gifts.wrap.price", defaultPayload));
             sendToSocket(socketIndex,
-                CatalogPayloads.giftWrapOptions(giftWrapPrice, giftSettings().giftWrapPayload()));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_136_765F10(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingPacketPayload(args);
-            if (requestPayload.length() >= 3) {
-                requestPayload = requestPayload.substring(2);
-            }
-            long pageId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            if (pageId <= 0L) {
-                pageId = readWireLong(requestPayload, new LongRef(1));
-            }
-            String pagePayload = catalogPages().pagePayload(pageId);
-            if (!pagePayload.isEmpty()) {
-                sendToSocket(socketIndex, CatalogPayloads.page(pageId, pagePayload));
-            }
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_137_766470(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "BA");
-            String voucherCode = requestPayload.startsWith("@")
-                ? readWireString(requestPayload, new LongRef(1))
-                : requestPayload;
-            voucherCode = voucherCode.replace(' ', '0');
-            if (voucherCode.length() != 8) {
-                sendToSocket(socketIndex, VoucherPayloads.invalid(voucherCode));
-                return;
-            }
-            VoucherDao vouchers = voucherDao();
-            VoucherDao.VoucherReward voucherReward = vouchers == null ? null : vouchers.reward(voucherCode).orElse(null);
-            if (voucherReward == null) {
-                sendToSocket(socketIndex, VoucherPayloads.invalid(voucherCode));
-                return;
-            }
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty()) {
-                sendToSocket(socketIndex, VoucherPayloads.invalid(voucherCode));
-                return;
-            }
-            String productSprite = StringUtils.text(voucherReward.productSprite());
-            long creditsValue = voucherReward.credits();
-            long shellsValue = voucherReward.shells();
-            String rewardPayload = "";
-            if (productSprite.length() > 2) {
-                long productId = vouchers.catalogProductProductIdBySprite(productSprite);
-                if (productId != 0L) {
-                    rewardPayload = DataManager.productCache().tradeName(productId) + '\2'
-                        + DataManager.productCache().displayName(productId) + '\2';
-                }
-            }
-            UserDao users = userDao();
-            if (users == null) {
-                sendToSocket(socketIndex, VoucherPayloads.invalid(voucherCode));
-                return;
-            }
-            long userIdValue = NumberUtils.parseLong(userId);
-            if (creditsValue != 0L) {
-                users.addCredits(userIdValue, creditsValue);
-                Functions.sendCreditsRefresh(userId);
-            }
-            if (shellsValue != 0L) {
-                users.addActivityPoints(userIdValue, 0L, shellsValue);
-                Functions.sendActivityPointRefreshes(userId);
-            }
-            vouchers.deleteVoucher(voucherCode);
-            sendToSocket(socketIndex, VoucherPayloads.redeemed(rewardPayload));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_139_768100(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "AB");
-            String userId = handlingUserIdFromSocket(socketIndex);
-            long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (userId.isEmpty() || roomId <= 0L) {
-                return;
-            }
-            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
-            if (furnitureId <= 0L) {
-                return;
-            }
-            FurnitureDao furniture = furnitureDao();
-            RoomDao rooms = roomDao();
-            if (furniture == null || rooms == null) {
-                return;
-            }
-            FurnitureDao.DecorationFurniture decorationFurniture = furniture
-                .decorationFurniture(furnitureId, NumberUtils.parseLong(userId))
-                .orElse(null);
-            if (decorationFurniture == null) {
-                return;
-            }
-            long productId = decorationFurniture.productId();
-            String decoValue = StringUtils.text(decorationFurniture.sign());
-            CatalogRegistry.Product product = Licence.product(productId);
-            if (product == null) {
-                return;
-            }
-            long productType = product.type();
-            RoomDao.RoomDecoration decoration = RoomDao.RoomDecoration.fromProductType(productType);
-            if (decoration == null) {
-                return;
-            }
-            if (decoValue.isEmpty() || "0".equals(decoValue)) {
-                decoValue = product.defaultDecoration();
-            }
-            if (decoValue.isEmpty()) {
-                decoValue = product.sprite();
-            }
-            if (decoValue.isEmpty()) {
-                return;
-            }
-            broadcastToCurrentRoom(socketIndex, "@n" + decoration.wireName() + '\2' + decoValue + '\2');
-            rooms.updateDecoration(roomId, decoration, decoValue);
-            sendToSocket(socketIndex, InventoryMessagePayloads.remove(furnitureId));
-            furniture.deleteFurniture(furnitureId);
-            sendInventoryToSocket(socketIndex);
+                CatalogPayloads.giftWrapOptions(giftWrapPrice, giftSettings()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
     /**
-     * Original function: Proc_6_140_769400.
+     * Original function: Proc_6_136_765F10.
      */
-    public static void Proc_6_140_769400(Object... args) {
-        sendInventoryToSocket(handlingSocketIndex(args));
+    public static void sendCatalogPage(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            CatalogWire.PageRequest request = CatalogWire.pageRequest(packetPayload);
+            long pageId = request.pageId();
+            if (!catalogPages().pagePayload(pageId).isEmpty()) {
+                sendToSocket(socketIndex, CatalogPayloads.page(catalogPages(), pageId));
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_137_766470.
+     */
+    public static void redeemVoucher(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            VoucherWire.RedeemRequest request = VoucherWire.redeemRequest(packetPayload);
+            String voucherCode = request.voucherCode();
+            String userId = handlingUserIdFromSocket(socketIndex);
+            VoucherRedemption redemption = VoucherRedemption.redeem(
+                voucherCode,
+                NumberUtils.parseLong(userId),
+                voucherDao(),
+                userDao(),
+                GameDataCaches.productCache());
+            if (redemption.redeemed() && redemption.creditsRefreshRequired()) {
+                UserRefreshService.sendCreditsRefresh(userId);
+            }
+            if (redemption.redeemed() && redemption.activityPointRefreshRequired()) {
+                UserRefreshService.sendActivityPointRefreshes(userId);
+            }
+            sendToSocket(socketIndex, redemption.responsePayload());
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
+    }
+
+    /**
+     * Original function: Proc_6_139_768100.
+     */
+    public static void applyRoomDecorationFurniture(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            String userId = handlingUserIdFromSocket(socketIndex);
+            long roomId = handlingCurrentRoomId(socketIndex, userId);
+            if (userId.isEmpty() || roomId <= 0L) {
+                return;
+            }
+            long furnitureId = FurnitureWire.stickyFurnitureId(packetPayload);
+            if (furnitureId <= 0L) {
+                return;
+            }
+            FurnitureLookups.RoomDecorationApplication application = FurnitureLookups.applyRoomDecorationFurniture(
+                furnitureId,
+                roomId,
+                NumberUtils.parseLong(userId),
+                furnitureDao(),
+                roomDao(),
+                CatalogState.instance().registry());
+            if (!application.valid()) {
+                return;
+            }
+            broadcastToCurrentRoom(socketIndex, application.roomPayload());
+            sendToSocket(socketIndex, application.inventoryRemovePayload());
+            sendInventoryToSocket(socketIndex);
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+        }
     }
 
     /**
@@ -4613,13 +3349,10 @@ public final class Handling {
             if (furniture == null) {
                 return;
             }
-            InventoryPayloads payloads = inventoryPayloadsFromInventory(
-                InventoryMessagePayloads.listFromItems(
-                    furniture.inventoryFurnitureForOwner(NumberUtils.parseLong(userId))));
-            sendToSocket(socketIndex,
-                InventoryMessagePayloads.regularList(payloads.regularCount, payloads.regularPayload));
-            sendToSocket(socketIndex,
-                InventoryMessagePayloads.iconList(payloads.iconCount, payloads.iconPayload));
+            InventoryMessagePayloads.InventoryList payloads = InventoryMessagePayloads.listFromItems(
+                furniture.inventoryFurnitureForOwner(NumberUtils.parseLong(userId)));
+            sendToSocket(socketIndex, InventoryMessagePayloads.regularList(payloads));
+            sendToSocket(socketIndex, InventoryMessagePayloads.iconList(payloads));
             sendToSocket(socketIndex, InventoryMessagePayloads.emptyRentalList());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -4628,37 +3361,17 @@ public final class Handling {
 
     /**
      * Original function: Proc_6_141_76A670.
-     */
-    public static String Proc_6_141_76A670(Object... args) {
-        return moveFloorFurnitureInRoom(handlingSocketIndex(args), handlingRequestPayload(args, "A["));
-    }
-
-    /**
-     * Original function: Proc_6_141_76A670.
+     * Original function: Proc_6_159_79FCD0.
      */
     public static String moveFloorFurnitureInRoom(int socketIndex, String floorPlacementPayload) {
-        return placeOrMoveFloorFurniture(socketIndex, floorPlacementPayload, false);
-    }
-
-    /**
-     * Original function: Proc_6_142_76B310.
-     */
-    public static String Proc_6_142_76B310(Object... args) {
-        return placeFloorFurnitureFromInventory(handlingSocketIndex(args), handlingRequestPayload(args, "rv"));
+        return placeOrMoveFloorFurniture(socketIndex, FurnitureWire.floorPlacementRequest(floorPlacementPayload), false);
     }
 
     /**
      * Original function: Proc_6_142_76B310.
      */
     public static String placeFloorFurnitureFromInventory(int socketIndex, String floorPlacementPayload) {
-        return placeOrMoveFloorFurniture(socketIndex, floorPlacementPayload, true);
-    }
-
-    /**
-     * Original function: Proc_6_143_76BB80.
-     */
-    public static void Proc_6_143_76BB80(Object... args) {
-        sendActivityPointBalanceToSocket(handlingSocketIndex(args));
+        return placeOrMoveFloorFurniture(socketIndex, FurnitureWire.floorPlacementRequest(floorPlacementPayload), true);
     }
 
     /**
@@ -4667,66 +3380,44 @@ public final class Handling {
     public static void sendActivityPointBalanceToSocket(int socketIndex) {
         try {
             String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty()) {
-                return;
+            String payload = UserLookups.activityPointBalancePayload(userId, userDao());
+            if (!payload.isEmpty()) {
+                sendToSocket(socketIndex, payload);
             }
-            UserDao users = userDao();
-            if (users == null) {
-                return;
-            }
-            UserDao.ActivityPointBalance balance = users.activityPointBalance(NumberUtils.parseLong(userId)).orElse(null);
-            if (balance == null) {
-                return;
-            }
-            sendToSocket(socketIndex, UserPayloads.activityPointBalance(
-                balance.pointTypeOne(),
-                balance.pointTypeTwo(),
-                balance.pointTypeThree(),
-                balance.pointTypeFour()));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
     }
 
-    public static void Proc_6_144_76BE70(Object... args) {
+    /**
+     * Original function: Proc_6_144_76BE70.
+     */
+    public static void returnRoomFurnitureToInventory(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = handlingPacketPayload(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             long roomId = handlingCurrentRoomId(socketIndex, userId);
             if (userId.isEmpty() || "0".equals(userId) || roomId <= 0L) {
                 return;
             }
-            long furnitureId = pickupFurnitureIdFromPayload(packetPayload);
+            long furnitureId = FurnitureWire.pickupFurnitureId(packetPayload);
             if (furnitureId <= 0L) {
                 return;
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
+            boolean canPickUpAny = UserLookups.hasPermission(userId, "fuse_pick_up_any_furni", userDao(), AppConfigState.instance().permissionMatrix());
+            FurnitureLookups.FurnitureInventoryReturn inventoryReturn =
+                FurnitureLookups.returnRoomFurnitureToInventory(
+                    furnitureId,
+                    roomId,
+                    NumberUtils.parseLong(userId),
+                    RoomLookups.userOwnsRoom(userId, roomId, roomDao()),
+                    RoomLookups.userHasRoomRight(userId, roomId, roomDao()),
+                    canPickUpAny,
+                    furnitureDao());
+            if (!inventoryReturn.valid()) {
                 return;
             }
-            FurnitureDao.RoomFurnitureOwnerProduct furnitureProduct = furniture
-                .roomFurnitureOwnerProduct(furnitureId, roomId)
-                .orElse(null);
-            if (furnitureProduct == null) {
-                return;
-            }
-            long productId = furnitureProduct.productId();
-            String ownerId = String.valueOf(furnitureProduct.ownerId());
-            if (productId <= 0L || ownerId.isEmpty() || "0".equals(ownerId)) {
-                return;
-            }
-            boolean canPickUpAny = handlingUserHasPermission(userId, "fuse_pick_up_any_furni");
-            if (!ownerId.equals(userId) && !handlingUserOwnsRoom(userId, roomId) && !canPickUpAny) {
-                return;
-            }
-            if (!handlingUserHasRoomRight(userId, roomId) && !ownerId.equals(userId) && !canPickUpAny) {
-                return;
-            }
-            furniture.moveRoomFurnitureToInventory(furnitureId, NumberUtils.parseLong(userId));
-            broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2');
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
+            broadcastToCurrentRoom(socketIndex, inventoryReturn.removedPayload());
+            RoomCacheFiles.invalidateRoom(roomId);
             sendInventoryToSocket(socketIndex);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -4734,224 +3425,29 @@ public final class Handling {
     }
 
     /**
-     * Original function: Proc_6_145_76CA20.
+     * Original function: Proc_6_147_76E910.
      */
-    public static void trackRepresentedFurnitureCacheMarker(int socketIndex, long roomId, long furnitureId) {
+    public static long refreshFloorFurnitureStatesAtPosition(long roomId, long positionX, long positionY) {
         try {
-            if (roomId <= 0L && socketIndex > 0) {
-                String userId = handlingUserIdFromSocket(socketIndex);
-                if (!userId.isEmpty() && !"0".equals(userId)) {
-                    roomId = handlingCurrentRoomId(socketIndex, userId);
-                }
-            }
-            if (furnitureId <= 0L) {
-                return;
-            }
-            FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
-            FurnitureCacheState state = trackFurnitureCacheMarker(
-                cacheState.pendingRoomCache,
-                cacheState.pendingFurnitureCache,
-                cacheState.representedRoomCache,
-                roomId,
-                furnitureId);
-            Licence.setFurnitureRoomCache(furnitureRoomCacheState(state));
-            if (roomId > 0L) {
-                deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
-                deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
-            }
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    /**
-     * Original function: Proc_6_145_76CA20.
-     */
-    public static void Proc_6_145_76CA20(Object... args) {
-        int socketIndex = 0;
-        long roomId = 0L;
-        long furnitureId = 0L;
-        if (args != null && args.length >= 3) {
-            socketIndex = (int) NumberUtils.parseLong(args[0]);
-            roomId = NumberUtils.parseLong(args[1]);
-            furnitureId = NumberUtils.parseLong(args[2]);
-        } else if (args != null && args.length >= 2) {
-            roomId = NumberUtils.parseLong(args[0]);
-            furnitureId = NumberUtils.parseLong(args[1]);
-        } else if (args != null && args.length >= 1) {
-            furnitureId = NumberUtils.parseLong(args[0]);
-        }
-        trackRepresentedFurnitureCacheMarker(socketIndex, roomId, furnitureId);
-    }
-
-    /**
-     * Original function: Proc_6_146_76D300.
-     */
-    public static void removeRepresentedFurnitureCacheMarker(int socketIndex, long furnitureId, long productId) {
-        try {
-            if (furnitureId <= 0L) {
-                return;
-            }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return;
-            }
-            FurnitureDao.RoomFurnitureState furnitureState = furniture.roomFurnitureState(furnitureId).orElse(null);
-            if (furnitureState == null) {
-                return;
-            }
-            if (productId <= 0L) {
-                productId = furnitureState.productId();
-            }
-            long roomId = furnitureState.roomId();
-            FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
-            FurnitureCacheState state = removeFurnitureCacheMarker(
-                cacheState.pendingRoomCache,
-                cacheState.pendingFurnitureCache,
-                cacheState.representedRoomCache,
-                furnitureId);
-            Licence.setFurnitureRoomCache(furnitureRoomCacheState(state));
-            if (roomId <= 0L && socketIndex > 0) {
-                String userId = handlingUserIdFromSocket(socketIndex);
-                if (!userId.isEmpty() && !"0".equals(userId)) {
-                    roomId = handlingCurrentRoomId(socketIndex, userId);
-                }
-            }
-            if (roomId > 0L) {
-                deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
-                deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
-            }
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    /**
-     * Original function: Proc_6_146_76D300.
-     */
-    public static void Proc_6_146_76D300(Object... args) {
-        int socketIndex = 0;
-        long furnitureId = 0L;
-        long productId = 0L;
-        if (args != null && args.length >= 3) {
-            socketIndex = (int) NumberUtils.parseLong(args[0]);
-            furnitureId = NumberUtils.parseLong(args[1]);
-            productId = NumberUtils.parseLong(args[2]);
-        } else if (args != null && args.length >= 2) {
-            furnitureId = NumberUtils.parseLong(args[0]);
-            productId = NumberUtils.parseLong(args[1]);
-        } else if (args != null && args.length >= 1) {
-            furnitureId = NumberUtils.parseLong(args[0]);
-        }
-        removeRepresentedFurnitureCacheMarker(socketIndex, furnitureId, productId);
-    }
-
-    public static long Proc_6_147_76E910(Object... args) {
-        try {
-            long roomId = 0L;
-            long positionX;
-            long positionY;
-            if (args != null && args.length >= 3) {
-                roomId = NumberUtils.parseLong(args[0]);
-                positionX = NumberUtils.parseLong(args[1]);
-                positionY = NumberUtils.parseLong(args[2]);
-            } else if (args != null && args.length >= 2) {
-                positionX = NumberUtils.parseLong(args[0]);
-                positionY = NumberUtils.parseLong(args[1]);
-            } else {
+            if (positionX <= 0L || positionY <= 0L) {
                 return 0L;
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return 0L;
-            }
-            List<FurnitureDao.FloorPositionFurniture> rows = roomId > 0L
-                ? furniture.floorFurnitureAt(roomId, positionX, positionY)
-                : furniture.floorFurnitureAt(positionX, positionY);
+            List<FurnitureLookups.FloorPositionStateRefresh> refreshes =
+                FurnitureLookups.floorStateRefreshesAtPosition(
+                    roomId, positionX, positionY, furnitureDao(), GameDataCaches.productCache());
             long refreshCount = 0L;
-            for (FurnitureDao.FloorPositionFurniture row : rows) {
-                long furnitureId = row.furnitureId();
-                long rowRoomId = roomId > 0L ? roomId : row.roomId();
-                long productId = row.productId();
-                if (furnitureId > 0L && rowRoomId > 0L && productId > 0L) {
-                    String productAction = DataManager.productCache().interactionAction(productId).toLowerCase();
-                    String productSprite = DataManager.productCache().primarySprite(productId).toLowerCase();
-                    if (productSprite.isEmpty()) {
-                        productSprite = DataManager.productCache().alternateSprite(productId).toLowerCase();
-                    }
-                    if (productAction.isEmpty() || productAction.contains("switch") || productAction.contains("click")
-                        || productAction.contains("score") || productSprite.contains("score") || productSprite.contains("dice")) {
-                        long stateValue = NumberUtils.parseLong(row.sign());
-                        refreshRepresentedFurnitureState(rowRoomId, furnitureId, stateValue);
-                        broadcastToRoomUsers(rowRoomId, FurniturePayloads.stateChanged(furnitureId, stateValue));
-                        refreshCount++;
-                    }
-                }
+            for (FurnitureLookups.FloorPositionStateRefresh refresh : refreshes) {
+                RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.refreshState(
+                    RoomState.instance().furnitureRoomCache(), refresh.roomId(), refresh.furnitureId(),
+                    refresh.stateValue()));
+                broadcastToRoomUsers(refresh.roomId(), refresh.payload());
+                refreshCount++;
             }
             return refreshCount;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
         }
-    }
-
-    /**
-     * Original function: Proc_6_148_7756D0.
-     */
-    public static void Proc_6_148_7756D0(Object... args) {
-        if (args == null || args.length < 3) {
-            return;
-        }
-        consumeFurnitureChargeOrPrompt(
-            handlingSocketIndex(args),
-            NumberUtils.parseLong(args[1]),
-            NumberUtils.parseLong(args[2]));
-    }
-
-    /**
-     * Original function: Proc_6_148_7756D0.
-     */
-    public static void consumeFurnitureChargeOrPrompt(int socketIndex, long productId, long furnitureId) {
-        try {
-            if (socketIndex <= 0 || productId <= 0L || furnitureId <= 0L) {
-                return;
-            }
-            CatalogRegistry.Product product = Licence.product(productId);
-            if (product == null) {
-                return;
-            }
-            long hasCharge = product.chargeSize();
-            if (hasCharge == 0L) {
-                return;
-            }
-            long chargeSize = product.chargeSize();
-            long chargePriceCredits = product.chargePriceCredits();
-            long chargePricePoints = product.chargePriceActivityPoints();
-            long chargePointType = product.chargePriceActivityPointsType();
-            Path chargePath = Path.of(Functions.applicationPath, "cache", "items_charges", furnitureId + ".cache");
-            long currentCharges = NumberUtils.parseLong(readFile(chargePath.toString()));
-            if (currentCharges < 1L) {
-                String payload = FurniturePayloads.chargePrompt(
-                    furnitureId,
-                    currentCharges,
-                    chargeSize,
-                    chargePriceCredits,
-                    chargePricePoints,
-                    chargePointType);
-                sendToSocket(socketIndex, payload);
-            } else {
-                DataManager.writeTextFile(chargePath.toString(), String.valueOf(currentCharges - 1L));
-            }
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    /**
-     * Original function: Proc_6_149_775C10.
-     */
-    public static void Proc_6_149_775C10(Object... args) {
-        toggleFloorFurnitureState(handlingSocketIndex(args), handlingRequestPayload(args, "Ch"));
     }
 
     /**
@@ -4962,11 +3458,7 @@ public final class Handling {
             if (socketIndex <= 0) {
                 return;
             }
-            String requestPayload = StringUtils.text(floorStatePayload);
-            if (requestPayload.startsWith("Ch")) {
-                requestPayload = requestPayload.substring(2);
-            }
-            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            long furnitureId = FurnitureWire.floorStateFurnitureId(floorStatePayload);
             if (furnitureId <= 0L) {
                 return;
             }
@@ -4978,47 +3470,26 @@ public final class Handling {
             if (roomId <= 0L) {
                 return;
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
+            FurnitureLookups.FloorFurnitureStateToggle toggle = FurnitureLookups.toggleFloorFurnitureState(
+                furnitureId,
+                roomId,
+                NumberUtils.parseLong(userId),
+                furnitureDao(),
+                GameDataCaches.productCache(),
+                CatalogState.instance().registry(),
+                AppPaths.applicationPath());
+            if (!toggle.valid()) {
                 return;
             }
-            FurnitureDao.FloorStateFurniture stateFurniture = furniture.floorStateFurniture(furnitureId, roomId).orElse(null);
-            if (stateFurniture == null) {
-                return;
-            }
-            long productId = stateFurniture.productId();
-            String signText = StringUtils.text(stateFurniture.sign());
-            if (productId <= 0L) {
-                return;
-            }
-            long productType = DataManager.productCache().type(productId);
-            if (productType == 9L) {
-                return;
-            }
-            String productSprite = DataManager.productCache().primarySprite(productId).toLowerCase();
-            if (productSprite.isEmpty()) {
-                productSprite = DataManager.productCache().alternateSprite(productId).toLowerCase();
-            }
-            long currentState = NumberUtils.parseLong(signText);
-            long maxState = DataManager.productCache().maxState(productId);
-            long nextState = nextFurnitureState(productSprite, currentState, maxState);
-            furniture.updateRoomFurnitureState(furnitureId, roomId, NumberUtils.parseLong(userId), nextState);
-            refreshRepresentedFurnitureState(roomId, furnitureId, nextState);
-            String payload = FurniturePayloads.stateChanged(furnitureId, nextState);
-            broadcastToCurrentRoom(socketIndex, payload);
-            if (DataManager.productCache().hasCharges(productId)) {
-                consumeFurnitureChargeOrPrompt(socketIndex, productId, furnitureId);
+            RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.refreshState(
+                RoomState.instance().furnitureRoomCache(), roomId, toggle.furnitureId(), toggle.stateValue()));
+            broadcastToCurrentRoom(socketIndex, toggle.payload());
+            if (toggle.hasChargePayload()) {
+                sendToSocket(socketIndex, toggle.chargePayload());
             }
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
-    }
-
-    /**
-     * Original function: Proc_6_150_777FA0.
-     */
-    public static Object Proc_6_150_777FA0(Object... args) {
-        return openFloorFurniturePackageOrToggleState(handlingSocketIndex(args), handlingRequestPayload(args, "FH"));
     }
 
     /**
@@ -5029,15 +3500,10 @@ public final class Handling {
             if (socketIndex <= 0) {
                 return "";
             }
-            String requestPayload = StringUtils.text(packagePayload);
-            if (requestPayload.startsWith("FH")) {
-                requestPayload = requestPayload.substring(2);
-            }
-            LongRef offset = new LongRef(1);
-            long furnitureId = readWireLong(requestPayload, offset);
-            if (furnitureId <= 0L) {
-                furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
+            FurnitureWire.FloorFurniturePackageRequest request =
+                FurnitureWire.floorFurniturePackageRequest(packagePayload);
+            String requestPayload = request.requestPayload();
+            long furnitureId = request.furnitureId();
             if (furnitureId <= 0L) {
                 return "";
             }
@@ -5049,31 +3515,16 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return "";
+            FurnitureLookups.FloorFurniturePackageOpen packageOpen =
+                FurnitureLookups.openFloorFurniturePackage(furnitureId, roomId, furnitureDao(), packageDao());
+            if (packageOpen.petPreviewRequired()) {
+                return sendPetPackagePreview(socketIndex, "FH", requestPayload);
             }
-            FurnitureDao.FloorStateFurniture stateFurniture = furniture.floorStateFurniture(furnitureId, roomId).orElse(null);
-            if (stateFurniture == null) {
-                return "";
+            if (packageOpen.hasPayload()) {
+                sendToSocket(socketIndex, packageOpen.payload());
+                return packageOpen.furnitureId();
             }
-            long productId = stateFurniture.productId();
-            if (productId <= 0L) {
-                return "";
-            }
-            PackageDao packages = packageDao();
-            if (packages != null) {
-                PackageDao.PackageRow packageRow = packages.packageByProduct(productId).orElse(null);
-                String packageType = packageRow == null ? "" : StringUtils.text(packageRow.secondaryType()).toLowerCase();
-                long containedId = packageRow == null ? 0L : packageRow.containedId();
-                if ("packages_pets".equals(packageType) && containedId > 0L) {
-                    return Proc_6_86_73B0D0(socketIndex, "FH", requestPayload);
-                } else if (!packageType.isEmpty()) {
-                    sendToSocket(socketIndex, FurniturePayloads.packageOpened(productId, furnitureId, packageType));
-                    return furnitureId;
-                }
-            }
-            toggleFloorFurnitureState(socketIndex, requestPayload);
+            toggleFloorFurnitureState(socketIndex, packagePayload);
             return furnitureId;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -5082,111 +3533,37 @@ public final class Handling {
     }
 
     /**
-     * Original function: Proc_6_151_78AC20.
+     * Original function: Proc_6_154_78F040.
      */
-    public static void Proc_6_151_78AC20(Object... args) {
-        long roomId = 0L;
-        long furnitureId = 0L;
-        long stateValue = 0L;
-        if (args != null && args.length >= 3) {
-            roomId = NumberUtils.parseLong(args[0]);
-            furnitureId = NumberUtils.parseLong(args[1]);
-            stateValue = NumberUtils.parseLong(args[2]);
-        } else if (args != null && args.length >= 2) {
-            roomId = NumberUtils.parseLong(args[0]);
-            furnitureId = NumberUtils.parseLong(args[1]);
-        } else if (args != null && args.length >= 1) {
-            furnitureId = NumberUtils.parseLong(args[0]);
-        }
-        refreshRepresentedFurnitureState(roomId, furnitureId, stateValue);
-    }
-
-    /**
-     * Original function: Proc_6_151_78AC20.
-     */
-    public static void refreshRepresentedFurnitureState(long roomId, long furnitureId, long stateValue) {
+    public static String refreshLocatedFurnitureState(long furnitureId, long productId) {
         try {
-            if (roomId <= 0L || furnitureId <= 0L) {
-                return;
-            }
-            FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
-            FurnitureStateCache state = representedFurnitureStateCache(
-                cacheState.pendingRoomCache,
-                cacheState.pendingFurnitureCache,
-                cacheState.representedRoomCache,
-                roomId,
-                furnitureId,
-                stateValue);
-            Licence.setFurnitureRoomCache(furnitureRoomCacheState(state));
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_152_78C2F0(Object... args) {
-        handlingRepresentedFurnitureStateWrite(args);
-    }
-
-    public static void Proc_6_153_78D980(Object... args) {
-        handlingRepresentedFurnitureStateWrite(args);
-    }
-
-    public static String Proc_6_154_78F040(Object... args) {
-        try {
-            if (args == null || args.length == 0) {
-                return "";
-            }
-            long furnitureId = NumberUtils.parseLong(args[0]);
-            long productId = args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             if (furnitureId <= 0L) {
                 return "";
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
+            FurnitureLookups.LocatedFurnitureStateRefresh refresh = FurnitureLookups.refreshLocatedFurnitureState(
+                furnitureId, productId, furnitureDao(), GameDataCaches.productCache());
+            if (!refresh.valid()) {
                 return "";
             }
-            FurnitureDao.RoomFurnitureState furnitureState = furniture.roomFurnitureState(furnitureId).orElse(null);
-            if (furnitureState == null) {
-                return "";
+            RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.refreshState(
+                RoomState.instance().furnitureRoomCache(), refresh.roomId(), refresh.furnitureId(), refresh.stateValue()));
+            broadcastToRoomUsers(refresh.roomId(), refresh.payload());
+            if (refresh.clearSoundMarkers()) {
+                clearJukeboxSoundMarkers(0, refresh.roomId(), refresh.furnitureId());
             }
-            long roomId = furnitureState.roomId();
-            if (productId <= 0L) {
-                productId = furnitureState.productId();
-            }
-            String signText = StringUtils.text(furnitureState.sign());
-            if (roomId <= 0L || productId <= 0L) {
-                return "";
-            }
-            long productType = DataManager.productCache().type(productId);
-            String productSprite = DataManager.productCache().primarySprite(productId);
-            if (productSprite.isEmpty()) {
-                productSprite = DataManager.productCache().alternateSprite(productId);
-            }
-            long stateValue = NumberUtils.parseLong(signText);
-            String lowerSprite = productSprite.toLowerCase();
-            if ((lowerSprite.startsWith("bb_score_") || lowerSprite.startsWith("es_score_")) && stateValue < 0L) {
-                stateValue = 0L;
-            }
-            refreshRepresentedFurnitureState(roomId, furnitureId, stateValue);
-            String payload = FurniturePayloads.stateChanged(furnitureId, stateValue);
-            broadcastToRoomUsers(roomId, payload);
-            if (productType == 11L || lowerSprite.contains("soundmachine") || lowerSprite.contains("jukebox")) {
-                Proc_6_224_7EF5A0(0, roomId, furnitureId);
-            }
-            return payload;
+            return refresh.payload();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
     }
 
-    public static void Proc_6_155_795C90(Object... args) {
+    /**
+     * Original function: Proc_6_155_795C90.
+     */
+    public static void pickUpRoomFurniture(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "AC");
-            long furnitureId = stickyFurnitureIdFromPayload(requestPayload);
+            long furnitureId = FurnitureWire.stickyFurnitureId(packetPayload);
             if (socketIndex <= 0 || furnitureId <= 0L) {
                 return;
             }
@@ -5195,57 +3572,33 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId) || roomId <= 0L) {
                 return;
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
+            boolean canPickUpAny = UserLookups.hasPermission(userId, "fuse_pick_up_any_furni", userDao(), AppConfigState.instance().permissionMatrix());
+            long userIdValue = NumberUtils.parseLong(userId);
+            FurnitureLookups.RoomFurniturePickup pickup = FurnitureLookups.pickUpRoomFurniture(
+                furnitureId,
+                roomId,
+                userIdValue,
+                RoomLookups.userOwnsRoom(userId, roomId, roomDao()),
+                RoomLookups.userHasRoomRight(userId, roomId, roomDao()),
+                canPickUpAny,
+                furnitureDao());
+            if (!pickup.valid()) {
                 return;
             }
-            FurnitureDao.RoomFurnitureOwnerProduct furnitureProduct = furniture
-                .roomFurnitureOwnerProduct(furnitureId, roomId)
-                .orElse(null);
-            if (furnitureProduct == null) {
-                return;
-            }
-            long productId = furnitureProduct.productId();
-            String ownerId = String.valueOf(furnitureProduct.ownerId());
-            if (productId <= 0L) {
-                return;
-            }
-            boolean canPickUpAny = handlingUserHasPermission(userId, "fuse_pick_up_any_furni");
-            if (!ownerId.equals(userId) && !handlingUserOwnsRoom(userId, roomId) && !canPickUpAny) {
-                return;
-            }
-            if (!handlingUserHasRoomRight(userId, roomId) && !ownerId.equals(userId) && !canPickUpAny) {
-                return;
-            }
-            if (!ownerId.equals(userId)) {
-                String sessionId = handlingUserSessionId(userId);
+            if (pickup.moderationLogRequired()) {
+                String sessionId = UserLookups.sessionId(userId, userDao());
                 StaffModerationDao moderationDao = staffModerationDao();
                 if (moderationDao == null) {
                     return;
                 }
-                moderationDao.insertFurniturePickupLog(NumberUtils.parseLong(userId), roomId, furnitureId, sessionId);
+                moderationDao.insertFurniturePickupLog(userIdValue, roomId, furnitureId, sessionId);
             }
-            removeRepresentedFurnitureCacheMarker(socketIndex, furnitureId, productId);
-            furniture.moveRoomFurnitureToInventory(furnitureId, roomId, NumberUtils.parseLong(userId));
-            sendToSocket(socketIndex, InventoryMessagePayloads.remove(furnitureId));
-            broadcastToCurrentRoom(socketIndex, "A^" + furnitureId + '\2');
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
+            RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.removeMarker(
+                RoomState.instance().furnitureRoomCache(), roomId, furnitureId));
+            sendToSocket(socketIndex, pickup.inventoryRemovePayload());
+            broadcastToCurrentRoom(socketIndex, pickup.removedPayload());
+            RoomCacheFiles.invalidateRoom(roomId);
             sendInventoryToSocket(socketIndex);
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    public static void Proc_6_157_7974B0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String wallPayload = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
-            FurnitureDao.InventoryPlacementFurniture placementFurniture = null;
-            if (args != null && args.length >= 3 && args[2] instanceof FurnitureDao.InventoryPlacementFurniture item) {
-                placementFurniture = item;
-            }
-            placeWallFurnitureFromInventory(socketIndex, wallPayload, placementFurniture);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -5263,14 +3616,12 @@ public final class Handling {
             if (socketIndex <= 0) {
                 return;
             }
-            wallPayload = StringUtils.text(wallPayload);
-            if (wallPayload.startsWith("rv")) {
-                wallPayload = wallPayload.substring(2);
-            }
+            FurnitureWire.WallFurniturePlacementRequest request =
+                FurnitureWire.wallFurniturePlacementRequest(wallPayload);
+            wallPayload = request.wallPayload();
             long furnitureId = placementFurniture == null ? 0L : placementFurniture.furnitureId();
-            long productId = placementFurniture == null ? 0L : placementFurniture.productId();
             if (furnitureId <= 0L) {
-                furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(wallPayload));
+                furnitureId = request.furnitureId();
             }
             if (furnitureId <= 0L) {
                 return;
@@ -5280,227 +3631,28 @@ public final class Handling {
                 return;
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L || (!handlingUserHasRoomRight(userId, roomId)
-                && !handlingUserHasPermission(userId, "fuse_pick_up_any_furni"))) {
+            if (roomId <= 0L || (!RoomLookups.userHasRoomRight(userId, roomId, roomDao())
+                && !UserLookups.hasPermission(userId, "fuse_pick_up_any_furni", userDao(), AppConfigState.instance().permissionMatrix()))) {
                 return;
             }
-            if (productId <= 0L) {
-                FurnitureDao furniture = furnitureDao();
-                if (furniture == null) {
-                    return;
-                }
-                placementFurniture = furniture
-                    .inventoryPlacementFurniture(furnitureId, NumberUtils.parseLong(userId))
-                    .orElse(null);
-                productId = placementFurniture == null ? 0L : placementFurniture.productId();
-            }
-            if (productId <= 0L || DataManager.productCache().type(productId) != 9L) {
+            FurnitureLookups.WallFurniturePlacement placement = FurnitureLookups.placeWallFurnitureFromInventory(
+                wallPayload,
+                furnitureId,
+                roomId,
+                NumberUtils.parseLong(userId),
+                placementFurniture,
+                furnitureDao(),
+                GameDataCaches.productCache());
+            if (!placement.valid()) {
                 return;
             }
-            WallPlacement placement = new WallPlacement();
-            if (!wallPlacementFromPayload(wallPayload, placement)) {
-                return;
-            }
-            String wallPosition = Functions.sqlEscapedText((":w=" + placement.wallX + "," + placement.wallY
-                + " l=" + placement.localX + "," + placement.localY).toLowerCase());
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return;
-            }
-            furniture.placeWallFurniture(furnitureId, NumberUtils.parseLong(userId), roomId, wallPosition);
-            sendToSocket(socketIndex, InventoryMessagePayloads.remove(furnitureId));
-            String payload = Proc_6_156_7972B0(furnitureId, productId, wallPosition,
-                placementFurniture == null ? "" : placementFurniture.sign(),
-                placementFurniture == null ? 0L : placementFurniture.secondaryValue());
-            if (!payload.isEmpty()) {
-                broadcastToCurrentRoom(socketIndex, "AS" + payload);
-            }
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
+            sendToSocket(socketIndex, placement.inventoryRemovePayload());
+            broadcastToCurrentRoom(socketIndex, placement.roomPayload());
+            RoomCacheFiles.invalidateRoom(roomId);
             sendInventoryToSocket(socketIndex);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
-    }
-
-    public static long Proc_6_158_7987C0(Object... args) {
-        try {
-            if (args == null || args.length < 3) {
-                return 0L;
-            }
-            long furnitureId = NumberUtils.parseLong(args[0]);
-            long positionX = NumberUtils.parseLong(args[1]);
-            long positionY = NumberUtils.parseLong(args[2]);
-            long footprintX = args.length >= 4 ? NumberUtils.parseLong(args[3]) : 1L;
-            long footprintY = args.length >= 5 ? NumberUtils.parseLong(args[4]) : 1L;
-            if (footprintX <= 0L) {
-                footprintX = 1L;
-            }
-            if (footprintY <= 0L) {
-                footprintY = 1L;
-            }
-            FurnitureDao furniture = furnitureDao();
-            RoomDao rooms = roomDao();
-            if (furniture == null || rooms == null) {
-                return 0L;
-            }
-            long roomId = furniture.roomIdByFurniture(furnitureId);
-            if (roomId <= 0L) {
-                roomId = furnitureId;
-                furnitureId = 0L;
-            }
-            if (roomId <= 0L || positionX < 0L || positionY < 0L) {
-                return 0L;
-            }
-            RoomDao.RoomPlacementState placementState = rooms.roomPlacementState(roomId).orElse(null);
-            if (placementState == null) {
-                return 0L;
-            }
-            String modelMap = StringUtils.text(placementState.modelMap()).replace('\n', '\r');
-            while (modelMap.contains("\r\r")) {
-                modelMap = modelMap.replace("\r\r", "\r");
-            }
-            if (modelMap.endsWith("\r")) {
-                modelMap = modelMap.substring(0, modelMap.length() - 1);
-            }
-            String[] mapRows = modelMap.split("\r", -1);
-            long allowWalkthrough = placementState.allowWalkthrough();
-            long roomSlot = placementState.roomSlot();
-            for (long tileY = positionY; tileY <= positionY + footprintY - 1L; tileY++) {
-                if (tileY < 0L || tileY >= mapRows.length) {
-                    return 0L;
-                }
-                String mapRow = mapRows[(int) tileY];
-                for (long tileX = positionX; tileX <= positionX + footprintX - 1L; tileX++) {
-                    if (tileX < 0L || tileX + 1L > mapRow.length()) {
-                        return 0L;
-                    }
-                    String mapCell = mapRow.substring((int) tileX, (int) tileX + 1).toLowerCase();
-                    if (mapCell.isEmpty() || "x".equals(mapCell)) {
-                        return 0L;
-                    }
-                    long occupiedCount = furniture.floorFurnitureCountAtExcluding(roomId, furnitureId, tileX, tileY);
-                    if (occupiedCount > 0L) {
-                        return 0L;
-                    }
-                    occupiedCount = rooms.botCountAtLimited(roomId, tileX, tileY);
-                    if (occupiedCount > 0L) {
-                        return 0L;
-                    }
-                    if (allowWalkthrough == 0L && roomSlot > 0L) {
-                        for (long occupantRoomUserIndex : rooms.activeVisitIdsByRoom(roomId)) {
-                            if (occupantRoomUserIndex > 0L) {
-                                RoomUserPosition movementPosition = RoomUserPosition.from(
-                                    Licence.representedRooms().movementPosition(roomSlot, occupantRoomUserIndex));
-                                if (movementPosition.found() && movementPosition.positionX() == tileX
-                                    && movementPosition.positionY() == tileY) {
-                                    return 0L;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return 1L;
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return 0L;
-        }
-    }
-
-    public static String Proc_6_159_79FCD0(Object... args) {
-        try {
-            String requestPayload = handlingRequestPayload(args, "AI");
-            if (requestPayload.isEmpty()) {
-                return "";
-            }
-            return moveFloorFurnitureInRoom(handlingSocketIndex(args), requestPayload);
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_160_7A71A0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            long firstId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            long secondId = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
-            long furnitureId = 0L;
-            long productId = 0L;
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return "";
-            }
-            FurnitureDao.LocatedFurnitureState furnitureState = null;
-            if (secondId > 0L) {
-                furnitureState = furniture.locatedFurnitureState(secondId).orElse(null);
-                if (furnitureState != null) {
-                    furnitureId = secondId;
-                    productId = firstId;
-                }
-            }
-            if (furnitureState == null && firstId > 0L) {
-                furnitureState = furniture.locatedFurnitureState(firstId).orElse(null);
-                if (furnitureState != null) {
-                    furnitureId = firstId;
-                }
-            }
-            if (furnitureState == null && secondId > 0L) {
-                furnitureState = furniture.newestLocatedFurnitureStateByProduct(secondId).orElse(null);
-                if (furnitureState != null) {
-                    productId = secondId;
-                }
-            }
-            if (furnitureState == null) {
-                return "";
-            }
-            long roomId = furnitureState.roomId();
-            if (productId <= 0L) {
-                productId = furnitureState.productId();
-            }
-            String signText = StringUtils.text(furnitureState.sign());
-            if (roomId <= 0L || productId <= 0L) {
-                return "";
-            }
-            if (furnitureId <= 0L) {
-                furnitureId = furniture.newestFurnitureIdByRoomAndProduct(roomId, productId);
-            }
-            if (furnitureId <= 0L) {
-                return "";
-            }
-            String productSprite = DataManager.productCache().primarySprite(productId).toLowerCase();
-            if (productSprite.isEmpty()) {
-                productSprite = DataManager.productCache().alternateSprite(productId).toLowerCase();
-            }
-            if (productSprite.startsWith("bb_score_") || productSprite.startsWith("es_score_")) {
-                long stateValue = NumberUtils.parseLong(signText);
-                long maxState = DataManager.productCache().maxState(productId);
-                if (maxState <= 0L) {
-                    maxState = 99L;
-                }
-                if (stateValue < 0L) {
-                    stateValue = 0L;
-                }
-                if (stateValue > maxState) {
-                    stateValue = maxState;
-                }
-                if (!String.valueOf(stateValue).equals(signText)) {
-                    furniture.updateSignLimited(furnitureId, stateValue);
-                }
-            }
-            return Proc_6_154_78F040(furnitureId, productId);
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    /**
-     * Original function: Proc_6_162_7B3310.
-     */
-    public static void Proc_6_162_7B3310(Object... args) {
-        sendClientDateSettings(handlingSocketIndex(args));
     }
 
     /**
@@ -5508,7 +3660,7 @@ public final class Handling {
      */
     public static void sendClientDateSettings(int socketIndex) {
         try {
-            String dateFormat = Functions.settingsCache().valueOrDefault("com.system.format.date", "DAQBHHIIKHJHPAHQA");
+            String dateFormat = AppConfigState.instance().settingsCache().valueOrDefault("com.system.format.date", "DAQBHHIIKHJHPAHQA");
             if (dateFormat.isEmpty()) {
                 dateFormat = "DAQBHHIIKHJHPAHQA";
             }
@@ -5522,18 +3674,9 @@ public final class Handling {
     /**
      * Original function: Proc_6_163_7B3480.
      */
-    public static String Proc_6_163_7B3480(Object... args) {
-        int socketIndex = handlingSocketIndex(args);
-        String packetPayload = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
-        return handleLoginTicket(socketIndex, packetPayload);
-    }
-
-    /**
-     * Original function: Proc_6_163_7B3480.
-     */
     public static String handleLoginTicket(int socketIndex, String packetPayload) {
         try {
-            String loginTicket = handlingLoginTicketFromPayload(packetPayload);
+            String loginTicket = SessionWire.loginTicket(packetPayload);
             if (loginTicket.isEmpty() || "NULL".equalsIgnoreCase(loginTicket)) {
                 if (socketIndex > 0) {
                     disconnectSocket(socketIndex);
@@ -5574,11 +3717,11 @@ public final class Handling {
             if (updateAgeDays > 0L) {
                 users.resetDailyInteractionCounters(userIdValue);
             }
-            handlingStoreSocketSession(socketIndex, userId + '\2' + socketIndex + '\2' + userName + '\2'
+            SessionState.instance().storeSocketSession(socketIndex, userId + '\2' + socketIndex + '\2' + userName + '\2'
                 + rankIndex + '\2' + loginTicket + '\2');
             sendToSocket(socketIndex, "@C");
-            Proc_6_20_6E88E0(socketIndex, 0, 0);
-            sendToSocket(socketIndex, "@F" + creditsValue + ".0" + '\2');
+            sendRankAndStaffState(socketIndex);
+            sendToSocket(socketIndex, UserPayloads.creditsRefresh(creditsValue));
             for (int pointIndex = 0; pointIndex <= 4; pointIndex++) {
                 sendToSocket(socketIndex, UserPayloads.activityPointRefresh(pointIndex, pointValues[pointIndex]));
             }
@@ -5589,20 +3732,20 @@ public final class Handling {
                 sendToSocket(socketIndex, UserPayloads.emailStatus(emailValidated));
             }
             sendToSocket(socketIndex, "@a" + "com.server.socket.location" + '\2' + "invalid.location" + '\2');
-            if (NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.motd.message.enabled", 0)) != 0L) {
-                String motdMessage = Functions.settingsCache().valueOrDefault("com.client.motd.message", "").replace("\\n", "\n");
+            if (AppConfigState.instance().settingsCache().longValueOrDefault("com.client.motd.message.enabled", 0) != 0L) {
+                String motdMessage = AppConfigState.instance().settingsCache().valueOrDefault("com.client.motd.message", "").replace("\\n", "\n");
                 if (!motdMessage.isEmpty()) {
-                    sendToSocket(socketIndex, Console.encodeBase64Length(motdMessage.length())
+                    sendToSocket(socketIndex, WireEncoding.encodeBase64Length(motdMessage.length())
                         + " " + motdMessage + '\2');
                 }
             }
-            sendToSocket(socketIndex, SocialPayloads.badgeDisplay(userIdValue, Proc_6_195_7D38D0(userId, 0, 0)));
-            sendToSocket(socketIndex, SocialPayloads.tagDisplay(userIdValue, Proc_6_196_7D3ED0(userId, 0, 0)));
+            sendToSocket(socketIndex, SocialLookups.badgeDisplayPayload(userId, userDao()));
+            sendToSocket(socketIndex, SocialLookups.tagDisplayPayload(userId, userDao()));
             long favouriteGroupId = loginUser.favouriteGroupId();
             if (favouriteGroupId > 0L) {
                 UserGroupRow groupRow = users.userGroup(favouriteGroupId).orElse(null);
                 if (groupRow != null) {
-                    String groupPayload = loginGroupPayload(favouriteGroupId, groupRow);
+                    String groupPayload = UserPayloads.loginGroup(favouriteGroupId, groupRow);
                     sendToSocket(socketIndex, groupPayload);
                 }
             }
@@ -5615,19 +3758,20 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_165_7BE0B0(Object... args) {
+    /**
+     * Original function: Proc_6_165_7BE0B0.
+     */
+    public static String sendMessengerFriendOnlineNotification(int socketIndex, int targetSocketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            int targetSocketIndex = args != null && args.length >= 2 ? (int) NumberUtils.parseLong(args[1]) : 0;
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String summaryPayload = messengerFriendSummaryPayload(userId, 1L);
-            if (summaryPayload.isEmpty()) {
+            MessengerFriend friendSummary = MessengerLookups.friendSummary(userId, messengerDao());
+            if (friendSummary == null) {
                 return "";
             }
-            String notifyPayload = MessengerPayloads.friendOnlineNotification(summaryPayload);
+            String notifyPayload = MessengerViews.friendOnlineNotification(friendSummary, 1L);
             if (targetSocketIndex > 0) {
                 if (Guardian.isSocketConnected(targetSocketIndex)) {
                     sendToSocket(targetSocketIndex, notifyPayload);
@@ -5651,15 +3795,17 @@ public final class Handling {
         }
     }
 
-    public static long Proc_6_170_7C1100(Object... args) {
+    /**
+     * Original function: Proc_6_170_7C1100.
+     */
+    public static long deleteMessengerFriendRequests(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return 0L;
             }
-            FriendTargetList targets = friendDeleteTargetsFromPayload(handlingPacketPayload(args));
-            if (targets.deleteAllPending) {
+            MessengerWire.FriendTargetList targets = MessengerWire.friendDeleteTargetsFromPayload(packetPayload);
+            if (targets.deleteAllPending()) {
                 MessengerDao messenger = messengerDao();
                 if (messenger == null) {
                     return 0L;
@@ -5667,14 +3813,14 @@ public final class Handling {
                 messenger.deletePendingRequests(NumberUtils.parseLong(userId));
                 return 1L;
             }
-            if (targets.targetIds.isEmpty()) {
+            if (targets.targetIds().isEmpty()) {
                 return 0L;
             }
             MessengerDao messenger = messengerDao();
             if (messenger == null) {
                 return 0L;
             }
-            messenger.deletePendingRequests(NumberUtils.parseLong(userId), targets.targetIds);
+            messenger.deletePendingRequests(NumberUtils.parseLong(userId), targets.targetIds());
             return 1L;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -5682,95 +3828,58 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_171_7C1520(Object... args) {
+    /**
+     * Original function: Proc_6_171_7C1520.
+     */
+    public static String removeMessengerFriends(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "@h");
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
-                return "";
-            }
-            LongRef offset = new LongRef(1);
-            long removeCount = readWireLong(requestPayload, offset);
-            if (removeCount <= 0L) {
                 return "";
             }
             MessengerDao messenger = messengerDao();
             if (messenger == null) {
                 return "";
             }
-            removeCount = Math.min(removeCount, 75L);
-            List<Long> targetIds = new ArrayList<>();
-            PacketBuilder removedIdsPayload = PacketBuilder.create();
-            long removedCount = 0L;
-            for (long removeIndex = 1L; removeIndex <= removeCount; removeIndex++) {
-                long targetUserId = readWireLong(requestPayload, offset);
-                String targetId = String.valueOf(targetUserId);
-                if (targetUserId > 0L && !targetId.equals(userId) && !targetIds.contains(targetUserId)) {
-                    if (messenger.acceptedFriendshipExists(NumberUtils.parseLong(userId), targetUserId)) {
-                        targetIds.add(targetUserId);
-                        removedIdsPayload.appendRaw(MessengerPayloads.removedId(targetUserId));
-                        removedCount++;
-                        int targetSocketIndex = handlingSocketFromUserId(targetId);
-                        if (targetSocketIndex > 0) {
-                            sendToSocket(targetSocketIndex,
-                                MessengerPayloads.friendRemovedNotification(NumberUtils.parseLong(userId)));
-                        }
-                    }
-                }
-            }
-            if (targetIds.isEmpty()) {
+            MessengerWire.FriendTargetList targets =
+                MessengerWire.friendRemoveTargetsFromPayload(packetPayload, userId);
+            RemovedFriendships removed = MessengerLookups.removeAcceptedFriends(
+                NumberUtils.parseLong(userId), targets.targetIds(), messenger);
+            if (!removed.valid()) {
                 return "";
             }
-            messenger.deleteAcceptedFriendships(NumberUtils.parseLong(userId), targetIds);
-            String callerPayload = MessengerPayloads.removeFriends(removedIdsPayload.build(), removedCount);
-            sendToSocket(socketIndex, callerPayload);
-            return callerPayload;
+            for (long targetUserId : removed.targetUserIds()) {
+                int targetSocketIndex = handlingSocketFromUserId(String.valueOf(targetUserId));
+                if (targetSocketIndex > 0) {
+                    sendToSocket(targetSocketIndex, removed.notificationPayload());
+                }
+            }
+            sendToSocket(socketIndex, removed.callerPayload());
+            return removed.callerPayload();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
     }
 
-    public static String Proc_6_172_7C25B0(Object... args) {
+    /**
+     * Original function: Proc_6_172_7C25B0.
+     */
+    public static String searchMessengerUsers(int socketIndex, MessengerWire.SearchRequest request) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "@i");
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String searchText = Functions.readBase64LengthString(requestPayload);
-            if (searchText.isEmpty()) {
-                LongRef offset = new LongRef(1);
-                searchText = readWireString(requestPayload, offset);
-            }
-            searchText = searchText.trim().toLowerCase();
+            String searchText = request.searchText();
             if (searchText.isEmpty()) {
                 return "";
             }
-            String dateFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
-            String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
             MessengerDao messenger = messengerDao();
             if (messenger == null) {
                 return "";
             }
-            long callerUserId = NumberUtils.parseLong(userId);
-            List<MessengerSearchResult> results = new ArrayList<>();
-            for (MessengerDao.SearchUser searchUser : messenger.searchUsers(searchText, dateFormat + " " + timeFormat)) {
-                if (searchUser.userId() != callerUserId) {
-                    results.add(new MessengerSearchResult(
-                        searchUser.userId(),
-                        searchUser.userName(),
-                        searchUser.figure(),
-                        searchUser.motto(),
-                        searchUser.nickname(),
-                        searchUser.lastOnline(),
-                        searchUser.socketIndex() > 0L,
-                        messenger.acceptedFriendshipExists(callerUserId, searchUser.userId())));
-                }
-            }
-            String resultPayload = MessengerPayloads.searchResults(results);
+            String resultPayload = MessengerLookups.searchResultsPayload(NumberUtils.parseLong(userId), searchText, messenger);
             sendToSocket(socketIndex, resultPayload);
             return resultPayload;
         } catch (Exception ignored) {
@@ -5779,36 +3888,19 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_173_7C3430(Object... args) {
+    /**
+     * Original function: Proc_6_173_7C3430.
+     */
+    public static String sendMessengerPrivateMessage(int socketIndex, MessengerPrivateMessage message) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "@a");
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            LongRef offset = new LongRef(1);
-            String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
-            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
-                targetUserId = String.valueOf((long) NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload)));
-            }
-            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+            if (!message.valid()) {
                 return "";
             }
-            String messageText = Functions.readBase64LengthString(requestPayload);
-            if (messageText.length() > 122) {
-                messageText = messageText.substring(0, 122);
-            }
-            if (messageText.isEmpty()) {
-                messageText = readWireString(requestPayload, offset);
-                if (messageText.length() > 122) {
-                    messageText = messageText.substring(0, 122);
-                }
-            }
-            if (messageText.isEmpty() || messageText.length() > 255) {
-                return "";
-            }
-            int targetSocketIndex = handlingSocketFromUserId(targetUserId);
+            int targetSocketIndex = handlingSocketFromUserId(String.valueOf(message.targetUserId()));
             if (targetSocketIndex <= 0) {
                 return "";
             }
@@ -5817,13 +3909,15 @@ public final class Handling {
             if (messenger == null) {
                 return "";
             }
-            messenger.insertPrivateChatLog(
+            String payload = MessengerLookups.privateMessagePayload(
                 NumberUtils.parseLong(userId),
+                message.targetUserId(),
                 currentRoomId,
-                "(Chat To:     " + handlingUserName(targetUserId) + ") -- " + messageText,
-                socketIndex);
-            String filteredText = Proc_6_22_6E9300(messageText, 0, 0);
-            String payload = MessengerPayloads.privateChatMessage(NumberUtils.parseLong(userId), filteredText);
+                handlingUserName(String.valueOf(message.targetUserId())),
+                message.messageText(),
+                ChatLookups.filterMessage(message.messageText()),
+                socketIndex,
+                messenger);
             sendToSocket(targetSocketIndex, payload);
             return payload;
         } catch (Exception ignored) {
@@ -5832,20 +3926,16 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_174_7C3BC0(Object... args) {
+    /**
+     * Original function: Proc_6_174_7C3BC0.
+     */
+    public static String requestMessengerFriend(int socketIndex, MessengerWire.FriendRequest requestPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "@g");
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String targetName = Functions.readBase64LengthString(requestPayload);
-            if (targetName.isEmpty()) {
-                LongRef offset = new LongRef(1);
-                targetName = readWireString(requestPayload, offset);
-            }
-            targetName = targetName.trim();
+            String targetName = requestPayload.targetName();
             if (targetName.isEmpty()) {
                 return "";
             }
@@ -5853,37 +3943,31 @@ public final class Handling {
             if (messenger == null) {
                 return "";
             }
-            String targetUserId = String.valueOf(messenger.userIdByName(targetName));
-            if (targetUserId.isEmpty() || "0".equals(targetUserId) || targetUserId.equals(userId)) {
-                String callerPayload = MessengerPayloads.requestDenied();
-                sendToSocket(socketIndex, callerPayload);
-                return callerPayload;
-            }
             long callerUserId = NumberUtils.parseLong(userId);
-            long targetUserIdValue = NumberUtils.parseLong(targetUserId);
-            if (messenger.friendshipExists(callerUserId, targetUserIdValue) || messenger.acceptFriends(targetUserIdValue) != 1L) {
-                String callerPayload = MessengerPayloads.requestDenied();
-                sendToSocket(socketIndex, callerPayload);
-                return callerPayload;
+            MessengerFriendRequest request = MessengerLookups.requestFriend(
+                callerUserId, handlingUserName(userId), targetName, messenger);
+            if (!request.valid()) {
+                return "";
             }
-            messenger.insertFriendRequest(targetUserIdValue, callerUserId);
-            String userName = handlingUserName(userId);
-            int targetSocketIndex = handlingSocketFromUserId(targetUserId);
-            if (targetSocketIndex > 0) {
-                sendToSocket(targetSocketIndex, MessengerPayloads.requestNotify(callerUserId, userName));
+            if (request.hasTargetNotification()) {
+                int targetSocketIndex = handlingSocketFromUserId(String.valueOf(request.targetUserId()));
+                if (targetSocketIndex > 0) {
+                    sendToSocket(targetSocketIndex, request.targetNotificationPayload());
+                }
             }
-            String callerPayload = MessengerPayloads.requestAcceptedCaller(targetUserIdValue);
-            sendToSocket(socketIndex, callerPayload);
-            return callerPayload;
+            sendToSocket(socketIndex, request.callerPayload());
+            return request.callerPayload();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
     }
 
-    public static String Proc_6_175_7C4800(Object... args) {
+    /**
+     * Original function: Proc_6_175_7C4800.
+     */
+    public static String sendMessengerPendingRequests(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
@@ -5902,43 +3986,35 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_176_7C4EE0(Object... args) {
+    /**
+     * Original function: Proc_6_176_7C4EE0.
+     */
+    public static String sendMessengerFriendList(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            long maxFriends0 = messengerMaxFriends(0L);
-            long maxFriends1 = messengerMaxFriends(2L);
-            long maxFriends2 = messengerMaxFriends(4L);
-            String dateFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
-            String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
             MessengerDao messenger = messengerDao();
             if (messenger == null) {
                 return "";
             }
-            List<MessengerFriend> friends = messenger.acceptedFriends(
-                NumberUtils.parseLong(userId),
-                dateFormat + " " + timeFormat,
-                maxFriends2);
-            String callerSummary = messengerFriendSummaryPayload(userId, 1L);
+            MessengerFriendList friendList = MessengerLookups.friendList(NumberUtils.parseLong(userId), messenger);
+            String onlineNotificationPayload = friendList.onlineNotificationPayload();
             List<Long> onlineFriendIds = new ArrayList<>();
-            for (MessengerFriend friend : friends) {
+            for (MessengerFriend friend : friendList.friends()) {
                 if (friend != null) {
                     int friendSocketIndex = (int) friend.socketIndex();
                     long friendOnline = friendSocketIndex > 0 && Guardian.isSocketConnected(friendSocketIndex) ? 1L : 0L;
                     if (friendOnline == 1L) {
                         onlineFriendIds.add(friend.userId());
                     }
-                    if (friendOnline == 1L && !callerSummary.isEmpty()) {
-                        sendToSocket(friendSocketIndex,
-                            MessengerPayloads.friendOnlineNotification(callerSummary));
+                    if (friendOnline == 1L && !onlineNotificationPayload.isEmpty()) {
+                        sendToSocket(friendSocketIndex, onlineNotificationPayload);
                     }
                 }
             }
-            String payload = MessengerPayloads.friendList(friends, maxFriends0, maxFriends1, maxFriends2,
-                onlineFriendIds, messengerFollowEnabled());
+            String payload = friendList.listPayload(onlineFriendIds);
             sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
@@ -5947,48 +4023,25 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_177_7C6580(Object... args) {
+    /**
+     * Original function: Proc_6_177_7C6580.
+     */
+    public static String sendPetRaceList(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "n" + '\177');
+            PetWire.RaceListRequest request = PetWire.raceListRequest(packetPayload);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String productPet = Functions.readBase64LengthString(requestPayload);
+            String productPet = request.productPet();
             if (productPet.isEmpty()) {
-                productPet = readWireString(requestPayload, new LongRef(1));
-            }
-            if (productPet.isEmpty()) {
-                return "";
-            }
-            long rankIndex = handlingUserRank(userId);
-            long hcLevel = handlingUserHcLevel(userId);
-            BotDao bots = botDao();
-            if (bots == null) {
-                return "";
-            }
-            String payload = PetPayloads.raceList(productPet, bots.petRaces(productPet), rankIndex, hcLevel);
-            sendToSocket(socketIndex, payload);
-            return payload;
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_178_7C6E60(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
             BotDao bots = botDao();
             if (bots == null) {
                 return "";
             }
-            String payload = PetPayloads.inventoryList(bots.inventoryPets(NumberUtils.parseLong(userId)));
+            String payload = PetLookups.raceListPayload(userId, productPet, bots, userDao());
             sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
@@ -5997,18 +4050,41 @@ public final class Handling {
         }
     }
 
-    public static long Proc_6_179_7C7790(Object... args) {
+    /**
+     * Original function: Proc_6_178_7C6E60.
+     */
+    public static String sendPetInventory(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            if (NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.rooms.bots.pets.enabled", "0")) == 0L) {
+            String userId = handlingUserIdFromSocket(socketIndex);
+            if (userId.isEmpty() || "0".equals(userId)) {
+                return "";
+            }
+            BotDao bots = botDao();
+            if (bots == null) {
+                return "";
+            }
+            String payload = PetLookups.inventoryPayload(NumberUtils.parseLong(userId), bots);
+            sendToSocket(socketIndex, payload);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    /**
+     * Original function: Proc_6_179_7C7790.
+     */
+    public static long placePetInRoom(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            if (NumberUtils.parseLong(AppConfigState.instance().settingsCache().valueOrDefault("com.client.rooms.bots.pets.enabled", "0")) == 0L) {
                 return 0L;
             }
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "nz");
-            LongRef offset = new LongRef(1);
-            long petId = readWireLong(requestPayload, offset);
-            long positionX = readWireLong(requestPayload, offset);
-            long positionY = readWireLong(requestPayload, offset);
-            long positionR = readWireLong(requestPayload, offset);
+            PetWire.RoomPlacementRequest request = PetWire.roomPlacementRequest(packetPayload);
+            long petId = request.petId();
+            long positionX = request.positionX();
+            long positionY = request.positionY();
+            long positionR = request.rotation();
             if (socketIndex <= 0 || petId <= 0L) {
                 return 0L;
             }
@@ -6025,91 +4101,66 @@ public final class Handling {
             if (rooms == null || bots == null) {
                 return 0L;
             }
-            long roomSlot = rooms.roomSlot(roomId);
-            if (roomSlot <= 0L) {
+            PetPlacementAction placement = PetLookups.placementAction(
+                petId, NumberUtils.parseLong(userId), roomId, positionX, positionY, positionR, bots, rooms);
+            if (!placement.valid()) {
                 return 0L;
             }
-            String positionZ = String.valueOf(NumberUtils.parseLong(rooms.modelHeightmap(roomId)));
-            PetPlacementRow pet = bots.availablePetForPlacement(petId, NumberUtils.parseLong(userId)).orElse(null);
-            if (pet == null) {
-                return 0L;
+            bots.placeBotInRoom(
+                placement.botId(),
+                placement.roomId(),
+                placement.positionX(),
+                placement.positionY(),
+                placement.positionZ(),
+                placement.positionR());
+            if (placement.hasRoomEntryPayload()) {
+                broadcastToCurrentRoom(socketIndex, placement.roomEntryPayload());
             }
-            long botEntityId = allocateRepresentedBot(
-                roomSlot,
-                RepresentedBotEntry.from(pet, positionX, positionY, positionZ, positionR));
-            if (botEntityId <= 0L) {
-                return 0L;
-            }
-            storeRepresentedBotPosition(botEntityId, positionX, positionY, positionZ, positionR);
-            bots.placeBotInRoom(petId, roomId, positionX, positionY, positionZ, positionR);
-            String placementPayload = representedBotRoomEntryPayload(botEntityId);
-            if (!placementPayload.isEmpty()) {
-                broadcastToCurrentRoom(socketIndex, placementPayload);
-            }
-            sendToSocket(socketIndex, PetPayloads.placed(petId));
-            return botEntityId;
+            sendToSocket(socketIndex, placement.placedPayload());
+            return placement.botEntityId();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
         }
     }
 
-    public static long Proc_6_180_7C96F0(Object... args) {
+    /**
+     * Original function: Proc_6_180_7C96F0.
+     */
+    public static long pickUpPetFromRoom(int socketIndex, long botEntityId) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long botEntityId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             if (botEntityId <= 0L) {
-                return 0L;
-            }
-            RepresentedBotRegistry.RepresentedBotRecord bot = Licence.representedBots().record(botEntityId);
-            long botId = bot.botId();
-            if (botId <= 0L) {
                 return 0L;
             }
             BotDao bots = botDao();
             if (bots == null) {
                 return 0L;
             }
-            bots.clearBotRoom(botId);
-            bots.touchPetData(botId);
-            broadcastToCurrentRoom(socketIndex, PetPayloads.removedFromRoom(botEntityId));
-            String petName = bot.name();
-            String petFigure = bot.figure().toLowerCase();
-            long scratches = bots.petScratches(botId);
-            String pickupPayload = PetPayloads.inventoryRow(new PetInventoryRow(botId, petName, petFigure, scratches));
-            if (!pickupPayload.isEmpty()) {
-                sendToSocket(socketIndex, PetPayloads.inventoryAdd(pickupPayload));
+            PetPickupAction pickup = PetLookups.pickupAction(botEntityId, bots);
+            if (!pickup.valid()) {
+                return 0L;
             }
-            removeRepresentedBotRecord(botEntityId);
-            return botId;
+            bots.clearBotRoom(pickup.botId());
+            bots.touchPetData(pickup.botId());
+            broadcastToCurrentRoom(socketIndex, pickup.removedPayload());
+            if (pickup.hasInventoryAddPayload()) {
+                sendToSocket(socketIndex, pickup.inventoryAddPayload());
+            }
+            PetLookups.completePickup(pickup);
+            return pickup.botId();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
         }
     }
 
-    public static long Proc_6_181_7CA920(Object... args) {
+    /**
+     * Original function: Proc_6_182_7CAAD0.
+     */
+    public static String validatePetName(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            if (args == null || args.length == 0) {
-                return 2L;
-            }
-            return PetPayloads.nameValidationCode(StringUtils.text(args[0]));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return 2L;
-        }
-    }
-
-    public static String Proc_6_182_7CAAD0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "@c");
-            String requestedName = Functions.readBase64LengthString(requestPayload);
-            if (requestedName.isEmpty()) {
-                requestedName = readWireString(requestPayload, new LongRef(1));
-            }
-            requestedName = Functions.sqlEscapedText(Functions.singleLineText(requestedName));
-            String payload = PetPayloads.nameValidation(requestedName);
+            String requestedName = PetWire.nameValidationRequest(packetPayload).petName();
+            String payload = PetLookups.nameValidationPayload(requestedName);
             sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
@@ -6118,19 +4169,13 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_183_7CABF0(Object... args) {
+    /**
+     * Original function: Proc_6_183_7CABF0.
+     */
+    public static String sendPetStatus(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "ny");
-            LongRef offset = new LongRef(1);
-            long requestedId = readWireLong(requestPayload, offset);
+            long requestedId = PetWire.petIdRequest(packetPayload, packetPrefix).petId();
             if (socketIndex <= 0 || requestedId <= 0L) {
-                return "";
-            }
-            RepresentedBotRegistry.RepresentedBotIdentity identity = Licence.representedBots().identityFromEntityOrBotId(requestedId);
-            long botEntityId = identity.entityId();
-            long botId = identity.botId();
-            if (botId <= 0L) {
                 return "";
             }
             String userId = handlingUserIdFromSocket(socketIndex);
@@ -6141,14 +4186,7 @@ public final class Handling {
             if (bots == null) {
                 return "";
             }
-            PetStatusRow petStatus = bots.petStatus(botId).orElse(null);
-            if (petStatus == null) {
-                return "";
-            }
-            if (botEntityId <= 0L) {
-                botEntityId = botId;
-            }
-            String payload = PetPayloads.status(botEntityId, petStatus);
+            String payload = PetLookups.statusPayload(requestedId, bots);
             if (!payload.isEmpty()) {
                 sendToSocket(socketIndex, payload);
             }
@@ -6159,15 +4197,11 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_184_7CBDA0(Object... args) {
+    /**
+     * Original function: Proc_6_184_7CBDA0.
+     */
+    public static String sendPetCommandList(int socketIndex, long petLevel) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long petLevel = 0L;
-            if (args != null && args.length >= 2) {
-                petLevel = NumberUtils.parseLong(args[1]);
-            } else if (args != null && args.length >= 1) {
-                petLevel = NumberUtils.parseLong(args[0]);
-            }
             String payload = petSettings().commandListPayload(petLevel);
             if (socketIndex > 0) {
                 sendToSocket(socketIndex, payload);
@@ -6179,44 +4213,39 @@ public final class Handling {
         }
     }
 
-    public static String Proc_7CC190(Object... args) {
+    /**
+     * Original function: Proc_7CC190.
+     */
+    public static String sendPetCommandListForTarget(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "n|");
-            long requestedId = readWireLong(requestPayload, new LongRef(1));
-            long botId = Licence.representedBots().identityFromEntityOrBotId(requestedId).botId();
+            long requestedId = PetWire.petIdRequest(packetPayload, packetPrefix).petId();
             long petLevel = 0L;
             String userId = handlingUserIdFromSocket(socketIndex);
-            if (!userId.isEmpty() && !"0".equals(userId) && botId > 0L) {
+            if (!userId.isEmpty() && !"0".equals(userId)) {
                 BotDao bots = botDao();
                 if (bots != null) {
-                    petLevel = bots.petLevelForOwner(botId, NumberUtils.parseLong(userId));
+                    petLevel = PetLookups.levelForOwnerTarget(requestedId, NumberUtils.parseLong(userId), bots);
                 }
             }
-            return Proc_6_184_7CBDA0(socketIndex, petLevel, 0);
+            return sendPetCommandList(socketIndex, petLevel);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
     }
 
-    public static long Proc_7CA730(Object... args) {
+    /**
+     * Original function: Proc_7CA730.
+     */
+    public static long performPetCommand(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return 0L;
             }
-            String requestPayload = handlingRequestPayload(args, "n{");
-            LongRef offset = new LongRef(1);
-            long requestedId = readWireLong(requestPayload, offset);
-            long commandId = readWireLong(requestPayload, offset);
+            PetWire.CommandRequest request = PetWire.commandRequest(packetPayload);
+            long requestedId = request.petId();
+            long commandId = request.commandId();
             if (requestedId <= 0L || commandId <= 0L) {
-                return 0L;
-            }
-            RepresentedBotRegistry.RepresentedBotIdentity identity = Licence.representedBots().identityFromEntityOrBotId(requestedId);
-            long botEntityId = identity.entityId();
-            long botId = identity.botId();
-            if (botId <= 0L) {
                 return 0L;
             }
             String userId = handlingUserIdFromSocket(socketIndex);
@@ -6231,27 +4260,18 @@ public final class Handling {
             if (bots == null) {
                 return 0L;
             }
-            PetCommandTargetRow pet = bots.petCommandTarget(botId, roomId).orElse(null);
-            if (pet == null) {
+            PetCommandExecution execution = PetLookups.commandExecution(
+                requestedId, commandId, roomId, petSettings().commands(), AppConfigState.instance().settingsCache(), bots);
+            if (!execution.valid()) {
                 return 0L;
             }
-            PetCommandAction commandAction = petCommandAction(commandId, petSettings().commandRows());
-            if (!commandAction.found || commandAction.requiredLevel > pet.level()) {
-                return 0L;
+            if (execution.hasActionPayload()) {
+                broadcastToRoomUsers(roomId, execution.actionPayload());
             }
-            if (!commandAction.action.isEmpty()) {
-                String payload = petCommandActionPayload(botEntityId, commandAction.action, commandId);
-                broadcastToRoomUsers(roomId, payload);
-            }
-            if (pet.energy() < 250L || pet.nutrition() < 250L) {
-                String commandSpeech = Functions.randomLongInclusive(0, 2) == 0L
-                    ? Functions.settingsCache().valueOrDefault("com.client.bot.pet.sad.speech", "gst thr")
-                    : Functions.settingsCache().valueOrDefault("com.client.bot.pet.angry.speech", "gst grr");
-                if (!commandSpeech.isEmpty()) {
-                    broadcastToRoomUsers(roomId, petSpeechPayload(botEntityId, commandSpeech));
-                }
-            } else {
-                Proc_6_185_7CC2D0(botEntityId, commandId * 10L, 0);
+            if (execution.hasSpeechPayload()) {
+                broadcastToRoomUsers(roomId, execution.speechPayload());
+            } else if (execution.shouldAwardExperience()) {
+                awardPetExperience(execution.botEntityId(), execution.experienceDelta());
             }
             return commandId;
         } catch (Exception ignored) {
@@ -6260,76 +4280,45 @@ public final class Handling {
         }
     }
 
-    public static long Proc_6_185_7CC2D0(Object... args) {
+    /**
+     * Original function: Proc_6_185_7CC2D0.
+     */
+    public static long awardPetExperience(long botEntityId, long experienceDelta) {
         try {
-            if (args == null || args.length == 0) {
-                return 0L;
-            }
-            long botEntityId = NumberUtils.parseLong(args[0]);
-            long experienceDelta = args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
             if (botEntityId <= 0L) {
-                return 0L;
-            }
-            RepresentedBotRegistry.RepresentedBotIdentity identity = Licence.representedBots().identityFromEntityOrBotId(botEntityId);
-            botEntityId = identity.entityId();
-            long botId = identity.botId();
-            if (botId <= 0L) {
                 return 0L;
             }
             BotDao bots = botDao();
             if (bots == null) {
                 return 0L;
             }
-            PetExperienceStateRow petState = bots.petExperienceState(botId).orElse(null);
-            if (petState == null) {
+            PetExperienceAward award = PetLookups.experienceAward(
+                botEntityId, experienceDelta, AppConfigState.instance().settingsCache(), bots);
+            if (!award.valid()) {
                 return 0L;
             }
-            if (botEntityId <= 0L) {
-                botEntityId = botId;
+            if (award.hasLevelSpeechPayload()) {
+                broadcastToRoomUsers(award.roomId(), award.levelSpeechPayload());
             }
-            List<PetLevelExperienceRow> levelRows = bots.petLevelExperienceRows();
-            PetExperienceUpdate update = petExperienceUpdate(
-                botEntityId,
-                petState.name(),
-                petState.figure(),
-                petState.level(),
-                petState.experience(),
-                petState.energy(),
-                petState.nutrition(),
-                petState.scratches(),
-                experienceDelta,
-                levelRows);
-            if (update.leveledUp && petState.roomId() > 0L) {
-                String levelSpeech = Functions.settingsCache().valueOrDefault("com.client.bot.pet.level_up.speech", "gst sml");
-                if (!levelSpeech.isEmpty()) {
-                    broadcastToRoomUsers(petState.roomId(), petSpeechPayload(botEntityId, levelSpeech));
-                }
+            bots.updatePetExperience(award.botId(), award.petLevel(), award.petExperience());
+            if (award.hasRoomPayloads()) {
+                broadcastToRoomUsers(award.roomId(), award.statusPayload());
+                broadcastToRoomUsers(award.roomId(), award.experiencePayload());
             }
-            bots.updatePetExperience(botId, update.petLevel, update.petExperience);
-            if (petState.roomId() > 0L) {
-                broadcastToRoomUsers(petState.roomId(), update.statusPayload);
-                broadcastToRoomUsers(petState.roomId(), update.experiencePayload);
-            }
-            return update.petLevel;
+            return award.petLevel();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
         }
     }
 
-    public static long Proc_6_186_7CD040(Object... args) {
+    /**
+     * Original function: Proc_6_186_7CD040.
+     */
+    public static long scratchPet(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "n}");
-            LongRef offset = new LongRef(1);
-            long requestedId = readWireLong(requestPayload, offset);
+            long requestedId = PetWire.petIdRequest(packetPayload, packetPrefix).petId();
             if (socketIndex <= 0 || requestedId <= 0L) {
-                return 0L;
-            }
-            RepresentedBotRegistry.RepresentedBotIdentity identity = Licence.representedBots().identityFromEntityOrBotId(requestedId);
-            long botEntityId = identity.entityId();
-            long botId = identity.botId();
-            if (botId <= 0L) {
                 return 0L;
             }
             String userId = handlingUserIdFromSocket(socketIndex);
@@ -6342,47 +4331,25 @@ public final class Handling {
             if (users == null || bots == null) {
                 return 0L;
             }
-            long scratchAmount = users.scratchAmount(userIdValue);
-            if (scratchAmount <= 0L) {
+            PetScratchAction scratch = PetLookups.scratchAction(requestedId, userIdValue, bots, users);
+            if (!scratch.valid()) {
                 return 0L;
             }
-            PetScratchRow pet = bots.scratchTarget(botId).orElse(null);
-            if (pet == null) {
-                return 0L;
-            }
-            long scratches = pet.scratches() + 1L;
-            bots.updatePetScratches(botId, scratches);
+            bots.updatePetScratches(scratch.botId(), scratch.scratches());
             users.spendScratch(userIdValue);
-            if (botEntityId <= 0L) {
-                botEntityId = botId;
-            }
-            broadcastToCurrentRoom(socketIndex, petScratchPayload(botEntityId, userIdValue, scratches, pet.name(), pet.figure()));
-            return scratches;
+            broadcastToCurrentRoom(socketIndex, scratch.payload());
+            return scratch.scratches();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
         }
     }
 
-    public static long Proc_6_187_7CD700(Object... args) {
+    /**
+     * Original function: Proc_6_188_7CF3C0.
+     */
+    public static long spawnTutorialGuideBot(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            if (args == null || args.length < 2) {
-                return 0L;
-            }
-            long roomSlot = NumberUtils.parseLong(args[0]);
-            if (!(args[1] instanceof RepresentedBotEntry botEntry)) {
-                return 0L;
-            }
-            return allocateRepresentedBot(roomSlot, botEntry);
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return 0L;
-        }
-    }
-
-    public static long Proc_6_188_7CF3C0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return 0L;
             }
@@ -6401,42 +4368,28 @@ public final class Handling {
             if (tutorialGuide == 0L) {
                 users.markTutorialGuide(userIdValue);
             }
-            if (NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.rooms.bots.guide.enabled", "0")) == 0L) {
-                return 0L;
-            }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
             if (roomId <= 0L) {
                 return 0L;
             }
-            long roomSlot = rooms.roomSlot(roomId);
-            if (roomSlot <= 0L) {
-                return 0L;
+            PetTutorialGuideSpawn spawn = PetLookups.tutorialGuideSpawn(
+                roomId, AppConfigState.instance().settingsCache(), bots, rooms);
+            if (spawn.valid()) {
+                sendToSocket(socketIndex, spawn.payload());
             }
-            long guideBotId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.bot.guide.id", "0"));
-            if (guideBotId <= 0L || !Licence.representedBots().entitiesForRoom(roomSlot, guideBotId).isEmpty()) {
-                return 0L;
-            }
-            BotRoomEntryRow guide = bots.botRoomEntry(guideBotId).orElse(null);
-            if (guide == null) {
-                return 0L;
-            }
-            long botEntityId = allocateRepresentedBot(roomSlot, RepresentedBotEntry.from(guide));
-            if (botEntityId > 0L) {
-                sendToSocket(socketIndex, "@a" + "YjO");
-            }
-            return botEntityId;
+            return spawn.botEntityId();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
         }
     }
 
-    public static long Proc_6_189_7D0630(Object... args) {
+    /**
+     * Original function: Proc_6_189_7D0630.
+     */
+    public static long removeTutorialGuideBots(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "Fy");
-            LongRef offset = new LongRef(1);
-            long requestedEntityId = readWireLong(requestPayload, offset);
+            long requestedEntityId = PetWire.petIdRequest(packetPayload, packetPrefix).petId();
             if (socketIndex <= 0) {
                 return 0L;
             }
@@ -6452,44 +4405,29 @@ public final class Handling {
             if (rooms == null) {
                 return 0L;
             }
-            long roomSlot = rooms.roomSlot(roomId);
-            if (roomSlot <= 0L) {
+            PetTutorialGuideRemoval removal = PetLookups.tutorialGuideRemoval(
+                requestedEntityId, roomId, AppConfigState.instance().settingsCache(), rooms);
+            if (!removal.hasRemovals()) {
                 return 0L;
             }
-            String entityList = "";
-            if (requestedEntityId > 0L) {
-                if (Licence.representedBots().isEntityInRoom(requestedEntityId, roomSlot)) {
-                    entityList = String.valueOf(requestedEntityId);
-                }
-            } else {
-                long guideBotId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.bot.guide.id", "0"));
-                entityList = Licence.representedBots().entitiesForRoom(roomSlot, guideBotId);
+            for (String removedPayload : removal.removedPayloads()) {
+                broadcastToRoomUsers(roomId, removedPayload);
             }
-            if (entityList.isEmpty()) {
-                return 0L;
-            }
-            long removedCount = 0L;
-            for (String entityIdText : entityList.split("\r", -1)) {
-                long botEntityId = NumberUtils.parseLong(entityIdText);
-                if (botEntityId > 0L) {
-                    broadcastToRoomUsers(roomId, PetPayloads.removedFromRoom(botEntityId));
-                    removeRepresentedBotRecord(botEntityId);
-                    removedCount++;
-                }
-            }
-            return removedCount;
+            return removal.removedCount();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
         }
     }
 
-    public static String Proc_6_190_7D11D0(Object... args) {
+    /**
+     * Original function: Proc_6_190_7D11D0.
+     */
+    public static String sendRoomUserProfile(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "Cg");
-            LongRef offset = new LongRef(1);
-            long requestedRoomUserIndex = readWireLong(requestPayload, offset);
+            SocialWire.RoomUserIndexRequest request =
+                SocialWire.roomUserIndexRequest(packetPayload, packetPrefix);
+            long requestedRoomUserIndex = request.roomUserIndex();
             if (socketIndex <= 0 || requestedRoomUserIndex <= 0L) {
                 return "";
             }
@@ -6501,47 +4439,12 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            RoomDao rooms = roomDao();
-            java.util.Optional<RoomUserProfileRow> row = rooms.activeRoomUserProfileByVisitId(roomId, requestedRoomUserIndex);
-            if (row.isEmpty()) {
-                row = rooms.activeRoomUserProfileByUserId(roomId, requestedRoomUserIndex);
-            }
-            if (row.isEmpty()) {
+            SocialLookups.DirectPayload action =
+                SocialLookups.roomUserProfileAction(roomId, requestedRoomUserIndex, roomDao());
+            if (!action.hasPayload()) {
                 return "";
             }
-            String payload = representedRoomUserProfilePayload(row.get());
-            if (!payload.isEmpty()) {
-                sendToSocket(socketIndex, payload);
-            }
-            return payload;
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_191_7D18B0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "DG");
-            LongRef offset = new LongRef(1);
-            long requestedUserId = readWireLong(requestPayload, offset);
-            if (socketIndex <= 0 || requestedUserId <= 0L) {
-                return "";
-            }
-            String callerUserId = handlingUserIdFromSocket(socketIndex);
-            if (callerUserId.isEmpty() || "0".equals(callerUserId)) {
-                return "";
-            }
-            UserDao users = userDao();
-            if (users == null) {
-                return "";
-            }
-            int targetSocketIndex = (int) users.socketByUserId(requestedUserId);
-            if (targetSocketIndex <= 0 && handlingCurrentRoomId(socketIndex, callerUserId) <= 0L) {
-                return "";
-            }
-            String payload = SocialPayloads.tagDisplay(requestedUserId, Proc_6_196_7D3ED0(requestedUserId, 0, 0));
+            String payload = action.payload();
             sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
@@ -6550,11 +4453,37 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_192_7D1B80(Object... args) {
+    /**
+     * Original function: Proc_6_191_7D18B0.
+     */
+    public static String sendUserTags(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "B_");
-            long requestedRoomUserIndex = readWireLong(requestPayload, new LongRef(1));
+            if (socketIndex <= 0) {
+                return "";
+            }
+            String callerUserId = handlingUserIdFromSocket(socketIndex);
+            SocialLookups.DirectPayload action = SocialLookups.tagDisplayAction(
+                callerUserId, handlingCurrentRoomId(socketIndex, callerUserId), packetPayload, userDao());
+            if (!action.hasPayload()) {
+                return "";
+            }
+            String payload = action.payload();
+            sendToSocket(socketIndex, payload);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    /**
+     * Original function: Proc_6_192_7D1B80.
+     */
+    public static String lookAtRoomUserBadge(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            SocialWire.RoomUserIndexRequest request =
+                SocialWire.roomUserIndexRequest(packetPayload, packetPrefix);
+            long requestedRoomUserIndex = request.roomUserIndex();
             if (socketIndex <= 0 || requestedRoomUserIndex <= 0L) {
                 return "";
             }
@@ -6567,27 +4496,21 @@ public final class Handling {
                 return "";
             }
             long callerRoomUserIndex = representedRoomUserIndex(socketIndex, callerUserId);
-            RoomUserTargetRow target = activeRoomUserTarget(callerRoomId, requestedRoomUserIndex);
-            if (target == null) {
+            RoomUserTargetRow target = RoomLookups.activeRoomUserTarget(
+                callerRoomId, requestedRoomUserIndex, roomDao()).orElse(null);
+            SocialLookups.RoomUserBadgeLook look =
+                SocialLookups.roomUserBadgeLookAction(callerRoomUserIndex, target, userDao());
+            if (!look.hasDirectPayload()) {
                 return "";
             }
-            long targetRoomUserIndex = target.roomUserIndex();
-            String targetUserId = String.valueOf(target.userId());
-            if (targetRoomUserIndex <= 0L || targetUserId.isEmpty() || "0".equals(targetUserId)) {
-                return "";
-            }
-            String targetBadgePayload = SocialPayloads.badgeDisplay(NumberUtils.parseLong(targetUserId),
-                Proc_6_195_7D38D0(targetUserId, 0, 0));
+            String targetBadgePayload = look.directPayload();
             sendToSocket(socketIndex, targetBadgePayload);
-            if (callerRoomUserIndex > 0L && callerRoomUserIndex != targetRoomUserIndex) {
-                String callerStatusPayload = SocialPayloads.roomUserStatus(callerRoomUserIndex, 0L);
-                String targetStatusPayload = SocialPayloads.roomUserStatus(targetRoomUserIndex, 0L);
-                if (!callerStatusPayload.isEmpty()) {
-                    broadcastToCurrentRoom(socketIndex, callerStatusPayload);
-                }
-                if (!targetStatusPayload.isEmpty()) {
-                    broadcastToCurrentRoom(socketIndex, targetStatusPayload);
-                }
+            RoomUserStatusPayloads statusPayloads = look.statusPayloads();
+            if (statusPayloads.hasCallerPayload()) {
+                broadcastToCurrentRoom(socketIndex, statusPayloads.callerPayload());
+            }
+            if (statusPayloads.hasTargetPayload()) {
+                broadcastToCurrentRoom(socketIndex, statusPayloads.targetPayload());
             }
             return targetBadgePayload;
         } catch (Exception ignored) {
@@ -6596,9 +4519,11 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_193_7D2BB0(Object... args) {
+    /**
+     * Original function: Proc_6_193_7D2BB0.
+     */
+    public static String sendBadgeInventory(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return "";
             }
@@ -6610,123 +4535,59 @@ public final class Handling {
             if (users == null) {
                 return "";
             }
-            List<BadgeRow> inventoryRows = users.unequippedBadges(NumberUtils.parseLong(userId));
-            String equippedPayload = Proc_6_195_7D38D0(userId, 0, 0);
-            String payload = SocialPayloads.badgeInventory(inventoryRows, equippedPayload);
-            sendToSocket(socketIndex, payload);
-            sendToSocket(socketIndex, SocialPayloads.badgeDisplay(NumberUtils.parseLong(userId), equippedPayload));
-            return payload;
+            BadgeInventoryPayload badgePayload = SocialLookups.badgeInventoryPayload(userId, users);
+            sendToSocket(socketIndex, badgePayload.inventoryPayload());
+            sendToSocket(socketIndex, badgePayload.displayPayload());
+            return badgePayload.inventoryPayload();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
     }
 
-    public static String Proc_6_194_7D3180(Object... args) {
+    /**
+     * Original function: Proc_6_194_7D3180.
+     */
+    public static String updateEquippedBadges(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return "";
             }
-            String packetPayload = handlingPacketPayload(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            long userIdValue = NumberUtils.parseLong(userId);
             UserDao users = userDao();
             if (users == null) {
                 return "";
             }
-            users.clearEquippedBadges(userIdValue);
-            BadgeUpdateSelections selections = badgeUpdateSelectionsFromWire(packetPayload);
-            for (int slotIndex = 0; slotIndex < selections.size(); slotIndex++) {
-                String badgeId = selections.slot(slotIndex);
-                if (!badgeId.isEmpty()) {
-                    users.equipBadge(userIdValue, badgeId, slotIndex + 1L);
-                }
+            SocialLookups.BadgeUpdateResult update =
+                SocialLookups.updateEquippedBadges(userId, SocialWire.badgeUpdateSelections(packetPayload), users);
+            if (!update.hasDisplayPayload()) {
+                return "";
             }
-            String equippedPayload = Proc_6_195_7D38D0(userId, 0, 0);
-            String displayPayload = SocialPayloads.badgeDisplay(NumberUtils.parseLong(userId), equippedPayload);
-            sendToSocket(socketIndex, displayPayload);
+            sendToSocket(socketIndex, update.displayPayload());
             if (handlingCurrentRoomId(socketIndex, userId) > 0L) {
-                broadcastToCurrentRoom(socketIndex, displayPayload);
+                broadcastToCurrentRoom(socketIndex, update.displayPayload());
             }
-            return equippedPayload;
+            return update.equippedPayload();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
     }
 
-    public static String Proc_6_195_7D38D0(Object... args) {
+    /**
+     * Original function: Proc_6_197_7D43C0.
+     */
+    public static String lookTowardRoomPosition(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            String userId = "";
-            if (args != null && args.length >= 1 && NumberUtils.parseLong(args[0]) > 0L) {
-                userId = String.valueOf((long) NumberUtils.parseLong(args[0]));
-            }
-            if (userId.isEmpty() || "0".equals(userId)) {
-                int socketIndex = handlingSocketIndex(args);
-                if (socketIndex > 0) {
-                    userId = handlingUserIdFromSocket(socketIndex);
-                }
-            }
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return SocialPayloads.equippedBadges(List.of());
-            }
-            UserDao users = userDao();
-            if (users == null) {
-                return SocialPayloads.equippedBadges(List.of());
-            }
-            List<BadgeRow> rows = users.equippedBadges(NumberUtils.parseLong(userId));
-            return SocialPayloads.equippedBadges(rows);
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return SocialPayloads.equippedBadges(List.of());
-        }
-    }
-
-    public static String Proc_6_196_7D3ED0(Object... args) {
-        try {
-            String userId = "";
-            if (args != null && args.length >= 1 && NumberUtils.parseLong(args[0]) > 0L) {
-                userId = String.valueOf((long) NumberUtils.parseLong(args[0]));
-            }
-            if (userId.isEmpty() || "0".equals(userId)) {
-                int socketIndex = handlingSocketIndex(args);
-                if (socketIndex > 0) {
-                    userId = handlingUserIdFromSocket(socketIndex);
-                }
-            }
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return SocialPayloads.tags(List.of());
-            }
-            UserDao users = userDao();
-            if (users == null) {
-                return SocialPayloads.tags(List.of());
-            }
-            List<UserDao.UserTagRow> rows = users.tagNames(NumberUtils.parseLong(userId));
-            return SocialPayloads.tags(rows);
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return SocialPayloads.tags(List.of());
-        }
-    }
-
-    public static String Proc_6_197_7D43C0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return "";
             }
-            String requestPayload = handlingRequestPayload(args, "AK");
-            LongRef offset = new LongRef(1);
-            long lookX = readWireLong(requestPayload, offset);
-            long lookY = readWireLong(requestPayload, offset);
-            if (lookX == 0L && lookY == 0L) {
-                lookX = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-                lookY = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
+            RoomWire.PositionRequest request = RoomWire.positionRequest(packetPayload, packetPrefix);
+            long lookX = request.positionX();
+            long lookY = request.positionY();
             if (lookX < 0L || lookY < 0L) {
                 return "";
             }
@@ -6739,13 +4600,13 @@ public final class Handling {
                 return "";
             }
             long roomSlot = socketIndex;
-            RoomUserPosition current = RoomUserPosition.from(Licence.representedRooms().movementPosition(roomSlot, socketIndex));
+            RoomUserPosition current = RoomUserPosition.from(RoomState.instance().representedRooms().movementPosition(roomSlot, socketIndex));
             long currentX = current.found() ? current.positionX() : 0L;
             long currentY = current.found() ? current.positionY() : 0L;
-            long directionValue = handlingDirectionCode(Long.compare(lookX, currentX), Long.compare(lookY, currentY));
-            Licence.setRepresentedRooms(
-                Licence.representedRooms().moveOccupant(roomSlot, socketIndex, currentX, currentY, directionValue, 0L));
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+            long directionValue = MovementStep.directionCode(Long.compare(lookX, currentX), Long.compare(lookY, currentY));
+            RoomState.instance().setRepresentedRooms(
+                RoomState.instance().representedRooms().moveOccupant(roomSlot, socketIndex, currentX, currentY, directionValue, 0L));
+            RoomCacheFiles.invalidateRoomPayload(roomId);
             return "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6753,20 +4614,17 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_198_7D4B70(Object... args) {
+    /**
+     * Original function: Proc_6_198_7D4B70.
+     */
+    public static String walkTowardRoomPosition(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return "";
             }
-            String requestPayload = handlingRequestPayload(args, "AO");
-            LongRef offset = new LongRef(1);
-            long targetX = readWireLong(requestPayload, offset);
-            long targetY = readWireLong(requestPayload, offset);
-            if (targetX == 0L && targetY == 0L) {
-                targetX = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-                targetY = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
+            RoomWire.PositionRequest request = RoomWire.positionRequest(packetPayload, packetPrefix);
+            long targetX = request.positionX();
+            long targetY = request.positionY();
             if (targetX < 0L || targetY < 0L) {
                 return "";
             }
@@ -6775,11 +4633,11 @@ public final class Handling {
                 return "";
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L || Functions.roomPositionAvailable(roomId, targetX, targetY) == 0L) {
+            if (roomId <= 0L || RoomPositionService.roomPositionAvailable(roomId, targetX, targetY) == 0L) {
                 return "";
             }
             long roomSlot = socketIndex;
-            RoomUserPosition current = RoomUserPosition.from(Licence.representedRooms().movementPosition(roomSlot, socketIndex));
+            RoomUserPosition current = RoomUserPosition.from(RoomState.instance().representedRooms().movementPosition(roomSlot, socketIndex));
             long currentX = current.found() ? current.positionX() : 0L;
             long currentY = current.found() ? current.positionY() : 0L;
             MovementStep movement = MovementStep.between(currentX, currentY, targetX, targetY);
@@ -6790,9 +4648,9 @@ public final class Handling {
             if (movingValue == 0L && (currentX != targetX || currentY != targetY)) {
                 movingValue = 1L;
             }
-            Licence.setRepresentedRooms(
-                Licence.representedRooms().moveOccupant(roomSlot, socketIndex, nextX, nextY, directionValue, movingValue));
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
+            RoomState.instance().setRepresentedRooms(
+                RoomState.instance().representedRooms().moveOccupant(roomSlot, socketIndex, nextX, nextY, directionValue, movingValue));
+            RoomCacheFiles.invalidateRoomPayload(roomId);
             return "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6800,26 +4658,13 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_199_7D54E0(Object... args) {
+    /**
+     * Original function: Proc_6_199_7D54E0.
+     */
+    public static String recordPollExit(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long pollId = pollIdFromWire(handlingPacketPayload(args), "Ck");
-            if (pollId <= 0L) {
-                return "";
-            }
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return "";
-            }
-            long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L) {
-                return "";
-            }
-            PollDao polls = pollDao();
-            if (polls == null || polls.pollHeader(pollId, roomId).isEmpty()) {
-                return "";
-            }
-            polls.recordPollExit(NumberUtils.parseLong(userId), pollId);
+            PollLookups.RoomRequest request = PollLookups.roomRequest(socketIndex, userDao(), roomDao());
+            PollLookups.recordExit(request, PollWire.idFromWire(packetPayload, packetPrefix), pollDao());
             return "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6827,26 +4672,13 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_200_7D5770(Object... args) {
+    /**
+     * Original function: Proc_6_200_7D5770.
+     */
+    public static String submitPollAnswer(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            PollAnswerSubmission submission = pollAnswerFromWire(handlingPacketPayload(args), "Cl");
-            if (!submission.valid) {
-                return "";
-            }
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return "";
-            }
-            long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L) {
-                return "";
-            }
-            PollDao polls = pollDao();
-            if (polls == null || polls.pollHeader(submission.pollId, roomId).isEmpty()) {
-                return "";
-            }
-            polls.recordPollAnswer(submission.pollId, submission.questionId, submission.answerText, NumberUtils.parseLong(userId));
+            PollLookups.RoomRequest request = PollLookups.roomRequest(socketIndex, userDao(), roomDao());
+            PollLookups.submitAnswer(request, PollWire.answerFromWire(packetPayload, packetPrefix), pollDao());
             return "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -6854,27 +4686,13 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_201_7D5AC0(Object... args) {
+    /**
+     * Original function: Proc_6_201_7D5AC0.
+     */
+    public static String sendLivePoll(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long pollId = pollIdFromWire(handlingPacketPayload(args), "Cj");
-            if (pollId <= 0L) {
-                return "";
-            }
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return "";
-            }
-            long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L) {
-                return "";
-            }
-            PollDao polls = pollDao();
-            if (polls == null) {
-                return "";
-            }
-            PollDefinition poll = polls.pollDefinition(pollId, roomId).orElse(null);
-            String payload = PollPayloads.poll(poll);
+            PollLookups.RoomRequest request = PollLookups.roomRequest(socketIndex, userDao(), roomDao());
+            String payload = PollLookups.livePollPayload(request, PollWire.idFromWire(packetPayload, packetPrefix), pollDao());
             if (!payload.isEmpty()) {
                 sendToSocket(socketIndex, payload);
             }
@@ -6885,54 +4703,39 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_202_7D6760(Object... args) {
+    /**
+     * Original function: Proc_6_202_7D6760.
+     */
+    public static String submitRecyclerItems(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
-                return "";
-            }
-            long enabledValue = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.recycler.enabled", 0));
-            if (enabledValue == 0L) {
                 return "";
             }
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            RecyclerSelection selection = recyclerSelectionFromWire(handlingPacketPayload(args));
-            if (!selection.valid) {
+            RecyclerLookups.SubmitResult result = RecyclerLookups.submitItems(
+                userId, RecyclerWire.selectionFromWire(packetPayload),
+                recyclerSettings(), furnitureDao(), catalogDao(), recyclerDao());
+            if (!result.valid()) {
                 return "";
             }
-            FurnitureDao furniture = furnitureDao();
-            if (furniture == null) {
-                return "";
-            }
-            long userIdValue = NumberUtils.parseLong(userId);
-            long validCount = furniture.recyclableInventoryCount(userIdValue, selection.selectedItemIds);
-            if (validCount != selection.requestedCount) {
-                return "";
-            }
-            long rewardProductId = representedRecyclerRewardProduct();
-            if (rewardProductId <= 0L) {
-                return "";
-            }
-            CatalogDao catalog = catalogDao();
-            long rewardDestinationId = catalog == null ? 0L : catalog.destinationIdByProduct(rewardProductId);
-            if (rewardDestinationId <= 0L) {
-                rewardDestinationId = rewardProductId;
-            }
-            String rewardSign = recyclerRewardSign();
-            furniture.updateRecyclerRewardBox(
-                userIdValue,
-                recyclerSettings().boxProductId(),
-                rewardSign,
-                rewardDestinationId);
-            furniture.clearRecyclerItems(userIdValue, selection.selectedItemIds);
-            furniture.insertRecyclerLog(userIdValue, selection.selectedItemIds, rewardProductId);
-            for (long selectedFurnitureId : selection.selectedItemIds) {
-                sendToSocket(socketIndex, InventoryMessagePayloads.remove(selectedFurnitureId));
-            }
-            String payload = RecyclerPayloads.reward(rewardProductId);
+            sendToSocket(socketIndex, result.deliveryPayloads());
+            String payload = result.rewardPayload();
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    /**
+     * Original function: Proc_6_203_7D7F80.
+     */
+    public static String sendRecyclerStatus(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            String payload = RecyclerLookups.statusPayload();
             sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
@@ -6941,59 +4744,22 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_203_7D7F80(Object... args) {
+    /**
+     * Original function: Proc_6_204_7D82E0.
+     */
+    public static String grantAchievementReward(int socketIndex, long achievementIndex, long badgeLevel) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long enabledValue = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.catalog.recycler.enabled", 0));
-            String payload = RecyclerPayloads.status(enabledValue, 0L);
-            sendToSocket(socketIndex, payload);
-            return payload;
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_204_7D82E0(Object... args) {
-        try {
-            if (args == null || args.length < 2) {
-                return "";
-            }
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
-            long achievementIndex = NumberUtils.parseLong(args[1]);
-            long badgeLevel = args.length >= 3 ? NumberUtils.parseLong(args[2]) : 1L;
-            if (badgeLevel <= 0L) {
-                badgeLevel = 1L;
-            }
-            AchievementSettings.Achievement achievement = achievementByIndex(achievementIndex);
-            if (userId.isEmpty() || achievement == null) {
+            if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            String badgePrefix = achievement.badgePrefix();
-            String badgeId = badgePrefix + badgeLevel;
-            if (achievement.achievementId() == 0L || badgePrefix.isEmpty()) {
+            AchievementRewardGrant grant = AchievementLookups.grantReward(
+                userId, achievementIndex, badgeLevel, achievementSettings(), userDao());
+            if (!grant.valid()) {
                 return "";
             }
-            UserDao users = userDao();
-            if (users == null) {
-                return "";
-            }
-            long userIdValue = NumberUtils.parseLong(userId);
-            users.deleteBadgesByPrefix(userIdValue, badgePrefix);
-            users.insertBadge(userIdValue, badgeId);
-            long badgeRowId = users.badgeRowId(userIdValue, badgeId);
-            String payload = achievementRewardPayload(achievementIndex, achievement, badgeLevel, badgeRowId);
-            sendToSocket(socketIndex, payload);
-            String awardPayload = achievementAwardPayload(achievement);
-            if (!awardPayload.isEmpty()) {
-                users.addAchievementReward(
-                    userIdValue,
-                    achievement.rewardType(),
-                    achievement.rewardIncrease(),
-                    achievement.scoreIncrease());
-                sendToSocket(socketIndex, awardPayload);
-            }
+            String payload = grant.rewardPayload();
+            sendToSocket(socketIndex, grant.deliveryPayloads());
             return payload;
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7001,16 +4767,11 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_205_7D9780(Object... args) {
+    /**
+     * Original function: Proc_6_205_7D9780.
+     */
+    public static String advanceAchievementProgress(int socketIndex, long achievementQuestId) {
         try {
-            if (args == null || args.length < 2) {
-                return "";
-            }
-            int socketIndex = handlingSocketIndex(args);
-            if (socketIndex <= 0 && args.length >= 2) {
-                socketIndex = (int) NumberUtils.parseLong(args[1]);
-            }
-            long achievementQuestId = NumberUtils.parseLong(args[args.length - 1]);
             if (socketIndex <= 0 || achievementQuestId <= 0L) {
                 return "";
             }
@@ -7018,18 +4779,10 @@ public final class Handling {
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            AchievementSettings achievementSettings = achievementSettings();
-            List<AchievementSettings.Achievement> achievements = achievementSettings.achievements();
-            if (achievements.isEmpty()) {
-                return "";
-            }
-            AchievementProgressDecision decision = achievementProgressDecision(
-                achievementSettings.indexedAchievements(),
-                achievementQuestId,
-                achievementCurrentLevels(userId, achievements),
-                representedAchievementProgress(userId, achievementQuestId));
-            if (decision.shouldReward) {
-                Proc_6_204_7D82E0(socketIndex, decision.achievementIndex, decision.nextLevel);
+            AchievementRewardGrant grant = AchievementLookups.advanceProgress(
+                userId, achievementQuestId, achievementSettings(), userDao());
+            if (grant.valid()) {
+                sendToSocket(socketIndex, grant.deliveryPayloads());
             }
             return "";
         } catch (Exception ignored) {
@@ -7038,380 +4791,211 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_206_7DA450(Object... args) {
+    /**
+     * Original function: Proc_6_206_7DA450.
+     */
+    public static String sendAchievementList(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            List<AchievementSettings.Achievement> achievements = achievementSettings().achievements();
-            if (achievements.isEmpty()) {
-                return "";
-            }
-            String payload = achievementListPayload(achievements, achievementCurrentLevels(userId, achievements));
-            sendToSocket(socketIndex, payload);
-            return payload;
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static long Proc_6_207_7DB0D0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            long roomId = 0L;
-            if (socketIndex > 0) {
-                String userId = handlingUserIdFromSocket(socketIndex);
-                if (!userId.isEmpty() && !"0".equals(userId)) {
-                    roomId = handlingCurrentRoomId(socketIndex, userId);
-                }
-            }
-            if (roomId <= 0L && args != null && args.length >= 2) {
-                roomId = NumberUtils.parseLong(args[1]);
-            }
-            long triggerCode = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
-            return handlingRepresentedWiredTrigger(roomId, triggerCode, socketIndex);
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return 0L;
-        }
-    }
-
-    public static long Proc_6_208_7DC030(Object... args) {
-        return handlingRepresentedWiredActionCall(args, 506);
-    }
-
-    public static long Proc_6_209_7DE480(Object... args) {
-        return handlingRepresentedWiredActionCall(args, 505);
-    }
-
-    public static String Proc_6_210_7E1DC0(Object... args) {
-        return "";
-    }
-
-    public static long Proc_6_211_7E1E40(Object... args) {
-        return handlingRepresentedWiredTriggerCall(args, 1004);
-    }
-
-    public static long Proc_6_212_7E36C0(Object... args) {
-        return handlingRepresentedWiredTriggerCall(args, 1001);
-    }
-
-    public static long Proc_6_213_7E3FA0(Object... args) {
-        return handlingRepresentedWiredTriggerCall(args, 1003);
-    }
-
-    public static long Proc_6_214_7E60C0(Object... args) {
-        return handlingRepresentedWiredTriggerCall(args, 1002);
-    }
-
-    public static long Proc_6_215_7E6770(Object... args) {
-        return handlingRepresentedWiredActionCall(args, 503);
-    }
-
-    public static long Proc_6_216_7E8120(Object... args) {
-        return handlingRepresentedWiredActionCall(args, 502);
-    }
-
-    public static long Proc_6_217_7E9780(Object... args) {
-        return handlingRepresentedWiredActionCall(args, 501);
-    }
-
-    public static String Proc_6_218_7EA200(Object... args) {
-        try {
-            if (args == null || args.length == 0) {
-                return "";
-            }
-            return WiredPayloads.specialState(NumberUtils.parseLong(args[0]));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_219_7EA390(Object... args) {
-        return handlingRepresentedWiredEdit(args, "oj", 1, 500, "wired_trigger", false);
-    }
-
-    public static String Proc_6_220_7EBA50(Object... args) {
-        return handlingRepresentedWiredEdit(args, "ok", 501, 1000, "wired_action", true);
-    }
-
-    public static String Proc_6_221_7ED1E0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "on");
-            LongRef offset = new LongRef(1);
-            long furnitureId = readWireLong(requestPayload, offset);
-            if (furnitureId <= 0L) {
-                furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
-            if (socketIndex <= 0 || furnitureId <= 0L) {
-                return "";
-            }
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return "";
-            }
-            long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L || (!handlingUserHasRoomRight(userId, roomId) && !handlingUserOwnsRoom(userId, roomId))) {
-                return "";
-            }
-            long productId = furnitureDao().roomFurnitureProductById(furnitureId, roomId)
-                .map(FurnitureDao.RoomFurnitureProduct::productId)
-                .orElse(0L);
-            if (productId <= 0L) {
-                return "";
-            }
-            long wiredCode = DataManager.productCache().wiredCode(productId);
-            if (wiredCode <= 0L) {
-                return "";
-            }
-            Path snapshotPath = Path.of(Functions.applicationPath, "cache", "wired_snapshots", furnitureId + ".cache");
-            Files.createDirectories(snapshotPath.getParent());
-            DataManager.writeTextFile(snapshotPath.toString(), Licence.representedRooms().cacheText());
-            return snapshotPath.toString();
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_222_7ED710(Object... args) {
-        return handlingRepresentedWiredEdit(args, "ol", 1001, 1500, "wired_condition", false);
-    }
-
-    public static String Proc_6_223_7EEDD0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            if (socketIndex <= 0) {
-                return "";
-            }
-            SongInfoRequest request = songInfoRequestFromWire(handlingPacketPayload(args));
-            JukeboxDao jukebox = jukeboxDao();
-            String payload = jukebox == null
-                ? JukeboxPayloads.songInfo(List.of())
-                : JukeboxPayloads.songInfo(jukebox.songInfoRows(request.requestedIdList, request.requestedCount));
-            sendToSocket(socketIndex, payload);
-            return payload;
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_224_7EF5A0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            long jukeboxId = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
-            if (socketIndex > 0) {
-                String userId = handlingUserIdFromSocket(socketIndex);
-                if (!userId.isEmpty() && !"0".equals(userId) && roomId <= 0L) {
-                    roomId = handlingCurrentRoomId(socketIndex, userId);
-                }
-            }
-            if (jukeboxId <= 0L && roomId > 0L) {
-                jukeboxId = jukeboxRowForRoom(roomId).map(JukeboxRow::id).orElse(0L);
-            }
-            if (jukeboxId > 0L) {
-                JukeboxDao jukebox = jukeboxDao();
-                long activeDestinationId = jukebox == null ? 0L : jukebox.activeDestinationId(jukeboxId);
-                FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
-                cacheState.pendingFurnitureCache = removeSoundMachineMarkers(cacheState.pendingFurnitureCache, jukeboxId, activeDestinationId);
-                Licence.setFurnitureRoomCache(cacheState);
-            }
-            return "";
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_225_7EFBD0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            if (socketIndex <= 0) {
-                return "";
-            }
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return "";
-            }
-            JukeboxAddRequest request = jukeboxAddRequestFromWire(handlingPacketPayload(args));
-            if (request.diskFurnitureId <= 0L) {
-                return "";
-            }
-            long roomId = handlingCurrentRoomId(socketIndex, userId);
-            JukeboxDao jukebox = jukeboxDao();
-            JukeboxRow jukeboxRow = jukeboxRowForRoom(roomId).orElse(null);
-            if (jukebox == null || jukeboxRow == null || jukeboxRow.id() <= 0L) {
-                return "";
-            }
-            long jukeboxId = jukeboxRow.id();
-            long jukeboxProductId = jukeboxRow.productId();
-            String maxOrderText = jukebox.maxPlaylistOrderText(jukeboxId);
-            long playlistCount = jukebox.playlistCount(jukeboxId);
-            long playlistLimit = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault(
-                "com.server.socket.game.jukebox." + jukeboxProductId + ".soundsets.max", 0));
-            if (!jukeboxCanAddDisk(request.playlistOrder, maxOrderText, playlistCount, playlistLimit)) {
-                return "";
-            }
-            long songDiskProductId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.default.songdisk", 0));
-            if (songDiskProductId <= 0L) {
-                return "";
-            }
-            long userIdValue = NumberUtils.parseLong(userId);
-            long destinationId = jukebox.diskDestinationForOwner(userIdValue, request.diskFurnitureId, songDiskProductId);
-            if (destinationId <= 0L) {
-                return "";
-            }
-            jukebox.removeDiskFromOwner(userIdValue, request.diskFurnitureId, songDiskProductId);
-            jukebox.addPlaylistEntry(jukeboxId, request.diskFurnitureId, request.playlistOrder, destinationId);
-            String payload = InventoryMessagePayloads.remove(request.diskFurnitureId);
-            sendToSocket(socketIndex, payload);
-            Proc_6_227_7F2400(socketIndex);
-            Proc_6_228_7F2AF0(socketIndex);
-            return payload;
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_226_7F0B20(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            if (socketIndex <= 0) {
-                return "";
-            }
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return "";
-            }
-            long playlistOrder = jukeboxRemoveOrderFromWire(handlingPacketPayload(args));
-            long roomId = handlingCurrentRoomId(socketIndex, userId);
-            long jukeboxId = jukeboxRowForRoom(roomId).map(JukeboxRow::id).orElse(0L);
-            if (jukeboxId <= 0L) {
-                return "";
-            }
-            JukeboxDao jukebox = jukeboxDao();
-            if (jukebox == null) {
-                return "";
-            }
-            long cdFurnitureId = jukebox.diskFurnitureIdAtOrder(jukeboxId, playlistOrder);
-            if (cdFurnitureId <= 0L) {
-                return "";
-            }
-            long songDiskProductId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.default.songdisk", 0));
-            jukebox.returnDiskToOwner(NumberUtils.parseLong(userId), cdFurnitureId, songDiskProductId);
-            jukebox.deletePlaylistEntry(jukeboxId, cdFurnitureId);
-            jukebox.decrementOrdersAfter(jukeboxId, playlistOrder);
-            Proc_6_227_7F2400(socketIndex);
-            Proc_6_228_7F2AF0(socketIndex);
-            return "";
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_227_7F2400(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            if (socketIndex <= 0) {
-                return "";
-            }
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return "";
-            }
-            long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L) {
-                return "";
-            }
-            JukeboxDao jukebox = jukeboxDao();
-            JukeboxRow jukeboxRow = jukeboxRowForRoom(roomId).orElse(null);
-            if (jukebox == null || jukeboxRow == null || jukeboxRow.id() <= 0L) {
-                return "";
-            }
-            long jukeboxId = jukeboxRow.id();
-            long jukeboxProductId = jukeboxRow.productId();
-            long playlistLimit = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault(
-                "com.server.socket.game.jukebox." + jukeboxProductId + ".soundsets.max", 0));
-            if (playlistLimit <= 0L) {
-                playlistLimit = jukebox.playlistLimitFromEntries(jukeboxId);
-            }
-            if (playlistLimit <= 0L) {
-                playlistLimit = 100L;
-            }
-            String payload = JukeboxPayloads.playlist(playlistLimit, jukebox.playlistEntries(jukeboxId, playlistLimit));
-            sendToSocket(socketIndex, payload);
-            return payload;
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_228_7F2AF0(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return "";
-            }
-            long songDiskProductId = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.server.socket.game.default.songdisk", 0));
-            if (songDiskProductId <= 0L) {
-                return "";
-            }
-            JukeboxDao jukebox = jukeboxDao();
-            if (jukebox == null) {
-                return "";
-            }
-            String payload = JukeboxPayloads.diskInventory(jukebox.songDisks(NumberUtils.parseLong(userId), songDiskProductId));
-            sendToSocket(socketIndex, payload);
-            return payload;
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static String Proc_6_229_7F3070(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            if (socketIndex <= 0) {
-                return "";
-            }
-            long roomId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            long jukeboxId = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (!userId.isEmpty() && !"0".equals(userId) && roomId <= 0L) {
-                roomId = handlingCurrentRoomId(socketIndex, userId);
-            }
-            if (jukeboxId <= 0L && roomId > 0L) {
-                jukeboxId = jukeboxRowForRoom(roomId).map(JukeboxRow::id).orElse(0L);
-            }
-            if (jukeboxId <= 0L) {
-                return "";
-            }
-            JukeboxDao jukebox = jukeboxDao();
-            JukeboxPlaybackRow row = jukebox == null ? null : jukebox.playbackRow(jukeboxId).orElse(null);
-            if (row == null) {
-                return "";
-            }
-            String payload = JukeboxPayloads.playback(System.currentTimeMillis() / 1000L,
-                row.sequenceId(),
-                row.destinationId(),
-                row.diskFurnitureId());
+            String payload = AchievementLookups.listPayload(userId, achievementSettings(), userDao());
             if (payload.isEmpty()) {
                 return "";
             }
-            if (roomId > 0L) {
-                broadcastToRoomUsers(roomId, payload);
+            sendToSocket(socketIndex, payload);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    /**
+     * Original function: Proc_6_207_7DB0D0.
+     */
+    public static long triggerRepresentedWired(int socketIndex, long fallbackRoomId, long triggerCode) {
+        return representedWiredTrigger(socketIndex, fallbackRoomId, triggerCode);
+    }
+
+    /**
+     * Original function: Proc_6_208_7DC030.
+     */
+    public static long runRepresentedWiredAction506(int socketIndex, long fallbackRoomId, long selectedFurnitureId) {
+        return representedWiredAction(socketIndex, fallbackRoomId, selectedFurnitureId, 506);
+    }
+
+    /**
+     * Original function: Proc_6_209_7DE480.
+     */
+    public static long runRepresentedWiredAction505(int socketIndex, long fallbackRoomId, long selectedFurnitureId) {
+        return representedWiredAction(socketIndex, fallbackRoomId, selectedFurnitureId, 505);
+    }
+
+    /**
+     * Original function: Proc_6_219_7EA390.
+     */
+    public static String editWiredTrigger(int socketIndex, String packetPrefix, String packetPayload) {
+        return representedWiredEdit(socketIndex, packetPayload, packetPrefix, 1, 500, "wired_trigger", false);
+    }
+
+    /**
+     * Original function: Proc_6_220_7EBA50.
+     */
+    public static String editWiredAction(int socketIndex, String packetPrefix, String packetPayload) {
+        return representedWiredEdit(socketIndex, packetPayload, packetPrefix, 501, 1000, "wired_action", true);
+    }
+
+    /**
+     * Original function: Proc_6_221_7ED1E0.
+     */
+    public static String createWiredSnapshot(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            WiredLookups.RoomRequest request = WiredLookups.roomRequest(socketIndex, userDao(), roomDao());
+            return WiredLookups.createSnapshot(
+                socketIndex, request, packetPayload, furnitureDao(), roomDao());
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    /**
+     * Original function: Proc_6_222_7ED710.
+     */
+    public static String editWiredCondition(int socketIndex, String packetPrefix, String packetPayload) {
+        return representedWiredEdit(socketIndex, packetPayload, packetPrefix, 1001, 1500, "wired_condition", false);
+    }
+
+    /**
+     * Original function: Proc_6_223_7EEDD0.
+     */
+    public static String sendJukeboxSongInfo(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            if (socketIndex <= 0) {
+                return "";
+            }
+            String payload = JukeboxLookups.songInfoPayload(
+                JukeboxRequests.songInfoFromWire(packetPayload), jukeboxDao());
+            sendToSocket(socketIndex, payload);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    /**
+     * Original function: Proc_6_224_7EF5A0.
+     */
+    public static String clearJukeboxSoundMarkers(int socketIndex, long roomId, long jukeboxId) {
+        try {
+            long effectiveRoomId = roomId > 0L ? roomId : JukeboxLookups.roomRequest(socketIndex, userDao(), roomDao()).roomId();
+            RoomState.instance().setFurnitureRoomCache(JukeboxLookups.clearSoundMarkers(
+                RoomState.instance().furnitureRoomCache(), effectiveRoomId, jukeboxId, jukeboxDao()));
+            return "";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    /**
+     * Original function: Proc_6_225_7EFBD0.
+     */
+    public static String addJukeboxDisk(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            if (socketIndex <= 0) {
+                return "";
+            }
+            JukeboxLookups.RoomRequest request = JukeboxLookups.roomRequest(socketIndex, userDao(), roomDao());
+            JukeboxLookups.DiskChangeResult result =
+                JukeboxLookups.addDiskAction(
+                    request, JukeboxRequests.addRequestFromWire(packetPayload), jukeboxDao());
+            if (!result.valid()) {
+                return "";
+            }
+            sendToSocket(socketIndex, result.deliveryPayloads());
+            return result.payload();
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    /**
+     * Original function: Proc_6_226_7F0B20.
+     */
+    public static String removeJukeboxDisk(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            if (socketIndex <= 0) {
+                return "";
+            }
+            JukeboxLookups.RoomRequest request = JukeboxLookups.roomRequest(socketIndex, userDao(), roomDao());
+            JukeboxLookups.DiskChangeResult result =
+                JukeboxLookups.removeDiskAction(
+                    request, JukeboxRequests.removeOrderFromWire(packetPayload), jukeboxDao());
+            if (!result.valid()) {
+                return "";
+            }
+            sendToSocket(socketIndex, result.deliveryPayloads());
+            return "";
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    /**
+     * Original function: Proc_6_227_7F2400.
+     */
+    public static String sendJukeboxPlaylist(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            if (socketIndex <= 0) {
+                return "";
+            }
+            JukeboxLookups.RoomRequest request = JukeboxLookups.roomRequest(socketIndex, userDao(), roomDao());
+            String payload = JukeboxLookups.playlistPayload(request, jukeboxDao());
+            sendToSocket(socketIndex, payload);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    /**
+     * Original function: Proc_6_228_7F2AF0.
+     */
+    public static String sendJukeboxDiskInventory(int socketIndex, String packetPrefix, String packetPayload) {
+        try {
+            JukeboxLookups.RoomRequest request = JukeboxLookups.roomRequest(socketIndex, userDao(), roomDao());
+            String payload = JukeboxLookups.diskInventoryPayload(request, jukeboxDao());
+            sendToSocket(socketIndex, payload);
+            return payload;
+        } catch (Exception ignored) {
+            // VB6 source suppresses handler failures.
+            return "";
+        }
+    }
+
+    /**
+     * Original function: Proc_6_229_7F3070.
+     */
+    public static String broadcastJukeboxPlayback(int socketIndex, long roomId, long jukeboxId) {
+        try {
+            if (socketIndex <= 0) {
+                return "";
+            }
+            long effectiveRoomId = roomId > 0L ? roomId : JukeboxLookups.roomRequest(socketIndex, userDao(), roomDao()).roomId();
+            String payload = JukeboxLookups.playbackPayload(
+                effectiveRoomId, jukeboxId, System.currentTimeMillis() / 1000L, jukeboxDao());
+            if (payload.isEmpty()) {
+                return "";
+            }
+            if (effectiveRoomId > 0L) {
+                broadcastToRoomUsers(effectiveRoomId, payload);
             } else {
                 broadcastToCurrentRoom(socketIndex, payload);
             }
@@ -7422,36 +5006,17 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_230_7F3D20(Object... args) {
+    /**
+     * Original function: Proc_6_230_7F3D20.
+     */
+    public static String updateUserMotto(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "Gd");
-            String rawMotto = readWireString(requestPayload, new LongRef(1));
-            if (rawMotto.isEmpty()) {
-                rawMotto = Functions.readBase64LengthString(requestPayload);
-            }
-            if (rawMotto.isEmpty()) {
-                rawMotto = requestPayload;
-            }
-            String mottoText = left(Functions.singleLineText(rawMotto), 255);
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
+            UserLookups.UserRequest request = UserLookups.userRequest(socketIndex, userDao());
+            String payload = UserLookups.updateMottoPayload(
+                request, UserWire.mottoRequest(packetPayload), userDao());
+            if (payload.isEmpty()) {
                 return "";
             }
-            long numericUserId = NumberUtils.parseLong(userId);
-            UserDao users = userDao();
-            if (users == null) {
-                return "";
-            }
-            users.updateMotto(numericUserId, mottoText);
-            UserDao.UserIdentity identity = users.findIdentity(numericUserId)
-                .orElse(new UserDao.UserIdentity(numericUserId, 0L, "", "", "M"));
-            String figureText = StringUtils.text(identity.figure());
-            String genderText = left(StringUtils.text(identity.gender()).toUpperCase(), 1);
-            if (!"M".equals(genderText) && !"F".equals(genderText)) {
-                genderText = "M";
-            }
-            String payload = UserPayloads.identityRefresh(numericUserId, mottoText, figureText, genderText);
             sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
@@ -7460,24 +5025,25 @@ public final class Handling {
         }
     }
 
-    public static long Proc_7F44D0(Object... args) {
+    /**
+     * Original function: Proc_7F44D0.
+     */
+    public static long guideInviteUserIdFromWire(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            String packetPayload = handlingPacketPayload(args);
-            String requestPayload = packetPayload.startsWith("oL") ? packetPayload.substring(2) : packetPayload;
-            String valueText = Functions.readVl64LengthString(requestPayload);
-            if (valueText.isEmpty()) {
-                valueText = readWireString(requestPayload, new LongRef(1));
-            }
-            return NumberUtils.parseLong(valueText);
+            UserWire.GuideInviteRequest request = UserWire.guideInviteRequest(packetPayload);
+            return request.userId();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
         }
     }
 
-    public static String Proc_6_231_7F4510(Object... args) {
+    /**
+     * Original function: Proc_6_231_7F4510.
+     */
+    public static String sendGuideInvitation(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            sendToSocket(handlingSocketIndex(args), "Ic" + "IQA");
+            sendToSocket(socketIndex, "Ic" + "IQA");
             return "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7485,53 +5051,29 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_232_7F45A0(Object... args) {
+    /**
+     * Original function: Proc_6_232_7F45A0.
+     */
+    public static String acceptQuest(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            long requestedQuestId = questRequestIdFromWire(handlingPacketPayload(args), "p^");
-            if (requestedQuestId <= 0L) {
-                requestedQuestId = NumberUtils.parseLong(Functions.readVl64LengthString(handlingRequestPayload(args, "p^")));
-            }
+            QuestWire.QuestIdRequest request = QuestWire.questIdRequest(packetPayload, packetPrefix);
+            long requestedQuestId = request.questId();
             if (requestedQuestId <= 0L) {
                 return "";
             }
-            QuestSettings.QuestDefinitionRow questDefinition = questSettingsFromSource().definitionById(requestedQuestId);
-            if (questDefinition == null || questDefinition.fieldCount() < 11) {
+            QuestAcceptResult result =
+                QuestProgress.acceptQuest(userId, requestedQuestId, questSettings(), questDao());
+            if (!result.accepted()) {
                 return "";
             }
-            long questId = questDefinition.questId();
-            long activityCount = questDefinition.activityAmount();
-            long waitAmount = questDefinition.waitAmount();
-            if (activityCount <= 0L) {
-                activityCount = 1L;
-            }
-            QuestDao quests = questDao();
-            if (quests == null) {
-                return "";
-            }
-            long userIdValue = NumberUtils.parseLong(userId);
-            quests.clearAcceptedQuest(userIdValue);
-            long existingLevel = quests.existingLevel(userIdValue, questId);
-            if (existingLevel != Long.MIN_VALUE) {
-                quests.reactivateQuest(userIdValue, questId, requestedQuestId);
+            if (result.complete()) {
+                completeQuest(socketIndex, result.questId(), result.numericQuestId());
             } else {
-                quests.insertQuest(userIdValue, questId, requestedQuestId);
-            }
-            long progressValue = quests.progress(userIdValue, questId);
-            if (waitAmount > 0L && progressValue > 0L && progressValue < activityCount) {
-                String timeNextText = quests.timeNext(userIdValue, questId);
-                if (timeNextText.isEmpty() || "0".equals(timeNextText)) {
-                    quests.scheduleNextTime(userIdValue, questId, waitAmount);
-                }
-            }
-            if (progressValue >= activityCount) {
-                Proc_6_164_7BC820(socketIndex, questId, requestedQuestId);
-            } else {
-                Proc_6_236_7F8540(socketIndex, "", "");
+                sendQuestList(socketIndex, "", "");
             }
             return "";
         } catch (Exception ignored) {
@@ -7540,30 +5082,18 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_233_7F5D60(Object... args) {
+    /**
+     * Original function: Proc_6_233_7F5D60.
+     */
+    public static String autoAcceptNextQuest(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            QuestDao quests = questDao();
-            if (quests == null) {
-                return "";
-            }
-            long userIdValue = NumberUtils.parseLong(userId);
-            QuestDao.UserQuestLevelRow activeRow = quests.activeLevelRow(userIdValue)
-                .or(() -> {
-                    try {
-                        return quests.latestLevelRow(userIdValue);
-                    } catch (Exception ignored) {
-                        return java.util.Optional.empty();
-                    }
-                })
-                .orElse(null);
-            long requestedQuestId = nextQuestId(questSettingsFromSource(), activeRow);
+            long requestedQuestId = QuestProgress.nextQuestIdForUser(userId, questSettings(), questDao());
             if (requestedQuestId > 0L) {
-                Proc_6_232_7F45A0(socketIndex, QuestPayloads.request(requestedQuestId));
+                acceptQuest(socketIndex, "p^", QuestPayloads.request(requestedQuestId));
             }
             return "";
         } catch (Exception ignored) {
@@ -7572,20 +5102,20 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_234_7F75C0(Object... args) {
+    /**
+     * Original function: Proc_6_234_7F75C0.
+     */
+    public static String resetQuests(int socketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            QuestDao quests = questDao();
-            if (quests == null) {
+            QuestResetResult result = QuestProgress.resetQuests(userId, questSettings(), questDao());
+            if (!result.reset()) {
                 return "";
             }
-            quests.resetUserQuests(NumberUtils.parseLong(userId));
-            sendToSocket(socketIndex, "Lc");
-            Proc_6_236_7F8540(socketIndex, "", "");
+            sendToSocket(socketIndex, result.deliveryPayloads());
             return "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -7593,34 +5123,20 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_235_7F77E0(Object... args) {
+    /**
+     * Original function: Proc_6_235_7F77E0.
+     */
+    public static String refreshQuestProgress(int socketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            QuestDao quests = questDao();
-            if (quests == null) {
-                return "";
-            }
-            long userIdValue = NumberUtils.parseLong(userId);
-            QuestDao.UserQuestProgressRow activeQuest = quests.activeProgressRow(userIdValue).orElse(null);
-            if (activeQuest == null) {
-                return "";
-            }
-            long remainingWait = 0L;
-            if (!StringUtils.text(activeQuest.timeNext()).isEmpty() && !"0".equals(StringUtils.text(activeQuest.timeNext()))) {
-                remainingWait = quests.remainingWait(activeQuest.timeNext());
-            }
-            QuestProgressDecision decision = questProgressDecision(activeQuest, questSettingsFromSource(), remainingWait);
-            if (decision.shouldScheduleWait) {
-                quests.scheduleNextTime(userIdValue, activeQuest.questId(), decision.waitAmount);
-            }
-            if (decision.shouldComplete) {
-                Proc_6_164_7BC820(socketIndex, activeQuest.questId(), activeQuest.numericQuestId());
-            } else if (decision.shouldSendList) {
-                Proc_6_236_7F8540(socketIndex, "", "");
+            QuestProgressDecision decision = QuestProgress.refreshDecision(userId, questSettings(), questDao());
+            if (decision.shouldComplete()) {
+                completeQuest(socketIndex, decision.questId(), decision.numericQuestId());
+            } else if (decision.shouldSendList()) {
+                sendQuestList(socketIndex, "", "");
             }
             return "";
         } catch (Exception ignored) {
@@ -7629,19 +5145,16 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_236_7F8540(Object... args) {
+    /**
+     * Original function: Proc_6_236_7F8540.
+     */
+    public static String sendQuestList(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            QuestDao quests = questDao();
-            if (quests == null) {
-                return "";
-            }
-            String payload = QuestPayloads.list(questSettingsFromSource(),
-                userQuestRowsWithRemainingWait(quests, quests.listRows(NumberUtils.parseLong(userId))));
+            String payload = QuestProgress.listPayload(userId, questSettings(), questDao());
             sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
@@ -7650,16 +5163,13 @@ public final class Handling {
         }
     }
 
-    public static String Proc_6_237_7F9ED0(Object... args) {
+    /**
+     * Original function: Proc_6_237_7F9ED0.
+     */
+    public static String sendOwnProfile(int socketIndex, String packetPrefix, String packetPayload) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return "";
-            }
-            String payload = userDao().ownProfile(NumberUtils.parseLong(userId))
-                .map(UserPayloads::ownProfile)
-                .orElse("");
+            UserLookups.UserRequest request = UserLookups.userRequest(socketIndex, userDao());
+            String payload = UserLookups.ownProfilePayload(request, userDao());
             if (!payload.isEmpty()) {
                 sendToSocket(socketIndex, payload);
             }
@@ -7673,60 +5183,34 @@ public final class Handling {
     /**
      * Original function: Proc_7FA5A0.
      */
-    public static String Proc_7FA5A0(Object... args) {
-        return ignoreClientReadyPacket();
-    }
-
-    /**
-     * Original function: Proc_7FA5A0.
-     */
     public static String ignoreClientReadyPacket() {
         return "";
     }
 
-    public static String Proc_6_238_7FA670(Object... args) {
+    /**
+     * Original function: Proc_6_238_7FA670.
+     */
+    public static String awardTimedActivityPoints(int socketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            long sessionSeconds = representedActivityPointSessionSeconds(socketIndex, userId);
-            if (sessionSeconds <= 0L) {
-                return "";
-            }
-            PacketBuilder sentPayloads = PacketBuilder.create();
-            UserDao users = userDao();
-            long userIdValue = NumberUtils.parseLong(userId);
-            for (long pointType = 0L; pointType <= 4L; pointType++) {
-                long intervalSeconds = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault(
-                    "com.server.socket.game.activitypoints_" + pointType + ".interval", 0));
-                if (intervalSeconds > 0L && sessionSeconds % intervalSeconds == 0L) {
-                    long maxPoints = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault(
-                        "com.server.socket.game.activitypoints_" + pointType + ".max", 1));
-                    long currentPoints = users.activityPoints(userIdValue, pointType);
-                    long awardAmount = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault(
-                        "com.server.socket.game.activitypoints_" + pointType + ".amount", 0));
-                    ActivityPointAward award = activityPointAwardDecision(
-                        sessionSeconds, pointType, intervalSeconds, maxPoints, awardAmount, currentPoints);
-                    if (award.shouldAward) {
-                        users.addActivityPoints(userIdValue, pointType, awardAmount);
-                        sendToSocket(socketIndex, award.payload);
-                        sentPayloads.appendRaw(award.payload);
-                    }
-                }
-            }
-            return sentPayloads.build();
+            UserActivityPoints.AwardBatch awardBatch = UserActivityPoints.timedActivityPointAwardBatch(
+                socketIndex, userId, AppConfigState.instance().settingsCache(), userDao());
+            sendToSocket(socketIndex, awardBatch.deliveryPayloads());
+            return awardBatch.payload();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
     }
 
-    public static String Proc_6_168_7C05F0(Object... args) {
+    /**
+     * Original function: Proc_6_168_7C05F0.
+     */
+    public static String sendMessengerRoomInvite(int socketIndex, MessengerWire.RoomInviteRequest inviteRequest) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "@b");
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
@@ -7735,64 +5219,36 @@ public final class Handling {
             if (roomId <= 0L) {
                 return "";
             }
-            LongRef offset = new LongRef(1);
-            long targetCount = readWireLong(requestPayload, offset);
-            if (targetCount <= 0L) {
+            if (inviteRequest.targetCount() <= 0L) {
                 return "";
             }
-            targetCount = Math.min(targetCount, 150L);
             long userIdValue = NumberUtils.parseLong(userId);
-            MessengerDao messenger = messengerDao();
-            List<Long> targetIds = new ArrayList<>();
-            for (long targetIndex = 1L; targetIndex <= targetCount; targetIndex++) {
-                long targetUserId = readWireLong(requestPayload, offset);
-                if (targetUserId > 0L && !targetIds.contains(targetUserId)) {
-                    if (messenger != null
-                        && messenger.acceptedFriendshipExists(userIdValue, targetUserId)
-                        && handlingSocketFromUserId(String.valueOf(targetUserId)) > 0) {
-                        targetIds.add(targetUserId);
-                    }
-                }
+            String inviteText = inviteRequest.inviteText();
+            String filteredText = ChatLookups.filterMessage(inviteText);
+            MessengerRoomInvite invite = MessengerLookups.roomInvite(
+                userIdValue,
+                roomId,
+                socketIndex,
+                inviteRequest,
+                filteredText,
+                messengerDao(),
+                targetUserId -> handlingSocketFromUserId(String.valueOf(targetUserId)),
+                targetUserId -> handlingUserName(String.valueOf(targetUserId)));
+            for (MessengerNotification notification : invite.deliveryPayloads()) {
+                sendToSocket((int) notification.socketIndex(), notification.payload());
             }
-            String inviteText = Functions.readBase64LengthString(requestPayload);
-            if (inviteText.length() > 122) {
-                inviteText = inviteText.substring(0, 122);
-            }
-            if (inviteText.isEmpty()) {
-                inviteText = readWireString(requestPayload, offset);
-                if (inviteText.length() > 122) {
-                    inviteText = inviteText.substring(0, 122);
-                }
-            }
-            String filteredText = Proc_6_22_6E9300(inviteText, 0, 0);
-            String payload = MessengerPayloads.roomInviteMessage(NumberUtils.parseLong(userId), filteredText);
-            if (!targetIds.isEmpty()) {
-                for (long targetUserId : targetIds) {
-                    String targetUserIdText = String.valueOf(targetUserId);
-                    int targetSocketIndex = handlingSocketFromUserId(targetUserIdText);
-                    if (targetSocketIndex > 0) {
-                        sendToSocket(targetSocketIndex, payload);
-                        if (messenger != null) {
-                            messenger.insertInviteChatLog(
-                                userIdValue,
-                                roomId,
-                                "(Invite To: " + handlingUserName(targetUserIdText) + ") -- " + inviteText,
-                                socketIndex);
-                        }
-                    }
-                }
-            }
-            return payload;
+            return invite.payload();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
     }
 
-    public static String Proc_6_167_7BECA0(Object... args) {
+    /**
+     * Original function: Proc_6_167_7BECA0.
+     */
+    public static String acceptMessengerFriendRequests(int socketIndex, MessengerWire.AcceptFriendRequests request) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "@e");
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
@@ -7802,87 +5258,42 @@ public final class Handling {
             if (messenger == null) {
                 return "";
             }
-            LongRef offset = new LongRef(1);
-            long acceptCount = readWireLong(requestPayload, offset);
-            if (acceptCount <= 0L) {
+            if (request.requestedCount() <= 0L) {
                 return "";
             }
-            acceptCount = Math.min(acceptCount, 75L);
-            String dateFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
-            String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
-            String dateTimeFormat = Functions.sqlEscapedText(dateFormat + " " + timeFormat);
-            List<Long> targetIds = new ArrayList<>();
-            for (long acceptIndex = 1L; acceptIndex <= acceptCount; acceptIndex++) {
-                long targetUserId = readWireLong(requestPayload, offset);
-                if (targetUserId > 0L && !targetIds.contains(targetUserId)) {
-                    if (messenger.pendingRequestExists(userIdValue, targetUserId, dateTimeFormat)) {
-                        targetIds.add(targetUserId);
-                    }
-                }
-            }
-            if (targetIds.isEmpty()) {
+            String dateFormat = AppConfigState.instance().settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
+            String timeFormat = AppConfigState.instance().settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
+            String dateTimeFormat = StringUtils.sqlEscapedText(dateFormat + " " + timeFormat);
+            AcceptedFriendRequests accepted = MessengerLookups.acceptPendingFriends(
+                userIdValue, request.targetIds(), dateTimeFormat, messenger);
+            if (!accepted.valid()) {
                 return "";
             }
-            long acceptedCount = 0L;
-            PacketBuilder payloadRows = PacketBuilder.create();
-            for (long targetUserId : targetIds) {
-                MessengerFriend friend = messenger.messengerFriend(targetUserId, dateTimeFormat).orElse(null);
-                if (friend != null) {
-                    int targetSocketIndex = (int) friend.socketIndex();
-                    payloadRows.appendRaw('H').appendRaw(messengerFriendPayload(
-                        friend.userId(),
-                        friend.userName(),
-                        friend.motto(),
-                        friend.figure(),
-                        friend.level(),
-                        targetSocketIndex > 0 ? 2L : 0L,
-                        targetSocketIndex > 0 ? 1L : 0L,
-                        friend.lastOnline(),
-                        0L));
-                    messenger.insertReversePendingFriendship(targetUserId, userIdValue);
-                    messenger.acceptFriendshipPair(userIdValue, targetUserId);
-                    if (targetSocketIndex > 0) {
-                        String notifyPayload = MessengerPayloads.friendOnlineNotification(
-                            messengerFriendSummaryPayload(userId, 1L));
-                        sendToSocket(targetSocketIndex, notifyPayload);
-                    }
-                    acceptedCount++;
-                }
+            for (MessengerNotification notification : accepted.deliveryPayloads()) {
+                sendToSocket((int) notification.socketIndex(), notification.payload());
             }
-            if (acceptedCount > 0L) {
-                String callerPayload = MessengerPayloads.acceptedFriends(payloadRows.build(), acceptedCount);
-                sendToSocket(socketIndex, callerPayload);
-                return callerPayload;
-            }
-            return "";
+            sendToSocket(socketIndex, accepted.callerPayload());
+            return accepted.callerPayload();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
     }
 
-    public static String Proc_6_169_7C0DC0(Object... args) {
+    /**
+     * Original function: Proc_6_169_7C0DC0.
+     */
+    public static String followMessengerFriend(int socketIndex, MessengerWire.FriendFollowRequest request) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, "DF");
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            LongRef offset = new LongRef(1);
-            String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
-            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
-                targetUserId = String.valueOf((long) NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload)));
-            }
-            if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
+            long targetUserIdValue = request.targetUserId();
+            if (targetUserIdValue <= 0L) {
                 return "";
             }
-            MessengerDao messenger = messengerDao();
-            if (messenger == null || !messenger.acceptedFriendshipExists(
-                NumberUtils.parseLong(userId),
-                NumberUtils.parseLong(targetUserId))) {
-                return "";
-            }
+            String targetUserId = String.valueOf(targetUserIdValue);
             int targetSocketIndex = handlingSocketFromUserId(targetUserId);
             if (targetSocketIndex <= 0) {
                 return "";
@@ -7892,7 +5303,15 @@ public final class Handling {
                 return "";
             }
             long targetRoomUserIndex = representedRoomUserIndex(targetSocketIndex, targetUserId);
-            String payload = MessengerPayloads.followRoom(targetRoomUserIndex, targetRoomId);
+            String payload = MessengerLookups.followRoomPayload(
+                NumberUtils.parseLong(userId),
+                targetUserIdValue,
+                targetRoomUserIndex,
+                targetRoomId,
+                messengerDao());
+            if (payload.isEmpty()) {
+                return "";
+            }
             sendToSocket(socketIndex, payload);
             return payload;
         } catch (Exception ignored) {
@@ -7913,15 +5332,6 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_241_7FC380(Object... args) {
-        if (args == null || args.length < 2) {
-            return;
-        }
-        long socketIndex = NumberUtils.parseLong(args[0]);
-        String packetBuffer = Functions.normalizeNullBytes(args[1]);
-        processPreSessionPacketBuffer(socketIndex, packetBuffer);
-    }
-
     /**
      * Original function: Proc_6_241_7FC380.
      */
@@ -7933,13 +5343,13 @@ public final class Handling {
             long packetCount = 0L;
             while (packetBuffer.length() > 2 && packetCount < 10L) {
                 packetBuffer = packetBuffer.substring(1);
-                long packetLength = Crypto.decodeBase64Length(StringUtils.left(packetBuffer, 2));
+                long packetLength = WireEncoding.decodeBase64Length(StringUtils.left(packetBuffer, 2));
                 if (packetLength <= 0L || packetBuffer.length() < packetLength + 2L) {
                     break;
                 }
                 String packetPayload = StringUtils.mid(packetBuffer, 3, (int) packetLength);
                 String packetCode = StringUtils.left(packetPayload, 2);
-                if (Licence.runtimeState().shouldTracePackets()) {
+                if (LifecycleState.instance().runtimeState().shouldTracePackets()) {
                     Console.logSourceLine("[" + socketIndex + "] " + packetPayload, "GAME", 16711680L);
                 }
                 dispatchPreReadyPacket((int) socketIndex, packetCode, packetPayload);
@@ -7955,202 +5365,207 @@ public final class Handling {
         try {
             switch (StringUtils.text(packetCode)) {
                 case "~\u00e4": System.exit(0); break;
-                case "oD": Proc_6_231_7F4510(socketIndex, packetPayload, 0); break;
-                case "Gd": Proc_6_230_7F3D20(socketIndex, packetPayload, 0); break;
-                case "C]": Proc_6_223_7EEDD0(socketIndex, packetPayload, 0); break;
-                case "C\u007f": Proc_6_225_7EFBD0(socketIndex, packetPayload, 0); break;
-                case "D@": Proc_6_226_7F0B20(socketIndex, packetPayload, 0); break;
+                case "oD": sendGuideInvitation(socketIndex, "oD", packetPayload); break;
+                case "Gd": updateUserMotto(socketIndex, "Gd", packetPayload); break;
+                case "C]": sendJukeboxSongInfo(socketIndex, "C]", packetPayload); break;
+                case "C\u007f": addJukeboxDisk(socketIndex, "C\u007f", packetPayload); break;
+                case "D@": removeJukeboxDisk(socketIndex, "D@", packetPayload); break;
                 case "DC":
-                    Proc_6_227_7F2400(socketIndex, packetPayload, 0);
-                    Proc_6_228_7F2AF0(socketIndex, packetPayload, 0);
+                    sendJukeboxPlaylist(socketIndex, "DC", packetPayload);
+                    sendJukeboxDiskInventory(socketIndex, "DC", packetPayload);
                     break;
-                case "AZ": Proc_6_144_76BE70(socketIndex, "AZ", packetPayload); break;
-                case "AC": Proc_6_155_795C90(socketIndex, "AC", packetPayload); break;
+                case "AZ": returnRoomFurnitureToInventory(socketIndex, "AZ", packetPayload); break;
+                case "AC": pickUpRoomFurniture(socketIndex, "AC", packetPayload); break;
                 case "A[": moveFloorFurnitureInRoom(socketIndex, packetPayload); break;
-                case "AI": Proc_6_159_79FCD0(socketIndex, "AI", packetPayload); break;
+                case "AI": moveFloorFurnitureInRoom(socketIndex, packetPayload); break;
                 case "Ch": toggleFloorFurnitureState(socketIndex, packetPayload); break;
                 case "FH": openFloorFurniturePackageOrToggleState(socketIndex, packetPayload); break;
-                case "@B": Proc_6_78_7279A0(socketIndex, "@B", packetPayload); break;
+                case "@B": loadCurrentRoomModel(socketIndex); break;
                 case "rv": placeFloorFurnitureFromInventory(socketIndex, packetPayload); break;
                 case "pa": sendToSocket(socketIndex, "J|H"); break;
                 case "Ce": dispatchPreReadySoundSetting(socketIndex, packetPayload); break;
                 case "Cy": break;
-                case "pb": Proc_6_234_7F75C0(socketIndex, "pb", packetPayload); break;
-                case "p^": Proc_6_232_7F45A0(socketIndex, "p^", packetPayload); break;
-                case "pc": Proc_6_233_7F5D60(socketIndex, "pc", packetPayload); break;
-                case "p]": Proc_6_236_7F8540(socketIndex, "p]", packetPayload); break;
-                case "GV": Proc_6_38_70FD10(socketIndex, "GV", packetPayload); break;
-                case "GW": Proc_6_39_711650(socketIndex, "GW", packetPayload); break;
-                case "F]": Proc_6_203_7D7F80(socketIndex, "F]", packetPayload); break;
-                case "F^": Proc_6_202_7D6760(socketIndex, "F^", packetPayload); break;
-                case "Cj": Proc_6_201_7D5AC0(socketIndex, "Cj", packetPayload); break;
-                case "Ck": Proc_6_199_7D54E0(socketIndex, "Ck", packetPayload); break;
-                case "Cl": Proc_6_200_7D5770(socketIndex, "Cl", packetPayload); break;
-                case "EW": Proc_6_99_748460(socketIndex, "EW", packetPayload); break;
-                case "Cw": Proc_6_95_746CD0(socketIndex, "Cw", packetPayload); break;
-                case "AL": Proc_6_97_747640(socketIndex, "AL", packetPayload); break;
-                case "AM": Proc_6_96_747000(socketIndex, "AM", packetPayload); break;
-                case "FU": Proc_6_91_743480(socketIndex, "FU", packetPayload); break;
-                case "AH": Proc_6_92_744870(socketIndex, "AH", packetPayload); break;
-                case "FR": Proc_6_89_73EA10(socketIndex, "FR", packetPayload); break;
-                case "EV": Proc_6_100_748C80(socketIndex, "EV", packetPayload); break;
-                case "EU": Proc_6_98_747D80(socketIndex, "EU", packetPayload); break;
-                case "Er": Proc_6_206_7DA450(socketIndex, "Er", packetPayload); break;
+                case "pb": resetQuests(socketIndex); break;
+                case "p^": acceptQuest(socketIndex, "p^", packetPayload); break;
+                case "pc": autoAcceptNextQuest(socketIndex, "pc", packetPayload); break;
+                case "p]": sendQuestList(socketIndex, "p]", packetPayload); break;
+                case "GV": changeAvatarName(socketIndex, "GV", packetPayload); break;
+                case "GW": checkAvatarName(socketIndex, "GW", packetPayload); break;
+                case "F]": sendRecyclerStatus(socketIndex, "F]", packetPayload); break;
+                case "F^": submitRecyclerItems(socketIndex, "F^", packetPayload); break;
+                case "Cj": sendLivePoll(socketIndex, "Cj", packetPayload); break;
+                case "Ck": recordPollExit(socketIndex, "Ck", packetPayload); break;
+                case "Cl": submitPollAnswer(socketIndex, "Cl", packetPayload); break;
+                case "EW": toggleDimmerState(socketIndex, "EW", packetPayload); break;
+                case "AL": handlingSimpleFloorItemUse(socketIndex, packetPayload, "AL", -1L, false, RoomUserPosition.absent()); break;
+                case "AM": handlingSimpleFloorItemUse(socketIndex, packetPayload, "AM", 0L, true, RoomUserPosition.absent()); break;
+                case "FU": addTradeFurniture(socketIndex, "FU", packetPayload); break;
+                case "AH": removeTradeFurniture(socketIndex, "AH", packetPayload); break;
+                case "FR": confirmTrade(socketIndex, "FR", packetPayload); break;
+                case "EV": updateDimmerPreset(socketIndex, "EV", packetPayload); break;
+                case "EU": sendDimmerPresets(socketIndex); break;
+                case "Er": sendAchievementList(socketIndex, "Er", packetPayload); break;
                 case "CD": ignoreClientReadyPacket(); break;
-                case "@G": Proc_6_237_7F9ED0(socketIndex, "@G", packetPayload); break;
+                case "@G": sendOwnProfile(socketIndex, "@G", packetPayload); break;
                 case "D{":
                 case "Fe": break;
-                case "@t": Proc_6_26_7034C0(socketIndex, "@t", packetPayload); break;
-                case "@w": Proc_6_27_706920(socketIndex, "@w", packetPayload); break;
-                case "@x": Proc_6_28_709DA0(socketIndex, "@x", packetPayload); break;
-                case "Cd": Proc_6_101_749540(socketIndex, "EA", packetPayload); break;
+                case "@t": chatInCurrentRoom(socketIndex, "@t", packetPayload); break;
+                case "@w": shoutInCurrentRoom(socketIndex, "@w", packetPayload); break;
+                case "@x": whisperInCurrentRoom(socketIndex, "@x", packetPayload); break;
+                case "Cd": sendUserEffectList(socketIndex, "EA", packetPayload); break;
                 case "Et":
-                case "Eu": Proc_6_102_749C50(socketIndex, packetCode, packetPayload); break;
-                case "@Z": Proc_6_19_6E8040(socketIndex, recyclerSettings().statusPayload(), "Gz"); break;
-                case "oW": Proc_6_18_6E7480(socketIndex, "GY", packetPayload); break;
-                case "Cn": Proc_6_30_70DC90(socketIndex, packetPayload, "EG"); break;
-                case "A^": Proc_6_13_6E0A80(socketIndex, "A^", packetPayload); break;
-                case "A]": Proc_6_14_6E10C0(socketIndex, "A]", packetPayload); break;
-                case "GE": Proc_6_32_70EAB0(socketIndex, "GE", packetPayload); break;
-                case "F`": Proc_6_33_70F4F0(socketIndex); break;
-                case "Fa": Proc_6_34_70F590(socketIndex); break;
-                case "Fb": Proc_6_37_70FC20(socketIndex, "Fb", packetPayload); break;
-                case "Fc": Proc_6_36_70F7B0(socketIndex, "Fc", packetPayload); break;
-                case "Fd": Proc_6_35_70F630(socketIndex, "Fd", packetPayload); break;
+                case "Eu": activateUserEffect(socketIndex, packetCode, packetPayload); break;
+                case "@Z": sendCachedRecyclerStatus(socketIndex, recyclerSettings().statusPayload(), "Gz"); break;
+                case "oW": sendClubSubscriptionOffers(socketIndex, "GY", packetPayload); break;
+                case "Cn": cancelLatestCallForHelp(socketIndex, "EG", packetPayload); break;
+                case "A^": waveCurrentRoomUser(socketIndex, "A^", packetPayload); break;
+                case "A]": danceCurrentRoomUser(socketIndex, "A]", packetPayload); break;
+                case "GE": submitCallForHelp(socketIndex, "GE", packetPayload); break;
+                case "F`": sendImportantFaqs(socketIndex); break;
+                case "Fa": sendFaqCategories(socketIndex); break;
+                case "Fb": sendFaqDescription(socketIndex, "Fb", packetPayload); break;
+                case "Fc": searchFaqs(socketIndex, "Fc", packetPayload); break;
+                case "Fd": sendCategoryFaqs(socketIndex, "Fd", packetPayload); break;
                 case "Ae": dispatchPreReadyCatalogIndex(socketIndex); break;
-                case "FC": Proc_6_104_74AB60(socketIndex, "FC", packetPayload); break;
-                case "@]": Proc_6_105_74AD50(socketIndex, "@]", packetPayload); break;
-                case "Af": Proc_6_136_765F10(socketIndex, "Af", packetPayload); break;
-                case "Fv": Proc_6_125_755650(socketIndex, "Fv", packetPayload); break;
-                case "FG": Proc_6_58_71FCA0(socketIndex, "FG", packetPayload); break;
-                case "Bv": Proc_6_59_71FEE0(socketIndex, "Bv", packetPayload); break;
-                case "@{": Proc_6_79_72A430(socketIndex, "@{", packetPayload); break;
-                case "Ew": Proc_6_15_6E1900(socketIndex, "Ew", packetPayload); break;
-                case "Ex": Proc_6_16_6E2320(socketIndex, "Ex", packetPayload); break;
-                case "@l": Proc_6_17_6E48D0(socketIndex, "@l", packetPayload); break;
-                case "oC": Proc_6_135_765D80(socketIndex, "oC", packetPayload); break;
-                case "oV": Proc_6_134_765B90(socketIndex, "oV", packetPayload); break;
-                case "Ad": Proc_6_128_756190(socketIndex, "Ad", packetPayload); break;
-                case "GX": Proc_6_132_75D4A0(socketIndex, "GX", packetPayload); break;
-                case "GZ": Proc_6_131_75C700(socketIndex, "GZ", packetPayload); break;
-                case "G[": Proc_6_130_75B770(socketIndex, "G[", packetPayload); break;
-                case "Gc": Proc_6_107_74B7E0(socketIndex, "Gc", packetPayload); break;
-                case "GG": Proc_6_10_6DE1D0(socketIndex, "GG", packetPayload); break;
-                case "F@": Proc_6_47_714F60(socketIndex, "F@", packetPayload); break;
-                case "FB": Proc_6_44_7145E0(socketIndex, "FB", packetPayload); break;
-                case "Ab": Proc_6_50_7166B0(socketIndex, "Ab", packetPayload); break;
-                case "EZ": Proc_6_48_7151E0(socketIndex, "EZ", packetPayload); break;
-                case "E\\": Proc_6_49_715D30(socketIndex, "E\\", packetPayload); break;
+                case "FC": sendCreatableRoomCount(socketIndex, "FC", packetPayload); break;
+                case "@]": createRoom(socketIndex, "@]", packetPayload); break;
+                case "Af": sendCatalogPage(socketIndex, "Af", packetPayload); break;
+                case "Fv": sendNavigatorTagResults(socketIndex, "Fv", packetPayload); break;
+                case "FG": enterRoomFromPayload(socketIndex, "FG", packetPayload); break;
+                case "Bv": sendVisitRoomAdvertisement(socketIndex, "Bv", packetPayload); break;
+                case "@{": sendCurrentRoomDecoration(socketIndex, "@{", packetPayload); break;
+                case "Ew": sendWardrobeSlots(socketIndex, "Ew", packetPayload); break;
+                case "Ex": saveWardrobeSlot(socketIndex, "Ex", packetPayload); break;
+                case "@l": updateTutorialClothes(socketIndex, "@l", packetPayload); break;
+                case "oC": sendCatalogGiftWrapOptions(socketIndex, "oC", packetPayload); break;
+                case "oV": sendCatalogGiftAvailability(socketIndex, "oV", packetPayload); break;
+                case "Ad": purchaseCatalogProduct(socketIndex, "Ad", packetPayload); break;
+                case "GX": purchaseCatalogGift(socketIndex, "GX", packetPayload); break;
+                case "GZ": sendClubGiftStatus(socketIndex, "GZ", packetPayload); break;
+                case "G[": claimClubGift(socketIndex, "G[", packetPayload); break;
+                case "Gc": toggleStaffPickedRoom(socketIndex, "Gc", packetPayload); break;
+                case "GG": sendStaffRoomChatHistory(socketIndex, "GG", packetPayload); break;
+                case "F@": setHomeRoom(socketIndex, "F@", packetPayload); break;
+                case "FB": updateRoomIcon(socketIndex, "FB", packetPayload); break;
+                case "Ab": followUserToRoom(socketIndex, "Ab", packetPayload); break;
+                case "EZ": createRoomEvent(socketIndex, "EZ", packetPayload); break;
+                case "E\\": editRoomEvent(socketIndex, "E\\", packetPayload); break;
                 case "FP":
-                case "FF": Proc_6_43_713680(socketIndex, "FF", packetPayload); break;
-                case "FQ": Proc_6_52_7172B0(socketIndex, "FQ", packetPayload); break;
-                case "@H": Proc_6_108_74D800(socketIndex, "@H", packetPayload); break;
-                case "@S": Proc_6_110_74DDA0(socketIndex, "@S", packetPayload); break;
-                case "@T": Proc_6_109_74DBD0(socketIndex, "@T", packetPayload); break;
-                case "BW": Proc_6_111_74DF70(socketIndex, "BW", packetPayload); break;
-                case "GI": StaffModerationPacketHandlers.sendCallForHelpChatLog(socketIndex, "GI", packetPayload); break;
-                case "oj": Proc_6_219_7EA390(socketIndex, "oj", packetPayload); break;
-                case "ok": Proc_6_220_7EBA50(socketIndex, "ok", packetPayload); break;
-                case "ol": Proc_6_222_7ED710(socketIndex, "ol", packetPayload); break;
-                case "on": Proc_6_221_7ED1E0(socketIndex, "on", packetPayload); break;
-                case "GH": StaffModerationPacketHandlers.sendRoomChatLog(socketIndex, "GH", packetPayload); break;
-                case "GK": StaffModerationPacketHandlers.sendRoomInfo(socketIndex, "GK", packetPayload); break;
-                case "GF": Proc_6_0_6D7FF0(socketIndex, "GF", packetPayload); break;
-                case "GJ": Proc_6_11_6DF4A0(socketIndex, "GJ", packetPayload); break;
-                case "GM": Proc_6_1_6D8B70(socketIndex, "GM", packetPayload); break;
-                case "GN": Proc_6_12_6DFE90(socketIndex, "GN", packetPayload); break;
-                case "GO": Proc_6_2_6D9880(socketIndex, "GO", packetPayload); break;
-                case "GP": Proc_6_3_6DA490(socketIndex, "GP", packetPayload); break;
-                case "CH": Proc_6_4_6DAFB0(socketIndex, "CH", packetPayload); break;
-                case "GB": Proc_6_6_6DC9D0(socketIndex, "GB", packetPayload); break;
-                case "GC": Proc_6_8_6DD790(socketIndex, "GC", packetPayload); break;
-                case "GD": Proc_6_7_6DD0E0(socketIndex, "GD", packetPayload); break;
-                case "GL": Proc_6_9_6DDD70(socketIndex, "GL", packetPayload); break;
-                case "Fw": Proc_6_115_751220(socketIndex, "Fw", packetPayload); break;
-                case "Fn": Proc_6_116_751550(socketIndex, "Fn", packetPayload); break;
-                case "Fr": Proc_6_121_752080(socketIndex, "Fr", packetPayload); break;
-                case "Fq": Proc_6_117_751880(socketIndex, "Fq", packetPayload); break;
-                case "Fp": Proc_6_118_751A80(socketIndex, "Fp", packetPayload); break;
-                case "Fs": Proc_6_119_751C80(socketIndex, "Fs", packetPayload); break;
-                case "Fo": Proc_6_126_755B40(socketIndex, "Fo", packetPayload); break;
-                case "Ft": Proc_6_120_751E80(socketIndex, "Ft", packetPayload); break;
-                case "E|": Proc_6_123_754020(socketIndex, "E|", packetPayload); break;
-                case "Fu": Proc_6_127_755D30(socketIndex, "Fu", packetPayload); break;
-                case "E~": Proc_6_124_754D90(socketIndex, "E~", packetPayload); break;
-                case "EY": Proc_6_46_714D50(socketIndex, "EY", packetPayload); break;
-                case "Gj": Proc_6_88_73E4F0(socketIndex, "Gj", packetPayload); break;
-                case "@L": Proc_6_176_7C4EE0(socketIndex, "@L", packetPayload); break;
+                case "FF": sendRoomSettings(socketIndex, "FF", packetPayload); break;
+                case "FQ": updateRoomSettings(socketIndex, "FQ", packetPayload); break;
+                case "@H": sendFavouriteRoomIds(socketIndex, "@H", packetPayload); break;
+                case "@S": addFavouriteRoom(socketIndex, "@S", packetPayload); break;
+                case "@T": removeFavouriteRoom(socketIndex, "@T", packetPayload); break;
+                case "BW": sendRoomCategoryPayload(socketIndex, "BW", packetPayload); break;
+                case "GI": StaffModerationPacketHandlers.sendCallForHelpChatLog(
+                    socketIndex,
+                    StaffWire.callForHelpChatLogRequest(packetPayload)); break;
+                case "oj": editWiredTrigger(socketIndex, "oj", packetPayload); break;
+                case "ok": editWiredAction(socketIndex, "ok", packetPayload); break;
+                case "ol": editWiredCondition(socketIndex, "ol", packetPayload); break;
+                case "on": createWiredSnapshot(socketIndex, "on", packetPayload); break;
+                case "GH": StaffModerationPacketHandlers.sendRoomChatLog(
+                    socketIndex,
+                    StaffWire.roomChatLogRequest(packetPayload)); break;
+                case "GK": StaffModerationPacketHandlers.sendRoomInfo(
+                    socketIndex,
+                    StaffWire.roomInfoRequest(packetPayload)); break;
+                case "GF": sendStaffUserSummary(socketIndex, "GF", packetPayload); break;
+                case "GJ": sendStaffRoomVisitHistory(socketIndex, "GJ", packetPayload); break;
+                case "GM": sendStaffCaution(socketIndex, "GM", packetPayload); break;
+                case "GN": sendStaffAlert(socketIndex, "GN", packetPayload); break;
+                case "GO": staffKickUser(socketIndex, "GO", packetPayload); break;
+                case "GP": staffBanUser(socketIndex, "GP", packetPayload); break;
+                case "CH": moderateCurrentRoom(socketIndex, "CH", packetPayload); break;
+                case "GB": moveCallForHelpToPickedTab(socketIndex, "GB", packetPayload); break;
+                case "GC": moveCallForHelpToOpenTab(socketIndex, "GC", packetPayload); break;
+                case "GD": closeCallForHelp(socketIndex, "GD", packetPayload); break;
+                case "GL": lockCurrentRoomForModeration(socketIndex, "GL", packetPayload); break;
+                case "Fw": sendEventCategoryNavigatorRooms(socketIndex, "Fw", packetPayload); break;
+                case "Fn": sendPopularCategoryNavigatorRooms(socketIndex, "Fn", packetPayload); break;
+                case "Fr": sendOwnedNavigatorRooms(socketIndex, "Fr", packetPayload); break;
+                case "Fq": sendFriendCurrentNavigatorRooms(socketIndex, "Fq", packetPayload); break;
+                case "Fp": sendFriendOwnedNavigatorRooms(socketIndex, "Fp", packetPayload); break;
+                case "Fs": sendFavouriteNavigatorRooms(socketIndex, "Fs", packetPayload); break;
+                case "Fo": sendTopRatedNavigatorRooms(socketIndex, "Fo", packetPayload); break;
+                case "Ft": sendRecentlyVisitedNavigatorRooms(socketIndex, "Ft", packetPayload); break;
+                case "E|": sendOfficialNavigator(socketIndex, "E|", packetPayload); break;
+                case "Fu": sendNavigatorSearchResults(socketIndex, "Fu", packetPayload); break;
+                case "E~": sendPopularNavigatorTags(socketIndex, "E~", packetPayload); break;
+                case "EY": sendRoomDoorStatus(socketIndex, "EY", packetPayload); break;
+                case "Gj": sendNewFriendRoom(socketIndex, "Gj", packetPayload); break;
+                case "@L": sendMessengerFriendList(socketIndex, "@L", packetPayload); break;
                 case "@u":
                 case "Ao": sendRoomReady(socketIndex); break;
-                case "@j": Proc_6_182_7CAAD0(socketIndex, "@j", packetPayload); break;
-                case "@f": Proc_6_170_7C1100(socketIndex, "@f", packetPayload); break;
-                case "DF": Proc_6_169_7C0DC0(socketIndex, "DF", packetPayload); break;
+                case "@j": validatePetName(socketIndex, "@j", packetPayload); break;
+                case "@f": deleteMessengerFriendRequests(socketIndex, "@f", packetPayload); break;
+                case "DF": followMessengerFriend(socketIndex, MessengerWire.friendFollowRequest(packetPayload)); break;
                 case "@O": break;
                 case "D}":
                 case "D~": dispatchPreReadyRoomUserState(socketIndex); break;
-                case "@a": Proc_6_173_7C3430(socketIndex, "@a", packetPayload); break;
-                case "Ci": Proc_6_175_7C4800(socketIndex, "Ci", packetPayload); break;
-                case "@b": Proc_6_168_7C05F0(socketIndex, "@b", packetPayload); break;
-                case "@e": Proc_6_167_7BECA0(socketIndex, "@e", packetPayload); break;
-                case "@i": Proc_6_172_7C25B0(socketIndex, "@i", packetPayload); break;
-                case "@g": Proc_6_174_7C3BC0(socketIndex, "@g", packetPayload); break;
-                case "@h": Proc_6_171_7C1520(socketIndex, "@h", packetPayload); break;
-                case "Fy": Proc_6_189_7D0630(socketIndex, "Fy", packetPayload); break;
-                case "Fx": Proc_6_188_7CF3C0(socketIndex, "Fx", packetPayload); break;
-                case "Cg": Proc_6_190_7D11D0(socketIndex, "Cg", packetPayload); break;
-                case "DG": Proc_6_191_7D18B0(socketIndex, "DG", packetPayload); break;
-                case "B_": Proc_6_192_7D1B80(socketIndex, "B_", packetPayload); break;
-                case "B]": Proc_6_193_7D2BB0(socketIndex, "B]", packetPayload); break;
-                case "B^": Proc_6_194_7D3180(socketIndex, "B^", packetPayload); break;
+                case "@a": sendMessengerPrivateMessage(socketIndex, MessengerWire.privateMessageFromWire(packetPayload)); break;
+                case "Ci": sendMessengerPendingRequests(socketIndex, "Ci", packetPayload); break;
+                case "@b": sendMessengerRoomInvite(socketIndex, MessengerWire.roomInviteFromWire(packetPayload)); break;
+                case "@e": acceptMessengerFriendRequests(socketIndex, MessengerWire.acceptFriendRequests(packetPayload)); break;
+                case "@i": searchMessengerUsers(socketIndex, MessengerWire.searchRequest(packetPayload, "@i")); break;
+                case "@g": requestMessengerFriend(socketIndex, MessengerWire.friendRequest(packetPayload, "@g")); break;
+                case "@h": removeMessengerFriends(socketIndex, "@h", packetPayload); break;
+                case "Fy": removeTutorialGuideBots(socketIndex, "Fy", packetPayload); break;
+                case "Fx": spawnTutorialGuideBot(socketIndex, "Fx", packetPayload); break;
+                case "Cg": sendRoomUserProfile(socketIndex, "Cg", packetPayload); break;
+                case "DG": sendUserTags(socketIndex, "DG", packetPayload); break;
+                case "B_": lookAtRoomUserBadge(socketIndex, "B_", packetPayload); break;
+                case "B]": sendBadgeInventory(socketIndex, "B]", packetPayload); break;
+                case "B^": updateEquippedBadges(socketIndex, "B^", packetPayload); break;
                 case "pg": break;
-                case "AK": Proc_6_197_7D43C0(socketIndex, "AK", packetPayload); break;
-                case "AO": Proc_6_198_7D4B70(socketIndex, "AO", packetPayload); break;
-                case "AG": Proc_6_93_745D90(socketIndex, "AG", packetPayload); break;
+                case "AK": lookTowardRoomPosition(socketIndex, "AK", packetPayload); break;
+                case "AO": walkTowardRoomPosition(socketIndex, "AO", packetPayload); break;
+                case "AG": requestInteraction(socketIndex, "AG", packetPayload); break;
                 case "FT": sendInventoryToSocket(socketIndex); break;
-                case "AB": Proc_6_139_768100(socketIndex, "AB", packetPayload); break;
-                case "BA": Proc_6_137_766470(socketIndex, "BA", packetPayload); break;
-                case "n\u007f": Proc_6_177_7C6580(socketIndex, "n\u007f", packetPayload); break;
-                case "ny": Proc_6_183_7CABF0(socketIndex, "ny", packetPayload); break;
-                case "nx": Proc_6_178_7C6E60(socketIndex, "nx", packetPayload); break;
-                case "nz": Proc_6_179_7C7790(socketIndex, "nz", packetPayload); break;
+                case "AB": applyRoomDecorationFurniture(socketIndex, "AB", packetPayload); break;
+                case "BA": redeemVoucher(socketIndex, "BA", packetPayload); break;
+                case "n\u007f": sendPetRaceList(socketIndex, "n\u007f", packetPayload); break;
+                case "ny": sendPetStatus(socketIndex, "ny", packetPayload); break;
+                case "nx": sendPetInventory(socketIndex, "nx", packetPayload); break;
+                case "nz": placePetInRoom(socketIndex, "nz", packetPayload); break;
                 case "p`":
-                case "rt": Proc_6_86_73B0D0(socketIndex, packetCode, packetPayload); break;
-                case "n~": Proc_6_87_73C120(socketIndex, "n~", packetPayload); break;
-                case "n|": Proc_7CC190(socketIndex, "n|", packetPayload); break;
-                case "n{": Proc_7CA730(socketIndex, "n{", packetPayload); break;
-                case "n}": Proc_6_186_7CD040(socketIndex, "n}", packetPayload); break;
-                case "E[": Proc_6_45_714B60(socketIndex, "E[", packetPayload); break;
-                case "A_": Proc_6_61_720490(socketIndex, "A_", packetPayload); break;
-                case "E@": Proc_6_62_7209F0(socketIndex, "E@", packetPayload); break;
-                case "DE": Proc_6_63_721050(socketIndex, "DE", packetPayload); break;
-                case "D\u007f": Proc_6_64_721650(socketIndex, "D\u007f", packetPayload); break;
-                case "EB": Proc_6_75_7269D0(socketIndex, "EB", packetPayload); break;
-                case "Bw": Proc_6_73_725540(socketIndex, "Bw", packetPayload); break;
-                case "Aa": Proc_6_74_7265B0(socketIndex, "Aa", packetPayload); break;
-                case "B[": Proc_6_71_724CF0(socketIndex, "B[", packetPayload); break;
-                case "@W": Proc_6_72_7250D0(socketIndex, "@W", packetPayload); break;
-                case "Es": Proc_6_76_726CE0(socketIndex, "Es", packetPayload); break;
-                case "FD": Proc_6_77_727590(socketIndex, "FD", packetPayload); break;
-                case "A`": Proc_6_65_721A10(socketIndex, "A`", packetPayload); break;
-                case "AT": Proc_6_66_721D60(socketIndex, "AT", packetPayload); break;
-                case "AS": Proc_6_67_722940(socketIndex, "AS", packetPayload); break;
-                case "AU": Proc_6_68_723170(socketIndex, "AU", packetPayload); break;
+                case "rt": sendPetPackagePreview(socketIndex, packetCode, packetPayload); break;
+                case "n~": placePetFromPackage(socketIndex, "n~", packetPayload); break;
+                case "n|": sendPetCommandListForTarget(socketIndex, "n|", packetPayload); break;
+                case "n{": performPetCommand(socketIndex, "n{", packetPayload); break;
+                case "n}": scratchPet(socketIndex, "n}", packetPayload); break;
+                case "E[": deleteRoomEvent(socketIndex, "E[", packetPayload); break;
+                case "A_": kickRoomUser(socketIndex, "A_", packetPayload); break;
+                case "E@": banRoomUser(socketIndex, "E@", packetPayload); break;
+                case "DE": rateCurrentRoom(socketIndex, "DE", packetPayload); break;
+                case "D\u007f": revokeRoomRightByName(socketIndex, "D\u007f", packetPayload); break;
+                case "EB": revokeRoomRightByTargetName(socketIndex, "EB", packetPayload); break;
+                case "Bw": redeemCreditFurniture(socketIndex, "Bw", packetPayload); break;
+                case "Aa": revokeRoomRights(socketIndex, "Aa", packetPayload); break;
+                case "B[": revokeAllRoomRights(socketIndex, "B[", packetPayload); break;
+                case "@W": deleteCurrentRoom(socketIndex, "@W", packetPayload); break;
+                case "Es": giveRespect(socketIndex, "Es", packetPayload); break;
+                case "FD": sendOfficialRoomModel(socketIndex, "FD", packetPayload); break;
+                case "A`": grantRoomRight(socketIndex, "A`", packetPayload); break;
+                case "AT": updateStickyNote(socketIndex, "AT", packetPayload); break;
+                case "AS": sendStickyNote(socketIndex, "AS", packetPayload); break;
+                case "AU": deleteStickyNote(socketIndex, "AU", packetPayload); break;
                 case "A~":
                 case "CW":
                 case "Cf": break;
-                case "FA": Proc_6_60_720060(socketIndex, "FA", packetPayload); break;
-                case "FI": Proc_6_70_724190(socketIndex, "FI", packetPayload); break;
-                case "AN": Proc_6_69_723630(socketIndex, "AN", packetPayload); break;
+                case "FA": sendSingleRoomNavigatorInfo(socketIndex, "FA", packetPayload); break;
+                case "FI": toggleWallFurnitureState(socketIndex, "FI", packetPayload); break;
+                case "AN": openPresent(socketIndex, "AN", packetPayload); break;
                 case "Aq":
                 case "AE":
                 case "FS":
                 case "AF":
                     sendToSocket(socketIndex,
-                        StringUtils.text(Functions.settingsCache().valueOrDefault("com.client.park.infobus.theme.title", "AQ")) + '\2');
+                        StringUtils.text(AppConfigState.instance().settingsCache().valueOrDefault("com.client.park.infobus.theme.title", "AQ")) + '\2');
                     break;
-                case "oL": Proc_7F44D0(socketIndex, "oL", packetPayload); break;
+                case "oL": guideInviteUserIdFromWire(socketIndex, "oL", packetPayload); break;
                 default:
-                    if (Licence.runtimeState().debugLoggingEnabled()) {
+                    if (LifecycleState.instance().runtimeState().debugLoggingEnabled()) {
                         Console.logSourceLine(packetPayload, "UNHANDLED -- index: " + socketIndex, 255L);
                     }
                     break;
@@ -8162,18 +5577,8 @@ public final class Handling {
 
     private static void dispatchPreReadySoundSetting(int socketIndex, String packetPayload) {
         try {
-            long soundSetting = soundSettingFromWire(packetPayload);
-            if (soundSetting <= 0L) {
-                return;
-            }
             String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return;
-            }
-            UserDao users = userDao();
-            if (users != null) {
-                users.updateSoundSetting(NumberUtils.parseLong(userId), soundSetting);
-            }
+            UserLookups.updateSoundSetting(userId, UserWire.soundSettingRequest(packetPayload), userDao());
         } catch (Exception ignored) {
             // VB6 source suppresses dispatcher helper failures.
         }
@@ -8198,15 +5603,17 @@ public final class Handling {
             if (roomUserIndex <= 0L) {
                 return;
             }
-            broadcastToCurrentRoom(socketIndex, SocialPayloads.roomUserPreReadyState(roomUserIndex));
+            broadcastToCurrentRoom(socketIndex, SocialLookups.roomUserPreReadyPayload(roomUserIndex));
         } catch (Exception ignored) {
             // VB6 source suppresses dispatcher helper failures.
         }
     }
 
-    public static String Proc_6_242_7FF0D0(Object... args) {
+    /**
+     * Original function: Proc_6_242_7FF0D0.
+     */
+    public static String clearSocketUser(int socketIndex) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (!userId.isEmpty() && !"0".equals(userId)) {
                 UserDao users = userDao();
@@ -8221,11 +5628,6 @@ public final class Handling {
         }
     }
 
-    public static void Proc_6_243_7FFEB0(Object... args) {
-        int socketIndex = handlingSocketIndex(args);
-        disconnectSocket(socketIndex);
-    }
-
     /**
      * Original function: Proc_6_243_7FFEB0.
      */
@@ -8234,25 +5636,15 @@ public final class Handling {
             return;
         }
         int socketIndexValue = (int) socketIndex;
-        Proc_6_242_7FF0D0(socketIndexValue, 0, 0);
+        clearSocketUser(socketIndexValue);
         Guardian.setSocketConnected(socketIndexValue, false);
         Guardian.removeSocketMarker(socketIndexValue);
-        SocketMarkerSet socketMarkers = Licence.socketMarkers();
+        SocketMarkerSet socketMarkers = SessionState.instance().socketMarkers();
         socketMarkers.remove(socketIndexValue);
-        Licence.setSocketMarkers(socketMarkers);
-        GameServerSessionState sessionState = Licence.gameServerSessionState();
+        SessionState.instance().setSocketMarkers(socketMarkers);
+        GameServerSessionState sessionState = SessionState.instance().gameServerSession();
         sessionState.removeSocket(socketIndexValue);
-        Licence.setGameServerSessionState(sessionState);
-    }
-
-    /**
-     * Original function: Proc_6_244_801E80.
-     */
-    public static void Proc_6_244_801E80(Object... args) {
-        if (args == null || args.length < 2) {
-            return;
-        }
-        sendToSocket((int) NumberUtils.parseLong(args[0]), StringUtils.text(args[1]));
+        SessionState.instance().setGameServerSession(sessionState);
     }
 
     /**
@@ -8260,46 +5652,23 @@ public final class Handling {
      */
     public static void sendToSocket(int socketIndex, String payload) {
         if (socketIndex <= 0 || !Guardian.isSocketConnected(socketIndex)
-            || Licence.representedSockets().isBusy(socketIndex)) {
+            || SessionState.instance().representedSockets().isBusy(socketIndex)) {
             return;
         }
         MusConnectionManager.instance().sendData(socketIndex, StringUtils.text(payload) + '\1');
     }
 
+    public static void sendToSocket(int socketIndex, List<String> payloads) {
+        if (payloads == null) {
+            return;
+        }
+        for (String payload : payloads) {
+            sendToSocket(socketIndex, payload);
+        }
+    }
+
     /**
      * Original function: Proc_6_245_801FA0.
-     */
-    public static long Proc_6_245_801FA0(Object... args) {
-        if (args == null || args.length < 2) {
-            return 0L;
-        }
-        int socketIndex = (int) NumberUtils.parseLong(args[0]);
-        String userId = handlingUserIdFromSocket(socketIndex);
-        long roomId = handlingCurrentRoomId(socketIndex, userId);
-        return broadcastToRoomUsers(roomId, StringUtils.text(args[1]));
-    }
-
-    /**
-     * Original function: Proc_6_246_8024C0.
-     */
-    public static long Proc_6_246_8024C0(Object... args) {
-        if (args == null || args.length < 2) {
-            return 0L;
-        }
-        return broadcastToRoomUsers(NumberUtils.parseLong(args[0]), StringUtils.text(args[1]));
-    }
-
-    /**
-     * Original function: Proc_6_247_8027E0.
-     */
-    public static long Proc_6_247_8027E0(Object... args) {
-        if (args == null || args.length < 2) {
-            return 0L;
-        }
-        return broadcastToCurrentRoom(handlingSocketIndex(args), StringUtils.text(args[1]));
-    }
-
-    /**
      * Original function: Proc_6_247_8027E0.
      */
     public static long broadcastToCurrentRoom(int socketIndex, String payload) {
@@ -8308,61 +5677,13 @@ public final class Handling {
         return broadcastToRoomUsers(roomId, payload);
     }
 
-    /**
-     * Original function: Proc_6_248_802B80.
-     */
-    public static long Proc_6_248_802B80(Object... args) {
-        if (args == null || args.length < 2) {
-            return 0L;
-        }
-        return broadcastToRoomUsers(NumberUtils.parseLong(args[0]), StringUtils.text(args[1]));
-    }
-
-    /**
-     * Original function: Proc_6_249_802F10.
-     */
-    public static long Proc_6_249_802F10(Object... args) {
-        if (args == null || args.length == 0) {
-            return 0L;
-        }
-        return broadcastToStaffModerators(StringUtils.text(args[0]));
-    }
-
-    public static int handlingSocketIndex(Object... args) {
-        return args != null && args.length >= 1 ? (int) NumberUtils.parseLong(args[0]) : 0;
-    }
-
-    public static String handlingPacketPayload(Object... args) {
-        if (args == null) {
-            return "";
-        }
-        String payload = args.length >= 3 ? StringUtils.text(args[2]) : "";
-        if (payload.isEmpty() && args.length >= 2) {
-            payload = StringUtils.text(args[1]);
-        }
-        return payload;
-    }
-
-    public static String handlingRequestPayload(Object[] args, String prefix) {
-        String payload = handlingPacketPayload(args);
-        String expectedPrefix = StringUtils.text(prefix);
-        if (!expectedPrefix.isEmpty() && payload.startsWith(expectedPrefix)) {
-            return payload.substring(expectedPrefix.length());
-        }
-        return payload;
-    }
-
     public static String handlingUserIdFromSocket(int socketIndex) {
         if (socketIndex <= 0) {
             return "";
         }
-        String recordPayload = Licence.getSessionRecordPayload("1:", String.valueOf(socketIndex));
-        if (!recordPayload.isEmpty()) {
-            String[] fields = recordPayload.split("\2", -1);
-            String userId = String.valueOf(NumberUtils.parseLong(StringUtils.field(fields, 0)));
-            if (!userId.isEmpty() && !"0".equals(userId)) {
-                return userId;
-            }
+        long sessionUserId = SessionState.instance().sessionUserIdBySocket(socketIndex);
+        if (sessionUserId > 0L) {
+            return String.valueOf(sessionUserId);
         }
         UserDao users = userDao();
         if (users == null) {
@@ -8380,7 +5701,7 @@ public final class Handling {
         if (idText.isEmpty() || "0".equals(idText)) {
             return 0;
         }
-        long socketIndex = Licence.linkedUserSocketIndex(idText);
+        long socketIndex = SessionState.instance().linkedUserSocketIndex(idText);
         if (socketIndex <= 0L) {
             UserDao users = userDao();
             if (users != null) {
@@ -8395,7 +5716,7 @@ public final class Handling {
     }
 
     public static long handlingCurrentRoomId(int socketIndex, String userId) {
-        long roomId = Licence.sessionCacheLong(String.valueOf(socketIndex), 1);
+        long roomId = SessionState.instance().sessionCacheLong(String.valueOf(socketIndex), 1);
         if (roomId > 0L) {
             return roomId;
         }
@@ -8435,21 +5756,10 @@ public final class Handling {
         return roomUserIndex > 0L ? roomUserIndex : socketIndex;
     }
 
-    public static boolean handlingUserHasPermission(String userId, String permissionName) {
-        long rankIndex = handlingUserRank(userId);
-        long hcLevel = handlingUserHcLevel(userId);
-        return Functions.permissionMatrix().allows(rankIndex, "", permissionName, hcLevel);
-    }
-
-    private static void roomKickOrBanUser(Object[] args, boolean addRoomBan) {
+    private static void roomKickOrBanUser(int socketIndex, String packetPrefix, String packetPayload, boolean addRoomBan) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingPacketPayload(args);
-            if (requestPayload.startsWith("A_") || requestPayload.startsWith("E@")) {
-                requestPayload = requestPayload.substring(2);
-            }
-            LongRef offset = new LongRef(1);
-            String targetUserId = String.valueOf(readWireLong(requestPayload, offset));
+            RoomWire.RoomUserTargetRequest request = RoomWire.roomUserTargetRequest(packetPayload, packetPrefix);
+            String targetUserId = String.valueOf(request.targetUserId());
             if (targetUserId.isEmpty() || "0".equals(targetUserId)) {
                 return;
             }
@@ -8469,8 +5779,8 @@ public final class Handling {
             if (targetRoomId != callerRoomId) {
                 return;
             }
-            if (!handlingUserHasPermission(callerUserId, "fuse_kick")
-                || handlingUserHasPermission(targetUserId, "fuse_unkickable")) {
+            if (!UserLookups.hasPermission(callerUserId, "fuse_kick", userDao(), AppConfigState.instance().permissionMatrix())
+                || UserLookups.hasPermission(targetUserId, "fuse_unkickable", userDao(), AppConfigState.instance().permissionMatrix())) {
                 return;
             }
             sendToSocket(targetSocketIndex, "@aXjO");
@@ -8486,151 +5796,9 @@ public final class Handling {
         }
     }
 
-    public static long handlingUserRank(String userId) {
-        UserDao users = userDao();
-        if (users == null) {
-            return 0L;
-        }
-        try {
-            return users.rankLevel(NumberUtils.parseLong(userId));
-        } catch (Exception ignored) {
-            return 0L;
-        }
-    }
-
-    public static long handlingUserHcLevel(String userId) {
-        long hcLevel = 0L;
-        UserDao users = userDao();
-        if (users != null) {
-            try {
-                hcLevel = users.hcLevel(NumberUtils.parseLong(userId));
-            } catch (Exception ignored) {
-                hcLevel = 0L;
-            }
-        }
-        if (hcLevel < 0L) {
-            return 0L;
-        }
-        return Math.min(hcLevel, 2L);
-    }
-
-    public static String handlingUserSessionId(String userId) {
-        if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))) {
-            return "";
-        }
-        UserDao users = userDao();
-        if (users == null) {
-            return "";
-        }
-        try {
-            return users.sessionId(NumberUtils.parseLong(userId));
-        } catch (Exception ignored) {
-            return "";
-        }
-    }
-
-    public static boolean handlingUserOwnsRoom(String userId, long roomId) {
-        if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId)) || roomId <= 0L) {
-            return false;
-        }
-        RoomDao rooms = roomDao();
-        if (rooms == null) {
-            return false;
-        }
-        try {
-            return rooms.userOwnsRoom(NumberUtils.parseLong(userId), roomId);
-        } catch (Exception ignored) {
-            return false;
-        }
-    }
-
-    public static boolean handlingUserHasRoomRight(String userId, long roomId) {
-        if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId)) || roomId <= 0L) {
-            return false;
-        }
-        RoomDao rooms = roomDao();
-        if (rooms == null) {
-            return false;
-        }
-        try {
-            return rooms.userHasRoomRight(NumberUtils.parseLong(userId), roomId);
-        } catch (Exception ignored) {
-            return false;
-        }
-    }
-
-    public static long roomCategoryForUser(long categoryId, String userId) {
-        long rankIndex = handlingUserRank(userId);
-        long hcLevel = handlingUserHcLevel(userId);
-        RoomDao rooms = roomDao();
-        if (rooms == null) {
-            return 0L;
-        }
-        try {
-            return rooms.visibleCategoryId(categoryId, rankIndex, hcLevel);
-        } catch (Exception ignored) {
-            return 0L;
-        }
-    }
-
-    public static int handlingSocketIndexForUserName(String userName) {
-        if (StringUtils.text(userName).isEmpty()) {
-            return 0;
-        }
-        UserDao users = userDao();
-        if (users == null) {
-            return 0;
-        }
-        try {
-            return (int) users.socketByName(userName);
-        } catch (Exception ignored) {
-            return 0;
-        }
-    }
-
-    public static String staffModerationPayload(long rankIndex, long hcLevel) {
-        return staffSettings().moderationPayload(rankIndex, hcLevel);
-    }
-
-    public static void ensureRepresentedRoomSlotPool() {
-        RepresentedRoomSlots representedRoomSlots = Licence.representedRoomSlots();
-        representedRoomSlots.ensureInitialized();
-        Licence.setRepresentedRoomSlots(representedRoomSlots);
-    }
-
-    public static long reserveRepresentedRoomSlot(long preferredSlot) {
-        RepresentedRoomSlots representedRoomSlots = Licence.representedRoomSlots();
-        long slotId = representedRoomSlots.reserve(preferredSlot);
-        Licence.setRepresentedRoomSlots(representedRoomSlots);
-        return slotId;
-    }
-
-    public static void releaseRepresentedRoomSlot(long slotId) {
-        RepresentedRoomSlots representedRoomSlots = Licence.representedRoomSlots();
-        representedRoomSlots.release(slotId);
-        Licence.setRepresentedRoomSlots(representedRoomSlots);
-    }
-
-    public static void loadRepresentedRoomBots(long roomSlot, long roomId) {
-        if (roomSlot <= 0L || roomId <= 0L
-            || NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.rooms.bots.enabled", "-1")) == 0L) {
-            return;
-        }
-        BotDao bots = botDao();
-        if (bots == null) {
-            return;
-        }
-        try {
-            for (BotRoomEntryRow row : bots.roomBotEntries(roomId)) {
-                allocateRepresentedBot(roomSlot, RepresentedBotEntry.from(row));
-            }
-        } catch (Exception ignored) {
-            // VB6 source suppresses bot loading failures.
-        }
-    }
-
     /**
      * Original function: Proc_6_246_8024C0.
+     * Original function: Proc_6_248_802B80.
      */
     public static long broadcastToRoomUsers(long roomId, String payload) {
         if (roomId <= 0L || StringUtils.text(payload).isEmpty()) {
@@ -8667,14 +5835,14 @@ public final class Handling {
         }
         String sentMarkers = "";
         long sentCount = 0L;
-        for (SessionRegistry.SocketSession session : Licence.socketSessions()) {
+        for (SessionRegistry.SocketSession session : SessionState.instance().socketSessions()) {
             String candidateUserId = String.valueOf(session.userId());
             int candidateSocket = session.socketIndex();
             if ("0".equals(candidateUserId)) {
                 candidateUserId = handlingUserIdFromSocket(candidateSocket);
             }
             String marker = "[" + candidateSocket + "]";
-            if (candidateSocket > 0 && !sentMarkers.contains(marker) && handlingUserHasPermission(candidateUserId, "fuse_mod")) {
+            if (candidateSocket > 0 && !sentMarkers.contains(marker) && UserLookups.hasPermission(candidateUserId, "fuse_mod", userDao(), AppConfigState.instance().permissionMatrix())) {
                 sendToSocket(candidateSocket, payload);
                 sentMarkers += marker;
                 sentCount++;
@@ -8688,7 +5856,7 @@ public final class Handling {
                     int candidateSocket = (int) userSocket.socketIndex();
                     String marker = "[" + candidateSocket + "]";
                     if (candidateSocket > 0 && !sentMarkers.contains(marker)
-                        && handlingUserHasPermission(candidateUserId, "fuse_mod")) {
+                        && UserLookups.hasPermission(candidateUserId, "fuse_mod", userDao(), AppConfigState.instance().permissionMatrix())) {
                         sendToSocket(candidateSocket, payload);
                         sentMarkers += marker;
                         sentCount++;
@@ -8701,49 +5869,25 @@ public final class Handling {
         return sentCount;
     }
 
-    private static String handlingRepresentedChatRoute(Object[] args, long chatType) {
+    private static String handlingRepresentedChatRoute(int socketIndex, String packetPayload, long chatType) {
         try {
-            int socketIndex = handlingSocketIndex(args);
             if (socketIndex <= 0) {
                 return "";
             }
-            String requestPayload = handlingPacketPayload(args);
-            if (requestPayload.startsWith("@t") || requestPayload.startsWith("@w") || requestPayload.startsWith("@x")) {
-                requestPayload = requestPayload.substring(2);
-            }
-            if (requestPayload.startsWith("H") || requestPayload.startsWith("I")) {
-                requestPayload = requestPayload.substring(1);
-            }
-
-            String targetName = "";
-            String messageText;
-            LongRef offset = new LongRef(1);
-            if (chatType == 2L) {
-                targetName = readWireString(requestPayload, offset).trim();
-                messageText = readWireString(requestPayload, offset);
-                if (messageText.isEmpty()) {
-                    messageText = requestPayload;
-                    int spaceAt = messageText.indexOf(' ');
-                    if (spaceAt >= 0) {
-                        targetName = messageText.substring(0, spaceAt).trim();
-                        messageText = messageText.substring(spaceAt + 1);
-                    }
-                }
-            } else {
-                messageText = readWireString(requestPayload, offset);
-                if (messageText.isEmpty()) {
-                    messageText = requestPayload;
-                }
-            }
-
-            messageText = left(Functions.singleLineText(messageText).trim(), 122);
+            SocialWire.RepresentedChatMessage chatMessage =
+                SocialWire.representedChatMessage(packetPayload, chatType);
+            String targetName = chatMessage.targetName();
+            String messageText = chatMessage.messageText();
             if (messageText.isEmpty()) {
                 return "";
             }
             if (chatType == 0L && messageText.startsWith(":")) {
-                String commandPayload = legacyChatCommandPayload(messageText);
+                String commandPayload = ChatCommands.commandPayload(
+                    messageText,
+                    LifecycleState.instance().runtimeState().productName());
                 if (commandPayload.isEmpty()) {
-                    commandPayload = legacyDynamicChatCommandPayload(messageText);
+                    commandPayload = ChatCommands.dynamicCommandPayload(
+                        messageText, SessionState.instance().socketSessions(), Handling::handlingUserName);
                 }
                 if (!commandPayload.isEmpty()) {
                     sendToSocket(socketIndex, commandPayload);
@@ -8759,17 +5903,17 @@ public final class Handling {
             if (roomId <= 0L || roomUserIndex <= 0L) {
                 return "";
             }
-            long userRank = handlingUserRank(userId);
-            long hcLevel = handlingUserHcLevel(userId);
-            if (!Proc_6_21_6E8BA0(messageText, 0, 0).isEmpty()
-                && !Functions.permissionMatrix().allows(userRank, "", "fuse_can_chat_links", hcLevel)) {
+            long userRank = UserLookups.rank(userId, userDao());
+            long hcLevel = UserLookups.hcLevel(userId, userDao());
+            if (!ChatCommands.extractUrlList(messageText).isEmpty()
+                && !AppConfigState.instance().permissionMatrix().allows(userRank, "", "fuse_can_chat_links", hcLevel)) {
                 return "";
             }
-            String filteredText = Proc_6_22_6E9300(messageText, 0, 0);
+            String filteredText = ChatLookups.filterMessage(messageText);
             if (filteredText.isEmpty()) {
                 filteredText = messageText;
             }
-            long gestureId = Proc_6_23_6E9A90(filteredText, 0, 0);
+            long gestureId = ChatLookups.gestureId(filteredText);
             RoomDao rooms = roomDao();
             if (rooms == null) {
                 return "";
@@ -8779,10 +5923,10 @@ public final class Handling {
                 roomId,
                 filteredText,
                 chatType,
-                handlingUserSessionId(userId));
+                UserLookups.sessionId(userId, userDao()));
             String payload = UserPayloads.representedChat(roomUserIndex, filteredText, gestureId, chatType);
             if (chatType == 2L) {
-                int targetSocketIndex = handlingSocketIndexForUserName(targetName);
+                int targetSocketIndex = UserLookups.socketIndexForUserName(targetName, userDao());
                 if (targetSocketIndex > 0) {
                     sendToSocket(targetSocketIndex, payload);
                     sendToSocket(socketIndex, payload);
@@ -8798,57 +5942,24 @@ public final class Handling {
         }
     }
 
-    public static String legacyDynamicChatCommandPayload(String messageText) {
-        String command = StringUtils.text(messageText).trim().toLowerCase(Locale.ROOT);
-        if (!":whosonline".equals(command)) {
-            return "";
-        }
-        StringBuilder users = new StringBuilder();
-        String seenSockets = "";
-        for (SessionRegistry.SocketSession session : Licence.socketSessions()) {
-            int socketIndex = session.socketIndex();
-            String socketMarker = "[" + socketIndex + "]";
-            if (socketIndex <= 0 || seenSockets.contains(socketMarker)) {
-                continue;
-            }
-            String userName = handlingUserName(String.valueOf(session.userId()));
-            if (userName.isEmpty()) {
-                continue;
-            }
-            if (users.length() > 0) {
-                users.append(", ");
-            }
-            users.append(userName);
-            seenSockets += socketMarker;
-        }
-        return legacyActiveUsersPayload(users.toString());
-    }
-
     private static void staffDirectMessage(
-        Object[] args,
+        int socketIndex,
         String prefix,
+        String packetPayload,
         String requiredPermission,
         String logType,
         boolean kickAfterSend,
         boolean requireOnlineTarget
     ) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, prefix);
-            LongRef offset = new LongRef(1);
-            long targetUserId = readWireLong(requestPayload, offset);
-            if (targetUserId <= 0L) {
-                targetUserId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-            }
-            String messageText = readWireString(requestPayload, offset);
-            if (messageText.isEmpty()) {
-                messageText = Functions.readBase64LengthString(requestPayload);
-            }
+            StaffWire.DirectMessageRequest request = StaffWire.directMessageRequest(packetPayload, prefix);
+            long targetUserId = request.targetUserId();
+            String messageText = request.messageText();
             String callerUserId = handlingUserIdFromSocket(socketIndex);
             if (targetUserId <= 0L || messageText.isEmpty()
                 || callerUserId.isEmpty() || "0".equals(callerUserId)
-                || !handlingUserHasPermission(callerUserId, "fuse_mod")
-                || !handlingUserHasPermission(callerUserId, requiredPermission)
+                || !UserLookups.hasPermission(callerUserId, "fuse_mod", userDao(), AppConfigState.instance().permissionMatrix())
+                || !UserLookups.hasPermission(callerUserId, requiredPermission, userDao(), AppConfigState.instance().permissionMatrix())
                 || StaffPayloads.containsUnsafeAlert(messageText)) {
                 return;
             }
@@ -8883,17 +5994,17 @@ public final class Handling {
         }
     }
 
-    private static void updateCallForHelpTab(Object[] args, String prefix, String tabId) {
+    private static void updateCallForHelpTab(int socketIndex, String prefix, String packetPayload, String tabId) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, prefix);
+            StaffWire.CallForHelpTabRequest request =
+                StaffWire.callForHelpTabRequest(packetPayload, prefix);
             String callerUserId = handlingUserIdFromSocket(socketIndex);
             if (callerUserId.isEmpty() || "0".equals(callerUserId)
-                || !handlingUserHasPermission(callerUserId, "fuse_mod")
-                || !handlingUserHasPermission(callerUserId, "fuse_receive_calls_for_help")) {
+                || !UserLookups.hasPermission(callerUserId, "fuse_mod", userDao(), AppConfigState.instance().permissionMatrix())
+                || !UserLookups.hasPermission(callerUserId, "fuse_receive_calls_for_help", userDao(), AppConfigState.instance().permissionMatrix())) {
                 return;
             }
-            List<Long> callForHelpIds = StaffPayloads.callForHelpIds(requestPayload);
+            List<Long> callForHelpIds = request.callForHelpIds();
             if (callForHelpIds.isEmpty()) {
                 return;
             }
@@ -8907,19 +6018,18 @@ public final class Handling {
         }
     }
 
-    private static void staffRoomHistory(Object[] args, String prefix, boolean includeChatRows) {
+    private static void staffRoomHistory(int socketIndex, String prefix, String packetPayload, boolean includeChatRows) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, prefix);
+            StaffWire.HistoryRequest request =
+                StaffWire.historyRequest(packetPayload, prefix, includeChatRows);
             String callerUserId = handlingUserIdFromSocket(socketIndex);
-            if (callerUserId.isEmpty() || "0".equals(callerUserId) || !handlingUserHasPermission(callerUserId, "fuse_mod")) {
+            if (callerUserId.isEmpty() || "0".equals(callerUserId) || !UserLookups.hasPermission(callerUserId, "fuse_mod", userDao(), AppConfigState.instance().permissionMatrix())) {
                 return;
             }
-            if (includeChatRows && !handlingUserHasPermission(callerUserId, "fuse_chatlog")) {
+            if (includeChatRows && !UserLookups.hasPermission(callerUserId, "fuse_chatlog", userDao(), AppConfigState.instance().permissionMatrix())) {
                 return;
             }
-            long targetUserId = includeChatRows ? staffNestedUserIdFromWire(requestPayload)
-                : NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
+            long targetUserId = request.targetUserId();
             if (targetUserId <= 0L) {
                 return;
             }
@@ -8935,35 +6045,13 @@ public final class Handling {
             if (targetUserId <= 0L) {
                 return;
             }
-            long rowCount;
+            String responsePayload;
             if (includeChatRows) {
-                List<StaffRoomChatVisitRow> visitRows = moderationDao.recentChatHistoryVisits(targetUserId);
-                rowCount = visitRows.size();
-                PacketBuilder rowPayload = PacketBuilder.create();
-                for (StaffRoomChatVisitRow row : visitRows) {
-                    List<StaffRoomChatRow> chatRows = moderationDao.chatRowsForVisit(
-                        row.roomId(),
-                        targetUserId,
-                        row.timestampEnter(),
-                        row.timestampLeft());
-                    rowPayload.appendRaw(StaffPayloads.roomChatHistory(row, chatRows));
-                }
-                String responsePayload = StaffPayloads.roomChatHistoryResponse(
-                    targetUser,
-                    rowCount,
-                    rowPayload.build());
-                sendToSocket(socketIndex, responsePayload);
+                responsePayload = StaffModerationLookups.roomChatHistoryResponse(targetUser, moderationDao);
             } else {
-                List<StaffRoomVisitRow> visitRows = moderationDao.recentRoomVisits(targetUserId);
-                rowCount = visitRows.size();
-                PacketBuilder rowPayload = PacketBuilder.create();
-                for (StaffRoomVisitRow row : visitRows) {
-                    rowPayload.appendRaw(StaffPayloads.roomVisit(row));
-                }
-                String responsePayload = StaffPayloads.roomVisitHistoryResponse(
-                    targetUser,
-                    rowCount,
-                    rowPayload.build());
+                responsePayload = StaffModerationLookups.roomVisitHistoryResponse(targetUser, moderationDao);
+            }
+            if (!responsePayload.isEmpty()) {
                 sendToSocket(socketIndex, responsePayload);
             }
         } catch (Exception ignored) {
@@ -8971,249 +6059,28 @@ public final class Handling {
         }
     }
 
-    public static long avatarNameValidationCode(String candidateName, String currentName, long existingCount) {
-        String candidate = StringUtils.text(candidateName).trim();
-        if (candidate.length() < 3) {
-            return 2L;
-        }
-        if (candidate.length() > 14) {
-            return 1L;
-        }
-        String upper = candidate.toUpperCase();
-        if (upper.startsWith("MOD-") || upper.startsWith("VIP-")) {
-            return 2L;
-        }
-        for (int index = 0; index < candidate.length(); index++) {
-            char ch = candidate.charAt(index);
-            boolean allowed = (ch >= 'A' && ch <= 'Z')
-                || (ch >= 'a' && ch <= 'z')
-                || (ch >= '0' && ch <= '9')
-                || ch == '-'
-                || ch == '_';
-            if (!allowed) {
-                return 2L;
-            }
-        }
-        if (candidate.equalsIgnoreCase(StringUtils.text(currentName))) {
-            return 0L;
-        }
-        return existingCount > 0L ? 3L : 0L;
-    }
-
-    public static long handlingDirectionCode(long deltaX, long deltaY) {
-        return MovementStep.directionCode(deltaX, deltaY);
-    }
-
-    public static String Proc_6_239_7FC170(Object... args) {
-        if (args == null || args.length == 0) {
-            return "";
-        }
-        return readFile(StringUtils.text(args[0]));
-    }
-
-    public static void Proc_6_240_7FC2B0(Object... args) {
-        if (args == null || args.length < 2) {
-            return;
-        }
-        writeFile(StringUtils.text(args[0]), StringUtils.text(args[1]));
-    }
-
     /**
-     * Original function: Proc_6_239_7FC170.
+     * Original function: Proc_6_96_747000.
+     * Original function: Proc_6_97_747640.
      */
-    public static String readFile(String filePath) {
-        if (StringUtils.text(filePath).isEmpty()) {
-            return "";
-        }
-        Path path = Path.of(filePath);
-        if (!Files.exists(path)) {
-            return "";
-        }
+    public static String handlingSimpleFloorItemUse(
+        int socketIndex,
+        String packetPayload,
+        String packetPrefix,
+        long stateValue,
+        boolean storeState,
+        RoomUserPosition suppliedPosition
+    ) {
         try {
-            byte[] bytes = Files.readAllBytes(path);
-            return new String(bytes, StandardCharsets.UTF_8);
-        } catch (IOException ex) {
-            return "";
-        }
-    }
-
-    /**
-     * Original function: Proc_6_240_7FC2B0.
-     */
-    public static void writeFile(String filePath, String fileText) {
-        if (StringUtils.text(filePath).isEmpty()) {
-            return;
-        }
-        try {
-            Path path = Path.of(filePath);
-            Path parent = path.getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
-            }
-            Files.write(path, (StringUtils.text(fileText) + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
-        } catch (IOException ignored) {
-            // VB6 source suppresses write failures.
-        }
-    }
-
-    public static String handlingEnsureRoomCacheFile(String cachePath) {
-        if (StringUtils.text(cachePath).isEmpty()) {
-            return "";
-        }
-        Path path = Path.of(cachePath);
-        if (!Files.exists(path)) {
-            DataManager.writeTextFile(cachePath, "");
-        }
-        return readFile(cachePath);
-    }
-
-    public static String readWireString(String packetPayload, LongRef offset) {
-        if (offset == null) {
-            return "";
-        }
-        String payload = StringUtils.text(packetPayload);
-        if (offset.value < 1L) {
-            offset.value = 1L;
-        }
-        if (offset.value + 1L > payload.length()) {
-            return "";
-        }
-        int start = (int) offset.value - 1;
-        long fieldLength = Crypto.decodeBase64Length(payload.substring(start));
-        if (fieldLength <= 0L) {
-            return "";
-        }
-        int valueStart = start + 2;
-        int valueEnd = Math.min(payload.length(), valueStart + (int) fieldLength);
-        if (valueEnd - valueStart < fieldLength) {
-            return "";
-        }
-        offset.value = offset.value + 2L + fieldLength;
-        return payload.substring(valueStart, valueEnd);
-    }
-
-    public static long readWireLong(String packetPayload, LongRef offset) {
-        if (offset == null) {
-            return 0L;
-        }
-        String payload = StringUtils.text(packetPayload);
-        if (offset.value < 1L) {
-            offset.value = 1L;
-        }
-        if (offset.value > payload.length()) {
-            return 0L;
-        }
-        String remainingPayload = payload.substring((int) offset.value - 1);
-        long encodedLengthSize = wireLongFieldLength(remainingPayload);
-        if (encodedLengthSize <= 0L) {
-            return 0L;
-        }
-        long value = Crypto.decodeVl64(remainingPayload);
-        offset.value += encodedLengthSize;
-        return value;
-    }
-
-    private static long wireLongFieldLength(String encodedValue) {
-        String value = StringUtils.text(encodedValue);
-        if (value.isEmpty()) {
-            return 0L;
-        }
-        long firstByte = value.charAt(0) - 64L;
-        long tailLength = (firstByte & 0x38L) / 8L;
-        if (tailLength <= 0L) {
-            return 1L;
-        }
-        return Math.min(value.length(), tailLength + 1L);
-    }
-
-    public static boolean stickyNoteUpdateFromWire(String packetPayload, StickyNoteUpdate update) {
-        if (update == null) {
-            return false;
-        }
-        String payload = StringUtils.text(packetPayload);
-        String idText = Functions.readVl64LengthString(payload);
-        long furnitureId = NumberUtils.parseLong(idText);
-        String notePayload = "";
-        if (furnitureId <= 0L) {
-            LongRef offset = new LongRef(1);
-            furnitureId = readWireLong(payload, offset);
-            notePayload = StringUtils.mid(payload, (int) offset.value);
-        } else {
-            long idLengthSize = Crypto.encodedVl64LengthByteCount(payload);
-            if (idLengthSize > 0L) {
-                notePayload = StringUtils.mid(payload, (int) idLengthSize + idText.length() + 1);
-            }
-        }
-        if (notePayload.isEmpty()) {
-            notePayload = Functions.readBase64LengthString(payload);
-        }
-        if (notePayload.isEmpty()) {
-            return false;
-        }
-        if (notePayload.length() > 510) {
-            notePayload = notePayload.substring(0, 510);
-        }
-
-        int separatorAt = firstPositiveIndex(notePayload, '\r', '\n', '\2');
-        String noteColor;
-        String noteCaption;
-        if (separatorAt >= 0) {
-            noteColor = notePayload.substring(0, separatorAt).toUpperCase();
-            noteCaption = notePayload.substring(separatorAt + 1);
-        } else {
-            noteColor = notePayload.substring(0, Math.min(6, notePayload.length())).toUpperCase();
-            noteCaption = notePayload.length() > 6 ? notePayload.substring(6) : "";
-        }
-        if (noteColor.length() > 6) {
-            noteColor = noteColor.substring(0, 6);
-        }
-        if (!isStickyNoteColor(noteColor)) {
-            return false;
-        }
-        if (noteCaption.length() > 510) {
-            noteCaption = noteCaption.substring(0, 510);
-        }
-        noteCaption = noteCaption.replace('\u00a0', '\u001f').replace('\r', '\u001f').replace('\n', '\u001f');
-        update.furnitureId = furnitureId;
-        update.noteColor = noteColor;
-        update.noteCaption = noteCaption;
-        return true;
-    }
-
-    public static boolean isStickyNoteColor(String noteColor) {
-        String color = StringUtils.text(noteColor).toUpperCase();
-        return "9CFF9C".equals(color) || "FFFF33".equals(color) || "FF9CFF".equals(color) || "9CCEFF".equals(color);
-    }
-
-    public static long stickyFurnitureIdFromPayload(String requestPayload) {
-        long furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-        if (furnitureId <= 0L) {
-            furnitureId = readWireLong(requestPayload, new LongRef(1));
-        }
-        return furnitureId;
-    }
-
-    public static String handlingSimpleFloorItemUse(Object[] args, String packetPrefix, long stateValue, boolean storeState) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
-            String requestPayload = handlingRequestPayload(args, packetPrefix);
+            FurnitureWire.SimpleFloorItemUseRequest request =
+                FurnitureWire.simpleFloorItemUseRequest(packetPayload, packetPrefix);
             String userId = handlingUserIdFromSocket(socketIndex);
             long roomId = handlingCurrentRoomId(socketIndex, userId);
             if (userId.isEmpty() || "0".equals(userId) || roomId <= 0L) {
                 return "";
             }
-            long furnitureId = idRequestFromWire(requestPayload, "");
+            long furnitureId = request.furnitureId();
             if (furnitureId <= 0L) {
-                return "";
-            }
-            FurnitureDao.SimpleFloorFurniture item = furnitureDao().simpleFloorFurniture(furnitureId, roomId).orElse(null);
-            if (item == null) {
-                return "";
-            }
-            long furnitureX = item.positionX();
-            long furnitureY = item.positionY();
-            long productId = item.productId();
-            if (productId <= 0L || DataManager.productCache().type(productId) != 0L) {
                 return "";
             }
             RoomDao rooms = roomDao();
@@ -9221,23 +6088,31 @@ public final class Handling {
                 return "";
             }
             long roomSlot = rooms.roomSlot(roomId);
-            RoomUserPosition userPosition = RoomUserPosition.fromHandlerArgs(args);
+            RoomUserPosition userPosition = suppliedPosition == null ? RoomUserPosition.absent() : suppliedPosition;
             if (!userPosition.found()) {
                 userPosition = RoomUserPosition.from(
-                    Licence.representedRooms().movementPosition(roomSlot, representedRoomUserIndex(socketIndex, userId)));
+                    RoomState.instance().representedRooms().movementPosition(roomSlot, representedRoomUserIndex(socketIndex, userId)));
             }
-            if (userPosition.found()
-                && (Math.abs(userPosition.positionX() - furnitureX) > 2L || Math.abs(userPosition.positionY() - furnitureY) > 2L)) {
+            FurnitureLookups.SimpleFloorUse use = FurnitureLookups.simpleFloorUse(
+                furnitureId,
+                roomId,
+                userPosition,
+                stateValue,
+                storeState,
+                furnitureDao(),
+                GameDataCaches.productCache());
+            if (!use.valid()) {
                 return "";
             }
-            String payload = FurniturePayloads.simpleFloorUse(furnitureId, stateValue);
-            broadcastToCurrentRoom(socketIndex, payload);
-            if (storeState) {
-                refreshRepresentedFurnitureState(roomId, furnitureId, stateValue);
+            broadcastToCurrentRoom(socketIndex, use.payload());
+            if (use.storeState()) {
+                RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.refreshState(
+                    RoomState.instance().furnitureRoomCache(), roomId, use.furnitureId(), use.stateValue()));
             } else {
-                trackRepresentedFurnitureCacheMarker(socketIndex, roomId, furnitureId);
+                RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.trackMarker(
+                    RoomState.instance().furnitureRoomCache(), roomId, use.furnitureId()));
             }
-            return payload;
+            return use.payload();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
@@ -9247,14 +6122,14 @@ public final class Handling {
     /**
      * Original functions: Proc_6_141_76A670 and Proc_6_142_76B310.
      */
-    public static String placeOrMoveFloorFurniture(int socketIndex, String floorPlacementPayload, boolean fromInventory) {
+    public static String placeOrMoveFloorFurniture(
+        int socketIndex,
+        FurnitureWire.FloorPlacementRequest request,
+        boolean fromInventory
+    ) {
         try {
-            String requestPayload = StringUtils.text(floorPlacementPayload);
-            if (requestPayload.startsWith("A[") || requestPayload.startsWith("rv")) {
-                requestPayload = requestPayload.substring(2);
-            }
-            FloorFurniturePlacement placement = floorFurniturePlacementFromPayload(requestPayload);
-            if (placement.furnitureId <= 0L) {
+            FurnitureWire.FloorFurniturePlacement placement = request.placement();
+            if (placement.furnitureId() <= 0L) {
                 return "";
             }
             String userId = handlingUserIdFromSocket(socketIndex);
@@ -9262,1201 +6137,134 @@ public final class Handling {
                 return "";
             }
             long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L || (!handlingUserHasRoomRight(userId, roomId)
-                && !handlingUserHasPermission(userId, "fuse_pick_up_any_furni"))) {
+            if (roomId <= 0L || (!RoomLookups.userHasRoomRight(userId, roomId, roomDao())
+                && !UserLookups.hasPermission(userId, "fuse_pick_up_any_furni", userDao(), AppConfigState.instance().permissionMatrix()))) {
                 return "";
             }
             long userIdValue = NumberUtils.parseLong(userId);
-            FurnitureDao furniture = furnitureDao();
-            FurnitureDao.InventoryPlacementFurniture item = fromInventory
-                ? furniture.inventoryPlacementFurniture(placement.furnitureId, userIdValue).orElse(null)
-                : furniture.roomPlacementFurniture(placement.furnitureId, roomId).orElse(null);
-            if (item == null) {
+            FurnitureLookups.FloorFurniturePlacement placementResult = FurnitureLookups.placeOrMoveFloorFurniture(
+                placement, roomId, userIdValue, fromInventory, furnitureDao(), CatalogState.instance().registry());
+            if (!placementResult.valid()) {
                 return "";
             }
-            long productId = item.productId();
-            String itemData = StringUtils.text(item.sign());
-            long secondaryValue = item.secondaryValue();
-            if (productId <= 0L) {
-                return "";
-            }
-            CatalogRegistry.Product product = Licence.product(productId);
-            if (product == null) {
-                return "";
-            }
-            long productType = product.type();
-            if (productType == 9L) {
+            if (placementResult.wallFurniture()) {
                 if (fromInventory) {
-                    placeWallFurnitureFromInventory(socketIndex, requestPayload, item);
+                    FurnitureDao furniture = furnitureDao();
+                    if (furniture == null) {
+                        return "";
+                    }
+                    FurnitureDao.InventoryPlacementFurniture item = furniture
+                        .inventoryPlacementFurniture(placement.furnitureId(), userIdValue)
+                        .orElse(null);
+                    placeWallFurnitureFromInventory(socketIndex, request.placementPayload(), item);
                 }
                 return "";
             }
-            String positionZ = String.valueOf(product.squareZ());
-            if (fromInventory) {
-                furniture.placeFloorFurniture(
-                    placement.furnitureId,
-                    userIdValue,
-                    roomId,
-                    placement.positionX,
-                    placement.positionY,
-                    positionZ,
-                    placement.rotation);
-                sendToSocket(socketIndex, InventoryMessagePayloads.remove(placement.furnitureId));
-            } else {
-                furniture.moveFloorFurniture(
-                    placement.furnitureId,
-                    roomId,
-                    userIdValue,
-                    placement.positionX,
-                    placement.positionY,
-                    positionZ,
-                    placement.rotation);
+            if (placementResult.hasInventoryRemovePayload()) {
+                sendToSocket(socketIndex, placementResult.inventoryRemovePayload());
             }
-            String placementPayload = Proc_6_161_7B2EE0(
-                placement.furnitureId, placement.positionX, placement.positionY, placement.rotation,
-                NumberUtils.parseLong(positionZ), "", itemData, secondaryValue, productId);
-            String payload = (fromInventory ? "A]" : "A_") + placementPayload;
-            if (!placementPayload.isEmpty()) {
-                broadcastToCurrentRoom(socketIndex, payload);
-            }
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
-            deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
+            broadcastToCurrentRoom(socketIndex, placementResult.roomPayload());
+            RoomCacheFiles.invalidateRoom(roomId);
             if (fromInventory) {
                 sendInventoryToSocket(socketIndex);
             }
-            return payload;
+            return placementResult.roomPayload();
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
-            return "";
-        }
-    }
-
-    public static FloorFurniturePlacement floorFurniturePlacementFromPayload(String packetPayload) {
-        FloorFurniturePlacement placement = new FloorFurniturePlacement();
-        String normalizedPayload = StringUtils.text(packetPayload)
-            .replace('\1', ' ')
-            .replace('\2', ' ')
-            .replace('\t', ' ')
-            .replace('\r', ' ')
-            .replace('\n', ' ')
-            .trim();
-        while (normalizedPayload.contains("  ")) {
-            normalizedPayload = normalizedPayload.replace("  ", " ");
-        }
-        if (!normalizedPayload.isEmpty()) {
-            String[] tokens = normalizedPayload.split(" ", -1);
-            if (tokens.length >= 1) {
-                placement.furnitureId = NumberUtils.parseLong(tokens[0]);
-            }
-            if (tokens.length >= 2) {
-                placement.positionX = NumberUtils.parseLong(tokens[1]);
-            }
-            if (tokens.length >= 3) {
-                placement.positionY = NumberUtils.parseLong(tokens[2]);
-            }
-            if (tokens.length >= 4) {
-                placement.rotation = NumberUtils.parseLong(tokens[3]);
-            }
-        }
-        if (placement.furnitureId <= 0L) {
-            placement.furnitureId = readWireLong(StringUtils.text(packetPayload), new LongRef(1));
-        }
-        return placement;
-    }
-
-    public static boolean isPostItProduct(long productId) {
-        return DataManager.productCache().alternateSprite(productId).toLowerCase().startsWith("post.it");
-    }
-
-    public static long representedDimmerFurnitureId(long roomId) {
-        if (roomId <= 0L) {
-            return 0L;
-        }
-        FurnitureDao furniture = furnitureDao();
-        if (furniture == null) {
-            return 0L;
-        }
-        try {
-            return furniture.dimmerFurnitureId(roomId);
-        } catch (Exception ignored) {
-            return 0L;
-        }
-    }
-
-    public static boolean isDimmerColour(String colourText) {
-        String color = StringUtils.text(colourText).toUpperCase();
-        return "#0053F7".equals(color)
-            || "#74F5F5".equals(color)
-            || "#E759DE".equals(color)
-            || "#EA4532".equals(color)
-            || "#F2F851".equals(color)
-            || "#82F349".equals(color)
-            || "#000000".equals(color);
-    }
-
-    public static boolean wallPlacementFromPayload(String packetPayload, WallPlacement placement) {
-        if (placement == null) {
-            return false;
-        }
-        String normalizedPayload = StringUtils.text(packetPayload)
-            .replace('\1', ' ')
-            .replace('\2', ' ')
-            .replace('\t', ' ')
-            .replace('\r', ' ')
-            .replace('\n', ' ');
-        while (normalizedPayload.contains("  ")) {
-            normalizedPayload = normalizedPayload.replace("  ", " ");
-        }
-        normalizedPayload = normalizedPayload.trim();
-        String lower = normalizedPayload.toLowerCase();
-        int wallAt = lower.indexOf(":w=");
-        int localAt = lower.indexOf("l=");
-        if (wallAt < 0 || localAt <= wallAt) {
-            return false;
-        }
-        String wallText = normalizedPayload.substring(wallAt + 3, localAt).trim().replace(" ", "");
-        String localText = normalizedPayload.substring(localAt + 2).trim().replace(" ", "");
-        String[] wallParts = wallText.split(",", -1);
-        String[] localParts = localText.split(",", -1);
-        if (wallParts.length < 2 || localParts.length < 2) {
-            return false;
-        }
-        placement.wallX = NumberUtils.parseLong(wallParts[0]);
-        placement.wallY = NumberUtils.parseLong(wallParts[1]);
-        placement.localX = NumberUtils.parseLong(localParts[0]);
-        placement.localY = NumberUtils.parseLong(localParts[1]);
-        return true;
-    }
-
-    public static String roomIconPayloadFromWire(String packetPayload) {
-        LongRef offset = new LongRef(1);
-        long previousOffset = offset.value;
-        long backgroundId = readWireLong(packetPayload, offset);
-        if (offset.value <= previousOffset || backgroundId < 0L || backgroundId > 24L) {
-            return "";
-        }
-
-        previousOffset = offset.value;
-        long foregroundId = readWireLong(packetPayload, offset);
-        if (offset.value <= previousOffset || foregroundId < 0L || foregroundId > 11L) {
-            return "";
-        }
-
-        previousOffset = offset.value;
-        long itemCount = readWireLong(packetPayload, offset);
-        if (offset.value <= previousOffset || itemCount < 0L || itemCount > 12L) {
-            return "";
-        }
-
-        List<RoomPayloads.RoomIconItem> items = new ArrayList<>();
-        for (long itemIndex = 1L; itemIndex <= itemCount; itemIndex++) {
-            previousOffset = offset.value;
-            long itemType = readWireLong(packetPayload, offset);
-            if (offset.value <= previousOffset || itemType < 0L) {
-                return "";
-            }
-
-            previousOffset = offset.value;
-            long itemPosition = readWireLong(packetPayload, offset);
-            if (offset.value <= previousOffset || itemPosition < 0L) {
-                return "";
-            }
-
-            items.add(new RoomPayloads.RoomIconItem(itemType, itemPosition));
-        }
-        return RoomPayloads.icon(backgroundId, foregroundId, items);
-    }
-
-    public static boolean roomEventCreatePayloadFromWire(String packetPayload, RoomEventPayload result) {
-        if (result == null) {
-            return false;
-        }
-        LongRef offset = new LongRef(1);
-        long categoryId = readWireLong(packetPayload, offset);
-        if (categoryId < 1L) {
-            return false;
-        }
-        String categoryName = DataManager.roomEventLocales().field(String.valueOf(categoryId), 0);
-        if (categoryName.isEmpty()) {
-            return false;
-        }
-        result.categoryId = categoryId;
-        result.categoryName = categoryName;
-        return readRoomEventCommon(packetPayload, offset, result, true);
-    }
-
-    public static boolean roomEventEditPayloadFromWire(String packetPayload, RoomEventPayload result) {
-        if (result == null) {
-            return false;
-        }
-        LongRef offset = new LongRef(1);
-        return readRoomEventCommon(packetPayload, offset, result, true);
-    }
-
-    public static boolean roomSettingsFromWire(String packetPayload, RoomSettingsPayload result) {
-        if (result == null) {
-            return false;
-        }
-        LongRef offset = new LongRef(1);
-        String roomName = Functions.singleLineText(readWireString(packetPayload, offset));
-        if (roomName.length() < 3) {
-            return false;
-        }
-        result.roomName = left(roomName, 60);
-        result.roomPassword = left(Functions.singleLineText(readWireString(packetPayload, offset)), 60);
-        result.doorStatus = readWireLong(packetPayload, offset);
-        if (result.doorStatus < 0L || result.doorStatus > 2L) {
-            return false;
-        }
-        result.roomDescription = left(Functions.singleLineText(readWireString(packetPayload, offset)), 255);
-        result.visitorsMax = readWireLong(packetPayload, offset);
-        if (result.visitorsMax < 1L) {
-            result.visitorsMax = 1L;
-        }
-        if (result.visitorsMax > 250L) {
-            result.visitorsMax = 250L;
-        }
-        result.categoryId = readWireLong(packetPayload, offset);
-        if (result.categoryId <= 0L) {
-            return false;
-        }
-        long tagCount = readWireLong(packetPayload, offset);
-        if (tagCount < 0L || tagCount > 2L) {
-            return false;
-        }
-        for (long tagIndex = 1L; tagIndex <= tagCount; tagIndex++) {
-            String tagText = left(Functions.singleLineText(readWireString(packetPayload, offset)), 60).toLowerCase();
-            if (tagIndex == 1L) {
-                result.tagOne = tagText;
-            } else if (tagIndex == 2L) {
-                result.tagTwo = tagText;
-            }
-        }
-
-        result.allowOthersPets = optionalWireLong(packetPayload, offset, 0L);
-        result.allowFeedPets = optionalWireLong(packetPayload, offset, 0L);
-        result.allowWalkthrough = optionalWireLong(packetPayload, offset, 0L);
-        result.disableWalls = optionalWireLong(packetPayload, offset, 0L);
-        result.thicknessFloor = optionalWireLong(packetPayload, offset, 0L);
-        result.thicknessWallpaper = optionalWireLong(packetPayload, offset, 0L);
-
-        result.allowOthersPets = roomSettingsFlag(result.allowOthersPets);
-        result.allowFeedPets = roomSettingsFlag(result.allowFeedPets);
-        result.allowWalkthrough = roomSettingsFlag(result.allowWalkthrough);
-        result.disableWalls = roomSettingsFlag(result.disableWalls);
-        result.thicknessFloor = roomSettingsThickness(result.thicknessFloor);
-        result.thicknessWallpaper = roomSettingsThickness(result.thicknessWallpaper);
-        return true;
-    }
-
-    public static long roomSettingsFlag(long flagValue) {
-        return flagValue != 0L ? 1L : 0L;
-    }
-
-    public static long roomSettingsThickness(long thicknessValue) {
-        if (thicknessValue < -2L) {
-            return -2L;
-        }
-        if (thicknessValue > 1L) {
-            return 1L;
-        }
-        return thicknessValue;
-    }
-
-    public static String nullableSqlText(String valueText) {
-        return StringUtils.text(valueText).isEmpty() ? "null" : "'" + Functions.sqlEscapedText(valueText) + "'";
-    }
-
-    public static long navigatorListLimit() {
-        long limit = NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.navigator.list.limit", 50));
-        return limit <= 0L ? 50L : limit;
-    }
-
-    public static String navigatorSearchTerm(String rawText) {
-        return Functions.sqlEscapedText(rawText).replace("%", "");
-    }
-
-    public static long navigatorCategoryIdFromPacket(Object[] args, String packetPrefix) {
-        String requestPayload = handlingRequestPayload(args, packetPrefix);
-        long categoryId = NumberUtils.parseLong(Functions.readBase64LengthString(requestPayload));
-        if (categoryId <= 0L) {
-            categoryId = readWireLong(requestPayload, new LongRef(1));
-        }
-        return categoryId;
-    }
-
-    public static String navigatorTextFromPacket(Object[] args) {
-        String requestPayload = handlingPacketPayload(args);
-        if (requestPayload.length() >= 3) {
-            requestPayload = requestPayload.substring(2);
-        }
-        if (requestPayload.startsWith("@")) {
-            String value = readWireString(requestPayload, new LongRef(1));
-            if (!value.isEmpty()) {
-                return value;
-            }
-        }
-        return requestPayload;
-    }
-
-    public static String recommendedRoomPayload(long treeIndex) {
-        try {
-            return recommendedRooms().payload(treeIndex);
-        } catch (Exception ignored) {
             return "";
         }
     }
 
     private static RecommendedRooms recommendedRooms() {
-        Licence.recommendedRooms();
         return NavigatorState.instance().recommendedRooms();
     }
 
     private static RoomCategoryCache roomCategoryCache() {
-        Licence.roomCategoryCache();
         return NavigatorState.instance().roomCategoryCache();
     }
 
     private static VisitRoomAds visitRoomAds() {
-        Licence.visitRoomAds();
         return AdvertisingState.instance().visitRoomAds();
     }
 
     private static HelpCenterCache helpCenterCache() {
-        Licence.helpCenterCache();
         return HelpCenterState.instance().cache();
     }
 
     private static WiredSettings wiredSettings() {
-        Licence.wiredSettings();
         return WiredState.instance().settings();
     }
 
     private static MessengerSettings messengerSettings() {
-        Licence.messengerSettings();
         return MessengerState.instance().settings();
     }
 
-    private static ChatSettings chatSettings() {
-        Licence.chatSettings();
-        return ChatState.instance().settings();
-    }
-
     private static StaffSettings staffSettings() {
-        Licence.staffSettings();
         return ModerationState.instance().staffSettings();
     }
 
     private static RecyclerSettings recyclerSettings() {
-        Licence.recyclerSettings();
         return RecyclerState.instance().settings();
     }
 
     private static AchievementSettings achievementSettings() {
-        Licence.achievementSettings();
         return AchievementState.instance().settings();
     }
 
     private static QuestSettings questSettings() {
-        Licence.questSettings();
         return QuestState.instance().settings();
     }
 
     private static GiftSettings giftSettings() {
-        Licence.giftSettings();
         return CatalogState.instance().giftSettings();
     }
 
     private static CatalogPages catalogPages() {
-        Licence.catalogPages();
         return CatalogState.instance().catalogPages();
     }
 
     private static PetSettings petSettings() {
-        Licence.petSettings();
         return PetState.instance().settings();
     }
 
-    public static String officialNavigatorQuery() {
-        String separator = " UNION ALL ";
-        StringBuilder queryText = new StringBuilder();
-        queryText.append("SELECT rooms_official.id_type,rooms_official.id_style,rooms_official.icon,");
-        queryText.append("rooms_official.caption,rooms_official.caption_2,rooms_official.caption_3,");
-        queryText.append("NULL,rooms.id,rooms.name,users.name,rooms.status_door,rooms.visitors_now,");
-        queryText.append("rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,");
-        queryText.append("rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,");
-        queryText.append("rooms.allow_otherspets,NULL,NULL,NULL,rooms_official.id_parent,");
-        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM users,rooms,");
-        queryText.append("rooms_categories,rooms_official WHERE rooms_official.id_type='2' ");
-        queryText.append("AND rooms_official.id_room IS NOT NULL AND rooms.id=rooms_official.id_room ");
-        queryText.append("AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category ");
-        queryText.append("GROUP BY rooms_official.id");
-
-        queryText.append(separator).append("SELECT rooms_official.id_type,rooms_official.id_style,");
-        queryText.append("rooms_official.icon,rooms_official.caption,rooms_official.caption_2,");
-        queryText.append("rooms_official.caption_3,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
-        queryText.append("NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,rooms_official.id_parent,");
-        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM rooms_official ");
-        queryText.append("WHERE rooms_official.id_type='1' GROUP BY rooms_official.id");
-
-        queryText.append(separator).append("SELECT rooms_official.id_type,rooms_official.id_style,");
-        queryText.append("rooms_official.icon,rooms_official.caption,rooms_official.caption_2,");
-        queryText.append("rooms_official.caption_3,NULL,rooms.id,rooms.name,NULL,rooms.status_door,");
-        queryText.append("rooms.visitors_now,rooms.visitors_max,rooms.description,");
-        queryText.append("rooms_categories.has_trading,NULL,rooms.rate,rooms.id_category,rooms.icon,");
-        queryText.append("rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,models.name,");
-        queryText.append("models.required_files,models.visitors_max,rooms_official.id_parent,");
-        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM models,rooms,");
-        queryText.append("rooms_categories,rooms_official WHERE rooms_official.id_type='3' ");
-        queryText.append("AND rooms_official.id_room IS NOT NULL AND rooms.id=rooms_official.id_room ");
-        queryText.append("AND models.id=rooms.id_model AND rooms_categories.id=rooms.id_category ");
-        queryText.append("GROUP BY rooms_official.id");
-
-        queryText.append(separator).append("SELECT rooms_official.id_type,rooms_official.id_style,");
-        queryText.append("rooms_official.icon,rooms_official.caption,rooms_official.caption_2,");
-        queryText.append("rooms_official.caption_3,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
-        queryText.append("NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,rooms_official.id_parent,");
-        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM rooms_official ");
-        queryText.append("WHERE rooms_official.id_type='4' GROUP BY rooms_official.id ");
-        queryText.append("ORDER BY 27 ASC LIMIT 255");
-        return queryText.toString();
-    }
-
-    public static String Proc_6_112_74E0C0(Object... args) {
+    /**
+     * Original function: Proc_6_164_7BC820.
+     */
+    public static String completeQuest(int socketIndex, long questId, long numericQuestId) {
         try {
-            if (args == null || args.length == 0) {
-                return NavigatorPayloads.roomList(List.of());
-            }
-            String queryTail = StringUtils.text(args[0]);
-            if (queryTail.isEmpty()) {
-                return NavigatorPayloads.roomList(List.of());
-            }
-            RoomDao rooms = roomDao();
-            return NavigatorPayloads.roomList(rooms == null ? List.of() : rooms.navigatorRoomsByTail(queryTail, true));
-        } catch (Exception ignored) {
-            return NavigatorPayloads.roomList(List.of());
-        }
-    }
-
-    public static String Proc_6_138_7678A0(Object... args) {
-        if (args == null || args.length < 2) {
-            return "";
-        }
-        return InventoryMessagePayloads.item(NumberUtils.parseLong(args[0]), NumberUtils.parseLong(args[1]),
-            args.length >= 3 ? StringUtils.text(args[2]) : "",
-            args.length >= 4 ? NumberUtils.parseLong(args[3]) : 0L);
-    }
-
-    public static List<RepresentedTradeOffer> representedTradeOfferStore(
-        List<RepresentedTradeOffer> tradeOffers,
-        long socketIndex,
-        long furnitureId,
-        long productId,
-        String signText,
-        long secondaryValue
-    ) {
-        if (socketIndex <= 0L || furnitureId <= 0L || productId <= 0L) {
-            return tradeOffers == null ? List.of() : new ArrayList<>(tradeOffers);
-        }
-        RepresentedTradeOffer newOffer = RepresentedTradeOffer.stored(
-            socketIndex,
-            furnitureId,
-            productId,
-            signText,
-            secondaryValue);
-        List<RepresentedTradeOffer> rebuilt = new ArrayList<>();
-        boolean replacedExisting = false;
-        for (RepresentedTradeOffer offer : tradeOffers == null ? List.<RepresentedTradeOffer>of() : tradeOffers) {
-            if (offer.socketIndex() == socketIndex && offer.furnitureId() == furnitureId) {
-                rebuilt.add(newOffer);
-                replacedExisting = true;
-            } else {
-                rebuilt.add(offer);
-            }
-        }
-        if (!replacedExisting) {
-            rebuilt.add(newOffer);
-        }
-        return rebuilt;
-    }
-
-    public static List<RepresentedTradeOffer> representedTradeOfferRemove(
-        List<RepresentedTradeOffer> tradeOffers,
-        long socketIndex,
-        long furnitureId
-    ) {
-        if (socketIndex <= 0L || tradeOffers == null || tradeOffers.isEmpty()) {
-            return tradeOffers == null ? List.of() : new ArrayList<>(tradeOffers);
-        }
-        List<RepresentedTradeOffer> rebuilt = new ArrayList<>();
-        for (RepresentedTradeOffer offer : tradeOffers) {
-            if (offer.socketIndex() != socketIndex || (furnitureId > 0L && offer.furnitureId() != furnitureId)) {
-                rebuilt.add(offer);
-            }
-        }
-        return rebuilt;
-    }
-
-    public static String representedTradeOfferSqlIds(List<RepresentedTradeOffer> tradeOffers, long socketIndex) {
-        if (socketIndex <= 0L || tradeOffers == null || tradeOffers.isEmpty()) {
-            return "";
-        }
-        StringBuilder sqlIds = new StringBuilder();
-        for (RepresentedTradeOffer offer : tradeOffers) {
-            if (offer.socketIndex() == socketIndex) {
-                if (offer.furnitureId() > 0L) {
-                    if (sqlIds.length() > 0) {
-                        sqlIds.append(',');
-                    }
-                    sqlIds.append('\'').append(offer.furnitureId()).append('\'');
-                }
-            }
-        }
-        return sqlIds.toString();
-    }
-
-    public static List<Long> representedTradeOfferFurnitureIds(List<RepresentedTradeOffer> tradeOffers, long socketIndex) {
-        if (socketIndex <= 0L || tradeOffers == null || tradeOffers.isEmpty()) {
-            return List.of();
-        }
-        List<Long> furnitureIds = new ArrayList<>();
-        for (RepresentedTradeOffer offer : tradeOffers) {
-            if (offer.socketIndex() == socketIndex && offer.furnitureId() > 0L) {
-                furnitureIds.add(offer.furnitureId());
-            }
-        }
-        return List.copyOf(furnitureIds);
-    }
-
-    public static String representedTradeOfferLogItems(List<RepresentedTradeOffer> tradeOffers, long socketIndex) {
-        if (socketIndex <= 0L || tradeOffers == null || tradeOffers.isEmpty()) {
-            return "";
-        }
-        StringBuilder logItems = new StringBuilder();
-        for (RepresentedTradeOffer offer : tradeOffers) {
-            if (offer.socketIndex() == socketIndex) {
-                if (offer.furnitureId() > 0L) {
-                    if (logItems.length() > 0) {
-                        logItems.append('\1');
-                    }
-                    logItems.append(offer.furnitureId()).append(':').append(offer.productId());
-                }
-            }
-        }
-        return logItems.toString();
-    }
-
-    public static TradeOfferItemPayload representedTradeOfferItemPayload(List<RepresentedTradeOffer> tradeOffers, long socketIndex) {
-        TradeOfferItemPayload result = new TradeOfferItemPayload();
-        if (socketIndex <= 0L || tradeOffers == null || tradeOffers.isEmpty()) {
-            return result;
-        }
-        PacketBuilder payload = PacketBuilder.create();
-        for (RepresentedTradeOffer offer : tradeOffers) {
-            if (offer.socketIndex() == socketIndex) {
-                payload.appendRaw(InventoryMessagePayloads.item(
-                    offer.furnitureId(),
-                    offer.productId(),
-                    offer.signText(),
-                    offer.secondaryValue()));
-                result.itemCount++;
-            }
-        }
-        result.payload = payload.build();
-        return result;
-    }
-
-    public static String representedTradeOfferPayload(
-        List<RepresentedTradeOffer> tradeOffers,
-        long sourceSocketIndex,
-        long targetSocketIndex,
-        String sourceUserId,
-        String targetUserId
-    ) {
-        if (sourceSocketIndex <= 0L || targetSocketIndex <= 0L) {
-            return "";
-        }
-        TradeOfferItemPayload sourceItems = representedTradeOfferItemPayload(tradeOffers, sourceSocketIndex);
-        TradeOfferItemPayload targetItems = representedTradeOfferItemPayload(tradeOffers, targetSocketIndex);
-        return TradePayloads.confirmation(
-            NumberUtils.parseLong(sourceUserId),
-            NumberUtils.parseLong(targetUserId),
-            sourceItems.itemCount,
-            sourceItems.payload,
-            targetItems.itemCount,
-            targetItems.payload);
-    }
-
-    public static InventoryPayloads inventoryPayloadsFromInventory(InventoryMessagePayloads.InventoryList inventory) {
-        InventoryPayloads result = new InventoryPayloads();
-        if (inventory == null) {
-            return result;
-        }
-        result.regularCount = inventory.regularCount;
-        result.regularPayload = inventory.regularPayload;
-        result.iconCount = inventory.iconCount;
-        result.iconPayload = inventory.iconPayload;
-        return result;
-    }
-
-    public static FurnitureMoveRequest furnitureMoveRequestFromPayload(String packetPayload) {
-        FurnitureMoveRequest request = new FurnitureMoveRequest();
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("A[")) {
-            requestPayload = requestPayload.substring(2);
-        }
-
-        String normalizedPayload = requestPayload
-            .replace('\1', ' ')
-            .replace('\2', ' ')
-            .replace('\t', ' ')
-            .replace('\r', ' ')
-            .replace('\n', ' ');
-        while (normalizedPayload.contains("  ")) {
-            normalizedPayload = normalizedPayload.replace("  ", " ");
-        }
-        normalizedPayload = normalizedPayload.trim();
-
-        if (!normalizedPayload.isEmpty()) {
-            String[] tokens = normalizedPayload.split(" ", -1);
-            request.furnitureId = tokens.length >= 1 ? NumberUtils.parseLong(tokens[0]) : 0L;
-            request.positionX = tokens.length >= 2 ? NumberUtils.parseLong(tokens[1]) : 0L;
-            request.positionY = tokens.length >= 3 ? NumberUtils.parseLong(tokens[2]) : 0L;
-            request.rotation = tokens.length >= 4 ? NumberUtils.parseLong(tokens[3]) : 0L;
-        }
-
-        if (request.furnitureId <= 0L) {
-            LongRef offset = new LongRef(1);
-            request.furnitureId = readWireLong(requestPayload, offset);
-        }
-        return request;
-    }
-
-    public static long pickupFurnitureIdFromPayload(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("AZ")) {
-            requestPayload = requestPayload.substring(2);
-        }
-        long furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-        if (furnitureId <= 0L) {
-            LongRef offset = new LongRef(1);
-            furnitureId = readWireLong(requestPayload, offset);
-        }
-        return furnitureId;
-    }
-
-    public static FurnitureCacheState trackFurnitureCacheMarker(
-        String pendingRoomCache,
-        String pendingFurnitureCache,
-        String representedRoomCache,
-        long roomId,
-        long furnitureId
-    ) {
-        return furnitureCacheState(FurnitureRoomCache.trackMarker(
-            pendingRoomCache, pendingFurnitureCache, representedRoomCache, roomId, furnitureId));
-    }
-
-    public static FurnitureCacheState removeFurnitureCacheMarker(
-        String pendingRoomCache,
-        String pendingFurnitureCache,
-        String representedRoomCache,
-        long furnitureId
-    ) {
-        return furnitureCacheState(FurnitureRoomCache.removeMarker(
-            pendingRoomCache, pendingFurnitureCache, representedRoomCache, furnitureId));
-    }
-
-    public static long nextFurnitureState(String productSprite, long currentState, long maxState) {
-        String sprite = StringUtils.text(productSprite).toLowerCase();
-        if (sprite.contains("dice")) {
-            return Functions.randomLongInclusive(1, 6);
-        }
-        if (sprite.startsWith("bb_score_") || sprite.startsWith("es_score_") || sprite.contains("score")) {
-            long resolvedMaxState = maxState <= 0L ? 99L : maxState;
-            long nextState = currentState + 1L;
-            return nextState > resolvedMaxState ? 0L : nextState;
-        }
-        long resolvedMaxState = maxState <= 0L ? 1L : maxState;
-        long nextState = currentState + 1L;
-        return nextState > resolvedMaxState ? 0L : nextState;
-    }
-
-    public static FurnitureStateCache representedFurnitureStateCache(
-        String pendingRoomCache,
-        String pendingFurnitureCache,
-        String representedRoomCache,
-        long roomId,
-        long furnitureId,
-        long stateValue
-    ) {
-        return furnitureStateCache(FurnitureRoomCache.stateCache(
-            pendingRoomCache, pendingFurnitureCache, representedRoomCache, roomId, furnitureId, stateValue));
-    }
-
-    public static FurnitureStateCache representedFurnitureStateWrite(
-        String pendingRoomCache,
-        String pendingFurnitureCache,
-        String representedRoomCache,
-        long roomId,
-        long furnitureId,
-        String stateText
-    ) {
-        return furnitureStateCache(FurnitureRoomCache.stateWrite(
-            pendingRoomCache, pendingFurnitureCache, representedRoomCache, roomId, furnitureId, stateText));
-    }
-
-    public static void handlingRepresentedFurnitureStateWrite(Object... args) {
-        try {
-            long roomId = 0L;
-            long furnitureId = 0L;
-            String stateText = "";
-            if (args != null && args.length >= 3) {
-                roomId = NumberUtils.parseLong(args[0]);
-                furnitureId = NumberUtils.parseLong(args[1]);
-                stateText = StringUtils.text(args[2]);
-            } else if (args != null && args.length >= 2) {
-                furnitureId = NumberUtils.parseLong(args[0]);
-                stateText = StringUtils.text(args[1]);
-            }
-            if (furnitureId <= 0L) {
-                return;
-            }
-            if (roomId <= 0L) {
-                roomId = furnitureDao().roomIdByFurniture(furnitureId);
-            }
-            FurnitureRoomCache.State cacheState = Licence.furnitureRoomCache();
-            FurnitureStateCache state = representedFurnitureStateWrite(
-                cacheState.pendingRoomCache,
-                cacheState.pendingFurnitureCache,
-                cacheState.representedRoomCache,
-                roomId,
-                furnitureId,
-                stateText);
-            Licence.setFurnitureRoomCache(furnitureRoomCacheState(state));
-            if (roomId > 0L) {
-                deleteFile(Path.of(Functions.applicationPath, "CACHE", "ROOMS", roomId + ".cache").toString());
-                deleteFile(Path.of(Functions.applicationPath, "CACHE", "PATHFINDER", roomId + ".cache").toString());
-            }
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-        }
-    }
-
-    private static FurnitureCacheState furnitureCacheState(FurnitureRoomCache.State source) {
-        FurnitureCacheState state = new FurnitureCacheState();
-        state.pendingRoomCache = source.pendingRoomCache;
-        state.pendingFurnitureCache = source.pendingFurnitureCache;
-        state.representedRoomCache = source.representedRoomCache;
-        return state;
-    }
-
-    private static FurnitureStateCache furnitureStateCache(FurnitureRoomCache.State source) {
-        FurnitureStateCache state = new FurnitureStateCache();
-        state.pendingRoomCache = source.pendingRoomCache;
-        state.pendingFurnitureCache = source.pendingFurnitureCache;
-        state.representedRoomCache = source.representedRoomCache;
-        return state;
-    }
-
-    private static FurnitureRoomCache.State furnitureRoomCacheState(FurnitureCacheState source) {
-        return FurnitureRoomCache.State.from(source.pendingRoomCache, source.pendingFurnitureCache, source.representedRoomCache);
-    }
-
-    private static FurnitureRoomCache.State furnitureRoomCacheState(FurnitureStateCache source) {
-        return FurnitureRoomCache.State.from(source.pendingRoomCache, source.pendingFurnitureCache, source.representedRoomCache);
-    }
-
-    public static String Proc_6_156_7972B0(Object... args) {
-        if (args == null || args.length == 0) {
-            return "";
-        }
-        long baseValue = NumberUtils.parseLong(args[0]);
-        long firstValue = args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-        String secondValue = args.length >= 3 ? StringUtils.text(args[2]) : "";
-        String thirdValue = args.length >= 4 ? StringUtils.text(args[3]) : "";
-        long fourthValue = args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
-        return FurniturePayloads.wallInventoryPlacement(baseValue, firstValue, secondValue, thirdValue, fourthValue);
-    }
-
-    public static String Proc_6_161_7B2EE0(Object... args) {
-        if (args == null || args.length == 0) {
-            return "";
-        }
-        return FurniturePayloads.floorPlacement(
-            NumberUtils.parseLong(args[0]),
-            args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L,
-            args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L,
-            args.length >= 4 ? NumberUtils.parseLong(args[3]) : 0L,
-            args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L,
-            args.length >= 6 ? StringUtils.text(args[5]) : "",
-            args.length >= 7 ? StringUtils.text(args[6]) : "",
-            args.length >= 8 ? NumberUtils.parseLong(args[7]) : 0L,
-            args.length >= 9 ? NumberUtils.parseLong(args[8]) : 0L);
-    }
-
-    public static String systemHandshakePayload(String configuredDateFormat) {
-        String dateFormat = StringUtils.text(configuredDateFormat);
-        if (dateFormat.isEmpty()) {
-            dateFormat = "DAQBHHIIKHJHPAHQA";
-        }
-        return "0" + dateFormat + '\2' + "SAHPB" + "http://www.alpha-series.com/" + '\2' + "QBH";
-    }
-
-    public static String handlingLoginTicketFromPayload(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("F_")) {
-            requestPayload = requestPayload.substring(2);
-        }
-        requestPayload = Functions.singleLineText(requestPayload).trim();
-        if (requestPayload.startsWith("F_")) {
-            requestPayload = requestPayload.substring(2);
-        }
-        return requestPayload;
-    }
-
-    public static void handlingStoreSocketSession(int socketIndex, String sessionRecord) {
-        Licence.storeSocketSession(socketIndex, sessionRecord);
-    }
-
-    public static String normalizeRoomModelMap(String modelMap) {
-        String modelPayload = StringUtils.text(modelMap).replace('\n', '\r');
-        while (modelPayload.contains("\r\r")) {
-            modelPayload = modelPayload.replace("\r\r", "\r");
-        }
-        return modelPayload;
-    }
-
-    public static void sendRoomPollPrompt(int socketIndex, String userId, long roomId) {
-        if (socketIndex <= 0 || StringUtils.text(userId).isEmpty() || roomId <= 0L) {
-            return;
-        }
-        PollDao polls = pollDao();
-        if (polls == null) {
-            return;
-        }
-        long userIdValue = NumberUtils.parseLong(userId);
-        if (userIdValue <= 0L) {
-            return;
-        }
-        try {
-            PollPrompt pollPrompt = polls.activePrompt(roomId).orElse(null);
-            if (pollPrompt == null || pollPrompt.id() <= 0L) {
-                return;
-            }
-            if (polls.hasExited(userIdValue, pollPrompt.id())) {
-                return;
-            }
-            if (polls.hasAnswered(userIdValue, pollPrompt.id())) {
-                return;
-            }
-            sendToSocket(socketIndex, PollPayloads.prompt(pollPrompt));
-        } catch (Exception ignored) {
-            // VB6 source suppresses handler failures.
-            return;
-        }
-    }
-
-    public static long representedActivityPointSessionSeconds(long socketIndex, String userId) {
-        if (socketIndex <= 0L || StringUtils.text(userId).isEmpty()) {
-            return 0L;
-        }
-        Long cachedTickValue = representedActivityPointTicks.get(socketIndex);
-        long tickValue = cachedTickValue == null ? 0L : cachedTickValue;
-        if (cachedTickValue == null) {
-            try {
-                tickValue = userDao().onlineTime(NumberUtils.parseLong(userId));
-            } catch (Exception ignored) {
-                tickValue = 0L;
-            }
-        }
-        tickValue += 60L;
-        representedActivityPointTicks.put(socketIndex, tickValue);
-        return tickValue;
-    }
-
-    public static ActivityPointAward activityPointAwardDecision(
-        long sessionSeconds,
-        long pointType,
-        long intervalSeconds,
-        long maxPoints,
-        long awardAmount,
-        long currentPoints
-    ) {
-        ActivityPointAward result = new ActivityPointAward();
-        result.pointType = pointType;
-        result.awardAmount = awardAmount;
-        if (sessionSeconds <= 0L || intervalSeconds <= 0L || sessionSeconds % intervalSeconds != 0L) {
-            return result;
-        }
-        long effectiveMaxPoints = maxPoints <= 0L ? 1L : maxPoints;
-        if (currentPoints >= effectiveMaxPoints || awardAmount == 0L) {
-            return result;
-        }
-        result.newPoints = currentPoints + awardAmount;
-        result.payload = UserPayloads.activityPointAward(pointType, result.newPoints);
-        result.shouldAward = true;
-        return result;
-    }
-
-    public static boolean isSocketMarkedBusy(String representedSocketCache, long socketIndex) {
-        return com.alphaseries.game.session.RepresentedSocketCache.fromLegacy(representedSocketCache).isBusy(socketIndex);
-    }
-
-    public static long soundSettingFromWire(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("Ce")) {
-            requestPayload = requestPayload.substring(2);
-        }
-        long soundSetting = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-        if (soundSetting <= 0L) {
-            soundSetting = NumberUtils.parseLong(requestPayload);
-        }
-        return soundSetting > 0L && soundSetting < 101L ? soundSetting : 0L;
-    }
-
-    public static String loginGroupPayload(long groupId, UserGroupRow groupRow) {
-        if (groupId <= 0L || groupRow == null) {
-            return "";
-        }
-        return PacketBuilder.create()
-            .appendRaw("Dt")
-            .appendInt(groupId)
-            .appendString(groupRow.name())
-            .appendString(groupRow.description())
-            .appendString(groupRow.badgeId())
-            .appendInt(groupRow.roomId())
-            .appendRaw('H')
-            .build();
-    }
-
-    public static void storeRepresentedInteractionPair(long sourceSocketIndex, long targetSocketIndex, long interactionState) {
-        if (sourceSocketIndex <= 0L || targetSocketIndex <= 0L) {
-            return;
-        }
-        removeRepresentedInteractionPair(sourceSocketIndex);
-        removeRepresentedInteractionPair(targetSocketIndex);
-        representedInteractionPairs.add(RepresentedInteractionPair.stored(sourceSocketIndex, targetSocketIndex, interactionState));
-        representedInteractionPairs.add(RepresentedInteractionPair.stored(targetSocketIndex, sourceSocketIndex, interactionState));
-    }
-
-    public static void removeRepresentedInteractionPair(long socketIndex) {
-        if (socketIndex <= 0L || representedInteractionPairs.isEmpty()) {
-            return;
-        }
-        List<RepresentedInteractionPair> rebuilt = new ArrayList<>();
-        for (RepresentedInteractionPair pair : representedInteractionPairs) {
-            if (pair.socketIndex() != socketIndex) {
-                rebuilt.add(pair);
-            }
-        }
-        representedInteractionPairs = rebuilt;
-        removeRepresentedTradeOffer(socketIndex, 0L);
-    }
-
-    public static int representedInteractionPartner(long socketIndex) {
-        if (socketIndex <= 0L || representedInteractionPairs.isEmpty()) {
-            return 0;
-        }
-        for (RepresentedInteractionPair pair : representedInteractionPairs) {
-            if (pair.socketIndex() == socketIndex) {
-                return (int) pair.partnerSocketIndex();
-            }
-        }
-        return 0;
-    }
-
-    public static long representedInteractionState(long socketIndex) {
-        if (socketIndex <= 0L || representedInteractionPairs.isEmpty()) {
-            return 0L;
-        }
-        for (RepresentedInteractionPair pair : representedInteractionPairs) {
-            if (pair.socketIndex() == socketIndex) {
-                return pair.interactionState();
-            }
-        }
-        return 0L;
-    }
-
-    public static void storeRepresentedTradeOffer(long socketIndex, long furnitureId, long productId, String signText, long secondaryValue) {
-        representedTradeOffers = representedTradeOfferStore(representedTradeOffers, socketIndex, furnitureId, productId, signText, secondaryValue);
-    }
-
-    public static void removeRepresentedTradeOffer(long socketIndex, long furnitureId) {
-        representedTradeOffers = representedTradeOfferRemove(representedTradeOffers, socketIndex, furnitureId);
-    }
-
-    public static long questRequestIdFromWire(String packetPayload, String prefix) {
-        return idRequestFromWire(packetPayload, prefix);
-    }
-
-    public static long nextQuestId(QuestSettings questSettings, QuestDao.UserQuestLevelRow activeQuest) {
-        long currentQuestId = 0L;
-        long currentLevel = 0L;
-        if (activeQuest != null) {
-            currentQuestId = activeQuest.questId();
-            currentLevel = activeQuest.level();
-        }
-
-        long currentCampaignId = 0L;
-        long fallbackQuestId = 0L;
-        long fallbackCampaignId = 0L;
-        long fallbackLevel = Integer.MAX_VALUE;
-        boolean foundCurrent = false;
-        QuestSettings settings = questSettings == null ? QuestSettings.empty() : questSettings;
-        for (QuestSettings.QuestDefinitionRow definition : settings.definitions()) {
-            if (definition.fieldCount() >= 9) {
-                if (fallbackQuestId <= 0L || definition.level() < fallbackLevel) {
-                    fallbackQuestId = definition.questId();
-                    fallbackCampaignId = definition.campaignId();
-                    fallbackLevel = definition.level();
-                }
-                if (definition.questId() == currentQuestId) {
-                    currentCampaignId = definition.campaignId();
-                    currentLevel = definition.level();
-                    foundCurrent = true;
-                }
-            }
-        }
-        if (!foundCurrent) {
-            currentCampaignId = fallbackCampaignId;
-            currentLevel = fallbackLevel - 1L;
-        }
-
-        long requestedQuestId = 0L;
-        long bestLevel = Integer.MAX_VALUE;
-        for (QuestSettings.QuestDefinitionRow definition : settings.definitions()) {
-            if (definition.fieldCount() >= 9) {
-                if (definition.campaignId() == currentCampaignId && definition.level() > currentLevel
-                    && definition.level() < bestLevel) {
-                    requestedQuestId = definition.questId();
-                    bestLevel = definition.level();
-                }
-            }
-        }
-        return requestedQuestId > 0L ? requestedQuestId : fallbackQuestId;
-    }
-
-    public static QuestProgressDecision questProgressDecision(
-        QuestDao.UserQuestProgressRow activeQuest,
-        QuestSettings questSettings,
-        long remainingWait
-    ) {
-        QuestProgressDecision decision = new QuestProgressDecision();
-        if (activeQuest == null) {
-            return decision;
-        }
-        decision.questId = activeQuest.questId();
-        decision.numericQuestId = activeQuest.numericQuestId();
-        decision.progressValue = activeQuest.progress();
-        String timeNextText = StringUtils.text(activeQuest.timeNext());
-        if (decision.questId <= 0L) {
-            return decision;
-        }
-
-        boolean matchedQuest = false;
-        QuestSettings settings = questSettings == null ? QuestSettings.empty() : questSettings;
-        QuestSettings.QuestDefinitionRow questDefinition = settings.definitionById(decision.questId);
-        if (questDefinition != null && questDefinition.fieldCount() >= 11) {
-            decision.amountRequired = questDefinition.activityAmount();
-            decision.waitAmount = questDefinition.waitAmount();
-            matchedQuest = true;
-        }
-        if (!matchedQuest) {
-            return decision;
-        }
-
-        if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
-            decision.remainingWait = Math.max(0L, remainingWait);
-            if (decision.remainingWait > 0L) {
-                decision.shouldSendList = true;
-                return decision;
-            }
-        } else if (decision.waitAmount > 0L && decision.progressValue > 0L && decision.progressValue < decision.amountRequired) {
-            decision.shouldScheduleWait = true;
-            decision.shouldSendList = true;
-            return decision;
-        }
-
-        if (decision.amountRequired <= 0L) {
-            decision.amountRequired = 1L;
-        }
-        if (decision.progressValue >= decision.amountRequired) {
-            decision.shouldComplete = true;
-        } else {
-            decision.shouldSendList = true;
-        }
-        return decision;
-    }
-
-    public static String Proc_6_166_7BE940(Object... args) {
-        long userId = args != null && args.length >= 1 ? NumberUtils.parseLong(args[0]) : 0L;
-        String userName = args != null && args.length >= 2 ? StringUtils.text(args[1]) : "";
-        String motto = args != null && args.length >= 3 ? StringUtils.text(args[2]) : "";
-        String figure = args != null && args.length >= 4 ? StringUtils.text(args[3]) : "";
-        long rankValue = args != null && args.length >= 5 ? NumberUtils.parseLong(args[4]) : 0L;
-        long followCount = args != null && args.length >= 6 ? NumberUtils.parseLong(args[5]) : 0L;
-        long isOnline = args != null && args.length >= 7 ? NumberUtils.parseLong(args[6]) : 0L;
-        String lastOnlineText = args != null && args.length >= 8 ? StringUtils.text(args[7]) : "";
-        long relationshipState = args != null && args.length >= 9 ? NumberUtils.parseLong(args[8]) : 0L;
-        return messengerFriendPayload(userId, userName, motto, figure, rankValue, followCount, isOnline, lastOnlineText, relationshipState);
-    }
-
-    public static String Proc_6_164_7BC820(Object... args) {
-        try {
-            int socketIndex = handlingSocketIndex(args);
             String userId = handlingUserIdFromSocket(socketIndex);
             if (userId.isEmpty() || "0".equals(userId)) {
                 return "";
             }
-            long questId = args != null && args.length >= 2 ? NumberUtils.parseLong(args[1]) : 0L;
-            long numericQuestId = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
             QuestDao quests = questDao();
             UserDao users = userDao();
             if (quests == null || users == null) {
                 return "";
             }
             long userIdValue = NumberUtils.parseLong(userId);
-            QuestDao.UserQuestCompletionRow activeRow = quests.completionRow(userIdValue, questId).orElse(null);
-            if (activeRow == null) {
+            QuestCompletion completion = QuestProgress.completion(
+                quests,
+                QuestProgress.settingsFromSource(questSettings(), questDao()),
+                userIdValue,
+                questId,
+                numericQuestId);
+            if (!completion.valid()) {
                 return "";
             }
-            questId = activeRow.questId();
-            if (numericQuestId <= 0L) {
-                numericQuestId = activeRow.numericQuestId();
-            }
-            long progressValue = activeRow.progress();
-            long userQuestLevel = activeRow.level();
-            if (questId <= 0L) {
-                return "";
-            }
-            QuestSettings questSettings = questSettingsFromSource();
-            QuestSettings.QuestDefinitionRow questDefinition = questSettings.definitionById(questId);
-            if (questDefinition == null || questDefinition.fieldCount() < 11) {
-                return "";
-            }
-            String questName = questDefinition.name();
-            long rewardAmount = questDefinition.reward();
-            long rewardType = questDefinition.rewardType();
-            long campaignId = questDefinition.campaignId();
-            long activityCount = questDefinition.activityAmount();
-            if (activityCount <= 0L) {
-                activityCount = 1L;
-            }
-            long campaignLevelCount = questSettings.campaignLevelCount(campaignId);
-            String completionPayload = QuestPayloads.completion(campaignId, questName, campaignLevelCount, questId,
-                userQuestLevel, progressValue, activityCount);
+            String completionPayload = completion.payload();
             sendToSocket(socketIndex, "Lb" + completionPayload);
-            if (progressValue < activityCount) {
+            if (!completion.complete()) {
                 return "";
             }
-            if (rewardAmount != 0L && rewardType >= 0L && rewardType <= 20L) {
-                long currentPoints = users.activityPoints(userIdValue, rewardType);
-                users.addActivityPointsLimited(userIdValue, rewardType, rewardAmount);
-                sendToSocket(socketIndex, UserPayloads.activityPointAward(rewardType, currentPoints + rewardAmount));
+            if (completion.hasActivityPointReward()) {
+                long currentPoints = users.activityPoints(userIdValue, completion.rewardType());
+                users.addActivityPointsLimited(userIdValue, completion.rewardType(), completion.rewardAmount());
+                sendToSocket(socketIndex,
+                    UserPayloads.activityPointAward(completion.rewardType(), currentPoints + completion.rewardAmount()));
             }
-            quests.completeQuest(userIdValue, questId);
+            quests.completeQuest(userIdValue, completion.questId());
             sendToSocket(socketIndex, "La" + completionPayload);
-            Proc_6_236_7F8540(socketIndex, "", "");
+            sendQuestList(socketIndex, "", "");
             return "";
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
@@ -10464,527 +6272,9 @@ public final class Handling {
         }
     }
 
-    public static String messengerFriendPayload(
-        long userId,
-        String userName,
-        String motto,
-        String figure,
-        long rankValue,
-        long followCount,
-        long isOnline,
-        String lastOnlineText,
-        long relationshipState
-    ) {
-        return MessengerPayloads.friend(
-            userId,
-            userName,
-            motto,
-            figure,
-            rankValue,
-            followCount,
-            isOnline,
-            lastOnlineText,
-            relationshipState,
-            messengerFollowEnabled());
-    }
-
-    public static String messengerFriendSummaryPayload(MessengerFriend friend, long relationshipState) {
-        return MessengerPayloads.friendSummary(friend, relationshipState, messengerFollowEnabled());
-    }
-
-    public static String messengerFriendSummaryPayload(String userId, long relationshipState) {
-        try {
-            if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))) {
-                return "";
-            }
-            String dateFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
-            String timeFormat = Functions.settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
-            MessengerDao messenger = messengerDao();
-            if (messenger == null) {
-                return "";
-            }
-            MessengerFriend friend = messenger
-                .messengerFriend(NumberUtils.parseLong(userId), dateFormat + " " + timeFormat)
-                .orElse(null);
-            return messengerFriendSummaryPayload(friend, relationshipState);
-        } catch (Exception ignored) {
-            return "";
-        }
-    }
-
-    public static boolean messengerFollowEnabled() {
-        return NumberUtils.parseLong(Functions.settingsCache().valueOrDefault("com.client.messenger.follow.enabled", 0)) != 0L;
-    }
-
-    public static long messengerMaxFriends(long configIndex) {
-        return messengerSettings().maxFriends(configIndex);
-    }
-
-    public static String requestTextFromWirePayload(String packetPayload, String prefix, int maxLength) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (!StringUtils.text(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
-            requestPayload = requestPayload.substring(prefix.length());
-        }
-        String value = Functions.readBase64LengthString(requestPayload);
-        if (value.isEmpty()) {
-            LongRef offset = new LongRef(1);
-            value = readWireString(requestPayload, offset);
-        }
-        if (maxLength >= 0 && value.length() > maxLength) {
-            return value.substring(0, maxLength);
-        }
-        return value;
-    }
-
-    public static FriendTargetList friendDeleteTargetsFromPayload(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("@f")) {
-            requestPayload = requestPayload.substring(2);
-        }
-        FriendTargetList result = new FriendTargetList();
-        LongRef offset = new LongRef(1);
-        long firstValue = readWireLong(requestPayload, offset);
-        if (firstValue == 1L) {
-            result.deleteAllPending = true;
-            return result;
-        }
-
-        long maxTargets = firstValue <= 0L ? 75L : Math.min(firstValue, 75L);
-        List<Long> targetIds = new ArrayList<>();
-        List<String> targetTokens = new ArrayList<>();
-        while (offset.value <= requestPayload.length() && result.targetCount < maxTargets) {
-            long previousOffset = offset.value;
-            long targetUserId = readWireLong(requestPayload, offset);
-            if (targetUserId <= 0L || offset.value == previousOffset) {
-                break;
-            }
-            String token = String.valueOf(targetUserId);
-            if (!targetIds.contains(targetUserId)) {
-                targetIds.add(targetUserId);
-                targetTokens.add(token);
-                result.targetCount++;
-            }
-        }
-        if (targetIds.isEmpty() && firstValue > 1L) {
-            targetIds.add(firstValue);
-            targetTokens.add(String.valueOf(firstValue));
-            result.targetCount = 1L;
-        }
-        result.targetIds = List.copyOf(targetIds);
-        result.targetList = String.join(",", targetTokens);
-        return result;
-    }
-
-    public static String messengerFriendListPayload(
-        List<MessengerFriend> friends,
-        long maxFriends0,
-        long maxFriends1,
-        long maxFriends2
-    ) {
-        return MessengerPayloads.friendList(friends, maxFriends0, maxFriends1, maxFriends2, messengerFollowEnabled());
-    }
-
-    public static FriendTargetList friendRemoveTargetsFromPayload(String packetPayload, String callerUserId) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("@h")) {
-            requestPayload = requestPayload.substring(2);
-        }
-        FriendTargetList result = new FriendTargetList();
-        LongRef offset = new LongRef(1);
-        long removeCount = readWireLong(requestPayload, offset);
-        if (removeCount <= 0L) {
-            return result;
-        }
-        if (removeCount > 75L) {
-            removeCount = 75L;
-        }
-        List<Long> targetIds = new ArrayList<>();
-        List<String> targetTokens = new ArrayList<>();
-        for (long removeIndex = 1L; removeIndex <= removeCount; removeIndex++) {
-            long targetUserId = readWireLong(requestPayload, offset);
-            String token = String.valueOf(targetUserId);
-            if (targetUserId > 0L && !token.equals(StringUtils.text(callerUserId)) && !targetIds.contains(targetUserId)) {
-                targetIds.add(targetUserId);
-                targetTokens.add(token);
-                result.targetCount++;
-            }
-        }
-        result.targetIds = List.copyOf(targetIds);
-        result.targetList = String.join(",", targetTokens);
-        return result;
-    }
-
-    public static PetCommandAction petCommandAction(long commandId, Object commandRows) {
-        PetCommandAction result = new PetCommandAction();
-        if (commandId <= 0L) {
-            return result;
-        }
-        for (PetSettings.PetCommandRow row : PetSettings.commandRows(commandRows)) {
-            if (row.commandId() == commandId) {
-                result.requiredLevel = row.requiredLevel();
-                result.action = row.action();
-                result.found = true;
-                return result;
-            }
-        }
-        BotDao bots = botDao();
-        if (bots != null) {
-            try {
-                PetCommandActionRow row = bots.petCommandAction(commandId).orElse(null);
-                if (row != null) {
-                    result.requiredLevel = row.requiredLevel();
-                    result.action = StringUtils.text(row.action());
-                    result.found = true;
-                }
-            } catch (Exception ignored) {
-                // VB6 source suppresses handler failures.
-            }
-        }
-        return result;
-    }
-
-    public static PetExperienceUpdate petExperienceUpdate(
-        long botEntityId,
-        String petName,
-        String petFigure,
-        long petLevel,
-        long petExperience,
-        long petEnergy,
-        long petNutrition,
-        long petScratches,
-        long experienceDelta,
-        Object levelRows
-    ) {
-        PetExperienceUpdate result = new PetExperienceUpdate();
-        long nextExperience = petExperience + experienceDelta;
-        if (nextExperience < 0L) {
-            nextExperience = 0L;
-        }
-        long nextLevel = petLevel;
-        long maxExperience = petLevelMaxExperience(petLevel, levelRows);
-        if (maxExperience > 0L && nextExperience >= maxExperience && petLevelMaxExperience(petLevel + 1L, levelRows) > 0L) {
-            nextLevel = petLevel + 1L;
-            nextExperience = 0L;
-            result.leveledUp = true;
-        }
-        result.petLevel = nextLevel;
-        result.petExperience = nextExperience;
-        result.statusPayload = petExperienceStatusPayload(botEntityId, petName, petFigure, nextLevel, nextExperience, petEnergy, petNutrition, petScratches);
-        result.experiencePayload = PetPayloads.experience(botEntityId, experienceDelta, nextExperience);
-        return result;
-    }
-
-    public static PetExperienceUpdate petExperienceUpdate(
-        long botEntityId,
-        String petName,
-        String petFigure,
-        long petLevel,
-        long petExperience,
-        long petEnergy,
-        long petNutrition,
-        long petScratches,
-        long experienceDelta,
-        List<PetLevelExperienceRow> levelRows
-    ) {
-        PetExperienceUpdate result = new PetExperienceUpdate();
-        long nextExperience = petExperience + experienceDelta;
-        if (nextExperience < 0L) {
-            nextExperience = 0L;
-        }
-        long nextLevel = petLevel;
-        long maxExperience = petLevelMaxExperience(petLevel, levelRows);
-        if (maxExperience > 0L && nextExperience >= maxExperience && petLevelMaxExperience(petLevel + 1L, levelRows) > 0L) {
-            nextLevel = petLevel + 1L;
-            nextExperience = 0L;
-            result.leveledUp = true;
-        }
-        result.petLevel = nextLevel;
-        result.petExperience = nextExperience;
-        result.statusPayload = petExperienceStatusPayload(botEntityId, petName, petFigure, nextLevel, nextExperience, petEnergy, petNutrition, petScratches);
-        result.experiencePayload = PetPayloads.experience(botEntityId, experienceDelta, nextExperience);
-        return result;
-    }
-
-    public static long petLevelMaxExperience(long petLevel, Object levelRows) {
-        for (PetSettings.PetLevelRow row : PetSettings.levelRows(levelRows)) {
-            if (row.level() == petLevel) {
-                return row.maxExperience();
-            }
-        }
-        BotDao bots = botDao();
-        if (bots != null) {
-            try {
-                return bots.petLevelMaxExperience(petLevel);
-            } catch (Exception ignored) {
-                // VB6 source suppresses handler failures.
-            }
-        }
-        return 0L;
-    }
-
-    public static long petLevelMaxExperience(long petLevel, List<PetLevelExperienceRow> levelRows) {
-        if (levelRows != null) {
-            for (PetLevelExperienceRow row : levelRows) {
-                if (row != null && row.level() == petLevel) {
-                    return row.maxExperience();
-                }
-            }
-        }
-        return 0L;
-    }
-
-    public static String petExperienceStatusPayload(
-        long botEntityId,
-        String petName,
-        String petFigure,
-        long petLevel,
-        long petExperience,
-        long petEnergy,
-        long petNutrition,
-        long petScratches
-    ) {
-        return PetPayloads.experienceStatus(botEntityId, petName, petFigure, petLevel, petExperience, petEnergy, petNutrition, petScratches);
-    }
-
-    public static String petScratchPayload(long botEntityId, long userId, long scratches, String petName, String petFigure) {
-        return PetPayloads.scratch(botEntityId, userId, scratches, petName, petFigure);
-    }
-
-    public static String petCommandActionPayload(long botEntityId, String commandAction, long commandId) {
-        return PetPayloads.commandAction(botEntityId, commandAction, commandId);
-    }
-
-    public static String petSpeechPayload(long botEntityId, String speechText) {
-        return PetPayloads.speech(botEntityId, speechText);
-    }
-
-    public static long reserveRepresentedBotSlot() {
-        RepresentedBotRegistry representedBots = Licence.representedBots();
-        long botEntityId = representedBots.reserveSlot();
-        Licence.setRepresentedBots(representedBots);
-        return botEntityId;
-    }
-
-    public static long allocateRepresentedBot(long roomSlot, RepresentedBotEntry botEntry) {
-        if (roomSlot <= 0L) {
-            return 0L;
-        }
-        long botEntityId = reserveRepresentedBotSlot();
-        if (botEntityId <= 0L) {
-            return 0L;
-        }
-        storeRepresentedBotRecord(botEntityId, representedBotRecord(roomSlot, botEntry));
-        return botEntityId;
-    }
-
-    public static String representedBotRecord(long roomSlot, RepresentedBotEntry botEntry) {
-        if (botEntry == null) {
-            return "";
-        }
-        return botEntry.recordText(roomSlot);
-    }
-
-    public static void storeRepresentedBotRecord(long botEntityId, String recordText) {
-        RepresentedBotRegistry representedBots = Licence.representedBots();
-        representedBots.storeRecord(botEntityId, recordText);
-        Licence.setRepresentedBots(representedBots);
-    }
-
-    public static void removeRepresentedBotRecord(long botEntityId) {
-        RepresentedBotRegistry representedBots = Licence.representedBots();
-        representedBots.removeRecord(botEntityId);
-        Licence.setRepresentedBots(representedBots);
-    }
-
-    public static void storeRepresentedBotPosition(long botEntityId, long positionX, long positionY, String positionZ, long positionR) {
-        RepresentedBotRegistry representedBots = Licence.representedBots();
-        representedBots.storePosition(botEntityId, positionX, positionY, positionZ, positionR);
-        Licence.setRepresentedBots(representedBots);
-    }
-
-    public static String representedBotRoomEntryPayload(long botEntityId) {
-        RepresentedBotRegistry.RepresentedBotRecord bot = Licence.representedBots().record(botEntityId);
-        if (botEntityId <= 0L || bot.botId() <= 0L) {
-            return "";
-        }
-        return PetPayloads.representedBotRoomEntry(
-            botEntityId,
-            bot.name(),
-            bot.positionX(),
-            bot.positionY(),
-            bot.positionZ(),
-            bot.positionR(),
-            bot.figure());
-    }
-
-    public static String representedRoomUserProfilePayload(RoomUserProfileRow row) {
-        if (row == null) {
-            return "";
-        }
-        return SocialPayloads.roomUserProfile(
-            row.roomUserIndex(),
-            row.userName(),
-            row.motto(),
-            row.achievementScore(),
-            row.figure());
-    }
-
-    public static RoomUserTargetRow activeRoomUserTarget(long roomId, long requestedRoomUserIndex) throws Exception {
-        RoomDao rooms = roomDao();
-        java.util.Optional<RoomUserTargetRow> target = rooms.activeRoomUserTargetByVisitId(roomId, requestedRoomUserIndex);
-        if (target.isEmpty()) {
-            target = rooms.activeRoomUserTargetByUserId(roomId, requestedRoomUserIndex);
-        }
-        return target.orElse(null);
-    }
-
-    public static long pollIdFromWire(String packetPayload, String prefix) {
-        return idRequestFromWire(packetPayload, prefix);
-    }
-
-    public static PollAnswerSubmission pollAnswerFromWire(String packetPayload, String prefix) {
-        PollAnswerSubmission submission = new PollAnswerSubmission();
-        String requestPayload = StringUtils.text(packetPayload);
-        if (!StringUtils.text(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
-            requestPayload = requestPayload.substring(prefix.length());
-        }
-        LongRef offset = new LongRef(1);
-        submission.pollId = readWireLong(requestPayload, offset);
-        submission.questionId = readWireLong(requestPayload, offset);
-        submission.answerValue = readWireLong(requestPayload, offset);
-        submission.answerText = Functions.singleLineText(readWireString(requestPayload, offset));
-        if (submission.pollId <= 0L) {
-            submission.pollId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-        }
-        if (submission.answerText.isEmpty() && submission.answerValue > 0L) {
-            submission.answerText = String.valueOf(submission.answerValue);
-        }
-        submission.valid = submission.pollId > 0L && submission.questionId > 0L;
-        return submission;
-    }
-
-    public static String achievementRowByIndex(long achievementIndex) {
-        return achievementSettings().rowByIndex(achievementIndex);
-    }
-
-    public static AchievementSettings.Achievement achievementByIndex(long achievementIndex) {
-        return achievementSettings().achievementByIndex(achievementIndex);
-    }
-
-    public static Map<String, Long> achievementCurrentLevels(String userId, Iterable<AchievementSettings.Achievement> achievements) {
-        Map<String, Long> result = new HashMap<>();
-        UserDao users = userDao();
-        long userIdValue = NumberUtils.parseLong(userId);
-        Iterable<AchievementSettings.Achievement> rows = achievements == null
-            ? List.<AchievementSettings.Achievement>of() : achievements;
-        for (AchievementSettings.Achievement achievement : rows) {
-            String badgePrefix = achievement.badgePrefix();
-            if (!badgePrefix.isEmpty() && !result.containsKey(badgePrefix)) {
-                long currentLevel = 0L;
-                if (users != null && userIdValue > 0L) {
-                    try {
-                        currentLevel = users.badgeLevelByPrefix(userIdValue, badgePrefix);
-                    } catch (Exception ignored) {
-                        currentLevel = 0L;
-                    }
-                }
-                result.put(badgePrefix, Math.max(0L, currentLevel));
-            }
-        }
-        return result;
-    }
-
-    public static long representedAchievementProgress(String userId, long achievementQuestId) {
-        UserDao users = userDao();
-        if (users == null) {
-            return 0L;
-        }
-        long userIdValue = NumberUtils.parseLong(userId);
-        try {
-            long progress;
-            if (achievementQuestId == 1L) {
-                progress = users.distinctVisitedRoomCount(userIdValue);
-            } else if (achievementQuestId == 2L) {
-                progress = users.respectReceived(userIdValue);
-            } else if (achievementQuestId == 3L) {
-                progress = users.respectGiven(userIdValue);
-            } else if (achievementQuestId == 4L) {
-                progress = users.onlineTime(userIdValue) / 60L;
-            } else if (achievementQuestId == 6L) {
-                progress = users.giftsGiven(userIdValue);
-            } else if (achievementQuestId == 7L) {
-                progress = users.giftsReceived(userIdValue);
-            } else if (achievementQuestId == 8L) {
-                progress = users.hcPeriods(userIdValue);
-            } else if (achievementQuestId == 9L) {
-                progress = users.hc2Periods(userIdValue);
-            } else if (achievementQuestId == 11L) {
-                progress = users.staffPickedAmount(userIdValue);
-            } else {
-                progress = users.achievementProgressSummary(userIdValue)
-                    .map(UserDao.AchievementProgressSummary::respectReceived)
-                    .orElse(0L);
-            }
-            return Math.max(0L, progress);
-        } catch (Exception ignored) {
-            return 0L;
-        }
-    }
-
-    public static String achievementRewardPayload(
-        long achievementIndex,
-        AchievementSettings.Achievement achievement,
-        long badgeLevel,
-        long badgeRowId
-    ) {
-        return AchievementPayloads.reward(achievementIndex, achievement, badgeLevel, badgeRowId);
-    }
-
-    public static String achievementAwardPayload(AchievementSettings.Achievement achievement) {
-        return AchievementPayloads.award(achievement);
-    }
-
-    public static AchievementProgressDecision achievementProgressDecision(
-        Iterable<AchievementSettings.IndexedAchievement> indexedAchievements,
-        long achievementQuestId,
-        Map<String, Long> currentLevelsByBadgePrefix,
-        long currentProgress
-    ) {
-        AchievementProgressDecision decision = new AchievementProgressDecision();
-        Iterable<AchievementSettings.IndexedAchievement> rows = indexedAchievements == null
-            ? List.<AchievementSettings.IndexedAchievement>of() : indexedAchievements;
-        for (AchievementSettings.IndexedAchievement indexedAchievement : rows) {
-            AchievementSettings.Achievement achievement = indexedAchievement.achievement();
-            if (achievement.achievementId() == achievementQuestId) {
-                long levelTotal = achievement.levelTotal();
-                if (levelTotal <= 0L) {
-                    levelTotal = 1L;
-                }
-                long currentLevel = currentLevelsByBadgePrefix != null
-                    && currentLevelsByBadgePrefix.containsKey(achievement.badgePrefix())
-                    ? currentLevelsByBadgePrefix.get(achievement.badgePrefix()) : 0L;
-                if (!achievement.badgePrefix().isEmpty() && achievement.progressRequired() > 0L
-                    && currentLevel >= 0L && currentLevel < levelTotal) {
-                    decision.achievementIndex = indexedAchievement.achievementIndex();
-                    decision.nextLevel = currentLevel + 1L;
-                    decision.requiredProgress = achievement.progressRequired() * decision.nextLevel;
-                    decision.shouldReward = currentProgress >= decision.requiredProgress;
-                }
-                return decision;
-            }
-        }
-        return decision;
-    }
-
-    public static String achievementListPayload(
-        Iterable<AchievementSettings.Achievement> achievements,
-        Map<String, Long> currentLevelsByBadgePrefix
-    ) {
-        return AchievementPayloads.list(achievements, currentLevelsByBadgePrefix);
-    }
-
-    public static String handlingRepresentedWiredEdit(
-        Object[] args,
+    private static String representedWiredEdit(
+        int socketIndex,
+        String packetPayload,
         String packetCode,
         long minimumCode,
         long maximumCode,
@@ -10992,725 +6282,123 @@ public final class Handling {
         boolean includeExtraValue
     ) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            String packetPayload = handlingPacketPayload(args);
-            long furnitureId = firstWireLong(packetPayload, packetCode);
-            if (socketIndex <= 0 || furnitureId <= 0L) {
-                return "";
-            }
-            String userId = handlingUserIdFromSocket(socketIndex);
-            if (userId.isEmpty() || "0".equals(userId)) {
-                return "";
-            }
-            long roomId = handlingCurrentRoomId(socketIndex, userId);
-            if (roomId <= 0L || (!handlingUserHasRoomRight(userId, roomId) && !handlingUserOwnsRoom(userId, roomId))) {
-                return "";
-            }
-            long productId = furnitureDao().roomFurnitureProductById(furnitureId, roomId)
-                .map(FurnitureDao.RoomFurnitureProduct::productId)
-                .orElse(0L);
-            long wiredCode = DataManager.productCache().wiredCode(productId);
-            if (wiredCode < minimumCode || wiredCode > maximumCode) {
-                return "";
-            }
-            String recordText = wiredEditRecordFromWire(packetPayload, packetCode, wiredCode, includeExtraValue);
-            if (recordText.isEmpty()) {
-                return "";
-            }
-            String selectedIds = WiredPayloads.record(recordText).selectedIds();
-            if (!selectedIds.isEmpty() && !handlingRepresentedWiredSelectedItemsExist(roomId, selectedIds)) {
-                return "";
-            }
-            String cachePath = wiredCachePath(cacheFolder, roomId);
-            String cacheText = readFile(cachePath);
-            writeFile(cachePath, WiredPayloads.cacheWithRecord(cacheText, recordText));
-            return recordText;
+            WiredLookups.RoomRequest request = WiredLookups.roomRequest(socketIndex, userDao(), roomDao());
+            return WiredLookups.editRecord(
+                socketIndex,
+                request,
+                packetPayload,
+                packetCode,
+                minimumCode,
+                maximumCode,
+                cacheFolder,
+                includeExtraValue,
+                furnitureDao(),
+                roomDao());
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return "";
         }
     }
 
-    public static long handlingRepresentedWiredTriggerCall(Object[] args, long triggerCode) {
+    /**
+     * Original function: Proc_6_211_7E1E40.
+     * Original function: Proc_6_212_7E36C0.
+     * Original function: Proc_6_213_7E3FA0.
+     * Original function: Proc_6_214_7E60C0.
+     */
+    private static long representedWiredTrigger(int socketIndex, long fallbackRoomId, long triggerCode) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long roomId = 0L;
-            if (socketIndex > 0) {
-                String userId = handlingUserIdFromSocket(socketIndex);
-                if (!userId.isEmpty() && !"0".equals(userId)) {
-                    roomId = handlingCurrentRoomId(socketIndex, userId);
-                }
+            long roomId = WiredLookups.roomRequest(socketIndex, userDao(), roomDao()).roomId();
+            if (roomId <= 0L) {
+                roomId = fallbackRoomId;
             }
-            if (roomId <= 0L && args != null && args.length >= 2) {
-                roomId = NumberUtils.parseLong(args[1]);
-            }
-            return handlingRepresentedWiredTrigger(roomId, triggerCode, socketIndex);
+            return WiredLookups.trigger(roomId, triggerCode, 0L, furnitureDao(), Handling::broadcastToRoomUsers);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
         }
     }
 
-    public static long handlingRepresentedWiredActionCall(Object[] args, long actionCode) {
+    /**
+     * Original function: Proc_6_215_7E6770.
+     * Original function: Proc_6_216_7E8120.
+     * Original function: Proc_6_217_7E9780.
+     */
+    private static long representedWiredAction(int socketIndex, long fallbackRoomId, long selectedFurnitureId, long actionCode) {
         try {
-            int socketIndex = handlingSocketIndex(args);
-            long roomId = 0L;
-            if (socketIndex > 0) {
-                String userId = handlingUserIdFromSocket(socketIndex);
-                if (!userId.isEmpty() && !"0".equals(userId)) {
-                    roomId = handlingCurrentRoomId(socketIndex, userId);
-                }
+            long roomId = WiredLookups.roomRequest(socketIndex, userDao(), roomDao()).roomId();
+            if (roomId <= 0L) {
+                roomId = fallbackRoomId;
             }
-            if (roomId <= 0L && args != null && args.length >= 2) {
-                roomId = NumberUtils.parseLong(args[1]);
-            }
-            long selectedFurnitureId = args != null && args.length >= 3 ? NumberUtils.parseLong(args[2]) : 0L;
-            return handlingRepresentedWiredAction(roomId, actionCode, selectedFurnitureId, socketIndex);
+            return WiredLookups.action(roomId, actionCode, selectedFurnitureId, furnitureDao(), Handling::broadcastToRoomUsers);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return 0L;
         }
-    }
-
-    public static long handlingRepresentedWiredTrigger(long roomId, long triggerCode, int socketIndex) {
-        if (roomId <= 0L) {
-            return 0L;
-        }
-        long executedCount = 0L;
-        for (String row : readWiredCache("wired_trigger", roomId).replace("\r", "").split("\n", -1)) {
-            String recordText = row.trim();
-            if (!recordText.isEmpty()) {
-                long recordCode = NumberUtils.parseLong(WiredPayloads.record(recordText).code());
-                if ((triggerCode <= 0L || recordCode == triggerCode) && handlingRepresentedWiredConditionsPass(roomId)) {
-                    executedCount += handlingRepresentedWiredAction(roomId, 0L, 0L, socketIndex);
-                }
-            }
-        }
-        return executedCount;
-    }
-
-    public static boolean handlingRepresentedWiredConditionsPass(long roomId) {
-        if (roomId <= 0L) {
-            return false;
-        }
-        for (String row : readWiredCache("wired_condition", roomId).replace("\r", "").split("\n", -1)) {
-            String recordText = row.trim();
-            if (!recordText.isEmpty()) {
-                String selectedIds = WiredPayloads.record(recordText).selectedIds();
-                if (!selectedIds.isEmpty() && !handlingRepresentedWiredSelectedItemsExist(roomId, selectedIds)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    public static long handlingRepresentedWiredAction(long roomId, long actionCode, long selectedFurnitureId, int socketIndex) {
-        if (roomId <= 0L) {
-            return 0L;
-        }
-        long actionCount = 0L;
-        for (String row : readWiredCache("wired_action", roomId).replace("\r", "").split("\n", -1)) {
-            String recordText = row.trim();
-            if (!recordText.isEmpty()) {
-                WiredPayloads.WiredRecord record = WiredPayloads.record(recordText);
-                long recordCode = NumberUtils.parseLong(record.code());
-                if (actionCode <= 0L || recordCode == actionCode) {
-                    actionCount += handlingRepresentedWiredApplySelected(
-                        roomId, record.selectedIds(), record.parameterText(), selectedFurnitureId);
-                }
-            }
-        }
-        return actionCount;
-    }
-
-    public static long handlingRepresentedWiredApplySelected(long roomId, String selectedIds, String parameterText, long selectedFurnitureId) {
-        if (roomId <= 0L) {
-            return 0L;
-        }
-        String effectiveSelectedIds = selectedFurnitureId > 0L ? String.valueOf(selectedFurnitureId) : StringUtils.text(selectedIds);
-        if (effectiveSelectedIds.isEmpty()) {
-            return 0L;
-        }
-        FurnitureDao furniture = furnitureDao();
-        if (furniture == null) {
-            return 0L;
-        }
-        long stateValue = NumberUtils.parseLong((StringUtils.text(parameterText) + ";").split(";", -1)[0]);
-        long appliedCount = 0L;
-        for (String idPart : effectiveSelectedIds.replace(',', ';').split(";", -1)) {
-            long furnitureId = NumberUtils.parseLong(idPart);
-            if (furnitureId > 0L && handlingFurnitureExistsInRoom(roomId, furnitureId)) {
-                try {
-                    furniture.updateSignLimited(furnitureId, stateValue);
-                    refreshRepresentedFurnitureState(roomId, furnitureId, stateValue);
-                    broadcastToRoomUsers(roomId, FurniturePayloads.stateChanged(furnitureId, stateValue));
-                    appliedCount++;
-                } catch (Exception ignored) {
-                    // VB6 source suppresses helper failures.
-                }
-            }
-        }
-        return appliedCount;
-    }
-
-    public static boolean handlingRepresentedWiredSelectedItemsExist(long roomId, String selectedIds) {
-        if (roomId <= 0L) {
-            return false;
-        }
-        for (String idPart : StringUtils.text(selectedIds).replace(',', ';').split(";", -1)) {
-            long furnitureId = NumberUtils.parseLong(idPart);
-            if (furnitureId > 0L && !handlingFurnitureExistsInRoom(roomId, furnitureId)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static long firstWireLong(String packetPayload, String packetCode) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (!StringUtils.text(packetCode).isEmpty() && requestPayload.startsWith(packetCode)) {
-            requestPayload = requestPayload.substring(StringUtils.text(packetCode).length());
-        }
-        LongRef offset = new LongRef(1);
-        long value = readWireLong(requestPayload, offset);
-        return value > 0L ? value : NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-    }
-
-    public static String wiredCachePath(String cacheFolder, long roomId) {
-        return Path.of(Functions.applicationPath, "cache", StringUtils.text(cacheFolder), roomId + ".cache").toString();
-    }
-
-    public static String readWiredCache(String cacheFolder, long roomId) {
-        return roomId <= 0L ? "" : readFile(wiredCachePath(cacheFolder, roomId));
-    }
-
-    public static boolean handlingFurnitureExistsInRoom(long roomId, long furnitureId) {
-        if (roomId <= 0L || furnitureId <= 0L) {
-            return false;
-        }
-        try {
-            FurnitureDao furniture = furnitureDao();
-            return furniture != null && furniture.existsInRoom(furnitureId, roomId);
-        } catch (Exception ignored) {
-            // VB6 source suppresses helper failures.
-            return false;
-        }
-    }
-
-    public static String wiredEditRecordFromWire(String packetPayload, String packetCode, long wiredCode, boolean includeExtraValue) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (!StringUtils.text(packetCode).isEmpty() && requestPayload.startsWith(packetCode)) {
-            requestPayload = requestPayload.substring(packetCode.length());
-        }
-        LongRef offset = new LongRef(1);
-        long furnitureId = readWireLong(requestPayload, offset);
-        if (furnitureId <= 0L) {
-            furnitureId = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-        }
-        if (furnitureId <= 0L || wiredCode <= 0L) {
-            return "";
-        }
-        long parameterCount = readWireLong(requestPayload, offset);
-        if (parameterCount < 0L || parameterCount > 100L) {
-            return "";
-        }
-        String parameterValues = "";
-        for (long parameterIndex = 0L; parameterIndex < parameterCount; parameterIndex++) {
-            long parameterValue = readWireLong(requestPayload, offset);
-            if (!parameterValues.isEmpty()) {
-                parameterValues += ";";
-            }
-            parameterValues += parameterValue;
-        }
-        String textValue = left(Functions.singleLineText(readWireString(requestPayload, offset)), 125);
-        if (textValue.isEmpty()) {
-            textValue = left(Functions.singleLineText(Functions.readBase64LengthString(requestPayload)), 125);
-        }
-        long selectedCount = readWireLong(requestPayload, offset);
-        if (selectedCount < 0L || selectedCount > 100L) {
-            return "";
-        }
-        String selectedIdsText = "";
-        for (long selectedIndex = 0L; selectedIndex < selectedCount; selectedIndex++) {
-            long selectedFurnitureId = readWireLong(requestPayload, offset);
-            if (selectedFurnitureId <= 0L) {
-                return "";
-            }
-            if (!selectedIdsText.isEmpty()) {
-                selectedIdsText += ";";
-            }
-            selectedIdsText += selectedFurnitureId;
-        }
-        long extraValue = includeExtraValue ? readWireLong(requestPayload, offset) : 0L;
-        return WiredPayloads.recordText(wiredCode, furnitureId, selectedIdsText, parameterValues, textValue,
-            includeExtraValue ? String.valueOf(extraValue) : "");
-    }
-
-    public static SongInfoRequest songInfoRequestFromWire(String packetPayload) {
-        SongInfoRequest request = new SongInfoRequest();
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("C]")) {
-            requestPayload = requestPayload.substring(2);
-        }
-        LongRef offset = new LongRef(1);
-        long requestedCount = readWireLong(requestPayload, offset);
-        if (requestedCount <= 0L) {
-            requestedCount = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-        }
-        if (requestedCount > 60L) {
-            requestedCount = 60L;
-        }
-        request.requestedCount = requestedCount;
-        List<Long> requestedIdList = new ArrayList<>();
-        List<String> requestedTokens = new ArrayList<>();
-        for (long requestIndex = 0L; requestIndex < requestedCount; requestIndex++) {
-            long cdId = readWireLong(requestPayload, offset);
-            if (cdId > 0L) {
-                requestedIdList.add(cdId);
-                requestedTokens.add(String.valueOf(cdId));
-            }
-        }
-        request.requestedIdList = List.copyOf(requestedIdList);
-        request.requestedIds = String.join(",", requestedTokens);
-        return request;
-    }
-
-    public static String removeSoundMachineMarkers(String representedRoomCache, long jukeboxId, long activeDestinationId) {
-        String cache = StringUtils.text(representedRoomCache);
-        if (activeDestinationId > 0L) {
-            cache = cache.replaceFirst(Pattern.quote("\1" + activeDestinationId + '\2'), "");
-        }
-        if (jukeboxId > 0L) {
-            cache = cache.replaceFirst(Pattern.quote("\1" + jukeboxId + '\2'), "");
-        }
-        return cache;
-    }
-
-    public static JukeboxAddRequest jukeboxAddRequestFromWire(String packetPayload) {
-        JukeboxAddRequest request = new JukeboxAddRequest();
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("C" + '\177')) {
-            requestPayload = requestPayload.substring(2);
-        }
-        LongRef offset = new LongRef(1);
-        request.diskFurnitureId = readWireLong(requestPayload, offset);
-        request.playlistOrder = readWireLong(requestPayload, offset);
-        if (request.playlistOrder < 0L) {
-            request.playlistOrder = 0L;
-        }
-        return request;
-    }
-
-    public static java.util.Optional<JukeboxRow> jukeboxRowForRoom(long roomId) {
-        if (roomId <= 0L) {
-            return java.util.Optional.empty();
-        }
-        JukeboxDao jukebox = jukeboxDao();
-        if (jukebox == null) {
-            return java.util.Optional.empty();
-        }
-        try {
-            return jukebox.jukeboxInRoom(roomId);
-        } catch (Exception ignored) {
-            return java.util.Optional.empty();
-        }
-    }
-
-    public static boolean jukeboxCanAddDisk(long playlistOrder, String maxOrderText, long playlistCount, long playlistLimit) {
-        long effectiveLimit = playlistLimit <= 0L ? 100L : playlistLimit;
-        if (playlistCount >= effectiveLimit) {
-            return false;
-        }
-        String maxText = StringUtils.text(maxOrderText);
-        long maxOrder = NumberUtils.parseLong(maxText);
-        if (!maxText.isEmpty()) {
-            return playlistOrder == maxOrder || playlistOrder == maxOrder + 1L;
-        }
-        return playlistOrder == 0L;
-    }
-
-    public static long jukeboxRemoveOrderFromWire(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("D@")) {
-            requestPayload = requestPayload.substring(2);
-        }
-        LongRef offset = new LongRef(1);
-        long playlistOrder = readWireLong(requestPayload, offset);
-        return Math.max(0L, playlistOrder);
-    }
-
-    public static BadgeUpdateSelections badgeUpdateSelectionsFromWire(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("B^")) {
-            requestPayload = requestPayload.substring(2);
-        }
-        LongRef offset = new LongRef(1);
-        String first = badgeUpdateSelectionFromWire(requestPayload, offset);
-        String second = badgeUpdateSelectionFromWire(requestPayload, offset);
-        String third = badgeUpdateSelectionFromWire(requestPayload, offset);
-        String fourth = badgeUpdateSelectionFromWire(requestPayload, offset);
-        String fifth = badgeUpdateSelectionFromWire(requestPayload, offset);
-        return new BadgeUpdateSelections(first, second, third, fourth, fifth);
-    }
-
-    private static String badgeUpdateSelectionFromWire(String requestPayload, LongRef offset) {
-        long hasBadge = readWireLong(requestPayload, offset);
-        if (hasBadge == 1L) {
-            return Functions.sqlEscapedText(readWireString(requestPayload, offset));
-        }
-        return "";
-    }
-
-    public static long idRequestFromWire(String packetPayload, String prefix) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (!StringUtils.text(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
-            requestPayload = requestPayload.substring(prefix.length());
-        }
-        LongRef offset = new LongRef(1);
-        long value = readWireLong(requestPayload, offset);
-        if (value <= 0L) {
-            value = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-        }
-        return value;
-    }
-
-    public static RecyclerSelection recyclerSelectionFromWire(String packetPayload) {
-        RecyclerSelection selection = new RecyclerSelection();
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("F^")) {
-            requestPayload = requestPayload.substring(2);
-        }
-        LongRef offset = new LongRef(1);
-        selection.requestedCount = readWireLong(requestPayload, offset);
-        if (selection.requestedCount != 5L) {
-            return selection;
-        }
-        List<Long> selectedItemIds = new ArrayList<>();
-        List<String> selectedItemTokens = new ArrayList<>();
-        for (long itemIndex = 0L; itemIndex < selection.requestedCount; itemIndex++) {
-            long furnitureId = readWireLong(requestPayload, offset);
-            if (furnitureId <= 0L) {
-                return selection;
-            }
-            String token = String.valueOf(furnitureId);
-            if (selectedItemIds.contains(furnitureId)) {
-                return selection;
-            }
-            selectedItemIds.add(furnitureId);
-            selectedItemTokens.add(token);
-        }
-        selection.selectedItemIds = List.copyOf(selectedItemIds);
-        selection.selectedItems = String.join(",", selectedItemTokens);
-        selection.valid = true;
-        return selection;
-    }
-
-    public static String recyclerSelectionWhereClause(String selectedItems, String escapedUserId) {
-        String whereClause = "";
-        for (String item : StringUtils.text(selectedItems).split(",", -1)) {
-            long furnitureId = NumberUtils.parseLong(item);
-            if (furnitureId <= 0L) {
-                continue;
-            }
-            if (!whereClause.isEmpty()) {
-                whereClause += " OR ";
-            }
-            whereClause += "furnitures.id_owner='" + escapedUserId + "' AND furnitures.id_room IS NULL"
-                + " AND furnitures.id='" + furnitureId + "' AND products.id=furnitures.id_product"
-                + " AND products.is_recycleable='1'";
-        }
-        return whereClause;
-    }
-
-    public static long representedRecyclerRewardProduct() {
-        try {
-            RecyclerSettings recyclerSettings = recyclerSettings();
-            if (recyclerSettings.hasRewardGroups()) {
-                for (RecyclerSettings.RewardGroup rewardGroup : recyclerSettings.rewardGroups()) {
-                    long chance = rewardGroup.chance();
-                    if (chance > 0L && Functions.randomLongInclusive(1, chance) == 1L) {
-                        long productId = representedRandomProductFromList(rewardGroup.productIds());
-                        if (productId > 0L) {
-                            return productId;
-                        }
-                    }
-                }
-                for (RecyclerSettings.RewardGroup rewardGroup : recyclerSettings.rewardGroups()) {
-                    long productId = representedRandomProductFromList(rewardGroup.productIds());
-                    if (productId > 0L) {
-                        return productId;
-                    }
-                }
-            }
-            RecyclerDao recycler = recyclerDao();
-            List<Long> rewardProductIds = recycler == null ? List.of() : recycler.fallbackRewardProductIds();
-            if (!rewardProductIds.isEmpty()) {
-                int rowIndex = (int) Functions.randomLongInclusive(0, rewardProductIds.size() - 1L);
-                rowIndex = Math.max(0, Math.min(rowIndex, rewardProductIds.size() - 1));
-                Long productId = rewardProductIds.get(rowIndex);
-                return productId == null ? 0L : productId;
-            }
-            return 0L;
-        } catch (Exception ignored) {
-            // VB6 source suppresses helper failures.
-            return 0L;
-        }
-    }
-
-    public static long representedRandomProductFromList(String productList) {
-        return representedRandomProductFromList(RecyclerSettings.productIds(productList));
-    }
-
-    public static long representedRandomProductFromList(List<Long> productIds) {
-        try {
-            if (productIds == null || productIds.isEmpty()) {
-                return 0L;
-            }
-            int selectedIndex = (int) Functions.randomLongInclusive(0, productIds.size() - 1L);
-            selectedIndex = Math.max(0, Math.min(selectedIndex, productIds.size() - 1));
-            return productIds.get(selectedIndex);
-        } catch (Exception ignored) {
-            // VB6 source suppresses helper failures.
-            return 0L;
-        }
-    }
-
-    public static String recyclerRewardSign() {
-        return LocalDateTime.now().toString().replace('T', ' ');
-    }
-
-    public static long staffNestedUserIdFromWire(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        long directValue = NumberUtils.parseLong(Functions.readVl64LengthString(requestPayload));
-        if (directValue > 0L) {
-            return directValue;
-        }
-        LongRef offset = new LongRef(1);
-        String nestedPayload = readWireString(requestPayload, offset);
-        long nestedValue = NumberUtils.parseLong(Functions.readVl64LengthString(nestedPayload));
-        if (nestedValue <= 0L) {
-            nestedValue = NumberUtils.parseLong(nestedPayload);
-        }
-        if (nestedValue > 0L) {
-            return nestedValue;
-        }
-        offset.value = 1L;
-        return readWireLong(requestPayload, offset);
-    }
-
-    public static StaffChatRowsPayload staffRoomChatRowsPayload(List<StaffRoomChatRow> chatRows) {
-        StaffPayloads.ChatRows chatRowsPayload = StaffPayloads.roomChatRows(chatRows);
-        StaffChatRowsPayload result = new StaffChatRowsPayload();
-        result.chatCount = chatRowsPayload.chatCount;
-        result.payload = chatRowsPayload.payload;
-        return result;
     }
 
     private static StaffModerationDao staffModerationDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new StaffModerationDao(database);
+        return DaoProvider.staffModerationDao();
     }
 
     private static HelpDao helpDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new HelpDao(database);
+        return DaoProvider.helpDao();
     }
 
     private static UserDao userDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new UserDao(database);
+        return DaoProvider.userDao();
     }
 
     private static ClubDao clubDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new ClubDao(database);
+        return DaoProvider.clubDao();
     }
 
     private static CatalogDao catalogDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new CatalogDao(database);
+        return DaoProvider.catalogDao();
     }
 
     private static RoomDao roomDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new RoomDao(database);
+        return DaoProvider.roomDao();
     }
 
     private static FurnitureDao furnitureDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new FurnitureDao(database);
+        return DaoProvider.furnitureDao();
     }
 
     private static PackageDao packageDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new PackageDao(database);
+        return DaoProvider.packageDao();
     }
 
     private static VoucherDao voucherDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new VoucherDao(database);
+        return DaoProvider.voucherDao();
     }
 
     private static PollDao pollDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new PollDao(database);
+        return DaoProvider.pollDao();
     }
 
     private static JukeboxDao jukeboxDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new JukeboxDao(database);
+        return DaoProvider.jukeboxDao();
     }
 
     private static QuestDao questDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new QuestDao(database);
+        return DaoProvider.questDao();
     }
 
     private static RecyclerDao recyclerDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new RecyclerDao(database);
+        return DaoProvider.recyclerDao();
     }
 
     private static BotDao botDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new BotDao(database);
+        return DaoProvider.botDao();
     }
 
     private static TradeDao tradeDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new TradeDao(database);
+        return DaoProvider.tradeDao();
     }
 
     private static MessengerDao messengerDao() {
-        Database database = MySQL.configuredDatabase();
-        return database == null ? null : new MessengerDao(database);
-    }
-
-    private static boolean readRoomEventCommon(String packetPayload, LongRef offset, RoomEventPayload result, boolean requireText) {
-        result.eventName = Functions.singleLineText(readWireString(packetPayload, offset));
-        if (requireText && result.eventName.length() < 3) {
-            return false;
-        }
-        result.eventDescription = Functions.singleLineText(readWireString(packetPayload, offset));
-        if (requireText && result.eventDescription.length() < 3) {
-            return false;
-        }
-        long tagCount = readWireLong(packetPayload, offset);
-        if (tagCount < 0L || tagCount > 2L) {
-            return false;
-        }
-        for (long tagIndex = 1L; tagIndex <= tagCount; tagIndex++) {
-            String tagText = left(Functions.singleLineText(readWireString(packetPayload, offset)), 30).toLowerCase();
-            if (tagIndex == 1L) {
-                result.tagOne = tagText;
-            } else if (tagIndex == 2L) {
-                result.tagTwo = tagText;
-            }
-        }
-        return true;
-    }
-
-    private static long optionalWireLong(String packetPayload, LongRef offset, long defaultValue) {
-        long previousOffset = offset.value;
-        long value = readWireLong(packetPayload, offset);
-        return offset.value <= previousOffset ? defaultValue : value;
-    }
-
-    private static boolean containsDelimitedId(String idText, long wantedId) {
-        String wanted = String.valueOf(wantedId);
-        for (String idPart : StringUtils.text(idText).replace(',', ';').split(";", -1)) {
-            if (wanted.equals(String.valueOf(NumberUtils.parseLong(idPart)))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static void appendRow(StringBuilder rows, String rowText) {
-        if (rows.length() > 0) {
-            rows.append('\r');
-        }
-        rows.append(rowText);
-    }
-
-    private static String questRowsFromSource() {
-        return questSettingsFromSource().rows();
-    }
-
-    private static QuestSettings questSettingsFromSource() {
-        QuestSettings settings = questSettings();
-        if (settings.hasRows()) {
-            return settings;
-        }
-        QuestDao quests = questDao();
-        if (quests == null) {
-            return QuestSettings.empty();
-        }
-        try {
-            List<QuestSettings.QuestDefinitionRow> rows = new ArrayList<>();
-            for (QuestDao.QuestDefinition quest : quests.questDefinitions()) {
-                if (quest != null) {
-                    rows.add(QuestSettings.QuestDefinitionRow.fromFields(
-                        quest.questId(),
-                        quest.level(),
-                        quest.name(),
-                        quest.legacyNullSlot(),
-                        quest.reward(),
-                        quest.rewardType(),
-                        quest.requiredAction(),
-                        quest.additionalId(),
-                        quest.campaignId(),
-                        quest.activityAmount(),
-                        quest.waitAmount()));
-                }
-            }
-            return QuestSettings.fromDefinitions(rows);
-        } catch (Exception ignored) {
-            return QuestSettings.empty();
-        }
-    }
-
-    private static List<QuestSettings.UserQuestListRow> userQuestRowsWithRemainingWait(
-        QuestDao quests,
-        List<QuestDao.UserQuestListRow> userQuestRows
-    )
-        throws Exception {
-
-        List<QuestSettings.UserQuestListRow> rows = new ArrayList<>();
-        for (QuestDao.UserQuestListRow row : userQuestRows == null ? List.<QuestDao.UserQuestListRow>of() : userQuestRows) {
-            String timeNextText = StringUtils.text(row.timeNext());
-            long remainingWait = 0L;
-            if (!timeNextText.isEmpty() && !"0".equals(timeNextText)) {
-                remainingWait = quests.remainingWait(timeNextText);
-            }
-            rows.add(new QuestSettings.UserQuestListRow(
-                row.questId(),
-                row.level(),
-                row.timestampDone(),
-                row.timestampAccepted(),
-                row.timeNext(),
-                row.progress(),
-                remainingWait,
-                7));
-        }
-        return rows;
-    }
-
-    private static String left(String value, int maxLength) {
-        String text = StringUtils.text(value);
-        return text.length() <= maxLength ? text : text.substring(0, maxLength);
-    }
-
-    private static int firstPositiveIndex(String text, char... chars) {
-        int result = -1;
-        for (char ch : chars) {
-            int at = text.indexOf(ch);
-            if (at >= 0 && (result < 0 || at < result)) {
-                result = at;
-            }
-        }
-        return result;
+        return DaoProvider.messengerDao();
     }
 
 }

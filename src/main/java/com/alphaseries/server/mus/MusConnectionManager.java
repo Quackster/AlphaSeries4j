@@ -17,16 +17,10 @@ public final class MusConnectionManager {
         this.sink = sink == null ? (socketIndex, payload) -> { } : sink;
     }
 
-    /**
-     * Original function: HandlingMUS.Proc_12_0_8218C0.
-     */
     public void sendShutdown(int socketIndex) {
         sendPayload(socketIndex, MusPayloads.shutdown(socketIndex));
     }
 
-    /**
-     * Original function: HandlingMUS.Proc_12_1_821AA0.
-     */
     public void sendData(int socketIndex, String messageText) {
         sendPayload(socketIndex, MusPayloads.data(socketIndex, messageText));
     }

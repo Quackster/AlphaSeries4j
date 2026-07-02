@@ -15,12 +15,6 @@ public final class CatalogRegistry {
     private final Map<Long, CatalogRow> catalogProducts;
     private final Map<Long, CatalogRow> deals;
 
-    private CatalogRegistry(Object products, Object catalogProducts, Object deals) {
-        this.products = rowsById(products);
-        this.catalogProducts = rowsById(catalogProducts);
-        this.deals = rowsById(deals);
-    }
-
     private CatalogRegistry(
         Map<Long, CatalogRow> products,
         Map<Long, CatalogRow> catalogProducts,
@@ -31,8 +25,15 @@ public final class CatalogRegistry {
         this.deals = new LinkedHashMap<>(deals);
     }
 
-    public static CatalogRegistry fromLegacyCaches(Object products, Object catalogProducts, Object deals) {
-        return new CatalogRegistry(products, catalogProducts, deals);
+    public static CatalogRegistry fromRowMaps(
+        Map<Long, CatalogRow> products,
+        Map<Long, CatalogRow> catalogProducts,
+        Map<Long, CatalogRow> deals
+    ) {
+        return new CatalogRegistry(
+            products == null ? Map.of() : products,
+            catalogProducts == null ? Map.of() : catalogProducts,
+            deals == null ? Map.of() : deals);
     }
 
     public static CatalogRegistry fromRows(
@@ -47,7 +48,7 @@ public final class CatalogRegistry {
     }
 
     public static CatalogRegistry empty() {
-        return new CatalogRegistry("", "", "");
+        return new CatalogRegistry(Map.of(), Map.of(), Map.of());
     }
 
     public String productCell(long productId, long columnIndex) {
@@ -58,13 +59,12 @@ public final class CatalogRegistry {
         return cell(catalogProducts, catalogProductId, columnIndex);
     }
 
-    public String productRow(long productId) {
-        CatalogRow row = products.get(productId);
-        return row == null ? "" : row.text();
-    }
-
     public List<CatalogRow> productRows() {
         return List.copyOf(products.values());
+    }
+
+    public Map<Long, CatalogRow> productRowMap() {
+        return Map.copyOf(products);
     }
 
     public Optional<Product> product(long productId) {
@@ -86,13 +86,12 @@ public final class CatalogRegistry {
             NumberUtils.parseLong(row.field(37))));
     }
 
-    public String catalogProductRow(long catalogProductId) {
-        CatalogRow row = catalogProducts.get(catalogProductId);
-        return row == null ? "" : row.text();
-    }
-
     public List<CatalogRow> catalogProductRows() {
         return List.copyOf(catalogProducts.values());
+    }
+
+    public Map<Long, CatalogRow> catalogProductRowMap() {
+        return Map.copyOf(catalogProducts);
     }
 
     public Optional<CatalogProduct> catalogProduct(long catalogProductId) {
@@ -116,13 +115,12 @@ public final class CatalogRegistry {
             NumberUtils.parseLong(row.field(12))));
     }
 
-    public String dealRow(long productId) {
-        CatalogRow row = deals.get(productId);
-        return row == null ? "" : row.text();
-    }
-
     public List<CatalogRow> dealRows() {
         return List.copyOf(deals.values());
+    }
+
+    public Map<Long, CatalogRow> dealRowMap() {
+        return Map.copyOf(deals);
     }
 
     public Optional<ProductDeal> productDeal(long productId) {
@@ -130,15 +128,7 @@ public final class CatalogRegistry {
         if (row == null || row.isEmpty()) {
             return Optional.empty();
         }
-        String itemText = row.fieldCount() >= 2 ? row.field(1) : row.text();
-        List<Long> itemProductIds = new ArrayList<>();
-        for (String item : itemText.replace(',', ';').split(";", -1)) {
-            long itemProductId = NumberUtils.parseLong(item);
-            if (itemProductId > 0L) {
-                itemProductIds.add(itemProductId);
-            }
-        }
-        return Optional.of(new ProductDeal(NumberUtils.parseLong(row.field(0)), itemProductIds));
+        return Optional.of(new ProductDeal(NumberUtils.parseLong(row.field(0)), row.productDealItemIds()));
     }
 
     public record CatalogProduct(
@@ -187,43 +177,6 @@ public final class CatalogRegistry {
         return columnIndex >= 0 && columnIndex < row.fieldCount() ? row.field((int) columnIndex) : "";
     }
 
-    private static Map<Long, CatalogRow> rowsById(Object cache) {
-        Map<Long, CatalogRow> rows = new LinkedHashMap<>();
-        if (cache instanceof Iterable<?> values) {
-            for (Object value : values) {
-                if (value instanceof CatalogDao.ProductCacheRow row) {
-                    CatalogRow catalogRow = CatalogRow.fromFields(row.values());
-                    rows.put(NumberUtils.parseLong(catalogRow.field(0)), catalogRow);
-                } else if (value instanceof CatalogDao.CatalogProductCacheRow row) {
-                    CatalogRow catalogRow = CatalogRow.fromFields(row.values());
-                    rows.put(NumberUtils.parseLong(catalogRow.field(0)), catalogRow);
-                } else if (value instanceof CatalogDao.ProductDealRow row) {
-                    rows.put(row.dealId(), CatalogRow.fromFields(List.of(
-                        String.valueOf(row.dealId()),
-                        StringUtils.text(row.items()))));
-                }
-            }
-            return rows;
-        }
-        if (cache instanceof String[] rowArray) {
-            for (int index = 0; index < rowArray.length; index++) {
-                String row = StringUtils.text(rowArray[index]);
-                if (!row.isEmpty()) {
-                    rows.put((long) index, CatalogRow.fromText(row));
-                }
-            }
-            return rows;
-        }
-        for (String row : StringUtils.text(cache).split("\r", -1)) {
-            if (!row.isEmpty()) {
-                String[] fields = row.split("\t", -1);
-                long rowId = NumberUtils.parseLong(StringUtils.field(fields, 0));
-                rows.put(rowId, new CatalogRow(row, List.of(fields)));
-            }
-        }
-        return rows;
-    }
-
     private static Map<Long, CatalogRow> productRowsById(Iterable<CatalogDao.ProductCacheRow> productRows) {
         Map<Long, CatalogRow> rows = new LinkedHashMap<>();
         if (productRows != null) {
@@ -257,31 +210,42 @@ public final class CatalogRegistry {
         if (dealRows != null) {
             for (CatalogDao.ProductDealRow row : dealRows) {
                 if (row != null) {
-                    rows.put(row.dealId(), CatalogRow.fromFields(List.of(
-                        String.valueOf(row.dealId()),
-                        StringUtils.text(row.items()))));
+                    rows.put(row.dealId(), CatalogRow.fromDeal(row.dealId(), row.itemProductIds()));
                 }
             }
         }
         return rows;
     }
 
-    public record CatalogRow(String text, List<String> fields) {
+    public record CatalogRow(String text, List<String> fields, List<Long> productDealItemIds) {
+        public CatalogRow(String text, List<String> fields) {
+            this(text, fields, productDealItemIds(fields));
+        }
+
         public CatalogRow {
             text = StringUtils.text(text);
             fields = fields == null ? List.of() : List.copyOf(fields);
+            productDealItemIds = productDealItemIds == null ? List.of() : List.copyOf(productDealItemIds);
         }
 
-        private static CatalogRow fromFields(List<String> fields) {
+        public static CatalogRow fromFields(List<String> fields) {
             List<String> copiedFields = fields == null
                 ? List.of()
                 : fields.stream().map(StringUtils::text).toList();
             return new CatalogRow(String.join("\t", copiedFields), copiedFields);
         }
 
-        private static CatalogRow fromText(String rowText) {
-            String text = StringUtils.text(rowText);
-            return new CatalogRow(text, List.of(text.split("\t", -1)));
+        public static CatalogRow fromDeal(long dealId, List<Long> itemProductIds) {
+            List<Long> copiedItemProductIds = itemProductIds == null ? List.of() : List.copyOf(itemProductIds);
+            List<String> itemTexts = new ArrayList<>();
+            for (long itemProductId : copiedItemProductIds) {
+                itemTexts.add(String.valueOf(itemProductId));
+            }
+            String itemsText = String.join(";", itemTexts);
+            return new CatalogRow(
+                dealId + "\t" + itemsText,
+                List.of(String.valueOf(dealId), itemsText),
+                copiedItemProductIds);
         }
 
         public boolean isEmpty() {
@@ -292,8 +256,20 @@ public final class CatalogRegistry {
             return fields.size();
         }
 
-        public String field(int index) {
+        private String field(int index) {
             return index >= 0 && index < fields.size() ? fields.get(index) : "";
+        }
+
+        private static List<Long> productDealItemIds(List<String> fields) {
+            String itemText = fields != null && fields.size() >= 2 ? fields.get(1) : "";
+            List<Long> itemProductIds = new ArrayList<>();
+            for (String item : StringUtils.text(itemText).replace(',', ';').split(";", -1)) {
+                long itemProductId = NumberUtils.parseLong(item);
+                if (itemProductId > 0L) {
+                    itemProductIds.add(itemProductId);
+                }
+            }
+            return List.copyOf(itemProductIds);
         }
     }
 }

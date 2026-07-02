@@ -20,7 +20,4 @@ public final class AchievementState {
         this.settings = settings == null ? AchievementSettings.empty() : settings;
     }
 
-    public synchronized void setSettingsFromLegacy(String questIdPayload, Object rows) {
-        settings = AchievementSettings.fromLegacy(questIdPayload, rows);
-    }
 }

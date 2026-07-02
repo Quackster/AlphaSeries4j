@@ -16,39 +16,16 @@ public final class RepresentedBotRegistry {
     private final Map<Long, RepresentedBotRecord> records;
 
     private RepresentedBotRegistry(Set<Long> allocatedEntityIds, Map<Long, RepresentedBotRecord> records) {
-        this.allocatedEntityIds = new LinkedHashSet<>(allocatedEntityIds);
-        this.records = new LinkedHashMap<>(records);
+        this.allocatedEntityIds = allocatedEntityIds == null ? new LinkedHashSet<>() : new LinkedHashSet<>(allocatedEntityIds);
+        this.records = records == null ? new LinkedHashMap<>() : new LinkedHashMap<>(records);
     }
 
-    public static RepresentedBotRegistry fromLegacy(Object allocatedEntityMarkers, Object recordCache) {
-        if (allocatedEntityMarkers instanceof RepresentedBotRegistry registry && recordCache instanceof RepresentedBotRegistry) {
-            return registry;
-        }
-        return new RepresentedBotRegistry(allocatedEntityIds(allocatedEntityMarkers), records(recordCache));
+    public static RepresentedBotRegistry fromState(Set<Long> allocatedEntityIds, Map<Long, RepresentedBotRecord> records) {
+        return new RepresentedBotRegistry(allocatedEntityIds, records);
     }
 
     public static RepresentedBotRegistry empty() {
         return new RepresentedBotRegistry(Set.of(), Map.of());
-    }
-
-    public String allocatedEntityMarkers() {
-        StringBuilder result = new StringBuilder();
-        for (Long entityId : allocatedEntityIds) {
-            result.append(marker(entityId));
-        }
-        return result.toString();
-    }
-
-    public String recordCache() {
-        StringBuilder result = new StringBuilder();
-        for (Map.Entry<Long, RepresentedBotRecord> record : records.entrySet()) {
-            result.append('[')
-                .append(record.getKey())
-                .append(':')
-                .append(record.getValue().recordText())
-                .append(']');
-        }
-        return result.toString();
     }
 
     public long reserveSlot() {
@@ -61,12 +38,12 @@ public final class RepresentedBotRegistry {
         return 0L;
     }
 
-    public void storeRecord(long botEntityId, String recordText) {
-        if (botEntityId <= 0L) {
+    public void storeEntry(long botEntityId, long roomSlot, RepresentedBotEntry botEntry) {
+        if (botEntityId <= 0L || roomSlot <= 0L || botEntry == null) {
             return;
         }
         records.remove(botEntityId);
-        records.put(botEntityId, RepresentedBotRecord.fromText(recordText));
+        records.put(botEntityId, RepresentedBotRecord.fromEntry(roomSlot, botEntry));
     }
 
     public void removeRecord(long botEntityId) {
@@ -75,14 +52,6 @@ public final class RepresentedBotRegistry {
         }
         records.remove(botEntityId);
         allocatedEntityIds.remove(botEntityId);
-    }
-
-    public String recordText(long botEntityId) {
-        if (botEntityId <= 0L) {
-            return "";
-        }
-        RepresentedBotRecord record = records.get(botEntityId);
-        return record == null ? "" : record.recordText();
     }
 
     public RepresentedBotRecord record(long botEntityId) {
@@ -114,21 +83,18 @@ public final class RepresentedBotRegistry {
         return 0L;
     }
 
-    public String entitiesForRoom(long roomSlot, long onlyBotId) {
+    public List<Long> entityIdsForRoom(long roomSlot, long onlyBotId) {
         if (roomSlot <= 0L || records.isEmpty()) {
-            return "";
+            return List.of();
         }
-        StringBuilder result = new StringBuilder();
+        List<Long> entityIds = new ArrayList<>();
         for (Record record : records()) {
             if (record.bot.roomSlot() == roomSlot
                 && (onlyBotId <= 0L || record.bot.botId() == onlyBotId)) {
-                if (result.length() > 0) {
-                    result.append('\r');
-                }
-                result.append(record.entityId);
+                entityIds.add(record.entityId);
             }
         }
-        return result.toString();
+        return List.copyOf(entityIds);
     }
 
     public void storePosition(long botEntityId, long positionX, long positionY, String positionZ, long positionR) {
@@ -153,42 +119,6 @@ public final class RepresentedBotRegistry {
             result.add(new Record(record.getKey(), record.getValue()));
         }
         return result;
-    }
-
-    private static Set<Long> allocatedEntityIds(Object allocatedEntityMarkers) {
-        if (allocatedEntityMarkers instanceof RepresentedBotRegistry registry) {
-            return new LinkedHashSet<>(registry.allocatedEntityIds);
-        }
-        Set<Long> result = new LinkedHashSet<>();
-        for (String part : StringUtils.text(allocatedEntityMarkers).split("\\]", -1)) {
-            long entityId = NumberUtils.parseLong(part.replace("[", ""));
-            if (entityId > 0L) {
-                result.add(entityId);
-            }
-        }
-        return result;
-    }
-
-    private static Map<Long, RepresentedBotRecord> records(Object recordCache) {
-        if (recordCache instanceof RepresentedBotRegistry registry) {
-            return new LinkedHashMap<>(registry.records);
-        }
-        Map<Long, RepresentedBotRecord> result = new LinkedHashMap<>();
-        for (String recordText : StringUtils.text(recordCache).split("\\[", -1)) {
-            int payloadAt = recordText.indexOf(':');
-            int endAt = recordText.indexOf(']');
-            if (payloadAt > 0 && endAt > payloadAt) {
-                long entityId = NumberUtils.parseLong(recordText.substring(0, payloadAt));
-                if (entityId > 0L) {
-                    result.put(entityId, RepresentedBotRecord.fromText(recordText.substring(payloadAt + 1, endAt)));
-                }
-            }
-        }
-        return result;
-    }
-
-    private static String marker(long entityId) {
-        return "[" + entityId + "]";
     }
 
     private static final class Record {
@@ -231,6 +161,45 @@ public final class RepresentedBotRegistry {
 
         private static RepresentedBotRecord fromText(String recordText) {
             return fromFields(StringUtils.text(recordText).split("\2", -1));
+        }
+
+        private static RepresentedBotRecord fromEntry(long roomSlot, RepresentedBotEntry entry) {
+            return new RepresentedBotRecord(
+                roomSlot,
+                entry.botId(),
+                StringUtils.text(entry.name()),
+                StringUtils.text(entry.motto()),
+                StringUtils.text(entry.speech()),
+                StringUtils.text(entry.responses()),
+                entry.positionX(),
+                entry.positionY(),
+                StringUtils.text(entry.positionZ()),
+                entry.positionR(),
+                StringUtils.text(entry.figure()),
+                entry.handleId(),
+                entry.handleActionId(),
+                StringUtils.text(entry.cacheAction()),
+                StringUtils.text(entry.speechSubmit()),
+                entry.allowWalk(),
+                entry.maxFieldsAway(),
+                List.of(
+                    String.valueOf(roomSlot),
+                    String.valueOf(entry.botId()),
+                    StringUtils.text(entry.name()),
+                    StringUtils.text(entry.motto()),
+                    StringUtils.text(entry.speech()),
+                    StringUtils.text(entry.responses()),
+                    String.valueOf(entry.positionX()),
+                    String.valueOf(entry.positionY()),
+                    StringUtils.text(entry.positionZ()),
+                    String.valueOf(entry.positionR()),
+                    StringUtils.text(entry.figure()),
+                    String.valueOf(entry.handleId()),
+                    String.valueOf(entry.handleActionId()),
+                    StringUtils.text(entry.cacheAction()),
+                    StringUtils.text(entry.speechSubmit()),
+                    String.valueOf(entry.allowWalk()),
+                    String.valueOf(entry.maxFieldsAway())));
         }
 
         private static RepresentedBotRecord fromFields(String[] fields) {
@@ -283,10 +252,6 @@ public final class RepresentedBotRegistry {
                 allowWalk,
                 maxFieldsAway,
                 updatedFields);
-        }
-
-        private String recordText() {
-            return String.join("\2", serializedFields);
         }
 
         private static String field(String[] fields, int index) {

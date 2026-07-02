@@ -9,7 +9,7 @@ public final class WiredSettings {
         this.statePayload = StringUtils.text(statePayload);
     }
 
-    public static WiredSettings fromLegacy(String statePayload) {
+    public static WiredSettings fromStatePayload(String statePayload) {
         return new WiredSettings(statePayload);
     }
 

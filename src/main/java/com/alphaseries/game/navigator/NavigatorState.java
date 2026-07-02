@@ -1,7 +1,10 @@
 package com.alphaseries.game.navigator;
 
+import com.alphaseries.dao.mysql.RoomDao;
+
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 public final class NavigatorState {
     private static final NavigatorState INSTANCE = new NavigatorState();
@@ -29,10 +32,6 @@ public final class NavigatorState {
         newFriendRooms = NewFriendRooms.fromRoomPicks(rooms, expiresAt);
     }
 
-    public synchronized void setNewFriendRoomsFromLegacy(Object rows, LocalDateTime expiresAt) {
-        newFriendRooms = NewFriendRooms.fromLegacy(rows, expiresAt);
-    }
-
     public synchronized RecommendedRooms recommendedRooms() {
         return recommendedRooms;
     }
@@ -41,8 +40,8 @@ public final class NavigatorState {
         recommendedRooms = rooms == null ? RecommendedRooms.empty() : rooms;
     }
 
-    public synchronized void setRecommendedRoomsFromLegacy(Object payloads, long count) {
-        recommendedRooms = RecommendedRooms.fromLegacy(payloads, count);
+    public synchronized void setRecommendedRooms(Map<Long, String> payloads, long count) {
+        recommendedRooms = RecommendedRooms.fromPayloads(payloads, count);
     }
 
     public synchronized RoomCategoryCache roomCategoryCache() {
@@ -53,7 +52,25 @@ public final class NavigatorState {
         roomCategoryCache = cache == null ? RoomCategoryCache.empty() : cache;
     }
 
-    public synchronized void setRoomCategoryCacheFromLegacy(Object defaultCategoryIds, Object categoryRows, Object payloads) {
-        roomCategoryCache = RoomCategoryCache.fromLegacy(defaultCategoryIds, categoryRows, payloads);
+    public synchronized void setRoomCategoryDefaults(List<String> defaultCategoryIds) {
+        roomCategoryCache = RoomCategoryCache.fromPayloadRows(
+            defaultCategoryIds == null ? List.of() : List.copyOf(defaultCategoryIds),
+            roomCategoryCache.categoryRowList(),
+            roomCategoryCache.payloadRows());
     }
+
+    public synchronized void setRoomCategoryRows(List<RoomDao.RoomCategoryRow> categoryRows) {
+        roomCategoryCache = RoomCategoryCache.fromPayloadRows(
+            roomCategoryCache.defaultCategoryIdList(),
+            categoryRows == null ? List.of() : List.copyOf(categoryRows),
+            roomCategoryCache.payloadRows());
+    }
+
+    public synchronized void setRoomCategoryPayloads(List<RoomCategoryCache.CategoryPayload> payloads) {
+        roomCategoryCache = RoomCategoryCache.fromPayloadRows(
+            roomCategoryCache.defaultCategoryIdList(),
+            roomCategoryCache.categoryRowList(),
+            payloads == null ? List.of() : List.copyOf(payloads));
+    }
+
 }

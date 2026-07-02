@@ -20,20 +20,12 @@ public final class LifecycleState {
         this.runtimeState = runtimeState == null ? LicenceRuntimeState.empty() : runtimeState;
     }
 
-    public synchronized void setRuntimeStateFromLegacy(
-        long primaryColor,
-        String productName,
-        long version,
-        boolean debugLoggingEnabled,
-        long secondaryColor,
-        boolean packetTraceEnabled
-    ) {
-        runtimeState = LicenceRuntimeState.fromLegacy(
-            primaryColor,
-            productName,
-            version,
-            debugLoggingEnabled,
-            secondaryColor,
-            packetTraceEnabled);
+    public synchronized void resetRuntimeDefaults() {
+        runtimeState = LicenceRuntimeState.defaults(runtimeState.packetTraceEnabled());
     }
+
+    public synchronized void setPacketTraceEnabled(boolean packetTraceEnabled) {
+        runtimeState = runtimeState.withPacketTraceEnabled(packetTraceEnabled);
+    }
+
 }

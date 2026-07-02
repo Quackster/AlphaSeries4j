@@ -1,7 +1,5 @@
 package com.alphaseries.game.pet;
 
-import com.alphaseries.util.StringUtils;
-
 public record RepresentedBotEntry(
     long botId,
     String name,
@@ -66,15 +64,4 @@ public record RepresentedBotEntry(
             row.maxFieldsAway());
     }
 
-    public String recordText(long roomSlot) {
-        return roomSlot + "\2" + botId + "\2"
-            + StringUtils.text(name) + '\2' + StringUtils.text(motto) + '\2'
-            + StringUtils.text(speech) + '\2' + StringUtils.text(responses) + '\2'
-            + positionX + "\2" + positionY + "\2"
-            + StringUtils.text(positionZ) + '\2' + positionR + '\2'
-            + StringUtils.text(figure) + '\2' + handleId + '\2'
-            + handleActionId + '\2' + StringUtils.text(cacheAction) + '\2'
-            + StringUtils.text(speechSubmit) + '\2' + allowWalk + '\2'
-            + maxFieldsAway;
-    }
 }

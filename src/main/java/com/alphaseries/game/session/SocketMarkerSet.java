@@ -1,8 +1,5 @@
 package com.alphaseries.game.session;
 
-import com.alphaseries.util.NumberUtils;
-import com.alphaseries.util.StringUtils;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -10,10 +7,6 @@ import java.util.Set;
 
 public final class SocketMarkerSet {
     private final Set<Long> socketIndexes = new LinkedHashSet<>();
-
-    private SocketMarkerSet(Object markers) {
-        parse(StringUtils.text(markers));
-    }
 
     private SocketMarkerSet(Collection<Long> socketIndexes) {
         if (socketIndexes != null) {
@@ -25,26 +18,12 @@ public final class SocketMarkerSet {
         }
     }
 
-    public static SocketMarkerSet fromLegacy(Object markers) {
-        if (markers instanceof SocketMarkerSet socketMarkers) {
-            return socketMarkers;
-        }
-        if (markers instanceof Iterable<?> socketIndexes) {
-            Set<Long> parsedSocketIndexes = new LinkedHashSet<>();
-            for (Object socketIndex : socketIndexes) {
-                parsedSocketIndexes.add(NumberUtils.parseLong(socketIndex));
-            }
-            return fromSocketIndexes(parsedSocketIndexes);
-        }
-        return new SocketMarkerSet(markers);
-    }
-
     public static SocketMarkerSet fromSocketIndexes(Collection<Long> socketIndexes) {
         return new SocketMarkerSet(socketIndexes);
     }
 
     public static SocketMarkerSet empty() {
-        return new SocketMarkerSet("");
+        return new SocketMarkerSet(Set.of());
     }
 
     public Set<Long> socketIndexes() {
@@ -65,23 +44,4 @@ public final class SocketMarkerSet {
         return socketIndexes.contains(socketIndex);
     }
 
-    public String toLegacyMarkers() {
-        StringBuilder markers = new StringBuilder();
-        for (Long socketIndex : socketIndexes) {
-            markers.append('[').append(socketIndex).append(']');
-        }
-        return markers.toString();
-    }
-
-    private void parse(String markers) {
-        if (markers.isEmpty()) {
-            return;
-        }
-        for (String part : markers.split("\\]", -1)) {
-            long socketIndex = NumberUtils.parseLong(part.replace("[", ""));
-            if (socketIndex > 0L) {
-                socketIndexes.add(socketIndex);
-            }
-        }
-    }
 }

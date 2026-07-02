@@ -12,26 +12,34 @@ public final class SessionRegistry {
     private final List<Record> records = new ArrayList<>();
     private final List<LinkedSection> linkedSections = new ArrayList<>();
 
-    private SessionRegistry(String rawCache) {
-        String cacheText = StringUtils.text(rawCache);
-        parseRecords(cacheText);
-        parseLinkedSections(cacheText);
+    private SessionRegistry(List<SessionRecord> records, List<LinkedSessionSection> linkedSections) {
+        if (records != null) {
+            for (SessionRecord record : records) {
+                if (record != null) {
+                    this.records.add(new Record(record.key(), record.payload()));
+                }
+            }
+        }
+        if (linkedSections != null) {
+            for (LinkedSessionSection section : linkedSections) {
+                if (section != null) {
+                    this.linkedSections.add(new LinkedSection(
+                        StringUtils.text(section.recordId()),
+                        StringUtils.text(section.text())));
+                }
+            }
+        }
     }
 
-    public static SessionRegistry fromLegacyCache(String rawCache) {
-        return new SessionRegistry(rawCache);
+    public static SessionRegistry fromEntries(List<SessionRecord> records, List<LinkedSessionSection> linkedSections) {
+        return new SessionRegistry(records, linkedSections);
     }
 
     public static SessionRegistry empty() {
-        return new SessionRegistry("");
+        return new SessionRegistry(List.of(), List.of());
     }
 
-    public String recordPayload(String recordPrefix, String recordId) {
-        Record record = findRecord(StringUtils.text(recordPrefix), StringUtils.text(recordId));
-        return record == null ? "" : record.payload;
-    }
-
-    public String recordField(String recordPrefix, String recordId, long columnIndex) {
+    String recordField(String recordPrefix, String recordId, long columnIndex) {
         Record record = findRecord(StringUtils.text(recordPrefix), StringUtils.text(recordId));
         if (record == null || columnIndex < 0 || columnIndex >= record.fieldCount()) {
             return "";
@@ -40,11 +48,18 @@ public final class SessionRegistry {
         return valueParts.length == 0 ? "" : valueParts[0];
     }
 
-    public long recordLong(String recordPrefix, String recordId, long columnIndex) {
+    long recordLong(String recordPrefix, String recordId, long columnIndex) {
         return NumberUtils.parseLong(recordField(recordPrefix, recordId, columnIndex));
     }
 
-    public String cacheField(String keyName, long columnIndex) {
+    long userIdBySocket(int socketIndex) {
+        if (socketIndex <= 0) {
+            return 0L;
+        }
+        return recordLong("1:", String.valueOf(socketIndex), 0);
+    }
+
+    private String cacheField(String keyName, long columnIndex) {
         Record record = findRecord("", StringUtils.text(keyName));
         if (record == null || columnIndex < 0 || columnIndex >= record.fieldCount()) {
             return "";
@@ -52,11 +67,11 @@ public final class SessionRegistry {
         return record.field((int) columnIndex);
     }
 
-    public long cacheLong(String keyName, long columnIndex) {
+    long cacheLong(String keyName, long columnIndex) {
         return NumberUtils.parseLong(cacheField(keyName, columnIndex));
     }
 
-    public String linkedValue(String recordId, boolean useBracketCount) {
+    private String linkedValue(String recordId, boolean useBracketCount) {
         LinkedSection section = linkedSection(StringUtils.text(recordId));
         if (section == null) {
             return "";
@@ -71,7 +86,7 @@ public final class SessionRegistry {
         return valueParts[targetIndex];
     }
 
-    public long linkedLong(String recordId, boolean useBracketCount) {
+    long linkedLong(String recordId, boolean useBracketCount) {
         return NumberUtils.parseLong(linkedValue(recordId, useBracketCount));
     }
 
@@ -87,7 +102,7 @@ public final class SessionRegistry {
         return sessions;
     }
 
-    public void storeSocketSession(int socketIndex, String sessionRecord) {
+    void storeSocketSession(int socketIndex, String sessionRecord) {
         if (socketIndex <= 0 || StringUtils.text(sessionRecord).isEmpty()) {
             return;
         }
@@ -98,50 +113,6 @@ public final class SessionRegistry {
             }
         }
         records.add(new Record(key, sessionRecord));
-    }
-
-    public String toLegacyCache() {
-        StringBuilder cache = new StringBuilder();
-        for (Record record : records) {
-            cache.append('[').append(record.key).append('\1').append(record.payload).append(']');
-        }
-        return cache.toString();
-    }
-
-    private void parseRecords(String rawCache) {
-        if (rawCache.isEmpty()) {
-            return;
-        }
-        for (String part : rawCache.split("\\[", -1)) {
-            if (part.isEmpty()) {
-                continue;
-            }
-            int separator = part.indexOf('\1');
-            if (separator < 0) {
-                continue;
-            }
-            String key = part.substring(0, separator);
-            String payload = part.substring(separator + 1);
-            int end = payload.indexOf(']');
-            if (end >= 0) {
-                payload = payload.substring(0, end);
-            }
-            records.add(new Record(key, payload));
-        }
-    }
-
-    private void parseLinkedSections(String rawCache) {
-        int markerAt = rawCache.indexOf('\2');
-        while (markerAt >= 0) {
-            int idEndAt = rawCache.indexOf(']', markerAt + 1);
-            if (idEndAt < 0) {
-                return;
-            }
-            String recordId = rawCache.substring(markerAt + 1, idEndAt);
-            String sectionText = rawCache.substring(idEndAt + 1);
-            linkedSections.add(new LinkedSection(recordId, sectionText));
-            markerAt = rawCache.indexOf('\2', markerAt + 1);
-        }
     }
 
     private Record findRecord(String recordPrefix, String recordId) {
@@ -185,6 +156,20 @@ public final class SessionRegistry {
     }
 
     private record LinkedSection(String recordId, String text) {
+    }
+
+    public record SessionRecord(String key, String payload) {
+        public SessionRecord {
+            key = StringUtils.text(key);
+            payload = StringUtils.text(payload);
+        }
+    }
+
+    public record LinkedSessionSection(String recordId, String text) {
+        public LinkedSessionSection {
+            recordId = StringUtils.text(recordId);
+            text = StringUtils.text(text);
+        }
     }
 
     public static final class SocketSession {

@@ -20,7 +20,18 @@ public final class UpdaterState {
         this.settings = settings == null ? UpdaterSettings.empty() : settings;
     }
 
-    public synchronized void setSettingsFromLegacy(String executableName, String updateRows, String updateSql) {
-        settings = UpdaterSettings.fromLegacy(executableName, updateRows, updateSql);
+    public synchronized void setExecutableName(String executableName) {
+        settings = UpdaterSettings.fromEntries(
+            executableName,
+            settings.entryList(),
+            settings.updateSql());
     }
+
+    public synchronized void setUpdateSql(String updateSql) {
+        settings = UpdaterSettings.fromEntries(
+            settings.executableName(),
+            settings.entryList(),
+            updateSql);
+    }
+
 }

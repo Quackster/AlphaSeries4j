@@ -20,8 +20,4 @@ public final class HelpCenterState {
         this.cache = cache == null ? HelpCenterCache.empty() : cache;
     }
 
-    public synchronized void setCacheFromLegacy(String importantFaqPayload, String categoryPayload,
-                                                Object categoryFaqs, Object descriptions) {
-        cache = HelpCenterCache.fromLegacy(importantFaqPayload, categoryPayload, categoryFaqs, descriptions);
-    }
 }

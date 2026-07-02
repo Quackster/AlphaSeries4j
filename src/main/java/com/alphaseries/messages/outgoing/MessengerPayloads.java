@@ -144,7 +144,11 @@ public final class MessengerPayloads {
             .build();
     }
 
-    public static String friendOnlineNotification(String friendSummaryPayload) {
+    public static String friendOnlineNotification(MessengerFriend friend, long relationshipState, boolean followEnabled) {
+        return friendOnlineNotificationPayload(friendSummary(friend, relationshipState, followEnabled));
+    }
+
+    private static String friendOnlineNotificationPayload(String friendSummaryPayload) {
         return PacketBuilder.message("@MHIH")
             .appendRaw(friendSummaryPayload)
             .build();
@@ -156,19 +160,52 @@ public final class MessengerPayloads {
             .build();
     }
 
-    public static String acceptedFriends(String payloadRows, long acceptedCount) {
+    public static String acceptedFriends(List<MessengerFriend> friends, boolean followEnabled) {
+        if (friends == null || friends.isEmpty()) {
+            return "";
+        }
+        PacketBuilder payloadRows = PacketBuilder.create();
+        long acceptedCount = 0L;
+        for (MessengerFriend friend : friends) {
+            if (friend != null && friend.userId() > 0L) {
+                long socketIndex = friend.socketIndex();
+                payloadRows.appendRaw('H').appendRaw(friend(
+                    friend.userId(),
+                    friend.userName(),
+                    friend.motto(),
+                    friend.figure(),
+                    friend.level(),
+                    socketIndex > 0L ? 2L : 0L,
+                    socketIndex > 0L ? 1L : 0L,
+                    friend.lastOnline(),
+                    0L,
+                    followEnabled));
+                acceptedCount++;
+            }
+        }
         return acceptedCount > 0L
             ? PacketBuilder.message("@MH").appendInt(acceptedCount).appendRaw(payloadRows).build()
             : "";
     }
 
-    public static String removeFriends(String targetIdsPayload, long removedCount) {
+    public static String removeFriends(List<Long> targetUserIds) {
+        if (targetUserIds == null || targetUserIds.isEmpty()) {
+            return "";
+        }
+        PacketBuilder targetIdsPayload = PacketBuilder.create();
+        long removedCount = 0L;
+        for (long targetUserId : targetUserIds) {
+            if (targetUserId > 0L) {
+                targetIdsPayload.appendRaw(removedId(targetUserId));
+                removedCount++;
+            }
+        }
         return removedCount > 0L
             ? PacketBuilder.message("@MM").appendInt(removedCount).appendRaw(targetIdsPayload).build()
             : "";
     }
 
-    public static String removedId(long targetUserId) {
+    private static String removedId(long targetUserId) {
         return PacketBuilder.create().appendInt(targetUserId).build();
     }
 

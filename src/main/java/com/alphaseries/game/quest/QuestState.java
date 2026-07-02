@@ -20,11 +20,4 @@ public final class QuestState {
         this.settings = settings == null ? QuestSettings.empty() : settings;
     }
 
-    public synchronized void setQuestSettings(QuestSettings settings) {
-        setSettings(settings);
-    }
-
-    public synchronized void setSettingsFromLegacy(Object rows) {
-        settings = QuestSettings.fromLegacy(rows);
-    }
 }

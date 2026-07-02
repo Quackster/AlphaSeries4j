@@ -1,7 +1,9 @@
 package com.alphaseries.config;
 
-import com.alphaseries.Crypto;
+import com.alphaseries.db.Database;
 import com.alphaseries.db.JdbcDatabase;
+import com.alphaseries.db.MySQL;
+import com.alphaseries.util.StringUtils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -9,11 +11,75 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class AppDatabaseConfig {
+    private static DatabaseConnector databaseConnector = connectionString -> null;
+
     private AppDatabaseConfig() {
     }
 
+    public interface DatabaseConnector {
+        Database connect(String connectionString) throws Exception;
+    }
+
     public static void configureDefaultConnector() {
-        Crypto.configureDatabaseConnector(connectionString -> new JdbcDatabase(connectFromOdbcString(connectionString)));
+        configureDatabaseConnector(connectionString -> new JdbcDatabase(connectFromOdbcString(connectionString)));
+    }
+
+    public static void configureDatabaseConnector(DatabaseConnector connector) {
+        databaseConnector = connector == null ? connectionString -> null : connector;
+    }
+
+    public static long connectDatabaseFromConfig(String configText) {
+        try {
+            String connectionString = buildDatabaseConnectionString(configText);
+            if (connectionString.isEmpty()) {
+                return 0L;
+            }
+            Database database = databaseConnector.connect(connectionString);
+            if (database == null) {
+                return 0L;
+            }
+            MySQL.configureDatabaseConnection(database);
+            return 1L;
+        } catch (Exception ex) {
+            return 0L;
+        }
+    }
+
+    public static String buildDatabaseConnectionString(String configText) {
+        String text = StringUtils.text(configText);
+        if (text.isEmpty() || !text.toLowerCase().contains("mysql_")) {
+            return "";
+        }
+
+        Map<String, String> config = parseConfig(text);
+        return buildDatabaseConnectionString(new DatabaseConnectionSettings(
+            config.getOrDefault("mysql_host", "localhost"),
+            config.getOrDefault("mysql_port", "3306"),
+            config.getOrDefault("mysql_db", ""),
+            config.getOrDefault("mysql_username", ""),
+            config.getOrDefault("mysql_password", ""),
+            config.getOrDefault("mysql_driver", "MySQL ODBC 3.51 Driver")));
+    }
+
+    public static String buildDatabaseConnectionString(DatabaseConnectionSettings settings) {
+        if (settings == null || settings.databaseName().isEmpty() || settings.driverName().isEmpty()) {
+            return "";
+        }
+        return "Driver={" + settings.driverName() + "};Server=" + settings.hostName()
+            + ";Port=" + settings.portNumber() + ";Database=" + settings.databaseName()
+            + ";User=" + settings.userName() + ";Password=" + settings.password() + ";Option=3;";
+    }
+
+    public static Map<String, String> parseConfig(String configText) {
+        Map<String, String> result = new LinkedHashMap<>();
+        String normalized = StringUtils.text(configText).replace("\r\n", "\n").replace('\r', '\n');
+        for (String line : normalized.split("\n", -1)) {
+            int equalsAt = line.indexOf('=');
+            if (equalsAt > 0) {
+                result.put(line.substring(0, equalsAt).trim().toLowerCase(), line.substring(equalsAt + 1).trim());
+            }
+        }
+        return result;
     }
 
     public static Connection connectFromOdbcString(String connectionString) throws Exception {
@@ -27,9 +93,9 @@ public final class AppDatabaseConfig {
     }
 
     public static String jdbcUrl(String host, String port, String database) {
-        String hostText = text(host);
-        String portText = text(port);
-        String databaseText = text(database);
+        String hostText = StringUtils.text(host);
+        String portText = StringUtils.text(port);
+        String databaseText = StringUtils.text(database);
         StringBuilder url = new StringBuilder("jdbc:mysql://");
         url.append(hostText.isEmpty() ? "localhost" : hostText);
         url.append(':').append(portText.isEmpty() ? "3306" : portText);
@@ -42,7 +108,7 @@ public final class AppDatabaseConfig {
 
     public static Map<String, String> parseOdbcConnectionString(String connectionString) {
         Map<String, String> result = new LinkedHashMap<String, String>();
-        for (String part : text(connectionString).split(";", -1)) {
+        for (String part : StringUtils.text(connectionString).split(";", -1)) {
             int equalsAt = part.indexOf('=');
             if (equalsAt > 0) {
                 String key = part.substring(0, equalsAt).trim().toLowerCase();
@@ -61,7 +127,21 @@ public final class AppDatabaseConfig {
         return value == null || value.isEmpty() ? defaultValue : value;
     }
 
-    private static String text(Object value) {
-        return value == null ? "" : String.valueOf(value);
+    public record DatabaseConnectionSettings(
+        String hostName,
+        String portNumber,
+        String databaseName,
+        String userName,
+        String password,
+        String driverName
+    ) {
+        public DatabaseConnectionSettings {
+            hostName = StringUtils.text(hostName);
+            portNumber = StringUtils.text(portNumber);
+            databaseName = StringUtils.text(databaseName);
+            userName = StringUtils.text(userName);
+            password = StringUtils.text(password);
+            driverName = StringUtils.text(driverName);
+        }
     }
 }

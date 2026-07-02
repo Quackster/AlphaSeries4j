@@ -1,6 +1,7 @@
 package com.alphaseries.messages.outgoing;
 
 import com.alphaseries.dao.mysql.RoomDao;
+import com.alphaseries.game.social.SocialRoomOccupants;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
@@ -98,6 +99,10 @@ public final class RoomPayloads {
             .build();
     }
 
+    public static String doorStatus(long doorStatus) {
+        return doorStatus != 0L ? "EoHK" : "EoIH";
+    }
+
     public static String currentRoom(long roomId) {
         return PacketBuilder.message("AE")
             .appendInt(roomId)
@@ -105,14 +110,38 @@ public final class RoomPayloads {
             .build();
     }
 
-    public static String occupantEntries(long occupantCount, String occupantPayload) {
+    public static String eventInfo(RoomDao.RoomEventInfo event) {
+        if (event == null) {
+            return "-1" + '\2';
+        }
+        return PacketBuilder.create()
+            .appendString(event.eventName())
+            .appendString(event.description())
+            .appendString(event.formattedTime())
+            .appendString(event.tagOne())
+            .appendString(event.tagTwo())
+            .appendInt(event.userId())
+            .appendInt(event.roomId())
+            .appendInt(event.categoryId())
+            .build();
+    }
+
+    public static String occupantEntries(SocialRoomOccupants occupants) {
+        return occupants == null ? occupantEntries(0L, "") : occupantEntries(occupants.occupantCount(), occupants.occupantPayload());
+    }
+
+    private static String occupantEntries(long occupantCount, String occupantPayload) {
         return PacketBuilder.message("@\\")
             .appendInt(occupantCount)
             .appendRaw(occupantPayload)
             .build();
     }
 
-    public static String occupantStatuses(long statusCount, String statusPayload) {
+    public static String occupantStatuses(SocialRoomOccupants occupants) {
+        return occupants == null ? occupantStatuses(0L, "") : occupantStatuses(occupants.statusCount(), occupants.statusPayload());
+    }
+
+    private static String occupantStatuses(long statusCount, String statusPayload) {
         return PacketBuilder.message("Du")
             .appendInt(statusCount)
             .appendRaw(statusPayload)

@@ -4,32 +4,19 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 public final class VisitRoomAds {
     private final Map<Long, String> payloadsById;
     private final long count;
 
-    private VisitRoomAds(Object payloadsById, long count) {
-        this.payloadsById = parsePayloads(payloadsById);
-        this.count = count;
-    }
-
     private VisitRoomAds(Map<Long, String> payloadsById, long count) {
         this.payloadsById = copyPayloads(payloadsById);
         this.count = count;
     }
 
-    public static VisitRoomAds fromLegacy(Object payloadsById, long count) {
-        if (payloadsById instanceof VisitRoomAds visitRoomAds) {
-            return visitRoomAds;
-        }
-        return new VisitRoomAds(payloadsById, count);
-    }
-
     public static VisitRoomAds empty() {
-        return new VisitRoomAds("", 0L);
+        return new VisitRoomAds(Map.of(), 0L);
     }
 
     public static VisitRoomAds fromPayloads(Map<Long, String> payloadsById, long count) {
@@ -56,27 +43,6 @@ public final class VisitRoomAds {
             return "";
         }
         return payload(randomInclusive(1L, count));
-    }
-
-    private static Map<Long, String> parsePayloads(Object cache) {
-        if (cache instanceof Map<?, ?> values) {
-            Map<Long, String> payloads = new LinkedHashMap<>();
-            for (Map.Entry<?, ?> entry : values.entrySet()) {
-                long key = NumberUtils.parseLong(entry.getKey());
-                if (key >= 0L) {
-                    payloads.put(key, StringUtils.text(entry.getValue()));
-                }
-            }
-            return payloads;
-        }
-        if (cache instanceof Object[] values) {
-            Map<Long, String> payloads = new LinkedHashMap<>();
-            for (int index = 0; index < values.length; index++) {
-                payloads.put((long) index, StringUtils.text(values[index]));
-            }
-            return payloads;
-        }
-        return Map.of();
     }
 
     private static Map<Long, String> copyPayloads(Map<Long, String> payloadsById) {

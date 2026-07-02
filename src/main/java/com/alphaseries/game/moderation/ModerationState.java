@@ -19,8 +19,4 @@ public final class ModerationState {
     public synchronized void setStaffSettings(StaffSettings staffSettings) {
         this.staffSettings = staffSettings == null ? StaffSettings.empty() : staffSettings;
     }
-
-    public synchronized void setStaffModerationPayloads(Object moderationPayloads) {
-        staffSettings = StaffSettings.fromLegacy(moderationPayloads);
-    }
 }

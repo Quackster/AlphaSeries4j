@@ -21,6 +21,7 @@ public final class WiredState {
     }
 
     public synchronized void setStatePayload(String statePayload) {
-        settings = WiredSettings.fromLegacy(statePayload);
+        settings = WiredSettings.fromStatePayload(statePayload);
     }
+
 }

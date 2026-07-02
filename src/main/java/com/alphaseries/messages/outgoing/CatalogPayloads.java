@@ -1,5 +1,8 @@
 package com.alphaseries.messages.outgoing;
 
+import com.alphaseries.game.catalog.CatalogPages;
+import com.alphaseries.game.catalog.CatalogRegistry;
+import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.protocol.PacketBuilder;
 
 public final class CatalogPayloads {
@@ -20,7 +23,11 @@ public final class CatalogPayloads {
             .build();
     }
 
-    public static String giftWrapOptions(long giftWrapPrice, String giftWrapPayload) {
+    public static String giftWrapOptions(long giftWrapPrice, GiftSettings giftSettings) {
+        return giftWrapOptionsPayload(giftWrapPrice, giftSettings == null ? "" : giftSettings.giftWrapPayload());
+    }
+
+    private static String giftWrapOptionsPayload(long giftWrapPrice, String giftWrapPayload) {
         return PacketBuilder.create()
             .appendInt(giftWrapPrice)
             .appendRaw(giftWrapPayload)
@@ -35,7 +42,11 @@ public final class CatalogPayloads {
             .build();
     }
 
-    public static String page(long pageId, String pagePayload) {
+    public static String page(CatalogPages catalogPages, long pageId) {
+        return pagePayload(pageId, catalogPages == null ? "" : catalogPages.pagePayload(pageId));
+    }
+
+    private static String pagePayload(long pageId, String pagePayload) {
         return PacketBuilder.message("A\u007f")
             .appendInt(pageId)
             .appendRaw(pagePayload)
@@ -68,8 +79,15 @@ public final class CatalogPayloads {
             .build();
     }
 
-    public static String giftPurchase(long catalogProductId, String productPayload, long creditPrice,
+    public static String giftPurchase(CatalogRegistry.CatalogProduct catalogProduct, long creditPrice,
                                       long activityPrice, long activityType, long furnitureId) {
+        long catalogProductId = catalogProduct == null ? 0L : catalogProduct.catalogProductId();
+        return giftPurchasePayload(catalogProductId, String.valueOf(catalogProductId), creditPrice,
+            activityPrice, activityType, furnitureId);
+    }
+
+    private static String giftPurchasePayload(long catalogProductId, String productPayload, long creditPrice,
+                                              long activityPrice, long activityType, long furnitureId) {
         return PacketBuilder.message("AC")
             .appendInt(catalogProductId)
             .appendString(productPayload)
