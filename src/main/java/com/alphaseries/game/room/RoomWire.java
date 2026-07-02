@@ -68,16 +68,7 @@ public final class RoomWire {
     }
 
     public static WallPlacement wallPlacementFromPayload(String packetPayload) {
-        String normalizedPayload = StringUtils.text(packetPayload)
-            .replace('\1', ' ')
-            .replace('\2', ' ')
-            .replace('\t', ' ')
-            .replace('\r', ' ')
-            .replace('\n', ' ');
-        while (normalizedPayload.contains("  ")) {
-            normalizedPayload = normalizedPayload.replace("  ", " ");
-        }
-        normalizedPayload = normalizedPayload.trim();
+        String normalizedPayload = StringUtils.compactPacketWhitespace(packetPayload);
         String lower = normalizedPayload.toLowerCase();
         int wallAt = lower.indexOf(":w=");
         int localAt = lower.indexOf("l=");
@@ -86,24 +77,20 @@ public final class RoomWire {
         }
         String wallText = normalizedPayload.substring(wallAt + 3, localAt).trim().replace(" ", "");
         String localText = normalizedPayload.substring(localAt + 2).trim().replace(" ", "");
-        String[] wallParts = wallText.split(",", -1);
-        String[] localParts = localText.split(",", -1);
-        if (wallParts.length < 2 || localParts.length < 2) {
+        if (wallText.indexOf(',') < 0 || localText.indexOf(',') < 0) {
             return WallPlacement.empty();
         }
+        StringUtils.IndexedFields wallFields = StringUtils.indexedFields(wallText, ',');
+        StringUtils.IndexedFields localFields = StringUtils.indexedFields(localText, ',');
         return WallPlacement.valid(
-            NumberUtils.parseLong(wallParts[0]),
-            NumberUtils.parseLong(wallParts[1]),
-            NumberUtils.parseLong(localParts[0]),
-            NumberUtils.parseLong(localParts[1]));
+            wallFields.number(0),
+            wallFields.number(1),
+            localFields.number(0),
+            localFields.number(1));
     }
 
     public static String normalizeModelMap(String modelMap) {
-        String modelPayload = StringUtils.text(modelMap).replace('\n', '\r');
-        while (modelPayload.contains("\r\r")) {
-            modelPayload = modelPayload.replace("\r\r", "\r");
-        }
-        return modelPayload;
+        return StringUtils.collapsedCarriageReturnRows(modelMap);
     }
 
     public static RoomIconRequest roomIconRequest(String packetPayload) {
@@ -153,11 +140,7 @@ public final class RoomWire {
      * Original function: Proc_6_110_74DDA0.
      */
     public static RoomIdRequest roomIdRequest(String packetPayload, String prefix) {
-        String requestPayload = StringUtils.text(packetPayload);
-        String prefixText = StringUtils.text(prefix);
-        if (!prefixText.isEmpty() && requestPayload.startsWith(prefixText)) {
-            requestPayload = requestPayload.substring(prefixText.length());
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, prefix);
         long roomId = WireReader.readLong(requestPayload, new WireReader.Offset(1));
         if (roomId <= 0L) {
             roomId = NumberUtils.parseLong(WireEncoding.readVl64LengthString(requestPayload));
@@ -281,11 +264,7 @@ public final class RoomWire {
      * Original function: Proc_6_198_7D4B70.
      */
     public static PositionRequest positionRequest(String packetPayload, String prefix) {
-        String requestPayload = StringUtils.text(packetPayload);
-        String prefixText = StringUtils.text(prefix);
-        if (!prefixText.isEmpty() && requestPayload.startsWith(prefixText)) {
-            requestPayload = requestPayload.substring(prefixText.length());
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, prefix);
         WireReader.Offset offset = new WireReader.Offset(1);
         long positionX = WireReader.readLong(requestPayload, offset);
         long positionY = WireReader.readLong(requestPayload, offset);

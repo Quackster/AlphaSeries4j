@@ -1,10 +1,10 @@
 package com.alphaseries.server.runtime;
 
-import com.alphaseries.Handling;
 import com.alphaseries.config.AppConfigState;
 import com.alphaseries.dao.mysql.ServerMaintenanceDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.db.MySQL;
+import com.alphaseries.game.quest.QuestPacketHandlers;
 import com.alphaseries.server.lifecycle.BootLog;
 import com.alphaseries.server.lifecycle.LifecycleState;
 import com.alphaseries.server.logging.Console;
@@ -12,6 +12,7 @@ import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.server.mus.MusPayloads;
 import com.alphaseries.server.packet.Filesystems;
 import com.alphaseries.server.packet.PacketSink;
+import com.alphaseries.server.packet.PreReadyPacketDispatcher;
 import com.alphaseries.util.NumberUtils;
 
 import java.io.IOException;
@@ -67,7 +68,12 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
         PacketSink sink = this::sendToGameSocket;
         MusConnectionManager.instance().configureSink(sink);
         Filesystems.configurePacketSink(sink);
-        GameServerBridge.configurePreSessionPacketSink(Handling::processPreSessionPacketBuffer);
+        GameServerBridge.configurePreSessionPacketSink((socketIndex, packetBuffer) ->
+            PreReadyPacketDispatcher.processPreSessionPacketBuffer(
+                socketIndex,
+                packetBuffer,
+                SocketLifecycle::disconnectSocket,
+                QuestPacketHandlers::completeQuest));
     }
 
     private void configureProtocolLogging() {
@@ -128,7 +134,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
             // Socket disconnects are part of normal client lifecycle.
         } finally {
             gameSockets.remove(socketIndex);
-            Handling.disconnectSocket(socketIndex);
+            SocketLifecycle.disconnectSocket(socketIndex);
         }
     }
 
@@ -180,7 +186,7 @@ public final class AlphaSeriesRuntime implements AutoCloseable {
         if (socket != null) {
             closeQuietly(socket);
         }
-        Handling.disconnectSocket(socketIndex);
+        SocketLifecycle.disconnectSocket(socketIndex);
     }
 
     public static int configuredPort(String settingName) {

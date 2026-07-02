@@ -6,18 +6,19 @@ public final class SessionWire {
     private SessionWire() {
     }
 
+    public record LoginTicketRequest(String loginTicket) {
+        public LoginTicketRequest {
+            loginTicket = StringUtils.text(loginTicket);
+        }
+    }
+
     /**
      * Original function: Proc_6_101_746B60.
      */
-    public static String loginTicket(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("F_")) {
-            requestPayload = requestPayload.substring(2);
-        }
+    public static LoginTicketRequest loginTicketRequest(String packetPayload) {
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "F_");
         requestPayload = StringUtils.singleLineText(requestPayload).trim();
-        if (requestPayload.startsWith("F_")) {
-            requestPayload = requestPayload.substring(2);
-        }
-        return requestPayload;
+        requestPayload = StringUtils.withoutPrefix(requestPayload, "F_");
+        return new LoginTicketRequest(requestPayload);
     }
 }

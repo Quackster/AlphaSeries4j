@@ -1,7 +1,6 @@
 package com.alphaseries.server.runtime;
 
 import com.alphaseries.config.AppPaths;
-import com.alphaseries.Handling;
 import com.alphaseries.game.pet.PetState;
 import com.alphaseries.dao.mysql.FurnitureDao;
 import com.alphaseries.dao.mysql.RoomDao;
@@ -18,8 +17,9 @@ import com.alphaseries.game.room.RoomPositionService;
 import com.alphaseries.game.room.RoomRollers;
 import com.alphaseries.game.room.RoomState;
 import com.alphaseries.game.session.SessionState;
+import com.alphaseries.game.user.UserEffectExpiry;
+import com.alphaseries.game.user.UserLookups;
 import com.alphaseries.util.FileUtils;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.RandomUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -50,7 +50,7 @@ public final class RuntimeTasks {
                     furniture.updateSignLimited(furnitureId, nextSignValue);
                     cacheState = FurnitureStateWrites.refreshState(cacheState, roomId, furnitureId, nextSignValue);
                     RoomState.instance().setFurnitureRoomCache(cacheState);
-                    Handling.broadcastToRoomUsers(roomId, "AX" + furnitureId + '\2' + nextSignValue + '\2');
+                    SocketDelivery.broadcastToRoomUsers(roomId, "AX" + furnitureId + '\2' + nextSignValue + '\2');
                     processed++;
                     if (nextSignValue <= 0L) {
                         cacheState.removePendingFurniture(furnitureId);
@@ -120,17 +120,36 @@ public final class RuntimeTasks {
                 if (Guardian.isSocketConnected(socketIndex)) {
                     activeCount++;
                 } else {
-                    Handling.disconnectSocket(socketIndex);
+                    SocketLifecycle.disconnectSocket(socketIndex);
                 }
             }
             if (activeCount > previousMostActiveCount) {
                 maintenanceDao.updateMostActiveSockets(activeCount);
             }
-            Handling.expireUserEffects();
+            expireUserEffects();
         } catch (Exception ignored) {
             // VB6 source suppresses timer failures.
         }
         return activeCount;
+    }
+
+    private static long expireUserEffects() {
+        long expiredCount = 0L;
+        try {
+            for (UserEffectExpiry effect : UserLookups.expiredUserEffects(userDao())) {
+                int socketIndex = (int) effect.socketIndex();
+                if (effect.valid()) {
+                    if (!effect.broadcastPayload().isEmpty()) {
+                        SocketDelivery.broadcastToCurrentRoom(socketIndex, effect.broadcastPayload());
+                    }
+                    SocketDelivery.sendToSocket(socketIndex, effect.payload());
+                    expiredCount++;
+                }
+            }
+        } catch (Exception ignored) {
+            // VB6 source suppresses timer failures.
+        }
+        return expiredCount;
     }
 
     public static long rollersTimer(long roomSlot) {
@@ -165,7 +184,7 @@ public final class RuntimeTasks {
                         RoomState.instance().furnitureRoomCache(), roomId, movedId, 0));
                     String payload = RoomRollers.movePayload(movedId, targetX, targetY, movedZ);
                     if (!payload.isEmpty()) {
-                        Handling.broadcastToRoomUsers(roomId, payload);
+                        SocketDelivery.broadcastToRoomUsers(roomId, payload);
                     }
                     moved++;
                 }
@@ -263,7 +282,7 @@ public final class RuntimeTasks {
     }
 
     public static long mainRepresentedSocketRoomSlot(long socketIndex) {
-        long roomSlot = SessionState.instance().sessionCacheLong(String.valueOf(socketIndex), 1);
+        long roomSlot = SessionState.instance().sessionCacheLong(socketIndex, 1);
         if (roomSlot > 0L) {
             return roomSlot;
         }
@@ -322,29 +341,29 @@ public final class RuntimeTasks {
         if (socketIndex <= 0L) {
             return 0L;
         }
-        long roomId = SessionState.instance().sessionCacheLong(String.valueOf(socketIndex), 1);
+        long roomId = SessionState.instance().sessionCacheLong(socketIndex, 1);
         if (roomId > 0L) {
             return roomId;
         }
-        String userId = MySQL.mySqlUserIdFromSocket((int) socketIndex);
-        if (userId.isEmpty() || "0".equals(userId)) {
+        long userId = MySQL.mySqlUserIdFromSocket((int) socketIndex);
+        if (userId <= 0L) {
             return 0L;
         }
         try {
-            return roomDao().currentRoomIdByUser(NumberUtils.parseLong(userId));
+            return roomDao().currentRoomIdByUser(userId);
         } catch (SQLException ignored) {
             return 0L;
         }
     }
 
-    public static String mainUserIdFromSocket(long socketIndex) {
-        String userId = SessionState.instance().socketUserId(String.valueOf(socketIndex));
-        if (userId.isEmpty() || "0".equals(userId)) {
+    public static long mainUserIdFromSocket(long socketIndex) {
+        long userId = SessionState.instance().socketUserIdValue(socketIndex);
+        if (userId <= 0L) {
             try {
                 long databaseUserId = userDao().userIdBySocket(socketIndex);
-                userId = databaseUserId <= 0L ? "0" : String.valueOf(databaseUserId);
+                userId = databaseUserId <= 0L ? 0L : databaseUserId;
             } catch (SQLException ignored) {
-                userId = "";
+                userId = 0L;
             }
         }
         return userId;

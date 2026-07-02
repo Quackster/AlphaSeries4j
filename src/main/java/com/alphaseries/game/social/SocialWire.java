@@ -94,10 +94,7 @@ public final class SocialWire {
      * Original function: Proc_6_102_749C50.
      */
     public static EffectRequest effectRequest(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.length() >= 3) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPacketCode(packetPayload);
         long effectId = NumberUtils.parseLong(WireEncoding.readVl64LengthString(requestPayload));
         if (effectId <= 0L) {
             effectId = WireReader.readLong(requestPayload, new WireReader.Offset(1));
@@ -131,13 +128,8 @@ public final class SocialWire {
      * Original function: Proc_6_242_7FFC60.
      */
     public static RepresentedChatMessage representedChatMessage(String packetPayload, long chatType) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("@t") || requestPayload.startsWith("@w") || requestPayload.startsWith("@x")) {
-            requestPayload = requestPayload.substring(2);
-        }
-        if (requestPayload.startsWith("H") || requestPayload.startsWith("I")) {
-            requestPayload = requestPayload.substring(1);
-        }
+        String requestPayload = StringUtils.withoutAnyPrefix(packetPayload, "@t", "@w", "@x");
+        requestPayload = StringUtils.withoutAnyPrefix(requestPayload, "H", "I");
 
         String targetName = "";
         String messageText;

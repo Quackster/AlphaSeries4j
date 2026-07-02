@@ -114,10 +114,7 @@ public final class CatalogWire {
      * Original function: Proc_6_136_765F10.
      */
     public static PageRequest pageRequest(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.length() >= 3) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPacketCode(packetPayload);
         long pageId = NumberUtils.parseLong(WireEncoding.readVl64LengthString(requestPayload));
         if (pageId <= 0L) {
             pageId = WireReader.readLong(requestPayload, new WireReader.Offset(1));

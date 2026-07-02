@@ -85,28 +85,8 @@ public final class CatalogPageBootCache {
             .appendString(page.specialImage())
             .appendString(page.specialTemplate());
 
-        String[] textFields = new String[] {
-            page.textOne(),
-            page.textTwo(),
-            page.textThree(),
-            page.textFour(),
-            page.textFive(),
-            page.textSix(),
-            page.textSeven(),
-            page.textEight(),
-            page.textNine(),
-            page.textTen(),
-            page.textEleven()
-        };
-        long textCount = 0L;
-        PacketBuilder textPayload = PacketBuilder.create();
-        for (String textField : textFields) {
-            if (catalogTextFieldPresent(textField)) {
-                textCount++;
-                textPayload.appendString(textField);
-            }
-        }
-        payload.appendInt(textCount).appendRaw(textPayload.build());
+        PageTextPayload textPayload = PageTextFields.fromPage(page).payload();
+        payload.appendInt(textPayload.textCount()).appendRaw(textPayload.payload());
 
         if (catalogTextFieldPresent(page.link())) {
             payload.appendInt(1).appendString(page.link());
@@ -114,6 +94,68 @@ public final class CatalogPageBootCache {
             payload.appendInt(0);
         }
         return payload.appendRaw(buildCatalogProductPayload(page.pageId(), productRows)).build();
+    }
+
+    private record PageTextFields(
+        String textOne,
+        String textTwo,
+        String textThree,
+        String textFour,
+        String textFive,
+        String textSix,
+        String textSeven,
+        String textEight,
+        String textNine,
+        String textTen,
+        String textEleven
+    ) {
+        private static PageTextFields fromPage(CatalogDao.CatalogPageRow page) {
+            return new PageTextFields(
+                page.textOne(),
+                page.textTwo(),
+                page.textThree(),
+                page.textFour(),
+                page.textFive(),
+                page.textSix(),
+                page.textSeven(),
+                page.textEight(),
+                page.textNine(),
+                page.textTen(),
+                page.textEleven());
+        }
+
+        private PageTextPayload payload() {
+            PageTextAccumulator accumulator = PageTextAccumulator.empty()
+                .append(textOne)
+                .append(textTwo)
+                .append(textThree)
+                .append(textFour)
+                .append(textFive)
+                .append(textSix)
+                .append(textSeven)
+                .append(textEight)
+                .append(textNine)
+                .append(textTen)
+                .append(textEleven);
+            return new PageTextPayload(accumulator.textCount(), accumulator.payload().build());
+        }
+    }
+
+    private record PageTextAccumulator(long textCount, PacketBuilder payload) {
+        private static PageTextAccumulator empty() {
+            return new PageTextAccumulator(0L, PacketBuilder.create());
+        }
+
+        private PageTextAccumulator append(String textField) {
+            if (!catalogTextFieldPresent(textField)) {
+                return this;
+            }
+            payload.appendString(textField);
+            return new PageTextAccumulator(textCount + 1L, payload);
+        }
+    }
+
+    private record PageTextPayload(long textCount, String payload) {
     }
 
     /**

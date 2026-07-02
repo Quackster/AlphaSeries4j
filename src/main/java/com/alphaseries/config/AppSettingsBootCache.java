@@ -103,15 +103,15 @@ public final class AppSettingsBootCache {
      */
     public static String buildSettingsCache(List<SettingsDao.SettingRow> settingsRows, String systemDateFormat,
             String systemTimeFormat) {
-        StringBuilder payload = new StringBuilder();
+        PacketBuilder payload = PacketBuilder.create();
         for (Map.Entry<String, String> setting : buildSettingsMap(settingsRows, systemDateFormat, systemTimeFormat).entrySet()) {
-            payload.append('[')
-                .append(setting.getKey())
-                .append('=')
-                .append(setting.getValue())
-                .append(']');
+            payload.appendRaw('[')
+                .appendRaw(setting.getKey())
+                .appendRaw('=')
+                .appendRaw(setting.getValue())
+                .appendRaw(']');
         }
-        return payload.toString();
+        return payload.build();
     }
 
     /**
@@ -160,18 +160,7 @@ public final class AppSettingsBootCache {
         if (rows != null) {
             for (QuestDao.QuestDefinition row : rows) {
                 if (row != null) {
-                    definitions.add(QuestSettings.QuestDefinitionRow.fromFields(
-                        row.questId(),
-                        row.level(),
-                        row.name(),
-                        row.reservedSlot(),
-                        row.reward(),
-                        row.rewardType(),
-                        row.requiredAction(),
-                        row.additionalId(),
-                        row.campaignId(),
-                        row.activityAmount(),
-                        row.waitAmount()));
+                    definitions.add(QuestSettings.QuestDefinitionRow.fromDefinition(row));
                 }
             }
         }

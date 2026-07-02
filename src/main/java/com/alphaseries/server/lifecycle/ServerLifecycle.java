@@ -11,6 +11,7 @@ import com.alphaseries.util.FileUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.nio.file.Path;
+import java.util.List;
 
 public final class ServerLifecycle {
     public static final String INITIALIZING_CAPTION_TEMPLATE = "Alpha Series [INITIALISIERE] - [%%]";
@@ -18,13 +19,13 @@ public final class ServerLifecycle {
     public static final String RUNNING_STATE_TEXT = "RUNNING";
     public static final String SERVER_EXIT_ERROR_PREFIX = "Server Exit Suburned following error: \r\n";
     public static final String UNKNOWN_PROBLEM_MESSAGE = "Unbekanntes Problem";
-    private static final String[] DESIGN_CAPTIONS = new String[] {
+    private static final List<String> DESIGN_CAPTIONS = List.of(
         "Bitte warte...",
         "frame :: ADDONS",
         "Server by Privilege",
         "User Voice",
         "Source is only avaible for the author. Please do not share this Source!"
-    };
+    );
 
     private ServerLifecycle() {
     }
@@ -137,7 +138,7 @@ public final class ServerLifecycle {
                 StartupCacheCoordinator.initializeStartupCaches();
                 return StartupResult.succeeded();
             }
-            String message = LicenceChecker.lastLicenceFailureMessage;
+            String message = LicenceChecker.lastLicenceFailureMessage();
             if (message.isEmpty()) {
                 message = "Licence check failed for product key '" + lifecycle.productKey() + "'.";
             }
@@ -163,12 +164,11 @@ public final class ServerLifecycle {
             return productKey;
         }
 
-        String[] configParts = StringUtils.text(configText).split("=", -1);
-        if (configParts.length < 8) {
+        String fallbackProductKey = StringUtils.indexedFields(configText, '=').text(7);
+        if (fallbackProductKey.isEmpty()) {
             return "";
         }
-        String[] lines = configParts[7].split("\\r?\\n", -1);
-        return lines.length > 0 ? StringUtils.text(lines[0]) : "";
+        return firstLine(fallbackProductKey);
     }
 
     public static String javaCaptionFromConsoleTitle(String consoleTitle) {
@@ -182,8 +182,8 @@ public final class ServerLifecycle {
         return title;
     }
 
-    public static String[] designCaptions() {
-        return DESIGN_CAPTIONS.clone();
+    public static List<String> designCaptions() {
+        return DESIGN_CAPTIONS;
     }
 
     public static String serverExitErrorMessage(String description) {
@@ -202,5 +202,19 @@ public final class ServerLifecycle {
     private static ServerMaintenanceDao serverMaintenanceDao() {
         Database database = MySQL.configuredDatabase();
         return database == null ? null : new ServerMaintenanceDao(database);
+    }
+
+    private static String firstLine(String text) {
+        String value = StringUtils.text(text);
+        int lineEnd = value.length();
+        int carriageReturnAt = value.indexOf('\r');
+        if (carriageReturnAt >= 0) {
+            lineEnd = Math.min(lineEnd, carriageReturnAt);
+        }
+        int lineFeedAt = value.indexOf('\n');
+        if (lineFeedAt >= 0) {
+            lineEnd = Math.min(lineEnd, lineFeedAt);
+        }
+        return value.substring(0, lineEnd);
     }
 }

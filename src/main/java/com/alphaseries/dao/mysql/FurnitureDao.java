@@ -3,10 +3,9 @@ package com.alphaseries.dao.mysql;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.inventory.InventoryItemRow;
 import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -435,48 +434,29 @@ public final class FurnitureDao {
             boxProductId);
     }
 
-    public long recyclableInventoryCount(long ownerId, String selectedFurnitureIds) throws SQLException {
-        return recyclableInventoryCount(ownerId, parseNumericIds(selectedFurnitureIds));
-    }
-
     public long recyclableInventoryCount(long ownerId, List<Long> selectedFurnitureIds) throws SQLException {
         if (selectedFurnitureIds == null || selectedFurnitureIds.isEmpty()) {
             return 0L;
         }
-        String placeholders = placeholders(selectedFurnitureIds.size());
-        List<Object> parameters = new ArrayList<>();
-        parameters.add(ownerId);
-        parameters.addAll(selectedFurnitureIds);
-        parameters.add(1L);
+        String placeholders = SqlFragments.placeholders(selectedFurnitureIds.size());
         return database.queryOne(
             "SELECT COUNT(*) FROM furnitures,products WHERE furnitures.id_owner=? AND furnitures.id_room IS NULL "
                 + "AND furnitures.id IN (" + placeholders + ") AND products.id=furnitures.id_product "
                 + "AND products.is_recycleable=?",
             resultSet -> resultSet.getLong(1),
-            parameters.toArray())
+            SqlFragments.parametersWithIds(List.of(ownerId), selectedFurnitureIds, List.of(1L)))
             .orElse(0L);
-    }
-
-    public int clearRecyclerItems(long ownerId, String selectedFurnitureIds) throws SQLException {
-        return clearRecyclerItems(ownerId, parseNumericIds(selectedFurnitureIds));
     }
 
     public int clearRecyclerItems(long ownerId, List<Long> selectedFurnitureIds) throws SQLException {
         if (selectedFurnitureIds == null || selectedFurnitureIds.isEmpty()) {
             return 0;
         }
-        String placeholders = placeholders(selectedFurnitureIds.size());
-        List<Object> parameters = new ArrayList<>();
-        parameters.add(ownerId);
-        parameters.addAll(selectedFurnitureIds);
+        String placeholders = SqlFragments.placeholders(selectedFurnitureIds.size());
         return database.execute(
             "UPDATE furnitures SET id_owner=NULL WHERE id_owner=? AND id_room IS NULL AND id IN ("
                 + placeholders + ")",
-            parameters.toArray());
-    }
-
-    public int insertRecyclerLog(long userId, String selectedFurnitureIds, long rewardProductId) throws SQLException {
-        return insertRecyclerLog(userId, parseNumericIds(selectedFurnitureIds), rewardProductId);
+            SqlFragments.parametersWithIds(List.of(ownerId), selectedFurnitureIds));
     }
 
     public int insertRecyclerLog(long userId, List<Long> selectedFurnitureIds, long rewardProductId) throws SQLException {
@@ -491,36 +471,11 @@ public final class FurnitureDao {
             0L);
     }
 
-    private static List<Long> parseNumericIds(String selectedFurnitureIds) {
-        if (!isNumericIdList(selectedFurnitureIds)) {
-            return List.of();
-        }
-        List<Long> ids = new ArrayList<>();
-        for (String selectedFurnitureId : selectedFurnitureIds.split(",", -1)) {
-            long id = NumberUtils.parseLong(selectedFurnitureId);
-            if (id > 0L) {
-                ids.add(id);
-            }
-        }
-        return List.copyOf(ids);
-    }
-
-    private static String placeholders(int count) {
-        return String.join(",", Collections.nCopies(count, "?"));
-    }
-
     private static String joinIds(List<Long> selectedFurnitureIds) {
-        List<String> idTexts = new ArrayList<>();
-        for (Long selectedFurnitureId : selectedFurnitureIds) {
-            if (selectedFurnitureId != null && selectedFurnitureId > 0L) {
-                idTexts.add(String.valueOf(selectedFurnitureId));
-            }
-        }
-        return String.join(",", idTexts);
-    }
-
-    private static boolean isNumericIdList(String selectedFurnitureIds) {
-        return selectedFurnitureIds != null && selectedFurnitureIds.matches("\\d+(,\\d+)*");
+        List<Long> ids = selectedFurnitureIds == null ? List.of() : selectedFurnitureIds.stream()
+            .filter(selectedFurnitureId -> selectedFurnitureId != null && selectedFurnitureId > 0L)
+            .toList();
+        return StringUtils.delimitedText(ids, ',');
     }
 
     public int resetDimmerPresetStates(long furnitureId) throws SQLException {

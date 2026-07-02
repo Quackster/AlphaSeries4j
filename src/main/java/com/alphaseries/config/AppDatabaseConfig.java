@@ -3,6 +3,7 @@ package com.alphaseries.config;
 import com.alphaseries.db.Database;
 import com.alphaseries.db.JdbcDatabase;
 import com.alphaseries.db.MySQL;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.StringUtils;
 
 import java.sql.Connection;
@@ -72,8 +73,7 @@ public final class AppDatabaseConfig {
 
     public static Map<String, String> parseConfig(String configText) {
         Map<String, String> result = new LinkedHashMap<>();
-        String normalized = StringUtils.text(configText).replace("\r\n", "\n").replace('\r', '\n');
-        for (String line : normalized.split("\n", -1)) {
+        for (String line : StringUtils.delimitedFields(StringUtils.normalizedNewlines(configText), '\n')) {
             int equalsAt = line.indexOf('=');
             if (equalsAt > 0) {
                 result.put(line.substring(0, equalsAt).trim().toLowerCase(), line.substring(equalsAt + 1).trim());
@@ -96,19 +96,20 @@ public final class AppDatabaseConfig {
         String hostText = StringUtils.text(host);
         String portText = StringUtils.text(port);
         String databaseText = StringUtils.text(database);
-        StringBuilder url = new StringBuilder("jdbc:mysql://");
-        url.append(hostText.isEmpty() ? "localhost" : hostText);
-        url.append(':').append(portText.isEmpty() ? "3306" : portText);
+        PacketBuilder url = PacketBuilder.create()
+            .appendRaw("jdbc:mysql://")
+            .appendRaw(hostText.isEmpty() ? "localhost" : hostText)
+            .appendRaw(':')
+            .appendRaw(portText.isEmpty() ? "3306" : portText);
         if (!databaseText.isEmpty()) {
-            url.append('/').append(databaseText);
+            url.appendRaw('/').appendRaw(databaseText);
         }
-        url.append("?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
-        return url.toString();
+        return url.appendRaw("?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC").build();
     }
 
     public static Map<String, String> parseOdbcConnectionString(String connectionString) {
         Map<String, String> result = new LinkedHashMap<String, String>();
-        for (String part : StringUtils.text(connectionString).split(";", -1)) {
+        for (String part : StringUtils.delimitedFields(connectionString, ';')) {
             int equalsAt = part.indexOf('=');
             if (equalsAt > 0) {
                 String key = part.substring(0, equalsAt).trim().toLowerCase();

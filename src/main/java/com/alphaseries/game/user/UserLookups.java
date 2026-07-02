@@ -15,15 +15,15 @@ public final class UserLookups {
     private UserLookups() {
     }
 
-    public record UserRequest(String userId) {
+    public record UserRequest(long userId) {
         public boolean valid() {
-            return NumberUtils.parseLong(userId) > 0L;
+            return userId > 0L;
         }
     }
 
     public static UserRequest userRequest(int socketIndex, UserDao users) {
         if (socketIndex <= 0) {
-            return new UserRequest("");
+            return new UserRequest(0L);
         }
         long userId = SessionState.instance().sessionUserIdBySocket(socketIndex);
         if (userId <= 0L && users != null) {
@@ -33,32 +33,32 @@ public final class UserLookups {
                 userId = 0L;
             }
         }
-        return new UserRequest(userId > 0L ? String.valueOf(userId) : "");
+        return new UserRequest(userId);
     }
 
-    public static boolean hasPermission(String userId, String permissionName, UserDao users, PermissionMatrix permissions) {
+    public static boolean hasPermission(long userId, String permissionName, UserDao users, PermissionMatrix permissions) {
         long rankIndex = rank(userId, users);
         long hcLevel = hcLevel(userId, users);
         PermissionMatrix permissionMatrix = permissions == null ? PermissionMatrix.empty() : permissions;
         return permissionMatrix.allows(rankIndex, "", permissionName, hcLevel);
     }
 
-    public static long rank(String userId, UserDao users) {
+    public static long rank(long userId, UserDao users) {
         if (users == null) {
             return 0L;
         }
         try {
-            return users.rankLevel(NumberUtils.parseLong(userId));
+            return users.rankLevel(userId);
         } catch (Exception ignored) {
             return 0L;
         }
     }
 
-    public static long hcLevel(String userId, UserDao users) {
+    public static long hcLevel(long userId, UserDao users) {
         long hcLevel = 0L;
         if (users != null) {
             try {
-                hcLevel = users.hcLevel(NumberUtils.parseLong(userId));
+                hcLevel = users.hcLevel(userId);
             } catch (Exception ignored) {
                 hcLevel = 0L;
             }
@@ -69,12 +69,23 @@ public final class UserLookups {
         return Math.min(hcLevel, 2L);
     }
 
-    public static String sessionId(String userId, UserDao users) {
-        if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId)) || users == null) {
+    public static String sessionId(long userId, UserDao users) {
+        if (userId <= 0L || users == null) {
             return "";
         }
         try {
-            return users.sessionId(NumberUtils.parseLong(userId));
+            return users.sessionId(userId);
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    public static String nameByIdText(String userId, UserDao users) {
+        try {
+            if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId)) || users == null) {
+                return "";
+            }
+            return users.name(NumberUtils.parseLong(userId));
         } catch (Exception ignored) {
             return "";
         }
@@ -91,13 +102,16 @@ public final class UserLookups {
         }
     }
 
-    public static String ownProfilePayload(String userId, UserDao users) {
+    public static String ownProfilePayload(UserRequest request, UserDao users) {
+        if (request == null || !request.valid()) {
+            return "";
+        }
         try {
-            long numericUserId = NumberUtils.parseLong(userId);
-            if (numericUserId <= 0L || users == null) {
+            long userId = request.userId();
+            if (userId <= 0L || users == null) {
                 return "";
             }
-            return users.ownProfile(numericUserId)
+            return users.ownProfile(userId)
                 .map(UserPayloads::ownProfile)
                 .orElse("");
         } catch (Exception ignored) {
@@ -105,19 +119,12 @@ public final class UserLookups {
         }
     }
 
-    public static String ownProfilePayload(UserRequest request, UserDao users) {
-        if (request == null || !request.valid()) {
-            return "";
-        }
-        return ownProfilePayload(request.userId(), users);
-    }
-
     /**
      * Original function: Proc_6_20_6E88E0.
      */
-    public static String rankAndStaffStatePayload(String userId, UserDao users, PermissionMatrix permissions) {
+    public static String rankAndStaffStatePayload(long userId, UserDao users, PermissionMatrix permissions) {
         try {
-            if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))) {
+            if (userId <= 0L) {
                 return "";
             }
             long rankIndex = rank(userId, users);
@@ -131,17 +138,19 @@ public final class UserLookups {
     /**
      * Original function: Proc_6_15_6E1900.
      */
-    public static String wardrobeSlotsPayload(String userId, UserDao users, PermissionMatrix permissions) {
+    public static String wardrobeSlotsPayload(long userId, UserDao users, PermissionMatrix permissions) {
         try {
-            if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))
-                || !hasPermission(userId, "fuse_use_wardrobe", users, permissions)) {
+            if (userId <= 0L) {
+                return "";
+            }
+            if (!hasPermission(userId, "fuse_use_wardrobe", users, permissions)) {
                 return "";
             }
             long maxSlots = hasPermission(userId, "fuse_larger_wardrobe", users, permissions) ? 10L : 5L;
             if (users == null) {
                 return UserPayloads.wardrobeSlots(List.of(), maxSlots).payload();
             }
-            return UserPayloads.wardrobeSlots(users.wardrobeRows(NumberUtils.parseLong(userId)), maxSlots).payload();
+            return UserPayloads.wardrobeSlots(users.wardrobeRows(userId), maxSlots).payload();
         } catch (Exception ignored) {
             return "";
         }
@@ -151,31 +160,28 @@ public final class UserLookups {
      * Original function: Proc_6_16_6E2320.
      */
     public static String saveWardrobeSlotPayload(
-        String userId,
-        String packetPayload,
+        long userId,
+        UserWire.WardrobeSlotRequest request,
         String figureData,
         UserDao users,
         PermissionMatrix permissions
     ) {
         try {
-            UserWire.WardrobeSlotRequest request = UserWire.wardrobeSlotRequest(packetPayload);
-            String normalizedUserId = StringUtils.text(userId);
-            if (normalizedUserId.isEmpty() || "0".equals(normalizedUserId)
-                || !hasPermission(normalizedUserId, "fuse_use_wardrobe", users, permissions)) {
+            if (userId <= 0L
+                || !hasPermission(userId, "fuse_use_wardrobe", users, permissions)) {
                 return "";
             }
-            long maxSlots = hasPermission(normalizedUserId, "fuse_larger_wardrobe", users, permissions) ? 10L : 5L;
+            long maxSlots = hasPermission(userId, "fuse_larger_wardrobe", users, permissions) ? 10L : 5L;
             if (request.slotId() < 1L || request.slotId() > maxSlots
                 || (!"M".equals(request.genderText()) && !"F".equals(request.genderText()))
                 || !UserValidation.isValidWardrobeFigure(request.figureText(), request.genderText(), figureData)) {
                 return "";
             }
             if (users != null) {
-                long numericUserId = NumberUtils.parseLong(normalizedUserId);
-                users.deleteWardrobeSlot(numericUserId, request.slotId());
-                users.insertWardrobeSlot(numericUserId, request.slotId(), request.figureText(), request.genderText());
+                users.deleteWardrobeSlot(userId, request.slotId());
+                users.insertWardrobeSlot(userId, request.slotId(), request.figureText(), request.genderText());
             }
-            return wardrobeSlotsPayload(normalizedUserId, users, permissions);
+            return wardrobeSlotsPayload(userId, users, permissions);
         } catch (Exception ignored) {
             return "";
         }
@@ -185,39 +191,35 @@ public final class UserLookups {
      * Original function: Proc_6_17_6E48D0.
      */
     public static String updateTutorialClothesPayload(
-        String userId,
-        String packetPayload,
+        long userId,
+        UserWire.TutorialClothesRequest request,
         String figureData,
         UserDao users
     ) {
         try {
-            UserWire.TutorialClothesRequest request = UserWire.tutorialClothesRequest(packetPayload);
-            String normalizedUserId = StringUtils.text(userId);
-            if (normalizedUserId.isEmpty() || "0".equals(normalizedUserId)
+            if (userId <= 0L
                 || (!"M".equals(request.genderText()) && !"F".equals(request.genderText()))
                 || !UserValidation.isValidWardrobeFigure(request.figureText(), request.genderText(), figureData)) {
                 return "";
             }
-            long numericUserId = NumberUtils.parseLong(normalizedUserId);
             String mottoText = "";
             if (users != null) {
-                users.updateTutorialClothes(numericUserId, request.genderText(), request.figureText());
-                mottoText = users.motto(numericUserId);
+                users.updateTutorialClothes(userId, request.genderText(), request.figureText());
+                mottoText = users.motto(userId);
             }
-            return UserPayloads.identityRefresh(numericUserId, mottoText, request.figureText(), request.genderText());
+            return UserPayloads.identityRefresh(userId, mottoText, request.figureText(), request.genderText());
         } catch (Exception ignored) {
             return "";
         }
     }
 
-    public static long updateSoundSetting(String userId, UserWire.SoundSettingRequest request, UserDao users) {
+    public static long updateSoundSetting(long userId, UserWire.SoundSettingRequest request, UserDao users) {
         try {
             long soundSetting = request == null ? 0L : request.soundSetting();
-            long numericUserId = NumberUtils.parseLong(userId);
-            if (numericUserId <= 0L || soundSetting <= 0L || users == null) {
+            if (userId <= 0L || soundSetting <= 0L || users == null) {
                 return 0L;
             }
-            users.updateSoundSetting(numericUserId, soundSetting);
+            users.updateSoundSetting(userId, soundSetting);
             return soundSetting;
         } catch (Exception ignored) {
             return 0L;
@@ -227,13 +229,12 @@ public final class UserLookups {
     /**
      * Original function: Proc_6_143_76BB80.
      */
-    public static String activityPointBalancePayload(String userId, UserDao users) {
+    public static String activityPointBalancePayload(long userId, UserDao users) {
         try {
-            long numericUserId = NumberUtils.parseLong(userId);
-            if (numericUserId <= 0L || users == null) {
+            if (userId <= 0L || users == null) {
                 return "";
             }
-            UserDao.ActivityPointBalance balance = users.activityPointBalance(numericUserId).orElse(null);
+            UserDao.ActivityPointBalance balance = users.activityPointBalance(userId).orElse(null);
             if (balance == null) {
                 return "";
             }
@@ -251,27 +252,26 @@ public final class UserLookups {
      * Original function: Proc_6_40_711770.
      */
     public static AvatarNameUpdate validateOrChangeAvatarName(
-        String userId,
+        long userId,
         long socketIndex,
         boolean checkOnly,
         String candidateName,
         UserDao users
     ) {
         try {
-            long numericUserId = NumberUtils.parseLong(userId);
             String normalizedCandidate = StringUtils.text(candidateName).trim();
-            if (numericUserId <= 0L || socketIndex <= 0L || users == null) {
+            if (userId <= 0L || socketIndex <= 0L || users == null) {
                 return AvatarNameUpdate.empty();
             }
-            String oldName = users.name(numericUserId);
-            users.gender(numericUserId);
+            String oldName = users.name(userId);
+            users.gender(userId);
             long existingCount = users.countByName(normalizedCandidate);
             long validationCode = UserValidation.avatarNameValidationCode(normalizedCandidate, oldName, existingCount);
             String validationPayload = UserPayloads.avatarNameValidation(validationCode, normalizedCandidate);
             if (checkOnly || validationCode != 0L) {
                 return new AvatarNameUpdate(validationCode, normalizedCandidate, validationPayload, false);
             }
-            users.updateName(numericUserId, normalizedCandidate);
+            users.updateName(userId, normalizedCandidate);
             users.insertIdentityLog(oldName, normalizedCandidate, socketIndex);
             return new AvatarNameUpdate(0L, normalizedCandidate, validationPayload, true);
         } catch (Exception ignored) {
@@ -282,13 +282,12 @@ public final class UserLookups {
     /**
      * Original function: Proc_6_101_749540.
      */
-    public static UserPayloads.EffectListPayload effectListPayload(String userId, UserDao users) {
+    public static UserPayloads.EffectListPayload effectListPayload(long userId, UserDao users) {
         try {
-            long numericUserId = NumberUtils.parseLong(userId);
-            if (numericUserId <= 0L || users == null) {
+            if (userId <= 0L || users == null) {
                 return UserPayloads.effectList(List.of());
             }
-            return UserPayloads.effectList(users.userEffectSummaries(numericUserId));
+            return UserPayloads.effectList(users.userEffectSummaries(userId));
         } catch (Exception ignored) {
             return UserPayloads.effectList(List.of());
         }
@@ -297,20 +296,19 @@ public final class UserLookups {
     /**
      * Original function: Proc_6_102_749C50.
      */
-    public static UserEffectActivation activateUserEffect(String userId, long effectId, UserDao users) {
+    public static UserEffectActivation activateUserEffect(long userId, long effectId, UserDao users) {
         return activateUserEffect(userId, effectId, 0L, users);
     }
 
     /**
      * Original function: Proc_6_102_749C50.
      */
-    public static UserEffectActivation activateUserEffect(String userId, long effectId, long roomUserIndex, UserDao users) {
+    public static UserEffectActivation activateUserEffect(long userId, long effectId, long roomUserIndex, UserDao users) {
         try {
-            long numericUserId = NumberUtils.parseLong(userId);
-            if (numericUserId <= 0L || effectId <= 0L || users == null) {
+            if (userId <= 0L || effectId <= 0L || users == null) {
                 return UserEffectActivation.empty();
             }
-            UserEffectActivationRow effect = users.userEffectActivation(numericUserId, effectId).orElse(null);
+            UserEffectActivationRow effect = users.userEffectActivation(userId, effectId).orElse(null);
             if (effect == null || effect.rowId() <= 0L || effect.rentSeconds() <= 0L) {
                 return UserEffectActivation.empty();
             }
@@ -351,31 +349,27 @@ public final class UserLookups {
     /**
      * Original function: Proc_6_230_7F3D20.
      */
-    public static String updateMottoPayload(String userId, UserWire.MottoRequest request, UserDao users) {
+    public static String updateMottoPayload(UserRequest userRequest, UserWire.MottoRequest request, UserDao users) {
+        if (userRequest == null || !userRequest.valid()) {
+            return "";
+        }
         try {
-            long numericUserId = NumberUtils.parseLong(userId);
-            if (numericUserId <= 0L || request == null || users == null) {
+            long userId = userRequest.userId();
+            if (userId <= 0L || request == null || users == null) {
                 return "";
             }
             String mottoText = request.mottoText();
-            users.updateMotto(numericUserId, mottoText);
-            UserDao.UserIdentity identity = users.findIdentity(numericUserId)
-                .orElse(new UserDao.UserIdentity(numericUserId, 0L, "", "", "M"));
+            users.updateMotto(userId, mottoText);
+            UserDao.UserIdentity identity = users.findIdentity(userId)
+                .orElse(new UserDao.UserIdentity(userId, 0L, "", "", "M"));
             String figureText = StringUtils.text(identity.figure());
             String genderText = StringUtils.left(StringUtils.text(identity.gender()).toUpperCase(), 1);
             if (!"M".equals(genderText) && !"F".equals(genderText)) {
                 genderText = "M";
             }
-            return UserPayloads.identityRefresh(numericUserId, mottoText, figureText, genderText);
+            return UserPayloads.identityRefresh(userId, mottoText, figureText, genderText);
         } catch (Exception ignored) {
             return "";
         }
-    }
-
-    public static String updateMottoPayload(UserRequest userRequest, UserWire.MottoRequest request, UserDao users) {
-        if (userRequest == null || !userRequest.valid()) {
-            return "";
-        }
-        return updateMottoPayload(userRequest.userId(), request, users);
     }
 }

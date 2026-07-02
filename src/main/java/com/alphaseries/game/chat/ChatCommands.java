@@ -87,20 +87,17 @@ public final class ChatCommands {
      */
     public static String extractUrlList(String messageText) {
         List<String> urls = new ArrayList<>();
-        for (String word : StringUtils.text(messageText).split(" ", -1)) {
-            String candidate = word.trim();
+        for (String candidate : StringUtils.spaceSeparatedWords(messageText)) {
             String lowered = candidate.toLowerCase(Locale.ROOT);
-            if (!candidate.isEmpty()) {
-                if (lowered.startsWith("www.") && lowered.indexOf('.', 4) > 0) {
-                    urls.add(candidate);
-                } else if (lowered.startsWith("http://")) {
-                    urls.add(candidate);
-                } else if (lowered.startsWith("https://")) {
-                    urls.add(candidate);
-                }
+            if (lowered.startsWith("www.") && lowered.indexOf('.', 4) > 0) {
+                urls.add(candidate);
+            } else if (lowered.startsWith("http://")) {
+                urls.add(candidate);
+            } else if (lowered.startsWith("https://")) {
+                urls.add(candidate);
             }
         }
-        return urls.isEmpty() ? "" : String.join(";", urls) + ';';
+        return urls.isEmpty() ? "" : StringUtils.delimitedText(urls, ';') + ';';
     }
 
     public static String buildTextOrDefault(String buildText) {

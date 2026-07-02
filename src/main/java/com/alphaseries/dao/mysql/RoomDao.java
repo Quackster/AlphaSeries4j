@@ -1370,86 +1370,74 @@ public final class RoomDao {
     }
 
     private static String officialNavigatorQuery() {
-        String separator = " UNION ALL ";
-        StringBuilder queryText = new StringBuilder();
-        queryText.append("SELECT rooms_official.id_type,rooms_official.id_style,rooms_official.icon,");
-        queryText.append("rooms_official.caption,rooms_official.caption_2,rooms_official.caption_3,");
-        queryText.append("NULL,rooms.id,rooms.name,users.name,rooms.status_door,rooms.visitors_now,");
-        queryText.append("rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,");
-        queryText.append("rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,");
-        queryText.append("rooms.allow_otherspets,NULL,NULL,NULL,rooms_official.id_parent,");
-        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM users,rooms,");
-        queryText.append("rooms_categories,rooms_official WHERE rooms_official.id_type='2' ");
-        queryText.append("AND rooms_official.id_room IS NOT NULL AND rooms.id=rooms_official.id_room ");
-        queryText.append("AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category ");
-        queryText.append("GROUP BY rooms_official.id");
-
-        queryText.append(separator).append("SELECT rooms_official.id_type,rooms_official.id_style,");
-        queryText.append("rooms_official.icon,rooms_official.caption,rooms_official.caption_2,");
-        queryText.append("rooms_official.caption_3,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
-        queryText.append("NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,rooms_official.id_parent,");
-        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM rooms_official ");
-        queryText.append("WHERE rooms_official.id_type='1' GROUP BY rooms_official.id");
-
-        queryText.append(separator).append("SELECT rooms_official.id_type,rooms_official.id_style,");
-        queryText.append("rooms_official.icon,rooms_official.caption,rooms_official.caption_2,");
-        queryText.append("rooms_official.caption_3,NULL,rooms.id,rooms.name,NULL,rooms.status_door,");
-        queryText.append("rooms.visitors_now,rooms.visitors_max,rooms.description,");
-        queryText.append("rooms_categories.has_trading,NULL,rooms.rate,rooms.id_category,rooms.icon,");
-        queryText.append("rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,models.name,");
-        queryText.append("models.required_files,models.visitors_max,rooms_official.id_parent,");
-        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM models,rooms,");
-        queryText.append("rooms_categories,rooms_official WHERE rooms_official.id_type='3' ");
-        queryText.append("AND rooms_official.id_room IS NOT NULL AND rooms.id=rooms_official.id_room ");
-        queryText.append("AND models.id=rooms.id_model AND rooms_categories.id=rooms.id_category ");
-        queryText.append("GROUP BY rooms_official.id");
-
-        queryText.append(separator).append("SELECT rooms_official.id_type,rooms_official.id_style,");
-        queryText.append("rooms_official.icon,rooms_official.caption,rooms_official.caption_2,");
-        queryText.append("rooms_official.caption_3,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
-        queryText.append("NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,rooms_official.id_parent,");
-        queryText.append("rooms_official.id,rooms_official.requires_level_in FROM rooms_official ");
-        queryText.append("WHERE rooms_official.id_type='4' GROUP BY rooms_official.id ");
-        queryText.append("ORDER BY 27 ASC LIMIT 255");
-        return queryText.toString();
+        return SqlFragments.unionAll(
+            "SELECT rooms_official.id_type,rooms_official.id_style,rooms_official.icon,"
+                + "rooms_official.caption,rooms_official.caption_2,rooms_official.caption_3,"
+                + "NULL,rooms.id,rooms.name,users.name,rooms.status_door,rooms.visitors_now,"
+                + "rooms.visitors_max,rooms.description,rooms_categories.has_trading,NULL,"
+                + "rooms.rate,rooms.id_category,rooms.icon,rooms.tag_1,rooms.tag_2,"
+                + "rooms.allow_otherspets,NULL,NULL,NULL,rooms_official.id_parent,"
+                + "rooms_official.id,rooms_official.requires_level_in FROM users,rooms,"
+                + "rooms_categories,rooms_official WHERE rooms_official.id_type='2' "
+                + "AND rooms_official.id_room IS NOT NULL AND rooms.id=rooms_official.id_room "
+                + "AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category "
+                + "GROUP BY rooms_official.id",
+            "SELECT rooms_official.id_type,rooms_official.id_style,"
+                + "rooms_official.icon,rooms_official.caption,rooms_official.caption_2,"
+                + "rooms_official.caption_3,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"
+                + "NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,rooms_official.id_parent,"
+                + "rooms_official.id,rooms_official.requires_level_in FROM rooms_official "
+                + "WHERE rooms_official.id_type='1' GROUP BY rooms_official.id",
+            "SELECT rooms_official.id_type,rooms_official.id_style,"
+                + "rooms_official.icon,rooms_official.caption,rooms_official.caption_2,"
+                + "rooms_official.caption_3,NULL,rooms.id,rooms.name,NULL,rooms.status_door,"
+                + "rooms.visitors_now,rooms.visitors_max,rooms.description,"
+                + "rooms_categories.has_trading,NULL,rooms.rate,rooms.id_category,rooms.icon,"
+                + "rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,models.name,"
+                + "models.required_files,models.visitors_max,rooms_official.id_parent,"
+                + "rooms_official.id,rooms_official.requires_level_in FROM models,rooms,"
+                + "rooms_categories,rooms_official WHERE rooms_official.id_type='3' "
+                + "AND rooms_official.id_room IS NOT NULL AND rooms.id=rooms_official.id_room "
+                + "AND models.id=rooms.id_model AND rooms_categories.id=rooms.id_category "
+                + "GROUP BY rooms_official.id",
+            "SELECT rooms_official.id_type,rooms_official.id_style,"
+                + "rooms_official.icon,rooms_official.caption,rooms_official.caption_2,"
+                + "rooms_official.caption_3,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"
+                + "NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,rooms_official.id_parent,"
+                + "rooms_official.id,rooms_official.requires_level_in FROM rooms_official "
+                + "WHERE rooms_official.id_type='4' GROUP BY rooms_official.id "
+                + "ORDER BY 27 ASC LIMIT 255");
     }
 
     private static String recommendedRoomQuery() {
-        String separator = " UNION ALL ";
-        StringBuilder queryText = new StringBuilder();
-
-        queryText.append("SELECT rooms_recommented.id_type,rooms_recommented.id_style,rooms_recommented.icon,");
-        queryText.append("rooms_recommented.caption,rooms_recommented.caption_2,rooms_recommented.caption_3,");
-        queryText.append("NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
-        queryText.append("rooms_recommented.id_tree,rooms_recommented.id FROM rooms_recommented WHERE id_tree=? ");
-        queryText.append("AND rooms_recommented.id_type='1' GROUP BY rooms_recommented.id");
-
-        queryText.append(separator).append("SELECT rooms_recommented.id_type,rooms_recommented.id_style,rooms_recommented.icon,");
-        queryText.append("rooms_recommented.caption,rooms_recommented.caption_2,rooms_recommented.caption_3,NULL,");
-        queryText.append("rooms.id,rooms.name,users.name,rooms.status_door,rooms.visitors_now,rooms.visitors_max,");
-        queryText.append("rooms.description,rooms_categories.has_trading,NULL,rooms.rate,rooms.id_category,rooms.icon,");
-        queryText.append("rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,NULL,NULL,NULL,");
-        queryText.append("rooms_recommented.id_tree,rooms_recommented.id FROM users,rooms,rooms_categories,rooms_recommented ");
-        queryText.append("WHERE id_tree=? AND rooms_recommented.id_type='2' ");
-        queryText.append("AND rooms_recommented.id_room IS NOT NULL AND rooms.id=rooms_recommented.id_room ");
-        queryText.append("AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category GROUP BY rooms_recommented.id");
-
-        queryText.append(separator).append("SELECT rooms_recommented.id_type,rooms_recommented.id_style,rooms_recommented.icon,");
-        queryText.append("rooms_recommented.caption,rooms_recommented.caption_2,rooms_recommented.caption_3,NULL,");
-        queryText.append("rooms.id,rooms.name,NULL,rooms.status_door,rooms.visitors_now,rooms.visitors_max,");
-        queryText.append("rooms.description,rooms_categories.has_trading,NULL,rooms.rate,rooms.id_category,rooms.icon,");
-        queryText.append("rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,models.name,models.required_files,models.visitors_max,");
-        queryText.append("rooms_recommented.id_tree,rooms_recommented.id FROM models,rooms,rooms_categories,rooms_recommented ");
-        queryText.append("WHERE id_tree=? AND rooms_recommented.id_type='3' ");
-        queryText.append("AND rooms_recommented.id_room IS NOT NULL AND rooms.id=rooms_recommented.id_room ");
-        queryText.append("AND models.id=rooms.id_model AND rooms_categories.id=rooms.id_category GROUP BY rooms_recommented.id");
-
-        queryText.append(separator).append("SELECT rooms_recommented.id_type,rooms_recommented.id_style,rooms_recommented.icon,");
-        queryText.append("rooms_recommented.caption,rooms_recommented.caption_2,rooms_recommented.caption_3,");
-        queryText.append("NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
-        queryText.append("rooms_recommented.id_tree,rooms_recommented.id FROM rooms_recommented WHERE id_tree=? ");
-        queryText.append("AND rooms_recommented.id_type='4' GROUP BY rooms_recommented.id ORDER BY 27 ASC LIMIT 255");
-
-        return queryText.toString();
+        return SqlFragments.unionAll(
+            "SELECT rooms_recommented.id_type,rooms_recommented.id_style,rooms_recommented.icon,"
+                + "rooms_recommented.caption,rooms_recommented.caption_2,rooms_recommented.caption_3,"
+                + "NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"
+                + "rooms_recommented.id_tree,rooms_recommented.id FROM rooms_recommented WHERE id_tree=? "
+                + "AND rooms_recommented.id_type='1' GROUP BY rooms_recommented.id",
+            "SELECT rooms_recommented.id_type,rooms_recommented.id_style,rooms_recommented.icon,"
+                + "rooms_recommented.caption,rooms_recommented.caption_2,rooms_recommented.caption_3,NULL,"
+                + "rooms.id,rooms.name,users.name,rooms.status_door,rooms.visitors_now,rooms.visitors_max,"
+                + "rooms.description,rooms_categories.has_trading,NULL,rooms.rate,rooms.id_category,rooms.icon,"
+                + "rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,NULL,NULL,NULL,"
+                + "rooms_recommented.id_tree,rooms_recommented.id FROM users,rooms,rooms_categories,rooms_recommented "
+                + "WHERE id_tree=? AND rooms_recommented.id_type='2' "
+                + "AND rooms_recommented.id_room IS NOT NULL AND rooms.id=rooms_recommented.id_room "
+                + "AND users.id=rooms.id_owner AND rooms_categories.id=rooms.id_category GROUP BY rooms_recommented.id",
+            "SELECT rooms_recommented.id_type,rooms_recommented.id_style,rooms_recommented.icon,"
+                + "rooms_recommented.caption,rooms_recommented.caption_2,rooms_recommented.caption_3,NULL,"
+                + "rooms.id,rooms.name,NULL,rooms.status_door,rooms.visitors_now,rooms.visitors_max,"
+                + "rooms.description,rooms_categories.has_trading,NULL,rooms.rate,rooms.id_category,rooms.icon,"
+                + "rooms.tag_1,rooms.tag_2,rooms.allow_otherspets,models.name,models.required_files,models.visitors_max,"
+                + "rooms_recommented.id_tree,rooms_recommented.id FROM models,rooms,rooms_categories,rooms_recommented "
+                + "WHERE id_tree=? AND rooms_recommented.id_type='3' "
+                + "AND rooms_recommented.id_room IS NOT NULL AND rooms.id=rooms_recommented.id_room "
+                + "AND models.id=rooms.id_model AND rooms_categories.id=rooms.id_category GROUP BY rooms_recommented.id",
+            "SELECT rooms_recommented.id_type,rooms_recommented.id_style,rooms_recommented.icon,"
+                + "rooms_recommented.caption,rooms_recommented.caption_2,rooms_recommented.caption_3,"
+                + "NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,"
+                + "rooms_recommented.id_tree,rooms_recommented.id FROM rooms_recommented WHERE id_tree=? "
+                + "AND rooms_recommented.id_type='4' GROUP BY rooms_recommented.id ORDER BY 27 ASC LIMIT 255");
     }
 }

@@ -10,6 +10,8 @@ import com.alphaseries.util.StringUtils;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class Updater {
     public static final long PROGRESS_WIDTH_MAX = 11535L;
@@ -25,22 +27,21 @@ public final class Updater {
         "Bitte schauen Sie doch einmal in unserem User Voice Forum nach neuen Meldungen. "
             + "Die Webseite wurde automatisch ge\u00f6ffnet.";
 
-    public long height = 1000L;
-    public long imageWidth = 0L;
-    public long pendingHeightTarget = 0L;
-    public long pendingAnimationInterval = 0L;
-    public long pendingProgressWidth = 0L;
-    public long currentUpdateIndex = 0L;
-    public boolean timer1Enabled = false;
-    public boolean timer2Enabled = false;
-    public boolean timer3Enabled = false;
-    public boolean walkPercentEnabled = false;
-    public String currentUpdateEntry = "";
-    public String initCaption = "";
+    private long height = 1000L;
+    private long imageWidth = 0L;
+    private long pendingHeightTarget = 0L;
+    private long pendingAnimationInterval = 0L;
+    private long pendingProgressWidth = 0L;
+    private long currentUpdateIndex = 0L;
+    private boolean timer1Enabled = false;
+    private boolean timer2Enabled = false;
+    private boolean timer3Enabled = false;
+    private boolean walkPercentEnabled = false;
+    private String initCaption = "";
 
-    public final FeatureState freeFeature = new FeatureState();
-    public final FeatureState unfreeFeature = new FeatureState();
-    public final FeatureState downloadFeature = new FeatureState();
+    private FeatureState freeFeature = FeatureState.hidden();
+    private FeatureState unfreeFeature = FeatureState.hidden();
+    private FeatureState downloadFeature = FeatureState.hidden();
 
     public record HeightStep(long height, boolean timer2Enabled) {
     }
@@ -48,26 +49,21 @@ public final class Updater {
     public record ProgressStep(long width, boolean walkPercentEnabled, boolean complete) {
     }
 
-    public record RenderStep(boolean rendered, boolean complete, String title, String[] bodyLines, long featureTop) {
+    public record RenderStep(boolean rendered, boolean complete, String title, List<String> bodyLines, long featureTop) {
         public RenderStep {
             title = StringUtils.text(title);
-            bodyLines = bodyLines == null ? new String[0] : bodyLines.clone();
-        }
-
-        @Override
-        public String[] bodyLines() {
-            return bodyLines.clone();
+            bodyLines = bodyLines == null ? List.of() : List.copyOf(bodyLines);
         }
 
         public static RenderStep empty() {
-            return new RenderStep(false, false, "", new String[0], 0L);
+            return new RenderStep(false, false, "", List.of(), 0L);
         }
 
         public static RenderStep completed() {
-            return new RenderStep(false, true, "", new String[0], 0L);
+            return new RenderStep(false, true, "", List.of(), 0L);
         }
 
-        public static RenderStep rendered(String title, String[] bodyLines, long featureTop) {
+        public static RenderStep rendered(String title, List<String> bodyLines, long featureTop) {
             return new RenderStep(true, false, title, bodyLines, featureTop);
         }
     }
@@ -95,19 +91,81 @@ public final class Updater {
     }
 
     public void applyFeatureState(UpdaterSettings.UpdateEntry entry) {
-        freeFeature.visible = false;
-        unfreeFeature.visible = false;
-        downloadFeature.visible = false;
+        freeFeature = FeatureState.hidden();
+        unfreeFeature = FeatureState.hidden();
+        downloadFeature = FeatureState.hidden();
 
         if (entry.featureMode() == 0L) {
-            freeFeature.caption = "Kostenlose Funktion";
-            freeFeature.visible = true;
+            freeFeature = FeatureState.visible("Kostenlose Funktion");
         } else if (entry.featureMode() == 1L) {
-            downloadFeature.visible = true;
+            downloadFeature = FeatureState.visible("");
         } else {
-            unfreeFeature.caption = "Kostet " + entry.featureCost() + " Punkte";
-            unfreeFeature.visible = true;
+            unfreeFeature = FeatureState.visible("Kostet " + entry.featureCost() + " Punkte");
         }
+    }
+
+    public FeatureState freeFeature() {
+        return freeFeature;
+    }
+
+    public FeatureState unfreeFeature() {
+        return unfreeFeature;
+    }
+
+    public FeatureState downloadFeature() {
+        return downloadFeature;
+    }
+
+    public long height() {
+        return height;
+    }
+
+    public void setHeight(long height) {
+        this.height = height;
+    }
+
+    public long imageWidth() {
+        return imageWidth;
+    }
+
+    public long pendingHeightTarget() {
+        return pendingHeightTarget;
+    }
+
+    public long pendingAnimationInterval() {
+        return pendingAnimationInterval;
+    }
+
+    public long pendingProgressWidth() {
+        return pendingProgressWidth;
+    }
+
+    public long currentUpdateIndex() {
+        return currentUpdateIndex;
+    }
+
+    public void setCurrentUpdateIndex(long currentUpdateIndex) {
+        this.currentUpdateIndex = currentUpdateIndex;
+    }
+
+    public boolean timer1Enabled() {
+        return timer1Enabled;
+    }
+
+    public boolean timer2Enabled() {
+        return timer2Enabled;
+    }
+
+    public boolean timer3Enabled() {
+        return timer3Enabled;
+    }
+
+    public boolean walkPercentEnabled() {
+        return walkPercentEnabled;
+    }
+
+    public String initCaption() {
+        return initCaption;
     }
 
     public void startHeightAnimationTimer() {
@@ -143,14 +201,13 @@ public final class Updater {
                 return RenderStep.completed();
             }
             UpdaterSettings.UpdateEntry entry = entries.get((int) currentUpdateIndex);
-            currentUpdateEntry = entry.sourceText();
             if (!entry.valid()) {
                 advanceUpdateProgress(entries.size());
                 return RenderStep.empty();
             }
-            String[] bodyLines = visibleBodyLines(entry.bodyText(), 25);
+            List<String> bodyLines = visibleBodyLines(entry.bodyText(), 25);
             applyFeatureState(entry);
-            long visibleLineCount = bodyLines.length == 0 ? 1L : bodyLines.length;
+            long visibleLineCount = bodyLines.isEmpty() ? 1L : bodyLines.size();
             long featureTop = visibleLineCount * 240L + 720L;
             queueHeightAnimation(featureTop + 920L, 10);
             advanceUpdateProgress(entries.size());
@@ -196,7 +253,7 @@ public final class Updater {
                 if (updaterDao == null) {
                     return false;
                 }
-                for (String line : sqlText.split("\n", -1)) {
+                for (String line : newlineFields(sqlText)) {
                     if (line.trim().length() > 5) {
                         updaterDao.executeUpdateSql(line.trim());
                     }
@@ -277,20 +334,34 @@ public final class Updater {
             + SUCCESS_FORUM_MESSAGE;
     }
 
-    public static String[] visibleBodyLines(String bodyText, int maxLines) {
-        String[] rawLines = StringUtils.text(bodyText).split("\\\\n", -1);
+    public static List<String> visibleBodyLines(String bodyText, int maxLines) {
+        List<String> rawLines = escapedNewlineFields(bodyText);
         int visible = 0;
-        int limit = Math.min(maxLines, rawLines.length);
+        int limit = Math.min(maxLines, rawLines.size());
         for (int index = 0; index < limit; index++) {
-            if (!rawLines[index].isEmpty()) {
+            if (!rawLines.get(index).isEmpty()) {
                 visible = index + 1;
             }
         }
-        String[] lines = new String[visible];
-        for (int index = 0; index < visible; index++) {
-            lines[index] = rawLines[index];
+        return List.copyOf(rawLines.subList(0, visible));
+    }
+
+    private static List<String> escapedNewlineFields(String text) {
+        String value = StringUtils.text(text);
+        List<String> lines = new ArrayList<>();
+        int fieldStart = 0;
+        int delimiterAt = value.indexOf("\\n");
+        while (delimiterAt >= 0) {
+            lines.add(value.substring(fieldStart, delimiterAt));
+            fieldStart = delimiterAt + 2;
+            delimiterAt = value.indexOf("\\n", fieldStart);
         }
+        lines.add(value.substring(fieldStart));
         return lines;
+    }
+
+    private static List<String> newlineFields(String text) {
+        return StringUtils.delimitedFields(text, '\n');
     }
 
     private static UpdaterDao updaterDao() {
@@ -298,8 +369,17 @@ public final class Updater {
         return database == null ? null : new UpdaterDao(database);
     }
 
-    public static final class FeatureState {
-        public boolean visible = false;
-        public String caption = "";
+    public record FeatureState(boolean visible, String caption) {
+        public FeatureState {
+            caption = StringUtils.text(caption);
+        }
+
+        public static FeatureState hidden() {
+            return new FeatureState(false, "");
+        }
+
+        public static FeatureState visible(String caption) {
+            return new FeatureState(true, caption);
+        }
     }
 }

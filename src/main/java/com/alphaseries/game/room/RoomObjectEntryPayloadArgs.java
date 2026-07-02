@@ -1,14 +1,14 @@
 package com.alphaseries.game.room;
 
 public record RoomObjectEntryPayloadArgs(
-    String entityId,
+    long entityId,
     String displayName,
     String figure,
     String gender,
-    String roomUserIndex,
-    String positionX,
-    String positionY,
+    long roomUserIndex,
+    long positionX,
+    long positionY,
     String positionZ,
-    String objectType
+    long objectType
 ) {
 }

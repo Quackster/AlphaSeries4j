@@ -1,16 +1,16 @@
 package com.alphaseries.game.room;
 
 public record RoomUserEntryPayloadArgs(
-    String userId,
+    long userId,
     String userName,
     String figure,
     String motto,
     String gender,
-    String roomUserIndex,
-    String positionX,
-    String positionY,
+    long roomUserIndex,
+    long positionX,
+    long positionY,
     String positionZ,
-    String firstState,
-    String secondState
+    long firstState,
+    long secondState
 ) {
 }

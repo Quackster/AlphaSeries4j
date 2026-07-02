@@ -52,6 +52,15 @@ public final class UserPayloads {
         return payload.build();
     }
 
+    /**
+     * Original function: Proc_6_231_7F4510.
+     */
+    public static String guideInvitation() {
+        return PacketBuilder.message("Ic")
+            .appendRaw("IQA")
+            .build();
+    }
+
     public static String respectReceived(long targetUserId, long respectReceived) {
         return PacketBuilder.message("Fx")
             .appendInt(targetUserId)
@@ -242,8 +251,7 @@ public final class UserPayloads {
     }
 
     private static String normalizedGender(String genderText) {
-        String normalized = StringUtils.text(genderText).toUpperCase();
-        normalized = normalized.isEmpty() ? "M" : normalized.substring(0, 1);
+        String normalized = StringUtils.left(StringUtils.text(genderText).toUpperCase(), 1);
         return "F".equals(normalized) ? "F" : "M";
     }
 }

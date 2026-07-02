@@ -4,19 +4,56 @@ import com.alphaseries.config.AppPaths;
 import com.alphaseries.util.FileUtils;
 
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.List;
 
 public final class RoomCacheFiles {
     private RoomCacheFiles() {
     }
 
-    public static List<String> roomAndPathfinderPaths(long roomId) {
+    public static CachePaths roomAndPathfinderPaths(long roomId) {
         if (roomId <= 0L) {
-            return List.of();
+            return CachePaths.empty();
         }
-        return List.of(
+        return new CachePaths(
             roomPath(roomId),
             pathfinderPath(roomId));
+    }
+
+    public record CachePaths(String roomPath, String pathfinderPath) implements Iterable<String> {
+        public CachePaths {
+            roomPath = roomPath == null ? "" : roomPath;
+            pathfinderPath = pathfinderPath == null ? "" : pathfinderPath;
+        }
+
+        public static CachePaths empty() {
+            return new CachePaths("", "");
+        }
+
+        public int size() {
+            int count = 0;
+            if (!roomPath.isEmpty()) {
+                count++;
+            }
+            if (!pathfinderPath.isEmpty()) {
+                count++;
+            }
+            return count;
+        }
+
+        @Override
+        public Iterator<String> iterator() {
+            if (roomPath.isEmpty() && pathfinderPath.isEmpty()) {
+                return List.<String>of().iterator();
+            }
+            if (roomPath.isEmpty()) {
+                return List.of(pathfinderPath).iterator();
+            }
+            if (pathfinderPath.isEmpty()) {
+                return List.of(roomPath).iterator();
+            }
+            return List.of(roomPath, pathfinderPath).iterator();
+        }
     }
 
     private static String roomPath(long roomId) {
@@ -38,7 +75,7 @@ public final class RoomCacheFiles {
         }
     }
 
-    public static void deleteAll(List<String> paths) {
+    public static void deleteAll(Iterable<String> paths) {
         if (paths == null) {
             return;
         }

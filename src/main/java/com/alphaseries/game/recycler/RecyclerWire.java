@@ -11,10 +11,7 @@ public final class RecyclerWire {
     }
 
     public static RecyclerSelection selectionFromWire(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("F^")) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "F^");
         WireReader.Offset offset = new WireReader.Offset(1);
         long requestedCount = WireReader.readLong(requestPayload, offset);
         if (requestedCount != 5L) {

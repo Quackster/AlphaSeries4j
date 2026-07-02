@@ -3,11 +3,7 @@ package com.alphaseries.dao.mysql;
 import com.alphaseries.db.Database;
 import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.game.messenger.PendingFriendRequest;
-import com.alphaseries.util.NumberUtils;
-
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,22 +33,14 @@ public final class MessengerDao {
             0L);
     }
 
-    public int deletePendingRequests(long userId, String targetIdList) throws SQLException {
-        return deletePendingRequests(userId, parseIdList(targetIdList));
-    }
-
     public int deletePendingRequests(long userId, List<Long> targetIds) throws SQLException {
         if (targetIds == null || targetIds.isEmpty()) {
             return 0;
         }
-        String placeholders = placeholders(targetIds.size());
-        List<Object> parameters = new ArrayList<>();
-        parameters.add(userId);
-        parameters.add(0L);
-        parameters.addAll(targetIds);
+        String placeholders = SqlFragments.placeholders(targetIds.size());
         return database.execute(
             "DELETE FROM friendships WHERE id_user=? AND has_accept=? AND id_friend IN (" + placeholders + ") LIMIT 75",
-            parameters.toArray());
+            SqlFragments.parametersWithIds(List.of(userId, 0L), targetIds));
     }
 
     public boolean acceptedFriendshipExists(long userId, long targetUserId) throws SQLException {
@@ -68,25 +56,15 @@ public final class MessengerDao {
             .orElse(0L) > 0L;
     }
 
-    public int deleteAcceptedFriendships(long userId, String targetIdList) throws SQLException {
-        return deleteAcceptedFriendships(userId, parseIdList(targetIdList));
-    }
-
     public int deleteAcceptedFriendships(long userId, List<Long> targetIds) throws SQLException {
         if (targetIds == null || targetIds.isEmpty()) {
             return 0;
         }
-        String placeholders = placeholders(targetIds.size());
-        List<Object> parameters = new ArrayList<>();
-        parameters.add(1L);
-        parameters.add(userId);
-        parameters.addAll(targetIds);
-        parameters.add(userId);
-        parameters.addAll(targetIds);
+        String placeholders = SqlFragments.placeholders(targetIds.size());
         return database.execute(
             "DELETE FROM friendships WHERE has_accept=? AND ((id_user=? AND id_friend IN (" + placeholders
                 + ")) OR (id_friend=? AND id_user IN (" + placeholders + "))) LIMIT 150",
-            parameters.toArray());
+            SqlFragments.parametersWithRepeatedIds(List.of(1L, userId), targetIds, List.of(userId)));
     }
 
     public List<PendingFriendRequest> pendingRequests(long userId) throws SQLException {
@@ -98,25 +76,6 @@ public final class MessengerDao {
                 String.valueOf(resultSet.getString(2))),
             0L,
             userId);
-    }
-
-    private static List<Long> parseIdList(String targetIdList) {
-        if (targetIdList == null || targetIdList.isEmpty() || !targetIdList.matches("\\d+(,\\d+)*")) {
-            return List.of();
-        }
-        List<Long> ids = new ArrayList<>();
-        for (String idText : targetIdList.split(",", -1)) {
-            long id = NumberUtils.parseLong(idText);
-            if (id <= 0L) {
-                return List.of();
-            }
-            ids.add(id);
-        }
-        return List.copyOf(ids);
-    }
-
-    private static String placeholders(int count) {
-        return String.join(",", Collections.nCopies(count, "?"));
     }
 
     public List<MessengerFriend> acceptedFriends(long userId, String dateTimeFormat, long limit) throws SQLException {

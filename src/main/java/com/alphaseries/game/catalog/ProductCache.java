@@ -1,7 +1,6 @@
 package com.alphaseries.game.catalog;
 
 import com.alphaseries.dao.mysql.CatalogDao;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -28,12 +27,9 @@ public final class ProductCache {
         return new ProductCache(List.of());
     }
 
-    private String cell(long productId, long columnIndex) {
+    private ProductRow row(long productId) {
         ProductRow row = rows.get(productId);
-        if (row == null) {
-            return "";
-        }
-        return row.field((int) columnIndex);
+        return row == null ? ProductRow.empty(productId) : row;
     }
 
     public List<ProductRow> rows() {
@@ -41,47 +37,47 @@ public final class ProductCache {
     }
 
     public long type(long productId) {
-        return NumberUtils.parseLong(cell(productId, 0));
+        return row(productId).type();
     }
 
     public String defaultSign(long productId) {
-        return cell(productId, 4);
+        return row(productId).defaultSign();
     }
 
     public String fallbackDefaultSign(long productId) {
-        return cell(productId, 5);
+        return row(productId).fallbackDefaultSign();
     }
 
     public String interactionAction(long productId) {
-        return cell(productId, 7);
+        return row(productId).interactionAction();
     }
 
     public long stateCount(long productId) {
-        return NumberUtils.parseLong(cell(productId, 10));
+        return row(productId).stateCount();
     }
 
     public long maxState(long productId) {
-        return NumberUtils.parseLong(cell(productId, 12));
+        return row(productId).maxState();
     }
 
     public String tradeName(long productId) {
-        return cell(productId, 13);
+        return row(productId).tradeName();
     }
 
     public String displayName(long productId) {
-        return cell(productId, 14);
+        return row(productId).displayName();
     }
 
     public String description(long productId) {
-        return cell(productId, 15);
+        return row(productId).description();
     }
 
     public String primarySprite(long productId) {
-        return cell(productId, 17);
+        return row(productId).primarySprite();
     }
 
     public String alternateSprite(long productId) {
-        return cell(productId, 18);
+        return row(productId).alternateSprite();
     }
 
     public boolean isPostItProduct(long productId) {
@@ -89,27 +85,27 @@ public final class ProductCache {
     }
 
     public long dimensionMapId(long productId) {
-        return NumberUtils.parseLong(cell(productId, 20));
+        return row(productId).dimensionMapId();
     }
 
     public String itemData(long productId) {
-        return cell(productId, 24);
+        return row(productId).itemData();
     }
 
     public String badgeId(long productId) {
-        return cell(productId, 26);
+        return row(productId).badgeId();
     }
 
     public String fallbackBadgeId(long productId) {
-        return cell(productId, 27);
+        return row(productId).fallbackBadgeId();
     }
 
     public long wiredCode(long productId) {
-        return NumberUtils.parseLong(cell(productId, 27));
+        return row(productId).wiredCode();
     }
 
     public boolean hasCharges(long productId) {
-        return NumberUtils.parseLong(cell(productId, 34)) != 0L;
+        return row(productId).hasCharges();
     }
 
     private static List<ProductRow> productRows(Iterable<CatalogDao.ProductCacheRow> rows) {
@@ -138,28 +134,65 @@ public final class ProductCache {
         return rows;
     }
 
-    public record ProductRow(long productId, List<String> fields) {
+    public record ProductRow(
+        long productId,
+        long type,
+        String defaultSign,
+        String fallbackDefaultSign,
+        String interactionAction,
+        long stateCount,
+        long maxState,
+        String tradeName,
+        String displayName,
+        String description,
+        String primarySprite,
+        String alternateSprite,
+        long dimensionMapId,
+        String itemData,
+        String badgeId,
+        String fallbackBadgeId,
+        long wiredCode,
+        boolean hasCharges
+    ) {
         public ProductRow {
-            fields = fields == null ? List.of() : List.copyOf(fields);
+            defaultSign = StringUtils.text(defaultSign);
+            fallbackDefaultSign = StringUtils.text(fallbackDefaultSign);
+            interactionAction = StringUtils.text(interactionAction);
+            tradeName = StringUtils.text(tradeName);
+            displayName = StringUtils.text(displayName);
+            description = StringUtils.text(description);
+            primarySprite = StringUtils.text(primarySprite);
+            alternateSprite = StringUtils.text(alternateSprite);
+            itemData = StringUtils.text(itemData);
+            badgeId = StringUtils.text(badgeId);
+            fallbackBadgeId = StringUtils.text(fallbackBadgeId);
         }
 
         public static ProductRow fromDaoRow(CatalogDao.ProductCacheRow row) {
-            return new ProductRow(NumberUtils.parseLong(ProductCache.field(row.values(), 0)), productFields(row.values()));
+            return new ProductRow(
+                row.productId(),
+                row.type(),
+                row.defaultSign(),
+                row.fallbackDefaultSign(),
+                row.interactionAction(),
+                row.stateCount(),
+                row.maxState(),
+                row.tradeName(),
+                row.displayName(),
+                row.description(),
+                row.primarySprite(),
+                row.alternateSprite(),
+                row.dimensionMapId(),
+                row.itemData(),
+                row.badgeId(),
+                row.fallbackBadgeId(),
+                row.wiredCode(),
+                row.hasCharges());
         }
 
-        private String field(int index) {
-            return ProductCache.field(fields, index);
+        private static ProductRow empty(long productId) {
+            return new ProductRow(productId, 0L, "", "", "", 0L, 0L, "", "", "", "", "", 0L, "", "", "", 0L, false);
         }
     }
 
-    private static List<String> productFields(List<String> rowValues) {
-        if (rowValues == null || rowValues.size() <= 1) {
-            return List.of();
-        }
-        return List.copyOf(rowValues.subList(1, rowValues.size()));
-    }
-
-    private static String field(List<String> fields, int index) {
-        return fields != null && index >= 0 && index < fields.size() ? StringUtils.text(fields.get(index)) : "";
-    }
 }

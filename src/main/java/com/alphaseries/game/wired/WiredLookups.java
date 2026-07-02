@@ -22,15 +22,15 @@ public final class WiredLookups {
     private WiredLookups() {
     }
 
-    public record RoomRequest(String userId, long roomId) {
+    public record RoomRequest(long userId, long roomId) {
         public boolean valid() {
-            return NumberUtils.parseLong(userId) > 0L && roomId > 0L;
+            return userId > 0L && roomId > 0L;
         }
     }
 
     public static RoomRequest roomRequest(int socketIndex, UserDao users, RoomDao rooms) {
         if (socketIndex <= 0) {
-            return new RoomRequest("", 0L);
+            return new RoomRequest(0L, 0L);
         }
         long userId = SessionState.instance().sessionUserIdBySocket(socketIndex);
         if (userId <= 0L && users != null) {
@@ -40,7 +40,7 @@ public final class WiredLookups {
                 userId = 0L;
             }
         }
-        long roomId = SessionState.instance().sessionCacheLong(String.valueOf(socketIndex), 1);
+        long roomId = SessionState.instance().sessionCacheLong(socketIndex, 1);
         if (roomId <= 0L && userId > 0L && rooms != null) {
             try {
                 roomId = rooms.currentRoomIdByUser(userId);
@@ -55,7 +55,7 @@ public final class WiredLookups {
                 roomId = 0L;
             }
         }
-        return new RoomRequest(userId > 0L ? String.valueOf(userId) : "", roomId);
+        return new RoomRequest(userId, roomId);
     }
 
     /**
@@ -83,7 +83,7 @@ public final class WiredLookups {
 
     public static String editRecord(
         int socketIndex,
-        String userId,
+        long userId,
         long roomId,
         String packetPayload,
         String packetCode,
@@ -94,11 +94,34 @@ public final class WiredLookups {
         FurnitureDao furniture,
         RoomDao rooms
     ) {
+        return editRecord(
+            socketIndex,
+            userId,
+            roomId,
+            WiredWire.editFurnitureRequest(packetPayload, packetCode),
+            minimumCode,
+            maximumCode,
+            cacheFolder,
+            includeExtraValue,
+            furniture,
+            rooms);
+    }
+
+    public static String editRecord(
+        int socketIndex,
+        long userId,
+        long roomId,
+        WiredWire.EditFurnitureRequest request,
+        long minimumCode,
+        long maximumCode,
+        String cacheFolder,
+        boolean includeExtraValue,
+        FurnitureDao furniture,
+        RoomDao rooms
+    ) {
         try {
-            WiredWire.EditFurnitureRequest request = WiredWire.editFurnitureRequest(packetPayload, packetCode);
             long furnitureId = request.furnitureId();
-            if (socketIndex <= 0 || furnitureId <= 0L || roomId <= 0L || userId == null || userId.isEmpty()
-                || "0".equals(userId) || furniture == null || rooms == null) {
+            if (socketIndex <= 0 || furnitureId <= 0L || userId <= 0L || roomId <= 0L || furniture == null || rooms == null) {
                 return "";
             }
             if (!RoomLookups.userHasRoomRight(userId, roomId, rooms) && !RoomLookups.userOwnsRoom(userId, roomId, rooms)) {
@@ -111,16 +134,17 @@ public final class WiredLookups {
             if (wiredCode < minimumCode || wiredCode > maximumCode) {
                 return "";
             }
-            String recordText = WiredWire.editRecord(packetPayload, packetCode, wiredCode, includeExtraValue);
-            if (recordText.isEmpty()) {
+            WiredPayloads.WiredRecord record = WiredWire.editRecordRequest(
+                request.packetPayload(), request.packetCode(), wiredCode, includeExtraValue);
+            if (!record.valid()) {
                 return "";
             }
-            List<Long> selectedIds = WiredPayloads.record(recordText).selectedFurnitureIds();
+            List<Long> selectedIds = record.selectedFurnitureIds();
             if (!selectedIds.isEmpty() && !selectedItemsExist(roomId, selectedIds, furniture)) {
                 return "";
             }
-            WiredCache.appendRecord(cacheFolder, roomId, recordText);
-            return recordText;
+            WiredCache.appendRecord(cacheFolder, roomId, record);
+            return WiredPayloads.recordText(record);
         } catch (Exception ignored) {
             return "";
         }
@@ -138,6 +162,29 @@ public final class WiredLookups {
         FurnitureDao furniture,
         RoomDao rooms
     ) {
+        return editRecord(
+            socketIndex,
+            request,
+            WiredWire.editFurnitureRequest(packetPayload, packetCode),
+            minimumCode,
+            maximumCode,
+            cacheFolder,
+            includeExtraValue,
+            furniture,
+            rooms);
+    }
+
+    public static String editRecord(
+        int socketIndex,
+        RoomRequest request,
+        WiredWire.EditFurnitureRequest editRequest,
+        long minimumCode,
+        long maximumCode,
+        String cacheFolder,
+        boolean includeExtraValue,
+        FurnitureDao furniture,
+        RoomDao rooms
+    ) {
         if (request == null || !request.valid()) {
             return "";
         }
@@ -145,8 +192,7 @@ public final class WiredLookups {
             socketIndex,
             request.userId(),
             request.roomId(),
-            packetPayload,
-            packetCode,
+            editRequest,
             minimumCode,
             maximumCode,
             cacheFolder,
@@ -160,17 +206,32 @@ public final class WiredLookups {
      */
     public static String createSnapshot(
         int socketIndex,
-        String userId,
+        long userId,
         long roomId,
         String packetPayload,
         FurnitureDao furniture,
         RoomDao rooms
     ) {
+        return createSnapshot(
+            socketIndex,
+            userId,
+            roomId,
+            WiredWire.snapshotRequest(packetPayload),
+            furniture,
+            rooms);
+    }
+
+    public static String createSnapshot(
+        int socketIndex,
+        long userId,
+        long roomId,
+        WiredWire.SnapshotRequest request,
+        FurnitureDao furniture,
+        RoomDao rooms
+    ) {
         try {
-            WiredWire.SnapshotRequest request = WiredWire.snapshotRequest(packetPayload);
             long furnitureId = request.furnitureId();
-            if (socketIndex <= 0 || furnitureId <= 0L || roomId <= 0L || userId == null || userId.isEmpty()
-                || "0".equals(userId) || furniture == null || rooms == null) {
+            if (socketIndex <= 0 || furnitureId <= 0L || userId <= 0L || roomId <= 0L || furniture == null || rooms == null) {
                 return "";
             }
             if (!RoomLookups.userHasRoomRight(userId, roomId, rooms) && !RoomLookups.userOwnsRoom(userId, roomId, rooms)) {
@@ -198,10 +259,20 @@ public final class WiredLookups {
         FurnitureDao furniture,
         RoomDao rooms
     ) {
+        return createSnapshot(socketIndex, request, WiredWire.snapshotRequest(packetPayload), furniture, rooms);
+    }
+
+    public static String createSnapshot(
+        int socketIndex,
+        RoomRequest request,
+        WiredWire.SnapshotRequest snapshotRequest,
+        FurnitureDao furniture,
+        RoomDao rooms
+    ) {
         if (request == null || !request.valid()) {
             return "";
         }
-        return createSnapshot(socketIndex, request.userId(), request.roomId(), packetPayload, furniture, rooms);
+        return createSnapshot(socketIndex, request.userId(), request.roomId(), snapshotRequest, furniture, rooms);
     }
 
     public static long trigger(

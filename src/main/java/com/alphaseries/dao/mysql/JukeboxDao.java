@@ -10,7 +10,6 @@ import com.alphaseries.util.NumberUtils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,10 +37,6 @@ public final class JukeboxDao {
             roomId);
     }
 
-    public List<SongInfoRow> songInfoRows(String requestedIds, long requestedCount) throws SQLException {
-        return songInfoRows(parseRequestedIds(requestedIds), requestedCount);
-    }
-
     public List<SongInfoRow> songInfoRows(List<Long> requestedIds, long requestedCount) throws SQLException {
         long effectiveCount = requestedCount <= 0L ? 0L : Math.min(requestedCount, 60L);
         if (effectiveCount <= 0L || requestedIds == null || requestedIds.isEmpty()) {
@@ -49,7 +44,7 @@ public final class JukeboxDao {
         }
         int limit = (int) Math.min(effectiveCount, requestedIds.size());
         List<Long> cdIds = new ArrayList<>(requestedIds.subList(0, limit));
-        String placeholders = String.join(",", Collections.nCopies(cdIds.size(), "?"));
+        String placeholders = SqlFragments.placeholders(cdIds.size());
         return database.query(
             "SELECT title,sequence,author,sound,id FROM soundmachine_cds WHERE id IN ("
                 + placeholders + ") LIMIT " + effectiveCount,
@@ -59,20 +54,7 @@ public final class JukeboxDao {
                 resultSet.getString(3),
                 resultSet.getString(4),
                 resultSet.getLong(5)),
-            cdIds.toArray());
-    }
-
-    private static List<Long> parseRequestedIds(String requestedIds) {
-        List<Long> cdIds = new ArrayList<>();
-        for (String requestedId : String.valueOf(requestedIds == null ? "" : requestedIds).split(",", -1)) {
-            if (!requestedId.isEmpty()) {
-                long cdId = NumberUtils.parseLong(requestedId);
-                if (cdId > 0L) {
-                    cdIds.add(cdId);
-                }
-            }
-        }
-        return List.copyOf(cdIds);
+            SqlFragments.idParameters(cdIds));
     }
 
     public long activeDestinationId(long jukeboxId) throws SQLException {

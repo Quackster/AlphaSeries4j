@@ -5,7 +5,6 @@ import com.alphaseries.game.social.BadgeRow;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomUserEntryPayloadArgs;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.List;
@@ -89,8 +88,8 @@ public final class SocialPayloads {
         if (values == null) {
             return "";
         }
-        long userId = NumberUtils.parseLong(values.userId());
-        long roomUserIndex = NumberUtils.parseLong(values.roomUserIndex());
+        long userId = values.userId();
+        long roomUserIndex = values.roomUserIndex();
         if (roomUserIndex <= 0L) {
             roomUserIndex = userId;
         }
@@ -102,15 +101,15 @@ public final class SocialPayloads {
             .appendString(values.figure())
             .appendString(values.motto())
             .appendInt(roomUserIndex)
-            .appendInt(NumberUtils.parseLong(values.positionX()))
-            .appendInt(NumberUtils.parseLong(values.positionY()))
+            .appendInt(values.positionX())
+            .appendInt(values.positionY())
             .appendString(values.positionZ())
             .appendRaw("JI")
             .appendString(values.gender())
             .appendRaw('M')
-            .appendInt(NumberUtils.parseLong(values.firstState()))
+            .appendInt(values.firstState())
             .appendString("M")
-            .appendInt(NumberUtils.parseLong(values.secondState()))
+            .appendInt(values.secondState())
             .build();
     }
 
@@ -118,12 +117,12 @@ public final class SocialPayloads {
         if (values == null) {
             return "";
         }
-        long entityId = NumberUtils.parseLong(values.entityId());
-        long roomUserIndex = NumberUtils.parseLong(values.roomUserIndex());
+        long entityId = values.entityId();
+        long roomUserIndex = values.roomUserIndex();
         if (roomUserIndex <= 0L) {
             roomUserIndex = entityId;
         }
-        long objectType = NumberUtils.parseLong(values.objectType());
+        long objectType = values.objectType();
         PacketBuilder payload = PacketBuilder.create();
         String tailMarker;
         if (objectType == 3L) {
@@ -137,8 +136,8 @@ public final class SocialPayloads {
             .appendString(values.figure())
             .appendString(values.gender())
             .appendInt(roomUserIndex)
-            .appendInt(NumberUtils.parseLong(values.positionX()))
-            .appendInt(NumberUtils.parseLong(values.positionY()))
+            .appendInt(values.positionX())
+            .appendInt(values.positionY())
             .appendString(values.positionZ())
             .appendRaw(tailMarker)
             .build();

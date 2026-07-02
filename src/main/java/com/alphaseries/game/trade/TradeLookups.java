@@ -7,7 +7,6 @@ import com.alphaseries.game.room.RoomLookups;
 import com.alphaseries.game.room.RoomUserTargetRow;
 import com.alphaseries.game.social.InteractionStatePayloads;
 import com.alphaseries.game.social.SocialLookups;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.List;
@@ -22,7 +21,7 @@ public final class TradeLookups {
      */
     public static TradeInteractionRequestAction requestInteractionAction(
         long socketIndex,
-        String callerUserId,
+        long callerUserId,
         long callerRoomId,
         long requestedRoomUserIndex,
         RoomDao rooms,
@@ -32,8 +31,7 @@ public final class TradeLookups {
         throws Exception {
 
         if (socketIndex <= 0L || callerRoomId <= 0L || requestedRoomUserIndex <= 0L
-            || StringUtils.text(callerUserId).isEmpty() || "0".equals(StringUtils.text(callerUserId))
-            || rooms == null || tradeState == null) {
+            || callerUserId <= 0L || rooms == null || tradeState == null) {
             return emptyInteractionRequestAction();
         }
         RoomUserTargetRow target = RoomLookups.activeRoomUserTarget(
@@ -50,15 +48,11 @@ public final class TradeLookups {
             || tradeState.interactionPartner(targetSocketIndex) > 0) {
             return emptyInteractionRequestAction();
         }
-        long numericCallerUserId = NumberUtils.parseLong(callerUserId);
-        if (numericCallerUserId <= 0L) {
-            return emptyInteractionRequestAction();
-        }
         tradeState.storeInteractionPair(socketIndex, targetSocketIndex, 1L);
         return new TradeInteractionRequestAction(
             targetSocketIndex,
-            SocialLookups.interactionRequestPayload(numericCallerUserId, targetUserId),
-            SocialLookups.interactionRequestPayload(targetUserId, numericCallerUserId));
+            SocialLookups.interactionRequestPayload(callerUserId, targetUserId),
+            SocialLookups.interactionRequestPayload(targetUserId, callerUserId));
     }
 
     /**
@@ -126,8 +120,8 @@ public final class TradeLookups {
      */
     public static TradeConfirmation confirmTradeAction(
         long socketIndex,
-        String userId,
-        String targetUserId,
+        long userId,
+        long targetUserId,
         long roomId,
         String sessionId,
         TradeState tradeState,
@@ -136,8 +130,7 @@ public final class TradeLookups {
         throws Exception {
 
         if (socketIndex <= 0L
-            || StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))
-            || StringUtils.text(targetUserId).isEmpty() || "0".equals(StringUtils.text(targetUserId))
+            || userId <= 0L || targetUserId <= 0L
             || tradeState == null || trades == null) {
             return emptyConfirmation();
         }
@@ -150,17 +143,15 @@ public final class TradeLookups {
         if (sourceFurnitureIds.isEmpty() && targetFurnitureIds.isEmpty()) {
             return emptyConfirmation();
         }
-        long numericUserId = NumberUtils.parseLong(userId);
-        long numericTargetUserId = NumberUtils.parseLong(targetUserId);
         if (!sourceFurnitureIds.isEmpty()) {
-            trades.transferInventoryFurniture(sourceFurnitureIds, numericUserId, numericTargetUserId);
+            trades.transferInventoryFurniture(sourceFurnitureIds, userId, targetUserId);
         }
         if (!targetFurnitureIds.isEmpty()) {
-            trades.transferInventoryFurniture(targetFurnitureIds, numericTargetUserId, numericUserId);
+            trades.transferInventoryFurniture(targetFurnitureIds, targetUserId, userId);
         }
         trades.insertTradeLog(
-            numericUserId,
-            numericTargetUserId,
+            userId,
+            targetUserId,
             tradeState.tradeOfferLogItems(socketIndex),
             tradeState.tradeOfferLogItems(targetSocketIndex),
             roomId,
@@ -176,8 +167,8 @@ public final class TradeLookups {
     public static TradeOfferAction addOfferAction(
         long socketIndex,
         long targetSocketIndex,
-        String userId,
-        String targetUserId,
+        long userId,
+        long targetUserId,
         long furnitureId,
         TradeState tradeState,
         FurnitureDao furniture
@@ -185,13 +176,12 @@ public final class TradeLookups {
         throws Exception {
 
         if (socketIndex <= 0L || targetSocketIndex <= 0L || furnitureId <= 0L
-            || StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))
-            || StringUtils.text(targetUserId).isEmpty() || "0".equals(StringUtils.text(targetUserId))
+            || userId <= 0L || targetUserId <= 0L
             || tradeState == null || furniture == null) {
             return emptyOfferAction();
         }
         FurnitureDao.TradeFurniture tradeFurniture =
-            furniture.tradeFurniture(furnitureId, NumberUtils.parseLong(userId)).orElse(null);
+            furniture.tradeFurniture(furnitureId, userId).orElse(null);
         if (tradeFurniture == null || tradeFurniture.productId() <= 0L) {
             return emptyOfferAction();
         }
@@ -210,8 +200,8 @@ public final class TradeLookups {
     public static TradeOfferAction removeOfferAction(
         long socketIndex,
         long targetSocketIndex,
-        String userId,
-        String targetUserId,
+        long userId,
+        long targetUserId,
         long furnitureId,
         TradeState tradeState,
         FurnitureDao furniture
@@ -219,12 +209,11 @@ public final class TradeLookups {
         throws Exception {
 
         if (socketIndex <= 0L || targetSocketIndex <= 0L || furnitureId <= 0L
-            || StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))
-            || StringUtils.text(targetUserId).isEmpty() || "0".equals(StringUtils.text(targetUserId))
+            || userId <= 0L || targetUserId <= 0L
             || tradeState == null || furniture == null) {
             return emptyOfferAction();
         }
-        if (furniture.tradeFurnitureForRemoval(furnitureId, NumberUtils.parseLong(userId)).isEmpty()) {
+        if (furniture.tradeFurnitureForRemoval(furnitureId, userId).isEmpty()) {
             return emptyOfferAction();
         }
         tradeState.removeTradeOffer(socketIndex, furnitureId);
@@ -234,8 +223,8 @@ public final class TradeLookups {
     private static TradeOfferAction offerAction(
         long socketIndex,
         long targetSocketIndex,
-        String userId,
-        String targetUserId,
+        long userId,
+        long targetUserId,
         TradeState tradeState
     ) {
         return new TradeOfferAction(

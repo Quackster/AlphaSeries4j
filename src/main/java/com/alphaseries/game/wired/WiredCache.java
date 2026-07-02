@@ -21,19 +21,34 @@ public final class WiredCache {
     }
 
     public static List<WiredPayloads.WiredRecord> records(String cacheFolder, long roomId) {
-        List<WiredPayloads.WiredRecord> records = new ArrayList<>();
-        for (String row : read(cacheFolder, roomId).replace("\r", "").split("\n", -1)) {
-            String recordText = row.trim();
-            if (!recordText.isEmpty()) {
-                records.add(WiredPayloads.record(recordText));
-            }
-        }
-        return records;
+        return CacheFile.fromText(read(cacheFolder, roomId)).records();
     }
 
-    public static void appendRecord(String cacheFolder, long roomId, String recordText) {
+    public static void appendRecord(String cacheFolder, long roomId, WiredPayloads.WiredRecord record) {
         String cachePath = path(cacheFolder, roomId);
-        String cacheText = FileUtils.readTextFile(cachePath);
-        FileUtils.writeTextFile(cachePath, WiredPayloads.cacheWithRecord(cacheText, recordText));
+        CacheFile cache = CacheFile.fromText(FileUtils.readTextFile(cachePath));
+        FileUtils.writeTextFile(cachePath, cache.withRecord(record).cacheText());
+    }
+
+    private record CacheFile(String cacheText, List<WiredPayloads.WiredRecord> records) {
+        private CacheFile {
+            cacheText = StringUtils.text(cacheText);
+            records = List.copyOf(records);
+        }
+
+        private static CacheFile fromText(String cacheText) {
+            List<WiredPayloads.WiredRecord> records = new ArrayList<>();
+            for (String row : StringUtils.delimitedFields(StringUtils.withoutCarriageReturns(cacheText), '\n')) {
+                String recordText = row.trim();
+                if (!recordText.isEmpty()) {
+                    records.add(WiredPayloads.record(recordText));
+                }
+            }
+            return new CacheFile(cacheText, records);
+        }
+
+        private CacheFile withRecord(WiredPayloads.WiredRecord record) {
+            return fromText(WiredPayloads.cacheWithRecord(cacheText, record));
+        }
     }
 }

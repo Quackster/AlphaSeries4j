@@ -29,14 +29,14 @@ public final class UserValidation {
         }
 
         String allowedTypes = ";lg;ha;wa;hr;ch;sh;cc;ea;he;ca;hd;fa;cp;";
-        for (String part : figure.split("\\.", -1)) {
+        for (String part : StringUtils.delimitedFields(figure, '.')) {
             if (!part.isEmpty()) {
-                String[] piece = part.split("-", -1);
-                if (piece.length < 2) {
+                StringUtils.IndexedFields fields = StringUtils.indexedFields(part, '-');
+                String figureType = fields.text(0).toLowerCase(Locale.ROOT);
+                String setId = fields.text(1);
+                if (figureType.isEmpty() || setId.isEmpty()) {
                     return false;
                 }
-                String figureType = piece[0].toLowerCase(Locale.ROOT);
-                String setId = piece[1];
                 if (!allowedTypes.contains(";" + figureType + ";") || NumberUtils.parseLong(setId) <= 0L) {
                     return false;
                 }

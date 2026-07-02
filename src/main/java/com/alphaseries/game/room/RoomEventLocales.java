@@ -7,16 +7,16 @@ import java.util.List;
 import java.util.Map;
 
 public final class RoomEventLocales {
-    private final Map<String, List<String>> fieldsByKey;
+    private final Map<String, LocaleEntry> entriesByKey;
 
-    private RoomEventLocales(Map<String, List<String>> fieldsByKey) {
-        this.fieldsByKey = copyFields(fieldsByKey);
+    private RoomEventLocales(Map<String, LocaleEntry> entriesByKey) {
+        this.entriesByKey = copyEntries(entriesByKey);
     }
 
     public static RoomEventLocales fromEntries(List<LocaleEntry> entries) {
-        Map<String, List<String>> fields = new LinkedHashMap<>();
-        appendEntries(fields, entries);
-        return new RoomEventLocales(fields);
+        Map<String, LocaleEntry> locales = new LinkedHashMap<>();
+        appendEntries(locales, entries);
+        return new RoomEventLocales(locales);
     }
 
     public static RoomEventLocales empty() {
@@ -24,60 +24,48 @@ public final class RoomEventLocales {
     }
 
     public RoomEventLocales withEntries(List<LocaleEntry> entries) {
-        Map<String, List<String>> fields = copyFields(fieldsByKey);
-        appendEntries(fields, entries);
-        return new RoomEventLocales(fields);
+        Map<String, LocaleEntry> locales = copyEntries(entriesByKey);
+        appendEntries(locales, entries);
+        return new RoomEventLocales(locales);
     }
 
     public String categoryName(long categoryId) {
-        return field(String.valueOf(categoryId), 0);
-    }
-
-    private String field(String keyName, long columnIndex) {
-        String key = StringUtils.text(keyName);
-        if (key.isEmpty()) {
-            return "";
-        }
-        List<String> fields = fieldsByKey.get(key);
-        if (fields == null || columnIndex < 0 || columnIndex >= fields.size()) {
-            return "";
-        }
-        return fields.get((int) columnIndex);
+        LocaleEntry entry = entriesByKey.get(String.valueOf(categoryId));
+        return entry == null ? "" : entry.categoryName();
     }
 
     public List<LocaleEntry> entries() {
-        return fieldsByKey.entrySet().stream()
-            .map(entry -> new LocaleEntry(entry.getKey(), entry.getValue()))
-            .toList();
+        return List.copyOf(entriesByKey.values());
     }
 
-    private static void appendEntries(Map<String, List<String>> fieldsByKey, List<LocaleEntry> entries) {
+    private static void appendEntries(Map<String, LocaleEntry> entriesByKey, List<LocaleEntry> entries) {
         if (entries == null) {
             return;
         }
         for (LocaleEntry entry : entries) {
             if (entry != null && !StringUtils.text(entry.key()).isEmpty()) {
-                fieldsByKey.put(StringUtils.text(entry.key()), List.copyOf(entry.fields()));
+                entriesByKey.put(StringUtils.text(entry.key()), entry);
             }
         }
     }
 
-    private static Map<String, List<String>> copyFields(Map<String, List<String>> source) {
-        Map<String, List<String>> fields = new LinkedHashMap<>();
+    private static Map<String, LocaleEntry> copyEntries(Map<String, LocaleEntry> source) {
+        Map<String, LocaleEntry> entries = new LinkedHashMap<>();
         if (source != null) {
-            for (Map.Entry<String, List<String>> entry : source.entrySet()) {
-                if (entry.getKey() != null) {
-                    fields.put(entry.getKey(), entry.getValue() == null ? List.of() : List.copyOf(entry.getValue()));
+            for (Map.Entry<String, LocaleEntry> entry : source.entrySet()) {
+                if (entry.getValue() != null && !StringUtils.text(entry.getKey()).isEmpty()) {
+                    entries.put(StringUtils.text(entry.getKey()), entry.getValue());
                 }
             }
         }
-        return fields;
+        return entries;
     }
 
-    public record LocaleEntry(String key, List<String> fields) {
+    public record LocaleEntry(String key, String categoryName, String reservedText) {
         public LocaleEntry {
             key = StringUtils.text(key);
-            fields = fields == null ? List.of() : List.copyOf(fields);
+            categoryName = StringUtils.text(categoryName);
+            reservedText = StringUtils.text(reservedText);
         }
     }
 }

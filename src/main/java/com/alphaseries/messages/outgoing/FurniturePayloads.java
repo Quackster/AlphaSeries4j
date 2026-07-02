@@ -55,9 +55,11 @@ public final class FurniturePayloads {
     }
 
     public static String simpleFloorUse(long furnitureId, long stateValue) {
-        return "0" + PacketBuilder.message("AZ")
-            .appendInt(furnitureId)
-            .appendInt(stateValue)
+        return PacketBuilder.create()
+            .appendRaw('0')
+            .appendRaw(PacketBuilder.message("AZ")
+                .appendInt(furnitureId)
+                .appendInt(stateValue))
             .build();
     }
 

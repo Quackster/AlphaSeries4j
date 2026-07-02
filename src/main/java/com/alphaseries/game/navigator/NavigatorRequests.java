@@ -33,14 +33,14 @@ public final class NavigatorRequests {
     }
 
     public static String eventCategoryQueryPayload(
-        String packetPayload,
+        NavigatorWire.CategoryRequest request,
         AppSettingsCache settingsCache,
         RecommendedRooms recommendedRooms,
         RoomDao rooms
     ) {
         long recommendedTree = randomRecommendedTree(recommendedRooms);
         return eventCategoryQueryPayload(
-            NavigatorWire.categoryId(packetPayload),
+            request.categoryId(),
             listLimit(settingsCache),
             recommendedTree,
             rooms,
@@ -48,14 +48,14 @@ public final class NavigatorRequests {
     }
 
     public static String popularCategoryQueryPayload(
-        String packetPayload,
+        NavigatorWire.CategoryRequest request,
         AppSettingsCache settingsCache,
         RecommendedRooms recommendedRooms,
         RoomDao rooms
     ) {
         long recommendedTree = randomRecommendedTree(recommendedRooms);
         return popularCategoryQueryPayload(
-            NavigatorWire.categoryId(packetPayload),
+            request.categoryId(),
             listLimit(settingsCache),
             recommendedTree,
             rooms,
@@ -132,10 +132,6 @@ public final class NavigatorRequests {
         }
     }
 
-    public static String friendCurrentQueryPayload(String userId, AppSettingsCache settingsCache, RoomDao rooms) {
-        return friendCurrentQueryPayload(NumberUtils.parseLong(userId), listLimit(settingsCache), rooms);
-    }
-
     /**
      * Original function: Proc_6_118_751A80.
      */
@@ -146,10 +142,6 @@ public final class NavigatorRequests {
         } catch (Exception ignored) {
             return roomQueryPayload("GC", "\0", limit, List.of());
         }
-    }
-
-    public static String friendOwnedQueryPayload(String userId, AppSettingsCache settingsCache, RoomDao rooms) {
-        return friendOwnedQueryPayload(NumberUtils.parseLong(userId), listLimit(settingsCache), rooms);
     }
 
     /**
@@ -164,10 +156,6 @@ public final class NavigatorRequests {
         }
     }
 
-    public static String favouriteQueryPayload(String userId, AppSettingsCache settingsCache, RoomDao rooms) {
-        return favouriteQueryPayload(NumberUtils.parseLong(userId), listLimit(settingsCache), rooms);
-    }
-
     /**
      * Original function: Proc_6_120_751E80.
      */
@@ -180,10 +168,6 @@ public final class NavigatorRequests {
         }
     }
 
-    public static String recentlyVisitedQueryPayload(String userId, AppSettingsCache settingsCache, RoomDao rooms) {
-        return recentlyVisitedQueryPayload(NumberUtils.parseLong(userId), listLimit(settingsCache), rooms);
-    }
-
     /**
      * Original function: Proc_6_121_752080.
      */
@@ -194,10 +178,6 @@ public final class NavigatorRequests {
         } catch (Exception ignored) {
             return roomQueryPayload("GCQA", "", limit, List.of());
         }
-    }
-
-    public static String ownedQueryPayload(String userId, AppSettingsCache settingsCache, RoomDao rooms) {
-        return ownedQueryPayload(NumberUtils.parseLong(userId), listLimit(settingsCache), rooms);
     }
 
     /**
@@ -304,9 +284,9 @@ public final class NavigatorRequests {
         }
     }
 
-    public static String tagResultsQueryPayload(String packetPayload, AppSettingsCache settingsCache, RoomDao rooms) {
+    public static String tagResultsQueryPayload(NavigatorWire.QueryRequest request, AppSettingsCache settingsCache, RoomDao rooms) {
         return tagResultsQueryPayload(
-            NavigatorWire.queryText(packetPayload),
+            request.queryText(),
             timeFormat(settingsCache),
             listLimit(settingsCache),
             rooms);
@@ -327,9 +307,9 @@ public final class NavigatorRequests {
         }
     }
 
-    public static String searchResultsQueryPayload(String packetPayload, AppSettingsCache settingsCache, RoomDao rooms) {
+    public static String searchResultsQueryPayload(NavigatorWire.QueryRequest request, AppSettingsCache settingsCache, RoomDao rooms) {
         return searchResultsQueryPayload(
-            NavigatorWire.queryText(packetPayload),
+            request.queryText(),
             timeFormat(settingsCache),
             listLimit(settingsCache),
             rooms);

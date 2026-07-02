@@ -32,6 +32,6 @@ public final class MessageRegistry {
     }
 
     public Set<String> headers() {
-        return messages.keySet();
+        return Set.copyOf(messages.keySet());
     }
 }

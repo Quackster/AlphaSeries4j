@@ -3,7 +3,6 @@ package com.alphaseries.game.pet;
 import com.alphaseries.dao.mysql.BotDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.db.MySQL;
-import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -51,34 +50,6 @@ public final class PetBootCache {
         } catch (Exception ignored) {
             // VB6 source suppresses boot cache failures.
         }
-    }
-
-    /**
-     * Original function: Proc_1_6_6C5830.
-     */
-    public static String buildPetRaceCache(List<PetRaceCacheRow> raceRows) {
-        PacketBuilder payload = PacketBuilder.create();
-        if (raceRows != null) {
-            for (PetRaceCacheRow row : raceRows) {
-                if (row != null) {
-                    payload
-                        .appendRaw('[')
-                        .appendRaw(StringUtils.text(row.productPet()))
-                        .appendRaw('\t')
-                        .appendRaw(row.petId())
-                        .appendRaw('\t')
-                        .appendRaw(row.breed())
-                        .appendRaw('\t')
-                        .appendRaw(row.minRank())
-                        .appendRaw('\t')
-                        .appendRaw(row.minHcRank())
-                        .appendRaw('\t')
-                        .appendRaw(StringUtils.text(row.name()))
-                        .appendRaw(']');
-                }
-            }
-        }
-        return payload.build();
     }
 
     /**

@@ -30,6 +30,10 @@ public final class WiredPayloads {
         String textValue,
         String extraValue
     ) {
+        public boolean valid() {
+            return !StringUtils.text(code).isEmpty() && !StringUtils.text(furnitureId).isEmpty();
+        }
+
         public List<Long> selectedFurnitureIds() {
             return parseIdList(selectedIds);
         }
@@ -42,6 +46,10 @@ public final class WiredPayloads {
         return itemState == 1507L ? "5;1;7;1;5;0;" : "";
     }
 
+    public static long stateParameterValue(String parameterText) {
+        return StringUtils.indexedFields(parameterText, ';').number(0);
+    }
+
     static String recordText(
         long wiredCode,
         long furnitureId,
@@ -50,7 +58,27 @@ public final class WiredPayloads {
         String textValue,
         String extraValue
     ) {
-        return recordText(wiredCode, furnitureId, joinIds(selectedFurnitureIds), joinIds(parameterValues), textValue, extraValue);
+        return recordText(record(wiredCode, furnitureId, selectedFurnitureIds, parameterValues, textValue, extraValue));
+    }
+
+    static WiredRecord record(
+        long wiredCode,
+        long furnitureId,
+        List<Long> selectedFurnitureIds,
+        List<Long> parameterValues,
+        String textValue,
+        String extraValue
+    ) {
+        if (wiredCode <= 0L || furnitureId <= 0L) {
+            return new WiredRecord("", "", "", "", "", "");
+        }
+        return new WiredRecord(
+            String.valueOf(wiredCode),
+            String.valueOf(furnitureId),
+            joinIds(selectedFurnitureIds),
+            joinIds(parameterValues),
+            StringUtils.left(textValue, 125),
+            StringUtils.text(extraValue));
     }
 
     static String recordText(
@@ -64,12 +92,35 @@ public final class WiredPayloads {
         if (wiredCode <= 0L || furnitureId <= 0L) {
             return "";
         }
-        String recordText = "\1" + wiredCode + '\2' + furnitureId + '\3' + StringUtils.text(selectedIdsText)
-            + '\4' + StringUtils.text(parameterValues) + '\5' + StringUtils.left(textValue, 125) + '\6';
+        PacketBuilder recordText = PacketBuilder.create()
+            .appendRaw('\1')
+            .appendRaw(wiredCode)
+            .appendRaw('\2')
+            .appendRaw(furnitureId)
+            .appendRaw('\3')
+            .appendRaw(StringUtils.text(selectedIdsText))
+            .appendRaw('\4')
+            .appendRaw(StringUtils.text(parameterValues))
+            .appendRaw('\5')
+            .appendRaw(StringUtils.left(textValue, 125))
+            .appendRaw('\6');
         if (!StringUtils.text(extraValue).isEmpty()) {
-            recordText += StringUtils.text(extraValue);
+            recordText.appendRaw(StringUtils.text(extraValue));
         }
-        return recordText;
+        return recordText.build();
+    }
+
+    static String recordText(WiredRecord record) {
+        if (record == null || !record.valid()) {
+            return "";
+        }
+        return recordText(
+            NumberUtils.parseLong(record.code()),
+            NumberUtils.parseLong(record.furnitureId()),
+            record.selectedIds(),
+            record.parameterText(),
+            record.textValue(),
+            record.extraValue());
     }
 
     static WiredRecord record(String recordText) {
@@ -77,33 +128,25 @@ public final class WiredPayloads {
         if (bodyText.startsWith("\1")) {
             bodyText = bodyText.substring(1);
         }
-        String[] parts = bodyText.split("\2", 2);
-        String code = parts.length >= 1 ? parts[0] : "";
-        if (parts.length < 2) {
+        StringUtils.SequentialFields fields = StringUtils.sequentialFields(bodyText, '\2', '\3', '\4', '\5', '\6');
+        String code = fields.text(0);
+        if (!fields.foundDelimiter(0)) {
             return new WiredRecord(code, "", "", "", "", "");
         }
-        String restText = parts[1];
-        parts = restText.split("\3", 2);
-        String furnitureId = parts.length >= 1 ? parts[0] : "";
-        if (parts.length < 2) {
+        String furnitureId = fields.text(1);
+        if (!fields.foundDelimiter(1)) {
             return new WiredRecord(code, furnitureId, "", "", "", "");
         }
-        restText = parts[1];
-        parts = restText.split("\4", 2);
-        String selectedIds = parts.length >= 1 ? parts[0] : "";
-        if (parts.length < 2) {
+        String selectedIds = fields.text(2);
+        if (!fields.foundDelimiter(2)) {
             return new WiredRecord(code, furnitureId, selectedIds, "", "", "");
         }
-        restText = parts[1];
-        parts = restText.split("\5", 2);
-        String parameterText = parts.length >= 1 ? parts[0] : "";
-        if (parts.length < 2) {
+        String parameterText = fields.text(3);
+        if (!fields.foundDelimiter(3)) {
             return new WiredRecord(code, furnitureId, selectedIds, parameterText, "", "");
         }
-        restText = parts[1];
-        parts = restText.split("\6", 2);
-        String textValue = parts.length >= 1 ? parts[0] : "";
-        String extraValue = parts.length >= 2 ? parts[1] : "";
+        String textValue = fields.text(4);
+        String extraValue = fields.foundDelimiter(4) ? fields.rest() : "";
         return new WiredRecord(code, furnitureId, selectedIds, parameterText, textValue, extraValue);
     }
 
@@ -124,13 +167,18 @@ public final class WiredPayloads {
         return cache.isEmpty() ? record : record + '\n' + cache;
     }
 
-    public static boolean selectedItemsExist(List<Long> selectedFurnitureIds, String existingIds) {
+    static String cacheWithRecord(String cacheText, WiredRecord record) {
+        return cacheWithRecord(cacheText, recordText(record));
+    }
+
+    public static boolean selectedItemsExist(List<Long> selectedFurnitureIds, List<Long> existingIds) {
         List<Long> selected = selectedFurnitureIds == null ? List.of() : selectedFurnitureIds;
         if (selected.isEmpty()) {
             return true;
         }
+        List<Long> existing = existingIds == null ? List.of() : existingIds;
         for (long furnitureId : selected) {
-            if (furnitureId > 0L && !containsDelimitedId(existingIds, furnitureId)) {
+            if (furnitureId > 0L && !existing.contains(furnitureId)) {
                 return false;
             }
         }
@@ -141,7 +189,7 @@ public final class WiredPayloads {
         List<Long> selectedFurnitureIds,
         String parameterText,
         long selectedFurnitureId,
-        String existingIds,
+        List<Long> existingIds,
         BiFunction<Long, Long, String> statePayloadBuilder
     ) {
         List<Long> effectiveSelectedIds = selectedFurnitureId > 0L
@@ -150,12 +198,12 @@ public final class WiredPayloads {
         if (effectiveSelectedIds.isEmpty()) {
             return ApplyResult.empty();
         }
-        String[] parameterParts = (StringUtils.text(parameterText) + ";").split(";", -1);
-        long stateValue = NumberUtils.parseLong(parameterParts.length > 0 ? parameterParts[0] : "");
+        long stateValue = stateParameterValue(parameterText);
         long appliedCount = 0L;
         PacketBuilder statePayloads = PacketBuilder.create();
+        List<Long> existing = existingIds == null ? List.of() : existingIds;
         for (long furnitureId : effectiveSelectedIds) {
-            if (furnitureId > 0L && containsDelimitedId(existingIds, furnitureId)) {
+            if (furnitureId > 0L && existing.contains(furnitureId)) {
                 statePayloads.appendRaw(statePayloadBuilder.apply(furnitureId, stateValue));
                 appliedCount++;
             }
@@ -163,25 +211,8 @@ public final class WiredPayloads {
         return new ApplyResult(appliedCount, statePayloads.build());
     }
 
-    private static boolean containsDelimitedId(String idText, long wantedId) {
-        String wanted = String.valueOf(wantedId);
-        for (String idPart : StringUtils.text(idText).replace(',', ';').split(";", -1)) {
-            if (wanted.equals(String.valueOf(NumberUtils.parseLong(idPart)))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private static List<Long> parseIdList(String idText) {
-        List<Long> ids = new ArrayList<>();
-        for (String idPart : StringUtils.text(idText).replace(',', ';').split(";", -1)) {
-            long id = NumberUtils.parseLong(idPart);
-            if (id > 0L) {
-                ids.add(id);
-            }
-        }
-        return List.copyOf(ids);
+        return StringUtils.positiveLongFields(StringUtils.text(idText).replace(',', ';'), ';');
     }
 
     private static String joinIds(List<Long> ids) {
@@ -194,7 +225,7 @@ public final class WiredPayloads {
                 textIds.add(String.valueOf(id));
             }
         }
-        return String.join(";", textIds);
+        return StringUtils.delimitedText(textIds, ';');
     }
 
 }

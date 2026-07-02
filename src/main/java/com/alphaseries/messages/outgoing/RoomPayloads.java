@@ -110,6 +110,16 @@ public final class RoomPayloads {
             .build();
     }
 
+    public static EntryBootstrapPayloads entryBootstrap(long roomMode) {
+        return new EntryBootstrapPayloads("@S", "Bf/client.php" + '\2', roomMode == 0L ? "@i" : "@{");
+    }
+
+    public record EntryBootstrapPayloads(String roomEntryMarker, String clientView, String roomModePayload) {
+        public List<String> payloads() {
+            return List.of(roomEntryMarker, clientView, roomModePayload);
+        }
+    }
+
     public static String eventInfo(RoomDao.RoomEventInfo event) {
         if (event == null) {
             return "-1" + '\2';

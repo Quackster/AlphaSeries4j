@@ -51,7 +51,8 @@ public final class RoomEventBootCache {
                     if (!cacheKey.isEmpty()) {
                         entries.add(new RoomEventLocales.LocaleEntry(
                             String.valueOf(NumberUtils.parseLong(cacheKey)),
-                            List.of(StringUtils.text(row.value()), "")));
+                            StringUtils.text(row.value()),
+                            ""));
                     }
                 }
             }

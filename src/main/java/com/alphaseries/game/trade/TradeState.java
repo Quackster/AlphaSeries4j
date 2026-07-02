@@ -89,8 +89,8 @@ public final class TradeState {
     public synchronized String tradeOfferPayload(
         long sourceSocketIndex,
         long targetSocketIndex,
-        String sourceUserId,
-        String targetUserId
+        long sourceUserId,
+        long targetUserId
     ) {
         return TradePayloads.offerPayload(tradeOffers, sourceSocketIndex, targetSocketIndex, sourceUserId, targetUserId);
     }

@@ -2,10 +2,7 @@ package com.alphaseries.db;
 
 import com.alphaseries.config.AppConfigState;
 import com.alphaseries.dao.mysql.UserDao;
-import com.alphaseries.util.NumberUtils;
-
 import java.sql.SQLException;
-import java.util.List;
 
 public final class MySQL {
     private static Database databaseConnection;
@@ -25,71 +22,30 @@ public final class MySQL {
         return new UserDao(databaseConnection);
     }
 
-    public static String mySqlUserIdFromSocket(int socketIndex) {
+    public static long mySqlUserIdFromSocket(int socketIndex) {
         if (socketIndex <= 0 || databaseConnection == null) {
-            return "";
+            return 0L;
         }
         try {
             long userId = userDao().userIdBySocket(socketIndex);
-            return userId <= 0L ? "0" : String.valueOf(userId);
+            return userId <= 0L ? 0L : userId;
         } catch (SQLException ex) {
-            return "";
+            return 0L;
         }
     }
 
-    public static boolean mySqlUserHasPermission(String userId, String permissionName) {
+    public static boolean mySqlUserHasPermission(long userId, String permissionName) {
         if (databaseConnection == null) {
             return false;
         }
-        long numericUserId = NumberUtils.parseLong(userId);
         try {
             UserDao users = userDao();
-            long rankIndex = users.rankLevel(numericUserId);
-            long hcLevel = users.hcLevel(numericUserId);
+            long rankIndex = users.rankLevel(userId);
+            long hcLevel = users.hcLevel(userId);
             return AppConfigState.instance().permissionMatrix().allows(rankIndex, "", permissionName, hcLevel);
         } catch (SQLException ex) {
             return false;
         }
     }
 
-    public static String readSqlRows(String sqlText) {
-        if (sqlText == null || sqlText.isEmpty() || databaseConnection == null) {
-            return "";
-        }
-        try {
-            return formatSqlRows(databaseConnection.query(sqlText));
-        } catch (SQLException ex) {
-            return "";
-        }
-    }
-
-    public static void executeSql(String sqlText) {
-        if (sqlText == null || sqlText.isEmpty() || databaseConnection == null) {
-            return;
-        }
-        try {
-            databaseConnection.execute(sqlText);
-        } catch (SQLException ignored) {
-            // The original VB6 call sites suppress most SQL failures.
-        }
-    }
-
-    public static String formatSqlRows(List<List<Object>> rows) {
-        StringBuilder rowText = new StringBuilder();
-        for (List<Object> row : rows) {
-            if (rowText.length() > 0) {
-                rowText.append('\r');
-            }
-            for (int fieldIndex = 0; fieldIndex < row.size(); fieldIndex++) {
-                if (fieldIndex > 0) {
-                    rowText.append('\t');
-                }
-                Object value = row.get(fieldIndex);
-                if (value != null) {
-                    rowText.append(value);
-                }
-            }
-        }
-        return rowText.toString().replace("\\n", "\n");
-    }
 }

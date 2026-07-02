@@ -2,7 +2,6 @@ package com.alphaseries.game.quest;
 
 import com.alphaseries.dao.mysql.QuestDao;
 import com.alphaseries.messages.outgoing.QuestPayloads;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -62,16 +61,15 @@ public final class QuestProgress {
     /**
      * Original function: Proc_6_233_7F5D60.
      */
-    public static long nextQuestIdForUser(String userId, QuestSettings questSettings, QuestDao quests) {
+    public static long nextQuestIdForUser(long userId, QuestSettings questSettings, QuestDao quests) {
         try {
-            long userIdValue = NumberUtils.parseLong(userId);
-            if (userIdValue <= 0L || quests == null) {
+            if (userId <= 0L || quests == null) {
                 return 0L;
             }
-            QuestDao.UserQuestLevelRow activeRow = quests.activeLevelRow(userIdValue)
+            QuestDao.UserQuestLevelRow activeRow = quests.activeLevelRow(userId)
                 .or(() -> {
                     try {
-                        return quests.latestLevelRow(userIdValue);
+                        return quests.latestLevelRow(userId);
                     } catch (Exception ignored) {
                         return java.util.Optional.empty();
                     }
@@ -154,14 +152,13 @@ public final class QuestProgress {
      * Original function: Proc_6_232_7F45A0.
      */
     public static QuestAcceptResult acceptQuest(
-        String userId,
+        long userId,
         long requestedQuestId,
         QuestSettings questSettings,
         QuestDao quests
     ) {
         try {
-            long userIdValue = NumberUtils.parseLong(userId);
-            if (userIdValue <= 0L || requestedQuestId <= 0L || quests == null) {
+            if (userId <= 0L || requestedQuestId <= 0L || quests == null) {
                 return QuestAcceptResult.empty();
             }
             QuestSettings settings = settingsFromSource(questSettings, quests);
@@ -175,18 +172,18 @@ public final class QuestProgress {
             if (activityCount <= 0L) {
                 activityCount = 1L;
             }
-            quests.clearAcceptedQuest(userIdValue);
-            long existingLevel = quests.existingLevel(userIdValue, questId);
+            quests.clearAcceptedQuest(userId);
+            long existingLevel = quests.existingLevel(userId, questId);
             if (existingLevel != Long.MIN_VALUE) {
-                quests.reactivateQuest(userIdValue, questId, requestedQuestId);
+                quests.reactivateQuest(userId, questId, requestedQuestId);
             } else {
-                quests.insertQuest(userIdValue, questId, requestedQuestId);
+                quests.insertQuest(userId, questId, requestedQuestId);
             }
-            long progressValue = quests.progress(userIdValue, questId);
+            long progressValue = quests.progress(userId, questId);
             if (waitAmount > 0L && progressValue > 0L && progressValue < activityCount) {
-                String timeNextText = quests.timeNext(userIdValue, questId);
+                String timeNextText = quests.timeNext(userId, questId);
                 if (timeNextText.isEmpty() || "0".equals(timeNextText)) {
-                    quests.scheduleNextTime(userIdValue, questId, waitAmount);
+                    quests.scheduleNextTime(userId, questId, waitAmount);
                 }
             }
             return new QuestAcceptResult(true, questId, requestedQuestId, progressValue >= activityCount);
@@ -198,13 +195,12 @@ public final class QuestProgress {
     /**
      * Original function: Proc_6_235_7F77E0.
      */
-    public static QuestProgressDecision refreshDecision(String userId, QuestSettings questSettings, QuestDao quests) {
+    public static QuestProgressDecision refreshDecision(long userId, QuestSettings questSettings, QuestDao quests) {
         try {
-            long userIdValue = NumberUtils.parseLong(userId);
-            if (userIdValue <= 0L || quests == null) {
+            if (userId <= 0L || quests == null) {
                 return QuestProgressDecision.empty();
             }
-            QuestDao.UserQuestProgressRow activeQuest = quests.activeProgressRow(userIdValue).orElse(null);
+            QuestDao.UserQuestProgressRow activeQuest = quests.activeProgressRow(userId).orElse(null);
             if (activeQuest == null) {
                 return QuestProgressDecision.empty();
             }
@@ -215,7 +211,7 @@ public final class QuestProgress {
             }
             QuestProgressDecision decision = decision(activeQuest, settingsFromSource(questSettings, quests), remainingWait);
             if (decision.shouldScheduleWait()) {
-                quests.scheduleNextTime(userIdValue, activeQuest.questId(), decision.waitAmount());
+                quests.scheduleNextTime(userId, activeQuest.questId(), decision.waitAmount());
             }
             return decision;
         } catch (Exception ignored) {
@@ -283,18 +279,7 @@ public final class QuestProgress {
             List<QuestSettings.QuestDefinitionRow> rows = new ArrayList<>();
             for (QuestDao.QuestDefinition quest : quests.questDefinitions()) {
                 if (quest != null) {
-                    rows.add(QuestSettings.QuestDefinitionRow.fromFields(
-                        quest.questId(),
-                        quest.level(),
-                        quest.name(),
-                        quest.reservedSlot(),
-                        quest.reward(),
-                        quest.rewardType(),
-                        quest.requiredAction(),
-                        quest.additionalId(),
-                        quest.campaignId(),
-                        quest.activityAmount(),
-                        quest.waitAmount()));
+                    rows.add(QuestSettings.QuestDefinitionRow.fromDefinition(quest));
                 }
             }
             return QuestSettings.fromDefinitions(rows);
@@ -332,15 +317,14 @@ public final class QuestProgress {
     /**
      * Original function: Proc_6_236_7F8540.
      */
-    public static String listPayload(String userId, QuestSettings questSettings, QuestDao quests) {
+    public static String listPayload(long userId, QuestSettings questSettings, QuestDao quests) {
         try {
-            long userIdValue = NumberUtils.parseLong(userId);
-            if (userIdValue <= 0L || quests == null) {
+            if (userId <= 0L || quests == null) {
                 return "";
             }
             return QuestPayloads.list(
                 settingsFromSource(questSettings, quests),
-                userQuestRowsWithRemainingWait(quests, quests.listRows(userIdValue)));
+                userQuestRowsWithRemainingWait(quests, quests.listRows(userId)));
         } catch (Exception ignored) {
             return "";
         }
@@ -349,20 +333,14 @@ public final class QuestProgress {
     /**
      * Original function: Proc_6_234_7F75C0.
      */
-    public static QuestResetResult resetQuests(String userId, QuestSettings questSettings, QuestDao quests) {
+    public static QuestResetResult resetQuests(long userId, QuestSettings questSettings, QuestDao quests) {
         try {
-            long userIdValue = NumberUtils.parseLong(userId);
-            if (userIdValue <= 0L || quests == null) {
+            if (userId <= 0L || quests == null) {
                 return QuestResetResult.empty();
             }
-            quests.resetUserQuests(userIdValue);
-            List<String> payloads = new ArrayList<>();
-            payloads.add("Lc");
+            quests.resetUserQuests(userId);
             String listPayload = listPayload(userId, questSettings, quests);
-            if (!listPayload.isEmpty()) {
-                payloads.add(listPayload);
-            }
-            return new QuestResetResult(true, payloads);
+            return new QuestResetResult(true, new QuestResetResult.DeliveryPayloads("Lc", listPayload));
         } catch (Exception ignored) {
             return QuestResetResult.empty();
         }

@@ -4,7 +4,6 @@ import com.alphaseries.config.AppSettingsCache;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -18,15 +17,15 @@ public final class UserActivityPoints {
     private UserActivityPoints() {
     }
 
-    public static long sessionSeconds(long socketIndex, String userId, UserDao users) {
-        if (socketIndex <= 0L || StringUtils.text(userId).isEmpty()) {
+    public static long sessionSeconds(long socketIndex, long userId, UserDao users) {
+        if (socketIndex <= 0L || userId <= 0L) {
             return 0L;
         }
         Long cachedTickValue = REPRESENTED_ACTIVITY_POINT_TICKS.get(socketIndex);
         long tickValue = cachedTickValue == null ? 0L : cachedTickValue;
         if (cachedTickValue == null && users != null) {
             try {
-                tickValue = users.onlineTime(NumberUtils.parseLong(userId));
+                tickValue = users.onlineTime(userId);
             } catch (Exception ignored) {
                 tickValue = 0L;
             }
@@ -110,20 +109,20 @@ public final class UserActivityPoints {
      */
     public static AwardBatch timedActivityPointAwardBatch(
         long socketIndex,
-        String userId,
+        long userId,
         AppSettingsCache settings,
         UserDao users
     )
         throws Exception {
 
-        if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId))) {
+        if (userId <= 0L) {
             return AwardBatch.empty();
         }
         long sessionSeconds = sessionSeconds(socketIndex, userId, users);
         if (sessionSeconds <= 0L) {
             return AwardBatch.empty();
         }
-        return awardSessionPointBatch(NumberUtils.parseLong(userId), sessionSeconds, settings, users);
+        return awardSessionPointBatch(userId, sessionSeconds, settings, users);
     }
 
     public static String payloadForAwards(List<Award> awards) {
@@ -152,24 +151,37 @@ public final class UserActivityPoints {
         }
     }
 
-    public record AwardBatch(List<Award> awards, String payload, List<String> deliveryPayloads) {
+    public record AwardBatch(List<Award> awards, String payload, DeliveryPayloads deliveryPayloads) {
         public static AwardBatch empty() {
-            return new AwardBatch(List.of(), "", List.of());
+            return new AwardBatch(List.of(), "", DeliveryPayloads.empty());
         }
 
         public static AwardBatch fromAwards(List<Award> awards) {
             List<Award> awardList = awards == null ? List.of() : List.copyOf(awards);
-            List<String> deliveryPayloads = awardList.stream()
-                .map(Award::payload)
-                .filter(payload -> !payload.isEmpty())
-                .toList();
-            return new AwardBatch(awardList, payloadForAwards(awardList), deliveryPayloads);
+            return new AwardBatch(awardList, payloadForAwards(awardList), new DeliveryPayloads(awardList));
         }
 
         public AwardBatch {
             awards = awards == null ? List.of() : List.copyOf(awards);
             payload = StringUtils.text(payload);
-            deliveryPayloads = deliveryPayloads == null ? List.of() : List.copyOf(deliveryPayloads);
+            deliveryPayloads = deliveryPayloads == null ? new DeliveryPayloads(awards) : deliveryPayloads;
+        }
+    }
+
+    public record DeliveryPayloads(List<Award> awards) {
+        public DeliveryPayloads {
+            awards = awards == null ? List.of() : List.copyOf(awards);
+        }
+
+        public static DeliveryPayloads empty() {
+            return new DeliveryPayloads(List.of());
+        }
+
+        public List<String> payloads() {
+            return awards.stream()
+                .map(Award::payload)
+                .filter(payload -> !payload.isEmpty())
+                .toList();
         }
     }
 }

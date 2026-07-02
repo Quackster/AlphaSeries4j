@@ -2,8 +2,6 @@ package com.alphaseries.game.achievement;
 
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.messages.outgoing.AchievementPayloads;
-import com.alphaseries.util.NumberUtils;
-
 import java.util.List;
 
 public final class AchievementLookups {
@@ -14,24 +12,23 @@ public final class AchievementLookups {
      * Original function: Proc_6_204_7D82E0.
      */
     public static AchievementRewardGrant grantReward(
-        String userId,
+        long userId,
         long achievementIndex,
         long badgeLevel,
         AchievementSettings settings,
         UserDao users
     ) {
         try {
-            long userIdValue = NumberUtils.parseLong(userId);
             AchievementSettings effectiveSettings = settings == null ? AchievementSettings.empty() : settings;
             AchievementSettings.Achievement achievement = effectiveSettings.achievementByIndex(achievementIndex);
-            if (userIdValue <= 0L || achievement == null || users == null) {
+            if (userId <= 0L || achievement == null || users == null) {
                 return emptyGrant();
             }
             AchievementRewardGrant grant = AchievementProgress.prepareRewardGrant(
-                users, userIdValue, achievementIndex, badgeLevel, achievement);
+                users, userId, achievementIndex, badgeLevel, achievement);
             if (grant.valid() && grant.hasAward()) {
                 users.addAchievementReward(
-                    userIdValue,
+                    userId,
                     grant.rewardType(),
                     grant.rewardIncrease(),
                     grant.scoreIncrease());
@@ -46,7 +43,7 @@ public final class AchievementLookups {
      * Original function: Proc_6_205_7D9780.
      */
     public static AchievementRewardGrant advanceProgress(
-        String userId,
+        long userId,
         long achievementQuestId,
         AchievementSettings settings,
         UserDao users
@@ -54,7 +51,7 @@ public final class AchievementLookups {
         try {
             AchievementSettings effectiveSettings = settings == null ? AchievementSettings.empty() : settings;
             List<AchievementSettings.Achievement> achievements = effectiveSettings.achievements();
-            if (NumberUtils.parseLong(userId) <= 0L || achievementQuestId <= 0L || achievements.isEmpty()) {
+            if (userId <= 0L || achievementQuestId <= 0L || achievements.isEmpty()) {
                 return emptyGrant();
             }
             AchievementProgressDecision decision = AchievementProgress.decision(
@@ -74,11 +71,11 @@ public final class AchievementLookups {
     /**
      * Original function: Proc_6_206_7DA450.
      */
-    public static String listPayload(String userId, AchievementSettings settings, UserDao users) {
+    public static String listPayload(long userId, AchievementSettings settings, UserDao users) {
         try {
             AchievementSettings effectiveSettings = settings == null ? AchievementSettings.empty() : settings;
             List<AchievementSettings.Achievement> achievements = effectiveSettings.achievements();
-            if (NumberUtils.parseLong(userId) <= 0L || achievements.isEmpty()) {
+            if (userId <= 0L || achievements.isEmpty()) {
                 return "";
             }
             return AchievementPayloads.list(

@@ -1,5 +1,7 @@
 package com.alphaseries.game.quest;
 
+import com.alphaseries.dao.mysql.QuestDao;
+
 import java.util.List;
 
 public final class QuestSettings {
@@ -64,31 +66,19 @@ public final class QuestSettings {
         long waitAmount,
         int fieldCount
     ) {
-        public static QuestDefinitionRow fromFields(
-            long questId,
-            long level,
-            String name,
-            String reservedSlot,
-            long reward,
-            long rewardType,
-            String requiredAction,
-            long additionalId,
-            long campaignId,
-            long activityAmount,
-            long waitAmount
-        ) {
+        public static QuestDefinitionRow fromDefinition(QuestDao.QuestDefinition definition) {
             return new QuestDefinitionRow(
-                questId,
-                level,
-                name,
-                reservedSlot,
-                reward,
-                rewardType,
-                requiredAction,
-                additionalId,
-                campaignId,
-                activityAmount,
-                waitAmount,
+                definition.questId(),
+                definition.level(),
+                definition.name(),
+                definition.reservedSlot(),
+                definition.reward(),
+                definition.rewardType(),
+                definition.requiredAction(),
+                definition.additionalId(),
+                definition.campaignId(),
+                definition.activityAmount(),
+                definition.waitAmount(),
                 11);
         }
     }

@@ -52,7 +52,7 @@ public final class NavigatorState {
         roomCategoryCache = cache == null ? RoomCategoryCache.empty() : cache;
     }
 
-    public synchronized void setRoomCategoryDefaults(List<String> defaultCategoryIds) {
+    public synchronized void setRoomCategoryDefaults(List<RoomCategoryCache.DefaultCategoryId> defaultCategoryIds) {
         roomCategoryCache = RoomCategoryCache.fromPayloadRows(
             defaultCategoryIds == null ? List.of() : List.copyOf(defaultCategoryIds),
             roomCategoryCache.categoryRowList(),
@@ -61,14 +61,14 @@ public final class NavigatorState {
 
     public synchronized void setRoomCategoryRows(List<RoomDao.RoomCategoryRow> categoryRows) {
         roomCategoryCache = RoomCategoryCache.fromPayloadRows(
-            roomCategoryCache.defaultCategoryIdList(),
+            roomCategoryCache.defaultCategoryIdRows(),
             categoryRows == null ? List.of() : List.copyOf(categoryRows),
             roomCategoryCache.payloadRows());
     }
 
     public synchronized void setRoomCategoryPayloads(List<RoomCategoryCache.CategoryPayload> payloads) {
         roomCategoryCache = RoomCategoryCache.fromPayloadRows(
-            roomCategoryCache.defaultCategoryIdList(),
+            roomCategoryCache.defaultCategoryIdRows(),
             roomCategoryCache.categoryRowList(),
             payloads == null ? List.of() : List.copyOf(payloads));
     }

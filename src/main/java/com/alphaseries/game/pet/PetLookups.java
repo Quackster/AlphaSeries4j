@@ -11,7 +11,6 @@ import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.game.room.RoomObjectEntryPayloadArgs;
 import com.alphaseries.game.room.RoomLookups;
-import com.alphaseries.game.user.UserLookups;
 import com.alphaseries.messages.outgoing.SocialPayloads;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
@@ -68,13 +67,17 @@ public final class PetLookups {
         }
     }
 
-    public static String raceListPayload(String userId, String productPet, BotDao bots, UserDao users) {
-        if (StringUtils.text(userId).isEmpty() || StringUtils.text(productPet).isEmpty() || bots == null) {
+    public static String raceListPayload(long userId, String productPet, BotDao bots, UserDao users) {
+        if (userId <= 0L || StringUtils.text(productPet).isEmpty() || bots == null) {
             return "";
         }
         try {
-            long rankIndex = UserLookups.rank(userId, users);
-            long hcLevel = UserLookups.hcLevel(userId, users);
+            long rankIndex = users == null ? 0L : users.rankLevel(userId);
+            long hcLevel = users == null ? 0L : users.hcLevel(userId);
+            if (hcLevel < 0L) {
+                hcLevel = 0L;
+            }
+            hcLevel = Math.min(hcLevel, 2L);
             return PetPayloads.raceList(productPet, bots.petRaces(productPet), rankIndex, hcLevel);
         } catch (Exception ignored) {
             return "";
@@ -168,10 +171,9 @@ public final class PetLookups {
         if (furnitureProduct == null || furnitureProduct.productId() <= 0L) {
             return emptyPackagePlacement();
         }
-        String userIdText = String.valueOf(userId);
         if (furnitureProduct.ownerId() != userId
-            && !RoomLookups.userOwnsRoom(userIdText, roomId, rooms)
-            && !RoomLookups.userHasRoomRight(userIdText, roomId, rooms)) {
+            && !RoomLookups.userOwnsRoom(userId, roomId, rooms)
+            && !RoomLookups.userHasRoomRight(userId, roomId, rooms)) {
             return emptyPackagePlacement();
         }
         String petFigure = packagePetFigure(furnitureProduct.productId(), packages);
@@ -254,15 +256,15 @@ public final class PetLookups {
             String positionZ = bot.positionZ().isEmpty() ? "0.0" : bot.positionZ();
             long directionValue = bot.positionR();
             String botEntry = SocialPayloads.roomObjectEntry(new RoomObjectEntryPayloadArgs(
-                String.valueOf(botEntityId),
+                botEntityId,
                 bot.name(),
                 bot.figure(),
                 "M",
-                String.valueOf(botEntityId),
-                String.valueOf(positionX),
-                String.valueOf(positionY),
+                botEntityId,
+                positionX,
+                positionY,
                 positionZ,
-                "2"));
+                2L));
             if (!botEntry.isEmpty()) {
                 occupantPayload.appendRaw(botEntry);
                 statusPayload.appendRaw(SocialPayloads.roomOccupantStatus(
@@ -549,15 +551,15 @@ public final class PetLookups {
             return emptyTutorialGuideRemoval();
         }
         long removedCount = 0L;
-        List<String> removedPayloads = new ArrayList<>();
+        List<Long> removedEntityIds = new ArrayList<>();
         for (long botEntityId : entityIds) {
             if (botEntityId > 0L) {
-                removedPayloads.add(PetPayloads.removedFromRoom(botEntityId));
+                removedEntityIds.add(botEntityId);
                 PetState.instance().removeRepresentedBotRecord(botEntityId);
                 removedCount++;
             }
         }
-        return new PetTutorialGuideRemoval(removedCount, removedPayloads);
+        return new PetTutorialGuideRemoval(removedCount, removedEntityIds);
     }
 
     private static PetCommandExecution emptyCommandExecution() {

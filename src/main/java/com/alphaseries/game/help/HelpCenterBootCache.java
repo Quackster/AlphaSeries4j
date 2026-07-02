@@ -142,7 +142,7 @@ public final class HelpCenterBootCache {
             for (HelpDao.FaqDescriptionRow row : faqRows) {
                 if (row != null) {
                     long faqId = row.id();
-                    String descriptionText = StringUtils.text(row.description()).replace('\n', '\r');
+                    String descriptionText = StringUtils.newlinesAsCarriageReturns(row.description());
                     cache.put(faqId, PacketBuilder.create()
                         .appendInt(faqId)
                         .appendString(descriptionText)

@@ -1,5 +1,6 @@
 package com.alphaseries.server.http;
 
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -70,13 +71,20 @@ public final class PrivSockHTTP {
         if (!portText.isEmpty() && port != 80L) {
             hostPort = ":" + port;
         }
-        return "GET " + path + " HTTP/1.1\r\n"
-            + "Host:   " + host + hostPort + "\r\n"
-            + "Connection:   keep-alive\r\n"
-            + "Accept:   application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5\r\n"
-            + "User-Agent:   FireFox/1.0\r\n"
-            + "Accept-Language:   en-US,en;q=0.8;q=0.6,en;q=0.4\r\n"
-            + "Accept-Charset:   ISO-8859-1,utf-8;q=0.7,*;q=0.3\r\n\r\n";
+        return PacketBuilder.create()
+            .appendRaw("GET ")
+            .appendRaw(path)
+            .appendRaw(" HTTP/1.1\r\n")
+            .appendRaw("Host:   ")
+            .appendRaw(host)
+            .appendRaw(hostPort)
+            .appendRaw("\r\n")
+            .appendRaw("Connection:   keep-alive\r\n")
+            .appendRaw("Accept:   application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5\r\n")
+            .appendRaw("User-Agent:   FireFox/1.0\r\n")
+            .appendRaw("Accept-Language:   en-US,en;q=0.8;q=0.6,en;q=0.4\r\n")
+            .appendRaw("Accept-Charset:   ISO-8859-1,utf-8;q=0.7,*;q=0.3\r\n\r\n")
+            .build();
     }
 
     public static String readHTTP(String url) {

@@ -48,7 +48,7 @@ public final class RepresentedRoomCache {
     public String cacheText() {
         PacketBuilder result = PacketBuilder.create().appendRaw(leadingText);
         for (RoomRecord record : records) {
-            result.appendRaw('\1').appendRaw(record.recordText()).appendRaw('\2');
+            result.appendRaw('\1').appendRaw(record.cacheRecordText()).appendRaw('\2');
         }
         return result.build();
     }
@@ -73,13 +73,14 @@ public final class RepresentedRoomCache {
         return null;
     }
 
-    private String recordField(long roomSlot, long fieldIndex) {
+    private RoomRecord roomRecordOrDefault(long roomSlot) {
         RoomRecord record = roomRecord(roomSlot);
-        return record == null ? "" : record.field(fieldIndex);
+        return record == null ? RoomRecord.empty(roomSlot) : record;
     }
 
     public long roomSlot(long roomSlot) {
-        return NumberUtils.parseLong(recordField(roomSlot, 0));
+        RoomRecord record = roomRecord(roomSlot);
+        return record == null ? 0L : record.roomSlot();
     }
 
     public List<Long> userEntityIds(long roomSlot) {
@@ -91,26 +92,26 @@ public final class RepresentedRoomCache {
     }
 
     private String activeUserMarkers(long roomSlot) {
-        return recordField(roomSlot, 1);
+        RoomRecord record = roomRecord(roomSlot);
+        return record == null ? "" : record.activeUserMarkers();
     }
 
     private String activeBotMarkers(long roomSlot) {
-        return recordField(roomSlot, 2);
+        RoomRecord record = roomRecord(roomSlot);
+        return record == null ? "" : record.activeBotMarkers();
     }
 
     private String movingUserMarkers(long roomSlot) {
-        return recordField(roomSlot, 4);
+        RoomRecord record = roomRecord(roomSlot);
+        return record == null ? "" : record.movingUserMarkers();
     }
 
     private String movingBotMarkers(long roomSlot) {
-        return recordField(roomSlot, 5);
+        RoomRecord record = roomRecord(roomSlot);
+        return record == null ? "" : record.movingBotMarkers();
     }
 
-    public RepresentedRoomCache setRecord(long roomSlot, String roomRecord) {
-        return setRecord(new RoomRecord(roomSlot, roomRecord));
-    }
-
-    private RepresentedRoomCache setRecord(RoomRecord roomRecord) {
+    public RepresentedRoomCache setRecord(RoomRecord roomRecord) {
         long roomSlot = roomRecord == null ? 0L : roomRecord.roomSlot();
         if (roomSlot <= 0L) {
             return this;
@@ -129,15 +130,7 @@ public final class RepresentedRoomCache {
         if (roomSlot <= 0L || entityIndex <= 0L) {
             return this;
         }
-        String markerText = "\1" + entityIndex + '\2';
-        int fieldIndex = occupantType == 2L ? 2 : 1;
-        int countIndex = 3;
-        String[] fields = ensureFieldCount(recordFields(roomSlot, defaultRoomFields(roomSlot)), countIndex);
-        if (!StringUtils.text(fields[fieldIndex]).contains(markerText)) {
-            fields[fieldIndex] = StringUtils.text(fields[fieldIndex]) + markerText;
-            fields[countIndex] = String.valueOf(NumberUtils.parseLong(fields[countIndex]) + 1L);
-        }
-        return setRecord(new RoomRecord(roomSlot, List.of(fields)));
+        return setRecord(roomRecordOrDefault(roomSlot).withOccupant(entityIndex, occupantType));
     }
 
     public Position movementPosition(long roomSlot, long entityIndex) {
@@ -145,18 +138,7 @@ public final class RepresentedRoomCache {
         if (roomRecord == null) {
             return Position.absent();
         }
-        List<String> fields = roomRecord.fields();
-        if (fields.size() < 5) {
-            return Position.absent();
-        }
-        String movementText = joinedFieldsFrom(fields, 4);
-        for (String part : movementText.split("\1", -1)) {
-            MovementRecord movementRecord = MovementRecord.fromText(part);
-            if (movementRecord.isValid() && movementRecord.entityIndex == entityIndex) {
-                return Position.found(movementRecord.positionX, movementRecord.positionY);
-            }
-        }
-        return Position.absent();
+        return roomRecord.movementPosition(entityIndex);
     }
 
     public RepresentedRoomCache moveOccupant(
@@ -171,12 +153,8 @@ public final class RepresentedRoomCache {
         if (roomSlot <= 0L || entityIndex <= 0L) {
             return this;
         }
-        int fieldIndex = occupantType == 2L ? 5 : 4;
-        String[] fields = ensureFieldCount(recordFields(roomSlot, defaultRoomFields(roomSlot)), fieldIndex);
-        String movementRecord = entityIndex + "\t" + positionX + "\t" + positionY + "\t" + directionValue + "\t" + movingValue;
-        fields[fieldIndex] = removeMovementRecord(StringUtils.text(fields[fieldIndex]), "\1" + entityIndex + '\t')
-            + '\1' + movementRecord + '\2';
-        return setRecord(new RoomRecord(roomSlot, List.of(fields)));
+        return setRecord(roomRecordOrDefault(roomSlot)
+            .withMovement(entityIndex, occupantType, positionX, positionY, directionValue, movingValue));
     }
 
     public RepresentedRoomCache moveOccupantsAt(
@@ -193,10 +171,9 @@ public final class RepresentedRoomCache {
             return this;
         }
         RepresentedRoomCache cache = this;
-        for (String record : movementText.split("\1", -1)) {
-            MovementRecord movement = MovementRecord.fromText(record);
-            if (movement.entityIndex > 0L && movement.positionX == fromX && movement.positionY == fromY) {
-                cache = cache.moveOccupant(roomSlot, movement.entityIndex, occupantType, toX, toY, directionValue, 0L);
+        for (MovementRecord movement : MovementRecord.recordsFromText(movementText)) {
+            if (movement.entityIndex() > 0L && movement.positionX() == fromX && movement.positionY() == fromY) {
+                cache = cache.moveOccupant(roomSlot, movement.entityIndex(), occupantType, toX, toY, directionValue, 0L);
             }
         }
         return cache;
@@ -213,133 +190,190 @@ public final class RepresentedRoomCache {
         if (roomSlot <= 0L || entityIndex <= 0L) {
             return this;
         }
-        String[] rawFields = ensureFieldCount(recordFields(roomSlot, defaultRoomFields(roomSlot)), 4);
-        String[] fields = new String[5];
-        for (int fieldIndex = 0; fieldIndex < 4; fieldIndex++) {
-            fields[fieldIndex] = rawFields[fieldIndex];
-        }
-        String movementText = joinedFieldsFrom(rawFields, 4);
-        fields[4] = removeMovementRecord(movementText, "\1" + entityIndex + '\t')
-            + '\1' + entityIndex + "\t" + positionX + "\t" + positionY + "\t" + directionValue + "\t" + movingValue + '\2';
-        return setRecord(new RoomRecord(roomSlot, List.of(fields)));
-    }
-
-    static String removeRecord(String cacheText, String markerText) {
-        String cache = StringUtils.text(cacheText);
-        String marker = StringUtils.text(markerText);
-        if (cache.isEmpty() || marker.isEmpty()) {
-            return cache;
-        }
-        int markerAt = cache.indexOf(marker);
-        while (markerAt >= 0) {
-            int recordStart = cache.lastIndexOf('\1', markerAt);
-            if (recordStart < 0) {
-                recordStart = markerAt;
-            }
-            int recordEnd = cache.indexOf('\2', markerAt + marker.length());
-            if (recordEnd < 0) {
-                recordEnd = markerAt + marker.length() - 1;
-            }
-            cache = cache.substring(0, recordStart) + cache.substring(recordEnd + 1);
-            markerAt = cache.indexOf(marker);
-        }
-        return cache;
-    }
-
-    private static String removeMovementRecord(String movementText, String markerText) {
-        String result = StringUtils.text(movementText);
-        String marker = StringUtils.text(markerText);
-        int markerAt = result.indexOf(marker);
-        while (markerAt >= 0) {
-            int endAt = result.indexOf('\2', markerAt + marker.length());
-            if (endAt < 0) {
-                result = result.substring(0, markerAt);
-            } else {
-                result = result.substring(0, markerAt) + result.substring(endAt + 1);
-            }
-            markerAt = result.indexOf(marker);
-        }
-        return result;
-    }
-
-    private static String[] ensureFieldCount(String[] fields, int lastIndex) {
-        if (fields.length > lastIndex) {
-            return fields;
-        }
-        String[] expanded = new String[lastIndex + 1];
-        for (int index = 0; index < expanded.length; index++) {
-            expanded[index] = index < fields.length ? fields[index] : "";
-        }
-        return expanded;
-    }
-
-    private static String joinedFieldsFrom(List<String> fields, int firstIndex) {
-        if (fields == null || firstIndex >= fields.size()) {
-            return "";
-        }
-        return String.join("\t", fields.subList(Math.max(0, firstIndex), fields.size()));
-    }
-
-    private static String joinedFieldsFrom(String[] fields, int firstIndex) {
-        if (fields == null || firstIndex >= fields.length) {
-            return "";
-        }
-        List<String> selectedFields = new ArrayList<>();
-        for (int fieldIndex = Math.max(0, firstIndex); fieldIndex < fields.length; fieldIndex++) {
-            selectedFields.add(StringUtils.text(fields[fieldIndex]));
-        }
-        return String.join("\t", selectedFields);
-    }
-
-    private String[] recordFields(long roomSlot, List<String> defaultFields) {
-        RoomRecord record = roomRecord(roomSlot);
-        if (record == null) {
-            return new RoomRecord(roomSlot, defaultFields).fields().toArray(String[]::new);
-        }
-        return record.fields().toArray(String[]::new);
-    }
-
-    private static List<String> defaultRoomFields(long roomSlot) {
-        return List.of(String.valueOf(roomSlot), "", "", "0");
+        return setRecord(roomRecordOrDefault(roomSlot)
+            .withFlattenedMovement(entityIndex, positionX, positionY, directionValue, movingValue));
     }
 
     private static List<Long> entityIdsFromMarkers(String markerText) {
-        Set<Long> entityIds = new LinkedHashSet<>();
-        for (String part : StringUtils.text(markerText).split("\1", -1)) {
-            long entityId = NumberUtils.parseLong(part);
-            if (entityId > 0L) {
-                entityIds.add(entityId);
-            }
-        }
-        return new ArrayList<>(entityIds);
+        return EntityMarkers.fromText(markerText).entityIds();
     }
 
     private static RoomRecord roomRecordFromText(String recordText) {
-        String text = StringUtils.text(recordText);
-        long roomSlot = NumberUtils.parseLong(StringUtils.delimitedField(text, '\t', 0));
-        return new RoomRecord(roomSlot, text);
+        return RoomRecord.fromCacheRecord(RoomCacheRecord.fromText(recordText));
     }
 
-    public record RoomRecord(long roomSlot, String recordText, List<String> fields) {
-        public RoomRecord(long roomSlot, String recordText) {
-            this(roomSlot, StringUtils.text(recordText), splitFields(recordText));
-        }
-
-        public RoomRecord(long roomSlot, List<String> fields) {
-            this(roomSlot, String.join("\t", normalizedFields(fields)), normalizedFields(fields));
-        }
-
+    public record RoomRecord(
+        long roomSlot,
+        int fieldCount,
+        String activeUserMarkers,
+        String activeBotMarkers,
+        String occupantCountText,
+        String movingUserMarkers,
+        String movingBotMarkers,
+        List<String> extraFields
+    ) {
         public RoomRecord {
-            recordText = StringUtils.text(recordText);
-            fields = normalizedFields(fields);
+            fieldCount = Math.max(0, fieldCount);
+            activeUserMarkers = StringUtils.text(activeUserMarkers);
+            activeBotMarkers = StringUtils.text(activeBotMarkers);
+            occupantCountText = StringUtils.text(occupantCountText);
+            movingUserMarkers = StringUtils.text(movingUserMarkers);
+            movingBotMarkers = StringUtils.text(movingBotMarkers);
+            extraFields = normalizedFields(extraFields);
         }
 
-        private String field(long fieldIndex) {
-            return fieldIndex >= 0 && fieldIndex < fields.size() ? fields.get((int) fieldIndex) : "";
+        private static RoomRecord fromCacheRecord(RoomCacheRecord record) {
+            return new RoomRecord(
+                record.roomSlot(),
+                record.fieldCount(),
+                record.activeUserMarkers(),
+                record.activeBotMarkers(),
+                record.occupantCountText(),
+                record.movingUserMarkers(),
+                record.movingBotMarkers(),
+                record.extraFields());
         }
 
-        private static List<String> splitFields(String recordText) {
-            return StringUtils.delimitedFields(recordText, '\t');
+        public static RoomRecord empty(long roomSlot) {
+            return new RoomRecord(roomSlot, 4, "", "", "0", "", "", List.of());
+        }
+
+        public static RoomRecord displayOnly(long roomSlot, String displayText) {
+            return new RoomRecord(roomSlot, 2, StringUtils.text(displayText), "", "", "", "", List.of());
+        }
+
+        public String displayText() {
+            return activeUserMarkers;
+        }
+
+        private Position movementPosition(long entityIndex) {
+            if (entityIndex <= 0L || fieldCount < 5) {
+                return Position.absent();
+            }
+            for (MovementRecord movementRecord : MovementRecord.recordsFromText(flattenedMovementText())) {
+                if (movementRecord.isValid() && movementRecord.entityIndex() == entityIndex) {
+                    return Position.found(movementRecord.positionX(), movementRecord.positionY());
+                }
+            }
+            return Position.absent();
+        }
+
+        private RoomRecord withOccupant(long entityIndex, long occupantType) {
+            EntityMarkers markers = EntityMarkers.fromText(occupantType == 2L ? activeBotMarkers : activeUserMarkers);
+            String updatedActiveUserMarkers = activeUserMarkers;
+            String updatedActiveBotMarkers = activeBotMarkers;
+            String updatedOccupantCountText = occupantCountText;
+            if (!markers.contains(entityIndex)) {
+                String markerText = markers.withEntity(entityIndex).markerText();
+                if (occupantType == 2L) {
+                    updatedActiveBotMarkers = markerText;
+                } else {
+                    updatedActiveUserMarkers = markerText;
+                }
+                updatedOccupantCountText = String.valueOf(NumberUtils.parseLong(occupantCountText) + 1L);
+            }
+            return new RoomRecord(
+                roomSlot,
+                Math.max(fieldCount, 4),
+                updatedActiveUserMarkers,
+                updatedActiveBotMarkers,
+                updatedOccupantCountText,
+                movingUserMarkers,
+                movingBotMarkers,
+                extraFields);
+        }
+
+        private RoomRecord withMovement(
+            long entityIndex,
+            long occupantType,
+            long positionX,
+            long positionY,
+            long directionValue,
+            long movingValue
+        ) {
+            boolean botMovement = occupantType == 2L;
+            String updatedMovingUserMarkers = movingUserMarkers;
+            String updatedMovingBotMarkers = movingBotMarkers;
+            if (botMovement) {
+                updatedMovingBotMarkers = MovementRecord.replaceRecord(
+                    movingBotMarkers,
+                    new MovementRecord(entityIndex, positionX, positionY, directionValue, movingValue));
+            } else {
+                updatedMovingUserMarkers = MovementRecord.replaceRecord(
+                    movingUserMarkers,
+                    new MovementRecord(entityIndex, positionX, positionY, directionValue, movingValue));
+            }
+            return new RoomRecord(
+                roomSlot,
+                Math.max(fieldCount, botMovement ? 6 : 5),
+                activeUserMarkers,
+                activeBotMarkers,
+                occupantCountText,
+                updatedMovingUserMarkers,
+                updatedMovingBotMarkers,
+                extraFields);
+        }
+
+        private RoomRecord withFlattenedMovement(
+            long entityIndex,
+            long positionX,
+            long positionY,
+            long directionValue,
+            long movingValue
+        ) {
+            String updatedMovingUserMarkers = MovementRecord.replaceRecord(
+                flattenedMovementText(),
+                new MovementRecord(entityIndex, positionX, positionY, directionValue, movingValue));
+            return new RoomRecord(
+                roomSlot,
+                5,
+                activeUserMarkers,
+                activeBotMarkers,
+                occupantCountText,
+                updatedMovingUserMarkers,
+                "",
+                List.of());
+        }
+
+        private String cacheRecordText() {
+            PacketBuilder text = PacketBuilder.create().appendRaw(roomSlot);
+            if (fieldCount >= 2) {
+                text.appendRaw('\t').appendRaw(activeUserMarkers);
+            }
+            if (fieldCount >= 3) {
+                text.appendRaw('\t').appendRaw(activeBotMarkers);
+            }
+            if (fieldCount >= 4) {
+                text.appendRaw('\t').appendRaw(occupantCountText);
+            }
+            if (fieldCount >= 5) {
+                text.appendRaw('\t').appendRaw(movingUserMarkers);
+            }
+            if (fieldCount >= 6) {
+                text.appendRaw('\t').appendRaw(movingBotMarkers);
+            }
+            if (fieldCount > 6) {
+                for (String extraField : extraFields) {
+                    text.appendRaw('\t').appendRaw(extraField);
+                }
+            }
+            return text.build();
+        }
+
+        private String flattenedMovementText() {
+            if (fieldCount < 5) {
+                return "";
+            }
+            PacketBuilder text = PacketBuilder.create().appendRaw(movingUserMarkers);
+            if (fieldCount >= 6) {
+                text.appendRaw('\t').appendRaw(movingBotMarkers);
+            }
+            if (fieldCount > 6) {
+                for (String extraField : extraFields) {
+                    text.appendRaw('\t').appendRaw(extraField);
+                }
+            }
+            return text.build();
         }
 
         private static List<String> normalizedFields(List<String> fields) {
@@ -347,6 +381,40 @@ public final class RepresentedRoomCache {
                 return List.of();
             }
             return fields.stream().map(StringUtils::text).toList();
+        }
+    }
+
+    private record RoomCacheRecord(
+        long roomSlot,
+        int fieldCount,
+        String activeUserMarkers,
+        String activeBotMarkers,
+        String occupantCountText,
+        String movingUserMarkers,
+        String movingBotMarkers,
+        List<String> extraFields
+    ) {
+        private RoomCacheRecord {
+            fieldCount = Math.max(0, fieldCount);
+            activeUserMarkers = StringUtils.text(activeUserMarkers);
+            activeBotMarkers = StringUtils.text(activeBotMarkers);
+            occupantCountText = StringUtils.text(occupantCountText);
+            movingUserMarkers = StringUtils.text(movingUserMarkers);
+            movingBotMarkers = StringUtils.text(movingBotMarkers);
+            extraFields = RoomRecord.normalizedFields(extraFields);
+        }
+
+        private static RoomCacheRecord fromText(String recordText) {
+            StringUtils.IndexedFields fields = StringUtils.indexedFields(recordText, '\t');
+            return new RoomCacheRecord(
+                fields.number(0),
+                fields.fieldCount(),
+                fields.text(1),
+                fields.text(2),
+                fields.text(3),
+                fields.text(4),
+                fields.text(5),
+                fields.fieldsFrom(6));
         }
     }
 
@@ -360,17 +428,105 @@ public final class RepresentedRoomCache {
         }
     }
 
-    private static final class MovementRecord {
-        private final long entityIndex;
-        private final long positionX;
-        private final long positionY;
-        private final boolean valid;
+    private record EntityMarkers(List<Long> entityIds) {
+        private EntityMarkers {
+            entityIds = entityIds == null ? List.of() : List.copyOf(entityIds);
+        }
 
-        private MovementRecord(long entityIndex, long positionX, long positionY, boolean valid) {
-            this.entityIndex = entityIndex;
-            this.positionX = positionX;
-            this.positionY = positionY;
-            this.valid = valid;
+        private static EntityMarkers fromText(String markerText) {
+            Set<Long> entityIds = new LinkedHashSet<>();
+            for (String part : StringUtils.delimitedFields(markerText, '\1')) {
+                long entityId = NumberUtils.parseLong(part);
+                if (entityId > 0L) {
+                    entityIds.add(entityId);
+                }
+            }
+            return new EntityMarkers(new ArrayList<>(entityIds));
+        }
+
+        private boolean contains(long entityId) {
+            return entityIds.contains(entityId);
+        }
+
+        private EntityMarkers withEntity(long entityId) {
+            if (entityId <= 0L || contains(entityId)) {
+                return this;
+            }
+            List<Long> updatedIds = new ArrayList<>(entityIds);
+            updatedIds.add(entityId);
+            return new EntityMarkers(updatedIds);
+        }
+
+        private String markerText() {
+            PacketBuilder text = PacketBuilder.create();
+            for (long entityId : entityIds) {
+                text.appendRaw('\1').appendRaw(entityId).appendRaw('\2');
+            }
+            return text.build();
+        }
+    }
+
+    private record MovementRecord(
+        long entityIndex,
+        long positionX,
+        long positionY,
+        long directionValue,
+        long movingValue,
+        boolean valid
+    ) {
+        private MovementRecord(long entityIndex, long positionX, long positionY, long directionValue, long movingValue) {
+            this(entityIndex, positionX, positionY, directionValue, movingValue, true);
+        }
+
+        private static List<MovementRecord> recordsFromText(String movementText) {
+            List<MovementRecord> records = new ArrayList<>();
+            for (String part : StringUtils.delimitedFields(movementText, '\1')) {
+                MovementRecord record = fromText(part);
+                if (record.isValid()) {
+                    records.add(record);
+                }
+            }
+            return records;
+        }
+
+        private static String replaceRecord(String movementText, MovementRecord replacement) {
+            if (replacement == null || replacement.entityIndex() <= 0L) {
+                return StringUtils.text(movementText);
+            }
+            List<MovementRecord> records = new ArrayList<>();
+            for (MovementRecord record : recordsFromText(movementText)) {
+                if (record.entityIndex() != replacement.entityIndex()) {
+                    records.add(record);
+                }
+            }
+            records.add(replacement);
+            return textFromRecords(records);
+        }
+
+        private static String textFromRecords(List<MovementRecord> records) {
+            PacketBuilder text = PacketBuilder.create();
+            if (records != null) {
+                for (MovementRecord record : records) {
+                    if (record != null && record.isValid()) {
+                        text.appendRaw('\1').appendRaw(record.recordText()).appendRaw('\2');
+                    }
+                }
+            }
+            return text.build();
+        }
+
+        private String recordText() {
+            return PacketBuilder.create()
+                .appendRaw(entityIndex)
+                .appendRaw('\t')
+                .appendRaw(positionX)
+                .appendRaw('\t')
+                .appendRaw(positionY)
+                .appendRaw('\t')
+                .appendRaw(directionValue)
+                .appendRaw('\t')
+                .appendRaw(movingValue)
+                .build();
         }
 
         private boolean isValid() {
@@ -378,12 +534,42 @@ public final class RepresentedRoomCache {
         }
 
         private static MovementRecord fromText(String recordText) {
-            String text = StringUtils.text(recordText).replace("\2", "");
+            MovementCacheRecord record = MovementCacheRecord.fromText(recordText);
             return new MovementRecord(
-                NumberUtils.parseLong(StringUtils.delimitedField(text, '\t', 0)),
-                NumberUtils.parseLong(StringUtils.delimitedField(text, '\t', 1)),
-                NumberUtils.parseLong(StringUtils.delimitedField(text, '\t', 2)),
-                text.indexOf('\t') >= 0 && text.indexOf('\t', text.indexOf('\t') + 1) >= 0);
+                record.entityIndex(),
+                record.positionX(),
+                record.positionY(),
+                record.directionValue(),
+                record.movingValue(),
+                record.isValid());
+        }
+    }
+
+    private record MovementCacheRecord(
+        long entityIndex,
+        long positionX,
+        long positionY,
+        long directionValue,
+        long movingValue,
+        int fieldCount
+    ) {
+        private static MovementCacheRecord fromText(String recordText) {
+            StringUtils.IndexedFields fields = StringUtils.indexedFields(normalizedMovementText(recordText), '\t');
+            return new MovementCacheRecord(
+                fields.number(0),
+                fields.number(1),
+                fields.number(2),
+                fields.number(3),
+                fields.number(4),
+                fields.fieldCount());
+        }
+
+        private boolean isValid() {
+            return fieldCount >= 3;
+        }
+
+        private static String normalizedMovementText(String recordText) {
+            return StringUtils.text(recordText).replace("\2", "");
         }
     }
 }

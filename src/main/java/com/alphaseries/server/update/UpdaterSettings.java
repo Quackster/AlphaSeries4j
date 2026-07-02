@@ -49,40 +49,22 @@ public final class UpdaterSettings {
     }
 
     public static String normalizeUpdateSql(String updateSql) {
-        return StringUtils.text(updateSql).replace("\r", "").replaceAll("(?i)INSERT INTO", "INSERT IGNORE INTO");
+        return StringUtils.withoutCarriageReturns(updateSql).replaceAll("(?i)INSERT INTO", "INSERT IGNORE INTO");
     }
 
     public String normalizedUpdateSql() {
         return normalizeUpdateSql(updateSql);
     }
 
-    public record UpdateEntry(String sourceText, String id, String title, String bodyText, long featureMode,
-                              long featureCost, boolean valid) {
+    public record UpdateEntry(String id, String title, String bodyText, long featureMode, long featureCost, boolean valid) {
         public UpdateEntry {
-            sourceText = StringUtils.text(sourceText);
             id = StringUtils.text(id);
             title = StringUtils.text(title);
             bodyText = StringUtils.text(bodyText);
         }
 
-        public static UpdateEntry fromFields(
-            String id,
-            String title,
-            String bodyText,
-            long featureMode,
-            long featureCost
-        ) {
-            String normalizedId = StringUtils.text(id);
-            String normalizedTitle = StringUtils.text(title);
-            String normalizedBodyText = StringUtils.text(bodyText);
-            return new UpdateEntry(
-                normalizedId + "\t" + normalizedTitle + "\t" + normalizedBodyText + "\t" + featureMode + "\t" + featureCost,
-                normalizedId,
-                normalizedTitle,
-                normalizedBodyText,
-                featureMode,
-                featureCost,
-                true);
+        public static UpdateEntry invalid() {
+            return new UpdateEntry("", "", "", 0L, 0L, false);
         }
 
     }

@@ -4,7 +4,6 @@ import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.messages.outgoing.NavigatorPayloads;
 import com.alphaseries.messages.outgoing.RoomPayloads;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -97,13 +96,37 @@ public final class RoomLookups {
         }
     }
 
-    public record RoomModelLoad(long modelId, List<String> initialPayloads) {
+    public static final class RoomModelInitialPayloads {
+        private final List<String> payloads;
+
+        public RoomModelInitialPayloads(List<String> payloads) {
+            this.payloads = List.copyOf(payloads == null ? List.of() : payloads);
+        }
+
+        public static RoomModelInitialPayloads empty() {
+            return new RoomModelInitialPayloads(List.of());
+        }
+
+        public boolean isEmpty() {
+            return payloads.isEmpty();
+        }
+
+        public boolean contains(String payload) {
+            return payloads.contains(payload);
+        }
+
+        public List<String> payloads() {
+            return payloads;
+        }
+    }
+
+    public record RoomModelLoad(long modelId, RoomModelInitialPayloads initialPayloads) {
         public RoomModelLoad {
-            initialPayloads = List.copyOf(initialPayloads == null ? List.of() : initialPayloads);
+            initialPayloads = initialPayloads == null ? RoomModelInitialPayloads.empty() : initialPayloads;
         }
 
         public static RoomModelLoad empty() {
-            return new RoomModelLoad(0L, List.of());
+            return new RoomModelLoad(0L, RoomModelInitialPayloads.empty());
         }
 
         public boolean valid() {
@@ -111,13 +134,37 @@ public final class RoomLookups {
         }
     }
 
-    public record RoomPresentationLoad(long modelId, List<String> initialPayloads) {
+    public static final class RoomPresentationInitialPayloads {
+        private final List<String> payloads;
+
+        public RoomPresentationInitialPayloads(List<String> payloads) {
+            this.payloads = List.copyOf(payloads == null ? List.of() : payloads);
+        }
+
+        public static RoomPresentationInitialPayloads empty() {
+            return new RoomPresentationInitialPayloads(List.of());
+        }
+
+        public boolean isEmpty() {
+            return payloads.isEmpty();
+        }
+
+        public boolean contains(String payload) {
+            return payloads.contains(payload);
+        }
+
+        public List<String> payloads() {
+            return payloads;
+        }
+    }
+
+    public record RoomPresentationLoad(long modelId, RoomPresentationInitialPayloads initialPayloads) {
         public RoomPresentationLoad {
-            initialPayloads = List.copyOf(initialPayloads == null ? List.of() : initialPayloads);
+            initialPayloads = initialPayloads == null ? RoomPresentationInitialPayloads.empty() : initialPayloads;
         }
 
         public static RoomPresentationLoad empty() {
-            return new RoomPresentationLoad(0L, List.of());
+            return new RoomPresentationLoad(0L, RoomPresentationInitialPayloads.empty());
         }
 
         public boolean valid() {
@@ -142,23 +189,23 @@ public final class RoomLookups {
         return target;
     }
 
-    public static boolean userOwnsRoom(String userId, long roomId, RoomDao rooms) {
-        if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId)) || roomId <= 0L || rooms == null) {
+    public static boolean userOwnsRoom(long userId, long roomId, RoomDao rooms) {
+        if (userId <= 0L || roomId <= 0L || rooms == null) {
             return false;
         }
         try {
-            return rooms.userOwnsRoom(NumberUtils.parseLong(userId), roomId);
+            return rooms.userOwnsRoom(userId, roomId);
         } catch (Exception ignored) {
             return false;
         }
     }
 
-    public static boolean userHasRoomRight(String userId, long roomId, RoomDao rooms) {
-        if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId)) || roomId <= 0L || rooms == null) {
+    public static boolean userHasRoomRight(long userId, long roomId, RoomDao rooms) {
+        if (userId <= 0L || roomId <= 0L || rooms == null) {
             return false;
         }
         try {
-            return rooms.userHasRoomRight(NumberUtils.parseLong(userId), roomId);
+            return rooms.userHasRoomRight(userId, roomId);
         } catch (Exception ignored) {
             return false;
         }
@@ -318,7 +365,7 @@ public final class RoomLookups {
                 payloads.add("GV" + modelPayload + '\2');
                 payloads.add("GWH" + modelPayload + '\2' + "H");
             }
-            return new RoomModelLoad(roomEntry.modelId(), payloads);
+            return new RoomModelLoad(roomEntry.modelId(), new RoomModelInitialPayloads(payloads));
         } catch (Exception ignored) {
             return RoomModelLoad.empty();
         }
@@ -328,15 +375,14 @@ public final class RoomLookups {
      * Original function: Proc_6_79_72A430.
      */
     public static RoomPresentationLoad roomPresentationLoad(
-        String userId,
+        long userId,
         long roomId,
         boolean hasControl,
         String eventInfoPayload,
         RoomDao rooms
     ) {
         try {
-            long userIdValue = NumberUtils.parseLong(userId);
-            if (userIdValue <= 0L || roomId <= 0L || rooms == null) {
+            if (userId <= 0L || roomId <= 0L || rooms == null) {
                 return RoomPresentationLoad.empty();
             }
             RoomDao.RoomPresentationState roomState = rooms.roomPresentationState(roomId).orElse(null);
@@ -347,7 +393,7 @@ public final class RoomLookups {
             if (roomRate < 0L) {
                 roomRate = 0L;
             }
-            boolean hasVoted = rooms.hasRatedRoom(userIdValue, roomId);
+            boolean hasVoted = rooms.hasRatedRoom(userId, roomId);
             long ratingPayloadValue = hasVoted ? -1L : roomRate;
             String modelPayload = RoomWire.normalizeModelMap(roomState.modelMap());
             List<String> payloads = new ArrayList<>();
@@ -360,7 +406,7 @@ public final class RoomLookups {
             if (hasControl) {
                 payloads.add("@j");
             }
-            if (roomState.ownerUserId() == userIdValue) {
+            if (roomState.ownerUserId() == userId) {
                 payloads.add("@o");
             }
             if (!modelPayload.isEmpty()) {
@@ -371,7 +417,7 @@ public final class RoomLookups {
                 roomState.disableWalls(),
                 roomState.thicknessFloor(),
                 roomState.thicknessWallpaper()));
-            return new RoomPresentationLoad(roomState.modelId(), payloads);
+            return new RoomPresentationLoad(roomState.modelId(), new RoomPresentationInitialPayloads(payloads));
         } catch (Exception ignored) {
             return RoomPresentationLoad.empty();
         }
@@ -380,16 +426,15 @@ public final class RoomLookups {
     /**
      * Original function: Proc_6_63_721050.
      */
-    public static String rateRoomPayload(String userId, long roomId, long voteValue, RoomDao rooms) {
+    public static String rateRoomPayload(long userId, long roomId, long voteValue, RoomDao rooms) {
         try {
-            long userIdValue = NumberUtils.parseLong(userId);
-            if (userIdValue <= 0L || roomId <= 0L || voteValue != 1L || rooms == null) {
+            if (userId <= 0L || roomId <= 0L || voteValue != 1L || rooms == null) {
                 return "";
             }
-            if (rooms.userRatedRoom(userIdValue, roomId)) {
+            if (rooms.userRatedRoom(userId, roomId)) {
                 return "";
             }
-            rooms.insertRoomRate(userIdValue, roomId);
+            rooms.insertRoomRate(userId, roomId);
             long roomRate = rooms.roomRate(roomId);
             if (roomRate < 0L) {
                 roomRate = 0L;
@@ -504,14 +549,13 @@ public final class RoomLookups {
     /**
      * Original function: Proc_6_47_714F60.
      */
-    public static String setHomeRoomPayload(String userId, long roomId, UserDao users) {
+    public static String setHomeRoomPayload(long userId, long roomId, UserDao users) {
         try {
-            long numericUserId = NumberUtils.parseLong(userId);
-            if (numericUserId <= 0L || roomId <= 0L) {
+            if (userId <= 0L || roomId <= 0L) {
                 return "";
             }
             if (users != null) {
-                users.updateHomeRoom(numericUserId, roomId);
+                users.updateHomeRoom(userId, roomId);
             }
             return RoomPayloads.homeRoom(roomId);
         } catch (Exception ignored) {
@@ -540,15 +584,14 @@ public final class RoomLookups {
      * Original function: Proc_6_48_7151E0.
      */
     public static RoomEventChange createRoomEvent(
-        String userId,
+        long userId,
         long roomId,
         RoomEventPayload event,
         String timeFormat,
         RoomDao rooms
     ) {
         try {
-            long numericUserId = NumberUtils.parseLong(userId);
-            if (numericUserId <= 0L || roomId <= 0L) {
+            if (userId <= 0L || roomId <= 0L) {
                 return RoomEventChange.empty();
             }
             long doorStatus = rooms == null ? 0L : rooms.doorStatus(roomId);
@@ -561,7 +604,7 @@ public final class RoomLookups {
             if (rooms != null) {
                 rooms.insertRoomEvent(
                     roomId,
-                    numericUserId,
+                    userId,
                     event.eventName(),
                     event.eventDescription(),
                     event.categoryId(),
@@ -579,15 +622,14 @@ public final class RoomLookups {
      * Original function: Proc_6_49_715D30.
      */
     public static RoomEventChange editRoomEvent(
-        String userId,
+        long userId,
         long roomId,
         RoomEventPayload event,
         String timeFormat,
         RoomDao rooms
     ) {
         try {
-            long numericUserId = NumberUtils.parseLong(userId);
-            if (numericUserId <= 0L || roomId <= 0L) {
+            if (userId <= 0L || roomId <= 0L) {
                 return RoomEventChange.empty();
             }
             if (event == null) {
@@ -596,7 +638,7 @@ public final class RoomLookups {
             if (rooms != null) {
                 rooms.updateRoomEvent(
                     roomId,
-                    numericUserId,
+                    userId,
                     event.eventName(),
                     event.eventDescription(),
                     event.tagOne(),
@@ -611,9 +653,9 @@ public final class RoomLookups {
     /**
      * Original function: Proc_6_104_74AB60.
      */
-    public static String creatableRoomCountPayload(String userId, long maxOwnedRooms, RoomDao rooms) {
+    public static String creatableRoomCountPayload(long userId, long maxOwnedRooms, RoomDao rooms) {
         try {
-            long ownedRoomCount = rooms == null ? 0L : rooms.ownedRoomCount(NumberUtils.parseLong(userId));
+            long ownedRoomCount = userId <= 0L || rooms == null ? 0L : rooms.ownedRoomCount(userId);
             return RoomPayloads.creatableRoomCount(maxOwnedRooms, ownedRoomCount);
         } catch (Exception ignored) {
             return RoomPayloads.creatableRoomCount(maxOwnedRooms, 0L);
@@ -624,18 +666,17 @@ public final class RoomLookups {
      * Original function: Proc_6_105_74AD50.
      */
     public static CreatedRoom createRoom(
-        String userId,
+        long userId,
         RoomWire.CreateRoomRequest request,
         long maxOwnedRooms,
         long hcLevel,
         RoomDao rooms
     ) {
         try {
-            long userIdValue = NumberUtils.parseLong(userId);
-            if (userIdValue <= 0L || rooms == null) {
+            if (userId <= 0L || rooms == null) {
                 return CreatedRoom.empty();
             }
-            long ownedRoomCount = rooms.ownedRoomCount(userIdValue);
+            long ownedRoomCount = rooms.ownedRoomCount(userId);
             if (maxOwnedRooms > 0L && ownedRoomCount >= maxOwnedRooms) {
                 return CreatedRoom.empty();
             }
@@ -647,7 +688,7 @@ public final class RoomLookups {
                 return CreatedRoom.empty();
             }
             long visitorsMax = model.visitorsMax() <= 0L ? 25L : model.visitorsMax();
-            rooms.insertRoom(userIdValue, request.roomName(), visitorsMax, model.modelId());
+            rooms.insertRoom(userId, request.roomName(), visitorsMax, model.modelId());
             long roomId = rooms.newestRoomId();
             if (roomId <= 0L) {
                 return CreatedRoom.empty();
@@ -697,14 +738,14 @@ public final class RoomLookups {
     /**
      * Original function: Proc_6_108_74D800.
      */
-    public static String favouriteRoomIdsPayload(String userId, long maxFavorites, RoomDao rooms) {
+    public static String favouriteRoomIdsPayload(long userId, long maxFavorites, RoomDao rooms) {
         try {
             long resolvedMaxFavorites = maxFavorites <= 0L ? 30L : maxFavorites;
-            if (rooms == null) {
+            if (userId <= 0L || rooms == null) {
                 return "";
             }
             return NavigatorPayloads.favouriteRoomIds(
-                rooms.favouriteRoomIds(NumberUtils.parseLong(userId), resolvedMaxFavorites),
+                rooms.favouriteRoomIds(userId, resolvedMaxFavorites),
                 resolvedMaxFavorites).payload();
         } catch (Exception ignored) {
             return "";
@@ -714,10 +755,13 @@ public final class RoomLookups {
     /**
      * Original function: Proc_6_109_74DBD0.
      */
-    public static String removeFavouriteRoomPayload(String userId, long roomId, RoomDao rooms) {
+    public static String removeFavouriteRoomPayload(long userId, long roomId, RoomDao rooms) {
         try {
+            if (userId <= 0L || roomId <= 0L) {
+                return "";
+            }
             if (rooms != null) {
-                rooms.deleteFavouriteRoom(NumberUtils.parseLong(userId), roomId);
+                rooms.deleteFavouriteRoom(userId, roomId);
             }
             return RoomPayloads.favouriteRemoved(roomId);
         } catch (Exception ignored) {
@@ -728,10 +772,13 @@ public final class RoomLookups {
     /**
      * Original function: Proc_6_110_74DDA0.
      */
-    public static String addFavouriteRoomPayload(String userId, long roomId, RoomDao rooms) {
+    public static String addFavouriteRoomPayload(long userId, long roomId, RoomDao rooms) {
         try {
+            if (userId <= 0L || roomId <= 0L) {
+                return "";
+            }
             if (rooms != null) {
-                rooms.insertFavouriteRoom(NumberUtils.parseLong(userId), roomId);
+                rooms.insertFavouriteRoom(userId, roomId);
             }
             return RoomPayloads.favouriteAdded(roomId);
         } catch (Exception ignored) {

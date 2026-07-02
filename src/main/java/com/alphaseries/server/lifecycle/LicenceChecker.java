@@ -1,6 +1,7 @@
 package com.alphaseries.server.lifecycle;
 
 import com.alphaseries.server.http.PrivSockHTTP;
+import com.alphaseries.util.IdentityEncoding;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.RandomUtils;
 import com.alphaseries.util.StringUtils;
@@ -9,35 +10,32 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public final class LicenceChecker {
     public static final String LICENCE_TIME_FORMAT = "yyyy-mm-dd_h-mm-ss";
     public static final String LICENCE_ENDPOINT_ENV = "ALPHASERIES_LICENCE_ENDPOINT";
     public static final String DEFAULT_LICENCE_ENDPOINT = "http://www.alpha-series.com/check_product_sep11";
     private static LicenceCheckState licenceCheckState = LicenceCheckState.empty();
-    public static String lastLicenceFailureMessage = "";
+    private static String lastLicenceFailureMessage = "";
     private static LicenceHttpFetcher licenceHttpFetcher = LicenceChecker::readHttp;
 
     private LicenceChecker() {
     }
 
     public interface LicenceHttpFetcher {
-        String read(String requestUrl, int action);
+        String read(String requestUrl);
     }
 
-    public static final class LicenceCheckContext {
-        public final String productKey;
-        public final String version;
-        public final LocalDateTime localTime;
-
+    public record LicenceCheckContext(String productKey, String version, LocalDateTime localTime) {
         public LicenceCheckContext(String productKey, String version) {
             this(productKey, version, LocalDateTime.now());
         }
 
-        public LicenceCheckContext(String productKey, String version, LocalDateTime localTime) {
-            this.productKey = StringUtils.text(productKey);
-            this.version = StringUtils.text(version);
-            this.localTime = localTime == null ? LocalDateTime.now() : localTime;
+        public LicenceCheckContext {
+            productKey = StringUtils.text(productKey);
+            version = StringUtils.text(version);
+            localTime = localTime == null ? LocalDateTime.now() : localTime;
         }
     }
 
@@ -45,7 +43,7 @@ public final class LicenceChecker {
         licenceHttpFetcher = fetcher == null ? LicenceChecker::readHttp : fetcher;
     }
 
-    public static String readHttp(String requestUrl, int action) {
+    public static String readHttp(String requestUrl) {
         return PrivSockHTTP.readHTTP(StringUtils.text(requestUrl));
     }
 
@@ -63,39 +61,15 @@ public final class LicenceChecker {
             saltValue = 1L;
         }
         long markerValue = RandomUtils.longInclusive(0x5A, 0x41);
-        return buildLicenceToken(sourceValue, saltValue, markerValue, null);
-    }
-
-    public static String buildLicenceToken(String sourceValue, long saltValue, long markerValue, String fillerCharacters) {
-        String source = StringUtils.text(sourceValue);
-        long salt = saltValue == 0L ? 1L : saltValue;
-        String fillers = StringUtils.text(fillerCharacters);
-        StringBuilder token = new StringBuilder();
-        token.append(source.length() + salt).append((char) markerValue);
-        for (int index = 0; index < source.length(); index++) {
-            char filler = index < fillers.length() ? fillers.charAt(index) : (char) markerValue;
-            token.append(filler);
-            token.append(source.charAt(index) * salt * markerValue);
-        }
-        return token.toString();
+        return IdentityEncoding.licenceToken(sourceValue, saltValue, markerValue, null);
     }
 
     public static void markLicenceUnavailable() {
         lastLicenceFailureMessage = "Das Lizenzsystem ist zurzeit nicht erreichbar. Versuch es sp\u00e4ter wieder!";
     }
 
-    public static String decodeShiftedLicenceText(String encodedValue) {
-        String encodedText = StringUtils.text(encodedValue);
-        if (encodedText.isEmpty()) {
-            return "";
-        }
-
-        int shiftValue = encodedText.charAt(0) - 87;
-        StringBuilder decoded = new StringBuilder();
-        for (int index = 1; index < encodedText.length(); index++) {
-            decoded.append((char) (encodedText.charAt(index) - shiftValue));
-        }
-        return decoded.toString();
+    public static String lastLicenceFailureMessage() {
+        return lastLicenceFailureMessage;
     }
 
     public static int licenceRankValue(String keyName) {
@@ -114,7 +88,7 @@ public final class LicenceChecker {
         try {
             long checksumSalt = licenceChecksumSalt();
             String requestUrl = buildLicenceRequestUrl(context);
-            String responseText = licenceHttpFetcher.read(requestUrl, 1);
+            String responseText = licenceHttpFetcher.read(requestUrl);
             return applyLicenceResponse(responseText, LICENCE_TIME_FORMAT, checksumSalt);
         } catch (Exception ex) {
             markLicenceUnavailable();
@@ -136,7 +110,7 @@ public final class LicenceChecker {
     }
 
     public static String buildLicenceRequestUrl(LicenceCheckContext context, String endpoint) {
-        String timeFormatText = context.localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd_H-mm-ss"));
+        String timeFormatText = context.localTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_H-mm-ss"));
         String timePrefix = String.valueOf(RandomUtils.longInclusive(0x9C4, 0x3E8))
             + RandomUtils.longInclusive(0x9C4, 0x3E8);
         String tokenSeed = RandomUtils.longInclusive(0x9C4, 0x3E8)
@@ -144,8 +118,8 @@ public final class LicenceChecker {
             + "/" + RandomUtils.longInclusive(0x9C4, 0x3E8) + "/L:";
         return StringUtils.text(endpoint) + "?local_time="
             + urlEncode(timePrefix + timeFormatText + ":")
-            + "&version=" + urlEncode(context.version)
-            + "&productKey=" + urlEncode(context.productKey)
+            + "&version=" + urlEncode(context.version())
+            + "&productKey=" + urlEncode(context.productKey())
             + "&token=" + urlEncode(randomisedLicenceToken(tokenSeed));
     }
 
@@ -162,12 +136,12 @@ public final class LicenceChecker {
         if (marker.isEmpty()) {
             return response;
         }
-        String[] blocks = response.split(java.util.regex.Pattern.quote(marker), -1);
+        List<String> blocks = StringUtils.delimitedFields(response, marker);
         String licenseBlock;
-        if (blocks.length >= 4) {
-            licenseBlock = blocks[3].replace("--*-", "\r").replace("*-*-", "\n");
-        } else if (blocks.length >= 2) {
-            licenseBlock = blocks[1];
+        if (blocks.size() >= 4) {
+            licenseBlock = blocks.get(3).replace("--*-", "\r").replace("*-*-", "\n");
+        } else if (blocks.size() >= 2) {
+            licenseBlock = blocks.get(1);
         } else {
             licenseBlock = response;
         }
@@ -175,7 +149,7 @@ public final class LicenceChecker {
     }
 
     public static String licenceCacheTextFromBlock(String licenseBlock) {
-        return "\r" + StringUtils.text(licenseBlock).replace('\n', '\r') + "\r";
+        return "\r" + StringUtils.newlinesAsCarriageReturns(licenseBlock) + "\r";
     }
 
     public static String blockedLicenceMessage(String responseText) {
@@ -210,13 +184,15 @@ public final class LicenceChecker {
 
     public static boolean licenceChecksumValid(String licenseBlock, long checksumSalt) {
         String block = StringUtils.text(licenseBlock);
-        String[] parts = block.split("-", -1);
-        if (parts.length < 3 || block.length() < 14) {
+        int firstDashAt = block.indexOf('-');
+        int secondDashAt = firstDashAt < 0 ? -1 : block.indexOf('-', firstDashAt + 1);
+        if (secondDashAt < 0 || block.length() < 14) {
             return true;
         }
-        long licenseCheck = NumberUtils.parseLong(parts[2])
+        StringUtils.IndexedFields fields = StringUtils.indexedFields(block, '-');
+        long licenseCheck = fields.number(2)
             - NumberUtils.parseLong(StringUtils.mid(block, 9, 6))
-            + NumberUtils.parseLong(parts[1])
+            + fields.number(1)
             - checksumSalt;
         return licenseCheck == 0L;
     }

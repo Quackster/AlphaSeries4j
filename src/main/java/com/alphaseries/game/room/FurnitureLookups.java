@@ -945,7 +945,9 @@ public final class FurnitureLookups {
             }
             long productId = wallState.productId();
             long currentState = NumberUtils.parseLong(wallState.sign());
-            long stateCount = catalogRegistry == null ? 0L : NumberUtils.parseLong(catalogRegistry.productCell(productId, 5));
+            long stateCount = catalogRegistry == null
+                ? 0L
+                : catalogRegistry.product(productId).map(CatalogRegistry.Product::stateCount).orElse(0L);
             if (stateCount <= 0L) {
                 stateCount = productCache.stateCount(productId);
             }

@@ -1,15 +1,15 @@
 package com.alphaseries.server.mus;
 
+import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 public final class MusPayloads {
     private MusPayloads() {
     }
 
-    public record ClientFrame(String command, String socketIndexText, String clientPayload) {
+    public record ClientFrame(String command, long socketIndex, String clientPayload) {
         public ClientFrame {
             command = StringUtils.text(command);
-            socketIndexText = StringUtils.text(socketIndexText);
             clientPayload = StringUtils.text(clientPayload);
         }
 
@@ -29,18 +29,20 @@ public final class MusPayloads {
     public static ClientFrame clientFrame(String frameText) {
         String payload = StringUtils.text(frameText);
         if (payload.startsWith("DATA\6")) {
-            String[] fields = payload.split("\6", 3);
-            if (fields.length >= 3) {
-                int packetEnd = fields[2].indexOf('\7');
-                return new ClientFrame("DATA", fields[1],
-                    packetEnd >= 0 ? fields[2].substring(0, packetEnd) : fields[2]);
+            String socketIndexValue = StringUtils.indexedFields(payload, '\6').text(1);
+            int payloadStart = payload.indexOf('\6', "DATA\6".length());
+            if (payloadStart >= 0) {
+                String clientPayload = payload.substring(payloadStart + 1);
+                int packetEnd = clientPayload.indexOf('\7');
+                return new ClientFrame("DATA", NumberUtils.parseLong(socketIndexValue),
+                    packetEnd >= 0 ? clientPayload.substring(0, packetEnd) : clientPayload);
             }
         }
         if (payload.startsWith("SHUTDOWN\6")) {
-            String socketIndexText = payload.substring("SHUTDOWN\6".length()).replace("\7", "");
-            return new ClientFrame("SHUTDOWN", socketIndexText, "");
+            String socketIndexValue = payload.substring("SHUTDOWN\6".length()).replace("\7", "");
+            return new ClientFrame("SHUTDOWN", NumberUtils.parseLong(socketIndexValue), "");
         }
-        return new ClientFrame("", "", payload);
+        return new ClientFrame("", 0L, payload);
     }
 
     public static String clientPayload(ClientFrame frame) {

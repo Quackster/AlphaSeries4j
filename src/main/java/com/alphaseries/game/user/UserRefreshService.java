@@ -6,8 +6,6 @@ import com.alphaseries.db.MySQL;
 import com.alphaseries.game.session.SessionState;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.server.mus.MusConnectionManager;
-import com.alphaseries.util.NumberUtils;
-import com.alphaseries.util.StringUtils;
 
 import java.sql.SQLException;
 
@@ -30,17 +28,16 @@ public final class UserRefreshService {
     /**
      * Original function: Proc_10_16_80C480.
      */
-    public static long sendCreditsRefresh(String userId) {
+    public static long sendCreditsRefresh(long userId) {
         try {
-            String userIdText = StringUtils.text(userId);
-            if (userIdText.isEmpty()) {
+            if (userId <= 0L) {
                 return 0L;
             }
-            long socketIndex = SessionState.instance().linkedSocketIndex(userIdText);
+            long socketIndex = SessionState.instance().linkedSocketIndex(userId);
             if (socketIndex == 0L) {
                 return 0L;
             }
-            long creditsValue = userDao().credits(NumberUtils.parseLong(userIdText));
+            long creditsValue = userDao().credits(userId);
             MusConnectionManager.instance().sendData((int) socketIndex, creditsRefreshPayload(creditsValue));
             return 1L;
         } catch (Exception ex) {
@@ -51,21 +48,19 @@ public final class UserRefreshService {
     /**
      * Original function: Proc_10_17_80C6B0.
      */
-    public static long sendActivityPointRefreshes(String userId) {
+    public static long sendActivityPointRefreshes(long userId) {
         try {
-            String userIdText = StringUtils.text(userId);
-            if (userIdText.isEmpty()) {
+            if (userId <= 0L) {
                 return 0L;
             }
-            long socketIndex = SessionState.instance().linkedSocketIndex(userIdText);
+            long socketIndex = SessionState.instance().linkedSocketIndex(userId);
             if (socketIndex == 0L) {
                 return 0L;
             }
             UserDao users = userDao();
-            long numericUserId = NumberUtils.parseLong(userIdText);
             long sentCount = 0L;
             for (long pointType = 0L; pointType <= 4L; pointType++) {
-                long pointsValue = users.activityPoints(numericUserId, pointType);
+                long pointsValue = users.activityPoints(userId, pointType);
                 MusConnectionManager.instance().sendData((int) socketIndex,
                     activityPointRefreshPayload(pointType, pointsValue));
                 sentCount++;
@@ -85,13 +80,12 @@ public final class UserRefreshService {
      */
     public static long validateEmailAndRefresh(long userId) {
         try {
-            String userIdText = String.valueOf(userId);
             if (userId <= 0L) {
                 return 0L;
             }
             UserDao userDao = userDao();
             userDao.markEmailValidated(userId);
-            long socketIndex = SessionState.instance().linkedSocketIndex(userIdText);
+            long socketIndex = SessionState.instance().linkedSocketIndex(userId);
             if (socketIndex <= 0L) {
                 return 0L;
             }
@@ -110,20 +104,19 @@ public final class UserRefreshService {
     /**
      * Original function: Proc_10_22_80D460.
      */
-    public static long sendUserIdentityRefresh(String requestedUserId) {
+    public static long sendUserIdentityRefresh(long requestedUserId) {
         try {
-            String requestedUserIdText = StringUtils.text(requestedUserId);
-            if (requestedUserIdText.isEmpty() || "0".equals(requestedUserIdText)) {
+            if (requestedUserId <= 0L) {
                 return 0L;
             }
-            UserDao.UserIdentity identity = userDao().findIdentity(NumberUtils.parseLong(requestedUserIdText)).orElse(null);
+            UserDao.UserIdentity identity = userDao().findIdentity(requestedUserId).orElse(null);
             if (identity == null) {
                 return 0L;
             }
             long userId = identity.userId();
             long socketIndex = identity.socketIndex();
             if (socketIndex <= 0L) {
-                socketIndex = SessionState.instance().linkedSocketIndex(String.valueOf(userId));
+                socketIndex = SessionState.instance().linkedSocketIndex(userId);
             }
             if (socketIndex <= 0L) {
                 return 0L;

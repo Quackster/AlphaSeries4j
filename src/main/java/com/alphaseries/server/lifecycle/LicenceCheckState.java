@@ -4,6 +4,7 @@ import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class LicenceCheckState {
@@ -78,8 +79,8 @@ public final class LicenceCheckState {
         return values;
     }
 
-    private static String[] entries(String cacheText) {
-        return StringUtils.text(cacheText).replace('\n', '\r').split("\r", -1);
+    private static List<String> entries(String cacheText) {
+        return StringUtils.delimitedFields(StringUtils.newlinesAsCarriageReturns(cacheText), '\r');
     }
 
     private static int settingSeparator(String entry) {

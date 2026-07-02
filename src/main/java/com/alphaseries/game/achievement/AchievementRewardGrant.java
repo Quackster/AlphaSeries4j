@@ -1,6 +1,5 @@
 package com.alphaseries.game.achievement;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public record AchievementRewardGrant(
@@ -9,12 +8,14 @@ public record AchievementRewardGrant(
     long rewardType,
     long rewardIncrease,
     long scoreIncrease,
-    List<String> deliveryPayloads
+    DeliveryPayloads deliveryPayloads
 ) {
     public AchievementRewardGrant {
         rewardPayload = rewardPayload == null ? "" : rewardPayload;
         awardPayload = awardPayload == null ? "" : awardPayload;
-        deliveryPayloads = deliveryPayloads == null ? List.of() : List.copyOf(deliveryPayloads);
+        deliveryPayloads = deliveryPayloads == null
+            ? new DeliveryPayloads(rewardPayload, awardPayload)
+            : deliveryPayloads;
     }
 
     public AchievementRewardGrant(
@@ -25,7 +26,7 @@ public record AchievementRewardGrant(
         long scoreIncrease
     ) {
         this(rewardPayload, awardPayload, rewardType, rewardIncrease, scoreIncrease,
-            deliveryPayloads(rewardPayload, awardPayload));
+            new DeliveryPayloads(rewardPayload, awardPayload));
     }
 
     public boolean valid() {
@@ -36,14 +37,23 @@ public record AchievementRewardGrant(
         return !awardPayload.isEmpty();
     }
 
-    public static List<String> deliveryPayloads(String rewardPayload, String awardPayload) {
-        List<String> payloads = new ArrayList<>();
-        if (rewardPayload != null && !rewardPayload.isEmpty()) {
-            payloads.add(rewardPayload);
+    public record DeliveryPayloads(String rewardPayload, String awardPayload) {
+        public DeliveryPayloads {
+            rewardPayload = rewardPayload == null ? "" : rewardPayload;
+            awardPayload = awardPayload == null ? "" : awardPayload;
         }
-        if (awardPayload != null && !awardPayload.isEmpty()) {
-            payloads.add(awardPayload);
+
+        public List<String> payloads() {
+            if (rewardPayload.isEmpty() && awardPayload.isEmpty()) {
+                return List.of();
+            }
+            if (rewardPayload.isEmpty()) {
+                return List.of(awardPayload);
+            }
+            if (awardPayload.isEmpty()) {
+                return List.of(rewardPayload);
+            }
+            return List.of(rewardPayload, awardPayload);
         }
-        return List.copyOf(payloads);
     }
 }

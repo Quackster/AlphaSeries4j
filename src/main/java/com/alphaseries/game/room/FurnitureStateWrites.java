@@ -3,7 +3,6 @@ package com.alphaseries.game.room;
 import com.alphaseries.dao.mysql.FurnitureDao;
 import com.alphaseries.game.wired.WiredPayloads;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -38,9 +37,7 @@ public final class FurnitureStateWrites {
             }
         }
         FurnitureRoomCache.State state = FurnitureRoomCache.stateWrite(
-            sourceState.pendingRoomCache,
-            sourceState.pendingFurnitureCache,
-            sourceState.representedRoomCache,
+            sourceState,
             resolvedRoomId,
             furnitureId,
             StringUtils.text(stateText));
@@ -60,13 +57,7 @@ public final class FurnitureStateWrites {
             return sourceState;
         }
         try {
-            FurnitureRoomCache.State state = FurnitureRoomCache.stateCache(
-                sourceState.pendingRoomCache,
-                sourceState.pendingFurnitureCache,
-                sourceState.representedRoomCache,
-                roomId,
-                furnitureId,
-                stateValue);
+            FurnitureRoomCache.State state = FurnitureRoomCache.stateCache(sourceState, roomId, furnitureId, stateValue);
             deleteRoomCaches(roomId);
             return state;
         } catch (Exception ignored) {
@@ -94,7 +85,7 @@ public final class FurnitureStateWrites {
         if (effectiveSelectedIds.isEmpty()) {
             return new WiredStateApplyResult(0L, state, List.of());
         }
-        long stateValue = NumberUtils.parseLong((StringUtils.text(parameterText) + ";").split(";", -1)[0]);
+        long stateValue = WiredPayloads.stateParameterValue(parameterText);
         long appliedCount = 0L;
         List<String> broadcastPayloads = new ArrayList<>();
         for (long furnitureId : effectiveSelectedIds) {
@@ -120,12 +111,7 @@ public final class FurnitureStateWrites {
             return sourceState;
         }
         try {
-            FurnitureRoomCache.State state = FurnitureRoomCache.trackMarker(
-                sourceState.pendingRoomCache,
-                sourceState.pendingFurnitureCache,
-                sourceState.representedRoomCache,
-                roomId,
-                furnitureId);
+            FurnitureRoomCache.State state = FurnitureRoomCache.trackMarker(sourceState, roomId, furnitureId);
             deleteRoomCaches(roomId);
             return state;
         } catch (Exception ignored) {
@@ -141,11 +127,7 @@ public final class FurnitureStateWrites {
             return sourceState;
         }
         try {
-            FurnitureRoomCache.State state = FurnitureRoomCache.removeMarker(
-                sourceState.pendingRoomCache,
-                sourceState.pendingFurnitureCache,
-                sourceState.representedRoomCache,
-                furnitureId);
+            FurnitureRoomCache.State state = FurnitureRoomCache.removeMarker(sourceState, furnitureId);
             deleteRoomCaches(roomId);
             return state;
         } catch (Exception ignored) {

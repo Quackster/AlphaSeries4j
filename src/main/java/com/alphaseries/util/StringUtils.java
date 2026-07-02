@@ -11,12 +11,33 @@ public final class StringUtils {
         return value == null ? "" : String.valueOf(value);
     }
 
-    public static String field(String[] fields, int index) {
-        return fields != null && index >= 0 && index < fields.length ? text(fields[index]) : "";
-    }
-
     public static String field(List<String> fields, int index) {
         return fields != null && index >= 0 && index < fields.size() ? text(fields.get(index)) : "";
+    }
+
+    public static String withoutPrefix(Object value, String prefix) {
+        String text = text(value);
+        String prefixText = text(prefix);
+        return !prefixText.isEmpty() && text.startsWith(prefixText) ? text.substring(prefixText.length()) : text;
+    }
+
+    public static String withoutAnyPrefix(Object value, String... prefixes) {
+        String text = text(value);
+        if (prefixes == null) {
+            return text;
+        }
+        for (String prefix : prefixes) {
+            String prefixText = text(prefix);
+            if (!prefixText.isEmpty() && text.startsWith(prefixText)) {
+                return text.substring(prefixText.length());
+            }
+        }
+        return text;
+    }
+
+    public static String withoutPacketCode(Object value) {
+        String text = text(value);
+        return text.length() >= 3 ? text.substring(2) : text;
     }
 
     public static String delimitedField(Object value, char delimiter, int index) {
@@ -50,6 +71,158 @@ public final class StringUtils {
         }
         fields.add(text.substring(fieldStart));
         return List.copyOf(fields);
+    }
+
+    public static List<String> delimitedFields(Object value, String delimiter) {
+        String text = text(value);
+        String marker = text(delimiter);
+        if (marker.isEmpty()) {
+            return List.of(text);
+        }
+        List<String> fields = new ArrayList<>();
+        int fieldStart = 0;
+        int delimiterAt = text.indexOf(marker);
+        while (delimiterAt >= 0) {
+            fields.add(text.substring(fieldStart, delimiterAt));
+            fieldStart = delimiterAt + marker.length();
+            delimiterAt = text.indexOf(marker, fieldStart);
+        }
+        fields.add(text.substring(fieldStart));
+        return List.copyOf(fields);
+    }
+
+    public static IndexedFields indexedFields(Object value, char delimiter) {
+        return new IndexedFields(delimitedFields(value, delimiter));
+    }
+
+    public static SequentialFields sequentialFields(Object value, char... delimiters) {
+        String remaining = text(value);
+        List<String> fields = new ArrayList<>();
+        int delimitersFound = 0;
+        if (delimiters == null) {
+            return new SequentialFields(List.of(remaining), "", 0);
+        }
+        for (char delimiter : delimiters) {
+            int delimiterAt = remaining.indexOf(delimiter);
+            if (delimiterAt < 0) {
+                fields.add(remaining);
+                return new SequentialFields(fields, "", delimitersFound);
+            }
+            fields.add(remaining.substring(0, delimiterAt));
+            remaining = remaining.substring(delimiterAt + 1);
+            delimitersFound++;
+        }
+        return new SequentialFields(fields, remaining, delimitersFound);
+    }
+
+    public record IndexedFields(List<String> values) {
+        public IndexedFields {
+            values = values == null ? List.of() : List.copyOf(values);
+        }
+
+        public String text(int index) {
+            return field(values, index);
+        }
+
+        public long number(int index) {
+            return NumberUtils.parseLong(text(index));
+        }
+
+        public int fieldCount() {
+            return values.size();
+        }
+
+        public List<String> fieldsFrom(int firstIndex) {
+            if (firstIndex >= values.size()) {
+                return List.of();
+            }
+            return values.subList(Math.max(0, firstIndex), values.size());
+        }
+    }
+
+    public record SequentialFields(List<String> values, String rest, int delimitersFound) {
+        public SequentialFields {
+            values = values == null ? List.of() : List.copyOf(values);
+            rest = StringUtils.text(rest);
+            delimitersFound = Math.max(0, delimitersFound);
+        }
+
+        public String text(int index) {
+            return field(values, index);
+        }
+
+        public boolean foundDelimiter(int index) {
+            return index >= 0 && delimitersFound > index;
+        }
+    }
+
+    public static String delimitedText(List<?> fields, char delimiter) {
+        if (fields == null || fields.isEmpty()) {
+            return "";
+        }
+        StringBuilder text = new StringBuilder();
+        for (Object field : fields) {
+            if (text.length() > 0) {
+                text.append(delimiter);
+            }
+            text.append(text(field));
+        }
+        return text.toString();
+    }
+
+    public static List<String> spaceSeparatedWords(Object value) {
+        List<String> words = new ArrayList<>();
+        for (String field : delimitedFields(value, ' ')) {
+            String word = field.trim();
+            if (!word.isEmpty()) {
+                words.add(word);
+            }
+        }
+        return List.copyOf(words);
+    }
+
+    public static List<Long> positiveLongFields(Object value, char delimiter) {
+        List<Long> values = new ArrayList<>();
+        for (String field : delimitedFields(value, delimiter)) {
+            long parsedValue = NumberUtils.parseLong(field);
+            if (parsedValue > 0L) {
+                values.add(parsedValue);
+            }
+        }
+        return List.copyOf(values);
+    }
+
+    public static boolean isUnsignedLongFieldList(Object value, char delimiter) {
+        String text = text(value);
+        if (text.isEmpty()) {
+            return false;
+        }
+        for (String field : delimitedFields(text, delimiter)) {
+            if (field.isEmpty()) {
+                return false;
+            }
+            for (int index = 0; index < field.length(); index++) {
+                if (!Character.isDigit(field.charAt(index))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public static List<Long> allPositiveLongFields(Object value, char delimiter) {
+        if (!isUnsignedLongFieldList(value, delimiter)) {
+            return List.of();
+        }
+        List<Long> values = new ArrayList<>();
+        for (String field : delimitedFields(value, delimiter)) {
+            long parsedValue = NumberUtils.parseLong(field);
+            if (parsedValue <= 0L) {
+                return List.of();
+            }
+            values.add(parsedValue);
+        }
+        return List.copyOf(values);
     }
 
     public static String left(Object value, int maxLength) {
@@ -104,6 +277,39 @@ public final class StringUtils {
         return text(value).replace('\n', ' ').replace('\r', ' ');
     }
 
+    public static String normalizedNewlines(Object value) {
+        return text(value).replace("\r\n", "\n").replace('\r', '\n');
+    }
+
+    public static String withoutCarriageReturns(Object value) {
+        return text(value).replace("\r", "");
+    }
+
+    public static String newlinesAsCarriageReturns(Object value) {
+        return text(value).replace('\n', '\r');
+    }
+
+    public static String collapsedCarriageReturnRows(Object value) {
+        String text = newlinesAsCarriageReturns(value);
+        while (text.contains("\r\r")) {
+            text = text.replace("\r\r", "\r");
+        }
+        return text;
+    }
+
+    public static String compactPacketWhitespace(Object value) {
+        String text = text(value)
+            .replace('\1', ' ')
+            .replace('\2', ' ')
+            .replace('\t', ' ')
+            .replace('\r', ' ')
+            .replace('\n', ' ');
+        while (text.contains("  ")) {
+            text = text.replace("  ", " ");
+        }
+        return text.trim();
+    }
+
     /**
      * Original function: Proc_10_11_80A9C0.
      */
@@ -121,9 +327,9 @@ public final class StringUtils {
         if (cache.isEmpty() || marker.isEmpty()) {
             return cache;
         }
-        cache = cache.replace("\r", "");
+        cache = withoutCarriageReturns(cache);
         StringBuilder rebuilt = new StringBuilder();
-        for (String rowText : cache.split("\n", -1)) {
+        for (String rowText : delimitedFields(cache, '\n')) {
             if (!rowText.isEmpty() && !rowText.contains(marker)) {
                 if (rebuilt.length() > 0) {
                     rebuilt.append('\n');

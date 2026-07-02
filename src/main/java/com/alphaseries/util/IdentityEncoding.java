@@ -25,6 +25,34 @@ public final class IdentityEncoding {
         return shift(StringUtils.text(value), -2L);
     }
 
+    public static String licenceToken(String sourceValue, long saltValue, long markerValue, String fillerCharacters) {
+        String source = StringUtils.text(sourceValue);
+        long salt = saltValue == 0L ? 1L : saltValue;
+        String fillers = StringUtils.text(fillerCharacters);
+        StringBuilder token = new StringBuilder();
+        token.append(source.length() + salt).append((char) markerValue);
+        for (int index = 0; index < source.length(); index++) {
+            char filler = index < fillers.length() ? fillers.charAt(index) : (char) markerValue;
+            token.append(filler);
+            token.append(source.charAt(index) * salt * markerValue);
+        }
+        return token.toString();
+    }
+
+    public static String shiftedLicenceText(Object encodedValue) {
+        String encodedText = StringUtils.text(encodedValue);
+        if (encodedText.isEmpty()) {
+            return "";
+        }
+
+        int shiftValue = encodedText.charAt(0) - 87;
+        StringBuilder decoded = new StringBuilder();
+        for (int index = 1; index < encodedText.length(); index++) {
+            decoded.append((char) (encodedText.charAt(index) - shiftValue));
+        }
+        return decoded.toString();
+    }
+
     public static String premiumDecode(Object valueOffset, Object encodedValue) {
         String encodedText = StringUtils.text(encodedValue);
         if (encodedText.isEmpty()) {

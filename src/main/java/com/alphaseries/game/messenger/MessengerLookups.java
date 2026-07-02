@@ -3,7 +3,6 @@ package com.alphaseries.game.messenger;
 import com.alphaseries.config.AppConfigState;
 import com.alphaseries.dao.mysql.MessengerDao;
 import com.alphaseries.messages.outgoing.MessengerPayloads;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -15,15 +14,15 @@ public final class MessengerLookups {
     private MessengerLookups() {
     }
 
-    public static MessengerFriend friendSummary(String userId, MessengerDao messenger) {
+    public static MessengerFriend friendSummary(long userId, MessengerDao messenger) {
         try {
-            if (StringUtils.text(userId).isEmpty() || "0".equals(StringUtils.text(userId)) || messenger == null) {
+            if (userId <= 0L || messenger == null) {
                 return null;
             }
             String dateFormat = AppConfigState.instance().settingsCache().valueOrDefault("com.mysql.format.date", "%d-%m-%Y");
             String timeFormat = AppConfigState.instance().settingsCache().valueOrDefault("com.mysql.format.time", "%H:%i");
             return messenger
-                .messengerFriend(NumberUtils.parseLong(userId), dateFormat + " " + timeFormat)
+                .messengerFriend(userId, dateFormat + " " + timeFormat)
                 .orElse(null);
         } catch (Exception ignored) {
             return null;
@@ -58,7 +57,7 @@ public final class MessengerLookups {
             if (targetSocketIndex > 0L) {
                 notifications.add(new MessengerNotification(
                     targetSocketIndex,
-                    MessengerViews.friendOnlineNotification(friendSummary(String.valueOf(userId), messenger), 1L)));
+                    MessengerViews.friendOnlineNotification(friendSummary(userId, messenger), 1L)));
             }
         }
         if (acceptedFriends.isEmpty()) {
@@ -276,7 +275,7 @@ public final class MessengerLookups {
             maxFriends0,
             maxFriends1,
             maxFriends2,
-            friendSummary(String.valueOf(userId), messenger));
+            friendSummary(userId, messenger));
     }
 
     private static MessengerFriendList emptyFriendList() {

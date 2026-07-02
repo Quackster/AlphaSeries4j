@@ -106,10 +106,10 @@ public final class PetPayloads {
             return "";
         }
         String petFigure = StringUtils.text(figure).toLowerCase();
-        String[] figureParts = petFigure.split(" ", -1);
-        long petType = figureParts.length >= 1 ? NumberUtils.parseLong(figureParts[0]) : 0L;
-        long petRace = figureParts.length >= 2 ? NumberUtils.parseLong(figureParts[1]) : 0L;
-        String petColor = figureParts.length >= 3 ? figureParts[2] : "";
+        StringUtils.IndexedFields figureFields = StringUtils.indexedFields(petFigure, ' ');
+        long petType = figureFields.number(0);
+        long petRace = figureFields.number(1);
+        String petColor = figureFields.text(2);
 
         return PacketBuilder.message("0")
             .appendInt(petId)
@@ -224,12 +224,20 @@ public final class PetPayloads {
         long ownerId,
         String ownerName
     ) {
-        return experienceStatus(botEntityId, petName, petFigure, petLevel, petExperience, petEnergy, petNutrition, petScratches)
-            + PacketBuilder.create()
-                .appendInt(petAgeDays)
-                .appendInt(ownerId)
-                .appendString(ownerName)
-                .build();
+        return PacketBuilder.create()
+            .appendRaw(experienceStatus(
+                botEntityId,
+                petName,
+                petFigure,
+                petLevel,
+                petExperience,
+                petEnergy,
+                petNutrition,
+                petScratches))
+            .appendInt(petAgeDays)
+            .appendInt(ownerId)
+            .appendString(ownerName)
+            .build();
     }
 
     public static String experienceStatus(

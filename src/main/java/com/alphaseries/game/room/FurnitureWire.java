@@ -92,9 +92,7 @@ public final class FurnitureWire {
         if (notePayload.isEmpty()) {
             return StickyNoteUpdate.empty();
         }
-        if (notePayload.length() > 510) {
-            notePayload = notePayload.substring(0, 510);
-        }
+        notePayload = StringUtils.left(notePayload, 510);
 
         int separatorAt = firstPositiveIndex(notePayload, '\r', '\n', '\2');
         String noteColor;
@@ -103,18 +101,14 @@ public final class FurnitureWire {
             noteColor = notePayload.substring(0, separatorAt).toUpperCase();
             noteCaption = notePayload.substring(separatorAt + 1);
         } else {
-            noteColor = notePayload.substring(0, Math.min(6, notePayload.length())).toUpperCase();
+            noteColor = StringUtils.left(notePayload, 6).toUpperCase();
             noteCaption = notePayload.length() > 6 ? notePayload.substring(6) : "";
         }
-        if (noteColor.length() > 6) {
-            noteColor = noteColor.substring(0, 6);
-        }
+        noteColor = StringUtils.left(noteColor, 6);
         if (!isStickyNoteColor(noteColor)) {
             return StickyNoteUpdate.empty();
         }
-        if (noteCaption.length() > 510) {
-            noteCaption = noteCaption.substring(0, 510);
-        }
+        noteCaption = StringUtils.left(noteCaption, 510);
         noteCaption = noteCaption.replace('\u00a0', '\u001f').replace('\r', '\u001f').replace('\n', '\u001f');
         return new StickyNoteUpdate(furnitureId, noteColor, noteCaption);
     }
@@ -134,12 +128,7 @@ public final class FurnitureWire {
     }
 
     private static String stripStickyFurniturePrefix(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("AS") || requestPayload.startsWith("AU") || requestPayload.startsWith("AN")
-            || requestPayload.startsWith("FI") || requestPayload.startsWith("AB") || requestPayload.startsWith("AC")) {
-            return requestPayload.substring(2);
-        }
-        return requestPayload;
+        return StringUtils.withoutAnyPrefix(packetPayload, "AS", "AU", "AN", "FI", "AB", "AC");
     }
 
     public static FurnitureIdRequest stickyFurnitureRequest(String packetPayload) {
@@ -158,10 +147,7 @@ public final class FurnitureWire {
      * Original function: Proc_6_157_7974B0.
      */
     public static WallFurniturePlacementRequest wallFurniturePlacementRequest(String packetPayload) {
-        String wallPayload = StringUtils.text(packetPayload);
-        if (wallPayload.startsWith("rv")) {
-            wallPayload = wallPayload.substring(2);
-        }
+        String wallPayload = StringUtils.withoutPrefix(packetPayload, "rv");
         long furnitureId = NumberUtils.parseLong(WireEncoding.readVl64LengthString(wallPayload));
         return new WallFurniturePlacementRequest(wallPayload, furnitureId);
     }
@@ -180,18 +166,15 @@ public final class FurnitureWire {
      */
     public static FloorFurniturePackageRequest floorFurniturePackageRequest(String packetPayload) {
         String requestPayload = WireRequests.stripPrefix(packetPayload, "FH");
-        return new FloorFurniturePackageRequest(requestPayload, floorStateFurnitureId(packetPayload));
+        return new FloorFurniturePackageRequest(requestPayload, parseFloorStateFurnitureId(packetPayload));
     }
 
     /**
      * Original function: Proc_6_149_775C10.
      * Original function: Proc_6_150_777FA0.
      */
-    public static long floorStateFurnitureId(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("Ch") || requestPayload.startsWith("FH")) {
-            requestPayload = requestPayload.substring(2);
-        }
+    private static long parseFloorStateFurnitureId(String packetPayload) {
+        String requestPayload = StringUtils.withoutAnyPrefix(packetPayload, "Ch", "FH");
         long furnitureId = WireReader.readLong(requestPayload, new WireReader.Offset(1));
         if (furnitureId <= 0L) {
             furnitureId = NumberUtils.parseLong(WireEncoding.readVl64LengthString(requestPayload));
@@ -199,44 +182,21 @@ public final class FurnitureWire {
         return furnitureId;
     }
 
+    public static FurnitureIdRequest floorStateFurnitureRequest(String packetPayload) {
+        return new FurnitureIdRequest(parseFloorStateFurnitureId(packetPayload));
+    }
+
     /**
      * Original function: Proc_6_141_76A670.
      * Original function: Proc_6_142_76B310.
      */
     public static FloorFurniturePlacement floorPlacement(String packetPayload) {
-        long furnitureId = 0L;
-        long positionX = 0L;
-        long positionY = 0L;
-        long rotation = 0L;
-        String normalizedPayload = StringUtils.text(packetPayload)
-            .replace('\1', ' ')
-            .replace('\2', ' ')
-            .replace('\t', ' ')
-            .replace('\r', ' ')
-            .replace('\n', ' ')
-            .trim();
-        while (normalizedPayload.contains("  ")) {
-            normalizedPayload = normalizedPayload.replace("  ", " ");
-        }
-        if (!normalizedPayload.isEmpty()) {
-            String[] tokens = normalizedPayload.split(" ", -1);
-            if (tokens.length >= 1) {
-                furnitureId = NumberUtils.parseLong(tokens[0]);
-            }
-            if (tokens.length >= 2) {
-                positionX = NumberUtils.parseLong(tokens[1]);
-            }
-            if (tokens.length >= 3) {
-                positionY = NumberUtils.parseLong(tokens[2]);
-            }
-            if (tokens.length >= 4) {
-                rotation = NumberUtils.parseLong(tokens[3]);
-            }
-        }
+        FloorFurniturePlacement placement = spaceFloorPlacement(packetPayload);
+        long furnitureId = placement.furnitureId();
         if (furnitureId <= 0L) {
             furnitureId = WireReader.readLong(StringUtils.text(packetPayload), new WireReader.Offset(1));
         }
-        return new FloorFurniturePlacement(furnitureId, positionX, positionY, rotation);
+        return new FloorFurniturePlacement(furnitureId, placement.positionX(), placement.positionY(), placement.rotation());
     }
 
     public static FloorPlacementRequest floorPlacementRequest(String packetPayload) {
@@ -250,55 +210,44 @@ public final class FurnitureWire {
      * Original function: Proc_6_141_76A670.
      */
     public static FurnitureMoveRequest moveRequest(String packetPayload) {
-        long furnitureId = 0L;
-        long positionX = 0L;
-        long positionY = 0L;
-        long rotation = 0L;
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("A[")) {
-            requestPayload = requestPayload.substring(2);
-        }
-
-        String normalizedPayload = requestPayload
-            .replace('\1', ' ')
-            .replace('\2', ' ')
-            .replace('\t', ' ')
-            .replace('\r', ' ')
-            .replace('\n', ' ');
-        while (normalizedPayload.contains("  ")) {
-            normalizedPayload = normalizedPayload.replace("  ", " ");
-        }
-        normalizedPayload = normalizedPayload.trim();
-
-        if (!normalizedPayload.isEmpty()) {
-            String[] tokens = normalizedPayload.split(" ", -1);
-            furnitureId = tokens.length >= 1 ? NumberUtils.parseLong(tokens[0]) : 0L;
-            positionX = tokens.length >= 2 ? NumberUtils.parseLong(tokens[1]) : 0L;
-            positionY = tokens.length >= 3 ? NumberUtils.parseLong(tokens[2]) : 0L;
-            rotation = tokens.length >= 4 ? NumberUtils.parseLong(tokens[3]) : 0L;
-        }
-
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "A[");
+        FloorFurniturePlacement placement = spaceFloorPlacement(requestPayload);
+        long furnitureId = placement.furnitureId();
         if (furnitureId <= 0L) {
             WireReader.Offset offset = new WireReader.Offset(1);
             furnitureId = WireReader.readLong(requestPayload, offset);
         }
-        return new FurnitureMoveRequest(furnitureId, positionX, positionY, rotation);
+        return new FurnitureMoveRequest(furnitureId, placement.positionX(), placement.positionY(), placement.rotation());
+    }
+
+    private static FloorFurniturePlacement spaceFloorPlacement(String packetPayload) {
+        String normalizedPayload = StringUtils.compactPacketWhitespace(packetPayload);
+        if (normalizedPayload.isEmpty()) {
+            return FloorFurniturePlacement.empty();
+        }
+        StringUtils.IndexedFields fields = StringUtils.indexedFields(normalizedPayload, ' ');
+        return new FloorFurniturePlacement(
+            fields.number(0),
+            fields.number(1),
+            fields.number(2),
+            fields.number(3));
     }
 
     /**
      * Original function: Proc_6_144_76BE70.
      */
-    public static long pickupFurnitureId(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("AZ")) {
-            requestPayload = requestPayload.substring(2);
-        }
+    private static long parsePickupFurnitureId(String packetPayload) {
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "AZ");
         long furnitureId = NumberUtils.parseLong(WireEncoding.readVl64LengthString(requestPayload));
         if (furnitureId <= 0L) {
             WireReader.Offset offset = new WireReader.Offset(1);
             furnitureId = WireReader.readLong(requestPayload, offset);
         }
         return furnitureId;
+    }
+
+    public static FurnitureIdRequest pickupFurnitureRequest(String packetPayload) {
+        return new FurnitureIdRequest(parsePickupFurnitureId(packetPayload));
     }
 
     /**

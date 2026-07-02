@@ -9,14 +9,17 @@ public final class PollWire {
     private PollWire() {
     }
 
-    public static long idFromWire(String packetPayload, String prefix) {
+    public record PollIdRequest(long pollId) {
+    }
+
+    public static PollIdRequest idRequestFromWire(String packetPayload, String prefix) {
         String requestPayload = requestPayload(packetPayload, prefix);
         WireReader.Offset offset = new WireReader.Offset(1);
         long value = WireReader.readLong(requestPayload, offset);
         if (value <= 0L) {
             value = NumberUtils.parseLong(WireEncoding.readVl64LengthString(requestPayload));
         }
-        return value;
+        return new PollIdRequest(value);
     }
 
     public static PollAnswerSubmission answerFromWire(String packetPayload, String prefix) {
@@ -36,11 +39,7 @@ public final class PollWire {
     }
 
     private static String requestPayload(String packetPayload, String prefix) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (!StringUtils.text(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
-            requestPayload = requestPayload.substring(prefix.length());
-        }
-        return requestPayload;
+        return StringUtils.withoutPrefix(packetPayload, prefix);
     }
 
 }

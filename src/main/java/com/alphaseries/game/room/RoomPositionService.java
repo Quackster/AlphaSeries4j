@@ -8,6 +8,7 @@ import com.alphaseries.db.MySQL;
 import com.alphaseries.util.StringUtils;
 
 import java.sql.SQLException;
+import java.util.List;
 
 public final class RoomPositionService {
     private RoomPositionService() {
@@ -105,14 +106,14 @@ public final class RoomPositionService {
             if (placementState == null) {
                 return 0L;
             }
-            String[] mapRows = placementMapRows(placementState.modelMap());
+            PlacementMap placementMap = PlacementMap.fromText(placementState.modelMap());
             long allowWalkthrough = placementState.allowWalkthrough();
             long roomSlot = placementState.roomSlot();
             for (long tileY = positionY; tileY <= positionY + resolvedFootprintY - 1L; tileY++) {
-                if (tileY < 0L || tileY >= mapRows.length) {
+                String mapRow = placementMap.row(tileY);
+                if (mapRow.isEmpty()) {
                     return 0L;
                 }
-                String mapRow = mapRows[(int) tileY];
                 for (long tileX = positionX; tileX <= positionX + resolvedFootprintX - 1L; tileX++) {
                     if (tileX < 0L || tileX + 1L > mapRow.length()) {
                         return 0L;
@@ -147,15 +148,25 @@ public final class RoomPositionService {
         }
     }
 
-    private static String[] placementMapRows(String modelMapText) {
-        String modelMap = StringUtils.text(modelMapText).replace('\n', '\r');
-        while (modelMap.contains("\r\r")) {
-            modelMap = modelMap.replace("\r\r", "\r");
+    private record PlacementMap(List<String> rows) {
+        private PlacementMap {
+            rows = List.copyOf(rows);
         }
-        if (modelMap.endsWith("\r")) {
-            modelMap = modelMap.substring(0, modelMap.length() - 1);
+
+        private static PlacementMap fromText(String modelMapText) {
+            String modelMap = StringUtils.collapsedCarriageReturnRows(modelMapText);
+            if (modelMap.endsWith("\r")) {
+                modelMap = modelMap.substring(0, modelMap.length() - 1);
+            }
+            return new PlacementMap(StringUtils.delimitedFields(modelMap, '\r'));
         }
-        return modelMap.split("\r", -1);
+
+        private String row(long y) {
+            if (y < 0L || y >= rows.size()) {
+                return "";
+            }
+            return rows.get((int) y);
+        }
     }
 
     private static RoomDao roomDao() throws SQLException {

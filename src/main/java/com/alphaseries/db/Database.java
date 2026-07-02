@@ -13,13 +13,13 @@ public interface Database {
     List<List<Object>> query(String sqlText) throws SQLException;
 
     default int execute(String sqlText, Object... parameters) throws SQLException {
-        execute(renderSqlForLegacyAdapter(sqlText, parameters));
+        execute(renderPreparedSqlForFallback(sqlText, parameters));
         return 0;
     }
 
     default <T> List<T> query(String sqlText, RowMapper<T> mapper, Object... parameters) throws SQLException {
         List<T> mappedRows = new ArrayList<>();
-        for (List<Object> row : query(renderSqlForLegacyAdapter(sqlText, parameters))) {
+        for (List<Object> row : query(renderPreparedSqlForFallback(sqlText, parameters))) {
             mappedRows.add(mapper.map(resultSetFor(row)));
         }
         return mappedRows;
@@ -57,9 +57,9 @@ public interface Database {
                     return false;
                 }
                 if ("toString".equals(methodName)) {
-                    return "LegacyAdapterResultSet" + row;
+                    return "MappedRowResultSet" + row;
                 }
-                throw new UnsupportedOperationException("ResultSet method not supported by legacy adapter: " + methodName);
+                throw new UnsupportedOperationException("ResultSet method not supported by mapped row adapter: " + methodName);
             });
     }
 
@@ -68,7 +68,7 @@ public interface Database {
         return row != null && index >= 0 && index < row.size() ? row.get(index) : null;
     }
 
-    private static String renderSqlForLegacyAdapter(String sqlText, Object... parameters) {
+    private static String renderPreparedSqlForFallback(String sqlText, Object... parameters) {
         if (parameters == null || parameters.length == 0 || sqlText == null || sqlText.indexOf('?') < 0) {
             return sqlText;
         }

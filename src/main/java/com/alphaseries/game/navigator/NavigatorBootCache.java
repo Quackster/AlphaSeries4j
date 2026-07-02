@@ -6,7 +6,6 @@ import com.alphaseries.db.Database;
 import com.alphaseries.db.MySQL;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.WireEncoding;
-import com.alphaseries.util.NumberUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -49,10 +48,10 @@ public final class NavigatorBootCache {
             .longValueOrDefault("com.client.navigator.categories.default.private.id", 0);
         long publicCategoryId = AppConfigState.instance().settingsCache()
             .longValueOrDefault("com.client.navigator.categories.default.public.id", 0);
-        List<String> defaults = new ArrayList<String>();
-        defaults.add(String.valueOf(privateCategoryId));
-        defaults.add("");
-        defaults.add(String.valueOf(publicCategoryId));
+        List<RoomCategoryCache.DefaultCategoryId> defaults = List.of(
+            RoomCategoryCache.DefaultCategoryId.of(privateCategoryId),
+            RoomCategoryCache.DefaultCategoryId.empty(),
+            RoomCategoryCache.DefaultCategoryId.of(publicCategoryId));
         NavigatorState.instance().setRoomCategoryDefaults(defaults);
         long parentCategoryId = privateCategoryId == 0L ? 1L : privateCategoryId;
         List<RoomDao.RoomCategoryRow> categoryRows = List.of();

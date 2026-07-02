@@ -4,13 +4,20 @@ import java.util.List;
 
 public record PetTutorialGuideRemoval(
     long removedCount,
-    List<String> removedPayloads
+    List<Long> removedEntityIds
 ) {
     public PetTutorialGuideRemoval {
-        removedPayloads = removedPayloads == null ? List.of() : List.copyOf(removedPayloads);
+        removedEntityIds = removedEntityIds == null ? List.of() : List.copyOf(removedEntityIds);
     }
 
     public boolean hasRemovals() {
         return removedCount > 0L;
+    }
+
+    public List<String> removedPayloads() {
+        return removedEntityIds.stream()
+            .filter(entityId -> entityId != null && entityId > 0L)
+            .map(PetPayloads::removedFromRoom)
+            .toList();
     }
 }

@@ -13,14 +13,13 @@ public final class MessengerWire {
     private MessengerWire() {
     }
 
-    public record FriendTargetList(boolean deleteAllPending, String targetList, List<Long> targetIds, long targetCount) {
+    public record FriendTargetList(boolean deleteAllPending, List<Long> targetIds, long targetCount) {
         public FriendTargetList {
-            targetList = StringUtils.text(targetList);
             targetIds = targetIds == null ? List.of() : List.copyOf(targetIds);
         }
 
         public static FriendTargetList empty() {
-            return new FriendTargetList(false, "", List.of(), 0L);
+            return new FriendTargetList(false, List.of(), 0L);
         }
     }
 
@@ -52,19 +51,13 @@ public final class MessengerWire {
         }
     }
 
-    public static String requestTextFromWirePayload(String packetPayload, String prefix, int maxLength) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (!StringUtils.text(prefix).isEmpty() && requestPayload.startsWith(prefix)) {
-            requestPayload = requestPayload.substring(prefix.length());
-        }
+    private static String requestTextFromWirePayload(String packetPayload, String prefix, int maxLength) {
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, prefix);
         String value = WireEncoding.readBase64LengthString(requestPayload);
         if (value.isEmpty()) {
             value = PacketReader.of(requestPayload).readString();
         }
-        if (maxLength >= 0 && value.length() > maxLength) {
-            return value.substring(0, maxLength);
-        }
-        return value;
+        return maxLength >= 0 ? StringUtils.left(value, maxLength) : value;
     }
 
     public static SearchRequest searchRequest(String packetPayload, String prefix) {
@@ -76,19 +69,15 @@ public final class MessengerWire {
     }
 
     public static FriendTargetList friendDeleteTargetsFromPayload(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("@f")) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "@f");
         PacketReader reader = PacketReader.of(requestPayload);
         long firstValue = reader.readInt();
         if (firstValue == 1L) {
-            return new FriendTargetList(true, "", List.of(), 0L);
+            return new FriendTargetList(true, List.of(), 0L);
         }
 
         long maxTargets = firstValue <= 0L ? 75L : Math.min(firstValue, 75L);
         List<Long> targetIds = new ArrayList<>();
-        List<String> targetTokens = new ArrayList<>();
         long targetCount = 0L;
         while (!reader.remaining().isEmpty() && targetCount < maxTargets) {
             int previousOffset = reader.offset();
@@ -96,26 +85,20 @@ public final class MessengerWire {
             if (targetUserId <= 0L || reader.offset() == previousOffset) {
                 break;
             }
-            String token = String.valueOf(targetUserId);
             if (!targetIds.contains(targetUserId)) {
                 targetIds.add(targetUserId);
-                targetTokens.add(token);
                 targetCount++;
             }
         }
         if (targetIds.isEmpty() && firstValue > 1L) {
             targetIds.add(firstValue);
-            targetTokens.add(String.valueOf(firstValue));
             targetCount = 1L;
         }
-        return new FriendTargetList(false, String.join(",", targetTokens), targetIds, targetCount);
+        return new FriendTargetList(false, targetIds, targetCount);
     }
 
-    public static FriendTargetList friendRemoveTargetsFromPayload(String packetPayload, String callerUserId) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("@h")) {
-            requestPayload = requestPayload.substring(2);
-        }
+    public static FriendTargetList friendRemoveTargetsFromPayload(String packetPayload, long callerUserId) {
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "@h");
         PacketReader reader = PacketReader.of(requestPayload);
         long removeCount = reader.readInt();
         if (removeCount <= 0L) {
@@ -125,28 +108,22 @@ public final class MessengerWire {
             removeCount = 75L;
         }
         List<Long> targetIds = new ArrayList<>();
-        List<String> targetTokens = new ArrayList<>();
         long targetCount = 0L;
         for (long removeIndex = 1L; removeIndex <= removeCount; removeIndex++) {
             long targetUserId = reader.readInt();
-            String token = String.valueOf(targetUserId);
-            if (targetUserId > 0L && !token.equals(StringUtils.text(callerUserId)) && !targetIds.contains(targetUserId)) {
+            if (targetUserId > 0L && targetUserId != callerUserId && !targetIds.contains(targetUserId)) {
                 targetIds.add(targetUserId);
-                targetTokens.add(token);
                 targetCount++;
             }
         }
-        return new FriendTargetList(false, String.join(",", targetTokens), targetIds, targetCount);
+        return new FriendTargetList(false, targetIds, targetCount);
     }
 
     /**
      * Original function: Proc_6_167_7BECA0.
      */
     public static AcceptFriendRequests acceptFriendRequests(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("@e")) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "@e");
         WireReader.Offset offset = new WireReader.Offset(1);
         long acceptCount = WireReader.readLong(requestPayload, offset);
         if (acceptCount <= 0L) {
@@ -164,24 +141,16 @@ public final class MessengerWire {
     }
 
     public static MessengerPrivateMessage privateMessageFromWire(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("@a")) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "@a");
         PacketReader reader = PacketReader.of(requestPayload);
         long targetUserId = reader.readInt();
         if (targetUserId <= 0L) {
             targetUserId = NumberUtils.parseLong(WireEncoding.readVl64LengthString(requestPayload));
         }
         String messageText = WireEncoding.readBase64LengthString(requestPayload);
-        if (messageText.length() > 122) {
-            messageText = messageText.substring(0, 122);
-        }
+        messageText = StringUtils.left(messageText, 122);
         if (messageText.isEmpty()) {
-            messageText = reader.readString();
-            if (messageText.length() > 122) {
-                messageText = messageText.substring(0, 122);
-            }
+            messageText = StringUtils.left(reader.readString(), 122);
         }
         return new MessengerPrivateMessage(targetUserId, messageText);
     }
@@ -190,10 +159,7 @@ public final class MessengerWire {
      * Original function: Proc_6_169_7C0DC0.
      */
     public static FriendFollowRequest friendFollowRequest(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("DF")) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "DF");
         long targetUserId = WireReader.readLong(requestPayload, new WireReader.Offset(1));
         if (targetUserId <= 0L) {
             targetUserId = NumberUtils.parseLong(WireEncoding.readVl64LengthString(requestPayload));
@@ -205,10 +171,7 @@ public final class MessengerWire {
      * Original function: Proc_6_168_7C05F0.
      */
     public static RoomInviteRequest roomInviteFromWire(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("@b")) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "@b");
         WireReader.Offset offset = new WireReader.Offset(1);
         long targetCount = WireReader.readLong(requestPayload, offset);
         if (targetCount <= 0L) {
@@ -225,14 +188,9 @@ public final class MessengerWire {
         }
 
         String inviteText = WireEncoding.readBase64LengthString(requestPayload);
-        if (inviteText.length() > 122) {
-            inviteText = inviteText.substring(0, 122);
-        }
+        inviteText = StringUtils.left(inviteText, 122);
         if (inviteText.isEmpty()) {
-            inviteText = WireReader.readString(requestPayload, offset);
-            if (inviteText.length() > 122) {
-                inviteText = inviteText.substring(0, 122);
-            }
+            inviteText = StringUtils.left(WireReader.readString(requestPayload, offset), 122);
         }
         return new RoomInviteRequest(targetIds, targetCount, inviteText);
     }

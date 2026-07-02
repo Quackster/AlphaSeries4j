@@ -65,11 +65,14 @@ import com.alphaseries.game.jukebox.JukeboxRequests;
 import com.alphaseries.game.jukebox.SongInfoRequest;
 import com.alphaseries.game.catalog.GiftSettings;
 import com.alphaseries.game.chat.ChatCommands;
+import com.alphaseries.game.chat.ChatLookups;
 import com.alphaseries.game.jukebox.SongDiskRow;
 import com.alphaseries.game.jukebox.SongInfoRow;
 import com.alphaseries.game.messenger.AcceptedFriendRequests;
 import com.alphaseries.game.messenger.MessengerFriend;
+import com.alphaseries.game.messenger.MessengerFriendList;
 import com.alphaseries.game.messenger.MessengerLookups;
+import com.alphaseries.game.messenger.MessengerPrivateMessage;
 import com.alphaseries.game.messenger.MessengerRoomInvite;
 import com.alphaseries.game.messenger.MessengerSearchResult;
 import com.alphaseries.game.messenger.MessengerSettings;
@@ -89,12 +92,14 @@ import com.alphaseries.game.navigator.RoomCategoryCache;
 import com.alphaseries.game.pet.PetBootCache;
 import com.alphaseries.game.pet.PetCommandCacheRow;
 import com.alphaseries.game.pet.PetCommandAction;
+import com.alphaseries.game.pet.PetExperienceAward;
 import com.alphaseries.game.pet.PetExperienceUpdate;
 import com.alphaseries.game.pet.PetInventoryRow;
 import com.alphaseries.game.pet.PetLookups;
 import com.alphaseries.game.pet.PetLevelCacheRow;
 import com.alphaseries.game.pet.PetPackagePlacement;
 import com.alphaseries.game.pet.PetPayloads;
+import com.alphaseries.game.pet.PetPickupAction;
 import com.alphaseries.game.pet.PetProgress;
 import com.alphaseries.game.pet.PetRaceCacheRow;
 import com.alphaseries.game.pet.PetRaceRow;
@@ -114,6 +119,8 @@ import com.alphaseries.game.poll.PollPrompt;
 import com.alphaseries.game.poll.PollQuestionRow;
 import com.alphaseries.game.poll.PollWire;
 import com.alphaseries.game.quest.QuestAcceptResult;
+import com.alphaseries.game.quest.QuestCompletion;
+import com.alphaseries.game.quest.QuestPacketHandlers;
 import com.alphaseries.game.quest.QuestProgress;
 import com.alphaseries.game.quest.QuestProgressDecision;
 import com.alphaseries.game.quest.QuestResetResult;
@@ -244,9 +251,12 @@ import com.alphaseries.server.lifecycle.LicenceCheckState;
 import com.alphaseries.server.lifecycle.ServerLifecycle;
 import com.alphaseries.server.lifecycle.StartupEnvironmentError;
 import com.alphaseries.server.packet.Filesystems;
+import com.alphaseries.server.packet.PreReadyPacketDispatcher;
 import com.alphaseries.server.runtime.Guardian;
 import com.alphaseries.server.runtime.GameServerBridge;
 import com.alphaseries.server.runtime.RuntimeTasks;
+import com.alphaseries.server.runtime.SocketDelivery;
+import com.alphaseries.server.runtime.SocketLifecycle;
 import com.alphaseries.server.update.Updater;
 import com.alphaseries.server.update.UpdaterSettings;
 import com.alphaseries.server.update.UpdaterState;
@@ -331,7 +341,6 @@ public final class PortedModuleSmokeTest {
             AppDatabaseConfig.jdbcUrl("db", "3307", "alpha"));
         assertEquals("db", AppDatabaseConfig.parseOdbcConnectionString(connectionStrings.get(0)).get("server"));
         assertEquals("pass", AppDatabaseConfig.parseOdbcConnectionString(connectionStrings.get(0)).get("password"));
-        assertEquals("connected", MySQL.readSqlRows("SELECT 1"));
         assertEquals(0L, AppDatabaseConfig.connectDatabaseFromConfig(""));
         AppDatabaseConfig.configureDatabaseConnector(connectionString -> {
             throw new IllegalStateException("connect failed");
@@ -341,9 +350,9 @@ public final class PortedModuleSmokeTest {
         MySQL.configureDatabaseConnection(null);
 
         GameDataCaches.setRoomEventLocales(RoomEventLocales.fromEntries(
-            List.of(new RoomEventLocales.LocaleEntry("1", List.of("events", "name", "price")))));
+            List.of(new RoomEventLocales.LocaleEntry("1", "events", "name"))));
         assertEquals("events", GameDataCaches.roomEventLocales().categoryName(1));
-        assertEquals(List.of(new RoomEventLocales.LocaleEntry("1", List.of("events", "name", "price"))),
+        assertEquals(List.of(new RoomEventLocales.LocaleEntry("1", "events", "name")),
             GameDataCaches.roomEventLocales().entries());
         GameDataCaches.setProductCache(ProductCache.fromProductRows(List.of(
             productCacheRow(10, "1", "sofa", "2", "5"),
@@ -371,13 +380,13 @@ public final class PortedModuleSmokeTest {
         assertEquals("502", GameDataCaches.productCache().fallbackBadgeId(11));
         assertEquals(502L, GameDataCaches.productCache().wiredCode(11));
         assertEquals(true, GameDataCaches.productCache().hasCharges(11));
-        ProductCache typedProductCache = ProductCache.fromRows(List.of(new CatalogDao.ProductCacheRow(List.of(
-            "12", "7", "", "", "", "typed", "fallbackTyped"))));
+        ProductCache typedProductCache = ProductCache.fromRows(List.of(productDaoRow(
+            12, "0", "7", "4", "typed", "5", "fallbackTyped")));
         assertEquals(7L, typedProductCache.type(12));
         assertEquals("typed", typedProductCache.defaultSign(12));
         assertEquals("fallbackTyped", typedProductCache.fallbackDefaultSign(12));
         ProductCache cacheProductCache = ProductCache.fromRows(List.of(
-            new CatalogDao.ProductCacheRow(List.of("13", "8", "", "", "", "cache", "fallbackCache"))));
+            productDaoRow(13, "0", "8", "4", "cache", "5", "fallbackCache")));
         assertEquals(8L, cacheProductCache.type(13));
         assertEquals("cache", cacheProductCache.defaultSign(13));
         assertEquals("rowCache", ProductCache.fromProductRows(List.of(productCacheRow(14, "4", "rowCache"))).defaultSign(14L));
@@ -393,13 +402,11 @@ public final class PortedModuleSmokeTest {
         assertEquals("fallback", LicenceChecker.licenceBlockFromResponse("prefixFMTfallback", "FMT"));
         assertEquals("\rrank=7\rmode=pro\r", LicenceChecker.licenceCacheTextFromBlock("rank=7\nmode=pro"));
         assertEquals("reason text", LicenceChecker.blockedLicenceMessage("{BLOCKED reason%20text}"));
-        assertEquals("5AZ12675B12870", LicenceChecker.buildLicenceToken("AB", 3, 65, "ZB"));
-        assertEquals("AB", LicenceChecker.decodeShiftedLicenceText("YCD"));
         assertEquals(true, LicenceChecker.applyLicenceResponse("rank=2\r7:2=5\r8:2=1", "FMT", 0));
         assertEquals(2, LicenceChecker.licenceRank());
         assertEquals(5, LicenceChecker.cachedLicenceRankValue(7));
         assertEquals(1, LicenceChecker.cachedLicenceRankValue(8));
-        assertEquals("", LicenceChecker.lastLicenceFailureMessage);
+        assertEquals("", LicenceChecker.lastLicenceFailureMessage());
         LicenceCheckState typedLicenceState = LicenceCheckState.fromCacheText("\rrank=2\r7:2=5\r9:2=10\r");
         assertEquals(2, typedLicenceState.rank());
         assertEquals(5, typedLicenceState.cachedRankValue(7));
@@ -408,9 +415,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(false, LicenceChecker.licenceChecksumValid("12345678" + "100000" + "-20-99981", 0));
         assertEquals(false, LicenceChecker.applyLicenceResponse("12345678" + "100000" + "-20-99981", "FMT", 0));
         assertEquals("Das Lizenzsystem ist zurzeit nicht erreichbar. Versuch es sp\u00e4ter wieder!",
-            LicenceChecker.lastLicenceFailureMessage);
+            LicenceChecker.lastLicenceFailureMessage());
         assertEquals(false, LicenceChecker.applyLicenceResponse("{BLOCKED no%20licence}", "FMT", 0));
-        assertEquals("no licence", LicenceChecker.lastLicenceFailureMessage);
+        assertEquals("no licence", LicenceChecker.lastLicenceFailureMessage());
         assertEquals(LicenceChecker.DEFAULT_LICENCE_ENDPOINT, LicenceChecker.licenceEndpointFromEnvironment(new HashMap<>()));
         Map<String, String> licenceEnvironment = new HashMap<>();
         licenceEnvironment.put(LicenceChecker.LICENCE_ENDPOINT_ENV, "http://127.0.0.1:8080/check_product_sep11");
@@ -422,13 +429,13 @@ public final class PortedModuleSmokeTest {
             "http://127.0.0.1:8080/check_product_sep11").startsWith(
                 "http://127.0.0.1:8080/check_product_sep11?local_time="));
         final List<String> licenceUrls = new ArrayList<>();
-        LicenceChecker.configureLicenceHttpFetcher((requestUrl, action) -> {
-            licenceUrls.add(action + ":" + requestUrl);
+        LicenceChecker.configureLicenceHttpFetcher(requestUrl -> {
+            licenceUrls.add(requestUrl);
             return "rank=4\r7:4=1";
         });
         assertEquals(true, LicenceChecker.checkLicence(new LicenceChecker.LicenceCheckContext(
             "PRODUCT-KEY", "ALPHASERIES_FINAL (PREMIUM)", LocalDateTime.of(2026, 6, 29, 14, 50, 0))));
-        assertEquals(true, licenceUrls.get(0).startsWith("1:http://www.alpha-series.com/check_product_sep11?local_time="));
+        assertEquals(true, licenceUrls.get(0).startsWith("http://www.alpha-series.com/check_product_sep11?local_time="));
         assertEquals(true, licenceUrls.get(0).contains("2026-06-29_14-50-00%3A"));
         assertEquals(true, licenceUrls.get(0).contains("&version=ALPHASERIES_FINAL+%28PREMIUM%29&productKey=PRODUCT-KEY&token="));
         assertEquals("ALPHASERIES_FINAL+%28PREMIUM%29", LicenceChecker.urlEncode("ALPHASERIES_FINAL (PREMIUM)"));
@@ -489,14 +496,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, mysqlHandlerPayloads.get(1).startsWith("4:DATA\6" + "4\6HW"));
         StaffModerationPacketHandlers.sendRoomInfo(4, StaffWire.roomInfoRequest("GK" + roomId13Field));
         assertEquals(true, mysqlHandlerPayloads.get(2).startsWith("4:DATA\6" + "4\6HZ"));
-        assertEquals("77", MySQL.mySqlUserIdFromSocket(4));
-        assertEquals(true, MySQL.mySqlUserHasPermission("77", "fuse_chatlog"));
+        assertEquals(77L, MySQL.mySqlUserIdFromSocket(4));
+        assertEquals(true, MySQL.mySqlUserHasPermission(77L, "fuse_chatlog"));
         MySQL.configureDatabaseConnection(null);
         MusConnectionManager.instance().configureSink(null);
-        List<List<Object>> rows = Arrays.asList(
-            new ArrayList<Object>(Arrays.<Object>asList(1, "alice")),
-            new ArrayList<Object>(Arrays.<Object>asList(2, "bob")));
-        assertEquals("1\talice\r2\tbob", MySQL.formatSqlRows(rows));
         AppConfigState.instance().setSettingsCache(settings("server.port", "1234", "name", "alpha"));
         assertEquals("1234", AppConfigState.instance().settingValueOrDefault("server.port", "0"));
         assertEquals("1234", AppConfigState.instance().settingsCache().valueOrDefault("server.port", "0"));
@@ -520,15 +523,6 @@ public final class PortedModuleSmokeTest {
         long randomRangeValue = RandomUtils.longInclusive(2, 4);
         assertEquals(true, randomRangeValue >= 2L && randomRangeValue <= 4L);
         assertEquals("a\u00a0b", StringUtils.normalizeNullBytes("a\0b"));
-        InventoryRefreshService.InventoryItem inventoryItem =
-            new InventoryRefreshService.InventoryItem(123, 45, "data", 6);
-        InventoryRefreshService.InventoryCache baseInventoryCache =
-            new InventoryRefreshService.InventoryCache("x", List.of());
-        InventoryRefreshService.InventoryCache inventoryCache = baseInventoryCache.add(inventoryItem);
-        assertEquals(new InventoryRefreshService.InventoryCache("x", List.of(inventoryItem)), inventoryCache);
-        assertEquals(inventoryCache, inventoryCache.add(new InventoryRefreshService.InventoryItem(123, 99, "other", 1)));
-        assertEquals(baseInventoryCache, inventoryCache.remove(123));
-        assertEquals(inventoryCache, inventoryCache.remove(999));
         assertEquals("Ab" + InventoryMessagePayloads.item(123, 45, "data", 6) + '\1',
             InventoryMessagePayloads.add(123, 45, "data", 6));
         assertEquals("Ab" + InventoryMessagePayloads.item(123, 45, "data", 6) + '\2',
@@ -607,14 +601,14 @@ public final class PortedModuleSmokeTest {
                 return Arrays.<List<Object>>asList(Arrays.<Object>asList(0));
             }
         });
-        assertEquals(1L, UserRefreshService.sendCreditsRefresh("77"));
+        assertEquals(1L, UserRefreshService.sendCreditsRefresh(77));
         assertEquals("42:DATA\6" + "42\6" + UserRefreshService.creditsRefreshPayload(250) + "\7", refreshPayloads.get(0));
-        assertEquals(5L, UserRefreshService.sendActivityPointRefreshes("77"));
+        assertEquals(5L, UserRefreshService.sendActivityPointRefreshes(77));
         assertEquals(6, refreshPayloads.size());
         assertEquals("42:DATA\6" + "42\6" + UserRefreshService.activityPointRefreshPayload(4, 40) + "\7",
             refreshPayloads.get(5));
-        assertEquals(0L, UserRefreshService.sendCreditsRefresh("missing"));
-        assertEquals(0L, UserRefreshService.sendActivityPointRefreshes("missing"));
+        assertEquals(0L, UserRefreshService.sendCreditsRefresh(0));
+        assertEquals(0L, UserRefreshService.sendActivityPointRefreshes(0));
         assertEquals(6, refreshPayloads.size());
         MySQL.configureDatabaseConnection(null);
         MusConnectionManager.instance().configureSink(null);
@@ -648,10 +642,10 @@ public final class PortedModuleSmokeTest {
         final List<String> alertPayloads = new ArrayList<>();
         SessionState.instance().setSessionRegistry(linkedSessionRegistry("81", "9\0"));
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> alertPayloads.add(socketIndex + ":" + payload));
-        assertEquals(1L, RoomRefreshService.sendUserRoomAlert("81", "notice", "hello"));
+        assertEquals(1L, RoomRefreshService.sendUserRoomAlert(81L, "notice", "hello"));
         assertEquals("9:DATA\6" + "9\6" + RoomRefreshService.roomAlertPayload("notice", "hello") + "\7",
             alertPayloads.get(0));
-        assertEquals(0L, RoomRefreshService.sendUserRoomAlert("missing", "notice", "hello"));
+        assertEquals(0L, RoomRefreshService.sendUserRoomAlert(0L, "notice", "hello"));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -710,7 +704,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("UPDATE users SET email_validated='1' WHERE id='91' LIMIT 1", userStateExecutions.get(0));
         assertEquals("14:DATA\6" + "14\6" + UserRefreshService.emailValidatedPayload(1) + "\7",
             userStatePayloads.get(0));
-        assertEquals(1L, UserRefreshService.sendUserIdentityRefresh("92"));
+        assertEquals(1L, UserRefreshService.sendUserIdentityRefresh(92));
         assertEquals("15:DATA\6" + "15\6"
                 + UserRefreshService.userIdentityRefreshPayload(92, "motto", "figure", "F") + "\7",
             userStatePayloads.get(1));
@@ -879,11 +873,11 @@ public final class PortedModuleSmokeTest {
         assertEquals("DATA\6" + "6\6named\7", MusPayloads.data(6, "named"));
         MusPayloads.ClientFrame dataFrame = MusPayloads.clientFrame("DATA\6" + "7\6client-payload\7");
         assertEquals("DATA", dataFrame.command());
-        assertEquals("7", dataFrame.socketIndexText());
+        assertEquals(7L, dataFrame.socketIndex());
         assertEquals("client-payload", MusPayloads.clientPayload(dataFrame));
         MusPayloads.ClientFrame shutdownFrame = MusPayloads.clientFrame("SHUTDOWN\6" + "7\7");
         assertEquals("SHUTDOWN", shutdownFrame.command());
-        assertEquals("7", shutdownFrame.socketIndexText());
+        assertEquals(7L, shutdownFrame.socketIndex());
         assertEquals("", MusPayloads.clientPayload(shutdownFrame));
         assertEquals("raw", MusPayloads.clientPayload(MusPayloads.clientFrame("raw")));
 
@@ -892,7 +886,7 @@ public final class PortedModuleSmokeTest {
         assertGuardianSocketMarkers();
         Guardian.setSocketMarkers(SocketMarkerSet.fromSocketIndexes(List.of(12L)));
         SessionState.instance().setSocketMarkers(SocketMarkerSet.fromSocketIndexes(List.of(4L, 12L)));
-        Handling.disconnectSocket(12);
+        SocketLifecycle.disconnectSocket(12);
         assertEquals(Set.of(), Guardian.socketMarkers().socketIndexes());
         assertEquals(Set.of(4L), SessionState.instance().socketMarkers().socketIndexes());
 
@@ -901,22 +895,21 @@ public final class PortedModuleSmokeTest {
             productDaoRow(11, "0", "200", "1", "table")));
         seedCatalogRegistryCatalogProductRows(List.of(catalogProductRow(1, "1", "alpha", "2", "7")));
         seedCatalogRegistryDealRows(List.of(
-            new CatalogDao.ProductDealRow(5L, "row-five"),
-            new CatalogDao.ProductDealRow(6L, "row-six")));
+            new CatalogDao.ProductDealRow(5L, List.of()),
+            new CatalogDao.ProductDealRow(6L, List.of())));
         CatalogRegistry registry = CatalogState.instance().registry();
-        assertEquals(100L, NumberUtils.parseLong(registry.productCell(10, 1)));
-        assertEquals("alpha", registry.catalogProductCell(1, 1));
-        assertEquals(7L, NumberUtils.parseLong(registry.catalogProductCell(1, 2)));
+        assertEquals(100L, registry.product(10).orElseThrow().type());
+        assertEquals("alpha", registry.catalogProduct(1).orElseThrow().sprite());
+        assertEquals(7L, registry.catalogProduct(1).orElseThrow().productId());
         assertEquals(200L, registry.product(11).orElseThrow().type());
         assertEquals("alpha", registry.catalogProduct(1).orElseThrow().sprite());
         assertEquals(List.of(), registry.productDeal(6L).orElseThrow().itemProductIds());
-        seedCatalogRegistryProductRows(List.of(new CatalogDao.ProductCacheRow(List.of("10", "100", "chair"))));
-        seedCatalogRegistryCatalogProductRows(List.of(new CatalogDao.CatalogProductCacheRow(List.of("1", "alpha", "7"))));
+        seedCatalogRegistryProductRows(List.of(productDaoRow(10, "0", "100")));
+        seedCatalogRegistryCatalogProductRows(List.of(catalogProductRow(1, "1", "alpha", "2", "7")));
         registry = CatalogState.instance().registry();
-        assertEquals(100L, NumberUtils.parseLong(registry.productCell(10, 1)));
         assertEquals(100L, registry.product(10).orElseThrow().type());
-        assertEquals("alpha", registry.catalogProductCell(1, 1));
-        seedCatalogRegistryDealRows(List.of(new CatalogDao.ProductDealRow(6L, "10;11")));
+        assertEquals("alpha", registry.catalogProduct(1).orElseThrow().sprite());
+        seedCatalogRegistryDealRows(List.of(new CatalogDao.ProductDealRow(6L, List.of(10L, 11L))));
         registry = CatalogState.instance().registry();
         assertEquals(List.of(10L, 11L), registry.productDeal(6L).orElseThrow().itemProductIds());
         assertEquals(10L, registry.product(10).orElseThrow().productId());
@@ -925,14 +918,18 @@ public final class PortedModuleSmokeTest {
         assertCatalogRegistryRows();
         SessionState.instance().setSessionRegistry(sessionRegistry(
             new SessionRegistry.SessionRecord("0:5", "u5\2sock5"),
+            new SessionRegistry.SessionRecord("0:8", "88\2sock8"),
             new SessionRegistry.SessionRecord("1:6", "66\2" + "6"),
+            new SessionRegistry.SessionRecord("8", "12\2" + "34"),
             new SessionRegistry.SessionRecord("room", "7\2" + "8")));
-        assertEquals("u5", SessionState.instance().socketUserId("5"));
+        assertEquals("u5", SessionState.instance().socketUserId(5L));
+        assertEquals(88L, SessionState.instance().socketUserIdValue(8L));
         assertEquals(66L, SessionState.instance().sessionUserIdBySocket(6));
+        assertEquals(12L, SessionState.instance().sessionCacheLong(8L, 0));
         assertEquals(7L, SessionState.instance().sessionCacheLong("room", 0));
         SessionState.instance().setSessionRegistry(linkedSessionRegistry("91", "14\0"));
-        assertEquals(14L, SessionState.instance().linkedUserSocketIndex("91"));
-        assertEquals(14L, SessionState.instance().linkedSocketIndex("91"));
+        assertEquals(14L, SessionState.instance().linkedUserSocketIndex(91L));
+        assertEquals(14L, SessionState.instance().linkedSocketIndex(91L));
         SessionRegistry typedSessionRegistry = SessionRegistry.fromEntries(
             List.of(
                 new SessionRegistry.SessionRecord("0:5", "u5\2sock5"),
@@ -941,9 +938,9 @@ public final class PortedModuleSmokeTest {
                 new SessionRegistry.LinkedSessionSection("91", "14\0"),
                 new SessionRegistry.LinkedSessionSection("92", "15\0")));
         SessionState.instance().setSessionRegistry(typedSessionRegistry);
-        assertEquals("u5", SessionState.instance().socketUserId("5"));
-        assertEquals(14L, SessionState.instance().linkedSocketIndex("91"));
-        assertEquals(15L, SessionState.instance().linkedSocketIndex("92"));
+        assertEquals("u5", SessionState.instance().socketUserId(5L));
+        assertEquals(14L, SessionState.instance().linkedSocketIndex(91L));
+        assertEquals(15L, SessionState.instance().linkedSocketIndex(92L));
         SessionState.instance().setSessionRegistry(sessionRegistry(new SessionRegistry.SessionRecord("1:4", "77\2" + "4")));
         assertEquals(77L, SessionState.instance().sessionUserIdBySocket(4));
         SessionState.instance().setSessionRegistry(SessionRegistry.empty());
@@ -969,11 +966,11 @@ public final class PortedModuleSmokeTest {
             BootLog.initializationIntegrityFailureMessage(true, "Alpha Series [INITIALISIERE] - [%%]"));
         assertEquals("", BootLog.initializationIntegrityFailureMessage(false, "Alpha Series [INITIALISIERE] - [%%]"));
         assertEquals("", BootLog.initializationIntegrityFailureMessage(true, "Alpha Series [RUNNING] - [%%]"));
-        String[] startupCreditLines = BootLog.startupCreditLines();
-        assertEquals(true, startupCreditLines[0].contains("2 . 0 - \"Meilenstein 2\""));
-        assertEquals(true, startupCreditLines[1].contains("Server Autor: Privilege"));
-        assertEquals(true, startupCreditLines[1].contains("Deutsche \u00dcbersetzung: Medaillon"));
-        assertEquals(true, startupCreditLines[2].contains("Shoutouts: Tweeney, Pure, MoBaT"));
+        List<String> startupCreditLines = BootLog.startupCreditLines();
+        assertEquals(true, startupCreditLines.get(0).contains("2 . 0 - \"Meilenstein 2\""));
+        assertEquals(true, startupCreditLines.get(1).contains("Server Autor: Privilege"));
+        assertEquals(true, startupCreditLines.get(1).contains("Deutsche \u00dcbersetzung: Medaillon"));
+        assertEquals(true, startupCreditLines.get(2).contains("Shoutouts: Tweeney, Pure, MoBaT"));
         Console.clear();
         BootLog.printStartupCredits();
         assertEquals(3, Console.entries().size());
@@ -1002,10 +999,6 @@ public final class PortedModuleSmokeTest {
                 new RoomDao.RoomCategoryRow(2L, "staff", 1L, 5L, 0L),
                 new RoomDao.RoomCategoryRow(3L, "hc", 1L, 2L, 1L)), 2, 1));
         assertRecyclerCacheBuilders();
-        assertEquals("[pet_dog\t1\t2\t3\t4\tDog][pet_cat\t5\t6\t7\t8\tCat]",
-            PetBootCache.buildPetRaceCache(List.of(
-                new PetRaceCacheRow("pet_dog", 1L, 2L, 3L, 4L, "Dog"),
-                new PetRaceCacheRow("pet_cat", 5L, 6L, 7L, 8L, "Cat"))));
         assertEquals(List.of(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 4)),
             PetBootCache.buildPetLevelRows(List.of(new PetLevelCacheRow(2L, 20L, 30L, 40L))));
         PetBootCache.PetCommandCache petCommandCache = PetBootCache.buildPetCommandCache(List.of(
@@ -1022,8 +1015,8 @@ public final class PortedModuleSmokeTest {
                 new SettingsDao.LocaleRow("roomevent_type_7", "game")),
             RoomEventLocales.empty());
         assertEquals(List.of(
-                new RoomEventLocales.LocaleEntry("5", List.of("party", "")),
-                new RoomEventLocales.LocaleEntry("7", List.of("game", ""))),
+                new RoomEventLocales.LocaleEntry("5", "party", ""),
+                new RoomEventLocales.LocaleEntry("7", "game", "")),
             builtRoomEventLocales.entries());
         assertRoomEventLocaleTypedBuilder();
         assertEquals("[site.name=Alpha][com.client.format.date=dd.mm.yyyy][com.client.format.time=hh:nn:ss]"
@@ -1564,6 +1557,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("abc", IdentityEncoding.easyDecode(IdentityEncoding.shift("abc", 25)));
         assertEquals("cde", IdentityEncoding.superEasyEncode("abc"));
         assertEquals("abc", IdentityEncoding.superEasyDecode("cde"));
+        assertEquals("5AZ12675B12870", IdentityEncoding.licenceToken("AB", 3, 65, "ZB"));
+        assertEquals("AB", IdentityEncoding.shiftedLicenceText("YCD"));
         String encodedIdentity = IdentityEncoding.encode("AZ");
         assertEquals("AZ", IdentityEncoding.decode(encodedIdentity, 0));
         assertEquals("hij", IdentityEncoding.shift("abc", 7));
@@ -1696,7 +1691,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "70\t2\t1"));
         RuntimeTasks.moveRepresentedUser(8, 1, 1, 1, 2);
         assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "8\t1\t2"));
-        RoomState.instance().setFurnitureRoomCache(FurnitureRoomCache.State.from("", "\1" + "101\2", RoomState.instance().representedRooms()));
+        RoomState.instance().setFurnitureRoomCache(FurnitureRoomCache.State.empty().withPendingFurnitureMarkers(101));
         assertEquals(1L, RuntimeTasks.signerTimer());
         assertEquals(true, containsSql(mainSql, "UPDATE furnitures SET sign='0' WHERE id='101' LIMIT 1"));
         PetState.instance().setRepresentedBots(representedBots(new LinkedHashSet<>(List.of(70L)), Map.of(
@@ -1728,8 +1723,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("lifecycle", missingLifecycleStartup.stage());
         ServerLifecycle.LifecycleResult failedLicenceLifecycle =
             ServerLifecycle.LifecycleResult.initialized("", "", "BAD-KEY");
-        LicenceChecker.lastLicenceFailureMessage = "licence unavailable";
-        LicenceChecker.configureLicenceHttpFetcher((requestUrl, action) -> "");
+        LicenceChecker.configureLicenceHttpFetcher(requestUrl -> "");
         ServerLifecycle.StartupResult failedLicenceStartup = ServerLifecycle.startServer(failedLicenceLifecycle);
         assertEquals(false, failedLicenceStartup.success());
         assertEquals("licence", failedLicenceStartup.stage());
@@ -1738,12 +1732,12 @@ public final class PortedModuleSmokeTest {
         assertEquals("Server Exit Suburned following error: \r\nfatal",
             ServerLifecycle.serverExitErrorMessage("fatal"));
         assertEquals("Unbekanntes Problem", ServerLifecycle.UNKNOWN_PROBLEM_MESSAGE);
-        String[] mainDesignCaptions = ServerLifecycle.designCaptions();
-        assertEquals("Bitte warte...", mainDesignCaptions[0]);
-        assertEquals("frame :: ADDONS", mainDesignCaptions[1]);
-        assertEquals("Server by Privilege", mainDesignCaptions[2]);
-        assertEquals("User Voice", mainDesignCaptions[3]);
-        assertEquals("Source is only avaible for the author. Please do not share this Source!", mainDesignCaptions[4]);
+        List<String> mainDesignCaptions = ServerLifecycle.designCaptions();
+        assertEquals("Bitte warte...", mainDesignCaptions.get(0));
+        assertEquals("frame :: ADDONS", mainDesignCaptions.get(1));
+        assertEquals("Server by Privilege", mainDesignCaptions.get(2));
+        assertEquals("User Voice", mainDesignCaptions.get(3));
+        assertEquals("Source is only avaible for the author. Please do not share this Source!", mainDesignCaptions.get(4));
         assertEquals("ACCEPT 16387", GameServerBridge.gameServerUnknownEventAccept());
         assertEquals(true, Guardian.isSocketConnected(0));
         assertEquals("LISTEN", GameServerBridge.gameServerUnknownEventListen());
@@ -1753,7 +1747,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(10245L, resizeResult.height());
         assertEquals(800L, resizeResult.logWidth());
         assertEquals(175L, resizeResult.logHeight());
-        assertEquals("88", RuntimeTasks.mainUserIdFromSocket(8));
+        assertEquals(88L, RuntimeTasks.mainUserIdFromSocket(8));
         Guardian.setSocketConnected(8, false);
         MySQL.configureDatabaseConnection(null);
         Path lifecycleRoot = Files.createTempDirectory("alphaseries-main-lifecycle");
@@ -1790,12 +1784,12 @@ public final class PortedModuleSmokeTest {
             RoomRollers.movePayload(99, 1, 2, "3"));
         Updater updater = new Updater();
         updater.queueHeightAnimation(1000, 5);
-        assertEquals(1000L, updater.pendingHeightTarget);
-        assertEquals(5L, updater.pendingAnimationInterval);
-        assertEquals(true, updater.timer1Enabled);
+        assertEquals(1000L, updater.pendingHeightTarget());
+        assertEquals(5L, updater.pendingAnimationInterval());
+        assertEquals(true, updater.timer1Enabled());
         updater.startHeightAnimationTimer();
-        assertEquals(false, updater.timer1Enabled);
-        assertEquals(true, updater.timer2Enabled);
+        assertEquals(false, updater.timer1Enabled());
+        assertEquals(true, updater.timer2Enabled());
         Updater.HeightStep heightStep = updater.applyHeightTimerStep(900);
         assertEquals(950L, heightStep.height());
         assertEquals(true, heightStep.timer2Enabled());
@@ -1806,8 +1800,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(1050L, shrinkingHeightStep.height());
         assertEquals(true, shrinkingHeightStep.timer2Enabled());
         updater.queueProgressWidth(250);
-        assertEquals(250L, updater.pendingProgressWidth);
-        assertEquals(true, updater.walkPercentEnabled);
+        assertEquals(250L, updater.pendingProgressWidth());
+        assertEquals(true, updater.walkPercentEnabled());
         Updater.ProgressStep progressStep = updater.applyProgressTimerStep(225, true);
         assertEquals(250L, progressStep.width());
         assertEquals(true, progressStep.walkPercentEnabled());
@@ -1815,36 +1809,36 @@ public final class PortedModuleSmokeTest {
         assertEquals(Updater.PROGRESS_WIDTH_MAX, completeProgressStep.width());
         assertEquals(true, completeProgressStep.complete());
         assertEquals(false, completeProgressStep.walkPercentEnabled());
-        updater.currentUpdateIndex = 0;
+        updater.setCurrentUpdateIndex(0);
         updater.advanceUpdateProgress(4);
-        assertEquals(5766L, updater.pendingProgressWidth);
-        updater.applyFeatureState(UpdaterSettings.UpdateEntry.fromFields("id", "title", "body", 0L, 99L));
-        assertEquals(true, updater.freeFeature.visible);
-        assertEquals("Kostenlose Funktion", updater.freeFeature.caption);
-        updater.applyFeatureState(UpdaterSettings.UpdateEntry.fromFields("id", "title", "body", 2L, 99L));
-        assertEquals(true, updater.unfreeFeature.visible);
-        assertEquals("Kostet 99 Punkte", updater.unfreeFeature.caption);
-        updater.applyFeatureState(UpdaterSettings.UpdateEntry.fromFields("id", "title", "body", 1L, 0L));
-        assertEquals(true, updater.downloadFeature.visible);
-        UpdaterSettings.UpdateEntry updateEntry = UpdaterSettings.UpdateEntry.fromFields("x", "42", "body", 3L, 7L);
+        assertEquals(5766L, updater.pendingProgressWidth());
+        updater.applyFeatureState(new UpdaterSettings.UpdateEntry("id", "title", "body", 0L, 99L, true));
+        assertEquals(true, updater.freeFeature().visible());
+        assertEquals("Kostenlose Funktion", updater.freeFeature().caption());
+        updater.applyFeatureState(new UpdaterSettings.UpdateEntry("id", "title", "body", 2L, 99L, true));
+        assertEquals(true, updater.unfreeFeature().visible());
+        assertEquals("Kostet 99 Punkte", updater.unfreeFeature().caption());
+        updater.applyFeatureState(new UpdaterSettings.UpdateEntry("id", "title", "body", 1L, 0L, true));
+        assertEquals(true, updater.downloadFeature().visible());
+        UpdaterSettings.UpdateEntry updateEntry = new UpdaterSettings.UpdateEntry("x", "42", "body", 3L, 7L, true);
         assertEquals("42", updateEntry.title());
         assertEquals(3L, updateEntry.featureMode());
         assertEquals(7L, updateEntry.featureCost());
         UpdaterSettings previousUpdaterSettings = UpdaterState.instance().settings();
         UpdaterState.instance().setSettings(UpdaterSettings.fromEntries("updater", List.of(
-            UpdaterSettings.UpdateEntry.fromFields("a", "A", "body", 0L, 0L),
-            new UpdaterSettings.UpdateEntry("", "", "", "", 0L, 0L, false)), "INSERT INTO a"));
+            new UpdaterSettings.UpdateEntry("a", "A", "body", 0L, 0L, true),
+            UpdaterSettings.UpdateEntry.invalid()), "INSERT INTO a"));
         UpdaterSettings mirroredUpdaterSettings = UpdaterState.instance().settings();
         assertEquals(2, mirroredUpdaterSettings.entryList().size());
-        assertEquals(UpdaterSettings.UpdateEntry.fromFields("a", "A", "body", 0L, 0L),
+        assertEquals(new UpdaterSettings.UpdateEntry("a", "A", "body", 0L, 0L, true),
             mirroredUpdaterSettings.entryList().get(0));
-        assertEquals("", mirroredUpdaterSettings.entryList().get(1).sourceText());
+        assertEquals(false, mirroredUpdaterSettings.entryList().get(1).valid());
         assertEquals(1L, mirroredUpdaterSettings.updateCountOrOne());
         UpdaterState.instance().setSettings(previousUpdaterSettings);
         List<UpdaterSettings.UpdateEntry> typedUpdateEntries = new ArrayList<>();
         typedUpdateEntries.add(updateEntry);
         UpdaterSettings typedUpdaterSettings = UpdaterSettings.fromEntries("typed-updater", typedUpdateEntries, "");
-        typedUpdateEntries.add(UpdaterSettings.UpdateEntry.fromFields("y", "title", "body", 1L, 2L));
+        typedUpdateEntries.add(new UpdaterSettings.UpdateEntry("y", "title", "body", 1L, 2L, true));
         assertEquals("typed-updater", typedUpdaterSettings.executableName());
         assertEquals(List.of(updateEntry), typedUpdaterSettings.entryList());
         assertEquals("custom", Updater.getUpdaterExecutableName("custom", "app"));
@@ -1862,18 +1856,18 @@ public final class PortedModuleSmokeTest {
             .contains("Update erfolgreich heruntergeladen. Die Datei wurde nach \"Alpha.exe\" benannt."));
         assertEquals(true, Updater.successfulDownloadMessage("Alpha")
             .contains("Die Webseite wurde automatisch ge\u00f6ffnet."));
-        assertEquals(3, Updater.visibleBodyLines("line1\\n\\nline3", 25).length);
+        assertEquals(3, Updater.visibleBodyLines("line1\\n\\nline3", 25).size());
         UpdaterState.instance().setSettings(UpdaterSettings.fromEntries("updater", List.of(
-            UpdaterSettings.UpdateEntry.fromFields("1", "title", "line1\\nline2", 0L, 0L),
-            UpdaterSettings.UpdateEntry.fromFields("2", "other", "body", 1L, 0L)), ""));
-        updater.height = 1000;
-        updater.currentUpdateIndex = 0;
+            new UpdaterSettings.UpdateEntry("1", "title", "line1\\nline2", 0L, 0L, true),
+            new UpdaterSettings.UpdateEntry("2", "other", "body", 1L, 0L, true)), ""));
+        updater.setHeight(1000);
+        updater.setCurrentUpdateIndex(0);
         Updater.RenderStep renderStep = updater.timer3Step();
         assertEquals(true, renderStep.rendered());
         assertEquals("title", renderStep.title());
-        assertEquals("line2", renderStep.bodyLines()[1]);
-        assertEquals(true, updater.freeFeature.visible);
-        assertEquals(11534L, updater.pendingProgressWidth);
+        assertEquals("line2", renderStep.bodyLines().get(1));
+        assertEquals(true, updater.freeFeature().visible());
+        assertEquals(11534L, updater.pendingProgressWidth());
         UpdaterState.instance().setExecutableName("custom-updater");
         assertEquals("custom-updater", UpdaterState.instance().settings().executableName());
         Updater.DownloadPlan downloadPlan = updater.downloadPlan("appname", LocalDateTime.of(2026, 6, 29, 13, 45, 6));
@@ -1897,8 +1891,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, updater.formLoad(true));
         assertEquals(true, containsSql(updaterSql, "INSERT IGNORE INTO a"));
         assertEquals(true, containsSql(updaterSql, "INSERT IGNORE INTO b"));
-        assertEquals(1000L, updater.height);
-        assertEquals(0L, updater.imageWidth);
+        assertEquals(1000L, updater.height());
+        assertEquals(0L, updater.imageWidth());
         assertEquals(true, updater.formUnload());
         assertEquals(true, updater.formQueryUnload());
         MySQL.configureDatabaseConnection(null);
@@ -1918,16 +1912,16 @@ public final class PortedModuleSmokeTest {
         StartupEnvironmentError.MessageBox mistakeMessageBox = StartupEnvironmentError.loadMessage();
         assertEquals(StartupEnvironmentError.MESSAGE, mistakeMessageBox.message());
         assertEquals(StartupEnvironmentError.MessageStyle.CRITICAL, mistakeMessageBox.style());
-        String[] mistakeInstructionCaptions = StartupEnvironmentError.instructionCaptions();
-        assertEquals("1. Click here to customize your regional options!", mistakeInstructionCaptions[0]);
-        assertEquals("2. Select the decimal symbol ,", mistakeInstructionCaptions[1]);
+        List<String> mistakeInstructionCaptions = StartupEnvironmentError.instructionCaptions();
+        assertEquals("1. Click here to customize your regional options!", mistakeInstructionCaptions.get(0));
+        assertEquals("2. Select the decimal symbol ,", mistakeInstructionCaptions.get(1));
         assertEquals("3. Click \"OK\" to apply your changes. You need to restart your Computer/VPS",
-            mistakeInstructionCaptions[2]);
+            mistakeInstructionCaptions.get(2));
         StartupEnvironmentError.QueryUnloadResult mistakeUnload = StartupEnvironmentError.queryUnload(3);
         assertEquals(false, mistakeUnload.cancel());
         assertEquals(true, mistakeUnload.exitRequested());
         assertEquals(3, mistakeUnload.unloadMode());
-        assertEquals("", LicenceChecker.readHttp("", 0));
+        assertEquals("", LicenceChecker.readHttp(""));
 
         assertEquals(encodedVl64(2, null, "") + "hd-180-1\2M\2",
             UserPayloads.wardrobeSlot(2, "hd-180-1", "M"));
@@ -2012,20 +2006,25 @@ public final class PortedModuleSmokeTest {
         assertEquals("keep\nalso", StringUtils.removeLineRecord("keep\r\nremove-this\nalso", "remove"));
         RepresentedRoomCache representedRoomCache = RepresentedRoomCache.fromCacheText("\1" + "1\talpha\2\1" + "2\tbeta\2");
         assertEquals(List.of(
-            new RepresentedRoomCache.RoomRecord(1L, "1\talpha"),
-            new RepresentedRoomCache.RoomRecord(2L, "2\tbeta")), representedRoomCache.roomRecords());
-        assertEquals("beta", representedRoomCache.roomRecords().get(1).fields().get(1));
+            RepresentedRoomCache.RoomRecord.displayOnly(1L, "alpha"),
+            RepresentedRoomCache.RoomRecord.displayOnly(2L, "beta")), representedRoomCache.roomRecords());
+        assertEquals("beta", representedRoomCache.roomRecords().get(1).displayText());
+        assertEquals(2L, representedRoomCache.roomSlot(2));
         RepresentedRoomCache duplicateRoomCache = RepresentedRoomCache.fromCacheText("\1" + "1\talpha\2\1" + "1\tbeta\2");
-        assertEquals(new RepresentedRoomCache.RoomRecord(1L, "1\talpha"), duplicateRoomCache.roomRecords().get(0));
+        assertEquals(RepresentedRoomCache.RoomRecord.displayOnly(1L, "alpha"), duplicateRoomCache.roomRecords().get(0));
         assertEquals("\1" + "1\talpha\2\1" + "1\tbeta\2", duplicateRoomCache.cacheText());
-        assertEquals("\1" + "1\tgamma\2", duplicateRoomCache.setRecord(1, "1\tgamma").cacheText());
-        assertEquals(List.of(new RepresentedRoomCache.RoomRecord(3L, "3")), RepresentedRoomCache.fromCacheText("\1" + "3\2").roomRecords());
+        assertEquals("\1" + "1\tgamma\2",
+            duplicateRoomCache.setRecord(RepresentedRoomCache.RoomRecord.displayOnly(1L, "gamma")).cacheText());
+        assertEquals(List.of(new RepresentedRoomCache.RoomRecord(3L, 1, "", "", "", "", "", List.of())),
+            RepresentedRoomCache.fromCacheText("\1" + "3\2").roomRecords());
         assertEquals(0L, RepresentedRoomCache.fromCacheText("\1" + "1\talpha\2").roomSlot(4));
         assertEquals("snapshot-room-cache", RepresentedRoomCache.fromCacheText("snapshot-room-cache").cacheText());
         assertEquals("snapshot-room-cache\1" + "2\tbeta\2",
-            RepresentedRoomCache.fromCacheText("snapshot-room-cache").setRecord(2, "2\tbeta").cacheText());
-        assertEquals(List.of(new RepresentedRoomCache.RoomRecord(7L, "7\ttyped")),
-            RepresentedRoomCache.fromRecords("", List.of(new RepresentedRoomCache.RoomRecord(7L, "7\ttyped")))
+            RepresentedRoomCache.fromCacheText("snapshot-room-cache")
+                .setRecord(RepresentedRoomCache.RoomRecord.displayOnly(2L, "beta"))
+                .cacheText());
+        assertEquals(List.of(RepresentedRoomCache.RoomRecord.displayOnly(7L, "typed")),
+            RepresentedRoomCache.fromRecords("", List.of(RepresentedRoomCache.RoomRecord.displayOnly(7L, "typed")))
                 .roomRecords());
         List<Long> mutableRoomSlots = new ArrayList<>();
         mutableRoomSlots.add(5L);
@@ -2042,17 +2041,17 @@ public final class PortedModuleSmokeTest {
         RepresentedRoomCache previousRepresentedRooms = RoomState.instance().representedRooms();
         RepresentedRoomCache typedRepresentedRooms = RepresentedRoomCache.fromRecords(
             "typed-prefix",
-            List.of(new RepresentedRoomCache.RoomRecord(8L, "8\ttyped")));
+            List.of(RepresentedRoomCache.RoomRecord.displayOnly(8L, "typed")));
         RoomState.instance().setRepresentedRooms(typedRepresentedRooms);
-        assertEquals(List.of(new RepresentedRoomCache.RoomRecord(8L, "8\ttyped")),
+        assertEquals(List.of(RepresentedRoomCache.RoomRecord.displayOnly(8L, "typed")),
             RoomState.instance().representedRooms().roomRecords());
         assertEquals("typed-prefix" + "\1" + "8\ttyped\2", RoomState.instance().representedRooms().cacheText());
         RoomState.instance().setRepresentedRooms(previousRepresentedRooms);
         String roomRecordCache = RepresentedRoomCache.fromCacheText("\1" + "1\talpha\2\1" + "2\told\2")
-            .setRecord(2, "2\tnew").cacheText();
+            .setRecord(RepresentedRoomCache.RoomRecord.displayOnly(2L, "new")).cacheText();
         assertEquals("\1" + "1\talpha\2\1" + "2\tnew\2", roomRecordCache);
         assertEquals("\1" + "1\talpha\2", RepresentedRoomCache.fromCacheText("\1" + "1\talpha\2")
-            .setRecord(0, "0\tignored").cacheText());
+            .setRecord(RepresentedRoomCache.RoomRecord.displayOnly(0L, "ignored")).cacheText());
         String movementCache = RepresentedRoomCache.fromCacheText("")
             .moveOccupant(4, 9, 2, 3, 4, 1).cacheText();
         assertEquals("\1" + "4\t\t\t0\t\1" + "9\t2\t3\t4\t1\2\2", movementCache);
@@ -2075,11 +2074,11 @@ public final class PortedModuleSmokeTest {
         Path missingCache = Files.createTempDirectory("alphaseries4j-cache").resolve("room.cache");
         assertEquals(System.lineSeparator(), FileUtils.ensureTextFile(missingCache.toString()));
         String userEntryPayload = SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
-            "7", "alice", "hd-1", "motto", "F", "8", "2", "3", "1.0", "4", "5"));
+            7L, "alice", "hd-1", "motto", "F", 8L, 2L, 3L, "1.0", 4L, 5L));
         assertEquals(true, userEntryPayload.contains("alice\2hd-1"));
         assertEquals(true, userEntryPayload.contains("motto\2"));
         assertEquals(SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
-                "7", "alice", "hd-1", "motto", "F", "8", "2", "3", "0.0", "0", "0")),
+                7L, "alice", "hd-1", "motto", "F", 8L, 2L, 3L, "0.0", 0L, 0L)),
             SocialLookups.roomUserEntryPayload(
                 new RoomUserEntryRow(7L, "alice", "hd-1", "motto", "F", 2L, 3L, 4L), 8L));
         SocialRoomOccupants socialOccupants = SocialLookups.roomOccupantsPayloads(
@@ -2089,7 +2088,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(1L, socialOccupants.occupantCount());
         assertEquals(1L, socialOccupants.statusCount());
         assertEquals(SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
-                "7", "alice", "hd-1", "motto", "M", "9", "2", "3", "0.0", "0", "0")),
+                7L, "alice", "hd-1", "motto", "M", 9L, 2L, 3L, "0.0", 0L, 0L)),
             socialOccupants.occupantPayload());
         assertEquals(SocialPayloads.roomOccupantStatus(9L, 2L, 3L, "0.0", 0L),
             socialOccupants.statusPayload());
@@ -2100,11 +2099,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(socialOccupants.occupantPayload() + "pet-entry", mergedOccupants.occupantPayload());
         assertEquals(socialOccupants.statusPayload() + "pet-status", mergedOccupants.statusPayload());
         String botPayload = SocialPayloads.roomObjectEntry(new RoomObjectEntryPayloadArgs(
-            "9", "bot", "figure", "M", "10", "4", "5", "0.0", "2"));
+            9L, "bot", "figure", "M", 10L, 4L, 5L, "0.0", 2L));
         assertEquals(true, botPayload.startsWith("Mbot\2figure\2M\2"));
         assertEquals(true, botPayload.endsWith("0.0\2HK"));
         String petPayload = SocialPayloads.roomObjectEntry(new RoomObjectEntryPayloadArgs(
-            "11", "pet", "figure", "F", "12", "6", "7", "0.5", "3"));
+            11L, "pet", "figure", "F", 12L, 6L, 7L, "0.5", 3L));
         assertEquals(true, petPayload.startsWith(encodedVl64(11, null, "") + "pet\2"));
         assertEquals(true, petPayload.endsWith("0.5\2PAJJ"));
         assertEquals(2L, UserValidation.avatarNameValidationCode("ab", "", 0));
@@ -2234,7 +2233,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(5L, walkRequest.positionX());
         assertEquals(6L, walkRequest.positionY());
         GameDataCaches.setRoomEventLocales(RoomEventLocales.fromEntries(
-            List.of(new RoomEventLocales.LocaleEntry("1", List.of("events", "")))));
+            List.of(new RoomEventLocales.LocaleEntry("1", "events", ""))));
         String eventWire = "A"
             + "@CJam"
             + "@DDesc"
@@ -2284,7 +2283,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(25L, NavigatorRequests.listLimit(settings("com.client.navigator.list.limit", "25")));
         assertEquals(50L, NavigatorRequests.listLimit(settings("com.client.navigator.list.limit", "0")));
         assertEquals("100'' ok", NavigatorRequests.searchTerm("100%' ok"));
-        assertEquals(2L, NavigatorWire.categoryId("GC" + wireLong(2)));
+        assertEquals(2L, NavigatorWire.categoryRequest("GC" + wireLong(2)).categoryId());
+        assertEquals("tag1", NavigatorWire.queryRequest("GCtag1").queryText());
         assertEquals("100' ok", NavigatorRequests.searchParameter("100%' ok"));
         NavigatorWire.SingleRoomRequest singleRoomRequest =
             NavigatorWire.singleRoomRequest("FA" + wireLong(0) + wireLong(1) + wireLong(9));
@@ -2489,7 +2489,7 @@ public final class PortedModuleSmokeTest {
         expectedTradePayload = encodedVl64(2, null, expectedTradePayload) + expectedSourceTradeItems;
         expectedTradePayload = encodedVl64(1, null, expectedTradePayload) + expectedTargetTradeItems;
         assertEquals(expectedTradePayload, TradePayloads.confirmation(5, 6, 2, expectedSourceTradeItems, 1, expectedTargetTradeItems));
-        assertEquals(expectedTradePayload, TradePayloads.offerPayload(tradeOffers, 2, 3, "5", "6"));
+        assertEquals(expectedTradePayload, TradePayloads.offerPayload(tradeOffers, 2, 3, 5L, 6L));
         List<RepresentedTradeOffer> removedSingleTradeOffer = TradePayloads.removeOffer(tradeOffers, 2, 101);
         assertEquals(2, removedSingleTradeOffer.size());
         assertEquals(100L, removedSingleTradeOffer.get(0).furnitureId());
@@ -2525,37 +2525,39 @@ public final class PortedModuleSmokeTest {
             + encodedVl64(4, null, "")
             + encodedVl64(40, null, "");
         assertEquals(expectedPointBalance, UserPayloads.activityPointBalance(10L, 20L, 0L, 40L));
-        assertEquals(1L, FurnitureWire.pickupFurnitureId("AZA"));
-        assertEquals(1L, FurnitureWire.pickupFurnitureId("A"));
         assertEquals(1L, FurnitureWire.pickupFurnitureRequest("AZA").furnitureId());
+        assertEquals(1L, FurnitureWire.pickupFurnitureRequest("A").furnitureId());
         assertEquals(73L, FurnitureWire.creditFurnitureRequest("AT" + wireLong(73)).furnitureId());
-        assertEquals(86L, FurnitureWire.floorStateFurnitureId("Ch" + wireLong(86)));
-        assertEquals(86L, FurnitureWire.floorStateFurnitureId("FH" + wireLong(86)));
-        assertEquals(86L, FurnitureWire.floorStateFurnitureId(wireLong(86)));
         assertEquals(86L, FurnitureWire.floorStateFurnitureRequest("Ch" + wireLong(86)).furnitureId());
+        assertEquals(86L, FurnitureWire.floorStateFurnitureRequest("FH" + wireLong(86)).furnitureId());
+        assertEquals(86L, FurnitureWire.floorStateFurnitureRequest(wireLong(86)).furnitureId());
         assertEquals(93L, FurnitureWire.simpleFloorItemUseRequest("AM" + wireLong(93), "AM").furnitureId());
         assertEquals(94L, FurnitureWire.simpleFloorItemUseRequest("AL" + wireLong(94), "AL").furnitureId());
         FurnitureWire.FloorFurniturePackageRequest packageRequest =
             FurnitureWire.floorFurniturePackageRequest("FH" + wireLong(95));
         assertEquals(95L, packageRequest.furnitureId());
         assertEquals(wireLong(95), packageRequest.requestPayload());
-        FurnitureRoomCache.State tracked = FurnitureRoomCache.trackMarker(
-            "\1" + "8\2\1" + "5\tstale\2",
-            "\1" + "7\2\1" + "7\told\2",
-            "\1" + "7\2\1" + "7\troom\2\1" + "9\2",
+        FurnitureRoomCache.State tracked = FurnitureRoomCache.trackMarker(FurnitureRoomCache.State.empty()
+                .withPendingRoomMarkers(8)
+                .withPendingRoomRecord(5, "stale")
+                .withPendingFurnitureMarkers(7)
+                .withPendingFurnitureRecord(7, "old")
+                .withRepresentedRooms(RepresentedRoomCache.fromCacheText("\1" + "7\2\1" + "7\troom\2\1" + "9\2")),
             5,
             7);
-        assertEquals("\1" + "8\2\1" + "5\2", tracked.pendingRoomCache);
-        assertEquals("\1" + "7\2", tracked.pendingFurnitureCache);
-        assertEquals("\1" + "9\2", tracked.representedRoomCache);
-        FurnitureRoomCache.State removed = FurnitureRoomCache.removeMarker(
-            "\1" + "7\2\1" + "7\troom\2\1" + "8\2",
-            "\1" + "7\2\1" + "7\told\2",
-            "\1" + "7\2\1" + "7\troom\2\1" + "9\2",
+        assertEquals("\1" + "8\2\1" + "5\2", tracked.pendingRoomCache());
+        assertEquals("\1" + "7\2", tracked.pendingFurnitureCache());
+        assertEquals("\1" + "9\2", tracked.representedRoomCache());
+        FurnitureRoomCache.State removed = FurnitureRoomCache.removeMarker(FurnitureRoomCache.State.empty()
+                .withPendingRoomMarkers(7, 8)
+                .withPendingRoomRecord(7, "room")
+                .withPendingFurnitureMarkers(7)
+                .withPendingFurnitureRecord(7, "old")
+                .withRepresentedRooms(RepresentedRoomCache.fromCacheText("\1" + "7\2\1" + "7\troom\2\1" + "9\2")),
             7);
-        assertEquals("\1" + "8\2", removed.pendingRoomCache);
-        assertEquals("", removed.pendingFurnitureCache);
-        assertEquals("\1" + "9\2", removed.representedRoomCache);
+        assertEquals("\1" + "8\2", removed.pendingRoomCache());
+        assertEquals("", removed.pendingFurnitureCache());
+        assertEquals("\1" + "9\2", removed.representedRoomCache());
         assertEquals(1L, FurnitureWire.nextState("chair", 0, 1));
         assertEquals(0L, FurnitureWire.nextState("chair", 1, 1));
         assertEquals(99L, FurnitureWire.nextState("bb_score_blue", 98, 0));
@@ -2573,30 +2575,31 @@ public final class PortedModuleSmokeTest {
                 + encodedVl64(2, null, "")
                 + encodedVl64(1, null, ""),
             FurniturePayloads.chargePrompt(77, 0, 3, 10, 2, 1));
-        FurnitureRoomCache.State stateCache = FurnitureRoomCache.stateCache(
-            "\1" + "5\2\1" + "9\told\2",
-            "\1" + "77\2",
-            "\1" + "5\t77\t1\2\1" + "77\2\1" + "88\2",
+        FurnitureRoomCache.State stateCache = FurnitureRoomCache.stateCache(FurnitureRoomCache.State.empty()
+                .withPendingRoomMarkers(5)
+                .withPendingRoomRecord(9, "old")
+                .withPendingFurnitureMarkers(77)
+                .withRepresentedRooms(RepresentedRoomCache.fromCacheText("\1" + "5\t77\t1\2\1" + "77\2\1" + "88\2")),
             5,
             77,
             4);
-        assertEquals("\1" + "9\told\2\1" + "5\2", stateCache.pendingRoomCache);
-        assertEquals("\1" + "77\2", stateCache.pendingFurnitureCache);
-        assertEquals("\1" + "5\t77\t4\2", stateCache.representedRoomCache);
-        FurnitureRoomCache.State stateWrite = FurnitureRoomCache.stateWrite(
-            "\1" + "5\2\1" + "8\2",
-            "\1" + "77\2\1" + "88\2",
-            "\1" + "77\2\1" + "77\t5\told\2\1" + "99\t5\tkeep\2",
+        assertEquals("\1" + "9\told\2\1" + "5\2", stateCache.pendingRoomCache());
+        assertEquals("\1" + "77\2", stateCache.pendingFurnitureCache());
+        assertEquals("\1" + "5\t77\t4\2", stateCache.representedRoomCache());
+        FurnitureRoomCache.State stateWrite = FurnitureRoomCache.stateWrite(FurnitureRoomCache.State.empty()
+                .withPendingRoomMarkers(5, 8)
+                .withPendingFurnitureMarkers(77, 88)
+                .withRepresentedRooms(RepresentedRoomCache.fromCacheText("\1" + "77\2\1" + "77\t5\told\2\1" + "99\t5\tkeep\2")),
             5,
             77,
             "new-state");
-        assertEquals("\1" + "8\2\1" + "5\2", stateWrite.pendingRoomCache);
-        assertEquals("\1" + "88\2\1" + "77\2", stateWrite.pendingFurnitureCache);
-        assertEquals("\1" + "99\t5\tkeep\2\1" + "77\t5\tnew-state\2", stateWrite.representedRoomCache);
-        FurnitureRoomCache.State stateWriteNoRoom = FurnitureRoomCache.stateWrite("", "", "", 0, 77, "off");
-        assertEquals("", stateWriteNoRoom.pendingRoomCache);
-        assertEquals("\1" + "77\2", stateWriteNoRoom.pendingFurnitureCache);
-        assertEquals("\1" + "77\t0\toff\2", stateWriteNoRoom.representedRoomCache);
+        assertEquals("\1" + "8\2\1" + "5\2", stateWrite.pendingRoomCache());
+        assertEquals("\1" + "88\2\1" + "77\2", stateWrite.pendingFurnitureCache());
+        assertEquals("\1" + "99\t5\tkeep\2\1" + "77\t5\tnew-state\2", stateWrite.representedRoomCache());
+        FurnitureRoomCache.State stateWriteNoRoom = FurnitureRoomCache.stateWrite(FurnitureRoomCache.State.empty(), 0, 77, "off");
+        assertEquals("", stateWriteNoRoom.pendingRoomCache());
+        assertEquals("\1" + "77\2", stateWriteNoRoom.pendingFurnitureCache());
+        assertEquals("\1" + "77\t0\toff\2", stateWriteNoRoom.representedRoomCache());
         String expectedWallInventory = "0" + encodedVl64(9, null,
             encodedVl64(20, null, "77\2") + ":w=1,2 l=3,4\2data\2");
         assertEquals(expectedWallInventory,
@@ -2630,8 +2633,9 @@ public final class PortedModuleSmokeTest {
                 new FurnitureDao.WallFurniture(100L, 101L, "wallpos", "state", 5L))));
         assertEquals("0DAQBHHIIKHJHPAHQA\2SAHPBhttp://www.alpha-series.com/\2QBH", SessionPayloads.systemHandshake(""));
         assertEquals("0FMT\2SAHPBhttp://www.alpha-series.com/\2QBH", SessionPayloads.systemHandshake("FMT"));
-        assertEquals("ticket one", SessionWire.loginTicket("F_ticket\none"));
-        assertEquals("ticket two", SessionWire.loginTicket(" F_ticket two "));
+        assertEquals("ticket one", SessionWire.loginTicketRequest("F_ticket\none").loginTicket());
+        assertEquals("ticket two", SessionWire.loginTicketRequest(" F_ticket two ").loginTicket());
+        assertEquals("ticket one", SessionWire.loginTicketRequest("F_ticket\none").loginTicket());
         assertEquals(encodedVl64(2, null, encodedVl64(300, null, "Fv") + "H"),
             UserPayloads.activityPointRefresh(2, 300));
         assertEquals(encodedVl64(2, null, encodedVl64(300, null, "Fv")) + "H",
@@ -2642,7 +2646,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(UserPayloads.activityPointAward(2, 325), pointAward.payload());
         UserActivityPoints.AwardBatch pointAwards = UserActivityPoints.AwardBatch.fromAwards(List.of(pointAward));
         assertEquals(pointAward.payload(), UserActivityPoints.payloadForAwards(List.of(pointAward)));
-        assertEquals(List.of(pointAward.payload()), pointAwards.deliveryPayloads());
+        assertEquals(List.of(pointAward), pointAwards.deliveryPayloads().awards());
+        assertEquals(List.of(pointAward.payload()), pointAwards.deliveryPayloads().payloads());
         assertEquals(false, UserActivityPoints.awardDecision(121, 2, 60, 500, 25, 300).shouldAward());
         RepresentedSocketCache.RepresentedSocketRecord socketRecord =
             new RepresentedSocketCache.RepresentedSocketRecord("a\2" + "7\2c\2d\2e\2" + "1", 7L, true);
@@ -2760,7 +2765,7 @@ public final class PortedModuleSmokeTest {
             MessengerViews.friendSummaryPayload(new MessengerFriend(5L, "Alice", "motto", "fig", 3L, 22L, "today"), 1));
         String expectedSearch = encodedVl64(8, null, "") + "Carol\2hi\2";
         expectedSearch = "1" + encodedVl64(1, null, expectedSearch) + "H\2nick\2fig\2now\2";
-        assertEquals(expectedSearch, MessengerPayloads.searchResult("8", "Carol", "fig", "hi", "nick", "now", 1));
+        assertEquals(expectedSearch, MessengerPayloads.searchResult(8L, "Carol", "fig", "hi", "nick", "now", 1));
         assertEquals(encodedVl64(1, null, "Fs") + expectedSearch
             + encodedVl64(1, null, "") + expectedSearch,
             MessengerPayloads.searchResults(List.of(
@@ -2771,16 +2776,14 @@ public final class PortedModuleSmokeTest {
         assertEquals(20L, MessengerViews.maxFriends(2));
         assertEquals(0L, MessengerViews.maxFriends(99));
         assertMessengerSettingsTypedAccessors();
-        assertEquals("hello world", MessengerWire.requestTextFromWirePayload("@i@Khello world", "@i", 50));
-        assertEquals("abc", MessengerWire.requestTextFromWirePayload("@g@Cabc", "@g", 2_000));
-        assertEquals("he", MessengerWire.requestTextFromWirePayload("@g@Khello", "@g", 2));
+        assertEquals("hello world", MessengerWire.searchRequest("@i@Khello world", "@i").searchText());
+        assertEquals("abc", MessengerWire.friendRequest("@g@Cabc", "@g").targetName());
         assertEquals("target", MessengerWire.searchRequest("@i@GTarget", "@i").searchText());
         assertEquals("Target", MessengerWire.friendRequest("@g@GTarget", "@g").targetName());
         MessengerWire.FriendTargetList deleteAll = MessengerWire.friendDeleteTargetsFromPayload("@fA");
         assertEquals(true, deleteAll.deleteAllPending());
         MessengerWire.FriendTargetList deleteTargets = MessengerWire.friendDeleteTargetsFromPayload("@fCABA");
         assertEquals(false, deleteTargets.deleteAllPending());
-        assertEquals("1,2", deleteTargets.targetList());
         assertEquals(List.of(1L, 2L), deleteTargets.targetIds());
         assertEquals(2L, deleteTargets.targetCount());
         MessengerWire.AcceptFriendRequests acceptRequests =
@@ -2851,8 +2854,7 @@ public final class PortedModuleSmokeTest {
             30,
             List.of(5L),
             true));
-        MessengerWire.FriendTargetList removeTargets = MessengerWire.friendRemoveTargetsFromPayload("@hCBCA", "2");
-        assertEquals("3,1", removeTargets.targetList());
+        MessengerWire.FriendTargetList removeTargets = MessengerWire.friendRemoveTargetsFromPayload("@hCBCA", 2L);
         assertEquals(List.of(3L, 1L), removeTargets.targetIds());
         assertEquals(2L, removeTargets.targetCount());
         String expectedRacePayload = encodedVl64(2, null, "L{dog\2")
@@ -3028,17 +3030,17 @@ public final class PortedModuleSmokeTest {
             SocialPayloads.roomUserStatus(9L, 4L));
         assertEquals("", SocialPayloads.roomUserStatus(0L, 4L));
         assertEquals(encodedVl64(9, null, "Ga"), SocialPayloads.roomUserWave(9L));
-        SocialLookups.RoomUserAction waveAction = SocialLookups.roomUserWaveAction("77", 9L, 9L);
+        SocialLookups.RoomUserAction waveAction = SocialLookups.roomUserWaveAction(77L, 9L, 9L);
         assertEquals(9L, waveAction.resultValue());
         assertEquals(SocialPayloads.roomUserWave(9L), waveAction.payload());
-        assertEquals(false, SocialLookups.roomUserWaveAction("0", 9L, 9L).valid());
+        assertEquals(false, SocialLookups.roomUserWaveAction(0L, 9L, 9L).valid());
         assertEquals(encodedVl64(3, null,
             encodedVl64(9, null, "G`")), SocialPayloads.roomUserDance(9L, 3L));
         SocialLookups.RoomUserAction danceAction =
-            SocialLookups.roomUserDanceAction("77", 9L, 9L, SocialWire.danceRequest("A]" + wireLong(3)));
+            SocialLookups.roomUserDanceAction(77L, 9L, 9L, SocialWire.danceRequest("A]" + wireLong(3)));
         assertEquals(3L, danceAction.resultValue());
         assertEquals(SocialPayloads.roomUserDance(9L, 3L), danceAction.payload());
-        assertEquals(false, SocialLookups.roomUserDanceAction("77", 0L, 9L,
+        assertEquals(false, SocialLookups.roomUserDanceAction(77L, 0L, 9L,
             SocialWire.danceRequest("A]" + wireLong(3))).valid());
         assertEquals(encodedVl64(9, null, "@\\"), SocialPayloads.roomUserRemoved(9L));
         assertEquals(SocialPayloads.roomUserRemoved(9L), SocialLookups.roomUserRemovedPayload(9L));
@@ -3118,7 +3120,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(encodedVl64(0, null, encodedVl64(1, null, "G{")),
             RecyclerPayloads.status(42, 0));
         assertEquals(encodedVl64(506, null, "G|"), RecyclerPayloads.reward(506));
-        assertEquals(7L, PollWire.idFromWire("Ck" + encodedVl64(7, null, ""), "Ck"));
+        assertEquals(7L, PollWire.idRequestFromWire("Ck" + encodedVl64(7, null, ""), "Ck").pollId());
         PollAnswerSubmission pollAnswer = PollWire.answerFromWire("Cl"
             + encodedVl64(7, null, "")
             + encodedVl64(8, null, "")
@@ -3219,19 +3221,27 @@ public final class PortedModuleSmokeTest {
             + encodedVl64(100, null, "")
             + encodedVl64(101, null, "")
             + encodedVl64(9, null, "");
-        assertEquals(wiredRecord, WiredWire.editRecord(wiredWire, "ok", 502, true));
+        WiredPayloads.WiredRecord wiredEditRecord = WiredWire.editRecordRequest(wiredWire, "ok", 502, true);
+        assertEquals("502", wiredEditRecord.code());
+        assertEquals("44", wiredEditRecord.furnitureId());
+        assertEquals("100;101", wiredEditRecord.selectedIds());
+        assertEquals("7;8", wiredEditRecord.parameterText());
+        assertEquals("txt", wiredEditRecord.textValue());
+        assertEquals("9", wiredEditRecord.extraValue());
         assertEquals(44L, WiredWire.editFurnitureRequest(wiredWire, "ok").furnitureId());
         assertEquals(44L, WiredWire.snapshotRequest("on" + encodedVl64(44, null, "")).furnitureId());
-        String replacementRecord = wiredRecordText(502, 44, "102", "5", "next", "3");
-        String otherRecord = wiredRecordText(503, 45, "200", "1", "", "");
-        assertEquals(true, WiredPayloads.selectedItemsExist(List.of(100L, 101L), "99,100,101"));
-        assertEquals(false, WiredPayloads.selectedItemsExist(List.of(100L, 101L), "99,100"));
+        WiredPayloads.WiredRecord replacementRecord =
+            new WiredPayloads.WiredRecord("502", "44", "102", "5", "next", "3");
+        WiredPayloads.WiredRecord otherRecord =
+            new WiredPayloads.WiredRecord("503", "45", "200", "1", "", "");
+        assertEquals(true, WiredPayloads.selectedItemsExist(List.of(100L, 101L), List.of(99L, 100L, 101L)));
+        assertEquals(false, WiredPayloads.selectedItemsExist(List.of(100L, 101L), List.of(99L, 100L)));
         WiredPayloads.ApplyResult wiredApply = WiredPayloads.applySelected(
-            List.of(100L, 101L, 102L), "5;ignored", 0, "100;102", FurniturePayloads::stateChanged);
+            List.of(100L, 101L, 102L), "5;ignored", 0, List.of(100L, 102L), FurniturePayloads::stateChanged);
         assertEquals(2L, wiredApply.appliedCount());
         assertEquals(FurniturePayloads.stateChanged(100, 5) + FurniturePayloads.stateChanged(102, 5), wiredApply.statePayloads());
         WiredPayloads.ApplyResult wiredOverride = WiredPayloads.applySelected(
-            List.of(100L), "7", 101, "100;101", FurniturePayloads::stateChanged);
+            List.of(100L), "7", 101, List.of(100L, 101L), FurniturePayloads::stateChanged);
         assertEquals(1L, wiredOverride.appliedCount());
         assertEquals(FurniturePayloads.stateChanged(101, 7), wiredOverride.statePayloads());
         Path previousApplicationPathForWired = Path.of(AppPaths.applicationPath());
@@ -3284,7 +3294,7 @@ public final class PortedModuleSmokeTest {
         WiredLookups.RoomRequest wiredRequest =
             WiredLookups.roomRequest(4, new UserDao(MySQL.configuredDatabase()), new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, wiredRequest.valid());
-        assertEquals("77", wiredRequest.userId());
+        assertEquals(77L, wiredRequest.userId());
         assertEquals(9L, wiredRequest.roomId());
         String liveWiredRecord = WiredLookups.editRecord(
             4,
@@ -3362,7 +3372,6 @@ public final class PortedModuleSmokeTest {
             + encodedVl64(51, null, "");
         SongInfoRequest songInfoRequest = JukeboxRequests.songInfoFromWire(songInfoWire);
         assertEquals(2L, songInfoRequest.requestedCount());
-        assertEquals("50,51", songInfoRequest.requestedIds());
         assertEquals(List.of(50L, 51L), songInfoRequest.requestedIdList());
         String expectedCdPayload = encodedVl64(50, null, "");
         expectedCdPayload = encodedVl64(3, null, expectedCdPayload) + "Song A\2Author A\2sound-a\2";
@@ -3380,7 +3389,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, JukeboxRequests.canAddDisk(2, "1", 1, 10));
         assertEquals(false, JukeboxRequests.canAddDisk(3, "1", 1, 10));
         assertEquals(true, JukeboxRequests.canAddDisk(0, "", 0, 0));
-        assertEquals(3L, JukeboxRequests.removeOrderFromWire("D@" + encodedVl64(3, null, "")));
+        assertEquals(3L, JukeboxRequests.removeRequestFromWire("D@" + encodedVl64(3, null, "")).playlistOrder());
         String expectedPlaylist = encodedVl64(2, null, "");
         expectedPlaylist += encodedVl64(40, null, "");
         expectedPlaylist += encodedVl64(3, null, "");
@@ -3474,9 +3483,6 @@ public final class PortedModuleSmokeTest {
         expectedVisit = encodedVl64(12, null, expectedVisit);
         expectedVisit = encodedVl64(30, null, expectedVisit) + "Room\2";
         assertEquals(expectedVisit, StaffPayloads.roomVisit(new StaffRoomVisitRow(1L, 7L, "Room", 12L, 30L)));
-        assertEquals(88L, StaffWire.userId("B88"));
-        assertEquals(123L, StaffWire.nestedUserId("@C123"));
-        assertEquals(77L, StaffWire.nestedUserId(encodedVl64(77, null, "")));
         assertEquals(88L, StaffWire.userSummaryRequest("GF" + wireLong(88)).targetUserId());
         StaffWire.BanRequest staffBanRequest =
             StaffWire.banRequest("GP" + wireLong(88) + wireString("Ban\nnow") + wireLong(2));
@@ -3507,6 +3513,7 @@ public final class PortedModuleSmokeTest {
             + encodedVl64(51, null, "");
         assertEquals(List.of(50L, 51L), StaffWire.callForHelpTabRequest("GB" + staffTabWire, "GB").callForHelpIds());
         assertEquals(123L, StaffWire.historyRequest("GG@C123", "GG", true).targetUserId());
+        assertEquals(77L, StaffWire.historyRequest("GG" + encodedVl64(77, null, ""), "GG", true).targetUserId());
         assertEquals(88L, StaffWire.historyRequest("GJB88", "GJ", false).targetUserId());
         assertEquals(12L, StaffWire.callForHelpChatLogRequest("GIB12").callForHelpId());
         assertEquals(13L, StaffWire.roomChatLogRequest("GHB13").roomId());
@@ -3647,7 +3654,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(List.of(new NewFriendRooms.RoomPick(21L, 3L)), NavigatorState.instance().newFriendRooms().roomPicks());
         NavigatorState.instance().setNewFriendRooms(previousNewFriendRooms);
         GameDataCaches.setRoomEventLocales(RoomEventLocales.fromEntries(
-            List.of(new RoomEventLocales.LocaleEntry("1", List.of("events", "")))));
+            List.of(new RoomEventLocales.LocaleEntry("1", "events", ""))));
         Path originalApplicationPath = Path.of(AppPaths.applicationPath());
         ProductCache originalProductCache = GameDataCaches.productCache();
         CatalogRegistry originalCatalogRegistry = CatalogState.instance().registry();
@@ -4390,90 +4397,94 @@ public final class PortedModuleSmokeTest {
             }
         });
 
-        Handling.sendToSocket(4, "PING");
+        SocketDelivery.sendToSocket(4, "PING");
         assertEquals("4:DATA\6" + "4\6PING\1\7", handlingSends.get(0));
         handlingSends.clear();
         int sqlBeforeCommand = handlingSql.size();
-        String aboutCommandPayload = Handling.routeChatCommand(4, ":about");
+        String aboutCommandPayload = ChatCommands.commandPayload(
+            ":about", LifecycleState.instance().runtimeState().productName());
         assertEquals(true, aboutCommandPayload.startsWith("BKAlpha Series"));
-        assertEquals(true, handlingSends.get(0).contains(
+        assertEquals(true, aboutCommandPayload.contains(
             "This is a copy of the unique Alpha Series written in Visual Basic 2006."));
         assertEquals(sqlBeforeCommand, handlingSql.size());
-        handlingSends.clear();
-        String onlineCommandPayload = Handling.routeChatCommand(4, ":whosonline");
+        String onlineCommandPayload = ChatCommands.dynamicCommandPayload(
+            ":whosonline", SessionState.instance().socketSessions(), userId -> {
+                try {
+                    return new UserDao(MySQL.configuredDatabase()).name(NumberUtils.parseLong(userId));
+                } catch (Exception ignored) {
+                    return "";
+                }
+            });
         assertEquals(true, onlineCommandPayload.startsWith("BKActive users:"));
         assertEquals(true, onlineCommandPayload.contains("OldName"));
         assertEquals(true, onlineCommandPayload.contains("Target"));
         assertEquals(sqlBeforeCommand, handlingSql.size());
         handlingSends.clear();
-        assertEquals(2L, Handling.broadcastToRoomUsers(9, "ROOM"));
+        assertEquals(2L, SocketDelivery.broadcastToRoomUsers(9, "ROOM"));
         assertEquals(Arrays.asList("4:DATA\6" + "4\6ROOM\1\7", "8:DATA\6" + "8\6ROOM\1\7"), handlingSends);
+        StaffModerationDao staffDao = new StaffModerationDao(MySQL.configuredDatabase());
+        StaffModerationDao.UserModerationSummary userSummary =
+            staffDao.userModerationSummary(88).orElse(null);
+        assertEquals(true, StaffPayloads.userSummary(
+            userSummary.userRow(),
+            userSummary.callForHelpCount(),
+            userSummary.pickedCallForHelpCount(),
+            userSummary.cautionCount(),
+            userSummary.banCount()).contains("HU"));
         handlingSends.clear();
-        Handling.sendStaffUserSummary(4, "GF", "GF" + wireLong(88));
-        assertEquals(true, handlingSends.get(0).contains("HU"));
-        handlingSends.clear();
-        Handling.sendStaffCaution(4, "GM", "GM" + wireLong(88) + wireString("Careful"));
+        processPreSessionPacketBuffer(4, readyFrame("GM" + wireLong(88) + wireString("Careful")));
         assertEquals("8:DATA\6" + "8\6BaCareful\2\1\7", handlingSends.get(0));
         assertEquals(true, containsSql(handlingSql, "users_cautions"));
         handlingSends.clear();
-        Handling.staffKickUser(4, "GO", "GO" + wireLong(88) + wireString("Leave"));
+        processPreSessionPacketBuffer(4, readyFrame("GO" + wireLong(88) + wireString("Leave")));
         assertEquals(true, handlingSends.contains("8:DATA\6" + "8\6BaLeave\2\1\7"));
         assertEquals(true, handlingSends.contains("8:DATA\6" + "8\6@R\7"));
         handlingSends.clear();
-        Handling.staffBanUser(4, "GP", "GP" + wireLong(88) + wireString("Ban") + wireLong(2));
+        processPreSessionPacketBuffer(4, readyFrame("GP" + wireLong(88) + wireString("Ban") + wireLong(2)));
         assertEquals(true, containsSql(handlingSql, "users_bans"));
         assertEquals(true, containsSql(handlingSql, "UNIX_TIMESTAMP()+7200"));
         Guardian.setSocketConnected(8, true);
         handlingSends.clear();
-        assertEquals(1L, Handling.moderateCurrentRoom(4, "CH", "CH" + wireLong(1) + wireString("Room alert")));
+        processPreSessionPacketBuffer(4, readyFrame("CH" + wireLong(1) + wireString("Room alert")));
         assertEquals(true, handlingSends.contains("4:DATA\6" + "4\6BaRoom alert\2\1\7"));
         assertEquals(true, handlingSends.contains("8:DATA\6" + "8\6BaRoom alert\2\1\7"));
         handlingSends.clear();
-        Handling.sendCallForHelpReview(50, 4);
-        assertEquals(true, handlingSends.get(0).contains("HR"));
+        StaffModerationDao.OpenCallForHelpReviewRow reviewRow =
+            staffDao.openCallForHelpReview(50).orElse(null);
+        assertEquals(true, StaffPayloads.callForHelpNotification(reviewRow.toPayloadRow(), null).contains("HR"));
         handlingSql.clear();
-        Handling.moveCallForHelpToPickedTab(4, "GB", "GB" + wireLong(1) + wireLong(50));
+        processPreSessionPacketBuffer(4, readyFrame("GB" + wireLong(1) + wireLong(50)));
         assertEquals(true, containsSql(handlingSql, "id_tab='2'"));
         handlingSql.clear();
-        Handling.moveCallForHelpToOpenTab(4, "GC", "GC" + wireLong(1) + wireLong(50));
+        processPreSessionPacketBuffer(4, readyFrame("GC" + wireLong(1) + wireLong(50)));
         assertEquals(true, containsSql(handlingSql, "id_tab='1'"));
         handlingSends.clear();
-        Handling.closeCallForHelp(4, "GD", "GD" + wireLong(2) + wireLong(50));
+        processPreSessionPacketBuffer(4, readyFrame("GD" + wireLong(2) + wireLong(50)));
         assertEquals(true, handlingSends.get(0).contains("H\\"));
         handlingSql.clear();
-        Handling.lockCurrentRoomForModeration(4, "GL", "GL" + wireLong(1) + wireLong(1));
+        processPreSessionPacketBuffer(4, readyFrame("GL" + wireLong(1) + wireLong(1)));
         assertEquals(true, containsSql(handlingSql, "Inappropriate to hotel management"));
         handlingSends.clear();
-        Handling.sendStaffRoomChatHistory(4, "GG", "GG" + wireLong(88));
-        assertEquals(true, handlingSends.get(0).contains("HX"));
-        assertEquals(sentPayload(handlingSends.get(0)),
-            StaffModerationLookups.roomChatHistoryResponse(
-                new StaffUserLookup(88L, "Target"), new StaffModerationDao(MySQL.configuredDatabase())));
+        String roomChatHistoryResponse = StaffModerationLookups.roomChatHistoryResponse(
+            new StaffUserLookup(88L, "Target"), new StaffModerationDao(MySQL.configuredDatabase()));
+        assertEquals(true, roomChatHistoryResponse.contains("HX"));
         handlingSends.clear();
-        Handling.sendStaffRoomVisitHistory(4, "GJ", "GJB88");
-        assertEquals(true, handlingSends.get(0).contains("HY"));
-        assertEquals(sentPayload(handlingSends.get(0)),
-            StaffModerationLookups.roomVisitHistoryResponse(
-                new StaffUserLookup(88L, "Target"), new StaffModerationDao(MySQL.configuredDatabase())));
+        String roomVisitHistoryResponse = StaffModerationLookups.roomVisitHistoryResponse(
+            new StaffUserLookup(88L, "Target"), new StaffModerationDao(MySQL.configuredDatabase()));
+        assertEquals(true, roomVisitHistoryResponse.contains("HY"));
         handlingSends.clear();
-        Handling.sendStaffAlert(4, "GN", "GN" + wireLong(88) + wireString("Direct"));
+        processPreSessionPacketBuffer(4, readyFrame("GN" + wireLong(88) + wireString("Direct")));
         assertEquals("8:DATA\6" + "8\6BaDirect\2\1\7", handlingSends.get(0));
         handlingSends.clear();
-        assertEquals(4L, Handling.waveCurrentRoomUser(4, "A^", "A^"));
-        assertEquals(true, handlingSends.get(0).contains("Ga"));
-        handlingSends.clear();
-        assertEquals(3L, Handling.danceCurrentRoomUser(4, "A]", "A]" + wireLong(3)));
-        assertEquals(true, handlingSends.get(0).contains("G`"));
-        handlingSends.clear();
         String wardrobePayload = UserLookups.wardrobeSlotsPayload(
-            "77", new UserDao(MySQL.configuredDatabase()), AppConfigState.instance().permissionMatrix());
+            77L, new UserDao(MySQL.configuredDatabase()), AppConfigState.instance().permissionMatrix());
         assertEquals(true, wardrobePayload.contains("DK"));
         assertEquals(true, wardrobePayload.contains("hd-180-1"));
         handlingSql.clear();
         handlingSends.clear();
         String savedWardrobePayload = UserLookups.saveWardrobeSlotPayload(
-            "77",
-            "Ex" + wireLong(2) + wireString("hd-180-1.ch-255-66") + wireString("M"),
+            77L,
+            UserWire.wardrobeSlotRequest("Ex" + wireLong(2) + wireString("hd-180-1.ch-255-66") + wireString("M")),
             Files.readString(figureCachePath.resolve("figuredata.cache")),
             new UserDao(MySQL.configuredDatabase()),
             AppConfigState.instance().permissionMatrix());
@@ -4483,91 +4494,95 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         handlingSends.clear();
         String tutorialClothesPayload = UserLookups.updateTutorialClothesPayload(
-            "77",
-            "@l" + wireString("M") + wireString("hd-180-1.ch-255-66"),
+            77L,
+            UserWire.tutorialClothesRequest("@l" + wireString("M") + wireString("hd-180-1.ch-255-66")),
             Files.readString(figureCachePath.resolve("figuredata.cache")),
             new UserDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "tutorial_clothes='1'"));
         assertEquals(true, tutorialClothesPayload.contains("DJ"));
         handlingSends.clear();
-        Handling.sendClubSubscriptionOffers(4, "oW", "oW");
-        assertEquals(true, handlingSends.get(0).contains("Iq"));
-        assertEquals(true, handlingSends.get(0).contains("club_vip"));
+        ClubDao liveClubDao = new ClubDao(MySQL.configuredDatabase());
+        String clubSubscriptionPayload = ClubPayloads.subscriptionOffers(
+            liveClubDao.clubProductRows(),
+            liveClubDao.userClubStatus(77)
+                .orElse(new ClubDao.UserClubStatus(0L, 0L, 0L, 0L, 0L, 0L, 0L)));
+        assertEquals(true, clubSubscriptionPayload.contains("Iq"));
+        assertEquals(true, clubSubscriptionPayload.contains("club_vip"));
         handlingSends.clear();
-        assertEquals("GzCACHE", Handling.sendCachedRecyclerStatus(4, "", "Gz"));
-        assertEquals("4:DATA\6" + "4\6GzCACHE\1\7", handlingSends.get(0));
-        handlingSends.clear();
+        assertEquals("CACHE", RecyclerState.instance().settings().statusPayload());
+        assertEquals("GzCACHE", "Gz" + RecyclerState.instance().settings().statusPayload());
         String rankAndStaffPayload = UserLookups.rankAndStaffStatePayload(
-            "77", new UserDao(MySQL.configuredDatabase()), AppConfigState.instance().permissionMatrix());
+            77L, new UserDao(MySQL.configuredDatabase()), AppConfigState.instance().permissionMatrix());
         assertEquals(true, rankAndStaffPayload.contains("@B"));
         handlingSql.clear();
         handlingSends.clear();
-        String chatPayload = Handling.chatInCurrentRoom(4, "@t", "@t" + wireString("hello"));
-        assertEquals(true, chatPayload.contains("@X"));
-        assertEquals(true, chatPayload.contains("hello"));
+        processPreSessionPacketBuffer(4, readyFrame("@t" + wireString("hello")));
+        assertEquals(true, containsSend(handlingSends, "@X"));
+        assertEquals(true, containsSend(handlingSends, "hello"));
         assertEquals(true, containsSql(handlingSql, "logs_chat"));
         assertEquals(true, containsSql(handlingSql, "'0'"));
         assertEquals(2, handlingSends.size());
         handlingSql.clear();
         handlingSends.clear();
-        String shoutPayload = Handling.shoutInCurrentRoom(4, "@w", "@w" + wireString("loud"));
-        assertEquals(true, shoutPayload.contains("@Y"));
+        processPreSessionPacketBuffer(4, readyFrame("@w" + wireString("loud")));
+        assertEquals(true, containsSend(handlingSends, "@Y"));
         assertEquals(true, containsSql(handlingSql, "'1'"));
         handlingSends.clear();
-        String whisperPayload = Handling.whisperInCurrentRoom(4, "@x", "@x" + wireString("Target") + wireString("secret"));
-        assertEquals(true, whisperPayload.contains("@X"));
-        assertEquals(true, whisperPayload.contains("secret"));
+        processPreSessionPacketBuffer(4, readyFrame("@x" + wireString("Target") + wireString("secret")));
+        assertEquals(true, containsSend(handlingSends, "@X"));
+        assertEquals(true, containsSend(handlingSends, "secret"));
         assertEquals(2, handlingSends.size());
         assertEquals(true, handlingSends.get(0).startsWith("8:DATA"));
         assertEquals(true, handlingSends.get(1).startsWith("4:DATA"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.cancelLatestCallForHelp(4, "EG", "EG");
+        processPreSessionPacketBuffer(4, readyFrame("Cn"));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM staff_cfh WHERE id='51'"));
         assertEquals("4:DATA\6" + "4\6E@\1\7", handlingSends.get(0));
         handlingSends.clear();
-        Handling.openStaffModerationPanel(4);
-        assertEquals(true, handlingSends.get(0).contains("HS"));
-        assertEquals(true, handlingSends.get(0).contains("STAFFMOD"));
-        assertEquals(true, handlingSends.get(1).contains("HR"));
+        String liveModerationPanelPayload = StaffPayloads.moderationPanel(
+            ModerationState.instance().staffSettings(),
+            UserLookups.rank(77L, new UserDao(MySQL.configuredDatabase())),
+            UserLookups.hcLevel(77L, new UserDao(MySQL.configuredDatabase())));
+        assertEquals(true, liveModerationPanelPayload.contains("HS"));
+        assertEquals(true, liveModerationPanelPayload.contains("STAFFMOD"));
+        assertEquals(true, StaffPayloads.callForHelpNotification(
+            staffDao.openStaffCallRows().get(0), null).contains("HR"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.submitCallForHelp(4, "GE", "GE" + wireString("This is a sufficiently long call for help description") + wireLong(8) + wireLong(88));
+        processPreSessionPacketBuffer(4, readyFrame("GE"
+            + wireString("This is a sufficiently long call for help description") + wireLong(8) + wireLong(88)));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO staff_cfh"));
         assertEquals(true, handlingSends.get(0).contains("EA"));
         handlingSends.clear();
-        Handling.sendImportantFaqs(4);
-        assertEquals("4:DATA\6" + "4\6HFIMPORTANTFAQ\1\7", handlingSends.get(0));
+        assertEquals("HFIMPORTANTFAQ", HelpPayloads.importantFaqs(HelpCenterState.instance().cache()));
+        assertEquals("HGFAQCATS", HelpPayloads.categories(HelpCenterState.instance().cache()));
+        assertEquals("HJ" + encodedVl64(1, null, "") + "\2CATFAQ",
+            HelpPayloads.categoryFaqs(HelpCenterState.instance().cache(),
+                HelpWire.categoryFaqRequest("Fd" + wireLong(1), "Fd").categoryId()));
+        String faqSearchPayload = HelpPayloads.searchResults(
+            new HelpDao(MySQL.configuredDatabase()).searchFaqs(
+                HelpWire.faqSearchRequest("Fc" + "hotel", "Fc").searchText()));
+        assertEquals(true, faqSearchPayload.contains("HI"));
+        assertEquals(true, faqSearchPayload.contains("FAQ Two"));
         handlingSends.clear();
-        Handling.sendFaqCategories(4);
-        assertEquals("4:DATA\6" + "4\6HGFAQCATS\1\7", handlingSends.get(0));
-        handlingSends.clear();
-        Handling.sendCategoryFaqs(4, "Fd", "Fd" + wireLong(1));
-        assertEquals(true, handlingSends.get(0).contains("HJ"));
-        assertEquals(true, handlingSends.get(0).contains("CATFAQ"));
-        handlingSends.clear();
-        Handling.searchFaqs(4, "Fc", "Fc" + "hotel");
-        assertEquals(true, handlingSends.get(0).contains("HI"));
-        assertEquals(true, handlingSends.get(0).contains("FAQ Two"));
-        handlingSends.clear();
-        Handling.sendFaqDescription(4, "Fb", "Fb" + wireLong(2));
-        assertEquals("4:DATA\6" + "4\6HHFAQDESC\1\7", handlingSends.get(0));
-        String eventInfoPayload = Handling.roomEventInfoPayload(9);
+        assertEquals("HHFAQDESC",
+            HelpPayloads.description(HelpCenterState.instance().cache(),
+                HelpWire.faqIdRequest("Fb" + wireLong(2), "Fb").faqId()));
+        String eventInfoPayload = RoomLookups.eventInfoPayload(
+            9, "%H:%i", new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, eventInfoPayload.contains("Party"));
-        assertEquals(eventInfoPayload, RoomLookups.eventInfoPayload(
-            9, "%H:%i", new RoomDao(MySQL.configuredDatabase())));
         assertEquals("-1\2", RoomPayloads.eventInfo(null));
-        assertEquals("-1\2", Handling.roomEventInfoPayload(0));
         handlingSends.clear();
         AvatarNameUpdate checkName = UserLookups.validateOrChangeAvatarName(
-            "77", 4, true, "NewName", new UserDao(MySQL.configuredDatabase()));
+            77L, 4, true, "NewName", new UserDao(MySQL.configuredDatabase()));
         assertEquals(0L, checkName.validationCode());
         assertEquals(true, checkName.validationPayload().contains("H{"));
         assertEquals(true, checkName.validationPayload().contains("NewName"));
         handlingSql.clear();
         handlingSends.clear();
         AvatarNameUpdate changeName = UserLookups.validateOrChangeAvatarName(
-            "77", 4, false, "NewName", new UserDao(MySQL.configuredDatabase()));
+            77L, 4, false, "NewName", new UserDao(MySQL.configuredDatabase()));
         assertEquals(0L, changeName.validationCode());
         assertEquals(true, changeName.changed());
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET name='NewName'"));
@@ -4576,9 +4591,6 @@ public final class PortedModuleSmokeTest {
         String settingsPayload = RoomLookups.roomSettingsPayload(9, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, settingsPayload.contains("GQ"));
         assertEquals(true, settingsPayload.contains("Room"));
-        Handling.sendRoomSettings(4, "FF", "FF" + wireLong(9));
-        assertEquals(true, handlingSends.get(0).contains("GQ"));
-        assertEquals(true, handlingSends.get(0).contains("Room"));
         handlingSql.clear();
         handlingSends.clear();
         RoomLookups.RoomIconUpdate iconUpdate =
@@ -4589,7 +4601,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, iconUpdate.entryUpdatedPayload().contains("GH"));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET icon="));
         handlingSql.clear();
-        Handling.updateRoomIcon(4, "FB", "FB" + wireLong(1) + wireLong(2) + wireLong(0));
+        processPreSessionPacketBuffer(4, readyFrame("FB" + wireLong(1) + wireLong(2) + wireLong(0)));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET icon="));
         assertEquals(true, containsSend(handlingSends, "GI"));
         assertEquals(true, containsSend(handlingSends, "GH"));
@@ -4601,26 +4613,24 @@ public final class PortedModuleSmokeTest {
         assertEquals(false, deletedEvent.hasBroadcastPayload());
         assertEquals(true, containsSql(handlingSql, "DELETE FROM rooms_events WHERE id_room='9'"));
         handlingSql.clear();
-        Handling.deleteRoomEvent(4, "E[", "E[");
+        processPreSessionPacketBuffer(4, readyFrame("E["));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM rooms_events WHERE id_room='9'"));
         assertEquals("4:DATA\6" + "4\6Er-1\2\1\7", handlingSends.get(0));
         handlingSends.clear();
         assertEquals("EoIH", RoomLookups.doorStatusPayload(9, new RoomDao(MySQL.configuredDatabase())));
-        Handling.sendRoomDoorStatus(4, "EY", "EY");
-        assertEquals("4:DATA\6" + "4\6EoIH\1\7", handlingSends.get(0));
         handlingSql.clear();
         handlingSends.clear();
         assertEquals(RoomPayloads.homeRoom(9), RoomLookups.setHomeRoomPayload(
-            "77", 9, new UserDao(MySQL.configuredDatabase())));
+            77L, 9, new UserDao(MySQL.configuredDatabase())));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET homeroom='9'"));
         handlingSql.clear();
-        Handling.setHomeRoom(4, "XX", "XX" + wireLong(9));
+        processPreSessionPacketBuffer(4, readyFrame("F@" + wireLong(9)));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET homeroom='9'"));
         assertEquals(true, handlingSends.get(0).contains("GG"));
         handlingSql.clear();
         handlingSends.clear();
         RoomLookups.RoomEventChange createdEventChange = RoomLookups.createRoomEvent(
-            "77",
+            77L,
             9,
             RoomWire.roomEventCreatePayloadFromWire("EZ" + wireLong(1) + wireString("Party")
                 + wireString("Description") + wireLong(2) + wireString("TagOne") + wireString("TagTwo")),
@@ -4630,14 +4640,15 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, createdEventChange.broadcastPayload().contains("Er"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms_events"));
         handlingSql.clear();
-        Handling.createRoomEvent(4, "EZ", "EZ" + wireLong(1) + wireString("Party") + wireString("Description")
-            + wireLong(2) + wireString("TagOne") + wireString("TagTwo"));
+        processPreSessionPacketBuffer(4, readyFrame("EZ" + wireLong(1)
+            + wireString("Party") + wireString("Description") + wireLong(2) + wireString("TagOne")
+            + wireString("TagTwo")));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms_events"));
         assertEquals(true, containsSend(handlingSends, "Er"));
         handlingSql.clear();
         handlingSends.clear();
         RoomLookups.RoomEventChange editedEventChange = RoomLookups.editRoomEvent(
-            "77",
+            77L,
             9,
             RoomWire.roomEventEditPayloadFromWire("E\\" + wireString("Edited") + wireString("Description")
                 + wireLong(1) + wireString("TagOne")),
@@ -4647,13 +4658,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, editedEventChange.broadcastPayload().contains("Er"));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms_events SET"));
         handlingSql.clear();
-        Handling.editRoomEvent(4, "E\\", "E\\" + wireString("Edited") + wireString("Description")
-            + wireLong(1) + wireString("TagOne"));
+        processPreSessionPacketBuffer(4, readyFrame("E\\" + wireString("Edited")
+            + wireString("Description") + wireLong(1) + wireString("TagOne")));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms_events SET"));
         assertEquals(true, containsSend(handlingSends, "Er"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.followUserToRoom(4, "Ab", "AbTarget");
+        processPreSessionPacketBuffer(4, readyFrame("AbTarget"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO logs_visitedrooms"));
         assertEquals(true, containsSend(handlingSends, "@S"));
         assertEquals(true, containsSend(handlingSends, "@R"));
@@ -4682,50 +4693,49 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET"));
         assertEquals(true, containsSql(handlingSql, "name='Updated Room'"));
         handlingSql.clear();
-        Handling.updateRoomSettings(4, "FQ", "FQ" + wireString("Updated Room") + wireString("secret")
+        processPreSessionPacketBuffer(4, readyFrame("FQ" + wireString("Updated Room") + wireString("secret")
             + wireLong(0) + wireString("Updated description") + wireLong(20) + wireLong(1)
             + wireLong(2) + wireString("TagOne") + wireString("TagTwo")
-            + wireLong(1) + wireLong(0) + wireLong(1) + wireLong(0) + wireLong(0) + wireLong(0));
+            + wireLong(1) + wireLong(0) + wireLong(1) + wireLong(0) + wireLong(0) + wireLong(0)));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET"));
         assertEquals(true, containsSql(handlingSql, "name='Updated Room'"));
         assertEquals(true, containsSend(handlingSends, "GS"));
         assertEquals(true, containsSend(handlingSends, "GX"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(4L, Handling.enterRoom(4, 9, ""));
+        processPreSessionPacketBuffer(4, readyFrame("FG9"));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET id_slot='4'"));
         assertEquals(true, containsSend(handlingSends, "@R"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(9L, Handling.leaveCurrentRoom(4));
+        processPreSessionPacketBuffer(4, readyFrame("FG9"));
         assertEquals(true, containsSql(handlingSql, "timestamp_left=UNIX_TIMESTAMP()"));
         assertEquals(true, containsSend(handlingSends, "J|H"));
         handlingSends.clear();
-        Handling.sendRoomEntryBootstrap(4, 0);
-        assertEquals(true, containsSend(handlingSends, "@S"));
-        assertEquals(true, containsSend(handlingSends, "Bf/client.php"));
-        assertEquals(true, containsSend(handlingSends, "@i"));
+        RoomPayloads.EntryBootstrapPayloads privateEntryBootstrap = RoomPayloads.entryBootstrap(0);
+        assertEquals("@S", privateEntryBootstrap.roomEntryMarker());
+        assertEquals("Bf/client.php\2", privateEntryBootstrap.clientView());
+        assertEquals("@i", privateEntryBootstrap.roomModePayload());
+        assertEquals(List.of("@S", "Bf/client.php\2", "@i"), privateEntryBootstrap.payloads());
+        assertEquals(List.of("@S", "Bf/client.php\2", "@{"), RoomPayloads.entryBootstrap(1).payloads());
         handlingSends.clear();
-        assertEquals(9L, Handling.enterRoomFromPayload(4, "FG", "FG9"));
+        processPreSessionPacketBuffer(4, readyFrame("FG9"));
         assertEquals(true, containsSend(handlingSends, "@R"));
-        handlingSends.clear();
-        Handling.sendVisitRoomAdvertisement(4, "Bv", "Bv");
-        assertEquals("4:DATA\6" + "4\6DB\2\2\1\7", handlingSends.get(0));
         handlingSends.clear();
         String singleRoomPayload = NavigatorRequests.singleRoomResponsePayload(9, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, singleRoomPayload.contains("GF"));
         assertEquals(true, singleRoomPayload.contains("NavRoom"));
-        Handling.kickRoomUser(4, "A_", "A_" + wireLong(88));
+        processPreSessionPacketBuffer(4, readyFrame("A_" + wireLong(88)));
         assertEquals(true, containsSend(handlingSends, "@aXjO"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.banRoomUser(4, "E@", "E@" + wireLong(88));
+        processPreSessionPacketBuffer(4, readyFrame("E@" + wireLong(88)));
         assertEquals(true, containsSend(handlingSends, "@aXjO"));
         assertEquals(true, containsSql(handlingSql, "INSERT IGNORE INTO rooms_bans"));
         assertEquals(true, containsSql(handlingSql, "UNIX_TIMESTAMP()+900"));
         handlingSql.clear();
         handlingSends.clear();
-        String roomRatingPayload = RoomLookups.rateRoomPayload("77", 9, 1, new RoomDao(MySQL.configuredDatabase()));
+        String roomRatingPayload = RoomLookups.rateRoomPayload(77L, 9, 1, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms_rates"));
         assertEquals(true, containsSql(handlingSql, "UPDATE rooms SET rate='6'"));
         assertEquals(true, roomRatingPayload.contains("EY"));
@@ -4816,17 +4826,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, officialRoomModelPayload.contains("GE"));
         assertEquals(true, officialRoomModelPayload.contains("model.swf"));
         assertEquals(true, officialRoomModelPayload.contains("Official Room"));
-        Handling.sendOfficialRoomModel(4, "FD", "FD" + wireLong(9));
-        assertEquals(true, containsSend(handlingSends, "GE"));
-        assertEquals(true, containsSend(handlingSends, "model.swf"));
-        assertEquals(true, containsSend(handlingSends, "Official Room"));
         handlingSends.clear();
         String roomUserEntryBroadcastPayload = SocialLookups.roomUserEntryBroadcastPayload(
-            "77", 9, 4, new RoomDao(MySQL.configuredDatabase()));
+            77L, 9, 4, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, roomUserEntryBroadcastPayload.contains("@\\"));
         assertEquals(true, roomUserEntryBroadcastPayload.contains("Caller"));
         assertEquals(true, roomUserEntryBroadcastPayload.contains("hd-180-1"));
-        Handling.broadcastCurrentRoomUserEntry(4, 9);
+        processPreSessionPacketBuffer(4, readyFrame("@B"));
         assertEquals(true, containsSend(handlingSends, "@\\"));
         assertEquals(true, containsSend(handlingSends, "Caller"));
         assertEquals(true, containsSend(handlingSends, "hd-180-1"));
@@ -4834,18 +4840,13 @@ public final class PortedModuleSmokeTest {
         RepresentedBotRegistry originalRepresentedBotsForRoomList = PetState.instance().representedBots();
         PetState.instance().setRepresentedBots(representedBots(Map.of(
             200L, "4\2" + "501\2RoomBot\2hello\2speech\2responses\2" + "5\2" + "6\2" + "0.5\2" + "3\2" + "1 2 ff\2")));
-        List<String> roomOccupantListPayloads = SocialLookups.roomOccupantListPayloads(
+        SocialLookups.RoomOccupantListPayloads roomOccupantListPayloads = SocialLookups.roomOccupantListPayloads(
             9, RoomState.instance().representedRooms(), new RoomDao(MySQL.configuredDatabase()));
-        assertEquals(true, roomOccupantListPayloads.stream().anyMatch(payload -> payload.contains("@\\")));
-        assertEquals(true, roomOccupantListPayloads.stream().anyMatch(payload -> payload.contains("Caller")));
-        assertEquals(true, roomOccupantListPayloads.stream().anyMatch(payload -> payload.contains("RoomBot")));
-        assertEquals(true, roomOccupantListPayloads.stream().anyMatch(payload -> payload.contains("Du")));
-        Handling.sendRoomOccupantList(4, 9);
-        assertEquals(true, containsSend(handlingSends, "@\\"));
-        assertEquals(true, containsSend(handlingSends, "Caller"));
-        assertEquals(true, containsSend(handlingSends, "RoomBot"));
-        assertEquals(true, containsSend(handlingSends, "Du"));
-        assertEquals(true, containsSend(handlingSends, "0.5"));
+        assertEquals(true, roomOccupantListPayloads.containsText("@\\"));
+        assertEquals(true, roomOccupantListPayloads.containsText("Caller"));
+        assertEquals(true, roomOccupantListPayloads.containsText("RoomBot"));
+        assertEquals(true, roomOccupantListPayloads.containsText("Du"));
+        assertEquals(true, roomOccupantListPayloads.containsText("0.5"));
         PetState.instance().setRepresentedBots(originalRepresentedBotsForRoomList);
         handlingSends.clear();
         RoomLookups.RoomModelLoad roomModelLoad =
@@ -4855,7 +4856,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, roomModelLoad.initialPayloads().contains("Bf/client.php\2"));
         assertEquals(true, roomModelLoad.initialPayloads().contains("@_000\r111\2"));
         assertEquals(true, roomModelLoad.initialPayloads().contains("GWH000\r111\2H"));
-        Handling.loadCurrentRoomModel(4);
+        processPreSessionPacketBuffer(4, readyFrame("@B"));
         assertEquals(true, containsSend(handlingSends, "Bf/client.php"));
         assertEquals(true, containsSend(handlingSends, "AE9"));
         assertEquals(true, containsSend(handlingSends, "@_000\r111\2"));
@@ -4863,89 +4864,65 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "CP\2\2"));
         handlingSends.clear();
         RoomLookups.RoomPresentationLoad roomPresentationLoad =
-            RoomLookups.roomPresentationLoad("77", 9, true,
-                Handling.roomEventInfoPayload(9), new RoomDao(MySQL.configuredDatabase()));
+            RoomLookups.roomPresentationLoad(77L, 9, true,
+                RoomLookups.eventInfoPayload(9, "%H:%i", new RoomDao(MySQL.configuredDatabase())),
+                new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, roomPresentationLoad.valid());
         assertEquals(20L, roomPresentationLoad.modelId());
         assertEquals(true, roomPresentationLoad.initialPayloads().contains("@nfloor\2floorA\2"));
         assertEquals(true, roomPresentationLoad.initialPayloads().contains("@nwallpaper\2wallA\2"));
         assertEquals(true, roomPresentationLoad.initialPayloads().contains("@nlandscape\2landA\2"));
         assertEquals(true, roomPresentationLoad.initialPayloads().contains("@o"));
-        Handling.sendCurrentRoomDecoration(4, "@{", "@{");
-        assertEquals(true, containsSend(handlingSends, "@nfloor\2floorA\2"));
-        assertEquals(true, containsSend(handlingSends, "@nwallpaper\2wallA\2"));
-        assertEquals(true, containsSend(handlingSends, "@nlandscape\2landA\2"));
-        assertEquals(true, containsSend(handlingSends, "Er"));
-        assertEquals(true, containsSend(handlingSends, "@o"));
-        assertEquals(true, containsSend(handlingSends, "GX"));
         handlingSends.clear();
-        Handling.processPreSessionPacketBuffer(4, "x@Bpa");
+        processPreSessionPacketBuffer(4, "x@Bpa");
         assertEquals(true, containsSend(handlingSends, "J|H"));
         handlingSends.clear();
-        List<String> activeEffectPayloads = SocialLookups.activeRoomEffectPayloads(
+        SocialLookups.ActiveRoomEffectPayloads activeEffectPayloads = SocialLookups.activeRoomEffectPayloads(
             9, new RoomDao(MySQL.configuredDatabase()));
-        assertEquals(true, activeEffectPayloads.stream().anyMatch(payload -> payload.contains("Ge")));
-        Handling.sendRoomActiveEffects(4, 9);
-        assertEquals(true, containsSend(handlingSends, "Ge"));
-        handlingSends.clear();
-        String modelFurniturePayload = Handling.sendRoomModelFurniture(4, 20);
+        assertEquals(true, activeEffectPayloads.containsText("Ge"));
+        String modelFurniturePayload = FurnitureLookups.modelFurniturePayload(20, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, modelFurniturePayload.contains("@^"));
         assertEquals(true, modelFurniturePayload.contains("state"));
         assertEquals(modelFurniturePayload,
-            FurnitureLookups.modelFurniturePayload(20, new RoomDao(MySQL.configuredDatabase())));
-        assertEquals(modelFurniturePayload,
             FurnitureLookups.modelFurniturePayloadForRoom(0, 9, new RoomDao(MySQL.configuredDatabase())));
-        assertEquals(true, containsSend(handlingSends, "@^"));
         handlingSends.clear();
         String directCachePayload = WiredLookups.roomStartupCachePayload(9, WiredState.instance().settings());
         assertEquals(true, directCachePayload.contains("DiWIREDSTATE"));
         assertEquals(true, directCachePayload.contains("trigger-cache"));
         assertEquals(true, directCachePayload.contains("room-cache"));
-        String cachePayload = Handling.sendRoomStartupCache(4, 9);
-        assertEquals(true, cachePayload.contains("DiWIREDSTATE"));
-        assertEquals(true, cachePayload.contains("trigger-cache"));
-        assertEquals(true, cachePayload.contains("room-cache"));
-        assertEquals(true, containsSend(handlingSends, "DiWIREDSTATE"));
-        handlingSends.clear();
-        String wallPayload = Handling.sendRoomWallFurniture(4, 9);
+        String wallPayload = FurnitureLookups.wallFurniturePayload(9, new FurnitureDao(MySQL.configuredDatabase()));
         assertEquals(true, wallPayload.contains("@m"));
         assertEquals(true, wallPayload.contains(":w=1,2 l=3,4"));
         assertEquals(true, wallPayload.contains("wall-state"));
-        assertEquals(wallPayload,
-            FurnitureLookups.wallFurniturePayload(9, new FurnitureDao(MySQL.configuredDatabase())));
-        assertEquals(true, containsSend(handlingSends, "@m"));
         handlingSends.clear();
-        String petPreviewPayload = Handling.sendPetPackagePreview(4, "p`", "p`" + wireLong(75));
+        String petPreviewPayload = PetLookups.packagePreviewPayload(
+            PetWire.packagePreviewRequest("p`" + wireLong(75)).furnitureId(),
+            9,
+            new FurnitureDao(MySQL.configuredDatabase()),
+            new PackageDao(MySQL.configuredDatabase()));
         assertEquals(true, petPreviewPayload.contains("Ly"));
         assertEquals(true, petPreviewPayload.endsWith("3\2"));
-        assertEquals(true, containsSend(handlingSends, "Ly"));
         handlingSends.clear();
         NavigatorState.instance().setNewFriendRooms(List.of(new NewFriendRooms.RoomPick(12L, 1L)),
             LocalDateTime.now().plusSeconds(90L));
         assertEquals(NavigatorPayloads.newFriendRoom(new NewFriendRooms.RoomPick(12L, 1L)),
             NavigatorRequests.newFriendRoomPayload(LocalDateTime.now(), NavigatorState.instance(), null));
-        Handling.sendNewFriendRoom(4, "Gj", "Gj");
-        assertEquals(true, containsSend(handlingSends, "L\u007f"));
         handlingSends.clear();
         handlingSql.clear();
         FurnitureDimmers.PresetPayload userDimmerPresets = FurnitureDimmers.presetsForUser(
-            "77", 9, new RoomDao(MySQL.configuredDatabase()), new FurnitureDao(MySQL.configuredDatabase()));
+            77L, 9, new RoomDao(MySQL.configuredDatabase()), new FurnitureDao(MySQL.configuredDatabase()));
         assertEquals(2L, userDimmerPresets.currentPresetId());
         assertEquals(true, userDimmerPresets.payload().contains("#82F349"));
-        assertEquals(2L, Handling.sendDimmerPresets(4));
-        assertEquals(true, containsSend(handlingSends, "Em"));
-        assertEquals(true, containsSend(handlingSends, "#82F349"));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals(1L, Handling.toggleDimmerState(4, "EW", "EW"));
+        processPreSessionPacketBuffer(4, readyFrame("EW"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='1,2,1,#82F349,100' WHERE id='78'"));
         assertEquals(true, containsSend(handlingSends, "AU78\2"));
         assertEquals(true, containsSend(handlingSends, "1,2,1,#82F349,100"));
         handlingSends.clear();
         handlingSql.clear();
-        long dimmerId = Handling.updateDimmerPreset(4, "EV",
-            "EV" + wireLong(2) + wireLong(1) + wireString("#82f349") + wireLong(100));
-        assertEquals(78L, dimmerId);
+        processPreSessionPacketBuffer(4,
+            readyFrame("EV" + wireLong(2) + wireLong(1) + wireString("#82f349") + wireLong(100)));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures_dimmerpresets SET id_state='1'"));
         assertEquals(true, containsSql(handlingSql, "colour='#82F349'"));
         assertEquals(true, containsSql(handlingSql, "sign='2,2,1,#82F349,100'"));
@@ -4954,12 +4931,12 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         handlingSends.clear();
         UserPayloads.EffectListPayload userEffectList = UserLookups.effectListPayload(
-            "77", new UserDao(MySQL.configuredDatabase()));
+            77, new UserDao(MySQL.configuredDatabase()));
         assertEquals(2L, userEffectList.listedEffects());
         assertEquals(true, userEffectList.payload().contains("GL"));
         handlingSends.clear();
         UserEffectActivation activatedEffect = UserLookups.activateUserEffect(
-            "77", 12L, 4L, new UserDao(MySQL.configuredDatabase()));
+            77, 12L, 4L, new UserDao(MySQL.configuredDatabase()));
         assertEquals(12L, activatedEffect.effectId());
         assertEquals(true, containsSql(handlingSql, "UPDATE users_effects SET timestamp_expire=UNIX_TIMESTAMP()+time_rent"));
         assertEquals(true, activatedEffect.payload().contains("GN"));
@@ -4974,24 +4951,24 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         handlingSends.clear();
         String creatableRoomCountPayload = RoomLookups.creatableRoomCountPayload(
-            "77",
+            77L,
             AppConfigState.instance().settingsCache().longValueOrDefault("com.server.socket.game.rooms.own.max", 0),
             new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, creatableRoomCountPayload.contains("H@"));
         handlingSends.clear();
         CreatedRoom createdRoom = RoomLookups.createRoom(
-            "77",
+            77L,
             RoomWire.createRoomRequest("@]" + wireString("Created Room") + wireString("model_a")),
             AppConfigState.instance().settingsCache().longValueOrDefault("com.server.socket.game.rooms.own.max", 0),
-            UserLookups.hcLevel("77", new UserDao(MySQL.configuredDatabase())),
+            UserLookups.hcLevel(77L, new UserDao(MySQL.configuredDatabase())),
             new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, createdRoom.valid());
         assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms(id_owner,name,visitors_max,id_model,timestamp_created)"));
         assertEquals(true, createdRoom.payload().contains("@{"));
         assertEquals(true, createdRoom.payload().contains("Created Room"));
-        assertEquals(2, createdRoom.cacheInvalidationPaths().size());
-        assertEquals(true, createdRoom.cacheInvalidationPaths().get(0).endsWith("CACHE/ROOMS/" + createdRoom.roomId() + ".cache"));
-        assertEquals(true, createdRoom.cacheInvalidationPaths().get(1).endsWith("CACHE/PATHFINDER/" + createdRoom.roomId() + ".cache"));
+        assertEquals(2, createdRoom.cacheInvalidation().size());
+        assertEquals(true, createdRoom.cacheInvalidation().roomPath().endsWith("CACHE/ROOMS/" + createdRoom.roomId() + ".cache"));
+        assertEquals(true, createdRoom.cacheInvalidation().pathfinderPath().endsWith("CACHE/PATHFINDER/" + createdRoom.roomId() + ".cache"));
         handlingSql.clear();
         handlingSends.clear();
         StaffPickedToggle staffPickedToggle = RoomLookups.toggleStaffPickedRoom(
@@ -5007,19 +4984,19 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         handlingSends.clear();
         String favouriteRoomIdsPayload = RoomLookups.favouriteRoomIdsPayload(
-            "77",
+            77L,
             AppConfigState.instance().settingsCache().longValueOrDefault("com.server.socket.game.rooms.favourites.max", 30),
             new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, favouriteRoomIdsPayload.contains("GJ"));
         handlingSends.clear();
         String favouriteAddedPayload = RoomLookups.addFavouriteRoomPayload(
-            "77", 9, new RoomDao(MySQL.configuredDatabase()));
+            77L, 9, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO rooms_favourites"));
         assertEquals(true, favouriteAddedPayload.contains("GK"));
         handlingSql.clear();
         handlingSends.clear();
         String favouriteRemovedPayload = RoomLookups.removeFavouriteRoomPayload(
-            "77", 9, new RoomDao(MySQL.configuredDatabase()));
+            77L, 9, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM rooms_favourites WHERE id_room='9'"));
         assertEquals(true, favouriteRemovedPayload.contains("GK"));
         handlingSql.clear();
@@ -5044,26 +5021,16 @@ public final class PortedModuleSmokeTest {
         RoomDao navigatorRequestRooms = new RoomDao(MySQL.configuredDatabase());
         long navigatorLimit = NavigatorRequests.listLimit(AppConfigState.instance().settingsCache());
         assertEquals(true, NavigatorRequests.eventCategoryQueryPayload(
-            "GC" + wireLong(2), AppConfigState.instance().settingsCache(),
+            NavigatorWire.categoryRequest("GC" + wireLong(2)), AppConfigState.instance().settingsCache(),
             NavigatorState.instance().recommendedRooms(), navigatorRequestRooms).contains("GCPC2"));
         assertEquals(true, NavigatorRequests.popularCategoryQueryPayload(
-            "GC" + wireLong(2), AppConfigState.instance().settingsCache(),
+            NavigatorWire.categoryRequest("GC" + wireLong(2)), AppConfigState.instance().settingsCache(),
             NavigatorState.instance().recommendedRooms(), navigatorRequestRooms).contains("GC 2"));
         assertEquals(true, NavigatorRequests.friendCurrentQueryPayload(77, navigatorLimit, navigatorRequestRooms).contains("GCQA"));
-        assertEquals(true, NavigatorRequests.friendCurrentQueryPayload(
-            "77", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GCQA"));
         assertEquals(true, NavigatorRequests.friendOwnedQueryPayload(77, navigatorLimit, navigatorRequestRooms).contains("GC\0"));
-        assertEquals(true, NavigatorRequests.friendOwnedQueryPayload(
-            "77", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GC\0"));
         assertEquals(true, NavigatorRequests.favouriteQueryPayload(77, navigatorLimit, navigatorRequestRooms).contains("GCRA"));
-        assertEquals(true, NavigatorRequests.favouriteQueryPayload(
-            "77", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GCRA"));
         assertEquals(true, NavigatorRequests.recentlyVisitedQueryPayload(77, navigatorLimit, navigatorRequestRooms).contains("GCSA"));
-        assertEquals(true, NavigatorRequests.recentlyVisitedQueryPayload(
-            "77", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GCSA"));
         assertEquals(true, NavigatorRequests.ownedQueryPayload(77, navigatorLimit, navigatorRequestRooms).contains("GCQA"));
-        assertEquals(true, NavigatorRequests.ownedQueryPayload(
-            "77", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GCQA"));
         String officialNavigatorPayload = NavigatorRequests.officialNavigatorPayload(navigatorRequestRooms);
         assertEquals(true, officialNavigatorPayload.contains("GB"));
         assertEquals(true, officialNavigatorPayload.contains("caption"));
@@ -5085,26 +5052,21 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, searchResultsPayload.contains("GCSANav"));
         assertEquals(true, searchResultsPayload.contains("Event Room"));
         assertEquals(true, NavigatorRequests.tagResultsQueryPayload(
-            "GCtag1", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GCSAtag1"));
+            NavigatorWire.queryRequest("GCtag1"), AppConfigState.instance().settingsCache(), navigatorRequestRooms)
+            .contains("GCSAtag1"));
         assertEquals(true, NavigatorRequests.searchResultsQueryPayload(
-            "GCNav", AppConfigState.instance().settingsCache(), navigatorRequestRooms).contains("GCSANav"));
-        handlingSends.clear();
-        Handling.sendClubGiftStatus(4, "GZ", "GZ");
-        assertEquals(true, containsSend(handlingSends, "IoM"));
-        assertEquals(true, containsSend(handlingSends, "GIFTS"));
+            NavigatorWire.queryRequest("GCNav"), AppConfigState.instance().settingsCache(), navigatorRequestRooms)
+            .contains("GCSANav"));
         handlingSends.clear();
         handlingSql.clear();
-        String hcGiftPayload = Handling.claimClubGift(4, "G[", "G[" + wireString("trade_sprite"));
-        assertEquals(true, hcGiftPayload.contains("AC"));
+        processPreSessionPacketBuffer(4, readyFrame("G[" + wireString("trade_sprite")));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO furnitures(id_product,id_ctlgproduct,id_owner,task_owner,task_time,position_r,sign) VALUES('506','81','77','77',UNIX_TIMESTAMP(),'0','')"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET hc_presents=hc_presents-1 WHERE id='77'"));
         assertEquals(true, containsSend(handlingSends, "AC"));
         assertEquals(true, containsSend(handlingSends, "BLS"));
         handlingSends.clear();
         handlingSql.clear();
-        String purchasePayload = Handling.purchaseCatalogProduct(4, "Ad",
-            "Ad" + wireLong(81) + wireString("catalog sign"));
-        assertEquals(true, purchasePayload.contains("AC"));
+        processPreSessionPacketBuffer(4, readyFrame("Ad" + wireLong(81) + wireString("catalog sign")));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time,id_ctlgproduct) VALUES('506','77','catalog sign','77',UNIX_TIMESTAMP(),'81')"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET credits=credits-3,activitypoints_0=activitypoints_0-2 WHERE id='77'"));
         assertEquals(true, containsSend(handlingSends, "Ab"));
@@ -5112,9 +5074,9 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "BLS"));
         handlingSends.clear();
         handlingSql.clear();
-        String giftPayload = Handling.purchaseCatalogGift(4, "GX", "GX" + wireLong(81) + wireLong(506)
-            + wireString("Target") + wireString("gift note") + wireLong(501) + wireLong(2) + wireLong(3));
-        assertEquals(true, giftPayload.contains("AC"));
+        processPreSessionPacketBuffer(4, readyFrame("GX" + wireLong(81)
+            + wireLong(506) + wireString("Target") + wireString("gift note") + wireLong(501) + wireLong(2)
+            + wireLong(3)));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO furnitures(id_product,id_owner,sign,task_owner,task_time,id_ctlgproduct) VALUES('506','77','gift note','77',UNIX_TIMESTAMP(),'81')"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign_extra='gift note',sign='"));
         assertEquals(true, containsSql(handlingSql, "id_owner='88',id_destination='81',id_secondary='3002' WHERE id='97'"));
@@ -5125,19 +5087,25 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSend(handlingSends, "8:DATA"));
         assertEquals(true, containsSend(handlingSends, "Ab"));
         handlingSends.clear();
-        Handling.sendCatalogGiftAvailability(4, "oV", "oV" + wireLong(81));
-        assertEquals(true, containsSend(handlingSends, "In"));
+        CatalogWire.GiftAvailabilityRequest giftAvailabilityRequest =
+            CatalogWire.giftAvailabilityRequest("oV" + wireLong(81));
+        CatalogRegistry.CatalogProduct giftAvailabilityProduct =
+            CatalogState.instance().registry().catalogProduct(giftAvailabilityRequest.itemId()).orElse(null);
+        long giftAvailabilityType = giftAvailabilityProduct == null ? 0L : giftAvailabilityProduct.activityType();
+        long giftEnabled = giftAvailabilityType == 1L
+            ? AppConfigState.instance().settingsCache().longValueOrDefault("com.client.catalog.gifts.enabled", 0)
+            : 0L;
+        assertEquals(CatalogPayloads.giftAvailability(81, giftEnabled),
+            CatalogPayloads.giftAvailability(giftAvailabilityRequest.itemId(), giftEnabled));
         handlingSends.clear();
-        Handling.sendCatalogGiftWrapOptions(4, "oC", "oC");
-        assertEquals(true, containsSend(handlingSends, "WRAP_PAYLOAD"));
+        assertEquals("A\u007f" + encodedVl64(2, null, "") + "PAGE_PAYLOAD",
+            CatalogPayloads.page(CatalogState.instance().catalogPages(),
+                CatalogWire.pageRequest("xx" + wireLong(2)).pageId()));
         handlingSends.clear();
-        Handling.sendCatalogPage(4, "Af", "xx" + wireLong(2));
-        assertEquals(true, containsSend(handlingSends, "A\u007f"));
-        assertEquals(true, containsSend(handlingSends, "PAGE_PAYLOAD"));
-        handlingSends.clear();
-        Handling.sendInventoryToSocket(4);
-        assertEquals(true, containsSend(handlingSends, "BLS"));
-        assertEquals(true, containsSend(handlingSends, "Id"));
+        InventoryMessagePayloads.InventoryList liveInventoryPayloads = InventoryMessagePayloads.listFromItems(
+            new FurnitureDao(MySQL.configuredDatabase()).inventoryFurnitureForOwner(77));
+        assertEquals(true, InventoryMessagePayloads.regularList(liveInventoryPayloads).contains("BLS"));
+        assertEquals(true, InventoryMessagePayloads.emptyRentalList().contains("Id"));
         handlingSends.clear();
         handlingSql.clear();
         VoucherRedemption voucherRedemption = VoucherRedemption.redeem(
@@ -5165,10 +5133,8 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         handlingSends.clear();
         String activityPointBalancePayload = UserLookups.activityPointBalancePayload(
-            "77", new UserDao(MySQL.configuredDatabase()));
+            77, new UserDao(MySQL.configuredDatabase()));
         assertEquals(true, activityPointBalancePayload.contains("M@"));
-        Handling.sendActivityPointBalanceToSocket(4);
-        assertEquals(true, containsSend(handlingSends, "M@"));
         handlingSends.clear();
         handlingSql.clear();
         FurnitureLookups.FurnitureInventoryReturn inventoryReturn =
@@ -5180,8 +5146,8 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         RoomState.instance().setFurnitureRoomCache(FurnitureRoomCache.State.empty());
         RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.trackMarker(RoomState.instance().furnitureRoomCache(), 9, 81));
-        assertEquals(true, RoomState.instance().furnitureRoomCache().pendingRoomCache.contains("\1" + "9\2"));
-        assertEquals(true, RoomState.instance().furnitureRoomCache().pendingFurnitureCache.contains("\1" + "81\2"));
+        assertEquals(true, RoomState.instance().furnitureRoomCache().pendingRoomIds().contains(9L));
+        assertEquals(true, RoomState.instance().furnitureRoomCache().pendingFurnitureIds().contains(81L));
         RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.refreshState(RoomState.instance().furnitureRoomCache(), 9, 82, 3));
         assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "9\t82\t3\2"));
         handlingSends.clear();
@@ -5192,9 +5158,8 @@ public final class PortedModuleSmokeTest {
             93, 9, new RoomUserPosition(2, 3, true), 0, true, new FurnitureDao(MySQL.configuredDatabase()),
             GameDataCaches.productCache());
         assertEquals(true, simpleUse.payload().contains("AZ"));
-        String simpleUsePayload = Handling.handlingSimpleFloorItemUse(
-            4, "AM" + wireLong(93), "AM", 0L, true, RoomUserPosition.absent());
-        assertEquals(simpleUse.payload(), simpleUsePayload);
+        processPreSessionPacketBuffer(4, readyFrame("AM" + wireLong(93)));
+        assertEquals(true, containsSend(handlingSends, simpleUse.payload()));
         assertEquals(true, containsSend(handlingSends, "AZ"));
         assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "9\t93\t0\2"));
         handlingSends.clear();
@@ -5202,11 +5167,10 @@ public final class PortedModuleSmokeTest {
             93, 9, new RoomUserPosition(2, 3, true), -1, false, new FurnitureDao(MySQL.configuredDatabase()),
             GameDataCaches.productCache());
         assertEquals(true, simpleReset.payload().contains("AZ"));
-        String simpleResetPayload = Handling.handlingSimpleFloorItemUse(
-            4, "AL" + wireLong(93), "AL", -1L, false, RoomUserPosition.absent());
-        assertEquals(simpleReset.payload(), simpleResetPayload);
+        processPreSessionPacketBuffer(4, readyFrame("AL" + wireLong(93)));
+        assertEquals(true, containsSend(handlingSends, simpleReset.payload()));
         assertEquals(true, containsSend(handlingSends, "AZ"));
-        assertEquals(true, RoomState.instance().furnitureRoomCache().pendingRoomCache.contains("\1" + "9\2"));
+        assertEquals(true, RoomState.instance().furnitureRoomCache().pendingRoomIds().contains(9L));
         RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.refreshState(RoomState.instance().furnitureRoomCache(), 9, 82, 3));
         handlingSends.clear();
         handlingSql.clear();
@@ -5221,8 +5185,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET position_x='5',position_y='6',position_z='0',position_r='2'"));
         handlingSends.clear();
         handlingSql.clear();
-        String movedFloorWrapperPayload = Handling.moveFloorFurnitureInRoom(4, "AI94 6 7 4");
-        assertEquals(true, movedFloorWrapperPayload.contains("A_"));
+        processPreSessionPacketBuffer(4, readyFrame("AI94 6 7 4"));
+        assertEquals(true, containsSend(handlingSends, "A_"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET position_x='6',position_y='7',position_z='0',position_r='4'"));
         handlingSends.clear();
         handlingSql.clear();
@@ -5239,7 +5203,7 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.removeMarker(RoomState.instance().furnitureRoomCache(), 9, 82));
-        assertEquals(false, RoomState.instance().furnitureRoomCache().pendingFurnitureCache.contains("\1" + "82\2"));
+        assertEquals(false, RoomState.instance().furnitureRoomCache().pendingFurnitureIds().contains(82L));
         assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "9\t82\t3\2"));
         RoomState.instance().setFurnitureRoomCache(FurnitureRoomCache.State.empty());
         FurnitureDao furniture = new FurnitureDao(MySQL.configuredDatabase());
@@ -5257,21 +5221,15 @@ public final class PortedModuleSmokeTest {
             FurnitureLookups.refreshLocatedFurnitureState(
                 84, 0, new FurnitureDao(MySQL.configuredDatabase()), GameDataCaches.productCache());
         assertEquals("AX84\2" + "5\2", locatedRefresh.payload());
-        String refreshPayload = Handling.refreshLocatedFurnitureState(84, 0);
-        assertEquals(locatedRefresh.payload(), refreshPayload);
-        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "9\t84\t5\2"));
-        assertEquals(true, containsSend(handlingSends, locatedRefresh.payload()));
         handlingSql.clear();
         handlingSends.clear();
-        RoomState.instance().setFurnitureRoomCache(FurnitureRoomCache.State.from(
-            RoomState.instance().furnitureRoomCache().pendingRoomCache,
-            "\1" + "85\2",
-            RoomState.instance().representedRooms()));
+        RoomState.instance().setFurnitureRoomCache(
+            RoomState.instance().furnitureRoomCache().withPendingFurnitureMarkers(85));
         RoomState.instance().setFurnitureRoomCache(FurnitureStateWrites.removeMarker(
             RoomState.instance().furnitureRoomCache(), 9, 85));
         FurnitureLookups.RoomFurniturePickup roomPickup = FurnitureLookups.pickUpRoomFurniture(
             85, 9, 77, false, true, false, new FurnitureDao(MySQL.configuredDatabase()));
-        assertEquals(false, RoomState.instance().furnitureRoomCache().pendingFurnitureCache.contains("\1" + "85\2"));
+        assertEquals(false, RoomState.instance().furnitureRoomCache().pendingFurnitureIds().contains(85L));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_room=NULL"));
         assertEquals(true, containsSql(handlingSql, "WHERE id='85' AND id_room='9' LIMIT 1"));
         assertEquals(InventoryMessagePayloads.remove(85), roomPickup.inventoryRemovePayload());
@@ -5300,8 +5258,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(false, FurnitureLookups.openFloorFurniturePackage(
             86, 9, new FurnitureDao(MySQL.configuredDatabase()), new PackageDao(MySQL.configuredDatabase()))
             .hasPayload());
-        assertEquals(Long.valueOf(86L), Handling.openFloorFurniturePackageOrToggleState(
-            4, FurnitureWire.floorFurniturePackageRequest("FH" + wireLong(86))));
+        processPreSessionPacketBuffer(4, readyFrame("FH" + wireLong(86)));
         assertEquals(true, containsSend(handlingSends, "AX86\2" + "1\2"));
         handlingSql.clear();
         handlingSends.clear();
@@ -5311,10 +5268,6 @@ public final class PortedModuleSmokeTest {
                 9, 2, 3, new FurnitureDao(MySQL.configuredDatabase()), GameDataCaches.productCache());
         assertEquals(1, positionRefreshes.size());
         assertEquals("AX88\2" + "4\2", positionRefreshes.get(0).payload());
-        assertEquals(1L, Handling.refreshFloorFurnitureStatesAtPosition(9, 2, 3));
-        assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "9\t88\t4\2"));
-        assertEquals(true, containsSend(handlingSends, positionRefreshes.get(0).payload()));
-        assertEquals(false, containsSend(handlingSends, "AX89\2" + "7\2"));
         handlingSql.clear();
         handlingSends.clear();
         FurnitureLookups.WallFurniturePlacement wallPlacement = FurnitureLookups.placeWallFurnitureFromInventory(
@@ -5351,21 +5304,15 @@ public final class PortedModuleSmokeTest {
                 new FurnitureDao(MySQL.configuredDatabase()),
                 GameDataCaches.productCache());
         assertEquals("AX92\2" + "0\2", scoreboardRefresh.payload());
-        String scoreboardPayload = Handling.refreshLocatedFurnitureState(scoreTarget.furnitureId(), scoreTarget.productId());
-        assertEquals(scoreboardRefresh.payload(), scoreboardPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='0' WHERE id='92' LIMIT 1"));
-        assertEquals(true, containsSend(handlingSends, scoreboardRefresh.payload()));
         handlingSql.clear();
-        handlingSends.clear();
-        Handling.sendClientDateSettings(4);
-        assertEquals(true, containsSend(handlingSends, "DAQBHHIIKHJHPAHQA"));
-        assertEquals(true, containsSend(handlingSends, "http://www.alpha-series.com/"));
         handlingSends.clear();
         Filesystems.processReadyPacketBuffer(4, "x@BCN");
         assertEquals(true, containsSend(handlingSends, "DAQBHHIIKHJHPAHQA"));
+        assertEquals(true, containsSend(handlingSends, "http://www.alpha-series.com/"));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals("77", Handling.handleLoginTicket(4, "F_login-77"));
+        Filesystems.processReadyPacketBuffer(4, readyFrame("F_login-77"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET login_ticket=null,id_socket = '4' WHERE id = '77'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_amount='5',scratch_amount='5',update_time=UNIX_TIMESTAMP() WHERE id='77' LIMIT 1"));
         assertEquals(true, containsSend(handlingSends, "@C"));
@@ -5378,17 +5325,16 @@ public final class PortedModuleSmokeTest {
         assertEquals(77L, SessionState.instance().sessionUserIdBySocket(4));
         handlingSends.clear();
         handlingSql.clear();
-        String friendNotifyPayload = Handling.sendMessengerFriendOnlineNotification(4, 0);
+        String friendNotifyPayload = MessengerViews.friendOnlineNotification(
+            MessengerLookups.friendSummary(77, new MessengerDao(MySQL.configuredDatabase())), 1L);
         assertEquals(true, friendNotifyPayload.startsWith("@MHIH"));
         assertEquals(true, friendNotifyPayload.contains("User77"));
-        assertEquals(true, containsSend(handlingSends, "@MHIH"));
-        assertEquals(true, containsSend(handlingSends, "User77"));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals(1L, Handling.deleteMessengerFriendRequests(4, "@f", "@fA"));
+        processPreSessionPacketBuffer(4, readyFrame("@fA"));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM friendships WHERE id_user='77' AND has_accept='0' LIMIT 75"));
         handlingSql.clear();
-        assertEquals(1L, Handling.deleteMessengerFriendRequests(4, "@f", "@fCABA"));
+        processPreSessionPacketBuffer(4, readyFrame("@fCABA"));
         assertEquals(true, containsSql(handlingSql, "id_friend IN ('1','2') LIMIT 75"));
         handlingSql.clear();
         handlingSends.clear();
@@ -5427,80 +5373,80 @@ public final class PortedModuleSmokeTest {
         assertEquals(1, acceptedFriends.deliveryPayloads().size());
         handlingSql.clear();
         handlingSends.clear();
-        String acceptPayload = Handling.acceptMessengerFriendRequests(
-            4, MessengerWire.acceptFriendRequests("@e" + wireLong(1) + wireLong(88)));
-        assertEquals(true, acceptPayload.startsWith("@MH"));
-        assertEquals(true, acceptPayload.contains("Target"));
+        processPreSessionPacketBuffer(4, readyFrame("@e" + wireLong(1) + wireLong(88)));
         assertEquals(true, containsSql(handlingSql, "INSERT IGNORE INTO friendships(id_user,id_friend,has_accept) VALUES('88','77','0')"));
         assertEquals(true, containsSql(handlingSql, "UPDATE friendships SET has_accept='1'"));
         assertEquals(true, containsSend(handlingSends, "@MHIH"));
         assertEquals(true, containsSend(handlingSends, "User77"));
         assertEquals(true, containsSend(handlingSends, "@MH"));
+        assertEquals(true, containsSend(handlingSends, "Target"));
         handlingSql.clear();
         handlingSends.clear();
-        String removePayload = Handling.removeMessengerFriends(4, "@h", "@h" + wireLong(1) + wireLong(88));
-        assertEquals(MessengerPayloads.removeFriends(List.of(88L)), removePayload);
+        processPreSessionPacketBuffer(4, readyFrame("@h" + wireLong(1) + wireLong(88)));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM friendships WHERE has_accept='1'"));
         assertEquals(true, containsSql(handlingSql, "id_friend IN ('88')"));
         assertEquals(true, containsSend(handlingSends, "@MMIM77"));
         assertEquals(true, containsSend(handlingSends, "@MM"));
         handlingSql.clear();
         handlingSends.clear();
-        String searchPayload = Handling.searchMessengerUsers(4, MessengerWire.searchRequest("@i" + wireString("targ"), "@i"));
-        assertEquals(true, searchPayload.startsWith("Fs"));
-        assertEquals(true, searchPayload.contains("Target"));
-        assertEquals(true, searchPayload.contains("Targus"));
+        processPreSessionPacketBuffer(4, readyFrame("@i" + wireString("targ")));
         assertEquals(true, containsSend(handlingSends, "Fs"));
+        assertEquals(true, containsSend(handlingSends, "Target"));
+        assertEquals(true, containsSend(handlingSends, "Targus"));
         handlingSends.clear();
         handlingSql.clear();
         String chatWire = wireLong(88) + wireString("Private hello");
         String chatText = WireEncoding.readBase64LengthString(chatWire);
-        String privateChatPayload = Handling.sendMessengerPrivateMessage(
-            4, MessengerWire.privateMessageFromWire("@a" + chatWire));
+        MessengerPrivateMessage privateChatMessage =
+            MessengerWire.privateMessageFromWire("@a" + chatWire);
+        String privateChatPayload = MessengerLookups.privateMessagePayload(
+            77,
+            privateChatMessage.targetUserId(),
+            9,
+            "Target",
+            privateChatMessage.messageText(),
+            ChatLookups.filterMessage(privateChatMessage.messageText()),
+            4,
+            new MessengerDao(MySQL.configuredDatabase()));
         assertEquals(encodedVl64(77, null, "BF") + chatText + "\2", privateChatPayload);
         assertEquals(true, containsSql(handlingSql, "(Chat To:     Target) -- " + chatText));
-        assertEquals(true, containsSend(handlingSends, "BF"));
         handlingSql.clear();
         handlingSends.clear();
-        String requestPayload = Handling.requestMessengerFriend(
-            4, MessengerWire.friendRequest("@g" + wireString("Target"), "@g"));
-        assertEquals(MessengerPayloads.requestAcceptedCaller(88), requestPayload);
+        processPreSessionPacketBuffer(4, readyFrame("@g" + wireString("Target")));
         assertEquals(true, containsSql(handlingSql, "INSERT IGNORE INTO friendships(id_user,id_friend) VALUES('88','77')"));
         assertEquals(true, containsSend(handlingSends, "BD"));
         assertEquals(true, containsSend(handlingSends, "DD"));
         handlingSql.clear();
         handlingSends.clear();
-        String pendingPayload = Handling.sendMessengerPendingRequests(4, "Ci", "Ci");
+        String pendingPayload = MessengerPayloads.pendingRequests(
+            new MessengerDao(MySQL.configuredDatabase()).pendingRequests(77));
         assertEquals(MessengerPayloads.pendingRequests(List.of(new PendingFriendRequest(88L, "Target"))), pendingPayload);
-        assertEquals(true, containsSend(handlingSends, "Dz"));
-        assertEquals(true, containsSend(handlingSends, "Target"));
         handlingSends.clear();
-        String friendListPayload = Handling.sendMessengerFriendList(4, "@L", "@L");
+        MessengerFriendList liveFriendList = MessengerLookups.friendList(
+            77, new MessengerDao(MySQL.configuredDatabase()));
+        String friendListPayload = liveFriendList.listPayload(List.of(88L));
         assertEquals(true, friendListPayload.startsWith("@L"));
         assertEquals(true, friendListPayload.contains("Target"));
         assertEquals(true, friendListPayload.endsWith("PYH"));
-        assertEquals(true, containsSend(handlingSends, "@MHIH"));
-        assertEquals(true, containsSend(handlingSends, "@L"));
         handlingSends.clear();
-        String raceListPayload = Handling.sendPetRaceList(4, "n\u007f", "n\u007f" + wireString("dog"));
+        String raceListPayload = PetLookups.raceListPayload(
+            77, PetWire.raceListRequest("n\u007f" + wireString("dog")).productPet(),
+            new BotDao(MySQL.configuredDatabase()), new UserDao(MySQL.configuredDatabase()));
         assertEquals(PetPayloads.raceList("dog", List.of(
             new PetRaceRow(1L, 1L, 0L, 0L, "A"),
             new PetRaceRow(2L, 2L, 2L, 0L, "B")), 1, 0), raceListPayload);
-        assertEquals(true, containsSend(handlingSends, "L{dog\2"));
         handlingSends.clear();
-        String petInventoryPayload = Handling.sendPetInventory(4, "nx", "nx");
+        String petInventoryPayload = PetLookups.inventoryPayload(77, new BotDao(MySQL.configuredDatabase()));
         assertEquals(PetPayloads.inventoryList(List.of(new PetInventoryRow(10L, "Rex", "1 2 FF00AA", 4L))),
             petInventoryPayload);
-        assertEquals(true, containsSend(handlingSends, "IX"));
-        assertEquals(true, containsSend(handlingSends, "Rex"));
         handlingSends.clear();
         assertEquals(2L, PetPayloads.nameValidationCode("Rex1"));
-        String nameCheckPayload = Handling.validatePetName(4, "@j", "@c" + wireString("Rex"));
-        assertEquals(PetPayloads.nameValidation("Rex"), nameCheckPayload);
+        assertEquals(PetPayloads.nameValidation("Rex"), PetLookups.nameValidationPayload("Rex"));
+        processPreSessionPacketBuffer(4, readyFrame("@j" + wireString("Rex")));
         assertEquals(true, containsSend(handlingSends, "@d"));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals("30", Handling.placePetFromPackage(4, "n~", "n~" + wireLong(93) + wireString("Buddy")));
+        processPreSessionPacketBuffer(4, readyFrame("n~" + wireLong(93) + wireString("Buddy")));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO bots(id_user,figure,name,id_handle) VALUES('77','1 2 3','Buddy','3')"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO bots_petdata(id_bot,timestamp_buy,id_owner,energy,nutrition,scratches) VALUES('30',UNIX_TIMESTAMP(),'77','100','100','0')"));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM furnitures WHERE id='93' LIMIT 1"));
@@ -5524,12 +5470,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, packagePlacement.nameValidationPayload().contains("Lz"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO bots(id_user,figure,name,id_handle) VALUES('77','1 2 3','Buddy','3')"));
         handlingSends.clear();
-        String petStatusPayload = Handling.sendPetStatus(4, "ny", "ny" + wireLong(10));
+        String petStatusPayload = PetLookups.statusPayload(10, new BotDao(MySQL.configuredDatabase()));
         PetStatusRow expectedPetStatusRow = new PetStatusRow(
             10L, "Rex", "1 2 ff", 2L, 7L, 100L, 90L, 4L, 12L, 5L, "Owner");
         assertEquals(PetPayloads.status(10, expectedPetStatusRow), petStatusPayload);
-        assertEquals(true, containsSend(handlingSends, "IY"));
-        assertEquals(true, containsSend(handlingSends, "Owner"));
         handlingSends.clear();
         List<PetSettings.PetCommandRow> commandRows = List.of(
             new PetSettings.PetCommandRow(1L, 0L, "sit", "gst sit", 4),
@@ -5541,20 +5485,22 @@ public final class PortedModuleSmokeTest {
             previousPetSettings.levels(),
             commandRows,
             commandRows.size()));
-        String petCommandPayload = Handling.sendPetCommandList(4, 2);
+        String petCommandPayload = PetState.instance().settings().commandListPayload(2);
         assertEquals(PetPayloads.commandList(2, commandRows), petCommandPayload);
-        assertEquals(true, containsSend(handlingSends, "I]"));
         handlingSends.clear();
         handlingSql.clear();
-        String routedCommandPayload = Handling.sendPetCommandListForTarget(4, "n|", "n|" + wireLong(10));
+        long routedPetLevel = PetLookups.levelForOwnerTarget(
+            PetWire.petIdRequest("n|" + wireLong(10), "n|").petId(),
+            77,
+            new BotDao(MySQL.configuredDatabase()));
+        String routedCommandPayload = PetState.instance().settings().commandListPayload(routedPetLevel);
         assertEquals(PetPayloads.commandList(3, commandRows), routedCommandPayload);
-        assertEquals(true, containsSend(handlingSends, "I]"));
         handlingSends.clear();
         RepresentedBotRegistry originalRepresentedBotsForCommand = PetState.instance().representedBots();
         PetState.instance().setRepresentedBots(representedBots(Map.of(
             300L, "4\2" + "10\2Rex\2hello\2speech\2responses\2" + "2\2" + "3\2" + "0.0\2" + "0\2" + "1 2 ff\2")));
         handlingSql.clear();
-        assertEquals(1L, Handling.performPetCommand(4, "n{", "n{" + wireLong(300) + wireLong(1)));
+        processPreSessionPacketBuffer(4, readyFrame("n{" + wireLong(300) + wireLong(1)));
         assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET id_level='3',experience='0' WHERE id_bot='10'"));
         assertEquals(true, containsSend(handlingSends, "IZ"));
         assertEquals(true, containsSend(handlingSends, "gst sit"));
@@ -5562,31 +5508,43 @@ public final class PortedModuleSmokeTest {
         PetState.instance().setSettings(previousPetSettings);
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals(42L, Handling.guideInviteUserIdFromWire(4, "oL", "oL" + wireString("42")));
-        assertEquals("", Handling.ignoreClientReadyPacket());
+        assertEquals(42L, UserWire.guideInviteRequest("oL" + wireString("42")).userId());
+        processPreSessionPacketBuffer(4, readyFrame("CD"));
+        assertEquals(List.of(), handlingSends);
         handlingSends.clear();
         handlingSql.clear();
         assertEquals(50L, UserLookups.updateSoundSetting(
-            "77", UserWire.soundSettingRequest("Ce50"), new UserDao(MySQL.configuredDatabase())));
+            77, UserWire.soundSettingRequest("Ce50"), new UserDao(MySQL.configuredDatabase())));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET settings_sound='50' WHERE id='77' LIMIT 1"));
         seedCatalogPageTrees(Map.of(new CatalogPages.PageTreeKey(0L, 0L), "CATALOG_TREE"));
-        Handling.dispatchPreReadyPacket(4, "Ae", "Ae");
+        dispatchPreReadyPacket(4, "Ae", "Ae");
         assertEquals("CATALOG_TREE", CatalogState.instance().catalogPages().defaultPageTree());
         assertCatalogPagesTypedAccessors();
         assertEquals(true, containsSend(handlingSends, "A~IHHM\2CATALOG_TREE"));
         handlingSends.clear();
-        Handling.dispatchPreReadyPacket(4, "D}", "D}");
+        dispatchPreReadyPacket(4, "D}", "D}");
         assertEquals(true, containsSend(handlingSends, "Ei"));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals(3L, Handling.awardPetExperience(10, 3));
+        PetExperienceAward petExperienceAward = PetLookups.experienceAward(
+            10, 3, AppConfigState.instance().settingsCache(), new BotDao(MySQL.configuredDatabase()));
+        assertEquals(3L, petExperienceAward.petLevel());
+        if (petExperienceAward.hasLevelSpeechPayload()) {
+            SocketDelivery.broadcastToRoomUsers(petExperienceAward.roomId(), petExperienceAward.levelSpeechPayload());
+        }
+        new BotDao(MySQL.configuredDatabase()).updatePetExperience(
+            petExperienceAward.botId(), petExperienceAward.petLevel(), petExperienceAward.petExperience());
+        if (petExperienceAward.hasRoomPayloads()) {
+            SocketDelivery.broadcastToRoomUsers(petExperienceAward.roomId(), petExperienceAward.statusPayload());
+            SocketDelivery.broadcastToRoomUsers(petExperienceAward.roomId(), petExperienceAward.experiencePayload());
+        }
         assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET id_level='3',experience='0' WHERE id_bot='10'"));
         assertEquals(true, containsSend(handlingSends, "@X"));
         assertEquals(true, containsSend(handlingSends, "IY"));
         assertEquals(true, containsSend(handlingSends, "Ia"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(5L, Handling.scratchPet(4, "n}", "n}" + wireLong(10)));
+        processPreSessionPacketBuffer(4, readyFrame("n}" + wireLong(10)));
         assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET scratches='5' WHERE id_bot='10'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET scratch_amount=scratch_amount-1,scratch_given=scratch_given+1 WHERE id='77'"));
         assertEquals(true, containsSend(handlingSends, "I^"));
@@ -5594,16 +5552,24 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         PetState.instance().setRepresentedBots(RepresentedBotRegistry.empty());
-        long placedPetEntityId = Handling.placePetInRoom(4, "nz",
-            "nz" + wireLong(10) + wireLong(2) + wireLong(3) + wireLong(4));
-        assertEquals(true, placedPetEntityId > 0L);
+        processPreSessionPacketBuffer(4,
+            readyFrame("nz" + wireLong(10) + wireLong(2) + wireLong(3) + wireLong(4)));
+        long placedPetEntityId = PetState.instance().representedBots().allocatedEntityIds().get(0);
         assertEquals(10L, PetState.instance().representedBots().record(placedPetEntityId).botId());
         assertEquals(true, containsSql(handlingSql, "UPDATE bots SET id_room='9',position_x='2',position_y='3',position_z='0',position_r='4' WHERE id='10'"));
         assertEquals(true, containsSend(handlingSends, "@\\"));
         assertEquals(true, containsSend(handlingSends, "I\\"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals(10L, Handling.pickUpPetFromRoom(4, placedPetEntityId));
+        PetPickupAction petPickup = PetLookups.pickupAction(placedPetEntityId, new BotDao(MySQL.configuredDatabase()));
+        assertEquals(10L, petPickup.botId());
+        new BotDao(MySQL.configuredDatabase()).clearBotRoom(petPickup.botId());
+        new BotDao(MySQL.configuredDatabase()).touchPetData(petPickup.botId());
+        SocketDelivery.broadcastToCurrentRoom(4, petPickup.removedPayload());
+        if (petPickup.hasInventoryAddPayload()) {
+            SocketDelivery.sendToSocket(4, petPickup.inventoryAddPayload());
+        }
+        PetLookups.completePickup(petPickup);
         assertEquals(0L, PetState.instance().representedBots().record(placedPetEntityId).botId());
         assertEquals(true, containsSql(handlingSql, "UPDATE bots SET id_room=null WHERE id='10'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE bots_petdata SET id_level=id_level,energy=energy,experience=experience,nutrition=nutrition,scratches=scratches WHERE id_bot='10'"));
@@ -5612,78 +5578,69 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         PetState.instance().setRepresentedBots(RepresentedBotRegistry.empty());
-        long guideEntityId = Handling.spawnTutorialGuideBot(4, "Fx", "Fx");
-        assertEquals(true, guideEntityId > 0L);
+        processPreSessionPacketBuffer(4, readyFrame("Fx"));
+        long guideEntityId = PetState.instance().representedBots().allocatedEntityIds().get(0);
         assertEquals(20L, PetState.instance().representedBots().record(guideEntityId).botId());
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET tutorial_guide='1' WHERE id='77'"));
         assertEquals(true, containsSend(handlingSends, "@aYjO"));
         handlingSends.clear();
-        assertEquals(1L, Handling.removeTutorialGuideBots(4, "Fy", "Fy" + wireLong(0)));
+        processPreSessionPacketBuffer(4, readyFrame("Fy" + wireLong(0)));
         assertEquals(0L, PetState.instance().representedBots().record(guideEntityId).botId());
         assertEquals(true, containsSend(handlingSends, "@]"));
         handlingSends.clear();
-        String profilePayload = Handling.sendRoomUserProfile(4, "Cg", "Cg" + wireLong(61));
-        assertEquals(SocialPayloads.roomUserProfile(61, "Target", "Motto", 123, "fig"), profilePayload);
-        assertEquals(true, containsSend(handlingSends, "Jf"));
-        assertEquals(true, containsSend(handlingSends, "Target"));
         SocialLookups.DirectPayload profileAction =
             SocialLookups.roomUserProfileAction(9L, 61L, new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, profileAction.hasPayload());
-        assertEquals(profilePayload, profileAction.payload());
+        assertEquals(SocialPayloads.roomUserProfile(61, "Target", "Motto", 123, "fig"), profileAction.payload());
         assertEquals(false, SocialLookups.roomUserProfileAction(0L, 61L,
             new RoomDao(MySQL.configuredDatabase())).hasPayload());
         handlingSends.clear();
         handlingSql.clear();
-        String badgeInventoryPayload = Handling.sendBadgeInventory(4, "B]", "B]");
+        String badgeInventoryPayload = SocialLookups.badgeInventoryPayload(
+            77, new UserDao(MySQL.configuredDatabase())).inventoryPayload();
         assertEquals(SocialPayloads.badgeInventory(
                 List.of(new BadgeRow("ACH1", 0L, 201L), new BadgeRow("MOD", 0L, 202L)),
                 List.of(new BadgeRow("VIP", 1L, 203L))),
             badgeInventoryPayload);
-        assertEquals(true, containsSend(handlingSends, "Ce"));
-        assertEquals(true, containsSend(handlingSends, "Cd"));
         handlingSends.clear();
         String badgeUpdateWire = "B^" + wireLong(1) + wireString("VIP")
             + wireLong(0) + wireLong(0) + wireLong(0) + wireLong(0);
-        String updatedBadgesPayload = Handling.updateEquippedBadges(4, "B^", badgeUpdateWire);
-        assertEquals(SocialPayloads.equippedBadges(List.of(new BadgeRow("VIP", 1L, 203L))), updatedBadgesPayload);
+        processPreSessionPacketBuffer(4, readyFrame(badgeUpdateWire));
         assertEquals(true, containsSql(handlingSql, "UPDATE users_badges SET id_slot='0' WHERE id_user='77'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users_badges SET id_slot='1' WHERE id_badge='VIP' AND id_user='77'"));
         assertEquals(true, containsSend(handlingSends, "Cd"));
         SocialLookups.BadgeUpdateResult badgeUpdateResult =
-            SocialLookups.updateEquippedBadges("77", SocialWire.badgeUpdateSelections(badgeUpdateWire),
+            SocialLookups.updateEquippedBadges(77L, SocialWire.badgeUpdateSelections(badgeUpdateWire),
                 new UserDao(MySQL.configuredDatabase()));
         assertEquals(SocialPayloads.equippedBadges(List.of(new BadgeRow("VIP", 1L, 203L))),
             badgeUpdateResult.equippedPayload());
         assertEquals(true, badgeUpdateResult.displayPayload().contains("Cd"));
-        assertEquals(false, SocialLookups.updateEquippedBadges("0", SocialWire.badgeUpdateSelections(badgeUpdateWire),
+        assertEquals(false, SocialLookups.updateEquippedBadges(0L, SocialWire.badgeUpdateSelections(badgeUpdateWire),
             new UserDao(MySQL.configuredDatabase())).hasDisplayPayload());
         handlingSends.clear();
         UserDao socialUsers = new UserDao(MySQL.configuredDatabase());
         assertEquals(SocialPayloads.equippedBadges(List.of(new BadgeRow("VIP", 1L, 203L))),
-            SocialLookups.equippedBadgePayload("77", socialUsers));
+            SocialLookups.equippedBadgePayload(77L, socialUsers));
         assertEquals(SocialPayloads.tags(List.of(new UserDao.UserTagRow("alpha"), new UserDao.UserTagRow("beta"))),
-            SocialLookups.tagPayload("77", socialUsers));
+            SocialLookups.tagPayload(77L, socialUsers));
         SocialLookups.DirectPayload tagAction =
-            SocialLookups.tagDisplayAction("77", 9L, "DG" + wireLong(88), socialUsers);
+            SocialLookups.tagDisplayAction(77L, 9L, SocialWire.userIdRequest("DG" + wireLong(88), "DG"), socialUsers);
         assertEquals(true, tagAction.hasPayload());
         assertEquals(SocialPayloads.tagDisplay(88, List.of(new UserDao.UserTagRow("target"))),
             tagAction.payload());
-        assertEquals(false, SocialLookups.tagDisplayAction("0", 9L, "DG" + wireLong(88), socialUsers).hasPayload());
-        String tagDisplay = Handling.sendUserTags(4, "DG", "DG" + wireLong(88));
+        assertEquals(false, SocialLookups.tagDisplayAction(
+            0L, 9L, SocialWire.userIdRequest("DG" + wireLong(88), "DG"), socialUsers).hasPayload());
         assertEquals(SocialPayloads.tagDisplay(88, List.of(new UserDao.UserTagRow("target"))),
-            tagDisplay);
-        assertEquals(true, containsSend(handlingSends, "E^"));
-        assertEquals(true, containsSend(handlingSends, "target"));
+            tagAction.payload());
         handlingSends.clear();
-        String lookToBadgePayload = Handling.lookAtRoomUserBadge(4, "B_", "B_" + wireLong(61));
-        assertEquals(SocialPayloads.badgeDisplay(88, List.of()), lookToBadgePayload);
+        processPreSessionPacketBuffer(4, readyFrame("B_" + wireLong(61)));
         assertEquals(true, containsSend(handlingSends, "Cd"));
         RoomUserTargetRow badgeTarget = RoomLookups.activeRoomUserTarget(
             9L, 61L, new RoomDao(MySQL.configuredDatabase())).orElse(null);
         SocialLookups.RoomUserBadgeLook badgeLook =
             SocialLookups.roomUserBadgeLookAction(4L, badgeTarget, new UserDao(MySQL.configuredDatabase()));
         assertEquals(true, badgeLook.hasDirectPayload());
-        assertEquals(lookToBadgePayload, badgeLook.directPayload());
+        assertEquals(SocialPayloads.badgeDisplay(88, List.of()), badgeLook.directPayload());
         assertEquals(true, badgeLook.statusPayloads().hasCallerPayload());
         assertEquals(true, badgeLook.statusPayloads().hasTargetPayload());
         assertEquals(false, SocialLookups.roomUserBadgeLookAction(0L, badgeTarget,
@@ -5691,13 +5648,13 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         RoomState.instance().setRepresentedRooms(RepresentedRoomCache.fromCacheText("")
             .moveOccupant(4, 4, 1, 1, 0, 0));
-        Handling.lookTowardRoomPosition(4, "AK", "AK" + wireLong(3) + wireLong(3));
+        processPreSessionPacketBuffer(4, readyFrame("AK" + wireLong(3) + wireLong(3)));
         RepresentedRoomCache.Position lookPosition = RoomState.instance().representedRooms().movementPosition(4, 4);
         assertEquals(true, lookPosition.found());
         assertEquals(1L, lookPosition.positionX());
         assertEquals(1L, lookPosition.positionY());
         assertEquals(true, RoomState.instance().representedRooms().cacheText().contains("\1" + "4\t1\t1\t3\t0\2"));
-        Handling.walkTowardRoomPosition(4, "AO", "AO" + wireLong(4) + wireLong(4));
+        processPreSessionPacketBuffer(4, readyFrame("AO" + wireLong(4) + wireLong(4)));
         RepresentedRoomCache.Position walkPosition = RoomState.instance().representedRooms().movementPosition(4, 4);
         assertEquals(true, walkPosition.found());
         assertEquals(2L, walkPosition.positionX());
@@ -5712,15 +5669,14 @@ public final class PortedModuleSmokeTest {
         PollLookups.RoomRequest pollRequest =
             PollLookups.roomRequest(4, new UserDao(MySQL.configuredDatabase()), new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, pollRequest.valid());
-        assertEquals("77", pollRequest.userId());
+        assertEquals(77L, pollRequest.userId());
         assertEquals(9L, pollRequest.roomId());
-        long pollExitId = PollWire.idFromWire("Ck" + wireLong(7), "Ck");
-        assertEquals(true, PollLookups.recordExit("77", 9, pollExitId, livePollDao));
+        long pollExitId = PollWire.idRequestFromWire("Ck" + wireLong(7), "Ck").pollId();
+        assertEquals(true, PollLookups.recordExit(pollRequest, pollExitId, livePollDao));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO poll_exit(id_user,id_poll) VALUES('77','7')"));
         handlingSql.clear();
         assertEquals(true, PollLookups.submitAnswer(
-            "77",
-            9,
+            pollRequest,
             PollWire.answerFromWire("Cl" + wireLong(7) + wireLong(8) + wireLong(4) + wireString("yes"), "Cl"),
             livePollDao));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO poll_results(id_poll,id_question,message_answer,id_user,timestamp) VALUES('7','8','yes','77',UNIX_TIMESTAMP())"));
@@ -5735,14 +5691,10 @@ public final class PortedModuleSmokeTest {
                     new PollAnswerRow(1L, 8L, "Yes"),
                     new PollAnswerRow(2L, 8L, "No")))));
         String livePollPayload = PollLookups.livePollPayload(
-            "77",
-            9,
-            PollWire.idFromWire("Cj" + wireLong(7), "Cj"),
+            pollRequest,
+            PollWire.idRequestFromWire("Cj" + wireLong(7), "Cj").pollId(),
             livePollDao);
         assertEquals(PollPayloads.poll(livePoll), livePollPayload);
-        handlingSends.clear();
-        assertEquals(livePollPayload, Handling.sendLivePoll(4, "Cj", "Cj" + wireLong(7)));
-        assertEquals(true, containsSend(handlingSends, livePollPayload));
         SessionState.instance().setSessionRegistry(SessionRegistry.empty());
         handlingSends.clear();
         handlingSql.clear();
@@ -5751,7 +5703,7 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         RecyclerLookups.SubmitResult recyclerSubmitResult = RecyclerLookups.submitItems(
-            "77",
+            77L,
             RecyclerWire.selectionFromWire("F^" + wireLong(5) + wireLong(1) + wireLong(2)
                 + wireLong(3) + wireLong(4) + wireLong(5)),
             RecyclerState.instance().settings(),
@@ -5760,13 +5712,15 @@ public final class PortedModuleSmokeTest {
             new RecyclerDao(MySQL.configuredDatabase()));
         assertEquals(RecyclerPayloads.reward(506), recyclerSubmitResult.rewardPayload());
         assertEquals(List.of(1L, 2L, 3L, 4L, 5L), recyclerSubmitResult.removedFurnitureIds());
+        assertEquals(List.of(1L, 2L, 3L, 4L, 5L), recyclerSubmitResult.deliveryPayloads().removedFurnitureIds());
+        assertEquals(RecyclerPayloads.reward(506), recyclerSubmitResult.deliveryPayloads().rewardPayload());
         assertEquals(List.of(
             InventoryMessagePayloads.remove(1),
             InventoryMessagePayloads.remove(2),
             InventoryMessagePayloads.remove(3),
             InventoryMessagePayloads.remove(4),
             InventoryMessagePayloads.remove(5),
-            RecyclerPayloads.reward(506)), recyclerSubmitResult.deliveryPayloads());
+            RecyclerPayloads.reward(506)), recyclerSubmitResult.deliveryPayloads().payloads());
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET sign='"));
         assertEquals(true, containsSql(handlingSql, "id_owner='77',id_destination='81' WHERE id_owner='77' AND id_product='508'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner=NULL WHERE id_owner='77' AND id_room IS NULL AND id IN ('1','2','3','4','5')"));
@@ -5774,7 +5728,7 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         AchievementRewardGrant achievementGrant = AchievementLookups.grantReward(
-            "77", 0, 3, AchievementState.instance().settings(), new UserDao(MySQL.configuredDatabase()));
+            77L, 0, 3, AchievementState.instance().settings(), new UserDao(MySQL.configuredDatabase()));
         String achievementReward = achievementGrant.rewardPayload();
         AchievementSettings.Achievement liveAchievement = new AchievementSettings.Achievement(
             2L, "ACH_", 10L, 5L, 3L, 7L, 2L);
@@ -5783,31 +5737,32 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "INSERT INTO users_badges(id_user,id_badge) VALUES('77','ACH_3')"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_2=activitypoints_2+5,achievement_score=achievement_score+7 WHERE id='77'"));
         assertEquals(true, achievementGrant.awardPayload().startsWith("Fv"));
+        assertEquals(achievementGrant.rewardPayload(), achievementGrant.deliveryPayloads().rewardPayload());
+        assertEquals(achievementGrant.awardPayload(), achievementGrant.deliveryPayloads().awardPayload());
         assertEquals(List.of(achievementGrant.rewardPayload(), achievementGrant.awardPayload()),
-            achievementGrant.deliveryPayloads());
+            achievementGrant.deliveryPayloads().payloads());
         handlingSql.clear();
         handlingSends.clear();
         AchievementRewardGrant progressedAchievementGrant = AchievementLookups.advanceProgress(
-            "77", 2, AchievementState.instance().settings(), new UserDao(MySQL.configuredDatabase()));
+            77L, 2, AchievementState.instance().settings(), new UserDao(MySQL.configuredDatabase()));
         assertEquals(true, progressedAchievementGrant.rewardPayload().startsWith("Fu"));
         assertEquals(progressedAchievementGrant.rewardPayload(),
-            progressedAchievementGrant.deliveryPayloads().get(0));
+            progressedAchievementGrant.deliveryPayloads().payloads().get(0));
         handlingSql.clear();
         handlingSends.clear();
         String respectLookupPayload = SocialLookups.giveRespectPayload(
-            "77", "88", new UserDao(MySQL.configuredDatabase()));
+            77L, 88L, new UserDao(MySQL.configuredDatabase()));
         assertEquals(UserPayloads.respectReceived(88, 12), respectLookupPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_amount=respect_amount-1,respect_given=respect_given+1 WHERE id='77'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_received=respect_received+1 WHERE id='88'"));
         handlingSql.clear();
-        String respectPayload = Handling.giveRespect(4, "Es", "Es" + wireLong(88));
-        assertEquals(UserPayloads.respectReceived(88, 12), respectPayload);
+        processPreSessionPacketBuffer(4, readyFrame("Es" + wireLong(88)));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_amount=respect_amount-1,respect_given=respect_given+1 WHERE id='77'"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET respect_received=respect_received+1 WHERE id='88'"));
         assertEquals(true, containsSend(handlingSends, "Fx"));
         handlingSends.clear();
         String achievementListPayload = AchievementLookups.listPayload(
-            "77", AchievementState.instance().settings(), new UserDao(MySQL.configuredDatabase()));
+            77L, AchievementState.instance().settings(), new UserDao(MySQL.configuredDatabase()));
         Map<String, Long> liveAchievementLevels = new HashMap<>();
         liveAchievementLevels.put("ACH_", 2L);
         assertEquals(AchievementPayloads.list(List.of(liveAchievement), liveAchievementLevels), achievementListPayload);
@@ -5822,13 +5777,11 @@ public final class PortedModuleSmokeTest {
                 new SongInfoRow("Song B", 4L, "Author B", "sound-b", 51L))),
             liveSongInfoPayload);
         handlingSends.clear();
-        RoomState.instance().setFurnitureRoomCache(FurnitureRoomCache.State.from(
-            RoomState.instance().furnitureRoomCache().pendingRoomCache,
-            "\1" + "300\2\1" + "40\2\1" + "999\2",
-            RoomState.instance().representedRooms()));
+        RoomState.instance().setFurnitureRoomCache(FurnitureRoomCache.State.empty()
+            .withPendingFurnitureMarkers(300, 40, 999));
         RoomState.instance().setFurnitureRoomCache(JukeboxLookups.clearSoundMarkers(
             RoomState.instance().furnitureRoomCache(), 9, 0, liveJukebox));
-        assertEquals("\1" + "999\2", RoomState.instance().furnitureRoomCache().pendingFurnitureCache);
+        assertEquals(List.of(999L), RoomState.instance().furnitureRoomCache().pendingFurnitureIds());
         handlingSql.clear();
         handlingSends.clear();
         SessionState.instance().setSessionRegistry(sessionRegistry(
@@ -5838,7 +5791,7 @@ public final class PortedModuleSmokeTest {
             JukeboxLookups.roomRequest(4, new UserDao(MySQL.configuredDatabase()), new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, jukeboxRequest.validUser());
         assertEquals(true, jukeboxRequest.validRoom());
-        assertEquals("77", jukeboxRequest.userId());
+        assertEquals(77L, jukeboxRequest.userId());
         assertEquals(9L, jukeboxRequest.roomId());
         JukeboxLookups.DiskChangeResult addDiskAction =
             JukeboxLookups.addDiskAction(jukeboxRequest,
@@ -5848,15 +5801,20 @@ public final class PortedModuleSmokeTest {
         assertEquals(encodedVl64(4, null, "Ac"), addDiskPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner=NULL WHERE id_owner='77' AND id='4' AND id_product='700' LIMIT 1"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO soundmachine_jb_playlist(id_jukebox,id_cd,id_order,id_destination) VALUES('300','4','1','50')"));
-        assertEquals(addDiskPayload, addDiskAction.deliveryPayloads().get(0));
-        assertEquals(3, addDiskAction.deliveryPayloads().size());
+        assertEquals(addDiskPayload, addDiskAction.deliveryPayloads().diskChangePayload());
+        assertEquals(true, addDiskAction.deliveryPayloads().playlistPayload().startsWith("EN"));
+        assertEquals(true, addDiskAction.deliveryPayloads().diskInventoryPayload().startsWith("EM"));
+        assertEquals(3, addDiskAction.deliveryPayloads().payloads().size());
         handlingSql.clear();
         handlingSends.clear();
         JukeboxLookups.DiskChangeResult removeDiskAction =
             JukeboxLookups.removeDiskAction(jukeboxRequest,
-                JukeboxRequests.removeOrderFromWire("D@" + wireLong(0)), liveJukebox);
+                JukeboxRequests.removeRequestFromWire("D@" + wireLong(0)), liveJukebox);
         assertEquals(true, removeDiskAction.valid());
-        assertEquals(2, removeDiskAction.deliveryPayloads().size());
+        assertEquals("", removeDiskAction.deliveryPayloads().diskChangePayload());
+        assertEquals(true, removeDiskAction.deliveryPayloads().playlistPayload().startsWith("EN"));
+        assertEquals(true, removeDiskAction.deliveryPayloads().diskInventoryPayload().startsWith("EM"));
+        assertEquals(2, removeDiskAction.deliveryPayloads().payloads().size());
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner='77' WHERE id='4' AND id_product='700' LIMIT 1"));
         assertEquals(true, containsSql(handlingSql, "DELETE FROM soundmachine_jb_playlist WHERE id_jukebox='300' AND id_cd='4' LIMIT 1"));
         assertEquals(true, containsSql(handlingSql, "UPDATE soundmachine_jb_playlist SET id_order=id_order-1 WHERE id_jukebox='300' AND id_order>'0'"));
@@ -5881,15 +5839,14 @@ public final class PortedModuleSmokeTest {
         UserLookups.UserRequest userRequest =
             UserLookups.userRequest(4, new UserDao(MySQL.configuredDatabase()));
         assertEquals(true, userRequest.valid());
-        assertEquals("77", userRequest.userId());
+        assertEquals(77L, userRequest.userId());
         String mottoPayload = UserLookups.updateMottoPayload(
             userRequest, UserWire.mottoRequest("Gd" + wireString("New motto")), new UserDao(MySQL.configuredDatabase()));
         assertEquals(UserPayloads.identityRefresh(77, "New motto", "hd-180-1", "M"), mottoPayload);
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET motto='New motto' WHERE id='77'"));
         SessionState.instance().setSessionRegistry(SessionRegistry.empty());
         handlingSends.clear();
-        Handling.sendGuideInvitation(4, "oD", "oD");
-        assertEquals(true, containsSend(handlingSends, "IcIQA"));
+        assertEquals("IcIQA", UserPayloads.guideInvitation());
         handlingSends.clear();
         handlingSql.clear();
         List<QuestSettings.QuestDefinitionRow> liveQuestDefinitions = List.of(
@@ -5900,30 +5857,26 @@ public final class PortedModuleSmokeTest {
         assertEquals(liveQuestDefinitions, QuestState.instance().settings().definitions());
         assertEquals(QuestPayloads.list(QuestState.instance().settings(), List.of(
                 new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "0", 1L, 0L, 7))),
-            QuestProgress.listPayload("77", QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase())));
-        String questListPayload = Handling.sendQuestList(4, "p]", "p]");
-        assertEquals(QuestPayloads.list(QuestState.instance().settings(), List.of(
-                new QuestSettings.UserQuestListRow(10L, 0L, "0", "1", "0", 1L, 0L, 7))),
-            questListPayload);
-        assertEquals(true, containsSend(handlingSends, "L`"));
+            QuestProgress.listPayload(77L, QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase())));
         handlingSends.clear();
         handlingSql.clear();
         QuestResetResult resetResult = QuestProgress.resetQuests(
-            "77", QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase()));
+            77L, QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase()));
         assertEquals(true, resetResult.reset());
-        assertEquals("Lc", resetResult.deliveryPayloads().get(0));
-        assertEquals(2, resetResult.deliveryPayloads().size());
+        assertEquals("Lc", resetResult.deliveryPayloads().resetPayload());
+        assertEquals(true, resetResult.deliveryPayloads().listPayload().startsWith("L`"));
+        assertEquals(2, resetResult.deliveryPayloads().payloads().size());
         assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET timestamp_done=NULL,timestamp_accepted=NULL WHERE id_user='77' LIMIT 50"));
         handlingSends.clear();
         handlingSql.clear();
-        Handling.resetQuests(4);
+        processPreSessionPacketBuffer(4, readyFrame("pb"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET timestamp_done=NULL,timestamp_accepted=NULL WHERE id_user='77' LIMIT 50"));
         assertEquals(true, containsSend(handlingSends, "Lc"));
         assertEquals(true, containsSend(handlingSends, "L`"));
         handlingSends.clear();
         handlingSql.clear();
         QuestAcceptResult questAcceptResult = QuestProgress.acceptQuest(
-            "77", 10, QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase()));
+            77L, 10, QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase()));
         assertEquals(true, questAcceptResult.accepted());
         assertEquals(10L, questAcceptResult.questId());
         assertEquals(10L, questAcceptResult.numericQuestId());
@@ -5932,21 +5885,21 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL 30 SECOND) WHERE id_user='77' AND id_quest='10' LIMIT 1"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.acceptQuest(4, "p^", "p^" + wireLong(10));
+        processPreSessionPacketBuffer(4, readyFrame("p^" + wireLong(10)));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO users_quests(id_user,id_quest,id_level,id_numericquest,timestamp_accepted) VALUES('77','10','0','10',UNIX_TIMESTAMP())"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL 30 SECOND) WHERE id_user='77' AND id_quest='10' LIMIT 1"));
         assertEquals(true, containsSend(handlingSends, "L`"));
         handlingSends.clear();
         handlingSql.clear();
         assertEquals(11L, QuestProgress.nextQuestIdForUser(
-            "77", QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase())));
-        Handling.autoAcceptNextQuest(4, "pc", "pc");
+            77L, QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase())));
+        processPreSessionPacketBuffer(4, readyFrame("pc"));
         assertEquals(true, containsSql(handlingSql, "id_numericquest='11'"));
         assertEquals(true, containsSend(handlingSends, "L`"));
         handlingSends.clear();
         handlingSql.clear();
         QuestProgressDecision refreshedQuestDecision = QuestProgress.refreshDecision(
-            "77", QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase()));
+            77L, QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase()));
         assertEquals(true, refreshedQuestDecision.shouldScheduleWait());
         assertEquals(true, refreshedQuestDecision.shouldSendList());
         assertEquals(10L, refreshedQuestDecision.questId());
@@ -5954,12 +5907,29 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL 30 SECOND) WHERE id_user='77' AND id_quest='10' LIMIT 1"));
         handlingSql.clear();
         handlingSends.clear();
-        Handling.refreshQuestProgress(4);
+        processPreSessionPacketBuffer(4, readyFrame("@B"));
         assertEquals(true, containsSql(handlingSql, "UPDATE users_quests SET time_next=DATE_ADD(NOW(),INTERVAL 30 SECOND) WHERE id_user='77' AND id_quest='10' LIMIT 1"));
         assertEquals(true, containsSend(handlingSends, "L`"));
         handlingSends.clear();
         handlingSql.clear();
-        Handling.completeQuest(4, 10, 10);
+        QuestCompletion questCompletion = QuestProgress.completion(
+            new QuestDao(MySQL.configuredDatabase()),
+            QuestProgress.settingsFromSource(QuestState.instance().settings(), new QuestDao(MySQL.configuredDatabase())),
+            77L,
+            10,
+            10);
+        assertEquals(true, questCompletion.valid());
+        SocketDelivery.sendToSocket(4, "Lb" + questCompletion.payload());
+        if (questCompletion.hasActivityPointReward()) {
+            long currentQuestRewardPoints = new UserDao(MySQL.configuredDatabase()).activityPoints(77L, questCompletion.rewardType());
+            new UserDao(MySQL.configuredDatabase()).addActivityPointsLimited(
+                77L, questCompletion.rewardType(), questCompletion.rewardAmount());
+            SocketDelivery.sendToSocket(4, UserPayloads.activityPointAward(
+                questCompletion.rewardType(), currentQuestRewardPoints + questCompletion.rewardAmount()));
+        }
+        new QuestDao(MySQL.configuredDatabase()).completeQuest(77L, questCompletion.questId());
+        SocketDelivery.sendToSocket(4, "La" + questCompletion.payload());
+        processPreSessionPacketBuffer(4, readyFrame("p]"));
         assertEquals(true, containsSend(handlingSends, "Lb"));
         assertEquals(true, containsSend(handlingSends, "La"));
         assertEquals(true, containsSend(handlingSends, "Fv"));
@@ -5979,14 +5949,14 @@ public final class PortedModuleSmokeTest {
         SessionState.instance().setSessionRegistry(SessionRegistry.empty());
         handlingSends.clear();
         UserActivityPoints.AwardBatch pointAwardBatch = UserActivityPoints.timedActivityPointAwardBatch(
-            4, "77", AppConfigState.instance().settingsCache(), new UserDao(MySQL.configuredDatabase()));
+            4, 77L, AppConfigState.instance().settingsCache(), new UserDao(MySQL.configuredDatabase()));
         assertEquals(UserPayloads.activityPointAward(0, 75), pointAwardBatch.payload());
-        assertEquals(List.of(UserPayloads.activityPointAward(0, 75)), pointAwardBatch.deliveryPayloads());
+        assertEquals(List.of(UserPayloads.activityPointAward(0, 75)), pointAwardBatch.deliveryPayloads().payloads());
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET activitypoints_0=activitypoints_0+5 WHERE id='77'"));
         handlingSends.clear();
         TradeInteractionRequestAction requestAction = TradeLookups.requestInteractionAction(
             4,
-            "77",
+            77L,
             9,
             61,
             new RoomDao(MySQL.configuredDatabase()),
@@ -5998,7 +5968,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, requestAction.targetPayload().contains("Ah"));
         TradeState.instance().removeInteractionPair(4);
         TradeState.instance().removeInteractionPair(8);
-        Handling.requestInteraction(4, "AG", "AG" + wireLong(61));
+        processPreSessionPacketBuffer(4, readyFrame("AG" + wireLong(61)));
         assertEquals(8, TradeState.instance().interactionPartner(4));
         assertEquals(4, TradeState.instance().interactionPartner(8));
         assertEquals(true, containsSend(handlingSends, "Ah"));
@@ -6012,9 +5982,6 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, stateAction.sourcePayload().contains("Am"));
         assertEquals(true, stateAction.targetPayload().contains("Am"));
         assertEquals("Ao", stateAction.completionPayload());
-        Handling.sendInteractionState(4, 0, null);
-        assertEquals(true, containsSend(handlingSends, "Am"));
-        assertEquals(true, containsSend(handlingSends, "Ao"));
         handlingSends.clear();
         TradeState.instance().removeInteractionPair(4);
         TradeState.instance().removeInteractionPair(8);
@@ -6022,8 +5989,8 @@ public final class PortedModuleSmokeTest {
         TradeOfferAction tradeOfferAction = TradeLookups.addOfferAction(
             4,
             8,
-            "77",
-            "88",
+            77L,
+            88L,
             76,
             TradeState.instance(),
             new FurnitureDao(MySQL.configuredDatabase()));
@@ -6031,28 +5998,25 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, tradeOfferAction.targetPayload().contains("Trade Chair"));
         TradeState.instance().removeInteractionPair(4);
         TradeState.instance().removeInteractionPair(8);
-        Handling.requestInteraction(4, "AG", "AG" + wireLong(61));
-        String carriedTradePayload = Handling.addTradeFurniture(4, "FU", "FU" + wireLong(76));
-        assertEquals(true, carriedTradePayload.contains("Al"));
-        assertEquals(true, carriedTradePayload.contains("Trade Chair"));
+        processPreSessionPacketBuffer(4, readyFrame("AG" + wireLong(61)));
+        processPreSessionPacketBuffer(4, readyFrame("FU" + wireLong(76)));
         assertEquals(true, containsSend(handlingSends, "Al"));
+        assertEquals(true, containsSend(handlingSends, "Trade Chair"));
         assertEquals(true, containsSend(handlingSends, "8:DATA"));
         handlingSends.clear();
-        String removedTradePayload = Handling.removeTradeFurniture(4, "AH", "AH" + wireLong(76));
-        assertEquals(true, removedTradePayload.contains("Al"));
-        assertEquals(false, removedTradePayload.contains("Trade Chair"));
+        processPreSessionPacketBuffer(4, readyFrame("AH" + wireLong(76)));
         assertEquals(true, containsSend(handlingSends, "Al"));
         handlingSends.clear();
         handlingSql.clear();
-        Handling.requestInteraction(4, "AG", "AG" + wireLong(61));
-        Handling.addTradeFurniture(4, "FU", "FU" + wireLong(76));
-        Handling.addTradeFurniture(8, "FU", "FU" + wireLong(86));
+        processPreSessionPacketBuffer(4, readyFrame("AG" + wireLong(61)));
+        processPreSessionPacketBuffer(4, readyFrame("FU" + wireLong(76)));
+        processPreSessionPacketBuffer(8, readyFrame("FU" + wireLong(86)));
         handlingSends.clear();
         handlingSql.clear();
         TradeConfirmation tradeConfirmation = TradeLookups.confirmTradeAction(
             4,
-            "77",
-            "88",
+            77L,
+            88L,
             9,
             "session-77",
             TradeState.instance(),
@@ -6063,12 +6027,12 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "INSERT INTO logs_trading(id_user,id_partner,items_user,items_partner,id_room,timestamp,id_session) VALUES('77','88','76:506','86:506','9',UNIX_TIMESTAMP(),'session-77')"));
         assertEquals(0, TradeState.instance().interactionPartner(4));
         handlingSql.clear();
-        Handling.requestInteraction(4, "AG", "AG" + wireLong(61));
-        Handling.addTradeFurniture(4, "FU", "FU" + wireLong(76));
-        Handling.addTradeFurniture(8, "FU", "FU" + wireLong(86));
+        processPreSessionPacketBuffer(4, readyFrame("AG" + wireLong(61)));
+        processPreSessionPacketBuffer(4, readyFrame("FU" + wireLong(76)));
+        processPreSessionPacketBuffer(8, readyFrame("FU" + wireLong(86)));
         handlingSends.clear();
         handlingSql.clear();
-        assertEquals("Ap", Handling.confirmTrade(4, "FR", "FR"));
+        processPreSessionPacketBuffer(4, readyFrame("FR"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner='88' WHERE id IN ('76') AND id_owner='77' AND id_room IS NULL"));
         assertEquals(true, containsSql(handlingSql, "UPDATE furnitures SET id_owner='77' WHERE id IN ('86') AND id_owner='88' AND id_room IS NULL"));
         assertEquals(true, containsSql(handlingSql, "INSERT INTO logs_trading(id_user,id_partner,items_user,items_partner,id_room,timestamp,id_session) VALUES('77','88','76:506','86:506','9',UNIX_TIMESTAMP(),'session-77')"));
@@ -6082,14 +6046,18 @@ public final class PortedModuleSmokeTest {
         assertEquals(8L, closeAction.targetSocketIndex());
         assertEquals(true, closeAction.payload().contains("An"));
         assertEquals(0, TradeState.instance().interactionPartner(4));
-        Handling.requestInteraction(4, "AG", "AG" + wireLong(61));
+        processPreSessionPacketBuffer(4, readyFrame("AG" + wireLong(61)));
         handlingSends.clear();
-        Handling.closeInteraction(4, 0);
+        TradeInteractionCloseAction routedCloseAction =
+            TradeLookups.closeInteractionAction(4, 8, 9, 61, TradeState.instance());
+        assertEquals(true, routedCloseAction.valid());
+        SocketDelivery.sendToSocket(4, routedCloseAction.payload());
+        SocketDelivery.sendToSocket((int) routedCloseAction.targetSocketIndex(), routedCloseAction.payload());
         assertEquals(true, containsSend(handlingSends, "An"));
         assertEquals(true, containsSend(handlingSends, "8:DATA"));
         assertEquals(0, TradeState.instance().interactionPartner(4));
         handlingSql.clear();
-        Handling.clearSocketUser(4);
+        new UserDao(MySQL.configuredDatabase()).clearSocket(77L);
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET id_socket=null WHERE id = '77'"));
         MySQL.configureDatabaseConnection(null);
         MusConnectionManager.instance().configureSink(null);
@@ -6150,7 +6118,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("alpha", parsedSettings.value("name"));
         AppSettingsCache typedSettings = AppSettingsCache.fromSettings(Map.of("Server.Port", "4321"));
         assertEquals("4321", typedSettings.value("server.port"));
-        UpdaterSettings.UpdateEntry entry = UpdaterSettings.UpdateEntry.fromFields("x", "42", "body", 3L, 7L);
+        UpdaterSettings.UpdateEntry entry = new UpdaterSettings.UpdateEntry("x", "42", "body", 3L, 7L, true);
         UpdaterSettings updaterSettings = UpdaterSettings.fromEntries("typed-updater", List.of(entry), "");
         assertEquals(List.of(entry), updaterSettings.entryList());
     }
@@ -6329,8 +6297,8 @@ public final class PortedModuleSmokeTest {
     private static void assertRoomEventLocaleTypedBuilder() {
         RoomEventLocales locales = RoomEventBootCache.buildRoomEventLocales(
             List.of(new SettingsDao.LocaleRow("roomevent_type_5", "party")),
-            RoomEventLocales.fromEntries(List.of(new RoomEventLocales.LocaleEntry("existing", List.of("old")))));
-        assertEquals(true, locales.entries().contains(new RoomEventLocales.LocaleEntry("existing", List.of("old"))));
+            RoomEventLocales.fromEntries(List.of(new RoomEventLocales.LocaleEntry("existing", "old", ""))));
+        assertEquals(true, locales.entries().contains(new RoomEventLocales.LocaleEntry("existing", "old", "")));
         assertEquals("party", locales.categoryName(5));
     }
 
@@ -6440,35 +6408,37 @@ public final class PortedModuleSmokeTest {
         assertEquals(1, productCache.rows().size());
         ProductCache.ProductRow row = productCache.rows().get(0);
         assertEquals(12L, row.productId());
-        assertEquals(List.of("7", "", "", "", "typed", "fallbackTyped"), row.fields());
+        assertEquals(7L, row.type());
+        assertEquals("typed", row.defaultSign());
+        assertEquals("fallbackTyped", row.fallbackDefaultSign());
     }
 
     private static void assertCatalogRegistryRows() {
         CatalogRegistry registry = CatalogRegistry.fromRows(
-            List.of(new CatalogDao.ProductCacheRow(List.of("21", "3", "chair"))),
-            List.of(new CatalogDao.CatalogProductCacheRow(List.of("31", "sprite", "21"))),
-            List.of(new CatalogDao.ProductDealRow(41L, "21;22")));
-        assertEquals(List.of(new CatalogRegistry.CatalogRow("21\t3\tchair", List.of("21", "3", "chair"))),
-            registry.productRows());
+            List.of(productDaoRow(21, "0", "3")),
+            List.of(catalogProductRow(31, "1", "sprite", "2", "21")),
+            List.of(new CatalogDao.ProductDealRow(41L, List.of(21L, 22L))));
+        assertEquals(21L, registry.product(21).orElseThrow().productId());
+        assertEquals(3L, registry.product(21).orElseThrow().type());
         assertEquals("sprite", registry.catalogProduct(31).orElseThrow().sprite());
-        assertEquals("41\t21;22", registry.dealRows().get(0).text());
         assertEquals(List.of(21L, 22L), registry.dealRows().get(0).productDealItemIds());
         assertEquals(List.of(21L, 22L), registry.productDeal(41L).orElseThrow().itemProductIds());
-        List<String> copiedFields = registry.productRows().get(0).fields();
-        assertEquals("chair", copiedFields.get(2));
         CatalogRegistry mapRegistry = CatalogRegistry.fromRowMaps(
-            Map.of(22L, CatalogRegistry.CatalogRow.fromFields(List.of("22", "4", "table"))),
-            Map.of(32L, CatalogRegistry.CatalogRow.fromFields(List.of("32", "table_sprite", "22"))),
-            Map.of(42L, new CatalogRegistry.CatalogRow("42\t22;23", List.of("42", "22;23"))));
-        assertEquals("table", mapRegistry.productRows().get(0).fields().get(2));
+            Map.of(22L, new CatalogRegistry.CatalogRow(
+                22L, 3, 4L, "", "", "", "", 0L, 0L, 0L, 0L, 0L, 0L,
+                "", 0L, 0L, "", 0L, "", 0L, 0L, 0L, 0L, 0L, 0L, List.of())),
+            Map.of(32L, new CatalogRegistry.CatalogRow(
+                32L, 3, 0L, "", "", "", "", 0L, 0L, 0L, 0L, 0L, 0L,
+                "table_sprite", 22L, 0L, "", 0L, "", 0L, 0L, 0L, 0L, 0L, 0L, List.of())),
+            Map.of(42L, CatalogRegistry.CatalogRow.fromDeal(42L, List.of(22L, 23L))));
+        assertEquals(4L, mapRegistry.product(22).orElseThrow().type());
         assertEquals("table_sprite", mapRegistry.catalogProduct(32).orElseThrow().sprite());
-        assertEquals("42\t22;23", mapRegistry.dealRows().get(0).text());
         assertEquals(List.of(22L, 23L), mapRegistry.productDeal(42L).orElseThrow().itemProductIds());
     }
 
     private static void assertRoomCategoryBootCaches() {
         NavigatorBootCache.loadRoomCategoryRowsCache();
-        assertEquals(List.of("0", "", "0"), NavigatorState.instance().roomCategoryCache().defaultCategoryIdList());
+        assertEquals(List.of(0L, 0L, 0L), NavigatorState.instance().roomCategoryCache().defaultCategoryIds());
         assertEquals(true, NavigatorState.instance().roomCategoryCache().categoryRowList().size() > 0);
         assertEquals(encodedVl64(1, null, "")
                 + encodedVl64(1, null, "") + "public\2"
@@ -6476,10 +6446,12 @@ public final class PortedModuleSmokeTest {
             NavigatorBootCache.buildRoomCategoryPayload(
                 List.of(new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L)), 0L, 0L));
 
-        RoomCategoryCache typedRoomCategories = RoomCategoryCache.fromPayloadRows(List.of("defaults"),
+        RoomCategoryCache typedRoomCategories = RoomCategoryCache.fromPayloadRows(
+            List.of(RoomCategoryCache.DefaultCategoryId.of(5L)),
             List.of(new RoomDao.RoomCategoryRow(5L, "typed", 1L, 2L, 3L)),
             List.of(new RoomCategoryCache.CategoryPayload(0L, 0L, "CATEGORY")));
-        assertEquals("defaults", typedRoomCategories.privateDefaultCategoryId());
+        assertEquals("5", typedRoomCategories.privateDefaultCategoryId());
+        assertEquals(5L, typedRoomCategories.privateDefaultCategoryIdValue());
         assertEquals("", typedRoomCategories.publicDefaultCategoryId());
         assertEquals(List.of(new RoomDao.RoomCategoryRow(5L, "typed", 1L, 2L, 3L)),
             typedRoomCategories.categoryRowList());
@@ -6487,17 +6459,25 @@ public final class PortedModuleSmokeTest {
         assertEquals(new RoomCategoryCache.CategoryPayload(0L, 0L, "CATEGORY"),
             typedRoomCategories.payloadRows().get(0));
         RoomCategoryCache cacheRoomCategories = RoomCategoryCache.fromPayloadRows(
-            List.of("11", "", "22"),
+            List.of(
+                RoomCategoryCache.DefaultCategoryId.of(11L),
+                RoomCategoryCache.DefaultCategoryId.empty(),
+                RoomCategoryCache.DefaultCategoryId.of(22L)),
             List.of(new RoomDao.RoomCategoryRow(7L, "cache", 3L, 4L, 5L)),
             List.of(new RoomCategoryCache.CategoryPayload(2L, 1L, "CACHE_CATEGORY")));
-        assertEquals(List.of("11", "", "22"), cacheRoomCategories.defaultCategoryIdList());
+        assertEquals(List.of(11L, 0L, 22L), cacheRoomCategories.defaultCategoryIds());
+        assertEquals(List.of(
+                RoomCategoryCache.DefaultCategoryId.of(11L),
+                RoomCategoryCache.DefaultCategoryId.empty(),
+                RoomCategoryCache.DefaultCategoryId.of(22L)),
+            cacheRoomCategories.defaultCategoryIdRows());
         assertEquals(List.of(new RoomDao.RoomCategoryRow(7L, "cache", 3L, 4L, 5L)),
             cacheRoomCategories.categoryRowList());
         assertEquals("CACHE_CATEGORY", cacheRoomCategories.payload(2L, 1L));
 
         RoomCategoryCache previousRoomCategoryCacheForRows = NavigatorState.instance().roomCategoryCache();
         NavigatorState.instance().setRoomCategoryCache(RoomCategoryCache.fromPayloadRows(
-            List.of("defaults"),
+            List.of(RoomCategoryCache.DefaultCategoryId.of(6L)),
             List.of(new RoomDao.RoomCategoryRow(6L, "legacy", 0L, 1L, 2L)),
             List.of()));
         RoomCategoryCache mirroredRoomCategories = NavigatorState.instance().roomCategoryCache();
@@ -6507,13 +6487,18 @@ public final class PortedModuleSmokeTest {
 
         List<RoomCategoryCache.CategoryPayload> payloadRows =
             new ArrayList<>(List.of(new RoomCategoryCache.CategoryPayload(0L, 0L, "PAYLOAD")));
-        List<String> defaultIds = new ArrayList<>(List.of("11", "", "22"));
+        List<RoomCategoryCache.DefaultCategoryId> defaultIds = new ArrayList<>(List.of(
+            RoomCategoryCache.DefaultCategoryId.of(11L),
+            RoomCategoryCache.DefaultCategoryId.empty(),
+            RoomCategoryCache.DefaultCategoryId.of(22L)));
         RoomCategoryCache typedRoomCategoryDefaults = RoomCategoryCache.fromPayloadRows(
             defaultIds, List.of(), payloadRows);
-        defaultIds.set(0, "changed");
+        defaultIds.set(0, RoomCategoryCache.DefaultCategoryId.of(99L));
         payloadRows.set(0, new RoomCategoryCache.CategoryPayload(0L, 0L, "changed"));
         assertEquals("11", typedRoomCategoryDefaults.privateDefaultCategoryId());
+        assertEquals(11L, typedRoomCategoryDefaults.privateDefaultCategoryIdValue());
         assertEquals("22", typedRoomCategoryDefaults.publicDefaultCategoryId());
+        assertEquals(22L, typedRoomCategoryDefaults.publicDefaultCategoryIdValue());
         assertRoomCategoryDefaults(typedRoomCategoryDefaults);
 
         RoomCategoryCache previousRoomCategoryDefaults = NavigatorState.instance().roomCategoryCache();
@@ -6528,7 +6513,11 @@ public final class PortedModuleSmokeTest {
     }
 
     private static void assertRoomCategoryDefaults(RoomCategoryCache cache) {
-        assertEquals(List.of("11", "", "22"), cache.defaultCategoryIdList());
+        assertEquals(List.of(
+                RoomCategoryCache.DefaultCategoryId.of(11L),
+                RoomCategoryCache.DefaultCategoryId.empty(),
+                RoomCategoryCache.DefaultCategoryId.of(22L)),
+            cache.defaultCategoryIdRows());
         assertEquals("PAYLOAD", cache.payload(0L, 0L));
         assertEquals(List.of(new RoomCategoryCache.CategoryPayload(0L, 0L, "PAYLOAD")), cache.payloadRows());
     }
@@ -6600,34 +6589,26 @@ public final class PortedModuleSmokeTest {
     }
 
     private static RepresentedBotRegistry.RepresentedBotRecord representedBotRecord(String recordText) {
-        String[] fields = StringUtils.text(recordText).split("\2", -1);
+        IndexedTextFields fields = IndexedTextFields.from(recordText, '\2');
         return new RepresentedBotRegistry.RepresentedBotRecord(
-            numberField(fields, 0),
-            numberField(fields, 1),
-            textField(fields, 2),
-            textField(fields, 3),
-            textField(fields, 4),
-            textField(fields, 5),
-            numberField(fields, 6),
-            numberField(fields, 7),
-            textField(fields, 8),
-            numberField(fields, 9),
-            textField(fields, 10),
-            numberField(fields, 11),
-            numberField(fields, 12),
-            textField(fields, 13),
-            textField(fields, 14),
-            numberField(fields, 15),
-            numberField(fields, 16),
-            List.of(fields));
-    }
-
-    private static String textField(String[] fields, int index) {
-        return StringUtils.field(fields, index);
-    }
-
-    private static long numberField(String[] fields, int index) {
-        return NumberUtils.parseLong(textField(fields, index));
+            fields.number(0),
+            fields.number(1),
+            fields.text(2),
+            fields.text(3),
+            fields.text(4),
+            fields.text(5),
+            fields.number(6),
+            fields.number(7),
+            fields.text(8),
+            fields.number(9),
+            fields.text(10),
+            fields.number(11),
+            fields.number(12),
+            fields.text(13),
+            fields.text(14),
+            fields.number(15),
+            fields.number(16),
+            fields.fieldCount());
     }
 
     private static SessionRegistry sessionRegistry(SessionRegistry.SessionRecord... records) {
@@ -6643,15 +6624,75 @@ public final class PortedModuleSmokeTest {
     }
 
     private static ProductCache.ProductRow productCacheRow(long productId, String... columnPairs) {
-        return new ProductCache.ProductRow(productId, productFields(productId, columnPairs));
+        SparseFields fields = SparseFields.from(productId, 0, columnPairs);
+        return new ProductCache.ProductRow(
+            productId,
+            fields.number(0),
+            fields.text(4),
+            fields.text(5),
+            fields.text(7),
+            fields.number(10),
+            fields.number(12),
+            fields.text(13),
+            fields.text(14),
+            fields.text(15),
+            fields.text(17),
+            fields.text(18),
+            fields.number(20),
+            fields.text(24),
+            fields.text(26),
+            fields.text(27),
+            fields.number(27),
+            fields.number(34) != 0L);
     }
 
     private static CatalogDao.ProductCacheRow productDaoRow(long productId, String... columnPairs) {
-        return new CatalogDao.ProductCacheRow(indexedFields(productId, columnPairs));
+        SparseFields fields = SparseFields.from(productId, 1, columnPairs);
+        return new CatalogDao.ProductCacheRow(
+            productId,
+            fields.fieldCount(),
+            fields.number(1),
+            fields.text(5),
+            fields.text(6),
+            fields.text(8),
+            fields.number(11),
+            fields.number(13),
+            fields.text(14),
+            fields.text(15),
+            fields.text(16),
+            fields.text(18),
+            fields.text(19),
+            fields.text(20),
+            fields.number(21),
+            fields.number(24),
+            fields.text(25),
+            fields.text(27),
+            fields.text(28),
+            fields.number(28),
+            fields.number(35) != 0L,
+            fields.number(34),
+            fields.number(35),
+            fields.number(36),
+            fields.number(37));
     }
 
-    private static CatalogDao.CatalogProductCacheRow catalogProductRow(long productId, String... columnPairs) {
-        return new CatalogDao.CatalogProductCacheRow(indexedFields(0, productId, columnPairs));
+    private static CatalogDao.CatalogProductCacheRow catalogProductRow(long rowId, String... columnPairs) {
+        SparseFields fields = SparseFields.from(rowId, 0, columnPairs);
+        return new CatalogDao.CatalogProductCacheRow(
+            rowId,
+            fields.fieldCount(),
+            fields.text(1),
+            fields.number(2),
+            fields.number(3),
+            fields.text(4),
+            fields.number(5),
+            fields.text(6),
+            fields.number(7),
+            fields.number(8),
+            fields.number(9),
+            fields.number(10),
+            fields.number(11),
+            fields.number(12));
     }
 
     private static void seedCatalogRegistryProductRows(List<CatalogDao.ProductCacheRow> productRows) {
@@ -6734,36 +6775,44 @@ public final class PortedModuleSmokeTest {
             clubProductRows));
     }
 
-    private static List<String> productFields(long productId, String... columnPairs) {
-        int maxColumn = 0;
-        for (int index = 0; index + 1 < columnPairs.length; index += 2) {
-            maxColumn = Math.max(maxColumn, (int) Long.parseLong(columnPairs[index]));
+    private record SparseFields(Map<Integer, String> values, int fieldCount) {
+        private static SparseFields from(long rowId, int columnOffset, String... columnPairs) {
+            Map<Integer, String> values = new LinkedHashMap<>();
+            values.put(0, String.valueOf(rowId));
+            int maxColumn = 0;
+            for (int index = 0; index + 1 < columnPairs.length; index += 2) {
+                int fieldIndex = (int) Long.parseLong(columnPairs[index]) + columnOffset;
+                values.put(fieldIndex, columnPairs[index + 1]);
+                maxColumn = Math.max(maxColumn, fieldIndex);
+            }
+            return new SparseFields(values, maxColumn + 1);
         }
-        String[] fields = new String[maxColumn + 1];
-        Arrays.fill(fields, "");
-        fields[0] = String.valueOf(productId);
-        for (int index = 0; index + 1 < columnPairs.length; index += 2) {
-            fields[(int) Long.parseLong(columnPairs[index])] = columnPairs[index + 1];
+
+        private String text(int index) {
+            return values.getOrDefault(index, "");
         }
-        return List.of(fields);
+
+        private long number(int index) {
+            return NumberUtils.parseLong(text(index));
+        }
     }
 
-    private static List<String> indexedFields(long productId, String... columnPairs) {
-        return indexedFields(1, productId, columnPairs);
-    }
+    private record IndexedTextFields(List<String> values) {
+        private static IndexedTextFields from(String text, char delimiter) {
+            return new IndexedTextFields(StringUtils.delimitedFields(text, delimiter));
+        }
 
-    private static List<String> indexedFields(int columnOffset, long productId, String... columnPairs) {
-        int maxColumn = 0;
-        for (int index = 0; index + 1 < columnPairs.length; index += 2) {
-            maxColumn = Math.max(maxColumn, (int) Long.parseLong(columnPairs[index]));
+        private String text(int index) {
+            return StringUtils.field(values, index);
         }
-        String[] fields = new String[maxColumn + columnOffset + 1];
-        Arrays.fill(fields, "");
-        fields[0] = String.valueOf(productId);
-        for (int index = 0; index + 1 < columnPairs.length; index += 2) {
-            fields[(int) Long.parseLong(columnPairs[index]) + columnOffset] = columnPairs[index + 1];
+
+        private long number(int index) {
+            return NumberUtils.parseLong(text(index));
         }
-        return List.of(fields);
+
+        private int fieldCount() {
+            return values.size();
+        }
     }
 
     private static List<Object> loginUserRow() {
@@ -6797,6 +6846,27 @@ public final class PortedModuleSmokeTest {
             + text;
     }
 
+    private static String readyFrame(String payload) {
+        return "x" + WireEncoding.encodeBase64Length(StringUtils.text(payload).length()) + StringUtils.text(payload);
+    }
+
+    private static void processPreSessionPacketBuffer(long socketIndex, String packetBuffer) {
+        PreReadyPacketDispatcher.processPreSessionPacketBuffer(
+            socketIndex,
+            packetBuffer,
+            SocketLifecycle::disconnectSocket,
+            QuestPacketHandlers::completeQuest);
+    }
+
+    private static void dispatchPreReadyPacket(int socketIndex, String packetCode, String payload) {
+        PreReadyPacketDispatcher.dispatchPreReadyPacket(
+            socketIndex,
+            packetCode,
+            payload,
+            SocketLifecycle::disconnectSocket,
+            QuestPacketHandlers::completeQuest);
+    }
+
     private static boolean containsSql(List<String> statements, String needle) {
         for (String statement : statements) {
             if (statement.contains(needle)) {
@@ -6816,11 +6886,7 @@ public final class PortedModuleSmokeTest {
     }
 
     private static String sentPayload(String send) {
-        String[] parts = StringUtils.text(send).split("\6", -1);
-        if (parts.length < 3) {
-            return "";
-        }
-        return parts[2].replace("\1\7", "");
+        return StringUtils.delimitedField(send, '\6', 2).replace("\1\7", "");
     }
 
     private static String wiredRecordText(

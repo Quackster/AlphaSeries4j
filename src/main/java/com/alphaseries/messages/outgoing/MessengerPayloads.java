@@ -4,7 +4,6 @@ import com.alphaseries.game.messenger.PendingFriendRequest;
 import com.alphaseries.game.messenger.MessengerFriend;
 import com.alphaseries.game.messenger.MessengerSearchResult;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.util.NumberUtils;
 
 import java.util.List;
 
@@ -76,7 +75,7 @@ public final class MessengerPayloads {
     }
 
     public static String searchResult(
-        String userId,
+        long userId,
         String userName,
         String figureText,
         String mottoText,
@@ -86,7 +85,7 @@ public final class MessengerPayloads {
     ) {
         return PacketBuilder.create()
             .appendRaw('1')
-            .appendInt(NumberUtils.parseLong(userId))
+            .appendInt(userId)
             .appendString(userName)
             .appendString(mottoText)
             .appendInt(isOnline)
@@ -106,7 +105,7 @@ public final class MessengerPayloads {
         for (MessengerSearchResult result : results == null ? List.<MessengerSearchResult>of() : results) {
             if (result != null && result.userId() > 0L) {
                 String resultPayload = searchResult(
-                    String.valueOf(result.userId()),
+                    result.userId(),
                     result.userName(),
                     result.figure(),
                     result.motto(),

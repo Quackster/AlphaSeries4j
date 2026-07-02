@@ -56,7 +56,7 @@ public final class InventoryRefreshService {
             if (!updatedCache.equals(cache)) {
                 FileUtils.writeTextFile(cachePath, updatedCache.cacheText());
             }
-            long socketIndex = SessionState.instance().linkedSocketIndex(String.valueOf(ownerId));
+            long socketIndex = SessionState.instance().linkedSocketIndex(ownerId);
             if (socketIndex > 0L) {
                 MusConnectionManager.instance().sendData((int) socketIndex,
                     inventoryAddPayload(furnitureId, productId, itemData, secondaryValue));
@@ -91,7 +91,7 @@ public final class InventoryRefreshService {
             if (!updatedCache.equals(cache)) {
                 FileUtils.writeTextFile(cachePath, updatedCache.cacheText());
             }
-            long socketIndex = SessionState.instance().linkedSocketIndex(String.valueOf(ownerId));
+            long socketIndex = SessionState.instance().linkedSocketIndex(ownerId);
             if (socketIndex > 0L) {
                 MusConnectionManager.instance().sendData((int) socketIndex, inventoryRemovePayload(furnitureId));
             }
@@ -106,8 +106,8 @@ public final class InventoryRefreshService {
         return basePath.resolve("cache").resolve("users").resolve(ownerId + ".cache").toString();
     }
 
-    public record InventoryCache(String leadingText, List<InventoryItem> items) {
-        public InventoryCache {
+    private record InventoryCache(String leadingText, List<InventoryItem> items) {
+        private InventoryCache {
             leadingText = trimCacheText(leadingText);
             items = items == null ? List.of() : List.copyOf(items);
         }
@@ -121,7 +121,7 @@ public final class InventoryRefreshService {
                 int payloadStart = recordStart + 1;
                 int recordEnd = cache.indexOf('\2', payloadStart);
                 String recordText = recordEnd < 0 ? cache.substring(payloadStart) : cache.substring(payloadStart, recordEnd);
-                InventoryItem item = InventoryItem.fromRecordText(recordText);
+                InventoryItem item = itemFromCacheRecord(recordText);
                 if (item.furnitureId() > 0L) {
                     items.add(item);
                 }
@@ -130,7 +130,7 @@ public final class InventoryRefreshService {
             return new InventoryCache(leadingText, items);
         }
 
-        public InventoryCache add(InventoryItem item) {
+        private InventoryCache add(InventoryItem item) {
             if (item == null || item.furnitureId() <= 0L || containsFurniture(item.furnitureId())) {
                 return this;
             }
@@ -139,7 +139,7 @@ public final class InventoryRefreshService {
             return new InventoryCache(leadingText, updatedItems);
         }
 
-        public InventoryCache remove(long furnitureId) {
+        private InventoryCache remove(long furnitureId) {
             if (furnitureId <= 0L || items.isEmpty()) {
                 return this;
             }
@@ -155,7 +155,9 @@ public final class InventoryRefreshService {
         private String cacheText() {
             PacketBuilder cache = PacketBuilder.create().appendRaw(leadingText);
             for (InventoryItem item : items) {
-                cache.appendRaw('\1').appendRaw(item.recordText()).appendRaw('\2');
+                cache.appendRaw('\1')
+                    .appendRaw(item.cacheRecordText())
+                    .appendRaw('\2');
             }
             return cache.build();
         }
@@ -168,6 +170,10 @@ public final class InventoryRefreshService {
             }
             return false;
         }
+
+        private static InventoryItem itemFromCacheRecord(String recordText) {
+            return InventoryItem.fromCacheRecord(recordText);
+        }
     }
 
     public record InventoryItem(long furnitureId, long productId, String itemData, long secondaryValue) {
@@ -175,21 +181,45 @@ public final class InventoryRefreshService {
             itemData = StringUtils.text(itemData);
         }
 
-        private static InventoryItem fromRecordText(String recordText) {
-            List<String> fields = StringUtils.delimitedFields(recordText, '\t');
+        private static InventoryItem fromCacheRecord(String recordText) {
+            InventoryCacheRecord record = InventoryCacheRecord.fromText(recordText);
             return new InventoryItem(
-                NumberUtils.parseLong(field(fields, 0)),
-                NumberUtils.parseLong(field(fields, 1)),
-                field(fields, 2),
-                NumberUtils.parseLong(field(fields, 3)));
+                record.furnitureId(),
+                record.productId(),
+                record.itemData(),
+                record.secondaryValue());
         }
 
-        private String recordText() {
-            return furnitureId + "\t" + productId + "\t" + itemData + "\t" + secondaryValue;
+        private String cacheRecordText() {
+            return PacketBuilder.create()
+                .appendRaw(furnitureId)
+                .appendRaw('\t')
+                .appendRaw(productId)
+                .appendRaw('\t')
+                .appendRaw(itemData)
+                .appendRaw('\t')
+                .appendRaw(secondaryValue)
+                .build();
+        }
+    }
+
+    private record InventoryCacheRecord(
+        long furnitureId,
+        long productId,
+        String itemData,
+        long secondaryValue
+    ) {
+        private InventoryCacheRecord {
+            itemData = StringUtils.text(itemData);
         }
 
-        private static String field(List<String> fields, int index) {
-            return fields != null && index >= 0 && index < fields.size() ? fields.get(index) : "";
+        private static InventoryCacheRecord fromText(String recordText) {
+            StringUtils.IndexedFields fields = StringUtils.indexedFields(recordText, '\t');
+            return new InventoryCacheRecord(
+                fields.number(0),
+                fields.number(1),
+                fields.text(2),
+                fields.number(3));
         }
     }
 

@@ -1,12 +1,9 @@
 package com.alphaseries.game.room;
 
-import com.alphaseries.util.StringUtils;
-
 public final class RoomState {
     private static final RoomState INSTANCE = new RoomState();
 
-    private String pendingRoomCache = "";
-    private String pendingFurnitureCache = "";
+    private FurnitureRoomCache.State furnitureRoomCache = FurnitureRoomCache.State.empty();
     private RepresentedRoomCache representedRooms = RepresentedRoomCache.empty();
     private RepresentedRoomSlots representedRoomSlots = RepresentedRoomSlots.empty();
     private RoomPortalSettings portalSettings = RoomPortalSettings.empty();
@@ -36,19 +33,17 @@ public final class RoomState {
     }
 
     public synchronized FurnitureRoomCache.State furnitureRoomCache() {
-        return FurnitureRoomCache.State.from(pendingRoomCache, pendingFurnitureCache, representedRooms);
+        return FurnitureRoomCache.State.from(furnitureRoomCache, representedRooms);
     }
 
     public synchronized void setFurnitureRoomCache(FurnitureRoomCache.State state) {
         if (state == null) {
-            pendingRoomCache = "";
-            pendingFurnitureCache = "";
+            furnitureRoomCache = FurnitureRoomCache.State.empty();
             representedRooms = RepresentedRoomCache.empty();
             return;
         }
-        pendingRoomCache = StringUtils.text(state.pendingRoomCache);
-        pendingFurnitureCache = StringUtils.text(state.pendingFurnitureCache);
-        representedRooms = RepresentedRoomCache.fromCacheText(state.representedRoomCache);
+        furnitureRoomCache = FurnitureRoomCache.State.markerStateFrom(state);
+        representedRooms = RepresentedRoomCache.fromCacheText(state.representedRoomCache());
     }
 
     public synchronized void setEventLocales(RoomEventLocales eventLocales) {

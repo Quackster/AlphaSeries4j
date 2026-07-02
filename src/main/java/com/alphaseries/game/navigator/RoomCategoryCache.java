@@ -7,13 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class RoomCategoryCache {
-    private final List<String> defaultCategoryIds;
+    private final List<DefaultCategoryId> defaultCategoryIds;
     private final List<RoomDao.RoomCategoryRow> categoryRows;
     private final List<CategoryPayload> payloads;
 
-    private RoomCategoryCache(List<String> defaultCategoryIds, List<RoomDao.RoomCategoryRow> categoryRows,
+    private RoomCategoryCache(List<DefaultCategoryId> defaultCategoryIds, List<RoomDao.RoomCategoryRow> categoryRows,
                               List<CategoryPayload> payloads) {
-        this.defaultCategoryIds = copyTexts(defaultCategoryIds);
+        this.defaultCategoryIds = copyDefaultCategoryIds(defaultCategoryIds);
         this.categoryRows = copyCategoryRows(categoryRows);
         this.payloads = copyPayloadRecords(payloads);
     }
@@ -22,21 +22,37 @@ public final class RoomCategoryCache {
         return new RoomCategoryCache(List.of(), List.of(), List.of());
     }
 
-    public static RoomCategoryCache fromPayloadRows(List<String> defaultCategoryIds,
+    public static RoomCategoryCache fromPayloadRows(List<DefaultCategoryId> defaultCategoryIds,
             List<RoomDao.RoomCategoryRow> categoryRows, List<CategoryPayload> payloads) {
         return new RoomCategoryCache(defaultCategoryIds, categoryRows, payloads);
     }
 
-    public List<String> defaultCategoryIdList() {
+    public List<DefaultCategoryId> defaultCategoryIdRows() {
         return List.copyOf(defaultCategoryIds);
+    }
+
+    public List<Long> defaultCategoryIds() {
+        List<Long> values = new ArrayList<>();
+        for (DefaultCategoryId categoryId : defaultCategoryIds) {
+            values.add(categoryId.categoryId());
+        }
+        return List.copyOf(values);
     }
 
     public String privateDefaultCategoryId() {
         return defaultCategoryId(0);
     }
 
+    public long privateDefaultCategoryIdValue() {
+        return defaultCategoryIdValue(0);
+    }
+
     public String publicDefaultCategoryId() {
         return defaultCategoryId(2);
+    }
+
+    public long publicDefaultCategoryIdValue() {
+        return defaultCategoryIdValue(2);
     }
 
     public List<RoomDao.RoomCategoryRow> categoryRowList() {
@@ -76,17 +92,35 @@ public final class RoomCategoryCache {
         }
     }
 
+    public record DefaultCategoryId(long categoryId, boolean present) {
+        public DefaultCategoryId {
+            categoryId = present ? categoryId : 0L;
+        }
+
+        public static DefaultCategoryId of(long categoryId) {
+            return new DefaultCategoryId(categoryId, true);
+        }
+
+        public static DefaultCategoryId empty() {
+            return new DefaultCategoryId(0L, false);
+        }
+
+        private String text() {
+            return present ? String.valueOf(categoryId) : "";
+        }
+    }
+
     private static List<RoomDao.RoomCategoryRow> copyCategoryRows(List<RoomDao.RoomCategoryRow> rows) {
         return rows == null ? List.of() : List.copyOf(rows);
     }
 
-    private static List<String> copyTexts(List<String> values) {
+    private static List<DefaultCategoryId> copyDefaultCategoryIds(List<DefaultCategoryId> values) {
         if (values == null) {
             return List.of();
         }
-        List<String> copiedValues = new ArrayList<>();
-        for (String value : values) {
-            copiedValues.add(StringUtils.text(value));
+        List<DefaultCategoryId> copiedValues = new ArrayList<>();
+        for (DefaultCategoryId value : values) {
+            copiedValues.add(value == null ? DefaultCategoryId.empty() : value);
         }
         return List.copyOf(copiedValues);
     }
@@ -96,6 +130,10 @@ public final class RoomCategoryCache {
     }
 
     private String defaultCategoryId(int index) {
-        return index >= 0 && index < defaultCategoryIds.size() ? StringUtils.text(defaultCategoryIds.get(index)) : "";
+        return index >= 0 && index < defaultCategoryIds.size() ? defaultCategoryIds.get(index).text() : "";
+    }
+
+    private long defaultCategoryIdValue(int index) {
+        return index >= 0 && index < defaultCategoryIds.size() ? defaultCategoryIds.get(index).categoryId() : 0L;
     }
 }

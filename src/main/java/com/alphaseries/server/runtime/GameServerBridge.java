@@ -1,7 +1,6 @@
 package com.alphaseries.server.runtime;
 
 import com.alphaseries.config.AppPaths;
-import com.alphaseries.Handling;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.SessionState;
 import com.alphaseries.server.lifecycle.LifecycleState;
@@ -78,14 +77,14 @@ public final class GameServerBridge {
 
     public static void processGameServerData(String incomingData) {
         try {
-            for (String packet : StringUtils.text(incomingData).split("\1", -1)) {
+            for (String packet : StringUtils.delimitedFields(incomingData, '\1')) {
                 if (packet.isEmpty()) {
                     continue;
                 }
                 GameServerPacket gamePacket = gameServerPacket(packet);
                 if ("SHUTDOWN".equals(gamePacket.commandName())) {
                     if (gamePacket.socketIndex() > 0L) {
-                        Handling.disconnectSocket(gamePacket.socketIndex());
+                        SocketLifecycle.disconnectSocket(gamePacket.socketIndex());
                     }
                 } else if ("LISTEN".equals(gamePacket.commandName())) {
                     if (gamePacket.socketIndex() > 0L) {
@@ -96,7 +95,7 @@ public final class GameServerBridge {
                         appendGameServerPacketPayload(gamePacket.socketIndex(), gamePacket.payload());
                     }
                 } else if (gamePacket.socketIndex() > 0L) {
-                    Handling.disconnectSocket(gamePacket.socketIndex());
+                    SocketLifecycle.disconnectSocket(gamePacket.socketIndex());
                 }
             }
         } catch (Exception ignored) {
@@ -111,25 +110,26 @@ public final class GameServerBridge {
     }
 
     public static GameServerPacket gameServerPacket(String packetText) {
-        String[] fields = StringUtils.text(packetText).split("\2", -1);
-        String commandName = fields.length > 0 ? StringUtils.text(fields[0]).toUpperCase(Locale.ROOT) : "";
-        long socketIndex = fields.length >= 2 ? NumberUtils.parseLong(fields[1]) : NumberUtils.parseLong(commandName);
-        String payload = "DATA".equals(commandName) ? gameServerPacketPayload(fields) : "";
+        String text = StringUtils.text(packetText);
+        StringUtils.IndexedFields fields = StringUtils.indexedFields(text, '\2');
+        String commandName = fields.text(0).toUpperCase(Locale.ROOT);
+        String socketText = fields.text(1);
+        long socketIndex = socketText.isEmpty() ? NumberUtils.parseLong(commandName) : NumberUtils.parseLong(socketText);
+        String payload = "DATA".equals(commandName) ? gameServerPacketPayload(text) : "";
         return new GameServerPacket(commandName, socketIndex, payload);
     }
 
-    private static String gameServerPacketPayload(String[] fields) {
-        if (fields == null || fields.length <= 2) {
+    private static String gameServerPacketPayload(String packetText) {
+        String text = StringUtils.text(packetText);
+        int firstDelimiter = text.indexOf('\2');
+        if (firstDelimiter < 0) {
             return "";
         }
-        StringBuilder payload = new StringBuilder();
-        for (int fieldIndex = 2; fieldIndex < fields.length; fieldIndex++) {
-            if (payload.length() > 0) {
-                payload.append('\2');
-            }
-            payload.append(StringUtils.text(fields[fieldIndex]));
+        int secondDelimiter = text.indexOf('\2', firstDelimiter + 1);
+        if (secondDelimiter < 0 || secondDelimiter + 1 >= text.length()) {
+            return "";
         }
-        return payload.toString();
+        return text.substring(secondDelimiter + 1);
     }
 
     public static String popGameServerPacketData(long socketIndex) {

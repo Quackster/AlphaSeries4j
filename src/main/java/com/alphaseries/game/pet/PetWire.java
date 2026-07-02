@@ -43,10 +43,7 @@ public final class PetWire {
      * Original function: Proc_6_86_73B0D0.
      */
     public static PackagePreviewRequest packagePreviewRequest(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("p`") || requestPayload.startsWith("rt")) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutAnyPrefix(packetPayload, "p`", "rt");
         return new PackagePreviewRequest(furnitureId(requestPayload, new WireReader.Offset(1)));
     }
 
@@ -54,10 +51,7 @@ public final class PetWire {
      * Original function: Proc_6_87_73C120.
      */
     public static PackagePlacementRequest packagePlacementRequest(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("n~")) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "n~");
         WireReader.Offset offset = new WireReader.Offset(1);
         long furnitureId = furnitureId(requestPayload, offset);
         String petName = StringUtils.singleLineText(WireReader.readString(requestPayload, offset));
@@ -71,10 +65,7 @@ public final class PetWire {
      * Original function: Proc_6_177_7C6580.
      */
     public static RaceListRequest raceListRequest(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("n" + '\177')) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "n" + '\177');
         String productPet = WireEncoding.readBase64LengthString(requestPayload);
         if (productPet.isEmpty()) {
             productPet = WireReader.readString(requestPayload, new WireReader.Offset(1));
@@ -86,10 +77,7 @@ public final class PetWire {
      * Original function: Proc_6_179_7C7790.
      */
     public static RoomPlacementRequest roomPlacementRequest(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("nz")) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "nz");
         WireReader.Offset offset = new WireReader.Offset(1);
         return new RoomPlacementRequest(
             WireReader.readLong(requestPayload, offset),
@@ -102,10 +90,7 @@ public final class PetWire {
      * Original function: Proc_6_182_7CAAD0.
      */
     public static NameValidationRequest nameValidationRequest(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("@c")) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "@c");
         String petName = WireEncoding.readBase64LengthString(requestPayload);
         if (petName.isEmpty()) {
             petName = WireReader.readString(requestPayload, new WireReader.Offset(1));
@@ -118,11 +103,7 @@ public final class PetWire {
      * Original function: Proc_7CC190.
      */
     public static PetIdRequest petIdRequest(String packetPayload, String prefix) {
-        String requestPayload = StringUtils.text(packetPayload);
-        String prefixText = StringUtils.text(prefix);
-        if (!prefixText.isEmpty() && requestPayload.startsWith(prefixText)) {
-            requestPayload = requestPayload.substring(prefixText.length());
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, prefix);
         return new PetIdRequest(WireReader.readLong(requestPayload, new WireReader.Offset(1)));
     }
 
@@ -130,10 +111,7 @@ public final class PetWire {
      * Original function: Proc_7CA730.
      */
     public static CommandRequest commandRequest(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("n{")) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "n{");
         WireReader.Offset offset = new WireReader.Offset(1);
         return new CommandRequest(WireReader.readLong(requestPayload, offset), WireReader.readLong(requestPayload, offset));
     }

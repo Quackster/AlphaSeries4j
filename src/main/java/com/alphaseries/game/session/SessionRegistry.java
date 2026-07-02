@@ -44,12 +44,21 @@ public final class SessionRegistry {
         if (record == null || columnIndex < 0 || columnIndex >= record.fieldCount()) {
             return "";
         }
-        String[] valueParts = record.field((int) columnIndex).split("\\]", -1);
-        return valueParts.length == 0 ? "" : valueParts[0];
+        String value = record.field((int) columnIndex);
+        int bracketAt = value.indexOf(']');
+        return bracketAt < 0 ? value : value.substring(0, bracketAt);
     }
 
     long recordLong(String recordPrefix, String recordId, long columnIndex) {
         return NumberUtils.parseLong(recordField(recordPrefix, recordId, columnIndex));
+    }
+
+    String socketUserId(long socketIndex) {
+        return recordField("0:", String.valueOf(socketIndex), 0);
+    }
+
+    long socketUserIdValue(long socketIndex) {
+        return recordLong("0:", String.valueOf(socketIndex), 0);
     }
 
     long userIdBySocket(int socketIndex) {
@@ -71,23 +80,27 @@ public final class SessionRegistry {
         return NumberUtils.parseLong(cacheField(keyName, columnIndex));
     }
 
+    long cacheLong(long keyName, long columnIndex) {
+        return cacheLong(String.valueOf(keyName), columnIndex);
+    }
+
     private String linkedValue(String recordId, boolean useBracketCount) {
         LinkedSection section = linkedSection(StringUtils.text(recordId));
         if (section == null) {
             return "";
         }
         String sectionText = section.text();
-        String[] bracketParts = sectionText.split("\\[", -1);
-        int targetIndex = bracketParts.length - 1;
-        String[] valueParts = useBracketCount ? sectionText.split("\1", -1) : sectionText.split("\0", -1);
-        if (targetIndex < 0 || targetIndex >= valueParts.length) {
-            return "";
-        }
-        return valueParts[targetIndex];
+        int targetIndex = countOccurrences(sectionText, '[');
+        char delimiter = useBracketCount ? '\1' : '\0';
+        return StringUtils.indexedFields(sectionText, delimiter).text(targetIndex);
     }
 
     long linkedLong(String recordId, boolean useBracketCount) {
         return NumberUtils.parseLong(linkedValue(recordId, useBracketCount));
+    }
+
+    long linkedLong(long recordId, boolean useBracketCount) {
+        return linkedLong(String.valueOf(recordId), useBracketCount);
     }
 
     public List<SocketSession> socketSessions() {
@@ -138,21 +151,32 @@ public final class SessionRegistry {
     private static final class Record {
         private final String key;
         private final String payload;
-        private final List<String> fields;
+        private final StringUtils.IndexedFields fields;
 
         private Record(String key, String payload) {
             this.key = StringUtils.text(key);
             this.payload = StringUtils.text(payload);
-            this.fields = List.of(this.payload.split("\2", -1));
+            this.fields = StringUtils.indexedFields(payload, '\2');
         }
 
         private int fieldCount() {
-            return fields.size();
+            return fields.fieldCount();
         }
 
         private String field(int index) {
-            return index >= 0 && index < fields.size() ? fields.get(index) : "";
+            return fields.text(index);
         }
+    }
+
+    private static int countOccurrences(String text, char character) {
+        String value = StringUtils.text(text);
+        int count = 0;
+        int characterAt = value.indexOf(character);
+        while (characterAt >= 0) {
+            count++;
+            characterAt = value.indexOf(character, characterAt + 1);
+        }
+        return count;
     }
 
     private record LinkedSection(String recordId, String text) {

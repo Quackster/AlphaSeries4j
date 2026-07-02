@@ -2,7 +2,7 @@ package com.alphaseries.game.trade;
 
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.util.NumberUtils;
+import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +90,7 @@ public final class TradePayloads {
                 logItems.add(offer.furnitureId() + ":" + offer.productId());
             }
         }
-        return String.join("\1", logItems);
+        return StringUtils.delimitedText(logItems, '\1');
     }
 
     public static ItemPayload itemPayload(List<RepresentedTradeOffer> tradeOffers, long socketIndex) {
@@ -116,17 +116,17 @@ public final class TradePayloads {
         List<RepresentedTradeOffer> tradeOffers,
         long sourceSocketIndex,
         long targetSocketIndex,
-        String sourceUserId,
-        String targetUserId
+        long sourceUserId,
+        long targetUserId
     ) {
-        if (sourceSocketIndex <= 0L || targetSocketIndex <= 0L) {
+        if (sourceSocketIndex <= 0L || targetSocketIndex <= 0L || sourceUserId <= 0L || targetUserId <= 0L) {
             return "";
         }
         ItemPayload sourceItems = itemPayload(tradeOffers, sourceSocketIndex);
         ItemPayload targetItems = itemPayload(tradeOffers, targetSocketIndex);
         return confirmation(
-            NumberUtils.parseLong(sourceUserId),
-            NumberUtils.parseLong(targetUserId),
+            sourceUserId,
+            targetUserId,
             sourceItems.itemCount(),
             sourceItems.payload(),
             targetItems.itemCount(),

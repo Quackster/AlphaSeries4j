@@ -54,13 +54,10 @@ public final class ChatSettings {
         if (!gestureEnabled || gestures.isEmpty()) {
             return 0L;
         }
-        for (String word : StringUtils.text(messageText).split(" ", -1)) {
-            String token = word.trim();
-            if (!token.isEmpty()) {
-                for (Gesture row : gestures) {
-                    if (row != null && token.equalsIgnoreCase(StringUtils.text(row.token()))) {
-                        return NumberUtils.parseLong(row.gestureId());
-                    }
+        for (String token : StringUtils.spaceSeparatedWords(messageText)) {
+            for (Gesture row : gestures) {
+                if (row != null && token.equalsIgnoreCase(StringUtils.text(row.token()))) {
+                    return NumberUtils.parseLong(row.gestureId());
                 }
             }
         }

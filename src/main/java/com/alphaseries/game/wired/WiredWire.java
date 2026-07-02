@@ -12,25 +12,29 @@ public final class WiredWire {
     private WiredWire() {
     }
 
-    public record SnapshotRequest(long furnitureId) {
+    public record SnapshotRequest(String packetPayload, long furnitureId) {
+        public SnapshotRequest {
+            packetPayload = StringUtils.text(packetPayload);
+        }
     }
 
-    public record EditFurnitureRequest(long furnitureId) {
+    public record EditFurnitureRequest(String packetPayload, String packetCode, long furnitureId) {
+        public EditFurnitureRequest {
+            packetPayload = StringUtils.text(packetPayload);
+            packetCode = StringUtils.text(packetCode);
+        }
     }
 
     /**
      * Original function: Proc_6_221_7ED1E0.
      */
     public static SnapshotRequest snapshotRequest(String packetPayload) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (requestPayload.startsWith("on")) {
-            requestPayload = requestPayload.substring(2);
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, "on");
         long furnitureId = WireReader.readLong(requestPayload, new WireReader.Offset(1));
         if (furnitureId <= 0L) {
             furnitureId = NumberUtils.parseLong(WireEncoding.readVl64LengthString(requestPayload));
         }
-        return new SnapshotRequest(furnitureId);
+        return new SnapshotRequest(packetPayload, furnitureId);
     }
 
     /**
@@ -39,15 +43,12 @@ public final class WiredWire {
      * Original function: Proc_6_223_7EEDD0.
      */
     public static EditFurnitureRequest editFurnitureRequest(String packetPayload, String packetCode) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (!StringUtils.text(packetCode).isEmpty() && requestPayload.startsWith(packetCode)) {
-            requestPayload = requestPayload.substring(packetCode.length());
-        }
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, packetCode);
         long furnitureId = WireReader.readLong(requestPayload, new WireReader.Offset(1));
         if (furnitureId <= 0L) {
             furnitureId = NumberUtils.parseLong(WireEncoding.readVl64LengthString(requestPayload));
         }
-        return new EditFurnitureRequest(furnitureId);
+        return new EditFurnitureRequest(packetPayload, packetCode, furnitureId);
     }
 
     /**
@@ -56,22 +57,33 @@ public final class WiredWire {
      * Original function: Proc_6_213_7E3FA0.
      * Original function: Proc_6_214_7E60C0.
      */
-    public static String editRecord(String packetPayload, String packetCode, long wiredCode, boolean includeExtraValue) {
-        String requestPayload = StringUtils.text(packetPayload);
-        if (!StringUtils.text(packetCode).isEmpty() && requestPayload.startsWith(packetCode)) {
-            requestPayload = requestPayload.substring(packetCode.length());
-        }
+    public static WiredPayloads.WiredRecord editRecordRequest(
+        String packetPayload,
+        String packetCode,
+        long wiredCode,
+        boolean includeExtraValue
+    ) {
+        return parseEditRecord(packetPayload, packetCode, wiredCode, includeExtraValue);
+    }
+
+    private static WiredPayloads.WiredRecord parseEditRecord(
+        String packetPayload,
+        String packetCode,
+        long wiredCode,
+        boolean includeExtraValue
+    ) {
+        String requestPayload = StringUtils.withoutPrefix(packetPayload, packetCode);
         WireReader.Offset offset = new WireReader.Offset(1);
         long furnitureId = WireReader.readLong(requestPayload, offset);
         if (furnitureId <= 0L) {
             furnitureId = NumberUtils.parseLong(WireEncoding.readVl64LengthString(requestPayload));
         }
         if (furnitureId <= 0L || wiredCode <= 0L) {
-            return "";
+            return new WiredPayloads.WiredRecord("", "", "", "", "", "");
         }
         long parameterCount = WireReader.readLong(requestPayload, offset);
         if (parameterCount < 0L || parameterCount > 100L) {
-            return "";
+            return new WiredPayloads.WiredRecord("", "", "", "", "", "");
         }
         List<Long> parameterValues = new ArrayList<>();
         for (long parameterIndex = 0L; parameterIndex < parameterCount; parameterIndex++) {
@@ -84,18 +96,18 @@ public final class WiredWire {
         }
         long selectedCount = WireReader.readLong(requestPayload, offset);
         if (selectedCount < 0L || selectedCount > 100L) {
-            return "";
+            return new WiredPayloads.WiredRecord("", "", "", "", "", "");
         }
         List<Long> selectedFurnitureIds = new ArrayList<>();
         for (long selectedIndex = 0L; selectedIndex < selectedCount; selectedIndex++) {
             long selectedFurnitureId = WireReader.readLong(requestPayload, offset);
             if (selectedFurnitureId <= 0L) {
-                return "";
+                return new WiredPayloads.WiredRecord("", "", "", "", "", "");
             }
             selectedFurnitureIds.add(selectedFurnitureId);
         }
         long extraValue = includeExtraValue ? WireReader.readLong(requestPayload, offset) : 0L;
-        return WiredPayloads.recordText(wiredCode, furnitureId, selectedFurnitureIds, parameterValues, textValue,
+        return WiredPayloads.record(wiredCode, furnitureId, selectedFurnitureIds, parameterValues, textValue,
             includeExtraValue ? String.valueOf(extraValue) : "");
     }
 }

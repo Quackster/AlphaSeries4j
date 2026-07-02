@@ -16,7 +16,7 @@ public record RepresentedTradeOffer(
         String signText,
         long secondaryValue
     ) {
-        String cleanSignText = StringUtils.text(signText).replace("\r", "");
+        String cleanSignText = StringUtils.withoutCarriageReturns(signText);
         return new RepresentedTradeOffer(
             socketIndex,
             furnitureId,

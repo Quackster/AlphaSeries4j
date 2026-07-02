@@ -14,11 +14,11 @@ public final class StaffWire {
     private StaffWire() {
     }
 
-    public static long userId(String packetPayload) {
+    private static long parseUserId(String packetPayload) {
         return NumberUtils.parseLong(WireEncoding.readVl64LengthString(packetPayload));
     }
 
-    public static long nestedUserId(String packetPayload) {
+    private static long parseNestedUserId(String packetPayload) {
         String requestPayload = StringUtils.text(packetPayload);
         long directValue = NumberUtils.parseLong(WireEncoding.readVl64LengthString(requestPayload));
         if (directValue > 0L) {
@@ -208,7 +208,7 @@ public final class StaffWire {
      */
     public static HistoryRequest historyRequest(String packetPayload, String prefix, boolean includeChatRows) {
         String requestPayload = WireRequests.stripPrefix(packetPayload, prefix);
-        long targetUserId = includeChatRows ? nestedUserId(requestPayload) : userId(requestPayload);
+        long targetUserId = includeChatRows ? parseNestedUserId(requestPayload) : parseUserId(requestPayload);
         return new HistoryRequest(targetUserId);
     }
 

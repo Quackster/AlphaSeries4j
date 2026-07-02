@@ -2,8 +2,6 @@ package com.alphaseries.game.achievement;
 
 import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.messages.outgoing.AchievementPayloads;
-import com.alphaseries.util.NumberUtils;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,21 +45,20 @@ public final class AchievementProgress {
     }
 
     public static Map<String, Long> currentLevels(
-        String userId,
+        long userId,
         Iterable<AchievementSettings.Achievement> achievements,
         UserDao users
     ) {
         Map<String, Long> result = new HashMap<>();
-        long userIdValue = NumberUtils.parseLong(userId);
         Iterable<AchievementSettings.Achievement> rows = achievements == null
             ? List.<AchievementSettings.Achievement>of() : achievements;
         for (AchievementSettings.Achievement achievement : rows) {
             String badgePrefix = achievement.badgePrefix();
             if (!badgePrefix.isEmpty() && !result.containsKey(badgePrefix)) {
                 long currentLevel = 0L;
-                if (users != null && userIdValue > 0L) {
+                if (users != null && userId > 0L) {
                     try {
-                        currentLevel = users.badgeLevelByPrefix(userIdValue, badgePrefix);
+                        currentLevel = users.badgeLevelByPrefix(userId, badgePrefix);
                     } catch (Exception ignored) {
                         currentLevel = 0L;
                     }
@@ -72,33 +69,32 @@ public final class AchievementProgress {
         return result;
     }
 
-    public static long representedProgress(String userId, long achievementQuestId, UserDao users) {
-        if (users == null) {
+    public static long representedProgress(long userId, long achievementQuestId, UserDao users) {
+        if (userId <= 0L || users == null) {
             return 0L;
         }
-        long userIdValue = NumberUtils.parseLong(userId);
         try {
             long progress;
             if (achievementQuestId == 1L) {
-                progress = users.distinctVisitedRoomCount(userIdValue);
+                progress = users.distinctVisitedRoomCount(userId);
             } else if (achievementQuestId == 2L) {
-                progress = users.respectReceived(userIdValue);
+                progress = users.respectReceived(userId);
             } else if (achievementQuestId == 3L) {
-                progress = users.respectGiven(userIdValue);
+                progress = users.respectGiven(userId);
             } else if (achievementQuestId == 4L) {
-                progress = users.onlineTime(userIdValue) / 60L;
+                progress = users.onlineTime(userId) / 60L;
             } else if (achievementQuestId == 6L) {
-                progress = users.giftsGiven(userIdValue);
+                progress = users.giftsGiven(userId);
             } else if (achievementQuestId == 7L) {
-                progress = users.giftsReceived(userIdValue);
+                progress = users.giftsReceived(userId);
             } else if (achievementQuestId == 8L) {
-                progress = users.hcPeriods(userIdValue);
+                progress = users.hcPeriods(userId);
             } else if (achievementQuestId == 9L) {
-                progress = users.hc2Periods(userIdValue);
+                progress = users.hc2Periods(userId);
             } else if (achievementQuestId == 11L) {
-                progress = users.staffPickedAmount(userIdValue);
+                progress = users.staffPickedAmount(userId);
             } else {
-                progress = users.achievementProgressSummary(userIdValue)
+                progress = users.achievementProgressSummary(userId)
                     .map(UserDao.AchievementProgressSummary::respectReceived)
                     .orElse(0L);
             }

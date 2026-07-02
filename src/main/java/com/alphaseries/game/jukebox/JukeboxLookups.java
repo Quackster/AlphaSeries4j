@@ -11,15 +11,14 @@ import com.alphaseries.game.room.FurnitureRoomCache;
 import com.alphaseries.game.inventory.InventoryMessagePayloads;
 import com.alphaseries.game.session.SessionState;
 import com.alphaseries.messages.outgoing.JukeboxPayloads;
-import com.alphaseries.util.NumberUtils;
 
 public final class JukeboxLookups {
     private JukeboxLookups() {
     }
 
-    public record RoomRequest(String userId, long roomId) {
+    public record RoomRequest(long userId, long roomId) {
         public boolean validUser() {
-            return NumberUtils.parseLong(userId) > 0L;
+            return userId > 0L;
         }
 
         public boolean validRoom() {
@@ -27,20 +26,46 @@ public final class JukeboxLookups {
         }
     }
 
-    public record DiskChangeResult(boolean valid, String payload, List<String> deliveryPayloads) {
+    public record DiskChangeResult(boolean valid, String payload, DeliveryPayloads deliveryPayloads) {
         public DiskChangeResult {
             payload = payload == null ? "" : payload;
-            deliveryPayloads = deliveryPayloads == null ? List.of() : List.copyOf(deliveryPayloads);
+            deliveryPayloads = deliveryPayloads == null ? DeliveryPayloads.empty() : deliveryPayloads;
         }
 
         public static DiskChangeResult empty() {
-            return new DiskChangeResult(false, "", List.of());
+            return new DiskChangeResult(false, "", DeliveryPayloads.empty());
+        }
+    }
+
+    public record DeliveryPayloads(String diskChangePayload, String playlistPayload, String diskInventoryPayload) {
+        public DeliveryPayloads {
+            diskChangePayload = diskChangePayload == null ? "" : diskChangePayload;
+            playlistPayload = playlistPayload == null ? "" : playlistPayload;
+            diskInventoryPayload = diskInventoryPayload == null ? "" : diskInventoryPayload;
+        }
+
+        public static DeliveryPayloads empty() {
+            return new DeliveryPayloads("", "", "");
+        }
+
+        public List<String> payloads() {
+            java.util.ArrayList<String> result = new java.util.ArrayList<>();
+            addPayload(result, diskChangePayload);
+            addPayload(result, playlistPayload);
+            addPayload(result, diskInventoryPayload);
+            return List.copyOf(result);
+        }
+
+        private static void addPayload(List<String> payloads, String payload) {
+            if (payload != null && !payload.isEmpty()) {
+                payloads.add(payload);
+            }
         }
     }
 
     public static RoomRequest roomRequest(int socketIndex, UserDao users, RoomDao rooms) {
         if (socketIndex <= 0) {
-            return new RoomRequest("", 0L);
+            return new RoomRequest(0L, 0L);
         }
         long userId = SessionState.instance().sessionUserIdBySocket(socketIndex);
         if (userId <= 0L && users != null) {
@@ -50,7 +75,7 @@ public final class JukeboxLookups {
                 userId = 0L;
             }
         }
-        long roomId = SessionState.instance().sessionCacheLong(String.valueOf(socketIndex), 1);
+        long roomId = SessionState.instance().sessionCacheLong(socketIndex, 1);
         if (roomId <= 0L && userId > 0L && rooms != null) {
             try {
                 roomId = rooms.currentRoomIdByUser(userId);
@@ -65,7 +90,7 @@ public final class JukeboxLookups {
                 roomId = 0L;
             }
         }
-        return new RoomRequest(userId > 0L ? String.valueOf(userId) : "", roomId);
+        return new RoomRequest(userId, roomId);
     }
 
     public static Optional<JukeboxRow> rowForRoom(long roomId, JukeboxDao jukebox) {
@@ -93,8 +118,13 @@ public final class JukeboxLookups {
     /**
      * Original function: Proc_6_225_7EFBD0.
      */
-    public static String addDiskPayload(String userId, long roomId, JukeboxAddRequest request, JukeboxDao jukebox) {
+    private static String addDiskPayload(RoomRequest roomRequest, JukeboxAddRequest request, JukeboxDao jukebox) {
         try {
+            if (roomRequest == null || !roomRequest.validUser() || !roomRequest.validRoom()) {
+                return "";
+            }
+            long userId = roomRequest.userId();
+            long roomId = roomRequest.roomId();
             if (request == null || request.diskFurnitureId() <= 0L || roomId <= 0L || jukebox == null) {
                 return "";
             }
@@ -114,12 +144,11 @@ public final class JukeboxLookups {
             if (songDiskProductId <= 0L) {
                 return "";
             }
-            long userIdValue = NumberUtils.parseLong(userId);
-            long destinationId = jukebox.diskDestinationForOwner(userIdValue, request.diskFurnitureId(), songDiskProductId);
+            long destinationId = jukebox.diskDestinationForOwner(userId, request.diskFurnitureId(), songDiskProductId);
             if (destinationId <= 0L) {
                 return "";
             }
-            jukebox.removeDiskFromOwner(userIdValue, request.diskFurnitureId(), songDiskProductId);
+            jukebox.removeDiskFromOwner(userId, request.diskFurnitureId(), songDiskProductId);
             jukebox.addPlaylistEntry(jukeboxId, request.diskFurnitureId(), request.playlistOrder(), destinationId);
             return InventoryMessagePayloads.remove(request.diskFurnitureId());
         } catch (Exception ignored) {
@@ -127,29 +156,28 @@ public final class JukeboxLookups {
         }
     }
 
-    public static DiskChangeResult addDiskAction(String userId, long roomId, JukeboxAddRequest request, JukeboxDao jukebox) {
-        String payload = addDiskPayload(userId, roomId, request, jukebox);
+    public static DiskChangeResult addDiskAction(RoomRequest roomRequest, JukeboxAddRequest request, JukeboxDao jukebox) {
+        String payload = addDiskPayload(roomRequest, request, jukebox);
         if (payload.isEmpty()) {
             return DiskChangeResult.empty();
         }
-        return new DiskChangeResult(true, payload, deliveryPayloads(
+        return new DiskChangeResult(true, payload, new DeliveryPayloads(
             payload,
-            playlistPayload(roomId, jukebox),
-            diskInventoryPayload(userId, jukebox)));
-    }
-
-    public static DiskChangeResult addDiskAction(RoomRequest roomRequest, JukeboxAddRequest request, JukeboxDao jukebox) {
-        if (roomRequest == null || !roomRequest.validUser() || !roomRequest.validRoom()) {
-            return DiskChangeResult.empty();
-        }
-        return addDiskAction(roomRequest.userId(), roomRequest.roomId(), request, jukebox);
+            playlistPayload(roomRequest, jukebox),
+            diskInventoryPayload(roomRequest, jukebox)));
     }
 
     /**
      * Original function: Proc_6_226_7F0B20.
      */
-    public static boolean removeDisk(String userId, long roomId, long playlistOrder, JukeboxDao jukebox) {
+    private static boolean removeDisk(RoomRequest request, JukeboxRemoveRequest removeRequest, JukeboxDao jukebox) {
         try {
+            if (request == null || !request.validUser() || !request.validRoom() || removeRequest == null) {
+                return false;
+            }
+            long userId = request.userId();
+            long roomId = request.roomId();
+            long playlistOrder = removeRequest.playlistOrder();
             if (roomId <= 0L || jukebox == null) {
                 return false;
             }
@@ -162,7 +190,7 @@ public final class JukeboxLookups {
                 return false;
             }
             long songDiskProductId = defaultSongDiskProductId();
-            jukebox.returnDiskToOwner(NumberUtils.parseLong(userId), cdFurnitureId, songDiskProductId);
+            jukebox.returnDiskToOwner(userId, cdFurnitureId, songDiskProductId);
             jukebox.deletePlaylistEntry(jukeboxId, cdFurnitureId);
             jukebox.decrementOrdersAfter(jukeboxId, playlistOrder);
             return true;
@@ -171,20 +199,22 @@ public final class JukeboxLookups {
         }
     }
 
-    public static DiskChangeResult removeDiskAction(String userId, long roomId, long playlistOrder, JukeboxDao jukebox) {
-        if (!removeDisk(userId, roomId, playlistOrder, jukebox)) {
+    private static DiskChangeResult removeDiskActionResult(RoomRequest request, JukeboxRemoveRequest removeRequest, JukeboxDao jukebox) {
+        if (!removeDisk(request, removeRequest, jukebox)) {
             return DiskChangeResult.empty();
         }
-        return new DiskChangeResult(true, "", deliveryPayloads(
-            playlistPayload(roomId, jukebox),
-            diskInventoryPayload(userId, jukebox)));
+        return new DiskChangeResult(true, "", new DeliveryPayloads(
+            "",
+            playlistPayload(request, jukebox),
+            diskInventoryPayload(request, jukebox)));
     }
 
     public static DiskChangeResult removeDiskAction(RoomRequest request, long playlistOrder, JukeboxDao jukebox) {
-        if (request == null || !request.validUser() || !request.validRoom()) {
-            return DiskChangeResult.empty();
-        }
-        return removeDiskAction(request.userId(), request.roomId(), playlistOrder, jukebox);
+        return removeDiskAction(request, new JukeboxRemoveRequest(playlistOrder), jukebox);
+    }
+
+    public static DiskChangeResult removeDiskAction(RoomRequest request, JukeboxRemoveRequest removeRequest, JukeboxDao jukebox) {
+        return removeDiskActionResult(request, removeRequest, jukebox);
     }
 
     /**
@@ -224,23 +254,19 @@ public final class JukeboxLookups {
     /**
      * Original function: Proc_6_228_7F2AF0.
      */
-    public static String diskInventoryPayload(String userId, JukeboxDao jukebox) {
+    public static String diskInventoryPayload(RoomRequest request, JukeboxDao jukebox) {
+        if (request == null || !request.validUser()) {
+            return "";
+        }
         try {
             long songDiskProductId = defaultSongDiskProductId();
             if (songDiskProductId <= 0L || jukebox == null) {
                 return "";
             }
-            return JukeboxPayloads.diskInventory(jukebox.songDisks(NumberUtils.parseLong(userId), songDiskProductId));
+            return JukeboxPayloads.diskInventory(jukebox.songDisks(request.userId(), songDiskProductId));
         } catch (Exception ignored) {
             return "";
         }
-    }
-
-    public static String diskInventoryPayload(RoomRequest request, JukeboxDao jukebox) {
-        if (request == null || !request.validUser()) {
-            return "";
-        }
-        return diskInventoryPayload(request.userId(), jukebox);
     }
 
     /**
@@ -283,8 +309,7 @@ public final class JukeboxLookups {
                 return state;
             }
             long activeDestinationId = jukebox == null ? 0L : jukebox.activeDestinationId(resolvedJukeboxId);
-            state.pendingFurnitureCache = JukeboxRequests.removeSoundMachineMarkers(
-                state.pendingFurnitureCache, resolvedJukeboxId, activeDestinationId);
+            state.removePendingFurnitureMarkers(activeDestinationId, resolvedJukeboxId);
             return state;
         } catch (Exception ignored) {
             return state;
@@ -299,16 +324,4 @@ public final class JukeboxLookups {
         return AppConfigState.instance().settingsCache().longValueOrDefault(key, 0);
     }
 
-    private static List<String> deliveryPayloads(String... payloads) {
-        if (payloads == null || payloads.length == 0) {
-            return List.of();
-        }
-        java.util.ArrayList<String> result = new java.util.ArrayList<>();
-        for (String payload : payloads) {
-            if (payload != null && !payload.isEmpty()) {
-                result.add(payload);
-            }
-        }
-        return List.copyOf(result);
-    }
 }

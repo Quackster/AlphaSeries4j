@@ -1,6 +1,5 @@
 package com.alphaseries.game.pet;
 
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -149,18 +148,11 @@ public final class RepresentedBotRegistry {
         String speechSubmit,
         long allowWalk,
         long maxFieldsAway,
-        List<String> serializedFields
+        int fieldCount
     ) {
-        public RepresentedBotRecord {
-            serializedFields = List.copyOf(serializedFields);
-        }
-
         private static RepresentedBotRecord empty() {
-            return fromFields(new String[0]);
-        }
-
-        private static RepresentedBotRecord fromText(String recordText) {
-            return fromFields(StringUtils.text(recordText).split("\2", -1));
+            return new RepresentedBotRecord(
+                0L, 0L, "", "", "", "", 0L, 0L, "", 0L, "", 0L, 0L, "", "", 0L, 0L, 0);
         }
 
         private static RepresentedBotRecord fromEntry(long roomSlot, RepresentedBotEntry entry) {
@@ -182,57 +174,13 @@ public final class RepresentedBotRegistry {
                 StringUtils.text(entry.speechSubmit()),
                 entry.allowWalk(),
                 entry.maxFieldsAway(),
-                List.of(
-                    String.valueOf(roomSlot),
-                    String.valueOf(entry.botId()),
-                    StringUtils.text(entry.name()),
-                    StringUtils.text(entry.motto()),
-                    StringUtils.text(entry.speech()),
-                    StringUtils.text(entry.responses()),
-                    String.valueOf(entry.positionX()),
-                    String.valueOf(entry.positionY()),
-                    StringUtils.text(entry.positionZ()),
-                    String.valueOf(entry.positionR()),
-                    StringUtils.text(entry.figure()),
-                    String.valueOf(entry.handleId()),
-                    String.valueOf(entry.handleActionId()),
-                    StringUtils.text(entry.cacheAction()),
-                    StringUtils.text(entry.speechSubmit()),
-                    String.valueOf(entry.allowWalk()),
-                    String.valueOf(entry.maxFieldsAway())));
-        }
-
-        private static RepresentedBotRecord fromFields(String[] fields) {
-            return new RepresentedBotRecord(
-                number(fields, 0),
-                number(fields, 1),
-                field(fields, 2),
-                field(fields, 3),
-                field(fields, 4),
-                field(fields, 5),
-                number(fields, 6),
-                number(fields, 7),
-                field(fields, 8),
-                number(fields, 9),
-                field(fields, 10),
-                number(fields, 11),
-                number(fields, 12),
-                field(fields, 13),
-                field(fields, 14),
-                number(fields, 15),
-                number(fields, 16),
-                List.of(fields));
+                17);
         }
 
         private RepresentedBotRecord withPosition(long positionX, long positionY, String positionZ, long positionR) {
-            if (serializedFields.size() < 10) {
+            if (fieldCount < 10) {
                 return this;
             }
-            List<String> updatedFields = new ArrayList<>(serializedFields);
-            updatedFields.set(6, String.valueOf(positionX));
-            updatedFields.set(7, String.valueOf(positionY));
-            updatedFields.set(8, StringUtils.text(positionZ));
-            updatedFields.set(9, String.valueOf(positionR));
             return new RepresentedBotRecord(
                 roomSlot,
                 botId,
@@ -251,16 +199,9 @@ public final class RepresentedBotRegistry {
                 speechSubmit,
                 allowWalk,
                 maxFieldsAway,
-                updatedFields);
+                fieldCount);
         }
 
-        private static String field(String[] fields, int index) {
-            return StringUtils.field(fields, index);
-        }
-
-        private static long number(String[] fields, int index) {
-            return NumberUtils.parseLong(field(fields, index));
-        }
     }
 
     public record RepresentedBotIdentity(long entityId, long botId) {

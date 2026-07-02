@@ -27,7 +27,7 @@ public final class FurnitureDimmers {
         }
     }
 
-    public static PresetPayload presetsForUser(String userId, long roomId, RoomDao rooms, FurnitureDao furniture) {
+    public static PresetPayload presetsForUser(long userId, long roomId, RoomDao rooms, FurnitureDao furniture) {
         if (!canControlDimmer(userId, roomId, rooms)) {
             return PresetPayload.empty();
         }
@@ -48,7 +48,7 @@ public final class FurnitureDimmers {
                 return StatePayload.empty();
             }
             String currentSign = StringUtils.text(dimmer.sign());
-            long currentState = currentSign.isEmpty() ? 0L : NumberUtils.parseLong(currentSign.substring(0, 1));
+            long currentState = currentSign.isEmpty() ? 0L : NumberUtils.parseLong(StringUtils.left(currentSign, 1));
             if (currentState <= 0L) {
                 currentState = 2L;
             }
@@ -68,7 +68,7 @@ public final class FurnitureDimmers {
         }
     }
 
-    public static StatePayload toggleStateForUser(String userId, long roomId, RoomDao rooms, FurnitureDao furniture) {
+    public static StatePayload toggleStateForUser(long userId, long roomId, RoomDao rooms, FurnitureDao furniture) {
         if (!canControlDimmer(userId, roomId, rooms)) {
             return StatePayload.empty();
         }
@@ -112,7 +112,7 @@ public final class FurnitureDimmers {
     }
 
     public static UpdatePayload updatePresetForUser(
-        String userId,
+        long userId,
         long roomId,
         long presetId,
         long backgroundId,
@@ -127,7 +127,7 @@ public final class FurnitureDimmers {
         return updatePreset(roomId, presetId, backgroundId, colourText, lightLevel, furniture);
     }
 
-    private static boolean canControlDimmer(String userId, long roomId, RoomDao rooms) {
+    private static boolean canControlDimmer(long userId, long roomId, RoomDao rooms) {
         return roomId > 0L
             && (RoomLookups.userOwnsRoom(userId, roomId, rooms)
                 || RoomLookups.userHasRoomRight(userId, roomId, rooms));

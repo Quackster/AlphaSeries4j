@@ -1,6 +1,7 @@
 package com.alphaseries.game.social;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import com.alphaseries.dao.mysql.RoomDao;
@@ -17,7 +18,6 @@ import com.alphaseries.messages.outgoing.RoomPayloads;
 import com.alphaseries.messages.outgoing.UserPayloads;
 import com.alphaseries.messages.outgoing.SocialPayloads;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
 public final class SocialLookups {
@@ -70,6 +70,50 @@ public final class SocialLookups {
         }
     }
 
+    public static final class RoomOccupantListPayloads implements Iterable<String> {
+        private final List<String> payloads;
+
+        public RoomOccupantListPayloads(List<String> payloads) {
+            this.payloads = List.copyOf(payloads == null ? List.of() : payloads);
+        }
+
+        public static RoomOccupantListPayloads empty() {
+            return new RoomOccupantListPayloads(List.of());
+        }
+
+        public boolean containsText(String text) {
+            String needle = StringUtils.text(text);
+            return payloads.stream().anyMatch(payload -> payload.contains(needle));
+        }
+
+        @Override
+        public Iterator<String> iterator() {
+            return payloads.iterator();
+        }
+    }
+
+    public static final class ActiveRoomEffectPayloads implements Iterable<String> {
+        private final List<String> payloads;
+
+        public ActiveRoomEffectPayloads(List<String> payloads) {
+            this.payloads = List.copyOf(payloads == null ? List.of() : payloads);
+        }
+
+        public static ActiveRoomEffectPayloads empty() {
+            return new ActiveRoomEffectPayloads(List.of());
+        }
+
+        public boolean containsText(String text) {
+            String needle = StringUtils.text(text);
+            return payloads.stream().anyMatch(payload -> payload.contains(needle));
+        }
+
+        @Override
+        public Iterator<String> iterator() {
+            return payloads.iterator();
+        }
+    }
+
     public record BadgeUpdateResult(String equippedPayload, String displayPayload) {
         public BadgeUpdateResult {
             equippedPayload = StringUtils.text(equippedPayload);
@@ -103,35 +147,32 @@ public final class SocialLookups {
     /**
      * Original function: Proc_6_195_7D38D0.
      */
-    public static String equippedBadgePayload(String userId, UserDao users) {
+    public static String equippedBadgePayload(long userId, UserDao users) {
         return SocialPayloads.equippedBadges(equippedBadgeRows(userId, users));
     }
 
-    private static List<BadgeRow> equippedBadgeRows(String userId, UserDao users) {
+    private static List<BadgeRow> equippedBadgeRows(long userId, UserDao users) {
         try {
-            String userIdText = StringUtils.text(userId);
-            if (userIdText.isEmpty() || "0".equals(userIdText) || users == null) {
+            if (userId <= 0L || users == null) {
                 return List.of();
             }
-            return users.equippedBadges(NumberUtils.parseLong(userIdText));
+            return users.equippedBadges(userId);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return List.of();
         }
     }
 
-    public static BadgeInventoryPayload badgeInventoryPayload(String userId, UserDao users) {
+    public static BadgeInventoryPayload badgeInventoryPayload(long userId, UserDao users) {
         try {
-            String userIdText = StringUtils.text(userId);
-            if (userIdText.isEmpty() || "0".equals(userIdText) || users == null) {
+            if (userId <= 0L || users == null) {
                 return emptyBadgeInventoryPayload();
             }
-            long numericUserId = NumberUtils.parseLong(userIdText);
-            List<BadgeRow> equippedRows = equippedBadgeRows(userIdText, users);
+            List<BadgeRow> equippedRows = equippedBadgeRows(userId, users);
             String equippedPayload = SocialPayloads.equippedBadges(equippedRows);
             return new BadgeInventoryPayload(
-                SocialPayloads.badgeInventory(users.unequippedBadges(numericUserId), equippedRows),
-                SocialPayloads.badgeDisplay(numericUserId, equippedRows),
+                SocialPayloads.badgeInventory(users.unequippedBadges(userId), equippedRows),
+                SocialPayloads.badgeDisplay(userId, equippedRows),
                 equippedPayload);
         } catch (Exception ignored) {
             return emptyBadgeInventoryPayload();
@@ -142,80 +183,75 @@ public final class SocialLookups {
      * Original function: Proc_6_194_7D3180.
      */
     public static BadgeUpdateResult updateEquippedBadges(
-        String userId,
+        long userId,
         BadgeUpdateSelections selections,
         UserDao users
     ) {
         try {
-            String userIdText = StringUtils.text(userId);
-            long userIdValue = NumberUtils.parseLong(userIdText);
-            if (userIdValue <= 0L || selections == null || users == null) {
+            if (userId <= 0L || selections == null || users == null) {
                 return BadgeUpdateResult.empty();
             }
-            users.clearEquippedBadges(userIdValue);
+            users.clearEquippedBadges(userId);
             for (int slotIndex = 0; slotIndex < selections.size(); slotIndex++) {
                 String badgeId = selections.slot(slotIndex);
                 if (!badgeId.isEmpty()) {
-                    users.equipBadge(userIdValue, badgeId, slotIndex + 1L);
+                    users.equipBadge(userId, badgeId, slotIndex + 1L);
                 }
             }
-            List<BadgeRow> equippedRows = equippedBadgeRows(userIdText, users);
+            List<BadgeRow> equippedRows = equippedBadgeRows(userId, users);
             String equippedPayload = SocialPayloads.equippedBadges(equippedRows);
-            return new BadgeUpdateResult(equippedPayload, SocialPayloads.badgeDisplay(userIdValue, equippedRows));
+            return new BadgeUpdateResult(equippedPayload, SocialPayloads.badgeDisplay(userId, equippedRows));
         } catch (Exception ignored) {
             return BadgeUpdateResult.empty();
         }
     }
 
-    public static String badgeDisplayPayload(String userId, UserDao users) {
-        return SocialPayloads.badgeDisplay(NumberUtils.parseLong(userId), equippedBadgeRows(userId, users));
+    public static String badgeDisplayPayload(long userId, UserDao users) {
+        return SocialPayloads.badgeDisplay(userId, equippedBadgeRows(userId, users));
     }
 
     /**
      * Original function: Proc_6_196_7D3ED0.
      */
-    public static String tagPayload(String userId, UserDao users) {
+    public static String tagPayload(long userId, UserDao users) {
         return SocialPayloads.tags(tagRows(userId, users));
     }
 
-    private static List<UserDao.UserTagRow> tagRows(String userId, UserDao users) {
+    private static List<UserDao.UserTagRow> tagRows(long userId, UserDao users) {
         try {
-            String userIdText = StringUtils.text(userId);
-            if (userIdText.isEmpty() || "0".equals(userIdText) || users == null) {
+            if (userId <= 0L || users == null) {
                 return List.of();
             }
-            return users.tagNames(NumberUtils.parseLong(userIdText));
+            return users.tagNames(userId);
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
             return List.of();
         }
     }
 
-    public static String tagDisplayPayload(String userId, UserDao users) {
-        return SocialPayloads.tagDisplay(NumberUtils.parseLong(userId), tagRows(userId, users));
+    public static String tagDisplayPayload(long userId, UserDao users) {
+        return SocialPayloads.tagDisplay(userId, tagRows(userId, users));
     }
 
     /**
      * Original function: Proc_6_191_7D18B0.
      */
     public static DirectPayload tagDisplayAction(
-        String callerUserId,
+        long callerUserId,
         long callerRoomId,
-        String packetPayload,
+        SocialWire.UserIdRequest request,
         UserDao users
     ) {
         try {
-            String callerUserIdText = StringUtils.text(callerUserId);
-            long requestedUserId = SocialWire.userIdRequest(packetPayload, "DG").userId();
-            if (callerUserIdText.isEmpty() || "0".equals(callerUserIdText)
-                || requestedUserId <= 0L || users == null) {
+            long requestedUserId = request.userId();
+            if (callerUserId <= 0L || requestedUserId <= 0L || users == null) {
                 return DirectPayload.empty();
             }
             long targetSocketIndex = users.socketByUserId(requestedUserId);
             if (targetSocketIndex <= 0L && callerRoomId <= 0L) {
                 return DirectPayload.empty();
             }
-            return new DirectPayload(tagDisplayPayload(String.valueOf(requestedUserId), users));
+            return new DirectPayload(tagDisplayPayload(requestedUserId, users));
         } catch (Exception ignored) {
             return DirectPayload.empty();
         }
@@ -248,7 +284,7 @@ public final class SocialLookups {
                 return RoomUserBadgeLook.empty();
             }
             return new RoomUserBadgeLook(
-                badgeDisplayPayload(String.valueOf(targetUserId), users),
+                badgeDisplayPayload(targetUserId, users),
                 roomUserStatusPayloads(callerRoomUserIndex, targetRoomUserIndex));
         } catch (Exception ignored) {
             return RoomUserBadgeLook.empty();
@@ -259,9 +295,8 @@ public final class SocialLookups {
         return SocialPayloads.roomUserWave(roomUserIndex);
     }
 
-    public static RoomUserAction roomUserWaveAction(String userId, long roomId, long roomUserIndex) {
-        String userIdText = StringUtils.text(userId);
-        if (userIdText.isEmpty() || "0".equals(userIdText) || roomId <= 0L || roomUserIndex <= 0L) {
+    public static RoomUserAction roomUserWaveAction(long userId, long roomId, long roomUserIndex) {
+        if (userId <= 0L || roomId <= 0L || roomUserIndex <= 0L) {
             return RoomUserAction.empty();
         }
         return new RoomUserAction(roomUserIndex, roomUserWavePayload(roomUserIndex));
@@ -272,14 +307,12 @@ public final class SocialLookups {
     }
 
     public static RoomUserAction roomUserDanceAction(
-        String userId,
+        long userId,
         long roomId,
         long roomUserIndex,
         SocialWire.DanceRequest request
     ) {
-        String userIdText = StringUtils.text(userId);
-        if (userIdText.isEmpty() || "0".equals(userIdText) || roomId <= 0L || roomUserIndex <= 0L
-            || request == null) {
+        if (userId <= 0L || roomId <= 0L || roomUserIndex <= 0L || request == null) {
             return RoomUserAction.empty();
         }
         long danceId = request.danceId();
@@ -312,22 +345,19 @@ public final class SocialLookups {
     /**
      * Original function: Proc_6_76_726CE0.
      */
-    public static String giveRespectPayload(String giverUserId, String targetUserId, UserDao users) {
+    public static String giveRespectPayload(long giverUserId, long targetUserId, UserDao users) {
         try {
-            long giverUserIdValue = NumberUtils.parseLong(giverUserId);
-            long targetUserIdValue = NumberUtils.parseLong(targetUserId);
-            if (giverUserIdValue <= 0L || targetUserIdValue <= 0L
-                || giverUserIdValue == targetUserIdValue || users == null) {
+            if (giverUserId <= 0L || targetUserId <= 0L || giverUserId == targetUserId || users == null) {
                 return "";
             }
-            long respectAmount = users.respectAmount(giverUserIdValue);
+            long respectAmount = users.respectAmount(giverUserId);
             if (respectAmount <= 0L) {
                 return "";
             }
-            users.spendRespect(giverUserIdValue);
-            users.receiveRespect(targetUserIdValue);
-            long respectReceived = users.respectReceived(targetUserIdValue);
-            return UserPayloads.respectReceived(targetUserIdValue, respectReceived);
+            users.spendRespect(giverUserId);
+            users.receiveRespect(targetUserId);
+            long respectReceived = users.respectReceived(targetUserId);
+            return UserPayloads.respectReceived(targetUserId, respectReceived);
         } catch (Exception ignored) {
             return "";
         }
@@ -338,34 +368,33 @@ public final class SocialLookups {
             return "";
         }
         return SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
-            String.valueOf(row.userId()),
+            row.userId(),
             row.name(),
             row.figure(),
             row.motto(),
             row.gender(),
-            String.valueOf(roomUserIndex),
-            String.valueOf(row.positionX()),
-            String.valueOf(row.positionY()),
+            roomUserIndex,
+            row.positionX(),
+            row.positionY(),
             "0.0",
-            "0",
-            "0"));
+            0L,
+            0L));
     }
 
     /**
      * Original function: Proc_6_80_72EB60.
      */
     public static String roomUserEntryBroadcastPayload(
-        String userId,
+        long userId,
         long roomId,
         long roomUserIndex,
         RoomDao rooms
     ) {
         try {
-            long numericUserId = NumberUtils.parseLong(userId);
-            if (numericUserId <= 0L || roomId <= 0L || roomUserIndex <= 0L || rooms == null) {
+            if (userId <= 0L || roomId <= 0L || roomUserIndex <= 0L || rooms == null) {
                 return "";
             }
-            RoomUserEntryRow entry = rooms.roomUserEntry(numericUserId, roomId).orElse(null);
+            RoomUserEntryRow entry = rooms.roomUserEntry(userId, roomId).orElse(null);
             String entryPayload = roomUserEntryPayload(entry, roomUserIndex);
             if (entryPayload.isEmpty()) {
                 return "";
@@ -402,17 +431,17 @@ public final class SocialLookups {
                     String positionZ = "0.0";
                     long directionValue = 0L;
                     occupantPayload.appendRaw(SocialPayloads.roomUserEntry(new RoomUserEntryPayloadArgs(
-                        String.valueOf(occupant.userId()),
+                        occupant.userId(),
                         occupant.name(),
                         occupant.figure(),
                         occupant.motto(),
                         normalizedGender(occupant.gender()),
-                        String.valueOf(roomUserIndex),
-                        String.valueOf(positionX),
-                        String.valueOf(positionY),
+                        roomUserIndex,
+                        positionX,
+                        positionY,
                         positionZ,
-                        "0",
-                        "0")));
+                        0L,
+                        0L)));
                     statusPayload.appendRaw(SocialPayloads.roomOccupantStatus(
                         roomUserIndex, positionX, positionY, positionZ, directionValue));
                     occupantCount++;
@@ -430,14 +459,14 @@ public final class SocialLookups {
     /**
      * Original function: Proc_6_81_730010.
      */
-    public static List<String> roomOccupantListPayloads(
+    public static RoomOccupantListPayloads roomOccupantListPayloads(
         long roomId,
         RepresentedRoomCache representedRooms,
         RoomDao rooms
     ) {
         try {
             if (roomId <= 0L || rooms == null) {
-                return List.of();
+                return RoomOccupantListPayloads.empty();
             }
             long roomSlot = rooms.roomSlot(roomId);
             SocialRoomOccupants occupants = roomOccupantsPayloads(
@@ -445,11 +474,11 @@ public final class SocialLookups {
             if (roomSlot > 0L) {
                 occupants = occupants.withPetOccupants(PetLookups.roomOccupants(roomSlot));
             }
-            return List.of(
+            return new RoomOccupantListPayloads(List.of(
                 RoomPayloads.occupantEntries(occupants),
-                RoomPayloads.occupantStatuses(occupants));
+                RoomPayloads.occupantStatuses(occupants)));
         } catch (Exception ignored) {
-            return List.of();
+            return RoomOccupantListPayloads.empty();
         }
     }
 
@@ -460,10 +489,10 @@ public final class SocialLookups {
     /**
      * Original function: Proc_6_82_731070.
      */
-    public static List<String> activeRoomEffectPayloads(long roomId, RoomDao rooms) {
+    public static ActiveRoomEffectPayloads activeRoomEffectPayloads(long roomId, RoomDao rooms) {
         try {
             if (roomId <= 0L || rooms == null) {
-                return List.of();
+                return ActiveRoomEffectPayloads.empty();
             }
             List<String> payloads = new ArrayList<>();
             for (RoomDao.ActiveRoomEffect activeEffect : rooms.activeRoomEffects(roomId)) {
@@ -473,9 +502,9 @@ public final class SocialLookups {
                     payloads.add(roomUserEffectPayload(roomUserIndex, effectId));
                 }
             }
-            return payloads;
+            return new ActiveRoomEffectPayloads(payloads);
         } catch (Exception ignored) {
-            return List.of();
+            return ActiveRoomEffectPayloads.empty();
         }
     }
 
@@ -544,8 +573,7 @@ public final class SocialLookups {
     }
 
     private static String normalizedGender(String gender) {
-        String genderText = StringUtils.text(gender).toUpperCase();
-        genderText = genderText.isEmpty() ? "M" : genderText.substring(0, 1);
+        String genderText = StringUtils.left(StringUtils.text(gender).toUpperCase(), 1);
         if (!"M".equals(genderText) && !"F".equals(genderText)) {
             return "M";
         }

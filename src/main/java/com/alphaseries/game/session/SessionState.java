@@ -54,8 +54,12 @@ public final class SessionState {
     /**
      * Original function: Proc_9_6_808080.
      */
-    public synchronized String socketUserId(String socketIndex) {
-        return sessionRegistry.recordField("0:", socketIndex, 0);
+    public synchronized String socketUserId(long socketIndex) {
+        return sessionRegistry.socketUserId(socketIndex);
+    }
+
+    public synchronized long socketUserIdValue(long socketIndex) {
+        return sessionRegistry.socketUserIdValue(socketIndex);
     }
 
     public synchronized long sessionUserIdBySocket(int socketIndex) {
@@ -69,6 +73,10 @@ public final class SessionState {
         return sessionRegistry.linkedLong(StringUtils.text(recordId), true);
     }
 
+    public synchronized long linkedUserSocketIndex(long recordId) {
+        return sessionRegistry.linkedLong(recordId, true);
+    }
+
     /**
      * Original function: Proc_9_9_808AC0.
      */
@@ -76,11 +84,19 @@ public final class SessionState {
         return sessionRegistry.linkedLong(StringUtils.text(recordId), false);
     }
 
+    public synchronized long linkedSocketIndex(long recordId) {
+        return sessionRegistry.linkedLong(recordId, false);
+    }
+
     /**
      * Original function: Proc_9_10_808F30.
      */
     public synchronized long sessionCacheLong(String keyName, long columnIndex) {
         return sessionRegistry.cacheLong(StringUtils.text(keyName), columnIndex);
+    }
+
+    public synchronized long sessionCacheLong(long keyName, long columnIndex) {
+        return sessionRegistry.cacheLong(keyName, columnIndex);
     }
 
     public synchronized void storeSocketSession(int socketIndex, String sessionRecord) {

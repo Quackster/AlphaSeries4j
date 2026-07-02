@@ -51,14 +51,6 @@ public final class CatalogRegistry {
         return new CatalogRegistry(Map.of(), Map.of(), Map.of());
     }
 
-    public String productCell(long productId, long columnIndex) {
-        return cell(products, productId, columnIndex);
-    }
-
-    public String catalogProductCell(long catalogProductId, long columnIndex) {
-        return cell(catalogProducts, catalogProductId, columnIndex);
-    }
-
     public List<CatalogRow> productRows() {
         return List.copyOf(products.values());
     }
@@ -73,17 +65,18 @@ public final class CatalogRegistry {
             return Optional.empty();
         }
         return Optional.of(new Product(
-            NumberUtils.parseLong(row.field(0)),
-            NumberUtils.parseLong(row.field(1)),
-            row.field(14),
-            row.field(15),
-            row.field(18),
-            row.field(20),
-            NumberUtils.parseLong(row.field(24)),
-            NumberUtils.parseLong(row.field(34)),
-            NumberUtils.parseLong(row.field(35)),
-            NumberUtils.parseLong(row.field(36)),
-            NumberUtils.parseLong(row.field(37))));
+            row.rowId(),
+            row.productType(),
+            row.productName(),
+            row.productDescription(),
+            row.productSprite(),
+            row.defaultDecoration(),
+            row.productStateCount(),
+            row.squareZ(),
+            row.chargeSize(),
+            row.chargePriceCredits(),
+            row.chargePriceActivityPoints(),
+            row.chargePriceActivityPointsType()));
     }
 
     public List<CatalogRow> catalogProductRows() {
@@ -100,19 +93,19 @@ public final class CatalogRegistry {
             return Optional.empty();
         }
         return Optional.of(new CatalogProduct(
-            NumberUtils.parseLong(row.field(0)),
-            row.field(1),
-            NumberUtils.parseLong(row.field(2)),
-            NumberUtils.parseLong(row.field(3)),
-            row.field(4),
-            NumberUtils.parseLong(row.field(5)),
-            row.field(6),
-            NumberUtils.parseLong(row.field(7)),
-            NumberUtils.parseLong(row.field(8)),
-            NumberUtils.parseLong(row.field(9)),
-            NumberUtils.parseLong(row.field(10)),
-            NumberUtils.parseLong(row.field(11)),
-            NumberUtils.parseLong(row.field(12))));
+            row.rowId(),
+            row.catalogSprite(),
+            row.catalogProductId(),
+            row.catalogPageId(),
+            row.catalogTypeSecondary(),
+            row.catalogAmount(),
+            row.catalogReceiveBadge(),
+            row.catalogCreditPrice(),
+            row.catalogActivityPrice(),
+            row.catalogActivityType(),
+            row.catalogAllowGifts(),
+            row.catalogMinClubLevel(),
+            row.catalogReplaceDefaultSign()));
     }
 
     public List<CatalogRow> dealRows() {
@@ -128,7 +121,7 @@ public final class CatalogRegistry {
         if (row == null || row.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(new ProductDeal(NumberUtils.parseLong(row.field(0)), row.productDealItemIds()));
+        return Optional.of(new ProductDeal(row.rowId(), row.productDealItemIds()));
     }
 
     public record CatalogProduct(
@@ -161,6 +154,7 @@ public final class CatalogRegistry {
         String description,
         String sprite,
         String defaultDecoration,
+        long stateCount,
         long squareZ,
         long chargeSize,
         long chargePriceCredits,
@@ -169,21 +163,13 @@ public final class CatalogRegistry {
     ) {
     }
 
-    private static String cell(Map<Long, CatalogRow> rows, long rowId, long columnIndex) {
-        CatalogRow row = rows.get(rowId);
-        if (row == null || row.isEmpty()) {
-            return "";
-        }
-        return columnIndex >= 0 && columnIndex < row.fieldCount() ? row.field((int) columnIndex) : "";
-    }
-
     private static Map<Long, CatalogRow> productRowsById(Iterable<CatalogDao.ProductCacheRow> productRows) {
         Map<Long, CatalogRow> rows = new LinkedHashMap<>();
         if (productRows != null) {
             for (CatalogDao.ProductCacheRow row : productRows) {
                 if (row != null) {
-                    CatalogRow catalogRow = CatalogRow.fromFields(row.values());
-                    rows.put(NumberUtils.parseLong(catalogRow.field(0)), catalogRow);
+                    CatalogRow catalogRow = CatalogRow.fromProductRow(row);
+                    rows.put(catalogRow.rowId(), catalogRow);
                 }
             }
         }
@@ -197,8 +183,8 @@ public final class CatalogRegistry {
         if (catalogProductRows != null) {
             for (CatalogDao.CatalogProductCacheRow row : catalogProductRows) {
                 if (row != null) {
-                    CatalogRow catalogRow = CatalogRow.fromFields(row.values());
-                    rows.put(NumberUtils.parseLong(catalogRow.field(0)), catalogRow);
+                    CatalogRow catalogRow = CatalogRow.fromCatalogProductRow(row);
+                    rows.put(catalogRow.rowId(), catalogRow);
                 }
             }
         }
@@ -217,59 +203,138 @@ public final class CatalogRegistry {
         return rows;
     }
 
-    public record CatalogRow(String text, List<String> fields, List<Long> productDealItemIds) {
-        public CatalogRow(String text, List<String> fields) {
-            this(text, fields, productDealItemIds(fields));
-        }
-
+    public record CatalogRow(
+        long rowId,
+        int fieldCount,
+        long productType,
+        String productName,
+        String productDescription,
+        String productSprite,
+        String defaultDecoration,
+        long productStateCount,
+        long squareZ,
+        long chargeSize,
+        long chargePriceCredits,
+        long chargePriceActivityPoints,
+        long chargePriceActivityPointsType,
+        String catalogSprite,
+        long catalogProductId,
+        long catalogPageId,
+        String catalogTypeSecondary,
+        long catalogAmount,
+        String catalogReceiveBadge,
+        long catalogCreditPrice,
+        long catalogActivityPrice,
+        long catalogActivityType,
+        long catalogAllowGifts,
+        long catalogMinClubLevel,
+        long catalogReplaceDefaultSign,
+        List<Long> productDealItemIds
+    ) {
         public CatalogRow {
-            text = StringUtils.text(text);
-            fields = fields == null ? List.of() : List.copyOf(fields);
+            productName = StringUtils.text(productName);
+            productDescription = StringUtils.text(productDescription);
+            productSprite = StringUtils.text(productSprite);
+            defaultDecoration = StringUtils.text(defaultDecoration);
+            catalogSprite = StringUtils.text(catalogSprite);
+            catalogTypeSecondary = StringUtils.text(catalogTypeSecondary);
+            catalogReceiveBadge = StringUtils.text(catalogReceiveBadge);
             productDealItemIds = productDealItemIds == null ? List.of() : List.copyOf(productDealItemIds);
         }
 
-        public static CatalogRow fromFields(List<String> fields) {
-            List<String> copiedFields = fields == null
-                ? List.of()
-                : fields.stream().map(StringUtils::text).toList();
-            return new CatalogRow(String.join("\t", copiedFields), copiedFields);
+        public static CatalogRow fromProductRow(CatalogDao.ProductCacheRow row) {
+            return new CatalogRow(
+                row.productId(),
+                row.fieldCount(),
+                row.type(),
+                row.tradeName(),
+                row.displayName(),
+                row.primarySprite(),
+                row.defaultDecoration(),
+                NumberUtils.parseLong(row.defaultSign()),
+                row.squareZ(),
+                row.chargeSize(),
+                row.chargePriceCredits(),
+                row.chargePriceActivityPoints(),
+                row.chargePriceActivityPointsType(),
+                "",
+                0L,
+                0L,
+                "",
+                0L,
+                "",
+                0L,
+                0L,
+                0L,
+                0L,
+                0L,
+                0L,
+                List.of());
+        }
+
+        public static CatalogRow fromCatalogProductRow(CatalogDao.CatalogProductCacheRow row) {
+            return new CatalogRow(
+                row.rowId(),
+                row.fieldCount(),
+                0L,
+                "",
+                "",
+                "",
+                "",
+                0L,
+                0L,
+                0L,
+                0L,
+                0L,
+                0L,
+                row.sprite(),
+                row.productId(),
+                row.pageId(),
+                row.typeSecondary(),
+                row.amount(),
+                row.receiveBadge(),
+                row.creditPrice(),
+                row.activityPointPrice(),
+                row.activityPointType(),
+                row.allowGifts(),
+                row.minimumHcRank(),
+                row.replaceDefaultSign(),
+                List.of());
         }
 
         public static CatalogRow fromDeal(long dealId, List<Long> itemProductIds) {
-            List<Long> copiedItemProductIds = itemProductIds == null ? List.of() : List.copyOf(itemProductIds);
-            List<String> itemTexts = new ArrayList<>();
-            for (long itemProductId : copiedItemProductIds) {
-                itemTexts.add(String.valueOf(itemProductId));
-            }
-            String itemsText = String.join(";", itemTexts);
             return new CatalogRow(
-                dealId + "\t" + itemsText,
-                List.of(String.valueOf(dealId), itemsText),
-                copiedItemProductIds);
+                dealId,
+                2,
+                0L,
+                "",
+                "",
+                "",
+                "",
+                0L,
+                0L,
+                0L,
+                0L,
+                0L,
+                0L,
+                "",
+                0L,
+                0L,
+                "",
+                0L,
+                "",
+                0L,
+                0L,
+                0L,
+                0L,
+                0L,
+                0L,
+                itemProductIds);
         }
 
         public boolean isEmpty() {
-            return text.isEmpty();
+            return fieldCount == 0;
         }
 
-        public int fieldCount() {
-            return fields.size();
-        }
-
-        private String field(int index) {
-            return index >= 0 && index < fields.size() ? fields.get(index) : "";
-        }
-
-        private static List<Long> productDealItemIds(List<String> fields) {
-            String itemText = fields != null && fields.size() >= 2 ? fields.get(1) : "";
-            List<Long> itemProductIds = new ArrayList<>();
-            for (String item : StringUtils.text(itemText).replace(',', ';').split(";", -1)) {
-                long itemProductId = NumberUtils.parseLong(item);
-                if (itemProductId > 0L) {
-                    itemProductIds.add(itemProductId);
-                }
-            }
-            return List.copyOf(itemProductIds);
-        }
     }
 }
