@@ -10,6 +10,7 @@ import com.alphaseries.server.runtime.Guardian;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -26,6 +27,44 @@ public final class Filesystems {
         public ReadyPacket {
             code = StringUtils.text(code);
             payload = StringUtils.text(payload);
+        }
+    }
+
+    public static final class ReadyPacketPayloads implements Iterable<String> {
+        private final List<String> values;
+
+        private ReadyPacketPayloads(List<String> values) {
+            this.values = List.copyOf(values == null ? List.of() : values);
+        }
+
+        public static ReadyPacketPayloads empty() {
+            return new ReadyPacketPayloads(List.of());
+        }
+
+        public static ReadyPacketPayloads fromReadyPackets(Iterable<ReadyPacket> packets) {
+            if (packets == null) {
+                return empty();
+            }
+            List<String> payloads = new ArrayList<>();
+            for (ReadyPacket packet : packets) {
+                if (packet != null) {
+                    payloads.add(packet.payload());
+                }
+            }
+            return new ReadyPacketPayloads(payloads);
+        }
+
+        public int size() {
+            return values.size();
+        }
+
+        public String payloadAt(int index) {
+            return index < 0 || index >= values.size() ? "" : values.get(index);
+        }
+
+        @Override
+        public Iterator<String> iterator() {
+            return values.iterator();
         }
     }
 
@@ -77,12 +116,8 @@ public final class Filesystems {
         return ReadyPacketBuffer.isCrossDomainPolicyRequest(packetBuffer);
     }
 
-    public static List<String> readyPacketPayloadsFromBuffer(String packetBuffer) {
-        List<String> payloads = new ArrayList<String>();
-        for (ReadyPacket packet : readyPacketsFromBuffer(packetBuffer)) {
-            payloads.add(packet.payload());
-        }
-        return payloads;
+    public static ReadyPacketPayloads readyPacketPayloadsFromBuffer(String packetBuffer) {
+        return ReadyPacketPayloads.fromReadyPackets(readyPacketsFromBuffer(packetBuffer));
     }
 
     public static List<ReadyPacket> readyPacketsFromBuffer(String packetBuffer) {

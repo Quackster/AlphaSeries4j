@@ -7,7 +7,6 @@ import com.alphaseries.server.mus.MusConnectionManager;
 import com.alphaseries.util.StringUtils;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 public final class SocketDelivery {
@@ -25,7 +24,7 @@ public final class SocketDelivery {
         MusConnectionManager.instance().sendData(socketIndex, StringUtils.text(payload) + '\1');
     }
 
-    public static void sendToSocket(int socketIndex, List<String> payloads) {
+    public static void sendToSocket(int socketIndex, Iterable<String> payloads) {
         if (payloads == null) {
             return;
         }

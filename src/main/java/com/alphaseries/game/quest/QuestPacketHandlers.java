@@ -84,7 +84,7 @@ public final class QuestPacketHandlers {
             if (!result.reset()) {
                 return "";
             }
-            SocketDelivery.sendToSocket(socketIndex, result.deliveryPayloads().payloads());
+            SocketDelivery.sendToSocket(socketIndex, result.deliveryPayloads());
             return "";
         } catch (Exception ignored) {
             return "";

@@ -5,6 +5,7 @@ import com.alphaseries.dao.mysql.UpdaterDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.db.MySQL;
 import com.alphaseries.util.FileUtils;
+import com.alphaseries.util.StringLines;
 import com.alphaseries.util.StringUtils;
 
 import java.nio.file.Path;
@@ -49,21 +50,21 @@ public final class Updater {
     public record ProgressStep(long width, boolean walkPercentEnabled, boolean complete) {
     }
 
-    public record RenderStep(boolean rendered, boolean complete, String title, List<String> bodyLines, long featureTop) {
+    public record RenderStep(boolean rendered, boolean complete, String title, StringLines bodyLines, long featureTop) {
         public RenderStep {
             title = StringUtils.text(title);
-            bodyLines = bodyLines == null ? List.of() : List.copyOf(bodyLines);
+            bodyLines = bodyLines == null ? StringLines.empty() : bodyLines;
         }
 
         public static RenderStep empty() {
-            return new RenderStep(false, false, "", List.of(), 0L);
+            return new RenderStep(false, false, "", StringLines.empty(), 0L);
         }
 
         public static RenderStep completed() {
-            return new RenderStep(false, true, "", List.of(), 0L);
+            return new RenderStep(false, true, "", StringLines.empty(), 0L);
         }
 
-        public static RenderStep rendered(String title, List<String> bodyLines, long featureTop) {
+        public static RenderStep rendered(String title, StringLines bodyLines, long featureTop) {
             return new RenderStep(true, false, title, bodyLines, featureTop);
         }
     }
@@ -205,7 +206,7 @@ public final class Updater {
                 advanceUpdateProgress(entries.size());
                 return RenderStep.empty();
             }
-            List<String> bodyLines = visibleBodyLines(entry.bodyText(), 25);
+            StringLines bodyLines = visibleBodyLines(entry.bodyText(), 25);
             applyFeatureState(entry);
             long visibleLineCount = bodyLines.isEmpty() ? 1L : bodyLines.size();
             long featureTop = visibleLineCount * 240L + 720L;
@@ -334,7 +335,7 @@ public final class Updater {
             + SUCCESS_FORUM_MESSAGE;
     }
 
-    public static List<String> visibleBodyLines(String bodyText, int maxLines) {
+    public static StringLines visibleBodyLines(String bodyText, int maxLines) {
         List<String> rawLines = escapedNewlineFields(bodyText);
         int visible = 0;
         int limit = Math.min(maxLines, rawLines.size());
@@ -343,7 +344,7 @@ public final class Updater {
                 visible = index + 1;
             }
         }
-        return List.copyOf(rawLines.subList(0, visible));
+        return StringLines.from(rawLines.subList(0, visible));
     }
 
     private static List<String> escapedNewlineFields(String text) {

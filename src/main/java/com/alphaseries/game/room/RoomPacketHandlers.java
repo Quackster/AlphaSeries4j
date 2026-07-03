@@ -140,7 +140,7 @@ public final class RoomPacketHandlers {
      */
     private static void sendRoomEntryBootstrap(int socketIndex, long roomMode) {
         try {
-            SocketDelivery.sendToSocket(socketIndex, RoomPayloads.entryBootstrap(roomMode).payloads());
+            SocketDelivery.sendToSocket(socketIndex, RoomPayloads.entryBootstrap(roomMode));
         } catch (Exception ignored) {
             // VB6 source suppresses handler failures.
         }
@@ -239,7 +239,7 @@ public final class RoomPacketHandlers {
             if (!modelLoad.valid()) {
                 return;
             }
-            for (String payload : modelLoad.initialPayloads().payloads()) {
+            for (String payload : modelLoad.initialPayloads()) {
                 SocketDelivery.sendToSocket(socketIndex, payload);
             }
             sendRoomOccupantList(socketIndex, roomId);
@@ -279,7 +279,7 @@ public final class RoomPacketHandlers {
             if (!presentationLoad.valid()) {
                 return;
             }
-            for (String payload : presentationLoad.initialPayloads().payloads()) {
+            for (String payload : presentationLoad.initialPayloads()) {
                 SocketDelivery.sendToSocket(socketIndex, payload);
             }
             sendRoomOccupantList(socketIndex, roomId);

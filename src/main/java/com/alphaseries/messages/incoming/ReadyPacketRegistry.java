@@ -6,8 +6,6 @@ import com.alphaseries.server.packet.PreReadyPacketDispatcher;
 import com.alphaseries.server.runtime.SocketDelivery;
 import com.alphaseries.server.runtime.SocketLifecycle;
 
-import java.util.List;
-
 public final class ReadyPacketRegistry {
     private ReadyPacketRegistry() {
     }
@@ -16,8 +14,8 @@ public final class ReadyPacketRegistry {
         return new MessageRegistry()
             .register(new IncomingMessage() {
                 @Override
-                public List<String> headers() {
-                    return List.of("CN");
+                public MessageHeaders headers() {
+                    return MessageHeaders.of("CN");
                 }
 
                 @Override
@@ -29,8 +27,8 @@ public final class ReadyPacketRegistry {
             })
             .register(new IncomingMessage() {
                 @Override
-                public List<String> headers() {
-                    return List.of("F_");
+                public MessageHeaders headers() {
+                    return MessageHeaders.of("F_");
                 }
 
                 @Override
@@ -45,8 +43,8 @@ public final class ReadyPacketRegistry {
             })
             .register(new IncomingMessage() {
                 @Override
-                public List<String> headers() {
-                    return List.of("CD");
+                public MessageHeaders headers() {
+                    return MessageHeaders.of("CD");
                 }
 
                 @Override

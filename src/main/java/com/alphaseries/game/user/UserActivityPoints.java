@@ -168,7 +168,7 @@ public final class UserActivityPoints {
         }
     }
 
-    public record DeliveryPayloads(List<Award> awards) {
+    public record DeliveryPayloads(List<Award> awards) implements Iterable<String> {
         public DeliveryPayloads {
             awards = awards == null ? List.of() : List.copyOf(awards);
         }
@@ -177,7 +177,12 @@ public final class UserActivityPoints {
             return new DeliveryPayloads(List.of());
         }
 
-        public List<String> payloads() {
+        @Override
+        public java.util.Iterator<String> iterator() {
+            return payloadList().iterator();
+        }
+
+        private List<String> payloadList() {
             return awards.stream()
                 .map(Award::payload)
                 .filter(payload -> !payload.isEmpty())

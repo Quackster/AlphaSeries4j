@@ -9,16 +9,27 @@ import com.alphaseries.util.StringUtils;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 public final class HelpCenterBootCache {
     private HelpCenterBootCache() {
     }
 
-    public record FaqCategoryCache(String categoryPayload, Map<Long, String> faqPayloadByCategoryId) {
+    public record FaqCategoryCache(String categoryPayload, List<HelpCenterCache.CategoryFaqPayload> faqPayloads) {
         public FaqCategoryCache {
             categoryPayload = StringUtils.text(categoryPayload);
-            faqPayloadByCategoryId = faqPayloadByCategoryId == null
-                ? Map.of() : Map.copyOf(faqPayloadByCategoryId);
+            faqPayloads = faqPayloads == null ? List.of() : List.copyOf(faqPayloads);
+        }
+
+        public String faqPayload(long categoryId) {
+            if (faqPayloads != null) {
+                for (HelpCenterCache.CategoryFaqPayload payload : faqPayloads) {
+                    if (payload != null && payload.categoryId() == categoryId) {
+                        return payload.payload();
+                    }
+                }
+            }
+            return "";
         }
     }
 
@@ -55,12 +66,12 @@ public final class HelpCenterBootCache {
             }
         }
         FaqCategoryCache cache = buildFaqCategoryCacheFromRows(categoryRows, faqRows);
-        mergeFaqCategoryCache(cache.categoryPayload(), cache.faqPayloadByCategoryId());
+        mergeFaqCategoryCache(cache.categoryPayload(), cache.faqPayloads());
     }
 
     public static void loadFaqDescriptionCache() {
         HelpDao help = helpDao();
-        Map<Long, String> cache = new LinkedHashMap<Long, String>();
+        List<HelpCenterCache.DescriptionPayload> cache = List.of();
         if (help != null) {
             try {
                 cache = buildFaqDescriptionCache(help.descriptionRows());
@@ -73,29 +84,18 @@ public final class HelpCenterBootCache {
 
     private static void mergeImportantFaqPayload(String payload) {
         HelpCenterCache current = HelpCenterState.instance().cache();
-        HelpCenterState.instance().setCache(HelpCenterCache.fromPayloads(
-            payload,
-            current.categoryPayload(),
-            current.categoryFaqPayloads(),
-            current.descriptionPayloads()));
+        HelpCenterState.instance().setCache(current.withImportantFaqPayload(payload));
     }
 
-    private static void mergeFaqCategoryCache(String categoryPayload, Map<Long, String> categoryFaqs) {
+    private static void mergeFaqCategoryCache(String categoryPayload,
+                                              Iterable<HelpCenterCache.CategoryFaqPayload> categoryFaqs) {
         HelpCenterCache current = HelpCenterState.instance().cache();
-        HelpCenterState.instance().setCache(HelpCenterCache.fromPayloads(
-            current.importantFaqPayload(),
-            categoryPayload,
-            categoryFaqs,
-            current.descriptionPayloads()));
+        HelpCenterState.instance().setCache(current.withFaqCategoryPayloads(categoryPayload, categoryFaqs));
     }
 
-    private static void mergeFaqDescriptionCache(Map<Long, String> descriptions) {
+    private static void mergeFaqDescriptionCache(Iterable<HelpCenterCache.DescriptionPayload> descriptions) {
         HelpCenterCache current = HelpCenterState.instance().cache();
-        HelpCenterState.instance().setCache(HelpCenterCache.fromPayloads(
-            current.importantFaqPayload(),
-            current.categoryPayload(),
-            current.categoryFaqPayloads(),
-            descriptions));
+        HelpCenterState.instance().setCache(current.withDescriptionPayloads(descriptions));
     }
 
     public static String buildImportantFaqPayloadFromRows(Map<Long, List<HelpDao.FaqNameRow>> faqRowsByImportance) {
@@ -113,17 +113,17 @@ public final class HelpCenterBootCache {
             Map<Long, List<HelpDao.FaqNameRow>> faqRowsByCategoryId) {
         long categoryCount = 0L;
         PacketBuilder categoryPayload = PacketBuilder.create();
-        Map<Long, String> faqPayloadByCategoryId = new LinkedHashMap<Long, String>();
+        List<HelpCenterCache.CategoryFaqPayload> faqPayloads = new ArrayList<>();
         if (categoryRows != null) {
             for (HelpDao.FaqNameRow category : categoryRows) {
                 if (category != null) {
                     long categoryId = category.id();
                     List<HelpDao.FaqNameRow> faqRows = faqRowsByCategoryId == null ? List.of() : faqRowsByCategoryId.get(categoryId);
-                    faqPayloadByCategoryId.put(categoryId,
+                    faqPayloads.add(new HelpCenterCache.CategoryFaqPayload(categoryId,
                         PacketBuilder.create()
                             .appendInt(countFaqNameRows(faqRows))
                             .appendRaw(buildFaqNamePayloadFromRows(faqRows))
-                            .build());
+                            .build()));
                     categoryPayload
                         .appendInt(categoryId)
                         .appendString(category.name());
@@ -133,20 +133,20 @@ public final class HelpCenterBootCache {
         }
         return new FaqCategoryCache(
             PacketBuilder.create().appendInt(categoryCount).appendRaw(categoryPayload.build()).build(),
-            faqPayloadByCategoryId);
+            faqPayloads);
     }
 
-    public static Map<Long, String> buildFaqDescriptionCache(List<HelpDao.FaqDescriptionRow> faqRows) {
-        Map<Long, String> cache = new LinkedHashMap<Long, String>();
+    public static List<HelpCenterCache.DescriptionPayload> buildFaqDescriptionCache(List<HelpDao.FaqDescriptionRow> faqRows) {
+        List<HelpCenterCache.DescriptionPayload> cache = new ArrayList<>();
         if (faqRows != null) {
             for (HelpDao.FaqDescriptionRow row : faqRows) {
                 if (row != null) {
                     long faqId = row.id();
                     String descriptionText = StringUtils.newlinesAsCarriageReturns(row.description());
-                    cache.put(faqId, PacketBuilder.create()
+                    cache.add(new HelpCenterCache.DescriptionPayload(faqId, PacketBuilder.create()
                         .appendInt(faqId)
                         .appendString(descriptionText)
-                        .build());
+                        .build()));
                 }
             }
         }

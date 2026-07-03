@@ -3,9 +3,9 @@ package com.alphaseries.server.lifecycle;
 import com.alphaseries.config.AppPaths;
 import com.alphaseries.server.logging.Console;
 import com.alphaseries.util.FileUtils;
+import com.alphaseries.util.StringLines;
 import com.alphaseries.util.StringUtils;
 
-import java.util.List;
 import java.util.function.BooleanSupplier;
 
 public final class BootLog {
@@ -15,7 +15,7 @@ public final class BootLog {
     public static final String INITIALIZATION_INTEGRITY_FAILURE_MESSAGE =
         "Unable to intialize. File may be corrupted!";
     public static final String SERVER_RETURNED_ERROR_PREFIX = "Server has Exit Suburned following error:       ";
-    private static final List<String> STARTUP_CREDIT_LINES = List.of(
+    private static final StringLines STARTUP_CREDIT_LINES = StringLines.of(
         "                                                           2 . 0 - \"Meilenstein 2\"",
         "         Server Autor: Privilege, Deutsche \u00dcbersetzung: Medaillon",
         "         Shoutouts: Tweeney, Pure, MoBaT, Donkjam, Arths, Jairo, Moogly and Bloopser"
@@ -49,7 +49,7 @@ public final class BootLog {
         Console.appendOptionalSourceLine("", "HIDDEN", 262144L);
     }
 
-    public static List<String> startupCreditLines() {
+    public static StringLines startupCreditLines() {
         return STARTUP_CREDIT_LINES;
     }
 

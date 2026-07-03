@@ -1,12 +1,12 @@
 package com.alphaseries.server.lifecycle;
 
-import java.util.List;
+import com.alphaseries.util.StringLines;
 
 public final class StartupEnvironmentError {
     public static final String CAPTION = "Please do these steps to run the Emulator correctly!";
     public static final String MESSAGE =
         "The Emulator does not work with your current PC-settings. Please change these settings in your \"Local Settings\"!";
-    private static final List<String> INSTRUCTION_CAPTIONS = List.of(
+    private static final StringLines INSTRUCTION_CAPTIONS = StringLines.of(
         "1. Click here to customize your regional options!",
         "2. Select the decimal symbol ,",
         "3. Click \"OK\" to apply your changes. You need to restart your Computer/VPS"
@@ -19,7 +19,7 @@ public final class StartupEnvironmentError {
         return new MessageBox(MESSAGE, MessageStyle.CRITICAL);
     }
 
-    public static List<String> instructionCaptions() {
+    public static StringLines instructionCaptions() {
         return INSTRUCTION_CAPTIONS;
     }
 

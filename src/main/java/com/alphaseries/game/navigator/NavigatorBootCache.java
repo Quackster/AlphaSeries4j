@@ -8,9 +8,7 @@ import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.WireEncoding;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public final class NavigatorBootCache {
     private NavigatorBootCache() {
@@ -20,7 +18,7 @@ public final class NavigatorBootCache {
      * Original function: Proc_1_2_6BE280.
      */
     public static void loadRecommendedRoomsCache() {
-        Map<Long, String> recommended = new LinkedHashMap<>();
+        List<RecommendedRooms.Payload> recommended = new ArrayList<>();
         long count = 0L;
         RoomDao rooms = roomDao();
         if (rooms != null) {
@@ -28,8 +26,8 @@ public final class NavigatorBootCache {
                 for (Long treeIdValue : rooms.recommendedRoomTreeIds()) {
                     long treeId = treeIdValue == null ? 0L : treeIdValue.longValue();
                     if (treeId != 0L) {
-                        recommended.put(count, WireEncoding.encodeVl64(treeId)
-                            + buildRecommendedRoomsPayload(rooms.recommendedRoomRows(treeId)));
+                        recommended.add(new RecommendedRooms.Payload(count,
+                            WireEncoding.encodeVl64(treeId) + buildRecommendedRoomsPayload(rooms.recommendedRoomRows(treeId))));
                         count++;
                     }
                 }

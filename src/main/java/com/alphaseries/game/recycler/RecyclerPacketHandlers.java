@@ -31,7 +31,7 @@ public final class RecyclerPacketHandlers {
             if (!result.valid()) {
                 return "";
             }
-            SocketDelivery.sendToSocket(socketIndex, result.deliveryPayloads().payloads());
+            SocketDelivery.sendToSocket(socketIndex, result.deliveryPayloads());
             return result.rewardPayload();
         } catch (Exception ignored) {
             return "";

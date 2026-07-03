@@ -1,6 +1,7 @@
 package com.alphaseries.game.room;
 
 import com.alphaseries.protocol.PacketBuilder;
+import com.alphaseries.util.FileUtils;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -26,7 +27,7 @@ public final class RepresentedRoomCache {
         return new RepresentedRoomCache(leadingText, records == null ? List.of() : records);
     }
 
-    public static RepresentedRoomCache fromCacheText(String cacheText) {
+    static RepresentedRoomCache fromCacheText(String cacheText) {
         List<RoomRecord> parsedRecords = new ArrayList<>();
         String cache = StringUtils.text(cacheText);
         int recordStart = cache.indexOf('\1');
@@ -45,12 +46,16 @@ public final class RepresentedRoomCache {
         return new RepresentedRoomCache(List.of());
     }
 
-    public String cacheText() {
+    String cacheText() {
         PacketBuilder result = PacketBuilder.create().appendRaw(leadingText);
         for (RoomRecord record : records) {
             result.appendRaw('\1').appendRaw(record.cacheRecordText()).appendRaw('\2');
         }
         return result.build();
+    }
+
+    public void writeCacheFile(String path) {
+        FileUtils.writeTextFile(path, cacheText());
     }
 
     public RepresentedRoomCache normalizedForCacheMirror() {

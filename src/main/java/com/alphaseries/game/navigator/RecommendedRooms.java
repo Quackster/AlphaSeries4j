@@ -18,16 +18,20 @@ public final class RecommendedRooms {
         return new RecommendedRooms(Map.of(), 0L);
     }
 
-    public static RecommendedRooms fromPayloads(Map<Long, String> payloadsByIndex, long count) {
+    public static RecommendedRooms fromPayloads(Iterable<Payload> payloads, long count) {
+        Map<Long, String> payloadsByIndex = new LinkedHashMap<>();
+        if (payloads != null) {
+            for (Payload payload : payloads) {
+                if (payload != null) {
+                    payloadsByIndex.put(payload.index(), payload.payload());
+                }
+            }
+        }
         return new RecommendedRooms(payloadsByIndex, count);
     }
 
     public long count() {
         return count;
-    }
-
-    public Map<Long, String> payloadsByIndex() {
-        return Map.copyOf(payloadsByIndex);
     }
 
     public String payload(long oneBasedTreeIndex) {
@@ -48,5 +52,12 @@ public final class RecommendedRooms {
             }
         }
         return copiedPayloads;
+    }
+
+    public record Payload(long index, String payload) {
+        public Payload {
+            index = Math.max(0L, index);
+            payload = StringUtils.text(payload);
+        }
     }
 }

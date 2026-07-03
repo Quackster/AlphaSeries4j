@@ -114,9 +114,11 @@ public final class RoomPayloads {
         return new EntryBootstrapPayloads("@S", "Bf/client.php" + '\2', roomMode == 0L ? "@i" : "@{");
     }
 
-    public record EntryBootstrapPayloads(String roomEntryMarker, String clientView, String roomModePayload) {
-        public List<String> payloads() {
-            return List.of(roomEntryMarker, clientView, roomModePayload);
+    public record EntryBootstrapPayloads(String roomEntryMarker, String clientView, String roomModePayload)
+        implements Iterable<String> {
+        @Override
+        public java.util.Iterator<String> iterator() {
+            return List.of(roomEntryMarker, clientView, roomModePayload).iterator();
         }
     }
 

@@ -4,7 +4,6 @@ import com.alphaseries.dao.mysql.RoomDao;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 public final class NavigatorState {
     private static final NavigatorState INSTANCE = new NavigatorState();
@@ -40,7 +39,7 @@ public final class NavigatorState {
         recommendedRooms = rooms == null ? RecommendedRooms.empty() : rooms;
     }
 
-    public synchronized void setRecommendedRooms(Map<Long, String> payloads, long count) {
+    public synchronized void setRecommendedRooms(Iterable<RecommendedRooms.Payload> payloads, long count) {
         recommendedRooms = RecommendedRooms.fromPayloads(payloads, count);
     }
 

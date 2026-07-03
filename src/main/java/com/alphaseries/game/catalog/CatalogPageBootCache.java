@@ -6,6 +6,7 @@ import com.alphaseries.db.Database;
 import com.alphaseries.db.MySQL;
 import com.alphaseries.protocol.PacketBuilder;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,13 +20,15 @@ public final class CatalogPageBootCache {
      */
     public static void loadCatalogPagePayloadCache() {
         CatalogDao catalog = catalogDao();
-        Map<Long, String> pages = new LinkedHashMap<>();
+        List<CatalogPages.PagePayload> pages = new ArrayList<>();
         if (catalog != null) {
             try {
                 for (CatalogDao.CatalogPageRow row : catalog.catalogPageRows()) {
                     long pageId = row.pageId();
                     if (pageId >= 0L) {
-                        pages.put(pageId, buildCatalogPagePayload(row, catalog.catalogPageProductRows(pageId)));
+                        pages.add(new CatalogPages.PagePayload(
+                            pageId,
+                            buildCatalogPagePayload(row, catalog.catalogPageProductRows(pageId))));
                     }
                 }
             } catch (Exception ignored) {
@@ -33,16 +36,14 @@ public final class CatalogPageBootCache {
             }
         }
         CatalogPages currentPages = CatalogState.instance().catalogPages();
-        CatalogState.instance().setCatalogPages(CatalogPages.fromPayloadMaps(
-            pages,
-            currentPages.pageTrees()));
+        CatalogState.instance().setCatalogPages(currentPages.withPagePayloads(pages));
     }
 
     /**
      * Original function: Proc_1_17_6CCDC0.
      */
     public static void loadCatalogPageTreeCache() {
-        Map<CatalogPages.PageTreeKey, String> trees = new LinkedHashMap<>();
+        List<CatalogPages.PageTreePayload> trees = new ArrayList<>();
         CatalogDao catalog = catalogDao();
         for (int rank = 0; rank <= 20; rank++) {
             for (int hc = 0; hc <= 2; hc++) {
@@ -56,8 +57,10 @@ public final class CatalogPageBootCache {
                             childCounts.put(pageId, catalog.catalogPageChildCount(pageId, rank, hc));
                             children.put(pageId, catalog.catalogPageTreeRows(pageId, rank, hc));
                         }
-                        trees.put(new CatalogPages.PageTreeKey(rank, hc),
-                            buildCatalogPageTreePayload(rootRows, childCounts, children, rank, hc));
+                        trees.add(new CatalogPages.PageTreePayload(
+                            rank,
+                            hc,
+                            buildCatalogPageTreePayload(rootRows, childCounts, children, rank, hc)));
                     } catch (Exception ignored) {
                         // Legacy startup cache loading tolerated missing tables or SQL failures.
                     }
@@ -65,9 +68,7 @@ public final class CatalogPageBootCache {
             }
         }
         CatalogPages currentPages = CatalogState.instance().catalogPages();
-        CatalogState.instance().setCatalogPages(CatalogPages.fromPayloadMaps(
-            currentPages.pagePayloads(),
-            trees));
+        CatalogState.instance().setCatalogPages(currentPages.withPageTrees(trees));
     }
 
     /**

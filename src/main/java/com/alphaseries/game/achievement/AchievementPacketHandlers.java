@@ -25,7 +25,7 @@ public final class AchievementPacketHandlers {
                 return "";
             }
             String payload = grant.rewardPayload();
-            SocketDelivery.sendToSocket(socketIndex, grant.deliveryPayloads().payloads());
+            SocketDelivery.sendToSocket(socketIndex, grant.deliveryPayloads());
             return payload;
         } catch (Exception ignored) {
             return "";
@@ -47,7 +47,7 @@ public final class AchievementPacketHandlers {
             AchievementRewardGrant grant = AchievementLookups.advanceProgress(
                 NumberUtils.parseLong(userId), achievementQuestId, achievementSettings(), userDao());
             if (grant.valid()) {
-                SocketDelivery.sendToSocket(socketIndex, grant.deliveryPayloads().payloads());
+                SocketDelivery.sendToSocket(socketIndex, grant.deliveryPayloads());
             }
             return "";
         } catch (Exception ignored) {

@@ -20,15 +20,20 @@ public final class LicenceCheckState {
         this.rankValues = rankValues == null ? new int[RANK_CACHE_SIZE] : rankValues.clone();
     }
 
-    public static LicenceCheckState fromCacheText(String cacheText) {
+    static LicenceCheckState fromCacheText(String cacheText) {
         Map<String, String> settings = parseSettings(cacheText);
         int parsedRank = NumberUtils.parseInt(settings.get("rank"));
         Map<String, Integer> parsedRankValuesByKey = parseRankValues(cacheText, parsedRank);
+        return fromRankValues(parsedRank, parsedRankValuesByKey);
+    }
+
+    public static LicenceCheckState fromRankValues(int rank, Map<String, Integer> rankValuesByKey) {
+        Map<String, Integer> parsedRankValuesByKey = rankValuesByKey == null ? Map.of() : Map.copyOf(rankValuesByKey);
         int[] parsedRankValues = new int[RANK_CACHE_SIZE];
         for (int rankIndex = 1; rankIndex < parsedRankValues.length; rankIndex++) {
             parsedRankValues[rankIndex] = parsedRankValuesByKey.getOrDefault(String.valueOf(rankIndex), 0);
         }
-        return new LicenceCheckState(parsedRank, parsedRankValuesByKey, parsedRankValues);
+        return new LicenceCheckState(rank, parsedRankValuesByKey, parsedRankValues);
     }
 
     public static LicenceCheckState empty() {

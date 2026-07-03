@@ -8,10 +8,10 @@ import com.alphaseries.db.MySQL;
 import com.alphaseries.protocol.WireEncoding;
 import com.alphaseries.server.runtime.Guardian;
 import com.alphaseries.util.FileUtils;
+import com.alphaseries.util.StringLines;
 import com.alphaseries.util.StringUtils;
 
 import java.nio.file.Path;
-import java.util.List;
 
 public final class ServerLifecycle {
     public static final String INITIALIZING_CAPTION_TEMPLATE = "Alpha Series [INITIALISIERE] - [%%]";
@@ -19,7 +19,7 @@ public final class ServerLifecycle {
     public static final String RUNNING_STATE_TEXT = "RUNNING";
     public static final String SERVER_EXIT_ERROR_PREFIX = "Server Exit Suburned following error: \r\n";
     public static final String UNKNOWN_PROBLEM_MESSAGE = "Unbekanntes Problem";
-    private static final List<String> DESIGN_CAPTIONS = List.of(
+    private static final StringLines DESIGN_CAPTIONS = StringLines.of(
         "Bitte warte...",
         "frame :: ADDONS",
         "Server by Privilege",
@@ -182,7 +182,7 @@ public final class ServerLifecycle {
         return title;
     }
 
-    public static List<String> designCaptions() {
+    public static StringLines designCaptions() {
         return DESIGN_CAPTIONS;
     }
 

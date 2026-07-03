@@ -96,10 +96,10 @@ public final class RoomLookups {
         }
     }
 
-    public static final class RoomModelInitialPayloads {
+    public static final class RoomModelInitialPayloads implements Iterable<String> {
         private final List<String> payloads;
 
-        public RoomModelInitialPayloads(List<String> payloads) {
+        private RoomModelInitialPayloads(List<String> payloads) {
             this.payloads = List.copyOf(payloads == null ? List.of() : payloads);
         }
 
@@ -115,8 +115,9 @@ public final class RoomLookups {
             return payloads.contains(payload);
         }
 
-        public List<String> payloads() {
-            return payloads;
+        @Override
+        public java.util.Iterator<String> iterator() {
+            return payloads.iterator();
         }
     }
 
@@ -134,10 +135,10 @@ public final class RoomLookups {
         }
     }
 
-    public static final class RoomPresentationInitialPayloads {
+    public static final class RoomPresentationInitialPayloads implements Iterable<String> {
         private final List<String> payloads;
 
-        public RoomPresentationInitialPayloads(List<String> payloads) {
+        private RoomPresentationInitialPayloads(List<String> payloads) {
             this.payloads = List.copyOf(payloads == null ? List.of() : payloads);
         }
 
@@ -153,8 +154,9 @@ public final class RoomLookups {
             return payloads.contains(payload);
         }
 
-        public List<String> payloads() {
-            return payloads;
+        @Override
+        public java.util.Iterator<String> iterator() {
+            return payloads.iterator();
         }
     }
 

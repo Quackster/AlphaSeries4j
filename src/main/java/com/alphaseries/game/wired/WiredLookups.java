@@ -245,7 +245,7 @@ public final class WiredLookups {
             }
             Path snapshotPath = Path.of(AppPaths.applicationPath(), "cache", "wired_snapshots", furnitureId + ".cache");
             Files.createDirectories(snapshotPath.getParent());
-            FileUtils.writeTextFile(snapshotPath.toString(), RoomState.instance().representedRooms().cacheText());
+            RoomState.instance().representedRooms().writeCacheFile(snapshotPath.toString());
             return snapshotPath.toString();
         } catch (Exception ignored) {
             return "";

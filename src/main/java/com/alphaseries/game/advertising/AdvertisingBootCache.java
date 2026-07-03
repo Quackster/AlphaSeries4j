@@ -7,18 +7,24 @@ import com.alphaseries.db.MySQL;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.StringUtils;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public final class AdvertisingBootCache {
     private AdvertisingBootCache() {
     }
 
-    public record VisitRoomCache(long count, Map<Long, String> payloadByVisitRoomId) {
+    public record VisitRoomCache(VisitRoomAds visitRoomAds) {
         public VisitRoomCache {
-            payloadByVisitRoomId = payloadByVisitRoomId == null
-                ? Map.of() : Map.copyOf(payloadByVisitRoomId);
+            visitRoomAds = visitRoomAds == null ? VisitRoomAds.empty() : visitRoomAds;
+        }
+
+        public long count() {
+            return visitRoomAds.count();
+        }
+
+        public String payload(long visitRoomId) {
+            return visitRoomAds.payload(visitRoomId);
         }
     }
 
@@ -35,28 +41,28 @@ public final class AdvertisingBootCache {
         VisitRoomCache cache = buildAdvertisementVisitRoomCache(
             visitRoomRows,
             AppConfigState.instance().settingsCache().valueOrDefault("com.server.socket.game.advertisement.visitrooms.path", ""));
-        AdvertisingState.instance().setVisitRoomAds(VisitRoomAds.fromPayloads(cache.payloadByVisitRoomId(), cache.count()));
+        AdvertisingState.instance().setVisitRoomAds(cache.visitRoomAds());
     }
 
     public static VisitRoomCache buildAdvertisementVisitRoomCache(List<AdvertisingDao.VisitRoomAdRow> visitRoomRows,
             String assetPath) {
         long count = 0L;
-        Map<Long, String> payloadByVisitRoomId = new LinkedHashMap<Long, String>();
+        List<VisitRoomAds.Payload> payloads = new ArrayList<>();
         if (visitRoomRows != null) {
             for (AdvertisingDao.VisitRoomAdRow row : visitRoomRows) {
                 if (row != null) {
                     long visitRoomId = row.visitRoomId();
-                    payloadByVisitRoomId.put(visitRoomId,
+                    payloads.add(new VisitRoomAds.Payload(visitRoomId,
                         PacketBuilder.create()
                             .appendRaw(StringUtils.text(assetPath))
                             .appendString(visitRoomId)
                             .appendString(row.address())
-                            .build());
+                            .build()));
                     count++;
                 }
             }
         }
-        return new VisitRoomCache(count, payloadByVisitRoomId);
+        return new VisitRoomCache(VisitRoomAds.fromPayloads(payloads, count));
     }
 
     private static AdvertisingDao advertisingDao() {

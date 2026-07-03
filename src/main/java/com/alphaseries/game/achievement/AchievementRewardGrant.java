@@ -37,13 +37,18 @@ public record AchievementRewardGrant(
         return !awardPayload.isEmpty();
     }
 
-    public record DeliveryPayloads(String rewardPayload, String awardPayload) {
+    public record DeliveryPayloads(String rewardPayload, String awardPayload) implements Iterable<String> {
         public DeliveryPayloads {
             rewardPayload = rewardPayload == null ? "" : rewardPayload;
             awardPayload = awardPayload == null ? "" : awardPayload;
         }
 
-        public List<String> payloads() {
+        @Override
+        public java.util.Iterator<String> iterator() {
+            return payloadList().iterator();
+        }
+
+        private List<String> payloadList() {
             if (rewardPayload.isEmpty() && awardPayload.isEmpty()) {
                 return List.of();
             }

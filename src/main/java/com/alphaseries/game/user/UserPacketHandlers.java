@@ -165,7 +165,7 @@ public final class UserPacketHandlers {
             }
             UserActivityPoints.AwardBatch awardBatch = UserActivityPoints.timedActivityPointAwardBatch(
                 socketIndex, NumberUtils.parseLong(userId), AppConfigState.instance().settingsCache(), userDao());
-            SocketDelivery.sendToSocket(socketIndex, awardBatch.deliveryPayloads().payloads());
+            SocketDelivery.sendToSocket(socketIndex, awardBatch.deliveryPayloads());
             return awardBatch.payload();
         } catch (Exception ignored) {
             return "";

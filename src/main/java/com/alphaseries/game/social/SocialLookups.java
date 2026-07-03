@@ -73,7 +73,7 @@ public final class SocialLookups {
     public static final class RoomOccupantListPayloads implements Iterable<String> {
         private final List<String> payloads;
 
-        public RoomOccupantListPayloads(List<String> payloads) {
+        private RoomOccupantListPayloads(List<String> payloads) {
             this.payloads = List.copyOf(payloads == null ? List.of() : payloads);
         }
 
@@ -95,7 +95,7 @@ public final class SocialLookups {
     public static final class ActiveRoomEffectPayloads implements Iterable<String> {
         private final List<String> payloads;
 
-        public ActiveRoomEffectPayloads(List<String> payloads) {
+        private ActiveRoomEffectPayloads(List<String> payloads) {
             this.payloads = List.copyOf(payloads == null ? List.of() : payloads);
         }
 

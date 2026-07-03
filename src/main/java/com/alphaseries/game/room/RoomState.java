@@ -43,7 +43,7 @@ public final class RoomState {
             return;
         }
         furnitureRoomCache = FurnitureRoomCache.State.markerStateFrom(state);
-        representedRooms = RepresentedRoomCache.fromCacheText(state.representedRoomCache());
+        representedRooms = state.representedRooms();
     }
 
     public synchronized void setEventLocales(RoomEventLocales eventLocales) {

@@ -19,16 +19,20 @@ public final class VisitRoomAds {
         return new VisitRoomAds(Map.of(), 0L);
     }
 
-    public static VisitRoomAds fromPayloads(Map<Long, String> payloadsById, long count) {
+    public static VisitRoomAds fromPayloads(Iterable<Payload> payloads, long count) {
+        Map<Long, String> payloadsById = new LinkedHashMap<>();
+        if (payloads != null) {
+            for (Payload payload : payloads) {
+                if (payload != null) {
+                    payloadsById.put(payload.visitRoomId(), payload.payload());
+                }
+            }
+        }
         return new VisitRoomAds(payloadsById, count);
     }
 
     public long count() {
         return count;
-    }
-
-    public Map<Long, String> payloadsById() {
-        return Map.copyOf(payloadsById);
     }
 
     public String payload(long visitRoomId) {
@@ -64,5 +68,12 @@ public final class VisitRoomAds {
             return min;
         }
         return ThreadLocalRandom.current().nextLong(min, max + 1L);
+    }
+
+    public record Payload(long visitRoomId, String payload) {
+        public Payload {
+            visitRoomId = Math.max(0L, visitRoomId);
+            payload = StringUtils.text(payload);
+        }
     }
 }

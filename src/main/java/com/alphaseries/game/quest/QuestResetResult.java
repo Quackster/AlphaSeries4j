@@ -11,7 +11,7 @@ public record QuestResetResult(boolean reset, DeliveryPayloads deliveryPayloads)
         return new QuestResetResult(false, DeliveryPayloads.empty());
     }
 
-    public record DeliveryPayloads(String resetPayload, String listPayload) {
+    public record DeliveryPayloads(String resetPayload, String listPayload) implements Iterable<String> {
         public DeliveryPayloads {
             resetPayload = resetPayload == null ? "" : resetPayload;
             listPayload = listPayload == null ? "" : listPayload;
@@ -21,7 +21,12 @@ public record QuestResetResult(boolean reset, DeliveryPayloads deliveryPayloads)
             return new DeliveryPayloads("", "");
         }
 
-        public List<String> payloads() {
+        @Override
+        public java.util.Iterator<String> iterator() {
+            return payloadList().iterator();
+        }
+
+        private List<String> payloadList() {
             if (resetPayload.isEmpty() && listPayload.isEmpty()) {
                 return List.of();
             }

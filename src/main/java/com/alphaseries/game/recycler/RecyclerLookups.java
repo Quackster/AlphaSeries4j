@@ -36,7 +36,7 @@ public final class RecyclerLookups {
         }
     }
 
-    public record DeliveryPayloads(List<Long> removedFurnitureIds, String rewardPayload) {
+    public record DeliveryPayloads(List<Long> removedFurnitureIds, String rewardPayload) implements Iterable<String> {
         public DeliveryPayloads {
             removedFurnitureIds = removedFurnitureIds == null ? List.of() : List.copyOf(removedFurnitureIds);
             rewardPayload = rewardPayload == null ? "" : rewardPayload;
@@ -46,7 +46,12 @@ public final class RecyclerLookups {
             return new DeliveryPayloads(List.of(), "");
         }
 
-        public List<String> payloads() {
+        @Override
+        public java.util.Iterator<String> iterator() {
+            return payloadList().iterator();
+        }
+
+        private List<String> payloadList() {
             List<String> payloads = new ArrayList<>();
             for (long selectedFurnitureId : removedFurnitureIds) {
                 if (selectedFurnitureId > 0L) {

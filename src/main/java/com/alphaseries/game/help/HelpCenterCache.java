@@ -24,9 +24,24 @@ public final class HelpCenterCache {
     }
 
     public static HelpCenterCache fromPayloads(String importantFaqPayload, String categoryPayload,
-                                               Map<Long, String> categoryFaqPayloads,
-                                               Map<Long, String> descriptionPayloads) {
-        return new HelpCenterCache(importantFaqPayload, categoryPayload, categoryFaqPayloads, descriptionPayloads);
+                                               Iterable<CategoryFaqPayload> categoryFaqPayloads,
+                                               Iterable<DescriptionPayload> descriptionPayloads) {
+        return new HelpCenterCache(importantFaqPayload, categoryPayload,
+            categoryFaqPayloadMap(categoryFaqPayloads), descriptionPayloadMap(descriptionPayloads));
+    }
+
+    public HelpCenterCache withImportantFaqPayload(String payload) {
+        return new HelpCenterCache(payload, categoryPayload, categoryFaqPayloads, descriptionPayloads);
+    }
+
+    public HelpCenterCache withFaqCategoryPayloads(String categoryPayload, Iterable<CategoryFaqPayload> categoryFaqPayloads) {
+        return new HelpCenterCache(importantFaqPayload, categoryPayload, categoryFaqPayloadMap(categoryFaqPayloads),
+            descriptionPayloads);
+    }
+
+    public HelpCenterCache withDescriptionPayloads(Iterable<DescriptionPayload> descriptionPayloads) {
+        return new HelpCenterCache(importantFaqPayload, categoryPayload, categoryFaqPayloads,
+            descriptionPayloadMap(descriptionPayloads));
     }
 
     public String importantFaqPayload() {
@@ -37,16 +52,8 @@ public final class HelpCenterCache {
         return categoryPayload;
     }
 
-    public Map<Long, String> categoryFaqPayloads() {
-        return Map.copyOf(categoryFaqPayloads);
-    }
-
     public String categoryFaqPayload(long categoryId) {
         return payload(categoryFaqPayloads, categoryId);
-    }
-
-    public Map<Long, String> descriptionPayloads() {
-        return Map.copyOf(descriptionPayloads);
     }
 
     public String descriptionPayload(long faqId) {
@@ -70,5 +77,43 @@ public final class HelpCenterCache {
             }
         }
         return copiedPayloads;
+    }
+
+    private static Map<Long, String> categoryFaqPayloadMap(Iterable<CategoryFaqPayload> payloads) {
+        Map<Long, String> payloadMap = new LinkedHashMap<>();
+        if (payloads != null) {
+            for (CategoryFaqPayload payload : payloads) {
+                if (payload != null) {
+                    payloadMap.put(payload.categoryId(), payload.payload());
+                }
+            }
+        }
+        return payloadMap;
+    }
+
+    private static Map<Long, String> descriptionPayloadMap(Iterable<DescriptionPayload> payloads) {
+        Map<Long, String> payloadMap = new LinkedHashMap<>();
+        if (payloads != null) {
+            for (DescriptionPayload payload : payloads) {
+                if (payload != null) {
+                    payloadMap.put(payload.faqId(), payload.payload());
+                }
+            }
+        }
+        return payloadMap;
+    }
+
+    public record CategoryFaqPayload(long categoryId, String payload) {
+        public CategoryFaqPayload {
+            categoryId = Math.max(0L, categoryId);
+            payload = StringUtils.text(payload);
+        }
+    }
+
+    public record DescriptionPayload(long faqId, String payload) {
+        public DescriptionPayload {
+            faqId = Math.max(0L, faqId);
+            payload = StringUtils.text(payload);
+        }
     }
 }

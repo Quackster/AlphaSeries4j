@@ -148,7 +148,7 @@ public final class LicenceChecker {
         return licenseBlock;
     }
 
-    public static String licenceCacheTextFromBlock(String licenseBlock) {
+    private static String licenceCacheTextFromBlock(String licenseBlock) {
         return "\r" + StringUtils.newlinesAsCarriageReturns(licenseBlock) + "\r";
     }
 

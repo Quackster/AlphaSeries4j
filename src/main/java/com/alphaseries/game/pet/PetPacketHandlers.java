@@ -417,7 +417,7 @@ public final class PetPacketHandlers {
             if (!removal.hasRemovals()) {
                 return 0L;
             }
-            for (String removedPayload : removal.removedPayloads()) {
+            for (String removedPayload : removal) {
                 SocketDelivery.broadcastToRoomUsers(roomId, removedPayload);
             }
             return removal.removedCount();

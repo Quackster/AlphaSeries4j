@@ -20,7 +20,7 @@ public final class WiredState {
         this.settings = settings == null ? WiredSettings.empty() : settings;
     }
 
-    public synchronized void setStatePayload(String statePayload) {
+    synchronized void setStatePayload(String statePayload) {
         settings = WiredSettings.fromStatePayload(statePayload);
     }
 

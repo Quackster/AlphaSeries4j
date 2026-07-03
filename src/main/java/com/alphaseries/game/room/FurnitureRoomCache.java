@@ -338,16 +338,16 @@ public final class FurnitureRoomCache {
             return FurnitureRoomCache.markerIds(pendingRoomCache);
         }
 
-        public String pendingRoomCache() {
+        private String pendingRoomCache() {
             return pendingRoomCache.cacheText();
         }
 
-        public String pendingFurnitureCache() {
+        private String pendingFurnitureCache() {
             return pendingFurnitureCache.cacheText();
         }
 
-        public String representedRoomCache() {
-            return representedRoomCache;
+        public RepresentedRoomCache representedRooms() {
+            return RepresentedRoomCache.fromCacheText(representedRoomCache);
         }
 
         public State withRepresentedRooms(RepresentedRoomCache representedRoomCache) {

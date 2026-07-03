@@ -37,7 +37,8 @@ public final class JukeboxLookups {
         }
     }
 
-    public record DeliveryPayloads(String diskChangePayload, String playlistPayload, String diskInventoryPayload) {
+    public record DeliveryPayloads(String diskChangePayload, String playlistPayload, String diskInventoryPayload)
+        implements Iterable<String> {
         public DeliveryPayloads {
             diskChangePayload = diskChangePayload == null ? "" : diskChangePayload;
             playlistPayload = playlistPayload == null ? "" : playlistPayload;
@@ -48,7 +49,12 @@ public final class JukeboxLookups {
             return new DeliveryPayloads("", "", "");
         }
 
-        public List<String> payloads() {
+        @Override
+        public java.util.Iterator<String> iterator() {
+            return payloadList().iterator();
+        }
+
+        private List<String> payloadList() {
             java.util.ArrayList<String> result = new java.util.ArrayList<>();
             addPayload(result, diskChangePayload);
             addPayload(result, playlistPayload);

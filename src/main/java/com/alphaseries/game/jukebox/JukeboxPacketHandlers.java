@@ -57,7 +57,7 @@ public final class JukeboxPacketHandlers {
             if (!result.valid()) {
                 return "";
             }
-            SocketDelivery.sendToSocket(socketIndex, result.deliveryPayloads().payloads());
+            SocketDelivery.sendToSocket(socketIndex, result.deliveryPayloads());
             return result.payload();
         } catch (Exception ignored) {
             return "";
@@ -78,7 +78,7 @@ public final class JukeboxPacketHandlers {
             if (!result.valid()) {
                 return "";
             }
-            SocketDelivery.sendToSocket(socketIndex, result.deliveryPayloads().payloads());
+            SocketDelivery.sendToSocket(socketIndex, result.deliveryPayloads());
             return "";
         } catch (Exception ignored) {
             return "";
