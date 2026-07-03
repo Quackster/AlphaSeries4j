@@ -3,6 +3,7 @@ package com.alphaseries.server.runtime;
 import com.alphaseries.config.AppPaths;
 import com.alphaseries.game.session.GameServerSessionState;
 import com.alphaseries.game.session.SessionState;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.server.lifecycle.LifecycleState;
 import com.alphaseries.server.logging.Console;
 import com.alphaseries.server.packet.Filesystems;
@@ -19,7 +20,34 @@ public final class GameServerBridge {
     private GameServerBridge() {
     }
 
-    public record GameServerPacket(String commandName, long socketIndex, String payload) {
+    public static final class GameServerPacket {
+        private final String commandName;
+        private final long socketIndex;
+        private final String payload;
+
+        private GameServerPacket(String commandName, long socketIndex, String payload) {
+            this.commandName = StringUtils.text(commandName);
+            this.socketIndex = socketIndex;
+            this.payload = StringUtils.text(payload);
+        }
+
+        public String commandName() {
+            return commandName;
+        }
+
+        public long socketIndex() {
+            return socketIndex;
+        }
+
+        public boolean hasPayload() {
+            return !payload.isEmpty();
+        }
+
+        public void appendPayloadTo(PacketBuilder packet) {
+            if (packet != null) {
+                packet.appendRaw(payload);
+            }
+        }
     }
 
     public static void configurePreSessionPacketSink(PacketSink sink) {
@@ -91,8 +119,8 @@ public final class GameServerBridge {
                         Guardian.toggleSocketMarker(gamePacket.socketIndex());
                     }
                 } else if ("DATA".equals(gamePacket.commandName())) {
-                    if (gamePacket.socketIndex() > 0L && !gamePacket.payload().isEmpty()) {
-                        appendGameServerPacketPayload(gamePacket.socketIndex(), gamePacket.payload());
+                    if (gamePacket.socketIndex() > 0L && gamePacket.hasPayload()) {
+                        appendGameServerPacket(gamePacket.socketIndex(), packetPayload(gamePacket));
                     }
                 } else if (gamePacket.socketIndex() > 0L) {
                     SocketLifecycle.disconnectSocket(gamePacket.socketIndex());
@@ -103,7 +131,7 @@ public final class GameServerBridge {
         }
     }
 
-    public static void appendGameServerPacketPayload(long socketIndex, String packetPayload) {
+    private static void appendGameServerPacket(long socketIndex, String packetPayload) {
         GameServerSessionState sessionState = SessionState.instance().gameServerSession();
         sessionState.appendPacketPayload(socketIndex, packetPayload);
         SessionState.instance().setGameServerSession(sessionState);
@@ -130,6 +158,14 @@ public final class GameServerBridge {
             return "";
         }
         return text.substring(secondDelimiter + 1);
+    }
+
+    private static String packetPayload(GameServerPacket packet) {
+        PacketBuilder payload = PacketBuilder.create();
+        if (packet != null) {
+            packet.appendPayloadTo(payload);
+        }
+        return payload.build();
     }
 
     public static String popGameServerPacketData(long socketIndex) {

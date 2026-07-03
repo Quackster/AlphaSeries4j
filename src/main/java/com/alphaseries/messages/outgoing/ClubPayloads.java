@@ -60,9 +60,9 @@ public final class ClubPayloads {
                 statusCount++;
             }
         }
-        return PacketBuilder.message("IoM")
-            .appendInt(presentsAvailable)
-            .appendRaw(resolvedSettings.clubGiftPayload())
+        PacketBuilder payload = PacketBuilder.message("IoM").appendInt(presentsAvailable);
+        resolvedSettings.appendClubGiftPayloadTo(payload);
+        return payload
             .appendInt(statusCount)
             .appendRaw(statusRows)
             .build();

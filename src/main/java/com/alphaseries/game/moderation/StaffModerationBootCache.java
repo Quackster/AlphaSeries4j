@@ -39,7 +39,7 @@ public final class StaffModerationBootCache {
                     + appendPermissionPayload(rank, hc, "fuse_room_alert", "")
                     + appendPermissionPayload(rank, hc, "fuse_room_kick", "")
                     + appendPermissionPayload(rank, hc, "fuse_edit_localizations", moderatorMessages);
-                values.add(new StaffSettings.ModerationPayload(rank, hc, payload));
+                values.add(StaffSettings.ModerationPayload.fromPayloadText(rank, hc, payload));
             }
         }
         ModerationState.instance().setStaffSettings(StaffSettings.fromPayloadRows(values));

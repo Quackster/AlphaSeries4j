@@ -54,7 +54,11 @@ public final class RecyclerPacketHandlers {
     /**
      * Original function: Proc_6_19_6E8040.
      */
-    public static String sendCachedStatus(int socketIndex, String cachedPayload, String packetPrefix) {
+    public static String sendCachedStatus(int socketIndex) {
+        return sendCachedStatus(socketIndex, "", "Gz");
+    }
+
+    private static String sendCachedStatus(int socketIndex, String cachedPayload, String packetPrefix) {
         try {
             if (socketIndex <= 0) {
                 return "";

@@ -8,22 +8,13 @@ import com.alphaseries.db.MySQL;
 import com.alphaseries.game.GameDataCaches;
 import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
-import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public final class CatalogGiftBootCache {
     private CatalogGiftBootCache() {
-    }
-
-    public record ClubGiftCache(String giftPayload, String giftLookup) {
-        public ClubGiftCache {
-            giftPayload = StringUtils.text(giftPayload);
-            giftLookup = StringUtils.text(giftLookup);
-        }
     }
 
     /**
@@ -44,7 +35,7 @@ public final class CatalogGiftBootCache {
             .longValueOrDefault("com.client.catalog.gifts.wrap.count.accessories", wrapCount);
         long colorCount = AppConfigState.instance().settingsCache()
             .longValueOrDefault("com.client.catalog.gifts.wrap.count.colors", 0);
-        mergeGiftWrapIntoCatalogState(wrapProductIds, buildGiftWrapPayload(wrapProductIds, accessoryCount, colorCount));
+        mergeGiftWrapIntoCatalogState(buildGiftWrapState(wrapProductIds, accessoryCount, colorCount));
     }
 
     /**
@@ -52,7 +43,6 @@ public final class CatalogGiftBootCache {
      */
     public static void loadClubGiftCache() {
         PacketBuilder payload = PacketBuilder.create();
-        PacketBuilder lookup = PacketBuilder.create();
         List<GiftSettings.ClubGift> gifts = new ArrayList<GiftSettings.ClubGift>();
         long count = 0L;
         ClubDao clubs = clubDao();
@@ -83,37 +73,32 @@ public final class CatalogGiftBootCache {
                 .appendString(giftClass)
                 .appendInt(row.vipOnly())
                 .appendInt(row.requiredDays());
-            appendClubGiftLookup(lookup, catalogProductId, productId, row.requiredDays());
             gifts.add(new GiftSettings.ClubGift(catalogProductId, productId, row.requiredDays()));
             count++;
         }
-        mergeClubGiftIntoCatalogState(new GiftSettings.ClubGiftState(
+        mergeClubGiftIntoCatalogState(GiftSettings.ClubGiftState.fromPayload(
             PacketBuilder.create().appendInt(count).appendRaw(payload.build()).build(),
             gifts));
     }
 
     private static void mergeClubGiftIntoCatalogState(GiftSettings.ClubGiftState state) {
         GiftSettings currentSettings = CatalogState.instance().giftSettings();
-        CatalogState.instance().setGiftSettings(GiftSettings.fromRows(
-            state == null ? "" : state.payload(),
-            state == null ? List.of() : state.gifts(),
-            currentSettings.giftWrapProductIds(),
-            currentSettings.giftWrapPayload()));
+        CatalogState.instance().setGiftSettings(GiftSettings.fromStates(
+            state == null ? GiftSettings.ClubGiftState.empty() : state,
+            currentSettings.giftWrapState()));
     }
 
-    private static void mergeGiftWrapIntoCatalogState(List<Long> productIds, String payload) {
+    private static void mergeGiftWrapIntoCatalogState(GiftSettings.GiftWrapState state) {
         GiftSettings currentSettings = CatalogState.instance().giftSettings();
-        CatalogState.instance().setGiftSettings(GiftSettings.fromRows(
-            currentSettings.clubGiftPayload(),
-            currentSettings.clubGifts(),
-            productIds == null ? List.of() : List.copyOf(productIds),
-            payload));
+        CatalogState.instance().setGiftSettings(GiftSettings.fromStates(
+            currentSettings.clubGiftState(),
+            state == null ? GiftSettings.GiftWrapState.empty() : state));
     }
 
     /**
      * Original function: Proc_1_13_6C9820.
      */
-    public static String buildGiftWrapPayload(List<Long> wrapProductIds, long accessoryCount, long colorCount) {
+    public static GiftSettings.GiftWrapState buildGiftWrapState(List<Long> wrapProductIds, long accessoryCount, long colorCount) {
         long wrapCount = 0L;
         PacketBuilder wrapPayload = PacketBuilder.create();
         for (Long productId : wrapProductIds == null ? List.<Long>of() : wrapProductIds) {
@@ -134,7 +119,7 @@ public final class CatalogGiftBootCache {
             colorPayload.appendInt(optionIndex);
         }
 
-        return PacketBuilder.create()
+        String payload = PacketBuilder.create()
             .appendInt(accessoryCount)
             .appendRaw(accessoryPayload.build())
             .appendInt(wrapCount)
@@ -142,17 +127,18 @@ public final class CatalogGiftBootCache {
             .appendInt(colorCount)
             .appendRaw(colorPayload.build())
             .build();
+        return GiftSettings.GiftWrapState.fromPayload(payload, wrapProductIds == null ? List.of() : List.copyOf(wrapProductIds));
     }
 
     /**
      * Original function: Proc_1_18_6CE9C0.
      */
-    public static ClubGiftCache buildClubGiftCache(List<ClubDao.ClubGiftRow> giftRows, Map<Long, Long> productIdByCatalogProductId,
+    public static GiftSettings.ClubGiftState buildClubGiftState(List<ClubDao.ClubGiftRow> giftRows, Map<Long, Long> productIdByCatalogProductId,
             Map<Long, Long> productTypeByProductId, Map<Long, String> nameByProductId,
             Map<Long, String> descriptionByProductId) {
         long giftCount = 0L;
         PacketBuilder giftPayload = PacketBuilder.create();
-        PacketBuilder giftLookup = PacketBuilder.create();
+        List<GiftSettings.ClubGift> gifts = new ArrayList<GiftSettings.ClubGift>();
         if (giftRows != null) {
             for (ClubDao.ClubGiftRow row : giftRows) {
                 if (row != null) {
@@ -169,25 +155,14 @@ public final class CatalogGiftBootCache {
                         .appendString(giftClass)
                         .appendInt(row.vipOnly())
                         .appendInt(row.requiredDays());
-                    appendClubGiftLookup(giftLookup, catalogProductId, productId, row.requiredDays());
+                    gifts.add(new GiftSettings.ClubGift(catalogProductId, productId, row.requiredDays()));
                     giftCount++;
                 }
             }
         }
-        return new ClubGiftCache(
+        return GiftSettings.ClubGiftState.fromPayload(
             PacketBuilder.create().appendInt(giftCount).appendRaw(giftPayload.build()).build(),
-            giftLookup.build());
-    }
-
-    private static void appendClubGiftLookup(PacketBuilder lookup, long catalogProductId, long productId, long requiredDays) {
-        lookup
-            .appendRaw('[')
-            .appendRaw(catalogProductId)
-            .appendRaw('\0')
-            .appendRaw(productId)
-            .appendRaw('\1')
-            .appendRaw(requiredDays)
-            .appendRaw(']');
+            gifts);
     }
 
     private static long countNonZeroRows(List<Long> values) {

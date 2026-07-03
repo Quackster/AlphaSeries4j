@@ -1,6 +1,7 @@
 package com.alphaseries.game.navigator;
 
 import com.alphaseries.dao.mysql.RoomDao;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public final class RoomCategoryCache {
         return List.copyOf(categoryRows);
     }
 
-    public String payload(long rankIndex, long hcLevel) {
+    String payload(long rankIndex, long hcLevel) {
         int rank = (int) rankIndex;
         int hc = (int) hcLevel;
         if (rank < 0 || hc < 0) {
@@ -76,19 +77,63 @@ public final class RoomCategoryCache {
     /**
      * Original function: Proc_6_111_74DF70.
      */
-    public String rankPayload(long rankIndex, long hcLevel) {
+    public boolean appendRankPayloadTo(PacketBuilder packet, long rankIndex, long hcLevel) {
+        if (packet == null) {
+            return false;
+        }
         long rank = rankIndex < 0L ? 0L : Math.min(rankIndex, 20L);
         long hc = hcLevel < 0L ? 0L : Math.min(hcLevel, 2L);
-        return "C]" + payload(rank, hc);
+        packet.appendRaw("C]").appendRaw(payload(rank, hc));
+        return true;
     }
 
-    public List<CategoryPayload> payloadRows() {
+    List<CategoryPayload> payloadRows() {
         return List.copyOf(payloads);
     }
 
-    public record CategoryPayload(long rankIndex, long hcLevel, String payload) {
-        public CategoryPayload {
-            payload = StringUtils.text(payload);
+    public static final class CategoryPayload {
+        private final long rankIndex;
+        private final long hcLevel;
+        private final String payload;
+
+        private CategoryPayload(long rankIndex, long hcLevel, String payload) {
+            this.rankIndex = rankIndex;
+            this.hcLevel = hcLevel;
+            this.payload = StringUtils.text(payload);
+        }
+
+        public static CategoryPayload fromCategoryRows(List<RoomDao.RoomCategoryRow> categoryRows, long rankIndex, long hcLevel) {
+            long categoryCount = 0L;
+            PacketBuilder categoryPayload = PacketBuilder.create();
+            if (categoryRows != null) {
+                for (RoomDao.RoomCategoryRow row : categoryRows) {
+                    if (row != null && rankIndex >= row.minimumRank() && hcLevel >= row.minimumHcRank()) {
+                        categoryPayload
+                            .appendInt(row.categoryId())
+                            .appendString(row.name())
+                            .appendInt(row.trading());
+                        categoryCount++;
+                    }
+                }
+            }
+            return fromPayloadText(rankIndex, hcLevel,
+                PacketBuilder.create().appendInt(categoryCount).appendRaw(categoryPayload.build()).build());
+        }
+
+        static CategoryPayload fromPayloadText(long rankIndex, long hcLevel, String payload) {
+            return new CategoryPayload(rankIndex, hcLevel, payload);
+        }
+
+        public long rankIndex() {
+            return rankIndex;
+        }
+
+        public long hcLevel() {
+            return hcLevel;
+        }
+
+        String payload() {
+            return payload;
         }
     }
 

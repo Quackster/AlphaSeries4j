@@ -1,5 +1,6 @@
 package com.alphaseries.game.pet;
 
+import com.alphaseries.protocol.PacketBuilder;
 import java.util.List;
 
 public final class PetSettings {
@@ -40,8 +41,8 @@ public final class PetSettings {
         return commandCount;
     }
 
-    public String commandListPayload(long petLevel) {
-        return PetPayloads.commandList(petLevel, commandRows);
+    public void appendCommandListPayloadTo(PacketBuilder packet, long petLevel) {
+        PetPayloads.appendCommandListTo(packet, petLevel, commandRows);
     }
 
     public record PetCommandRow(long commandId, long requiredLevel, String command, String action, int fieldCount) {

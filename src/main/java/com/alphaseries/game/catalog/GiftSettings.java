@@ -1,5 +1,6 @@
 package com.alphaseries.game.catalog;
 
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.NumberUtils;
 import com.alphaseries.util.StringUtils;
 
@@ -9,34 +10,48 @@ import java.util.List;
 import java.util.Set;
 
 public final class GiftSettings {
-    private final String clubGiftPayload;
-    private final String giftWrapPayload;
+    private final ClubGiftState clubGiftState;
+    private final GiftWrapState giftWrapState;
     private final List<ClubGift> clubGifts;
     private final Set<Long> giftWrapProductIds;
 
-    private GiftSettings(String clubGiftPayload, List<ClubGift> clubGifts, List<Long> giftWrapProductIds,
-                         String giftWrapPayload) {
-        this.clubGiftPayload = StringUtils.text(clubGiftPayload);
-        this.giftWrapPayload = StringUtils.text(giftWrapPayload);
-        this.clubGifts = clubGifts == null ? List.of() : List.copyOf(clubGifts);
-        this.giftWrapProductIds = copyGiftWrapProductIds(giftWrapProductIds);
+    private GiftSettings(ClubGiftState clubGiftState, GiftWrapState giftWrapState) {
+        this.clubGiftState = clubGiftState == null ? ClubGiftState.empty() : clubGiftState;
+        this.giftWrapState = giftWrapState == null ? GiftWrapState.empty() : giftWrapState;
+        this.clubGifts = this.clubGiftState.gifts();
+        this.giftWrapProductIds = copyGiftWrapProductIds(this.giftWrapState.productIds());
     }
 
-    public static GiftSettings fromRows(String clubGiftPayload, List<ClubGift> clubGifts,
-                                        List<Long> giftWrapProductIds, String giftWrapPayload) {
-        return new GiftSettings(clubGiftPayload, clubGifts, giftWrapProductIds, giftWrapPayload);
+    public static GiftSettings fromRows(List<ClubGift> clubGifts, List<Long> giftWrapProductIds) {
+        return new GiftSettings(ClubGiftState.fromGifts(clubGifts), GiftWrapState.fromProductIds(giftWrapProductIds));
+    }
+
+    public static GiftSettings fromStates(ClubGiftState clubGiftState, GiftWrapState giftWrapState) {
+        return new GiftSettings(clubGiftState, giftWrapState);
     }
 
     public static GiftSettings empty() {
-        return new GiftSettings("", List.of(), List.of(), "");
+        return new GiftSettings(ClubGiftState.empty(), GiftWrapState.empty());
     }
 
-    public String clubGiftPayload() {
-        return clubGiftPayload;
+    public void appendClubGiftPayloadTo(PacketBuilder payload) {
+        if (payload != null) {
+            payload.appendRaw(clubGiftState.payload());
+        }
     }
 
-    public String giftWrapPayload() {
-        return giftWrapPayload;
+    public void appendGiftWrapPayloadTo(PacketBuilder payload) {
+        if (payload != null) {
+            payload.appendRaw(giftWrapState.payload());
+        }
+    }
+
+    ClubGiftState clubGiftState() {
+        return clubGiftState;
+    }
+
+    GiftWrapState giftWrapState() {
+        return giftWrapState;
     }
 
     public List<ClubGift> clubGifts() {
@@ -79,10 +94,64 @@ public final class GiftSettings {
         }
     }
 
-    public record ClubGiftState(String payload, List<ClubGift> gifts) {
-        public ClubGiftState {
+    public static final class ClubGiftState {
+        private final String payload;
+        private final List<ClubGift> gifts;
+
+        private ClubGiftState(String payload, List<ClubGift> gifts) {
+            this.payload = StringUtils.text(payload);
+            this.gifts = gifts == null ? List.of() : List.copyOf(gifts);
+        }
+
+        public static ClubGiftState empty() {
+            return new ClubGiftState("", List.of());
+        }
+
+        public static ClubGiftState fromGifts(List<ClubGift> gifts) {
+            return new ClubGiftState("", gifts);
+        }
+
+        static ClubGiftState fromPayload(String payload, List<ClubGift> gifts) {
+            return new ClubGiftState(payload, gifts);
+        }
+
+        String payload() {
+            return payload;
+        }
+
+        public List<ClubGift> gifts() {
+            return gifts;
+        }
+    }
+
+    public static final class GiftWrapState {
+        private final String payload;
+        private final List<Long> productIds;
+
+        private GiftWrapState(String payload, List<Long> productIds) {
             payload = StringUtils.text(payload);
-            gifts = gifts == null ? List.of() : List.copyOf(gifts);
+            this.payload = payload;
+            this.productIds = productIds == null ? List.of() : List.copyOf(copyGiftWrapProductIds(productIds));
+        }
+
+        public static GiftWrapState empty() {
+            return new GiftWrapState("", List.of());
+        }
+
+        public static GiftWrapState fromProductIds(List<Long> productIds) {
+            return new GiftWrapState("", productIds);
+        }
+
+        static GiftWrapState fromPayload(String payload, List<Long> productIds) {
+            return new GiftWrapState(payload, productIds);
+        }
+
+        String payload() {
+            return payload;
+        }
+
+        public List<Long> productIds() {
+            return productIds;
         }
     }
 }

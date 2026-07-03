@@ -13,7 +13,6 @@ import com.alphaseries.game.messenger.MessengerSettings;
 import com.alphaseries.game.messenger.MessengerState;
 import com.alphaseries.game.moderation.StaffModerationBootCache;
 import com.alphaseries.game.pet.PetBootCache;
-import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -23,14 +22,17 @@ public final class AchievementBootCache {
     private AchievementBootCache() {
     }
 
-    public record AchievementSettingsCache(String questIdPayload, List<AchievementSettings.Achievement> achievements) {
+    public record AchievementSettingsCache(List<AchievementSettings.Achievement> achievements) {
         public AchievementSettingsCache {
-            questIdPayload = StringUtils.text(questIdPayload);
             achievements = achievements == null ? List.of() : List.copyOf(achievements);
         }
 
         public static AchievementSettingsCache empty() {
-            return new AchievementSettingsCache("", List.of());
+            return new AchievementSettingsCache(List.of());
+        }
+
+        public AchievementSettings settings() {
+            return AchievementSettings.fromAchievements(achievements);
         }
     }
 
@@ -47,9 +49,7 @@ public final class AchievementBootCache {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        AchievementState.instance().setSettings(AchievementSettings.fromAchievements(
-            achievementCache.questIdPayload(),
-            achievementCache.achievements()));
+        AchievementState.instance().setSettings(achievementCache.settings());
         AppSettingsBootCache.loadServerSettingsCache();
         PetBootCache.loadPetLevelAndCommandCache();
         CatalogGiftBootCache.loadClubGiftCache();
@@ -76,7 +76,6 @@ public final class AchievementBootCache {
     public static AchievementSettingsCache buildAchievementSettingsCache(
             List<AchievementDao.AchievementSettingsRow> achievementRows) {
         long achievementIndex = 0L;
-        PacketBuilder questIds = PacketBuilder.create();
         List<AchievementSettings.Achievement> achievements = new ArrayList<AchievementSettings.Achievement>();
         if (achievementRows != null) {
             for (AchievementDao.AchievementSettingsRow row : achievementRows) {
@@ -84,14 +83,13 @@ public final class AchievementBootCache {
                     break;
                 }
                 if (row != null) {
-                    questIds.appendString(row.questId());
                     achievements.add(new AchievementSettings.Achievement(row.questId(), StringUtils.text(row.badgeId()),
                         row.progress(), row.rewardIncrease(), row.levelTotal(), row.scoreIncrease(), row.rewardType()));
                     achievementIndex++;
                 }
             }
         }
-        return new AchievementSettingsCache(questIds.build(), achievements);
+        return new AchievementSettingsCache(achievements);
     }
 
     /**

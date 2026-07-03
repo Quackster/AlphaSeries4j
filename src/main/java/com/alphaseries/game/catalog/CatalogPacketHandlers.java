@@ -17,6 +17,7 @@ import com.alphaseries.game.social.SocialPacketHandlers;
 import com.alphaseries.game.user.UserLookups;
 import com.alphaseries.game.user.UserRefreshService;
 import com.alphaseries.messages.outgoing.CatalogPayloads;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.server.runtime.SessionLookups;
 import com.alphaseries.server.runtime.SocketDelivery;
 import com.alphaseries.util.NumberUtils;
@@ -70,7 +71,7 @@ public final class CatalogPacketHandlers {
         try {
             long pageId = request.pageId();
             CatalogPages catalogPages = CatalogState.instance().catalogPages();
-            if (!catalogPages.pagePayload(pageId).isEmpty()) {
+            if (catalogPages.appendPagePayloadTo(PacketBuilder.create(), pageId)) {
                 SocketDelivery.sendToSocket(socketIndex, CatalogPayloads.page(catalogPages, pageId));
             }
         } catch (Exception ignored) {
@@ -80,8 +81,9 @@ public final class CatalogPacketHandlers {
 
     public static void sendDefaultIndex(int socketIndex) {
         try {
-            String pageTree = CatalogState.instance().catalogPages().defaultPageTree();
-            SocketDelivery.sendToSocket(socketIndex, "A~IHHM" + '\2' + pageTree);
+            PacketBuilder payload = PacketBuilder.message("A~IHHM").appendRaw('\2');
+            CatalogState.instance().catalogPages().appendDefaultPageTreeTo(payload);
+            SocketDelivery.sendToSocket(socketIndex, payload.build());
         } catch (Exception ignored) {
             // VB6 source suppresses dispatcher helper failures.
         }

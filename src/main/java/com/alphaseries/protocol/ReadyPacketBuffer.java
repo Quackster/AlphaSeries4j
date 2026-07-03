@@ -22,8 +22,10 @@ public final class ReadyPacketBuffer {
             return code;
         }
 
-        public String payload() {
-            return payload;
+        public void appendPayloadTo(PacketBuilder packet) {
+            if (packet != null) {
+                packet.appendRaw(payload);
+            }
         }
     }
 

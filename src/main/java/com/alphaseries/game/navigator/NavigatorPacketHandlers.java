@@ -4,6 +4,7 @@ import com.alphaseries.config.AppConfigState;
 import com.alphaseries.dao.mysql.DaoProvider;
 import com.alphaseries.dao.mysql.RoomDao;
 import com.alphaseries.server.runtime.SessionLookups;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.server.runtime.SocketDelivery;
 import com.alphaseries.util.NumberUtils;
 
@@ -52,7 +53,9 @@ public final class NavigatorPacketHandlers {
      */
     public static void sendRoomCategoryPayload(int socketIndex) {
         try {
-            SocketDelivery.sendToSocket(socketIndex, roomCategoryCache().rankPayload(0L, 0L));
+            PacketBuilder payload = PacketBuilder.create();
+            roomCategoryCache().appendRankPayloadTo(payload, 0L, 0L);
+            SocketDelivery.sendToSocket(socketIndex, payload.build());
         } catch (Exception ignored) {
         }
     }

@@ -9,7 +9,6 @@ import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.quest.QuestState;
 import com.alphaseries.game.room.RoomPortalSettings;
 import com.alphaseries.game.room.RoomState;
-import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
@@ -76,7 +75,7 @@ public final class AppSettingsBootCache {
                         // Legacy startup cache loading tolerated missing tables or SQL failures.
                     }
                 }
-                permissions.add(new PermissionMatrix.PermissionPayload(rank, hc, permissionPayload(rows)));
+                permissions.add(buildPermissionPayloadEntry(rank, hc, rows));
             }
         }
         AppConfigState.instance().setPermissionMatrix(PermissionMatrix.fromPayloadRows(permissions));
@@ -85,33 +84,17 @@ public final class AppSettingsBootCache {
     /**
      * Original function: Proc_1_16_6CCA60.
      */
-    public static String permissionPayload(List<SettingsDao.PrivilegeRow> rows) {
-        PacketBuilder payload = PacketBuilder.create();
+    public static PermissionMatrix.PermissionPayload buildPermissionPayloadEntry(
+            long rankIndex, long hcLevel, List<SettingsDao.PrivilegeRow> rows) {
+        List<String> permissions = new ArrayList<>();
         if (rows != null) {
             for (SettingsDao.PrivilegeRow row : rows) {
                 if (row != null && !StringUtils.text(row.privilege()).isEmpty()) {
-                    payload.appendString(row.privilege());
+                    permissions.add(StringUtils.text(row.privilege()));
                 }
             }
         }
-        String value = payload.build();
-        return value.isEmpty() ? "\2" : value;
-    }
-
-    /**
-     * Original function: Proc_1_9_6C6DF0.
-     */
-    public static String buildSettingsCache(List<SettingsDao.SettingRow> settingsRows, String systemDateFormat,
-            String systemTimeFormat) {
-        PacketBuilder payload = PacketBuilder.create();
-        for (Map.Entry<String, String> setting : buildSettingsMap(settingsRows, systemDateFormat, systemTimeFormat).entrySet()) {
-            payload.appendRaw('[')
-                .appendRaw(setting.getKey())
-                .appendRaw('=')
-                .appendRaw(setting.getValue())
-                .appendRaw(']');
-        }
-        return payload.build();
+        return PermissionMatrix.PermissionPayload.ofPermissions(rankIndex, hcLevel, permissions);
     }
 
     /**

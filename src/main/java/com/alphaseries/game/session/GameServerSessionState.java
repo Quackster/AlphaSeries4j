@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public final class GameServerSessionState {
@@ -25,7 +26,7 @@ public final class GameServerSessionState {
         GameServerSessionState state = empty();
         if (queuedPackets != null) {
             for (QueuedPacket packet : queuedPackets) {
-                if (packet != null && packet.socketIndex() > 0L && !packet.payload().isEmpty()) {
+                if (packet != null && packet.socketIndex() > 0L && packet.hasPayload()) {
                     state.queuedPackets.add(packet);
                 }
             }
@@ -54,9 +55,9 @@ public final class GameServerSessionState {
             data
                 .appendRaw('[')
                 .appendRaw(packet.socketIndex())
-                .appendRaw(':')
-                .appendRaw(packet.payload())
-                .appendRaw(']');
+                .appendRaw(':');
+            packet.appendPayloadTo(data);
+            data.appendRaw(']');
         }
         return data.build();
     }
@@ -66,7 +67,7 @@ public final class GameServerSessionState {
         if (socketIndex <= 0L || payload.isEmpty()) {
             return;
         }
-        queuedPackets.add(new QueuedPacket(socketIndex, payload));
+        queuedPackets.add(QueuedPacket.of(socketIndex, payload));
     }
 
     public String popPacketData(long socketIndex) {
@@ -74,7 +75,7 @@ public final class GameServerSessionState {
             QueuedPacket packet = iterator.next();
             if (packet.socketIndex() == socketIndex) {
                 iterator.remove();
-                return packet.payload();
+                return packet.payloadText();
             }
         }
         return "";
@@ -89,9 +90,56 @@ public final class GameServerSessionState {
         readySocketIndexes.remove(socketIndex);
     }
 
-    public record QueuedPacket(long socketIndex, String payload) {
-        public QueuedPacket {
-            payload = StringUtils.text(payload);
+    public static final class QueuedPacket {
+        private final long socketIndex;
+        private final String payload;
+
+        private QueuedPacket(long socketIndex, String payload) {
+            this.socketIndex = socketIndex;
+            this.payload = StringUtils.text(payload);
+        }
+
+        public static QueuedPacket of(long socketIndex, Object payload) {
+            return new QueuedPacket(socketIndex, StringUtils.text(payload));
+        }
+
+        public long socketIndex() {
+            return socketIndex;
+        }
+
+        public void appendPayloadTo(PacketBuilder packet) {
+            if (packet != null) {
+                packet.appendRaw(payload);
+            }
+        }
+
+        private boolean hasPayload() {
+            return !payload.isEmpty();
+        }
+
+        private String payloadText() {
+            return payload;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) {
+                return true;
+            }
+            if (!(other instanceof QueuedPacket packet)) {
+                return false;
+            }
+            return socketIndex == packet.socketIndex && payload.equals(packet.payload);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(socketIndex, payload);
+        }
+
+        @Override
+        public String toString() {
+            return "QueuedPacket[socketIndex=" + socketIndex + ", payload=" + payload + ']';
         }
     }
 }

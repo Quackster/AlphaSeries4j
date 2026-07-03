@@ -26,9 +26,7 @@ public final class CatalogPageBootCache {
                 for (CatalogDao.CatalogPageRow row : catalog.catalogPageRows()) {
                     long pageId = row.pageId();
                     if (pageId >= 0L) {
-                        pages.add(new CatalogPages.PagePayload(
-                            pageId,
-                            buildCatalogPagePayload(row, catalog.catalogPageProductRows(pageId))));
+                        pages.add(buildCatalogPagePayloadEntry(row, catalog.catalogPageProductRows(pageId)));
                     }
                 }
             } catch (Exception ignored) {
@@ -57,10 +55,7 @@ public final class CatalogPageBootCache {
                             childCounts.put(pageId, catalog.catalogPageChildCount(pageId, rank, hc));
                             children.put(pageId, catalog.catalogPageTreeRows(pageId, rank, hc));
                         }
-                        trees.add(new CatalogPages.PageTreePayload(
-                            rank,
-                            hc,
-                            buildCatalogPageTreePayload(rootRows, childCounts, children, rank, hc)));
+                        trees.add(buildCatalogPageTreePayloadEntry(rootRows, childCounts, children, rank, hc));
                     } catch (Exception ignored) {
                         // Legacy startup cache loading tolerated missing tables or SQL failures.
                     }
@@ -74,7 +69,13 @@ public final class CatalogPageBootCache {
     /**
      * Original function: Proc_1_15_6CA000.
      */
-    public static String buildCatalogPagePayload(CatalogDao.CatalogPageRow page, List<CatalogDao.CatalogPageProductRow> productRows) {
+    public static CatalogPages.PagePayload buildCatalogPagePayloadEntry(
+            CatalogDao.CatalogPageRow page, List<CatalogDao.CatalogPageProductRow> productRows) {
+        return CatalogPages.PagePayload.fromPayloadText(page == null ? 0L : page.pageId(),
+            buildCatalogPagePayload(page, productRows));
+    }
+
+    private static String buildCatalogPagePayload(CatalogDao.CatalogPageRow page, List<CatalogDao.CatalogPageProductRow> productRows) {
         if (page == null) {
             return "";
         }
@@ -217,7 +218,15 @@ public final class CatalogPageBootCache {
     /**
      * Original function: Proc_1_17_6CCDC0.
      */
-    public static String buildCatalogPageTreePayload(List<CatalogDao.CatalogPageTreeRow> rootRows,
+    public static CatalogPages.PageTreePayload buildCatalogPageTreePayloadEntry(
+            List<CatalogDao.CatalogPageTreeRow> rootRows,
+            Map<Long, Long> childCountByPageId, Map<Long, List<CatalogDao.CatalogPageTreeRow>> childRowsByParentId,
+            long rankIndex, long hcLevel) {
+        return CatalogPages.PageTreePayload.fromPayloadText(rankIndex, hcLevel,
+            buildCatalogPageTreePayload(rootRows, childCountByPageId, childRowsByParentId, rankIndex, hcLevel));
+    }
+
+    private static String buildCatalogPageTreePayload(List<CatalogDao.CatalogPageTreeRow> rootRows,
             Map<Long, Long> childCountByPageId, Map<Long, List<CatalogDao.CatalogPageTreeRow>> childRowsByParentId,
             long rankIndex, long hcLevel) {
         long rootCount = 0L;

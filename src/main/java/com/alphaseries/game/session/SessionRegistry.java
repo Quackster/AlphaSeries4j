@@ -182,10 +182,34 @@ public final class SessionRegistry {
     private record LinkedSection(String recordId, String text) {
     }
 
-    public record SessionRecord(String key, String payload) {
-        public SessionRecord {
-            key = StringUtils.text(key);
-            payload = StringUtils.text(payload);
+    public static final class SessionRecord {
+        private final String key;
+        private final String payload;
+
+        private SessionRecord(String key, String payload) {
+            this.key = StringUtils.text(key);
+            this.payload = StringUtils.text(payload);
+        }
+
+        public static SessionRecord fields(String key, Object... fields) {
+            StringBuilder payload = new StringBuilder();
+            if (fields != null) {
+                for (int index = 0; index < fields.length; index++) {
+                    if (index > 0) {
+                        payload.append('\2');
+                    }
+                    payload.append(StringUtils.text(fields[index]));
+                }
+            }
+            return new SessionRecord(key, payload.toString());
+        }
+
+        String key() {
+            return key;
+        }
+
+        String payload() {
+            return payload;
         }
     }
 

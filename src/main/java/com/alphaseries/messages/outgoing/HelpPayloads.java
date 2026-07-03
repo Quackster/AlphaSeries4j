@@ -11,35 +11,29 @@ public final class HelpPayloads {
     }
 
     public static String importantFaqs(HelpCenterCache cache) {
-        return importantFaqs(cache == null ? "" : cache.importantFaqPayload());
-    }
-
-    private static String importantFaqs(String payload) {
-        return PacketBuilder.message("HF")
-            .appendRaw(payload)
-            .build();
+        PacketBuilder payload = PacketBuilder.message("HF");
+        if (cache != null) {
+            cache.appendImportantFaqPayloadTo(payload);
+        }
+        return payload.build();
     }
 
     public static String categories(HelpCenterCache cache) {
-        return categories(cache == null ? "" : cache.categoryPayload());
-    }
-
-    private static String categories(String payload) {
-        return PacketBuilder.message("HG")
-            .appendRaw(payload)
-            .build();
+        PacketBuilder payload = PacketBuilder.message("HG");
+        if (cache != null) {
+            cache.appendCategoryPayloadTo(payload);
+        }
+        return payload.build();
     }
 
     public static String categoryFaqs(HelpCenterCache cache, long categoryId) {
-        return categoryFaqs(categoryId, cache == null ? "" : cache.categoryFaqPayload(categoryId));
-    }
-
-    private static String categoryFaqs(long categoryId, String payload) {
-        return PacketBuilder.message("HJ")
+        PacketBuilder payload = PacketBuilder.message("HJ")
             .appendInt(categoryId)
-            .appendString("")
-            .appendRaw(payload)
-            .build();
+            .appendString("");
+        if (cache != null) {
+            cache.appendCategoryFaqPayloadTo(payload, categoryId);
+        }
+        return payload.build();
     }
 
     public static String searchResults(List<HelpDao.FaqNameRow> rows) {
@@ -58,12 +52,10 @@ public final class HelpPayloads {
     }
 
     public static String description(HelpCenterCache cache, long faqId) {
-        return description(cache == null ? "" : cache.descriptionPayload(faqId));
-    }
-
-    private static String description(String payload) {
-        return PacketBuilder.message("HH")
-            .appendRaw(payload)
-            .build();
+        PacketBuilder payload = PacketBuilder.message("HH");
+        if (cache != null) {
+            cache.appendDescriptionPayloadTo(payload, faqId);
+        }
+        return payload.build();
     }
 }

@@ -166,7 +166,13 @@ public final class PetPayloads {
             .build();
     }
 
-    public static String commandList(long petLevel, List<PetSettings.PetCommandRow> commandRows) {
+    public static void appendCommandListTo(PacketBuilder packet, long petLevel, List<PetSettings.PetCommandRow> commandRows) {
+        if (packet != null) {
+            packet.appendRaw(commandList(petLevel, commandRows));
+        }
+    }
+
+    static String commandList(long petLevel, List<PetSettings.PetCommandRow> commandRows) {
         long resolvedLevel = Math.max(0L, petLevel);
         long allCount = 0L;
         long availableCount = 0L;

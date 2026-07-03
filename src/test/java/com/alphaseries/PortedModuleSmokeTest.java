@@ -148,6 +148,7 @@ import com.alphaseries.game.quest.QuestSettings;
 import com.alphaseries.game.quest.QuestState;
 import com.alphaseries.game.recycler.RecyclerBootCache;
 import com.alphaseries.game.recycler.RecyclerLookups;
+import com.alphaseries.game.recycler.RecyclerPacketHandlers;
 import com.alphaseries.game.recycler.RecyclerSelection;
 import com.alphaseries.game.recycler.RecyclerSettings;
 import com.alphaseries.game.recycler.RecyclerState;
@@ -444,7 +445,8 @@ public final class PortedModuleSmokeTest {
         LicenceChecker.configureLicenceHttpFetcher(null);
 
         AppConfigState.instance().setPermissionMatrix(permissions(
-            new PermissionMatrix.PermissionPayload(1L, 0L, "\2fuse_mod\2fuse_chatlog\2fuse_receive_calls_for_help\2")));
+            PermissionMatrix.PermissionPayload.ofPermissions(
+                1L, 0L, "fuse_mod", "fuse_chatlog", "fuse_receive_calls_for_help")));
         final List<String> mysqlHandlerPayloads = new ArrayList<>();
         MusConnectionManager.instance().configureSink((socketIndex, payload) -> mysqlHandlerPayloads.add(socketIndex + ":" + payload));
         MySQL.configureDatabaseConnection(new Database() {
@@ -508,8 +510,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("fallback", AppConfigState.instance().settingsCache().valueOrDefault("missing", "fallback"));
         assertAppSettingsCache();
         AppConfigState.instance().setPermissionMatrix(permissions(
-            new PermissionMatrix.PermissionPayload(0L, 0L, "\2base\2"),
-            new PermissionMatrix.PermissionPayload(1L, 0L, "\2fuse_mod\2")));
+            PermissionMatrix.PermissionPayload.ofPermissions(0L, 0L, "base"),
+            PermissionMatrix.PermissionPayload.ofPermissions(1L, 0L, "fuse_mod")));
         assertEquals(true, AppConfigState.instance().allowsPermission(1, "", "fuse_mod", 0));
         assertEquals(true, AppConfigState.instance().permissionMatrix().allows(1, "", "fuse_mod", 0));
         assertPermissionMatrix();
@@ -856,9 +858,9 @@ public final class PortedModuleSmokeTest {
         List<Filesystems.ReadyPacket> readyPackets = Filesystems.readyPacketsFromBuffer(framedPackets);
         assertEquals(2, readyPackets.size());
         assertEquals("CN", readyPackets.get(0).code());
-        assertEquals("CN1", readyPackets.get(0).payload());
+        assertEquals("CN1", readyPacketPayload(readyPackets.get(0)));
         assertEquals("F_", readyPackets.get(1).code());
-        assertEquals("F_22", readyPackets.get(1).payload());
+        assertEquals("F_22", readyPacketPayload(readyPackets.get(1)));
         assertEquals(Arrays.asList(), strings(Filesystems.readyPacketPayloadsFromBuffer("<policy/>\0")));
 
         sent.clear();
@@ -917,11 +919,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(2, registry.productDeal(6L).orElseThrow().itemProductIds().size());
         assertCatalogRegistryRows();
         SessionState.instance().setSessionRegistry(sessionRegistry(
-            new SessionRegistry.SessionRecord("0:5", "u5\2sock5"),
-            new SessionRegistry.SessionRecord("0:8", "88\2sock8"),
-            new SessionRegistry.SessionRecord("1:6", "66\2" + "6"),
-            new SessionRegistry.SessionRecord("8", "12\2" + "34"),
-            new SessionRegistry.SessionRecord("room", "7\2" + "8")));
+            SessionRegistry.SessionRecord.fields("0:5", "u5", "sock5"),
+            SessionRegistry.SessionRecord.fields("0:8", 88L, "sock8"),
+            SessionRegistry.SessionRecord.fields("1:6", 66L, 6L),
+            SessionRegistry.SessionRecord.fields("8", 12L, 34L),
+            SessionRegistry.SessionRecord.fields("room", 7L, 8L)));
         assertEquals("u5", SessionState.instance().socketUserId(5L));
         assertEquals(88L, SessionState.instance().socketUserIdValue(8L));
         assertEquals(66L, SessionState.instance().sessionUserIdBySocket(6));
@@ -932,8 +934,8 @@ public final class PortedModuleSmokeTest {
         assertEquals(14L, SessionState.instance().linkedSocketIndex(91L));
         SessionRegistry typedSessionRegistry = SessionRegistry.fromEntries(
             List.of(
-                new SessionRegistry.SessionRecord("0:5", "u5\2sock5"),
-                new SessionRegistry.SessionRecord("1:bob", "bob\2" + "6")),
+                SessionRegistry.SessionRecord.fields("0:5", "u5", "sock5"),
+                SessionRegistry.SessionRecord.fields("1:bob", "bob", 6L)),
             List.of(
                 new SessionRegistry.LinkedSessionSection("91", "14\0"),
                 new SessionRegistry.LinkedSessionSection("92", "15\0")));
@@ -941,7 +943,7 @@ public final class PortedModuleSmokeTest {
         assertEquals("u5", SessionState.instance().socketUserId(5L));
         assertEquals(14L, SessionState.instance().linkedSocketIndex(91L));
         assertEquals(15L, SessionState.instance().linkedSocketIndex(92L));
-        SessionState.instance().setSessionRegistry(sessionRegistry(new SessionRegistry.SessionRecord("1:4", "77\2" + "4")));
+        SessionState.instance().setSessionRegistry(sessionRegistry(SessionRegistry.SessionRecord.fields("1:4", 77L, 4L)));
         assertEquals(77L, SessionState.instance().sessionUserIdBySocket(4));
         SessionState.instance().setSessionRegistry(SessionRegistry.empty());
         SessionState.instance().storeSocketSession(9, "99\2" + "9");
@@ -980,24 +982,25 @@ public final class PortedModuleSmokeTest {
         AchievementBootCache.AchievementSettingsCache achievementSettings = AchievementBootCache.buildAchievementSettingsCache(List.of(
             new AchievementDao.AchievementSettingsRow(7L, "ACH_ONE", 10L, 2L, 3L, 4L, 1L),
             new AchievementDao.AchievementSettingsRow(8L, "ACH_TWO", 20L, 5L, 6L, 7L, 2L)));
-        assertEquals("7\2" + "8\2", achievementSettings.questIdPayload());
         assertEquals("ACH_TWO", achievementSettings.achievements().get(1).badgePrefix());
         assertEquals(20L, achievementSettings.achievements().get(1).progressRequired());
+        assertEquals(8L, achievementSettings.settings().achievementByIndex(1L).achievementId());
         int[] messengerFriendLimits = AchievementBootCache.buildMessengerFriendLimitCache(50, 75, 100);
         assertEquals(50, messengerFriendLimits[0]);
         assertEquals(0, messengerFriendLimits[1]);
         assertEquals(75, messengerFriendLimits[2]);
         assertEquals(100, messengerFriendLimits[4]);
-        assertEquals(
-            encodedVl64(2, null, "")
+        RoomCategoryCache.CategoryPayload roomCategoryPayloadEntry =
+            NavigatorBootCache.buildRoomCategoryPayloadEntry(List.of(
+                new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L),
+                new RoomDao.RoomCategoryRow(2L, "staff", 1L, 5L, 0L),
+                new RoomDao.RoomCategoryRow(3L, "hc", 1L, 2L, 1L)), 2, 1);
+        assertEquals("C]" + encodedVl64(2, null, "")
                 + encodedVl64(1, null, "") + "public\2"
                 + encodedVl64(0, null, "")
                 + encodedVl64(3, null, "") + "hc\2"
                 + encodedVl64(1, null, ""),
-            NavigatorBootCache.buildRoomCategoryPayload(List.of(
-                new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L),
-                new RoomDao.RoomCategoryRow(2L, "staff", 1L, 5L, 0L),
-                new RoomDao.RoomCategoryRow(3L, "hc", 1L, 2L, 1L)), 2, 1));
+            roomCategoryPayload(RoomCategoryCache.fromPayloadRows(List.of(), List.of(), List.of(roomCategoryPayloadEntry)), 2, 1));
         assertRecyclerCacheBuilders();
         assertEquals(List.of(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 4)),
             PetBootCache.buildPetLevelRows(List.of(new PetLevelCacheRow(2L, 20L, 30L, 40L))));
@@ -1019,12 +1022,16 @@ public final class PortedModuleSmokeTest {
                 new RoomEventLocales.LocaleEntry("7", "game", "")),
             builtRoomEventLocales.entries());
         assertRoomEventLocaleTypedBuilder();
-        assertEquals("[site.name=Alpha][com.client.format.date=dd.mm.yyyy][com.client.format.time=hh:nn:ss]"
-                + "[com.mysql.format.date=%d.%m.%Y][com.mysql.format.time=%H:%i:%s]",
-            AppSettingsBootCache.buildSettingsCache(
-                List.of(new SettingsDao.SettingRow("site.name", "Alpha")), "d.m.Y", "h:i:s"));
+        AppSettingsCache builtSettings =
+            AppSettingsBootCache.buildSettings(List.of(new SettingsDao.SettingRow("site.name", "Alpha")), "d.m.Y", "h:i:s");
+        assertEquals("Alpha", builtSettings.value("site.name"));
+        assertEquals("dd.mm.yyyy", builtSettings.value("com.client.format.date"));
+        assertEquals("hh:nn:ss", builtSettings.value("com.client.format.time"));
+        assertEquals("%d.%m.%Y", builtSettings.value("com.mysql.format.date"));
+        assertEquals("%H:%i:%s", builtSettings.value("com.mysql.format.time"));
         assertEquals(
-            encodedVl64(2, null, "")
+            encodedVl64(7, null, "")
+                + encodedVl64(2, null, "")
                 + encodedVl64(1, null, "")
                 + encodedVl64(2, null, "")
                 + encodedVl64(2, null, "")
@@ -1034,7 +1041,9 @@ public final class PortedModuleSmokeTest {
                 + encodedVl64(1, null, "")
                 + encodedVl64(2, null, "")
                 + encodedVl64(3, null, ""),
-            CatalogGiftBootCache.buildGiftWrapPayload(List.of(10L, 0L, 12L), 2, 3));
+            CatalogPayloads.giftWrapOptions(7, GiftSettings.fromStates(
+                GiftSettings.ClubGiftState.empty(),
+                CatalogGiftBootCache.buildGiftWrapState(List.of(10L, 0L, 12L), 2, 3))));
         Map<Long, Long> giftProductIds = new HashMap<>();
         giftProductIds.put(100L, 200L);
         Map<Long, Long> giftProductTypes = new HashMap<>();
@@ -1046,28 +1055,34 @@ public final class PortedModuleSmokeTest {
         Map<Long, String> giftDescriptions = new HashMap<>();
         giftDescriptions.put(200L, "Badge desc");
         giftDescriptions.put(300L, "Sofa desc");
-        CatalogGiftBootCache.ClubGiftCache clubGiftCache = CatalogGiftBootCache.buildClubGiftCache(List.of(
+        GiftSettings.ClubGiftState clubGiftState = CatalogGiftBootCache.buildClubGiftState(List.of(
                 new ClubDao.ClubGiftRow(100L, 1L, 30L),
                 new ClubDao.ClubGiftRow(300L, 0L, 5L)),
             giftProductIds, giftProductTypes, giftNames, giftDescriptions);
-        assertEquals(
-            encodedVl64(2, null, "")
-                + encodedVl64(100, null, "")
-                + encodedVl64(200, null, "")
-                + "VIP badge\2Badge desc\2IHHIi\2"
-                + encodedVl64(1, null, "")
-                + encodedVl64(30, null, "")
-                + encodedVl64(300, null, "")
-                + encodedVl64(300, null, "")
-                + "Fallback sofa\2Sofa desc\2IHHIs\2"
-                + encodedVl64(0, null, "")
-                + encodedVl64(5, null, ""),
-            clubGiftCache.giftPayload());
-        assertEquals("[100\0" + "200\1" + "30][300\0" + "300\1" + "5]", clubGiftCache.giftLookup());
+        assertEquals(List.of(
+                new GiftSettings.ClubGift(100L, 200L, 30L),
+                new GiftSettings.ClubGift(300L, 300L, 5L)),
+            clubGiftState.gifts());
+        String clubGiftStatusPayload = ClubPayloads.clubGiftStatus(
+            GiftSettings.fromStates(clubGiftState, GiftSettings.GiftWrapState.empty()),
+            new ClubDao.ClubGiftStatus(1L, 0L, 0L, 0L, 0L));
+        assertEquals(true, clubGiftStatusPayload.contains("VIP badge\2Badge desc\2IHHIi\2"));
+        assertEquals(true, clubGiftStatusPayload.contains("Fallback sofa\2Sofa desc\2IHHIs\2"));
         Map<Long, List<HelpDao.FaqNameRow>> typedImportantFaqRows = new HashMap<>();
         typedImportantFaqRows.put(1L, List.of(new HelpDao.FaqNameRow(31L, "first")));
         typedImportantFaqRows.put(2L, List.of(new HelpDao.FaqNameRow(41L, "second"), new HelpDao.FaqNameRow(42L, "third")));
-        String importantFaqPayload = HelpCenterBootCache.buildImportantFaqPayloadFromRows(typedImportantFaqRows);
+        HelpCenterCache.ImportantFaqState importantFaqState =
+            HelpCenterBootCache.buildImportantFaqStateFromRows(typedImportantFaqRows);
+        assertEquals(
+            "HF"
+                + encodedVl64(2, null, "")
+                + encodedVl64(1, null, "")
+                + encodedVl64(31, null, "") + "first\2"
+                + encodedVl64(2, null, "")
+                + encodedVl64(41, null, "") + "second\2"
+                + encodedVl64(42, null, "") + "third\2",
+            HelpPayloads.importantFaqs(HelpCenterCache.fromPayloads(
+                importantFaqState, HelpCenterCache.CategoryState.empty(), List.of(), List.of())));
         assertEquals(
             encodedVl64(2, null, "")
                 + encodedVl64(1, null, "")
@@ -1075,39 +1090,39 @@ public final class PortedModuleSmokeTest {
                 + encodedVl64(2, null, "")
                 + encodedVl64(41, null, "") + "second\2"
                 + encodedVl64(42, null, "") + "third\2",
-            importantFaqPayload);
-        HelpCenterCache importantFaqCache = HelpCenterCache.fromPayloads(importantFaqPayload, "", List.of(), List.of());
-        assertEquals("HF" + importantFaqPayload, HelpPayloads.importantFaqs(importantFaqCache));
+            HelpPayloads.importantFaqs(HelpCenterCache.fromPayloads(
+                importantFaqState, HelpCenterCache.CategoryState.empty(), List.of(), List.of())).substring(2));
         Map<Long, List<HelpDao.FaqNameRow>> typedFaqRowsByCategory = new HashMap<>();
         typedFaqRowsByCategory.put(7L, List.of(new HelpDao.FaqNameRow(70L, "faq-a"), new HelpDao.FaqNameRow(71L, "faq-b")));
         HelpCenterBootCache.FaqCategoryCache faqCategoryCache = HelpCenterBootCache.buildFaqCategoryCacheFromRows(
             List.of(new HelpDao.FaqNameRow(7L, "cat-a"), new HelpDao.FaqNameRow(9L, "cat-b")),
             typedFaqRowsByCategory);
         assertEquals(
-            encodedVl64(2, null, "")
+            "HG" + encodedVl64(2, null, "")
                 + encodedVl64(7, null, "") + "cat-a\2"
                 + encodedVl64(9, null, "") + "cat-b\2",
-            faqCategoryCache.categoryPayload());
+            HelpPayloads.categories(HelpCenterCache.fromPayloads(
+                HelpCenterCache.ImportantFaqState.empty(),
+                faqCategoryCache.categoryState(),
+                faqCategoryCache.faqPayloads(),
+                List.of())));
         HelpCenterCache categoryHelpCache = HelpCenterCache.fromPayloads(
-            "",
-            faqCategoryCache.categoryPayload(),
+            HelpCenterCache.ImportantFaqState.empty(),
+            faqCategoryCache.categoryState(),
             faqCategoryCache.faqPayloads(),
             List.of());
-        assertEquals("HG" + faqCategoryCache.categoryPayload(), HelpPayloads.categories(categoryHelpCache));
-        String categorySevenPayload = faqCategoryCache.faqPayload(7L);
         assertEquals(
-            encodedVl64(2, null, "")
+            encodedVl64(7, null, "HJ") + '\2'
+                + encodedVl64(2, null, "")
                 + encodedVl64(70, null, "") + "faq-a\2"
                 + encodedVl64(71, null, "") + "faq-b\2",
-            categorySevenPayload);
-        assertEquals(encodedVl64(7, null, "HJ") + '\2' + categorySevenPayload,
             HelpPayloads.categoryFaqs(categoryHelpCache, 7L));
-        assertEquals(encodedVl64(0, null, ""), faqCategoryCache.faqPayload(9L));
+        assertEquals(encodedVl64(9, null, "HJ") + '\2' + encodedVl64(0, null, ""),
+            HelpPayloads.categoryFaqs(categoryHelpCache, 9L));
         List<HelpCenterCache.DescriptionPayload> faqDescriptions = HelpCenterBootCache.buildFaqDescriptionCache(
             List.of(new HelpDao.FaqDescriptionRow(5L, "line1\nline2")));
-        assertEquals(encodedVl64(5, null, "") + "line1\rline2\2",
-            faqDescriptions.get(0).payload());
-        HelpCenterCache descriptionHelpCache = HelpCenterCache.fromPayloads("", "", List.of(), faqDescriptions);
+        HelpCenterCache descriptionHelpCache = HelpCenterCache.fromPayloads(
+            HelpCenterCache.ImportantFaqState.empty(), HelpCenterCache.CategoryState.empty(), List.of(), faqDescriptions);
         assertEquals("HH" + encodedVl64(5, null, "") + "line1\rline2\2",
             HelpPayloads.description(descriptionHelpCache, 5L));
         assertEquals(7L, HelpWire.categoryFaqRequest("Fd" + wireLong(7), "Fd").categoryId());
@@ -1123,11 +1138,15 @@ public final class PortedModuleSmokeTest {
                 new AdvertisingDao.VisitRoomAdRow(4L, "/cafe")),
             "/ad/");
         assertEquals(2L, visitRoomCache.count());
-        assertEquals("/ad/4\2/cafe\2", visitRoomCache.payload(4L));
+        PacketBuilder visitRoomPayload = PacketBuilder.create();
+        assertEquals(true, visitRoomCache.appendPayloadTo(visitRoomPayload, 4L));
+        assertEquals("/ad/4\2/cafe\2", visitRoomPayload.build());
         AdvertisingBootCache.VisitRoomCache typedVisitRoomCache = AdvertisingBootCache.buildAdvertisementVisitRoomCache(
             List.of(new AdvertisingDao.VisitRoomAdRow(4L, "/cafe")), "/ad/");
         assertEquals(1L, typedVisitRoomCache.count());
-        assertEquals("/ad/4\2/cafe\2", typedVisitRoomCache.payload(4L));
+        PacketBuilder typedVisitRoomPayload = PacketBuilder.create();
+        assertEquals(true, typedVisitRoomCache.appendPayloadTo(typedVisitRoomPayload, 4L));
+        assertEquals("/ad/4\2/cafe\2", typedVisitRoomPayload.build());
         RoomDao recommendedRoomDao = new RoomDao(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -1146,15 +1165,21 @@ public final class PortedModuleSmokeTest {
         assertEquals("room", recommendedRoomRow.roomName());
         assertEquals(3L, recommendedRoomRow.treeId());
         RecommendedRooms typedRecommendedRooms =
-            RecommendedRooms.fromPayloads(List.of(new RecommendedRooms.Payload(0L, "REC")), 1L);
-        assertEquals("REC", typedRecommendedRooms.payload(1L));
-        NavigatorState.instance().setRecommendedRooms(List.of(new RecommendedRooms.Payload(0L, "SET_REC")), 1L);
+            RecommendedRooms.fromPayloads(List.of(RecommendedRooms.Payload.fromRecommendedRooms(0L, 3L, List.of())), 1L);
+        PacketBuilder typedRecommendedPayload = PacketBuilder.create();
+        assertEquals(true, typedRecommendedRooms.appendPayloadTo(typedRecommendedPayload, 1L));
+        assertEquals(encodedVl64(3, null, "") + encodedVl64(0, null, ""), typedRecommendedPayload.build());
+        NavigatorState.instance().setRecommendedRooms(List.of(RecommendedRooms.Payload.fromRecommendedRooms(0L, 4L, List.of())), 1L);
         assertEquals(1L, NavigatorState.instance().recommendedRooms().count());
-        assertEquals("SET_REC", NavigatorState.instance().recommendedRooms().payload(1L));
+        PacketBuilder stateRecommendedPayload = PacketBuilder.create();
+        assertEquals(true, NavigatorState.instance().recommendedRooms().appendPayloadTo(stateRecommendedPayload, 1L));
+        assertEquals(encodedVl64(4, null, "") + encodedVl64(0, null, ""), stateRecommendedPayload.build());
         assertRecommendedRoomsPayloadMapBridge();
         RecommendedRooms previousRecommendedRooms = NavigatorState.instance().recommendedRooms();
         NavigatorState.instance().setRecommendedRooms(typedRecommendedRooms);
-        assertEquals("REC", NavigatorState.instance().recommendedRooms().payload(1L));
+        PacketBuilder restoredRecommendedPayload = PacketBuilder.create();
+        assertEquals(true, NavigatorState.instance().recommendedRooms().appendPayloadTo(restoredRecommendedPayload, 1L));
+        assertEquals(encodedVl64(3, null, "") + encodedVl64(0, null, ""), restoredRecommendedPayload.build());
         NavigatorState.instance().setRecommendedRooms(previousRecommendedRooms);
         assertRecommendedRoomsPayloadBuilders();
         assertEquals("i", CatalogPageBootCache.catalogProductClass(9));
@@ -1165,7 +1190,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, CatalogPageBootCache.catalogPageVisible(
             new CatalogDao.CatalogPageTreeRow(1L, "name", 1L, 2L, 0L, 1L), 0, 0));
         AppConfigState.instance().setPermissionMatrix(permissions(
-            new PermissionMatrix.PermissionPayload(1L, 0L, "\2fuse_developer\2")));
+            PermissionMatrix.PermissionPayload.ofPermissions(1L, 0L, "fuse_developer")));
         assertEquals(true, CatalogPageBootCache.catalogPageVisible(
             new CatalogDao.CatalogPageTreeRow(1L, "name", 1L, 2L, 1L, 1L), 1, 0));
         CatalogDao.CatalogPageTreeRow rootPage = new CatalogDao.CatalogPageTreeRow(10L, "Root", 5L, 6L, 0L, 1L);
@@ -1192,9 +1217,12 @@ public final class PortedModuleSmokeTest {
         typedCatalogChildren.put(10L, List.of(
             childPage,
             new CatalogDao.CatalogPageTreeRow(12L, "Child B", 1L, 3L, 0L, 0L)));
-        assertEquals(expectedCatalogTree, CatalogPageBootCache.buildCatalogPageTreePayload(
+        CatalogPages.PageTreePayload treePayload = CatalogPageBootCache.buildCatalogPageTreePayloadEntry(
             List.of(rootPage, hiddenRootPage),
-            catalogChildCounts, typedCatalogChildren, 1, 0));
+            catalogChildCounts, typedCatalogChildren, 1, 0);
+        assertEquals(1L, treePayload.rankIndex());
+        assertEquals(0L, treePayload.hcLevel());
+        assertEquals(expectedCatalogTree, catalogPageTree(CatalogPages.fromPayloads(List.of(), List.of(treePayload)), 1, 0));
         });
         run(() -> {
         AppConfigState.instance().setSettingsCache(settings(
@@ -1358,12 +1386,17 @@ public final class PortedModuleSmokeTest {
         assertEquals("AD" + encodedVl64(2, null, ""), CatalogPayloads.purchaseError(2));
         assertEquals(encodedVl64(1, null, encodedVl64(81, null, "In")) + '\2',
             CatalogPayloads.giftAvailability(81, 1));
-        GiftSettings giftWrapSettings = GiftSettings.fromRows("", List.of(), List.of(), "WRAP");
-        assertEquals(encodedVl64(7, null, "") + "WRAP", CatalogPayloads.giftWrapOptions(7, giftWrapSettings));
+        GiftSettings giftWrapSettings = GiftSettings.fromStates(
+            GiftSettings.ClubGiftState.empty(),
+            CatalogGiftBootCache.buildGiftWrapState(List.of(10L), 1L, 0L));
+        assertEquals(encodedVl64(7, null, "") + encodedVl64(1, null, "")
+                + encodedVl64(1, null, "") + encodedVl64(1, null, "")
+                + encodedVl64(10, null, "") + encodedVl64(0, null, ""),
+            CatalogPayloads.giftWrapOptions(7, giftWrapSettings));
         assertEquals("0" + encodedVl64(1, null, "Il"), CatalogPayloads.giftWrapPriceFallback(1));
-        CatalogPages pagePayloads =
-            CatalogPages.fromPayloads(List.of(new CatalogPages.PagePayload(2L, "PAGE")), List.of());
-        assertEquals("A\u007f" + encodedVl64(2, null, "") + "PAGE", CatalogPayloads.page(pagePayloads, 2));
+        CatalogPages pagePayloads = CatalogPages.fromPayloads(List.of(catalogPageEntry(2L, "PAGE")), List.of());
+        assertEquals("A\u007f" + encodedVl64(2, null, "") + catalogPagePayload(pagePayloads, 2L),
+            CatalogPayloads.page(pagePayloads, 2));
         CatalogWire.ProductPurchaseRequest purchaseRequest =
             CatalogWire.productPurchaseRequest("Ad" + wireLong(81) + wireString("catalog sign"));
         assertEquals(81L, purchaseRequest.catalogProductId());
@@ -1406,32 +1439,28 @@ public final class PortedModuleSmokeTest {
         ProductCache voucherProductCache = ProductCache.fromProductRows(
             List.of(productCacheRow(55, "13", "RewardA", "14", "RewardB")));
         assertEquals("CTRewardA\2RewardB\2", VoucherPayloads.redeemed(voucherProductCache, 55L));
-        CatalogState.instance().setGiftSettings(GiftSettings.fromRows(
-            "GIFTS",
-            List.of(new GiftSettings.ClubGift(81L, 506L, 20L)),
-            CatalogState.instance().giftSettings().giftWrapProductIds(),
-            CatalogState.instance().giftSettings().giftWrapPayload()));
-        assertEquals("GIFTS", CatalogState.instance().giftSettings().clubGiftPayload());
+        GiftSettings.ClubGiftState fixtureClubGifts = CatalogGiftBootCache.buildClubGiftState(List.of(
+                new ClubDao.ClubGiftRow(81L, 1L, 20L)),
+            Map.of(81L, 506L),
+            Map.of(506L, 1L),
+            Map.of(506L, ""),
+            Map.of(506L, ""));
+        CatalogState.instance().setGiftSettings(GiftSettings.fromStates(
+            fixtureClubGifts,
+            GiftSettings.GiftWrapState.fromProductIds(CatalogState.instance().giftSettings().giftWrapProductIds())));
         assertEquals(506L, CatalogState.instance().giftSettings().clubGiftByCatalogProductId(81L).productId());
         GiftSettings previousGiftSettingsForTypedFixture = CatalogState.instance().giftSettings();
-        CatalogState.instance().setGiftSettings(GiftSettings.fromRows("GIFTS",
+        CatalogState.instance().setGiftSettings(GiftSettings.fromRows(
             List.of(new GiftSettings.ClubGift(82L, 507L, 30L)),
-            List.of(501L, 502L),
-            "WRAPS"));
+            List.of(501L, 502L)));
         GiftSettings typedGiftSettingsFixture = CatalogState.instance().giftSettings();
         assertGiftSettingsTypedAccessors(typedGiftSettingsFixture);
         CatalogState.instance().setGiftSettings(previousGiftSettingsForTypedFixture);
-        assertEquals("IoM" + encodedVl64(4, null, "")
-                + "GIFTS"
-                + encodedVl64(1, null, "")
-                + encodedVl64(81, null, "")
-                + encodedVl64(506, null, "")
-                + encodedVl64(20, null, "")
-                + encodedVl64(1, null, "")
-                + "H",
-            ClubPayloads.clubGiftStatus(
-                CatalogState.instance().giftSettings(),
-                new ClubDao.ClubGiftStatus(2L, 10L, 70L, 4L, 8L)));
+        String typedClubGiftStatus = ClubPayloads.clubGiftStatus(
+            CatalogState.instance().giftSettings(),
+            new ClubDao.ClubGiftStatus(2L, 10L, 70L, 4L, 8L));
+        assertEquals(true, typedClubGiftStatus.startsWith("IoM" + encodedVl64(4, null, "")));
+        assertEquals(true, typedClubGiftStatus.contains(encodedVl64(81, null, "") + encodedVl64(506, null, "")));
         assertEquals("Iq" + encodedVl64(1, null, "")
                 + encodedVl64(2, null, "") + "club_vip\2"
                 + encodedVl64(3, null, "")
@@ -1498,33 +1527,38 @@ public final class PortedModuleSmokeTest {
         assertEquals("%H:%i:%s", AppConfigState.instance().settingsCache().value("com.mysql.format.time"));
         assertRoomCategoryBootCaches();
         CatalogGiftBootCache.loadGiftWrapCache();
-        assertEquals(true, CatalogState.instance().giftSettings().giftWrapPayload().length() > 0);
+        assertEquals(true, CatalogPayloads.giftWrapOptions(1L, CatalogState.instance().giftSettings()).length()
+            > encodedVl64(1L, null, "").length());
         assertEquals(true, CatalogState.instance().giftSettings().containsGiftWrapProduct(10L));
         AppSettingsBootCache.loadPermissionMatrixCache();
         assertEquals(true, AppConfigState.instance().permissionMatrix().allows(1, "", "fuse_mod", 0));
         HelpCenterBootCache.loadImportantFaqCache();
-        assertEquals(true, HelpCenterState.instance().cache().importantFaqPayload().contains("important"));
+        assertEquals(true, HelpPayloads.importantFaqs(HelpCenterState.instance().cache()).contains("important"));
         HelpCenterBootCache.loadFaqCategoryCache();
-        assertEquals(true, HelpCenterState.instance().cache().categoryPayload().contains("cat"));
-        assertEquals(true, HelpCenterState.instance().cache().categoryPayload().contains("cat"));
+        assertEquals(true, HelpPayloads.categories(HelpCenterState.instance().cache()).contains("cat"));
+        assertEquals(true, HelpPayloads.categories(HelpCenterState.instance().cache()).contains("cat"));
         HelpCenterBootCache.loadFaqDescriptionCache();
-        assertEquals(true, HelpCenterState.instance().cache().descriptionPayload(5L).contains("line1\rline2"));
+        assertEquals(true, HelpPayloads.description(HelpCenterState.instance().cache(), 5L).contains("line1\rline2"));
         assertHelpCenterPayloadMaps();
         AdvertisingBootCache.loadVisitRoomAdsCache();
-        assertEquals("/ad/4\2/cafe\2", AdvertisingState.instance().visitRoomAds().payload(4L));
+        PacketBuilder cachedVisitRoomPayload = PacketBuilder.create();
+        assertEquals(true, AdvertisingState.instance().visitRoomAds().appendPayloadTo(cachedVisitRoomPayload, 4L));
+        assertEquals("/ad/4\2/cafe\2", cachedVisitRoomPayload.build());
         VisitRoomAds typedVisitRoomAds =
-            VisitRoomAds.fromPayloads(List.of(new VisitRoomAds.Payload(8L, "/ad/8\2/lounge\2")), 1L);
-        assertEquals("/ad/8\2/lounge\2", typedVisitRoomAds.payload(8L));
+            VisitRoomAds.fromPayloads(List.of(VisitRoomAds.Payload.fromAdvertisement(8L, "/ad/", "/lounge")), 1L);
+        PacketBuilder typedAdPayload = PacketBuilder.create();
+        assertEquals(true, typedVisitRoomAds.appendPayloadTo(typedAdPayload, 8L));
+        assertEquals("/ad/8\2/lounge\2", typedAdPayload.build());
         AdvertisingState.instance().setVisitRoomAds(typedVisitRoomAds);
-        assertEquals("/ad/8\2/lounge\2", AdvertisingState.instance().visitRoomAds().payload(8L));
+        PacketBuilder stateAdPayload = PacketBuilder.create();
+        assertEquals(true, AdvertisingState.instance().visitRoomAds().appendPayloadTo(stateAdPayload, 8L));
+        assertEquals("/ad/8\2/lounge\2", stateAdPayload.build());
         BootLog.logBootLine("booted", "DEBUG");
         AchievementBootCache.loadBonusSystemCache();
-        assertEquals("7\2", AchievementState.instance().settings().questIdPayload());
         assertEquals("ACH_ONE", AchievementState.instance().settings().achievementByIndex(0L).badgePrefix());
-        AchievementSettings typedAchievementSettings = AchievementSettings.fromAchievements("42\2",
+        AchievementSettings typedAchievementSettings = AchievementSettings.fromAchievements(
             List.of(new AchievementSettings.Achievement(42L, "ACH_TYPED", 1L, 2L, 3L, 4L, 5L)));
         AchievementState.instance().setSettings(typedAchievementSettings);
-        assertEquals("42\2", AchievementState.instance().settings().questIdPayload());
         assertEquals("ACH_TYPED", AchievementState.instance().settings().achievementByIndex(0L).badgePrefix());
         assertEquals(new ChatSettings.Gesture(":-)", 5L), ChatState.instance().settings().gestures().get(0));
         assertEquals(new ChatSettings.FilterWord("badword"), ChatState.instance().settings().filterWords().get(0));
@@ -1535,18 +1569,20 @@ public final class PortedModuleSmokeTest {
         });
         run(() -> {
         SessionState.instance().setGameServerSession(GameServerSessionState.empty());
-        assertEquals(new GameServerBridge.GameServerPacket("DATA", 7L, "A\2B\2C"),
-            GameServerBridge.gameServerPacket("DATA\2" + "7\2A\2B\2C"));
-        GameServerBridge.appendGameServerPacketPayload(8, "direct");
+        GameServerBridge.GameServerPacket gameServerPacket = GameServerBridge.gameServerPacket("DATA\2" + "7\2A\2B\2C");
+        assertEquals("DATA", gameServerPacket.commandName());
+        assertEquals(7L, gameServerPacket.socketIndex());
+        assertEquals("A\2B\2C", gameServerPacketPayload(gameServerPacket));
+        GameServerBridge.processGameServerData("DATA\2" + "8\2direct");
         assertEquals("direct", GameServerBridge.popGameServerPacketData(8));
-        GameServerBridge.appendGameServerPacketPayload(7, "A\2B\2C");
+        GameServerBridge.processGameServerData("DATA\2" + "7\2A\2B\2C");
         assertEquals("A\2B\2C", GameServerBridge.popGameServerPacketData(7));
         assertEquals(List.of(), SessionState.instance().gameServerSession().queuedPackets());
         GameServerSessionState typedGameSession = GameServerSessionState.fromState(
-            List.of(new GameServerSessionState.QueuedPacket(12L, "typed-packet")),
+            List.of(GameServerSessionState.QueuedPacket.of(12L, "typed-packet")),
             Set.of(12L)
         );
-        assertEquals(List.of(new GameServerSessionState.QueuedPacket(12L, "typed-packet")),
+        assertEquals(List.of(GameServerSessionState.QueuedPacket.of(12L, "typed-packet")),
             typedGameSession.queuedPackets());
         assertEquals(Set.of(12L), typedGameSession.readySocketIndexes());
         assertEquals("[12:typed-packet]", typedGameSession.queuedPacketData());
@@ -1581,7 +1617,7 @@ public final class PortedModuleSmokeTest {
         SessionState.instance().setGameServerSession(GameServerSessionState.fromState(
             SessionState.instance().gameServerSession().queuedPackets(),
             Set.of()));
-        GameServerBridge.appendGameServerPacketPayload(7, "login-data");
+        GameServerBridge.processGameServerData("DATA\2" + "7\2login-data");
         assertEquals(true, GameServerBridge.dataProcessTimer(7));
         assertEquals(Arrays.asList("7:login-data"), preSessionPackets);
         List<String> readyPacketsSent = new ArrayList<>();
@@ -1681,7 +1717,7 @@ public final class PortedModuleSmokeTest {
         });
         assertEquals(44L, RuntimeTasks.mainCurrentRoomIdForSlot(4));
         SessionState.instance().setRepresentedSockets(RepresentedSocketCache.fromRecords(Map.of(
-            8L, new RepresentedSocketCache.RepresentedSocketRecord("user\2" + "4", 4L, false))));
+            8L, new RepresentedSocketCache.RepresentedSocketRecord(4L, false))));
         RoomState.instance().setRepresentedRooms(RepresentedRoomCache.empty());
         Guardian.setSocketConnected(8, true);
         RuntimeTasks.attachRepresentedUser(8);
@@ -1982,8 +2018,8 @@ public final class PortedModuleSmokeTest {
         assertEquals("BKActive users:\r\rAlice, Bob\2\2", ChatCommands.activeUsersPayload("Alice, Bob"));
         assertEquals("BKActive users:\r\rAlice, Bob\2\2",
             ChatCommands.dynamicCommandPayload(":whosonline", SessionRegistry.fromEntries(List.of(
-                new SessionRegistry.SessionRecord("1:4", "44\2" + "4"),
-                new SessionRegistry.SessionRecord("1:5", "55\2" + "5")), List.of()).socketSessions(),
+                SessionRegistry.SessionRecord.fields("1:4", 44L, 4L),
+                SessionRegistry.SessionRecord.fields("1:5", 55L, 5L)), List.of()).socketSessions(),
                 userId -> "44".equals(userId) ? "Alice" : "Bob"));
         assertEquals("www.example.com;http://alpha;https://beta;",
             ChatCommands.extractUrlList("see www.example.com and http://alpha or https://beta"));
@@ -2426,14 +2462,15 @@ public final class PortedModuleSmokeTest {
                 50,
                 List.of(typedNavigatorEvent),
                 List.of(typedNavigatorRoom)));
+        String emptyRecommendedPayload = encodedVl64(3, null, "") + encodedVl64(0, null, "");
         assertEquals("GCPC7\2" + encodedVl64(50, null, "") + NavigatorPayloads.roomList(List.of(typedNavigatorRoom))
-                + "REC",
+                + emptyRecommendedPayload,
             NavigatorPayloads.queryResultWithRecommended(
                 "GCPC",
                 "7",
                 50,
                 List.of(typedNavigatorRoom),
-                RecommendedRooms.fromPayloads(List.of(new RecommendedRooms.Payload(0L, "REC")), 1L),
+                RecommendedRooms.fromPayloads(List.of(RecommendedRooms.Payload.fromRecommendedRooms(0L, 3L, List.of())), 1L),
                 1L));
         seedCatalogRegistryProductRows(List.of(
             productDaoRow(20, "0", "1", "13", "chair", "14", "seat", "17", "chair_sprite"),
@@ -2673,13 +2710,13 @@ public final class PortedModuleSmokeTest {
         assertEquals(List.of(pointAward.payload()), strings(pointAwards.deliveryPayloads()));
         assertEquals(false, UserActivityPoints.awardDecision(121, 2, 60, 500, 25, 300).shouldAward());
         RepresentedSocketCache.RepresentedSocketRecord socketRecord =
-            new RepresentedSocketCache.RepresentedSocketRecord("a\2" + "7\2c\2d\2e\2" + "1", 7L, true);
+            new RepresentedSocketCache.RepresentedSocketRecord(7L, true);
         assertEquals(7L, socketRecord.roomSlot());
         assertEquals(true, socketRecord.busy());
         RepresentedSocketCache socketCache = RepresentedSocketCache.fromRecords(Map.of(
             4L, socketRecord,
-            5L, new RepresentedSocketCache.RepresentedSocketRecord("a\2b\2c\2d\2e\2" + "0", 0L, false),
-            6L, new RepresentedSocketCache.RepresentedSocketRecord("a\2b", 0L, false)
+            5L, new RepresentedSocketCache.RepresentedSocketRecord(0L, false),
+            6L, new RepresentedSocketCache.RepresentedSocketRecord(0L, false)
         ));
         assertEquals(3, socketCache.recordsBySocketIndex().size());
         assertEquals(socketRecord, socketCache.recordsBySocketIndex().get(4L));
@@ -2951,7 +2988,7 @@ public final class PortedModuleSmokeTest {
             + encodedVl64(2, null, "")
             + "0" + encodedVl64(1, null, "")
             + "0" + encodedVl64(2, null, "");
-        assertEquals(expectedCommandList, PetPayloads.commandList(3, commandRows));
+        assertEquals(expectedCommandList, petCommandListPayload(commandRows, 3));
         PetCommandAction commandAction = PetLookups.commandAction(2, commandRows, null);
         assertEquals(true, commandAction.found());
         assertEquals(3L, commandAction.requiredLevel());
@@ -3201,7 +3238,7 @@ public final class PortedModuleSmokeTest {
         AchievementSettings.Achievement achievement = new AchievementSettings.Achievement(42L, "ACH_", 10L, 5L, 3L, 7L, 2L);
         List<AchievementSettings.Achievement> achievements = List.of(achievement);
         List<AchievementSettings.IndexedAchievement> indexedAchievements = AchievementSettings.indexedAchievements(achievements);
-        AchievementSettings typedAchievements = AchievementSettings.fromAchievements("42\2", achievements);
+        AchievementSettings typedAchievements = AchievementSettings.fromAchievements(achievements);
         assertEquals(achievement, typedAchievements.achievementByIndex(0L));
         assertAchievementRows(typedAchievements, indexedAchievements);
         String expectedAchievementReward = encodedVl64(1, null, "Fu");
@@ -3312,8 +3349,8 @@ public final class PortedModuleSmokeTest {
             }
         });
         SessionState.instance().setSessionRegistry(sessionRegistry(
-            new SessionRegistry.SessionRecord("1:4", "77\2" + "4"),
-            new SessionRegistry.SessionRecord("4", "0\2" + "9")));
+            SessionRegistry.SessionRecord.fields("1:4", 77L, 4L),
+            SessionRegistry.SessionRecord.fields("4", 0L, 9L)));
         WiredLookups.RoomRequest wiredRequest =
             WiredLookups.roomRequest(4, new UserDao(MySQL.configuredDatabase()), new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, wiredRequest.valid());
@@ -3488,9 +3525,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(encodedVl64(50, null, "EA"), StaffPayloads.callForHelpCreated(50L));
         assertEquals("BaCareful\2", StaffPayloads.alert("Careful"));
         StaffSettings moderationPanelSettings = StaffSettings.fromPayloadRows(
-            List.of(new StaffSettings.ModerationPayload(2L, 0L, "MOD")));
+            List.of(StaffSettings.ModerationPayload.fromEntries(
+                2L, 0L, List.of(new StaffSettings.ModerationEntry("fuse_mod", "MOD")))));
         assertEquals(encodedVl64(0, null, "HS")
-            + encodedVl64(0, null, "") + "MOD", StaffPayloads.moderationPanel(moderationPanelSettings, 2L, 0L));
+            + encodedVl64(0, null, "") + "fuse_mod\2MOD",
+            StaffPayloads.moderationPanel(moderationPanelSettings, 2L, 0L));
         String expectedStaffSummary = encodedVl64(5, null, "HU") + "Alice\2";
         expectedStaffSummary = encodedVl64(60, null, expectedStaffSummary);
         expectedStaffSummary = encodedVl64(10, null, expectedStaffSummary);
@@ -3604,51 +3643,60 @@ public final class PortedModuleSmokeTest {
         Guardian.setSocketConnected(4, true);
         Guardian.setSocketConnected(8, true);
         SessionState.instance().setSessionRegistry(sessionRegistry(
-            new SessionRegistry.SessionRecord("1:4", "77\2" + "4"),
-            new SessionRegistry.SessionRecord("1:8", "88\2" + "8")));
+            SessionRegistry.SessionRecord.fields("1:4", 77L, 4L),
+            SessionRegistry.SessionRecord.fields("1:8", 88L, 8L)));
         SessionState.instance().setRepresentedSockets(RepresentedSocketCache.empty());
-        RecyclerState.instance().setStatusPayload("CACHE");
-        assertEquals("CACHE", RecyclerState.instance().settings().statusPayload());
         List<Long> recyclerProductIds = new ArrayList<>();
         recyclerProductIds.add(501L);
-        RecyclerSettings typedRecyclerSettings = RecyclerSettings.fromRewardGroups("STATUS",
+        RecyclerSettings typedRecyclerSettings = RecyclerSettings.fromRewardGroups(
             List.of(new RecyclerSettings.RewardGroup(7L, recyclerProductIds)), 508L);
         recyclerProductIds.add(502L);
-        assertEquals("STATUS", typedRecyclerSettings.statusPayload());
         assertEquals(508L, typedRecyclerSettings.boxProductId());
         assertEquals(7L, typedRecyclerSettings.rewardGroups().get(0).chance());
         assertEquals(List.of(501L), typedRecyclerSettings.rewardGroups().get(0).productIds());
-        RecyclerSettings cacheRecyclerSettings = RecyclerSettings.fromRewardGroups("CACHE-STATUS",
-            List.of(new RecyclerSettings.RewardGroup(8L, List.of(505L))), 510L);
-        assertEquals("CACHE-STATUS", cacheRecyclerSettings.statusPayload());
+        RecyclerBootCache.RecyclerCache cacheRecycler = RecyclerBootCache.buildRecyclerCache(
+            List.of(new RecyclerSettings.RewardGroup(8L, List.of(505L))));
+        RecyclerSettings cacheRecyclerSettings = RecyclerSettings.fromRewardGroups(
+            cacheRecycler.statusPayload(),
+            cacheRecycler.rewardGroups(),
+            510L);
         assertEquals(510L, cacheRecyclerSettings.boxProductId());
         assertEquals(List.of(505L), cacheRecyclerSettings.rewardGroups().get(0).productIds());
         RecyclerState.instance().setRewards(List.of(new RecyclerSettings.RewardGroup(9L, List.of(503L, 504L))));
         assertEquals(1, RecyclerState.instance().settings().rewardGroups().size());
         assertEquals(9L, RecyclerState.instance().settings().rewardGroups().get(0).chance());
-        RecyclerState.instance().setStatusPayload("STATUS-2");
+        RecyclerState.instance().setStatusPayload(cacheRecycler.statusPayload());
         RecyclerState.instance().setBoxProductId(509L);
-        assertEquals("STATUS-2", RecyclerState.instance().settings().statusPayload());
         assertEquals(509L, RecyclerState.instance().settings().boxProductId());
         assertEquals(List.of(503L, 504L), RecyclerState.instance().settings().rewardGroups().get(0).productIds());
-        RecyclerState.instance().setStatusPayload("CACHE");
+        RecyclerState.instance().setStatusPayload(cacheRecycler.statusPayload());
         HelpCenterCache typedHelpCache = HelpCenterCache.fromPayloads(
-            "IMPORTANTFAQ",
-            "FAQCATS",
+            HelpCenterCache.ImportantFaqState.empty(),
+            HelpCenterCache.CategoryState.empty(),
             List.of(
-                new HelpCenterCache.CategoryFaqPayload(1L, "CATFAQ"),
-                new HelpCenterCache.CategoryFaqPayload(7L, "CATFAQ7")),
+                HelpCenterCache.CategoryFaqPayload.fromFaqEntries(
+                    1L, List.of(new HelpCenterCache.FaqEntry(10L, "cat-faq"))),
+                HelpCenterCache.CategoryFaqPayload.fromFaqEntries(
+                    7L, List.of(new HelpCenterCache.FaqEntry(70L, "cat-faq-7")))),
             List.of(
-                new HelpCenterCache.DescriptionPayload(2L, "FAQDESC"),
-                new HelpCenterCache.DescriptionPayload(9L, "FAQDESC9")));
-        assertEquals("CATFAQ7", typedHelpCache.categoryFaqPayload(7L));
-        assertEquals("FAQDESC9", typedHelpCache.descriptionPayload(9L));
+                HelpCenterCache.DescriptionPayload.fromDescription(2L, "FAQDESC"),
+                HelpCenterCache.DescriptionPayload.fromDescription(9L, "FAQDESC9")));
+        assertEquals("HJ" + encodedVl64(7L, null, "") + "\2"
+                + encodedVl64(1L, null, "") + encodedVl64(70L, null, "") + "cat-faq-7\2",
+            HelpPayloads.categoryFaqs(typedHelpCache, 7L));
+        assertEquals("HH" + encodedVl64(9L, null, "") + "FAQDESC9\2",
+            HelpPayloads.description(typedHelpCache, 9L));
         HelpCenterState.instance().setCache(typedHelpCache);
-        assertEquals("CATFAQ7", HelpCenterState.instance().cache().categoryFaqPayload(7L));
-        assertEquals("FAQDESC9", HelpCenterState.instance().cache().descriptionPayload(9L));
+        assertEquals("HJ" + encodedVl64(7L, null, "") + "\2"
+                + encodedVl64(1L, null, "") + encodedVl64(70L, null, "") + "cat-faq-7\2",
+            HelpPayloads.categoryFaqs(HelpCenterState.instance().cache(), 7L));
+        assertEquals("HH" + encodedVl64(9L, null, "") + "FAQDESC9\2",
+            HelpPayloads.description(HelpCenterState.instance().cache(), 9L));
         ModerationState.instance().setStaffSettings(StaffSettings.fromPayloadRows(
-            List.of(new StaffSettings.ModerationPayload(1L, 0L, "STAFFMOD"))));
-        assertEquals("STAFFMOD", ModerationState.instance().staffSettings().moderationPayload(1L, 0L));
+            List.of(StaffSettings.ModerationPayload.fromEntries(
+                1L, 0L, List.of(new StaffSettings.ModerationEntry("fuse_mod", "STAFFMOD"))))));
+        assertEquals(encodedVl64(0, null, "HS") + encodedVl64(0, null, "") + "fuse_mod\2STAFFMOD",
+            StaffPayloads.moderationPanel(ModerationState.instance().staffSettings(), 1L, 0L));
         assertStaffSettingsTypedAccessors();
         WiredState.instance().setSettings(WiredSettings.fromStateRecords(
             new WiredPayloads.WiredRecord("1", "2", "3;4", "5", "typed-wired", "extra")));
@@ -3730,16 +3778,19 @@ public final class PortedModuleSmokeTest {
         List<CatalogDao.CatalogProductCacheRow> catalogProducts = List.of(catalogProductRow(81, "2", "506", "4", "products",
             "5", "1", "7", "3", "8", "2", "9", "0", "10", "1", "11", "0"));
         seedCatalogRegistryCatalogProductRows(catalogProducts);
+        String categoryPayload = "C]" + encodedVl64(1, null, "")
+            + encodedVl64(9, null, "") + "category\2"
+            + encodedVl64(0, null, "");
         NavigatorState.instance().setRoomCategoryPayloads(
-            List.of(new RoomCategoryCache.CategoryPayload(2L, 1L, "CATEGORY_PAYLOAD")));
-        NavigatorState.instance().setRecommendedRooms(List.of(new RecommendedRooms.Payload(0L, "RECOMMENDED")), 1L);
-        CatalogState.instance().setGiftSettings(GiftSettings.fromRows("GIFTS",
+            List.of(roomCategoryPayloadEntry(2L, 1L, 9L, "category", 0L, 0L, 0L)));
+        String requestRecommendedPayload = encodedVl64(8, null, "") + encodedVl64(0, null, "");
+        NavigatorState.instance().setRecommendedRooms(
+            List.of(RecommendedRooms.Payload.fromRecommendedRooms(0L, 8L, List.of())), 1L);
+        CatalogState.instance().setGiftSettings(GiftSettings.fromRows(
             List.of(new GiftSettings.ClubGift(81L, 506L, 20L)),
-            List.of(501L),
-            "WRAP_PAYLOAD"));
+            List.of(501L)));
         seedCatalogPagePayloads(Map.of(2L, "PAGE_PAYLOAD"));
         RecyclerState.instance().setSettings(RecyclerSettings.fromRewardGroups(
-            RecyclerState.instance().settings().statusPayload(),
             List.of(new RecyclerSettings.RewardGroup(1L, List.of(506L))),
             508L));
         AppConfigState.instance().setSettingsCache(settings(
@@ -3763,11 +3814,10 @@ public final class PortedModuleSmokeTest {
             "com.server.socket.game.activitypoints_0.max", "500",
             "com.server.socket.game.activitypoints_0.amount", "5"));
         AchievementState.instance().setSettings(AchievementSettings.fromAchievements(
-            "",
             List.of(new AchievementSettings.Achievement(2L, "ACH_", 10L, 5L, 3L, 7L, 2L))));
-        AppConfigState.instance().setPermissionMatrix(permissions(new PermissionMatrix.PermissionPayload(1L, 0L,
-            "\2fuse_mod\2fuse_alert\2fuse_kick\2fuse_receive_calls_for_help\2fuse_chatlog\2"
-                + "fuse_use_wardrobe\2fuse_larger_wardrobe\2fuse_client_staff\2")));
+        AppConfigState.instance().setPermissionMatrix(permissions(PermissionMatrix.PermissionPayload.ofPermissions(
+            1L, 0L, "fuse_mod", "fuse_alert", "fuse_kick", "fuse_receive_calls_for_help", "fuse_chatlog",
+            "fuse_use_wardrobe", "fuse_larger_wardrobe", "fuse_client_staff")));
         MySQL.configureDatabaseConnection(new Database() {
             @Override
             public void execute(String sqlText) {
@@ -4535,8 +4585,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, clubSubscriptionPayload.contains("Iq"));
         assertEquals(true, clubSubscriptionPayload.contains("club_vip"));
         handlingSends.clear();
-        assertEquals("CACHE", RecyclerState.instance().settings().statusPayload());
-        assertEquals("GzCACHE", "Gz" + RecyclerState.instance().settings().statusPayload());
+        assertEquals(true, RecyclerPacketHandlers.sendCachedStatus(4).startsWith("Gz"));
         String rankAndStaffPayload = UserLookups.rankAndStaffStatePayload(
             77L, new UserDao(MySQL.configuredDatabase()), AppConfigState.instance().permissionMatrix());
         assertEquals(true, rankAndStaffPayload.contains("@B"));
@@ -4581,9 +4630,10 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, containsSql(handlingSql, "INSERT INTO staff_cfh"));
         assertEquals(true, handlingSends.get(0).contains("EA"));
         handlingSends.clear();
-        assertEquals("HFIMPORTANTFAQ", HelpPayloads.importantFaqs(HelpCenterState.instance().cache()));
-        assertEquals("HGFAQCATS", HelpPayloads.categories(HelpCenterState.instance().cache()));
-        assertEquals("HJ" + encodedVl64(1, null, "") + "\2CATFAQ",
+        assertEquals("HF", HelpPayloads.importantFaqs(HelpCenterState.instance().cache()));
+        assertEquals("HG", HelpPayloads.categories(HelpCenterState.instance().cache()));
+        assertEquals("HJ" + encodedVl64(1, null, "") + "\2"
+                + encodedVl64(1, null, "") + encodedVl64(10, null, "") + "cat-faq\2",
             HelpPayloads.categoryFaqs(HelpCenterState.instance().cache(),
                 HelpWire.categoryFaqRequest("Fd" + wireLong(1), "Fd").categoryId()));
         String faqSearchPayload = HelpPayloads.searchResults(
@@ -4592,7 +4642,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, faqSearchPayload.contains("HI"));
         assertEquals(true, faqSearchPayload.contains("FAQ Two"));
         handlingSends.clear();
-        assertEquals("HHFAQDESC",
+        assertEquals("HH" + encodedVl64(2, null, "") + "FAQDESC\2",
             HelpPayloads.description(HelpCenterState.instance().cache(),
                 HelpWire.faqIdRequest("Fb" + wireLong(2), "Fb").faqId()));
         String eventInfoPayload = RoomLookups.eventInfoPayload(
@@ -5027,7 +5077,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(true, favouriteRemovedPayload.contains("GK"));
         handlingSql.clear();
         handlingSends.clear();
-        assertEquals("C]CATEGORY_PAYLOAD", NavigatorState.instance().roomCategoryCache().rankPayload(2, 1));
+        assertEquals(categoryPayload, roomCategoryPayload(NavigatorState.instance().roomCategoryCache(), 2, 1));
         String eventCategoryPayload = NavigatorRequests.eventCategoryQueryPayload(
             2,
             NavigatorRequests.listLimit(AppConfigState.instance().settingsCache()),
@@ -5035,7 +5085,7 @@ public final class PortedModuleSmokeTest {
             new RoomDao(MySQL.configuredDatabase()),
             NavigatorState.instance().recommendedRooms());
         assertEquals(true, eventCategoryPayload.contains("GCPC2"));
-        assertEquals(true, eventCategoryPayload.contains("RECOMMENDED"));
+        assertEquals(true, eventCategoryPayload.contains(requestRecommendedPayload));
         String popularCategoryPayload = NavigatorRequests.popularCategoryQueryPayload(
             2,
             NavigatorRequests.listLimit(AppConfigState.instance().settingsCache()),
@@ -5043,7 +5093,7 @@ public final class PortedModuleSmokeTest {
             new RoomDao(MySQL.configuredDatabase()),
             NavigatorState.instance().recommendedRooms());
         assertEquals(true, popularCategoryPayload.contains("GC 2"));
-        assertEquals(true, popularCategoryPayload.contains("RECOMMENDED"));
+        assertEquals(true, popularCategoryPayload.contains(requestRecommendedPayload));
         RoomDao navigatorRequestRooms = new RoomDao(MySQL.configuredDatabase());
         long navigatorLimit = NavigatorRequests.listLimit(AppConfigState.instance().settingsCache());
         assertEquals(true, NavigatorRequests.eventCategoryQueryPayload(
@@ -5124,7 +5174,7 @@ public final class PortedModuleSmokeTest {
         assertEquals(CatalogPayloads.giftAvailability(81, giftEnabled),
             CatalogPayloads.giftAvailability(giftAvailabilityRequest.itemId(), giftEnabled));
         handlingSends.clear();
-        assertEquals("A\u007f" + encodedVl64(2, null, "") + "PAGE_PAYLOAD",
+        assertEquals("A\u007f" + encodedVl64(2, null, "") + catalogPagePayload(CatalogState.instance().catalogPages(), 2L),
             CatalogPayloads.page(CatalogState.instance().catalogPages(),
                 CatalogWire.pageRequest("xx" + wireLong(2)).pageId()));
         handlingSends.clear();
@@ -5511,16 +5561,16 @@ public final class PortedModuleSmokeTest {
             previousPetSettings.levels(),
             commandRows,
             commandRows.size()));
-        String petCommandPayload = PetState.instance().settings().commandListPayload(2);
-        assertEquals(PetPayloads.commandList(2, commandRows), petCommandPayload);
+        String petCommandPayload = petCommandListPayload(PetState.instance().settings(), 2);
+        assertEquals(petCommandListPayload(commandRows, 2), petCommandPayload);
         handlingSends.clear();
         handlingSql.clear();
         long routedPetLevel = PetLookups.levelForOwnerTarget(
             PetWire.petIdRequest("n|" + wireLong(10), "n|").petId(),
             77,
             new BotDao(MySQL.configuredDatabase()));
-        String routedCommandPayload = PetState.instance().settings().commandListPayload(routedPetLevel);
-        assertEquals(PetPayloads.commandList(3, commandRows), routedCommandPayload);
+        String routedCommandPayload = petCommandListPayload(PetState.instance().settings(), routedPetLevel);
+        assertEquals(petCommandListPayload(commandRows, 3), routedCommandPayload);
         handlingSends.clear();
         RepresentedBotRegistry originalRepresentedBotsForCommand = PetState.instance().representedBots();
         PetState.instance().setRepresentedBots(representedBots(Map.of(
@@ -5542,11 +5592,12 @@ public final class PortedModuleSmokeTest {
         assertEquals(50L, UserLookups.updateSoundSetting(
             77, UserWire.soundSettingRequest("Ce50"), new UserDao(MySQL.configuredDatabase())));
         assertEquals(true, containsSql(handlingSql, "UPDATE users SET settings_sound='50' WHERE id='77' LIMIT 1"));
+        String catalogTreePayload = catalogPageTreePayload(0L, 0L, 10L, "CATALOG_TREE");
         seedCatalogPageTrees(Map.of(new CatalogPages.PageTreeKey(0L, 0L), "CATALOG_TREE"));
         dispatchPreReadyPacket(4, "Ae", "Ae");
-        assertEquals("CATALOG_TREE", CatalogState.instance().catalogPages().defaultPageTree());
+        assertEquals(catalogTreePayload, catalogDefaultPageTree(CatalogState.instance().catalogPages()));
         assertCatalogPagesTypedAccessors();
-        assertEquals(true, containsSend(handlingSends, "A~IHHM\2CATALOG_TREE"));
+        assertEquals(true, containsSend(handlingSends, "A~IHHM\2" + catalogTreePayload));
         handlingSends.clear();
         dispatchPreReadyPacket(4, "D}", "D}");
         assertEquals(true, containsSend(handlingSends, "Ei"));
@@ -5690,8 +5741,8 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         PollDao livePollDao = new PollDao(MySQL.configuredDatabase());
         SessionState.instance().setSessionRegistry(sessionRegistry(
-            new SessionRegistry.SessionRecord("1:4", "77\2" + "4"),
-            new SessionRegistry.SessionRecord("4", "0\2" + "9")));
+            SessionRegistry.SessionRecord.fields("1:4", 77L, 4L),
+            SessionRegistry.SessionRecord.fields("4", 0L, 9L)));
         PollLookups.RoomRequest pollRequest =
             PollLookups.roomRequest(4, new UserDao(MySQL.configuredDatabase()), new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, pollRequest.valid());
@@ -5811,8 +5862,8 @@ public final class PortedModuleSmokeTest {
         handlingSql.clear();
         handlingSends.clear();
         SessionState.instance().setSessionRegistry(sessionRegistry(
-            new SessionRegistry.SessionRecord("1:4", "77\2" + "4"),
-            new SessionRegistry.SessionRecord("4", "0\2" + "9")));
+            SessionRegistry.SessionRecord.fields("1:4", 77L, 4L),
+            SessionRegistry.SessionRecord.fields("4", 0L, 9L)));
         JukeboxLookups.RoomRequest jukeboxRequest =
             JukeboxLookups.roomRequest(4, new UserDao(MySQL.configuredDatabase()), new RoomDao(MySQL.configuredDatabase()));
         assertEquals(true, jukeboxRequest.validUser());
@@ -5861,7 +5912,7 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         SessionState.instance().setSessionRegistry(sessionRegistry(
-            new SessionRegistry.SessionRecord("1:4", "77\2" + "4")));
+            SessionRegistry.SessionRecord.fields("1:4", 77L, 4L)));
         UserLookups.UserRequest userRequest =
             UserLookups.userRequest(4, new UserDao(MySQL.configuredDatabase()));
         assertEquals(true, userRequest.valid());
@@ -5965,7 +6016,7 @@ public final class PortedModuleSmokeTest {
         handlingSends.clear();
         handlingSql.clear();
         SessionState.instance().setSessionRegistry(sessionRegistry(
-            new SessionRegistry.SessionRecord("1:4", "77\2" + "4")));
+            SessionRegistry.SessionRecord.fields("1:4", 77L, 4L)));
         UserLookups.UserRequest ownProfileRequest =
             UserLookups.userRequest(4, new UserDao(MySQL.configuredDatabase()));
         String ownProfilePayload = UserLookups.ownProfilePayload(
@@ -6151,18 +6202,28 @@ public final class PortedModuleSmokeTest {
 
     private static void assertPermissionMatrix() {
         assertEquals(true, PermissionMatrix.fromPayloadRows(List.of(
-                new PermissionMatrix.PermissionPayload(1L, 2L, "\2typed_perm\2")))
+                PermissionMatrix.PermissionPayload.ofPermissions(1L, 2L, "typed_perm")))
             .allows(1, "", "typed_perm", 2));
         List<PermissionMatrix.PermissionPayload> permissionRows = new ArrayList<>(List.of(
-            new PermissionMatrix.PermissionPayload(1L, 1L, "\2hc_perm\2")));
+            PermissionMatrix.PermissionPayload.ofPermissions(1L, 1L, "hc_perm")));
         PermissionMatrix matrix = PermissionMatrix.fromPayloadRows(permissionRows);
-        permissionRows.set(0, new PermissionMatrix.PermissionPayload(1L, 1L, ""));
+        permissionRows.set(0, PermissionMatrix.PermissionPayload.ofPermissions(1L, 1L));
         assertEquals(true, matrix.allows(1, "", "hc_perm", 1));
     }
 
     private static void assertPetSettingsTypedAccessors(PetSettings settings, PetSettings.PetCommandRow command) {
         assertEquals(List.of(new PetSettings.PetLevelRow(2L, 20L, 30L, 40L, 3)), settings.levels());
         assertEquals(List.of(command), settings.commands());
+    }
+
+    private static String petCommandListPayload(List<PetSettings.PetCommandRow> commandRows, long petLevel) {
+        return petCommandListPayload(PetSettings.fromRaceRows(List.of(), List.of(), commandRows, commandRows.size()), petLevel);
+    }
+
+    private static String petCommandListPayload(PetSettings settings, long petLevel) {
+        PacketBuilder payload = PacketBuilder.create();
+        settings.appendCommandListPayloadTo(payload, petLevel);
+        return payload.build();
     }
 
     private static void assertChatSettingsTypedAccessors(ChatSettings settings) {
@@ -6257,7 +6318,9 @@ public final class PortedModuleSmokeTest {
             + "secondary\2"
             + encodedVl64(1, null, "")
             + encodedVl64(2, null, "");
-        assertEquals(expectedPagePayload, CatalogPageBootCache.buildCatalogPagePayload(page, List.of(productRow)));
+        CatalogPages.PagePayload pagePayload = CatalogPageBootCache.buildCatalogPagePayloadEntry(page, List.of(productRow));
+        assertEquals(3L, pagePayload.pageId());
+        assertEquals(expectedPagePayload, catalogPagePayload(CatalogPages.fromPayloads(List.of(pagePayload), List.of()), 3L));
         CatalogState.instance().setRegistry(previousRegistry);
     }
 
@@ -6267,25 +6330,19 @@ public final class PortedModuleSmokeTest {
         assertEquals(List.of(501L, 502L), giftSettings.giftWrapProductIds());
         assertEquals(true, giftSettings.containsGiftWrapProduct(502L));
         assertEquals(false, giftSettings.containsGiftWrapProduct(50L));
-        GiftSettings typedGiftSettings = GiftSettings.fromRows("TYPED",
+        GiftSettings typedGiftSettings = GiftSettings.fromRows(
             List.of(new GiftSettings.ClubGift(83L, 508L, 40L)),
-            List.of(601L, 0L, 602L, 601L),
-            "WRAPS");
-        assertEquals("TYPED", typedGiftSettings.clubGiftPayload());
+            List.of(601L, 0L, 602L, 601L));
         assertEquals(List.of(new GiftSettings.ClubGift(83L, 508L, 40L)), typedGiftSettings.clubGifts());
         assertEquals(List.of(601L, 602L), typedGiftSettings.giftWrapProductIds());
         assertEquals(true, typedGiftSettings.containsGiftWrapProduct(602L));
         GiftSettings previousGiftSettings = CatalogState.instance().giftSettings();
         CatalogState.instance().setGiftSettings(typedGiftSettings);
-        assertEquals("TYPED", CatalogState.instance().giftSettings().clubGiftPayload());
         assertEquals(508L, CatalogState.instance().giftSettings().clubGiftByCatalogProductId(83L).productId());
         CatalogState.instance().setGiftSettings(previousGiftSettings);
-        CatalogState.instance().setGiftSettings(GiftSettings.fromRows(
-            CatalogState.instance().giftSettings().clubGiftPayload(),
-            CatalogState.instance().giftSettings().clubGifts(),
-            List.of(701L, 0L, 702L),
-            "TYPED-WRAPS"));
-        assertEquals("TYPED-WRAPS", CatalogState.instance().giftSettings().giftWrapPayload());
+        CatalogState.instance().setGiftSettings(GiftSettings.fromStates(
+            GiftSettings.ClubGiftState.fromGifts(CatalogState.instance().giftSettings().clubGifts()),
+            CatalogGiftBootCache.buildGiftWrapState(List.of(701L, 0L, 702L), 1L, 1L)));
         assertEquals(List.of(701L, 702L), CatalogState.instance().giftSettings().giftWrapProductIds());
     }
 
@@ -6300,24 +6357,11 @@ public final class PortedModuleSmokeTest {
         assertEquals(List.of(10L, 11L), recyclerCache.rewardGroups().get(0).productIds());
         RecyclerSettings previousRecyclerSettings = RecyclerState.instance().settings();
         RecyclerState.instance().setSettings(RecyclerSettings.fromRewardGroups(
-            "LEGACY-STATUS",
             List.of(new RecyclerSettings.RewardGroup(80L, List.of(10L, 11L))),
             55L));
-        assertEquals("LEGACY-STATUS", RecyclerState.instance().settings().statusPayload());
         assertEquals(55L, RecyclerState.instance().settings().boxProductId());
         assertEquals(List.of(10L, 11L), RecyclerState.instance().settings().rewardGroups().get(0).productIds());
         RecyclerState.instance().setSettings(previousRecyclerSettings);
-        assertEquals(
-            encodedVl64(2, null, "")
-                + encodedVl64(80, null, "")
-                + encodedVl64(2, null, "")
-                + encodedVl64(10, null, "")
-                + encodedVl64(11, null, "")
-                + encodedVl64(20, null, "")
-                + encodedVl64(2, null, "")
-                + encodedVl64(12, null, "")
-                + encodedVl64(13, null, ""),
-            recyclerCache.payload());
     }
 
     private static void assertRoomEventLocaleTypedBuilder() {
@@ -6330,8 +6374,11 @@ public final class PortedModuleSmokeTest {
 
     private static void assertRecommendedRoomsPayloadMapBridge() {
         RecommendedRooms previousRecommendedRooms = NavigatorState.instance().recommendedRooms();
-        NavigatorState.instance().setRecommendedRooms(List.of(new RecommendedRooms.Payload(0L, "RECOMMENDED_MAP")), 1L);
-        assertEquals("RECOMMENDED_MAP", NavigatorState.instance().recommendedRooms().payload(1L));
+        NavigatorState.instance().setRecommendedRooms(
+            List.of(RecommendedRooms.Payload.fromRecommendedRooms(0L, 5L, List.of())), 1L);
+        PacketBuilder payload = PacketBuilder.create();
+        assertEquals(true, NavigatorState.instance().recommendedRooms().appendPayloadTo(payload, 1L));
+        assertEquals(encodedVl64(5, null, "") + encodedVl64(0, null, ""), payload.build());
         NavigatorState.instance().setRecommendedRooms(previousRecommendedRooms);
     }
 
@@ -6340,7 +6387,8 @@ public final class PortedModuleSmokeTest {
             1, 2, 3, "c1", "c2", "c3", "c4", 10, "c6", "c7", 11, 12, 13,
             "c10", 14, "c12", 15, 16, "c15", "c16", "c17", 17, "c19", "c20",
             "c21", 4, 5);
-        String expected = encodedVl64(1, null, "")
+        String expected = encodedVl64(3, null, "")
+            + encodedVl64(1, null, "")
             + encodedVl64(1, null, "")
             + encodedVl64(2, null, "")
             + encodedVl64(3, null, "")
@@ -6351,74 +6399,93 @@ public final class PortedModuleSmokeTest {
             + "\2"
             + encodedVl64(4, null, "")
             + encodedVl64(5, null, "");
-        assertEquals(expected, NavigatorBootCache.buildRecommendedRoomsPayload(List.of(row)));
+        RecommendedRooms.Payload payload = NavigatorBootCache.buildRecommendedRoomsPayloadEntry(0L, 3L, List.of(row));
+        assertEquals(0L, payload.index());
+        PacketBuilder payloadBytes = PacketBuilder.create();
+        assertEquals(true, RecommendedRooms.fromPayloads(List.of(payload), 1L).appendPayloadTo(payloadBytes, 1L));
+        assertEquals(expected, payloadBytes.build());
     }
 
     private static void assertHelpCenterPayloadMaps() {
-        assertEquals(true, HelpCenterState.instance().cache().categoryFaqPayload(7L).contains("faq"));
-        assertEquals(true, HelpCenterState.instance().cache().descriptionPayload(5L).contains("line1\rline2"));
+        assertEquals(true, HelpPayloads.categoryFaqs(HelpCenterState.instance().cache(), 7L).contains("faq"));
+        assertEquals(true, HelpPayloads.description(HelpCenterState.instance().cache(), 5L).contains("line1\rline2"));
     }
 
     private static void assertCatalogPagePayloadMapBridge() {
         CatalogPages previousCatalogPages = CatalogState.instance().catalogPages();
         CatalogState.instance().setCatalogPages(CatalogPages.fromPayloads(
-            List.of(new CatalogPages.PagePayload(8L, "CATALOG_PAGE_MAP")),
-            List.of(new CatalogPages.PageTreePayload(0L, 0L, "TREE"))));
-        assertEquals("CATALOG_PAGE_MAP", CatalogState.instance().catalogPages().pagePayload(8L));
-        assertEquals("TREE", CatalogState.instance().catalogPages().defaultPageTree());
+            List.of(catalogPageEntry(8L, "CATALOG_PAGE_MAP")),
+            List.of(catalogPageTreeEntry(0L, 0L, 18L, "TREE"))));
+        assertEquals(catalogPagePayload(CatalogPages.fromPayloads(List.of(catalogPageEntry(8L, "CATALOG_PAGE_MAP")), List.of()), 8L),
+            catalogPagePayload(CatalogState.instance().catalogPages(), 8L));
+        assertEquals(catalogPageTreePayload(0L, 0L, 18L, "TREE"),
+            catalogDefaultPageTree(CatalogState.instance().catalogPages()));
         CatalogState.instance().setCatalogPages(previousCatalogPages);
     }
 
     private static void assertCatalogPagesTypedAccessors() {
         List<CatalogPages.PageTreePayload> pageTrees = new ArrayList<>(
-            List.of(new CatalogPages.PageTreePayload(0L, 0L, "TREE0")));
+            List.of(catalogPageTreeEntry(0L, 0L, 14L, "TREE0")));
         CatalogPages typedCatalogPages =
-            CatalogPages.fromPayloads(List.of(new CatalogPages.PagePayload(4L, "PAGE4")), pageTrees);
-        pageTrees.set(0, new CatalogPages.PageTreePayload(0L, 0L, "changed"));
-        assertEquals("PAGE4", typedCatalogPages.pagePayload(4L));
-        assertEquals("TREE0", typedCatalogPages.defaultPageTree());
+            CatalogPages.fromPayloads(List.of(catalogPageEntry(4L, "PAGE4")), pageTrees);
+        pageTrees.set(0, catalogPageTreeEntry(0L, 0L, 99L, "changed"));
+        assertEquals(catalogPagePayload(CatalogPages.fromPayloads(List.of(catalogPageEntry(4L, "PAGE4")), List.of()), 4L),
+            catalogPagePayload(typedCatalogPages, 4L));
+        assertEquals(catalogPageTreePayload(0L, 0L, 14L, "TREE0"), catalogDefaultPageTree(typedCatalogPages));
         CatalogPages mapCatalogPages = CatalogPages.fromPayloads(
-            List.of(new CatalogPages.PagePayload(5L, "PAGE5")),
-            List.of(new CatalogPages.PageTreePayload(1L, 2L, "TREE12")));
-        assertEquals("PAGE5", mapCatalogPages.pagePayload(5L));
-        assertEquals("TREE12", mapCatalogPages.pageTree(1L, 2L));
+            List.of(catalogPageEntry(5L, "PAGE5")),
+            List.of(catalogPageTreeEntry(1L, 2L, 15L, "TREE12")));
+        assertEquals(catalogPagePayload(CatalogPages.fromPayloads(List.of(catalogPageEntry(5L, "PAGE5")), List.of()), 5L),
+            catalogPagePayload(mapCatalogPages, 5L));
+        assertEquals(catalogPageTreePayload(1L, 2L, 15L, "TREE12"), catalogPageTree(mapCatalogPages, 1L, 2L));
         CatalogPages cacheCatalogPages = CatalogPages.fromPayloads(
-            List.of(new CatalogPages.PagePayload(6L, "PAGE6")),
-            List.of(new CatalogPages.PageTreePayload(2L, 3L, "TREE23")));
-        assertEquals("PAGE6", cacheCatalogPages.pagePayload(6L));
-        assertEquals("TREE23", cacheCatalogPages.pageTree(2L, 3L));
+            List.of(catalogPageEntry(6L, "PAGE6")),
+            List.of(catalogPageTreeEntry(2L, 3L, 16L, "TREE23")));
+        assertEquals(catalogPagePayload(CatalogPages.fromPayloads(List.of(catalogPageEntry(6L, "PAGE6")), List.of()), 6L),
+            catalogPagePayload(cacheCatalogPages, 6L));
+        assertEquals(catalogPageTreePayload(2L, 3L, 16L, "TREE23"), catalogPageTree(cacheCatalogPages, 2L, 3L));
         CatalogPages previousCatalogPages = CatalogState.instance().catalogPages();
         CatalogState.instance().setCatalogPages(typedCatalogPages);
-        assertEquals("PAGE4", CatalogState.instance().catalogPages().pagePayload(4L));
+        assertEquals(catalogPagePayload(typedCatalogPages, 4L),
+            catalogPagePayload(CatalogState.instance().catalogPages(), 4L));
         CatalogState.instance().setCatalogPages(previousCatalogPages);
     }
 
     private static void assertStaffSettingsTypedAccessors() {
         List<StaffSettings.ModerationPayload> payloads = new ArrayList<>(List.of(
-            new StaffSettings.ModerationPayload(0L, 0L, "ZERO"),
-            new StaffSettings.ModerationPayload(1L, 0L, "STAFF"),
-            new StaffSettings.ModerationPayload(1L, 1L, "HC")));
+            StaffSettings.ModerationPayload.fromEntries(
+                0L, 0L, List.of(new StaffSettings.ModerationEntry("zero", "ZERO"))),
+            StaffSettings.ModerationPayload.fromEntries(
+                1L, 0L, List.of(new StaffSettings.ModerationEntry("staff", "STAFF"))),
+            StaffSettings.ModerationPayload.fromEntries(
+                1L, 1L, List.of(new StaffSettings.ModerationEntry("hc", "HC")))));
         StaffSettings settings = StaffSettings.fromPayloadRows(payloads);
-        payloads.set(2, new StaffSettings.ModerationPayload(1L, 1L, "changed"));
-        assertEquals("HC", settings.moderationPayload(1L, 1L));
-        assertEquals(new StaffSettings.ModerationPayload(1L, 1L, "HC"),
+        payloads.set(2, StaffSettings.ModerationPayload.fromEntries(
+            1L, 1L, List.of(new StaffSettings.ModerationEntry("changed", "changed"))));
+        assertEquals(encodedVl64(0, null, "HS") + encodedVl64(0, null, "") + "hc\2HC",
+            StaffPayloads.moderationPanel(settings, 1L, 1L));
+        assertEquals(StaffSettings.ModerationPayload.fromEntries(
+                1L, 1L, List.of(new StaffSettings.ModerationEntry("hc", "HC"))),
             settings.moderationPayloadRows().get(2));
         List<StaffSettings.ModerationPayload> copiedPayloads = settings.moderationPayloadRows();
         assertEquals(3, copiedPayloads.size());
-        assertEquals("HC", settings.moderationPayload(1L, 1L));
+        assertEquals(encodedVl64(0, null, "HS") + encodedVl64(0, null, "") + "hc\2HC",
+            StaffPayloads.moderationPanel(settings, 1L, 1L));
         StaffSettings cacheSettings = StaffSettings.fromPayloadRows(List.of(
-            new StaffSettings.ModerationPayload(2L, 0L, "CACHE_STAFF")));
-        assertEquals("CACHE_STAFF", cacheSettings.moderationPayload(2L, 0L));
+            StaffSettings.ModerationPayload.fromEntries(
+                2L, 0L, List.of(new StaffSettings.ModerationEntry("cache", "CACHE_STAFF")))));
+        assertEquals(encodedVl64(0, null, "HS") + encodedVl64(0, null, "") + "cache\2CACHE_STAFF",
+            StaffPayloads.moderationPanel(cacheSettings, 2L, 0L));
         StaffSettings previousStaffSettings = ModerationState.instance().staffSettings();
         ModerationState.instance().setStaffSettings(settings);
-        assertEquals("HC", ModerationState.instance().staffSettings().moderationPayload(1L, 1L));
+        assertEquals(encodedVl64(0, null, "HS") + encodedVl64(0, null, "") + "hc\2HC",
+            StaffPayloads.moderationPanel(ModerationState.instance().staffSettings(), 1L, 1L));
 
         AppSettingsBootCache.loadPermissionMatrixCache();
         StaffModerationBootCache.loadStaffModerationCache();
         StaffSettings.ModerationPayload bootPayload = ModerationState.instance().staffSettings().moderationPayloadRows().get(3);
         assertEquals(1L, bootPayload.rankIndex());
         assertEquals(0L, bootPayload.hcLevel());
-        assertEquals(bootPayload.payload(), ModerationState.instance().staffSettings().moderationPayload(1L, 0L));
         ModerationState.instance().setStaffSettings(previousStaffSettings);
     }
 
@@ -6466,31 +6533,34 @@ public final class PortedModuleSmokeTest {
         NavigatorBootCache.loadRoomCategoryRowsCache();
         assertEquals(List.of(0L, 0L, 0L), NavigatorState.instance().roomCategoryCache().defaultCategoryIds());
         assertEquals(true, NavigatorState.instance().roomCategoryCache().categoryRowList().size() > 0);
-        assertEquals(encodedVl64(1, null, "")
+        RoomCategoryCache.CategoryPayload singleRoomCategoryPayload =
+            NavigatorBootCache.buildRoomCategoryPayloadEntry(
+                List.of(new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L)), 0L, 0L);
+        assertEquals("C]" + encodedVl64(1, null, "")
                 + encodedVl64(1, null, "") + "public\2"
                 + encodedVl64(0, null, ""),
-            NavigatorBootCache.buildRoomCategoryPayload(
-                List.of(new RoomDao.RoomCategoryRow(1L, "public", 0L, 0L, 0L)), 0L, 0L));
+            roomCategoryPayload(RoomCategoryCache.fromPayloadRows(List.of(), List.of(), List.of(singleRoomCategoryPayload)), 0L, 0L));
 
         RoomCategoryCache typedRoomCategories = RoomCategoryCache.fromPayloadRows(
             List.of(RoomCategoryCache.DefaultCategoryId.of(5L)),
             List.of(new RoomDao.RoomCategoryRow(5L, "typed", 1L, 2L, 3L)),
-            List.of(new RoomCategoryCache.CategoryPayload(0L, 0L, "CATEGORY")));
+            List.of(roomCategoryPayloadEntry(0L, 0L, 5L, "typed-category", 0L, 0L, 1L)));
         assertEquals("5", typedRoomCategories.privateDefaultCategoryId());
         assertEquals(5L, typedRoomCategories.privateDefaultCategoryIdValue());
         assertEquals("", typedRoomCategories.publicDefaultCategoryId());
         assertEquals(List.of(new RoomDao.RoomCategoryRow(5L, "typed", 1L, 2L, 3L)),
             typedRoomCategories.categoryRowList());
-        assertEquals("CATEGORY", typedRoomCategories.payload(0L, 0L));
-        assertEquals(new RoomCategoryCache.CategoryPayload(0L, 0L, "CATEGORY"),
-            typedRoomCategories.payloadRows().get(0));
+        assertEquals("C]" + encodedVl64(1, null, "")
+                + encodedVl64(5, null, "") + "typed-category\2"
+                + encodedVl64(1, null, ""),
+            roomCategoryPayload(typedRoomCategories, 0L, 0L));
         RoomCategoryCache cacheRoomCategories = RoomCategoryCache.fromPayloadRows(
             List.of(
                 RoomCategoryCache.DefaultCategoryId.of(11L),
                 RoomCategoryCache.DefaultCategoryId.empty(),
                 RoomCategoryCache.DefaultCategoryId.of(22L)),
             List.of(new RoomDao.RoomCategoryRow(7L, "cache", 3L, 4L, 5L)),
-            List.of(new RoomCategoryCache.CategoryPayload(2L, 1L, "CACHE_CATEGORY")));
+            List.of(roomCategoryPayloadEntry(2L, 1L, 7L, "cache-category", 0L, 0L, 3L)));
         assertEquals(List.of(11L, 0L, 22L), cacheRoomCategories.defaultCategoryIds());
         assertEquals(List.of(
                 RoomCategoryCache.DefaultCategoryId.of(11L),
@@ -6499,7 +6569,10 @@ public final class PortedModuleSmokeTest {
             cacheRoomCategories.defaultCategoryIdRows());
         assertEquals(List.of(new RoomDao.RoomCategoryRow(7L, "cache", 3L, 4L, 5L)),
             cacheRoomCategories.categoryRowList());
-        assertEquals("CACHE_CATEGORY", cacheRoomCategories.payload(2L, 1L));
+        assertEquals("C]" + encodedVl64(1, null, "")
+                + encodedVl64(7, null, "") + "cache-category\2"
+                + encodedVl64(3, null, ""),
+            roomCategoryPayload(cacheRoomCategories, 2L, 1L));
 
         RoomCategoryCache previousRoomCategoryCacheForRows = NavigatorState.instance().roomCategoryCache();
         NavigatorState.instance().setRoomCategoryCache(RoomCategoryCache.fromPayloadRows(
@@ -6512,7 +6585,7 @@ public final class PortedModuleSmokeTest {
         NavigatorState.instance().setRoomCategoryCache(previousRoomCategoryCacheForRows);
 
         List<RoomCategoryCache.CategoryPayload> payloadRows =
-            new ArrayList<>(List.of(new RoomCategoryCache.CategoryPayload(0L, 0L, "PAYLOAD")));
+            new ArrayList<>(List.of(roomCategoryPayloadEntry(0L, 0L, 11L, "payload-category", 0L, 0L, 0L)));
         List<RoomCategoryCache.DefaultCategoryId> defaultIds = new ArrayList<>(List.of(
             RoomCategoryCache.DefaultCategoryId.of(11L),
             RoomCategoryCache.DefaultCategoryId.empty(),
@@ -6520,7 +6593,7 @@ public final class PortedModuleSmokeTest {
         RoomCategoryCache typedRoomCategoryDefaults = RoomCategoryCache.fromPayloadRows(
             defaultIds, List.of(), payloadRows);
         defaultIds.set(0, RoomCategoryCache.DefaultCategoryId.of(99L));
-        payloadRows.set(0, new RoomCategoryCache.CategoryPayload(0L, 0L, "changed"));
+        payloadRows.set(0, roomCategoryPayloadEntry(0L, 0L, 12L, "changed", 0L, 0L, 0L));
         assertEquals("11", typedRoomCategoryDefaults.privateDefaultCategoryId());
         assertEquals(11L, typedRoomCategoryDefaults.privateDefaultCategoryIdValue());
         assertEquals("22", typedRoomCategoryDefaults.publicDefaultCategoryId());
@@ -6529,13 +6602,35 @@ public final class PortedModuleSmokeTest {
 
         RoomCategoryCache previousRoomCategoryDefaults = NavigatorState.instance().roomCategoryCache();
         NavigatorState.instance().setRoomCategoryCache(typedRoomCategoryDefaults);
-        assertEquals("PAYLOAD", NavigatorState.instance().roomCategoryCache().payload(0L, 0L));
+        assertEquals("C]" + encodedVl64(1, null, "")
+                + encodedVl64(11, null, "") + "payload-category\2"
+                + encodedVl64(0, null, ""),
+            roomCategoryPayload(NavigatorState.instance().roomCategoryCache(), 0L, 0L));
         NavigatorState.instance().setRoomCategoryCache(previousRoomCategoryDefaults);
 
         NavigatorBootCache.loadRoomCategoryPayloadCache();
-        RoomCategoryCache.CategoryPayload payload = NavigatorState.instance().roomCategoryCache().payloadRows().get(0);
-        assertEquals(true, payload.payload().contains("public"));
-        assertEquals(true, NavigatorState.instance().roomCategoryCache().payload(0L, 0L).contains("public"));
+        assertEquals(true, roomCategoryPayload(NavigatorState.instance().roomCategoryCache(), 0L, 0L).contains("public"));
+    }
+
+    private static RoomCategoryCache.CategoryPayload roomCategoryPayloadEntry(
+        long rankIndex,
+        long hcLevel,
+        long categoryId,
+        String name,
+        long minimumRank,
+        long minimumHcRank,
+        long trading
+    ) {
+        return RoomCategoryCache.CategoryPayload.fromCategoryRows(
+            List.of(new RoomDao.RoomCategoryRow(categoryId, name, trading, minimumRank, minimumHcRank)),
+            rankIndex,
+            hcLevel);
+    }
+
+    private static String roomCategoryPayload(RoomCategoryCache cache, long rankIndex, long hcLevel) {
+        PacketBuilder payload = PacketBuilder.create();
+        assertEquals(true, cache.appendRankPayloadTo(payload, rankIndex, hcLevel));
+        return payload.build();
     }
 
     private static void assertRoomCategoryDefaults(RoomCategoryCache cache) {
@@ -6544,8 +6639,10 @@ public final class PortedModuleSmokeTest {
                 RoomCategoryCache.DefaultCategoryId.empty(),
                 RoomCategoryCache.DefaultCategoryId.of(22L)),
             cache.defaultCategoryIdRows());
-        assertEquals("PAYLOAD", cache.payload(0L, 0L));
-        assertEquals(List.of(new RoomCategoryCache.CategoryPayload(0L, 0L, "PAYLOAD")), cache.payloadRows());
+        assertEquals("C]" + encodedVl64(1, null, "")
+                + encodedVl64(11, null, "") + "payload-category\2"
+                + encodedVl64(0, null, ""),
+            roomCategoryPayload(cache, 0L, 0L));
     }
 
     private static void assertAchievementRows(
@@ -6760,7 +6857,7 @@ public final class PortedModuleSmokeTest {
     private static List<CatalogPages.PagePayload> catalogPagePayloads(Map<Long, String> pagePayloads) {
         List<CatalogPages.PagePayload> payloads = new ArrayList<>();
         for (Map.Entry<Long, String> entry : pagePayloads.entrySet()) {
-            payloads.add(new CatalogPages.PagePayload(entry.getKey(), entry.getValue()));
+            payloads.add(catalogPageEntry(entry.getKey(), entry.getValue()));
         }
         return payloads;
     }
@@ -6769,9 +6866,77 @@ public final class PortedModuleSmokeTest {
         List<CatalogPages.PageTreePayload> payloads = new ArrayList<>();
         for (Map.Entry<CatalogPages.PageTreeKey, String> entry : pageTrees.entrySet()) {
             CatalogPages.PageTreeKey key = entry.getKey();
-            payloads.add(new CatalogPages.PageTreePayload(key.rankIndex(), key.hcLevel(), entry.getValue()));
+            payloads.add(catalogPageTreeEntry(key.rankIndex(), key.hcLevel(), 10L + key.rankIndex() + key.hcLevel(),
+                entry.getValue()));
         }
         return payloads;
+    }
+
+    private static CatalogPages.PagePayload catalogPageEntry(long pageId, String name) {
+        return CatalogPageBootCache.buildCatalogPagePayloadEntry(catalogPageRow(pageId, name), List.of());
+    }
+
+    private static CatalogPages.PageTreePayload catalogPageTreeEntry(
+        long rankIndex,
+        long hcLevel,
+        long pageId,
+        String name
+    ) {
+        return CatalogPageBootCache.buildCatalogPageTreePayloadEntry(
+            List.of(new CatalogDao.CatalogPageTreeRow(pageId, name, 1L, 1L, 0L, 1L)),
+            Map.of(pageId, 0L),
+            Map.of(),
+            rankIndex,
+            hcLevel);
+    }
+
+    private static CatalogDao.CatalogPageRow catalogPageRow(long pageId, String name) {
+        return new CatalogDao.CatalogPageRow(
+            pageId,
+            name,
+            0L,
+            0L,
+            0L,
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            0L);
+    }
+
+    private static String catalogPagePayload(CatalogPages pages, long pageId) {
+        PacketBuilder payload = PacketBuilder.create();
+        assertEquals(true, pages.appendPagePayloadTo(payload, pageId));
+        return payload.build();
+    }
+
+    private static String catalogPageTree(CatalogPages pages, long rankIndex, long hcLevel) {
+        PacketBuilder payload = PacketBuilder.create();
+        assertEquals(true, pages.appendPageTreeTo(payload, rankIndex, hcLevel));
+        return payload.build();
+    }
+
+    private static String catalogDefaultPageTree(CatalogPages pages) {
+        PacketBuilder payload = PacketBuilder.create();
+        assertEquals(true, pages.appendDefaultPageTreeTo(payload));
+        return payload.build();
+    }
+
+    private static String catalogPageTreePayload(long rankIndex, long hcLevel, long pageId, String name) {
+        return catalogPageTree(CatalogPages.fromPayloads(List.of(), List.of(catalogPageTreeEntry(rankIndex, hcLevel, pageId, name))),
+            rankIndex, hcLevel);
     }
 
     private static void seedCatalogCounterProductIds(List<Long> counterProductIds) {
@@ -6891,6 +7056,18 @@ public final class PortedModuleSmokeTest {
 
     private static String readyFrame(String payload) {
         return "x" + WireEncoding.encodeBase64Length(StringUtils.text(payload).length()) + StringUtils.text(payload);
+    }
+
+    private static String readyPacketPayload(Filesystems.ReadyPacket packet) {
+        PacketBuilder payload = PacketBuilder.create();
+        packet.appendPayloadTo(payload);
+        return payload.build();
+    }
+
+    private static String gameServerPacketPayload(GameServerBridge.GameServerPacket packet) {
+        PacketBuilder payload = PacketBuilder.create();
+        packet.appendPayloadTo(payload);
+        return payload.build();
     }
 
     private static void processPreSessionPacketBuffer(long socketIndex, String packetBuffer) {

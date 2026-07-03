@@ -24,14 +24,11 @@ public final class CatalogPayloads {
     }
 
     public static String giftWrapOptions(long giftWrapPrice, GiftSettings giftSettings) {
-        return giftWrapOptionsPayload(giftWrapPrice, giftSettings == null ? "" : giftSettings.giftWrapPayload());
-    }
-
-    private static String giftWrapOptionsPayload(long giftWrapPrice, String giftWrapPayload) {
-        return PacketBuilder.create()
-            .appendInt(giftWrapPrice)
-            .appendRaw(giftWrapPayload)
-            .build();
+        PacketBuilder payload = PacketBuilder.create().appendInt(giftWrapPrice);
+        if (giftSettings != null) {
+            giftSettings.appendGiftWrapPayloadTo(payload);
+        }
+        return payload.build();
     }
 
     public static String giftWrapPriceFallback(long giftWrapEnabled) {
@@ -43,14 +40,11 @@ public final class CatalogPayloads {
     }
 
     public static String page(CatalogPages catalogPages, long pageId) {
-        return pagePayload(pageId, catalogPages == null ? "" : catalogPages.pagePayload(pageId));
-    }
-
-    private static String pagePayload(long pageId, String pagePayload) {
-        return PacketBuilder.message("A\u007f")
-            .appendInt(pageId)
-            .appendRaw(pagePayload)
-            .build();
+        PacketBuilder payload = PacketBuilder.message("A\u007f").appendInt(pageId);
+        if (catalogPages != null) {
+            catalogPages.appendPagePayloadTo(payload, pageId);
+        }
+        return payload.build();
     }
 
     public static String purchase(long catalogProductId, long creditPrice, long activityPrice, long activityType,

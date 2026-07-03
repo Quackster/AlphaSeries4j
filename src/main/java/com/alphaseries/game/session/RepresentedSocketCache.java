@@ -4,8 +4,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.alphaseries.util.StringUtils;
-
 public final class RepresentedSocketCache {
     private final Map<Long, RepresentedSocketRecord> records;
 
@@ -35,9 +33,6 @@ public final class RepresentedSocketCache {
         return record != null && record.busy();
     }
 
-    public record RepresentedSocketRecord(String payload, long roomSlot, boolean busy) {
-        public RepresentedSocketRecord {
-            payload = StringUtils.text(payload);
-        }
+    public record RepresentedSocketRecord(long roomSlot, boolean busy) {
     }
 }

@@ -1,7 +1,5 @@
 package com.alphaseries.game.achievement;
 
-import com.alphaseries.util.StringUtils;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,32 +9,31 @@ public final class AchievementSettings {
     private final String questIdPayload;
     private final Map<Long, Achievement> rowsByIndex;
 
-    private AchievementSettings(String questIdPayload, Iterable<Achievement> achievements) {
-        this.questIdPayload = StringUtils.text(questIdPayload);
+    private AchievementSettings(Iterable<Achievement> achievements) {
+        this.questIdPayload = questIdPayload(achievements);
         this.rowsByIndex = rowsFromAchievements(achievements);
     }
 
-    private AchievementSettings(String questIdPayload, List<IndexedAchievement> indexedAchievements) {
-        this.questIdPayload = StringUtils.text(questIdPayload);
+    private AchievementSettings(List<IndexedAchievement> indexedAchievements) {
+        this.questIdPayload = questIdPayloadFromIndexedAchievements(indexedAchievements);
         this.rowsByIndex = rowsFromIndexedAchievements(indexedAchievements);
     }
 
     public static AchievementSettings empty() {
-        return new AchievementSettings("", List.<Achievement>of());
+        return new AchievementSettings(List.<Achievement>of());
     }
 
-    public static AchievementSettings fromAchievements(String questIdPayload, Iterable<Achievement> achievements) {
-        return new AchievementSettings(questIdPayload, achievements);
+    public static AchievementSettings fromAchievements(Iterable<Achievement> achievements) {
+        return new AchievementSettings(achievements);
     }
 
     public static AchievementSettings fromIndexedAchievements(
-        String questIdPayload,
         List<IndexedAchievement> indexedAchievements
     ) {
-        return new AchievementSettings(questIdPayload, indexedAchievements);
+        return new AchievementSettings(indexedAchievements);
     }
 
-    public String questIdPayload() {
+    String questIdPayload() {
         return questIdPayload;
     }
 
@@ -116,5 +113,29 @@ public final class AchievementSettings {
             }
         }
         return parsedRows;
+    }
+
+    private static String questIdPayload(Iterable<Achievement> achievements) {
+        StringBuilder payload = new StringBuilder();
+        if (achievements != null) {
+            for (Achievement achievement : achievements) {
+                if (achievement != null) {
+                    payload.append(achievement.achievementId()).append('\2');
+                }
+            }
+        }
+        return payload.toString();
+    }
+
+    private static String questIdPayloadFromIndexedAchievements(List<IndexedAchievement> indexedAchievements) {
+        List<Achievement> achievements = new ArrayList<>();
+        if (indexedAchievements != null) {
+            for (IndexedAchievement indexedAchievement : indexedAchievements) {
+                if (indexedAchievement != null && indexedAchievement.achievement() != null) {
+                    achievements.add(indexedAchievement.achievement());
+                }
+            }
+        }
+        return questIdPayload(achievements);
     }
 }

@@ -16,14 +16,16 @@ public final class RecyclerBootCache {
     }
 
     public record RecyclerCache(
-        String payload,
+        RecyclerSettings.StatusPayload statusPayload,
         long groupCount,
         List<RecyclerSettings.RewardGroup> rewardGroups,
         Map<Long, String> productListByGroupIndex,
         Map<Long, Long> chanceByGroupIndex
     ) {
         public RecyclerCache {
-            payload = payload == null ? "" : payload;
+            statusPayload = statusPayload == null
+                ? RecyclerSettings.StatusPayload.fromPayload("")
+                : statusPayload;
             rewardGroups = rewardGroups == null ? List.of() : List.copyOf(rewardGroups);
             productListByGroupIndex = productListByGroupIndex == null
                 ? Map.of() : Map.copyOf(productListByGroupIndex);
@@ -54,7 +56,7 @@ public final class RecyclerBootCache {
             }
         }
         RecyclerCache cache = buildRecyclerCache(rewardGroups);
-        RecyclerState.instance().setStatusPayload(cache.payload());
+        RecyclerState.instance().setStatusPayload(cache.statusPayload());
         RecyclerState.instance().setRewards(cache.rewardGroups());
     }
 
@@ -102,7 +104,8 @@ public final class RecyclerBootCache {
             }
         }
         return new RecyclerCache(
-            PacketBuilder.create().appendInt(groupCount).appendRaw(payload.build()).build(),
+            RecyclerSettings.StatusPayload.fromPayload(
+                PacketBuilder.create().appendInt(groupCount).appendRaw(payload.build()).build()),
             groupCount,
             groups,
             productListByGroupIndex,

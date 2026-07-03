@@ -3,6 +3,7 @@ package com.alphaseries.server.packet;
 import com.alphaseries.messages.incoming.IncomingContext;
 import com.alphaseries.messages.incoming.MessageRegistry;
 import com.alphaseries.messages.incoming.ReadyPacketRegistry;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.protocol.ReadyPacketBuffer;
 import com.alphaseries.server.logging.Console;
 import com.alphaseries.server.mus.MusConnectionManager;
@@ -23,10 +24,23 @@ public final class Filesystems {
     private Filesystems() {
     }
 
-    public record ReadyPacket(String code, String payload) {
-        public ReadyPacket {
-            code = StringUtils.text(code);
-            payload = StringUtils.text(payload);
+    public static final class ReadyPacket {
+        private final String code;
+        private final String payload;
+
+        private ReadyPacket(String code, String payload) {
+            this.code = StringUtils.text(code);
+            this.payload = StringUtils.text(payload);
+        }
+
+        public String code() {
+            return code;
+        }
+
+        public void appendPayloadTo(PacketBuilder packet) {
+            if (packet != null) {
+                packet.appendRaw(payload);
+            }
         }
     }
 
@@ -48,7 +62,9 @@ public final class Filesystems {
             List<String> payloads = new ArrayList<>();
             for (ReadyPacket packet : packets) {
                 if (packet != null) {
-                    payloads.add(packet.payload());
+                    PacketBuilder payload = PacketBuilder.create();
+                    packet.appendPayloadTo(payload);
+                    payloads.add(payload.build());
                 }
             }
             return new ReadyPacketPayloads(payloads);
@@ -56,10 +72,6 @@ public final class Filesystems {
 
         public int size() {
             return values.size();
-        }
-
-        public String payloadAt(int index) {
-            return index < 0 || index >= values.size() ? "" : values.get(index);
         }
 
         @Override
@@ -96,10 +108,11 @@ public final class Filesystems {
         }
 
         for (ReadyPacketBuffer.Frame packet : ReadyPacketBuffer.frames(packetBuffer)) {
+            String packetPayload = framePayload(packet);
             if (packetTracingEnabled) {
-                Console.logSourceLine("[" + socketIndex + "] " + packet.payload(), "GAME", 16711680L);
+                Console.logSourceLine("[" + socketIndex + "] " + packetPayload, "GAME", 16711680L);
             }
-            dispatchReadyPacket(socketIndex, packet.code(), packet.payload());
+            dispatchReadyPacket(socketIndex, packet.code(), packetPayload);
         }
     }
 
@@ -123,7 +136,7 @@ public final class Filesystems {
     public static List<ReadyPacket> readyPacketsFromBuffer(String packetBuffer) {
         List<ReadyPacket> packets = new ArrayList<ReadyPacket>();
         for (ReadyPacketBuffer.Frame frame : ReadyPacketBuffer.frames(packetBuffer)) {
-            packets.add(new ReadyPacket(frame.code(), frame.payload()));
+            packets.add(new ReadyPacket(frame.code(), framePayload(frame)));
         }
         return packets;
     }
@@ -151,5 +164,13 @@ public final class Filesystems {
 
     private static void dispatchReadyPacket(long socketIndex, String packetCode, String packetPayload) {
         readyPacketRegistry.dispatch(new IncomingContext((int) socketIndex), StringUtils.text(packetCode), packetPayload);
+    }
+
+    private static String framePayload(ReadyPacketBuffer.Frame frame) {
+        PacketBuilder payload = PacketBuilder.create();
+        if (frame != null) {
+            frame.appendPayloadTo(payload);
+        }
+        return payload.build();
     }
 }

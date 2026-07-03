@@ -56,15 +56,13 @@ public final class StaffPayloads {
     }
 
     public static String moderationPanel(StaffSettings staffSettings, long rankIndex, long hcLevel) {
-        return moderationPanelPayload(staffSettings == null ? "" : staffSettings.moderationPayload(rankIndex, hcLevel));
-    }
-
-    private static String moderationPanelPayload(String moderationPayload) {
-        return PacketBuilder.message("HS")
+        PacketBuilder payload = PacketBuilder.message("HS")
             .appendInt(0L)
-            .appendInt(0L)
-            .appendRaw(moderationPayload)
-            .build();
+            .appendInt(0L);
+        if (staffSettings != null) {
+            staffSettings.appendModerationPayloadTo(payload, rankIndex, hcLevel);
+        }
+        return payload.build();
     }
 
     public static String callForHelpChatLogResponse(

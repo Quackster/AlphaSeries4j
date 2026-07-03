@@ -4,7 +4,6 @@ import com.alphaseries.dao.mysql.HelpDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.db.MySQL;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.util.StringUtils;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,17 +14,18 @@ public final class HelpCenterBootCache {
     private HelpCenterBootCache() {
     }
 
-    public record FaqCategoryCache(String categoryPayload, List<HelpCenterCache.CategoryFaqPayload> faqPayloads) {
+    public record FaqCategoryCache(HelpCenterCache.CategoryState categoryState,
+                                   List<HelpCenterCache.CategoryFaqPayload> faqPayloads) {
         public FaqCategoryCache {
-            categoryPayload = StringUtils.text(categoryPayload);
+            categoryState = categoryState == null ? HelpCenterCache.CategoryState.empty() : categoryState;
             faqPayloads = faqPayloads == null ? List.of() : List.copyOf(faqPayloads);
         }
 
-        public String faqPayload(long categoryId) {
+        String faqPayload(long categoryId) {
             if (faqPayloads != null) {
                 for (HelpCenterCache.CategoryFaqPayload payload : faqPayloads) {
                     if (payload != null && payload.categoryId() == categoryId) {
-                        return payload.payload();
+                        return payload.payloadText();
                     }
                 }
             }
@@ -44,7 +44,7 @@ public final class HelpCenterBootCache {
                 // Legacy startup cache loading tolerated missing tables or SQL failures.
             }
         }
-        mergeImportantFaqPayload(buildImportantFaqPayloadFromRows(rows));
+        mergeImportantFaqPayload(buildImportantFaqStateFromRows(rows));
     }
 
     public static void loadFaqCategoryCache() {
@@ -66,7 +66,7 @@ public final class HelpCenterBootCache {
             }
         }
         FaqCategoryCache cache = buildFaqCategoryCacheFromRows(categoryRows, faqRows);
-        mergeFaqCategoryCache(cache.categoryPayload(), cache.faqPayloads());
+        mergeFaqCategoryCache(cache.categoryState(), cache.faqPayloads());
     }
 
     public static void loadFaqDescriptionCache() {
@@ -82,15 +82,15 @@ public final class HelpCenterBootCache {
         mergeFaqDescriptionCache(cache);
     }
 
-    private static void mergeImportantFaqPayload(String payload) {
+    private static void mergeImportantFaqPayload(HelpCenterCache.ImportantFaqState state) {
         HelpCenterCache current = HelpCenterState.instance().cache();
-        HelpCenterState.instance().setCache(current.withImportantFaqPayload(payload));
+        HelpCenterState.instance().setCache(current.withImportantFaqState(state));
     }
 
-    private static void mergeFaqCategoryCache(String categoryPayload,
+    private static void mergeFaqCategoryCache(HelpCenterCache.CategoryState categoryState,
                                               Iterable<HelpCenterCache.CategoryFaqPayload> categoryFaqs) {
         HelpCenterCache current = HelpCenterState.instance().cache();
-        HelpCenterState.instance().setCache(current.withFaqCategoryPayloads(categoryPayload, categoryFaqs));
+        HelpCenterState.instance().setCache(current.withFaqCategoryState(categoryState, categoryFaqs));
     }
 
     private static void mergeFaqDescriptionCache(Iterable<HelpCenterCache.DescriptionPayload> descriptions) {
@@ -98,7 +98,8 @@ public final class HelpCenterBootCache {
         HelpCenterState.instance().setCache(current.withDescriptionPayloads(descriptions));
     }
 
-    public static String buildImportantFaqPayloadFromRows(Map<Long, List<HelpDao.FaqNameRow>> faqRowsByImportance) {
+    public static HelpCenterCache.ImportantFaqState buildImportantFaqStateFromRows(
+            Map<Long, List<HelpDao.FaqNameRow>> faqRowsByImportance) {
         PacketBuilder payload = PacketBuilder.create();
         for (long importanceLevel = 1L; importanceLevel <= 2L; importanceLevel++) {
             List<HelpDao.FaqNameRow> rows = faqRowsByImportance == null ? List.of() : faqRowsByImportance.get(importanceLevel);
@@ -106,7 +107,8 @@ public final class HelpCenterBootCache {
                 .appendInt(countFaqNameRows(rows))
                 .appendRaw(buildFaqNamePayloadFromRows(rows));
         }
-        return PacketBuilder.create().appendInt(2).appendRaw(payload.build()).build();
+        return HelpCenterCache.ImportantFaqState.fromPayload(
+            PacketBuilder.create().appendInt(2).appendRaw(payload.build()).build());
     }
 
     public static FaqCategoryCache buildFaqCategoryCacheFromRows(List<HelpDao.FaqNameRow> categoryRows,
@@ -119,11 +121,8 @@ public final class HelpCenterBootCache {
                 if (category != null) {
                     long categoryId = category.id();
                     List<HelpDao.FaqNameRow> faqRows = faqRowsByCategoryId == null ? List.of() : faqRowsByCategoryId.get(categoryId);
-                    faqPayloads.add(new HelpCenterCache.CategoryFaqPayload(categoryId,
-                        PacketBuilder.create()
-                            .appendInt(countFaqNameRows(faqRows))
-                            .appendRaw(buildFaqNamePayloadFromRows(faqRows))
-                            .build()));
+                    faqPayloads.add(HelpCenterCache.CategoryFaqPayload.fromFaqEntries(
+                        categoryId, faqEntries(faqRows)));
                     categoryPayload
                         .appendInt(categoryId)
                         .appendString(category.name());
@@ -132,7 +131,8 @@ public final class HelpCenterBootCache {
             }
         }
         return new FaqCategoryCache(
-            PacketBuilder.create().appendInt(categoryCount).appendRaw(categoryPayload.build()).build(),
+            HelpCenterCache.CategoryState.fromPayload(
+                PacketBuilder.create().appendInt(categoryCount).appendRaw(categoryPayload.build()).build()),
             faqPayloads);
     }
 
@@ -142,11 +142,7 @@ public final class HelpCenterBootCache {
             for (HelpDao.FaqDescriptionRow row : faqRows) {
                 if (row != null) {
                     long faqId = row.id();
-                    String descriptionText = StringUtils.newlinesAsCarriageReturns(row.description());
-                    cache.add(new HelpCenterCache.DescriptionPayload(faqId, PacketBuilder.create()
-                        .appendInt(faqId)
-                        .appendString(descriptionText)
-                        .build()));
+                    cache.add(HelpCenterCache.DescriptionPayload.fromDescription(faqId, row.description()));
                 }
             }
         }
@@ -165,6 +161,18 @@ public final class HelpCenterBootCache {
             }
         }
         return payload.build();
+    }
+
+    private static List<HelpCenterCache.FaqEntry> faqEntries(List<HelpDao.FaqNameRow> faqRows) {
+        List<HelpCenterCache.FaqEntry> entries = new ArrayList<>();
+        if (faqRows != null) {
+            for (HelpDao.FaqNameRow row : faqRows) {
+                if (row != null) {
+                    entries.add(new HelpCenterCache.FaqEntry(row.id(), row.name()));
+                }
+            }
+        }
+        return entries;
     }
 
     private static long countFaqNameRows(List<HelpDao.FaqNameRow> rows) {

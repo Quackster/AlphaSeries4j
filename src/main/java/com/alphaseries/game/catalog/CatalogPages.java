@@ -3,6 +3,7 @@ package com.alphaseries.game.catalog;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.util.StringUtils;
 
 public final class CatalogPages {
@@ -30,14 +31,42 @@ public final class CatalogPages {
         return new CatalogPages(pagePayloads, pageTreeMap(pageTrees));
     }
 
-    public String pagePayload(long pageId) {
+    public boolean appendPagePayloadTo(PacketBuilder packet, long pageId) {
+        if (packet == null) {
+            return false;
+        }
+        String payload = pagePayload(pageId);
+        if (payload.isEmpty()) {
+            return false;
+        }
+        packet.appendRaw(payload);
+        return true;
+    }
+
+    public boolean appendPageTreeTo(PacketBuilder packet, long rankIndex, long hcLevel) {
+        if (packet == null) {
+            return false;
+        }
+        String payload = pageTree(rankIndex, hcLevel);
+        if (payload.isEmpty()) {
+            return false;
+        }
+        packet.appendRaw(payload);
+        return true;
+    }
+
+    public boolean appendDefaultPageTreeTo(PacketBuilder packet) {
+        return appendPageTreeTo(packet, 0L, 0L);
+    }
+
+    String pagePayload(long pageId) {
         if (pageId < 0L) {
             return "";
         }
         return StringUtils.text(pagePayloads.get(pageId));
     }
 
-    public String pageTree(long rankIndex, long hcLevel) {
+    String pageTree(long rankIndex, long hcLevel) {
         int rank = (int) rankIndex;
         int hc = (int) hcLevel;
         if (rank < 0 || hc < 0) {
@@ -46,7 +75,7 @@ public final class CatalogPages {
         return StringUtils.text(pageTrees.get(new PageTreeKey(rank, hc)));
     }
 
-    public String defaultPageTree() {
+    String defaultPageTree() {
         return pageTree(0L, 0L);
     }
 
@@ -98,18 +127,53 @@ public final class CatalogPages {
         return payloadMap;
     }
 
-    public record PagePayload(long pageId, String payload) {
-        public PagePayload {
-            pageId = Math.max(0L, pageId);
-            payload = StringUtils.text(payload);
+    public static final class PagePayload {
+        private final long pageId;
+        private final String payload;
+
+        private PagePayload(long pageId, String payload) {
+            this.pageId = Math.max(0L, pageId);
+            this.payload = StringUtils.text(payload);
+        }
+
+        static PagePayload fromPayloadText(long pageId, String payload) {
+            return new PagePayload(pageId, payload);
+        }
+
+        public long pageId() {
+            return pageId;
+        }
+
+        String payload() {
+            return payload;
         }
     }
 
-    public record PageTreePayload(long rankIndex, long hcLevel, String payload) {
-        public PageTreePayload {
-            rankIndex = Math.max(0L, rankIndex);
-            hcLevel = Math.max(0L, hcLevel);
-            payload = StringUtils.text(payload);
+    public static final class PageTreePayload {
+        private final long rankIndex;
+        private final long hcLevel;
+        private final String payload;
+
+        private PageTreePayload(long rankIndex, long hcLevel, String payload) {
+            this.rankIndex = Math.max(0L, rankIndex);
+            this.hcLevel = Math.max(0L, hcLevel);
+            this.payload = StringUtils.text(payload);
+        }
+
+        static PageTreePayload fromPayloadText(long rankIndex, long hcLevel, String payload) {
+            return new PageTreePayload(rankIndex, hcLevel, payload);
+        }
+
+        public long rankIndex() {
+            return rankIndex;
+        }
+
+        public long hcLevel() {
+            return hcLevel;
+        }
+
+        String payload() {
+            return payload;
         }
     }
 

@@ -155,7 +155,7 @@ public final class PreReadyPacketDispatcher {
                 case "Cd": UserPacketHandlers.sendEffectList(socketIndex); break;
                 case "Et":
                 case "Eu": UserPacketHandlers.activateEffect(socketIndex, SocialWire.effectRequest(payload)); break;
-                case "@Z": RecyclerPacketHandlers.sendCachedStatus(socketIndex, "", "Gz"); break;
+                case "@Z": RecyclerPacketHandlers.sendCachedStatus(socketIndex); break;
                 case "oW": ClubPacketHandlers.sendSubscriptionOffers(socketIndex); break;
                 case "Cn": StaffModerationPacketHandlers.cancelLatestCallForHelp(socketIndex); break;
                 case "A^": SocialPacketHandlers.waveCurrentRoomUser(socketIndex); break;

@@ -56,8 +56,10 @@ public final class NavigatorPayloads {
         RecommendedRooms recommendedRooms,
         long recommendedTree
     ) {
+        PacketBuilder resultPayload = PacketBuilder.create().appendRaw(roomList(roomRows));
+        appendRecommendedPayload(resultPayload, recommendedRooms, recommendedTree);
         return queryResult(header, selector, limitValue,
-            roomList(roomRows) + recommendedPayload(recommendedRooms, recommendedTree));
+            resultPayload.build());
     }
 
     public static String combinedQueryResult(
@@ -187,8 +189,10 @@ public final class NavigatorPayloads {
         return PacketBuilder.create().appendRaw(payload.build()).appendInt(itemCount).build();
     }
 
-    private static String recommendedPayload(RecommendedRooms recommendedRooms, long recommendedTree) {
-        return recommendedRooms == null ? "" : recommendedRooms.payload(recommendedTree);
+    private static void appendRecommendedPayload(PacketBuilder payload, RecommendedRooms recommendedRooms, long recommendedTree) {
+        if (recommendedRooms != null) {
+            recommendedRooms.appendPayloadTo(payload, recommendedTree);
+        }
     }
 
     public static String official(List<OfficialNavigatorItem> items, boolean includeCountPrefix) {

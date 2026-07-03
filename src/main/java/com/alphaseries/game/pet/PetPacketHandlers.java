@@ -10,6 +10,7 @@ import com.alphaseries.dao.mysql.UserDao;
 import com.alphaseries.game.room.FurnitureStateWrites;
 import com.alphaseries.game.room.RoomState;
 import com.alphaseries.messages.outgoing.FurniturePayloads;
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.server.runtime.SessionLookups;
 import com.alphaseries.server.runtime.SocketDelivery;
 import com.alphaseries.util.NumberUtils;
@@ -197,7 +198,9 @@ public final class PetPacketHandlers {
      */
     public static String sendCommandList(int socketIndex, long petLevel) {
         try {
-            String payload = petSettings().commandListPayload(petLevel);
+            PacketBuilder packet = PacketBuilder.create();
+            petSettings().appendCommandListPayloadTo(packet, petLevel);
+            String payload = packet.build();
             if (socketIndex > 0) {
                 SocketDelivery.sendToSocket(socketIndex, payload);
             }

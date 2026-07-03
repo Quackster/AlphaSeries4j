@@ -1,5 +1,6 @@
 package com.alphaseries.game.advertising;
 
+import com.alphaseries.protocol.PacketBuilder;
 import com.alphaseries.server.runtime.SocketDelivery;
 
 public final class AdvertisingPacketHandlers {
@@ -11,15 +12,12 @@ public final class AdvertisingPacketHandlers {
      */
     public static void sendVisitRoomAdvertisement(int socketIndex) {
         try {
-            String advertisementPayload = "\2\2";
+            PacketBuilder advertisementPayload = PacketBuilder.create();
             VisitRoomAds visitRoomAds = AdvertisingState.instance().visitRoomAds();
-            if (visitRoomAds.count() > 0L) {
-                String candidate = visitRoomAds.randomPayload();
-                if (!candidate.isEmpty()) {
-                    advertisementPayload = candidate;
-                }
+            if (!visitRoomAds.appendRandomPayloadTo(advertisementPayload)) {
+                advertisementPayload.appendRaw("\2\2");
             }
-            SocketDelivery.sendToSocket(socketIndex, "DB" + advertisementPayload);
+            SocketDelivery.sendToSocket(socketIndex, PacketBuilder.message("DB").appendRaw(advertisementPayload).build());
         } catch (Exception ignored) {
         }
     }

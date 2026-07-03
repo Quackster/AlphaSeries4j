@@ -5,7 +5,6 @@ import com.alphaseries.dao.mysql.AdvertisingDao;
 import com.alphaseries.db.Database;
 import com.alphaseries.db.MySQL;
 import com.alphaseries.protocol.PacketBuilder;
-import com.alphaseries.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +22,8 @@ public final class AdvertisingBootCache {
             return visitRoomAds.count();
         }
 
-        public String payload(long visitRoomId) {
-            return visitRoomAds.payload(visitRoomId);
+        public boolean appendPayloadTo(PacketBuilder packet, long visitRoomId) {
+            return visitRoomAds.appendPayloadTo(packet, visitRoomId);
         }
     }
 
@@ -52,12 +51,7 @@ public final class AdvertisingBootCache {
             for (AdvertisingDao.VisitRoomAdRow row : visitRoomRows) {
                 if (row != null) {
                     long visitRoomId = row.visitRoomId();
-                    payloads.add(new VisitRoomAds.Payload(visitRoomId,
-                        PacketBuilder.create()
-                            .appendRaw(StringUtils.text(assetPath))
-                            .appendString(visitRoomId)
-                            .appendString(row.address())
-                            .build()));
+                    payloads.add(VisitRoomAds.Payload.fromAdvertisement(visitRoomId, assetPath, row.address()));
                     count++;
                 }
             }
